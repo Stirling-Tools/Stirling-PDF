@@ -1,0 +1,105 @@
+Return-Path: <test@example.com>
+Delivered-To: recipient@example.com
+Received: from mail.example.com (mail.example.com [192.168.1.1])
+	by mx.example.com (Postfix) with ESMTP id 1234567890
+	for <recipient@example.com>; Mon, 1 Jan 2024 12:00:00 +0000 (UTC)
+Message-ID: <test123@example.com>
+Date: Mon, 1 Jan 2024 12:00:00 +0000
+From: Test Sender <test@example.com>
+User-Agent: Mozilla/5.0 (compatible; Test Email Client)
+MIME-Version: 1.0
+To: Test Recipient <recipient@example.com>
+Subject: Test Email for Convert Tool
+Content-Type: multipart/alternative;
+ boundary="------------boundary123456789"
+
+This is a multi-part message in MIME format.
+--------------boundary123456789
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Test Email for Convert Tool
+===========================
+
+This is a test email for testing the EML to PDF conversion functionality.
+
+Email Details:
+- From: test@example.com
+- To: recipient@example.com
+- Subject: Test Email for Convert Tool
+- Date: January 1, 2024
+
+Content Features:
+- Plain text content
+- HTML content (in alternative part)
+- Headers and metadata
+- MIME structure
+
+This email should convert to a PDF that includes:
+1. Email headers (From, To, Subject, Date)
+2. Email body content
+3. Proper formatting
+
+Important Notes:
+- This is a test email only
+- Generated for Stirling PDF testing
+- Contains no sensitive information
+- Should preserve email formatting in PDF
+
+Best regards,
+Test Email System
+
+--------------boundary123456789
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Email</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <h1 style="color: #2c3e50;">Test Email for Convert Tool</h1>
+    
+    <p>This is a <strong>test email</strong> for testing the EML to PDF conversion functionality.</p>
+    
+    <h2 style="color: #34495e;">Email Details:</h2>
+    <ul>
+        <li><strong>From:</strong> test@example.com</li>
+        <li><strong>To:</strong> recipient@example.com</li>
+        <li><strong>Subject:</strong> Test Email for Convert Tool</li>
+        <li><strong>Date:</strong> January 1, 2024</li>
+    </ul>
+    
+    <h2 style="color: #34495e;">Content Features:</h2>
+    <ul>
+        <li>Plain text content</li>
+        <li><em>HTML content</em> (this part)</li>
+        <li>Headers and metadata</li>
+        <li>MIME structure</li>
+    </ul>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
+        <p><strong>This email should convert to a PDF that includes:</strong></p>
+        <ol>
+            <li>Email headers (From, To, Subject, Date)</li>
+            <li>Email body content</li>
+            <li>Proper formatting</li>
+        </ol>
+    </div>
+    
+    <h3 style="color: #6c757d;">Important Notes:</h3>
+    <ul>
+        <li>This is a test email only</li>
+        <li>Generated for Stirling PDF testing</li>
+        <li>Contains no sensitive information</li>
+        <li>Should preserve email formatting in PDF</li>
+    </ul>
+    
+    <p>Best regards,<br>
+    <strong>Test Email System</strong></p>
+</body>
+</html>
+
+--------------boundary123456789--

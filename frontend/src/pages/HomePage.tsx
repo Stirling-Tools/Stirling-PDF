@@ -190,6 +190,7 @@ function HomePageContent() {
                 toolMode={!!selectedToolKey}
                 showUpload={true}
                 showBulkActions={!selectedToolKey}
+                supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
                 {...(!selectedToolKey && {
                   onOpenPageEditor: (file) => {
                     handleViewChange("pageEditor");
@@ -217,6 +218,11 @@ function HomePageContent() {
                     } else if (previousMode === 'compress') {
                       selectTool('compress');
                       setCurrentView('compress');
+                      setLeftPanelView('toolContent');
+                      sessionStorage.removeItem('previousMode');
+                    } else if (previousMode === 'convert') {
+                      selectTool('convert');
+                      setCurrentView('convert');
                       setLeftPanelView('toolContent');
                       sessionStorage.removeItem('previousMode');
                     } else {
