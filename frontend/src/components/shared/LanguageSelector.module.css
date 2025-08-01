@@ -44,7 +44,7 @@
 
 /* Dark theme support */
 [data-mantine-color-scheme="dark"] .languageItem {
-  border-right-color: var(--mantine-color-dark-4);
+  border-right-color: var(--mantine-color-dark-3);
 }
 
 [data-mantine-color-scheme="dark"] .languageItem:nth-child(4n) {
@@ -52,11 +52,11 @@
 }
 
 [data-mantine-color-scheme="dark"] .languageItem:nth-child(2n) {
-  border-right-color: var(--mantine-color-dark-4);
+  border-right-color: var(--mantine-color-dark-3);
 }
 
 [data-mantine-color-scheme="dark"] .languageItem:nth-child(3n) {
-  border-right-color: var(--mantine-color-dark-4);
+  border-right-color: var(--mantine-color-dark-3);
 }
 
 /* Responsive text visibility */

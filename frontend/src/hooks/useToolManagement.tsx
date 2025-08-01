@@ -36,6 +36,17 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     description: "Open API documentation",
     endpoints: ["swagger-ui"]
   },
+  ocr: {
+    id: "ocr",
+    icon: <span className="material-symbols-rounded font-size-20">
+      quick_reference_all
+    </span>,
+    component: React.lazy(() => import("../tools/OCR")),
+    maxFiles: -1,
+    category: "utility",
+    description: "Extract text from images using OCR",
+    endpoints: ["ocr-pdf"]
+  },
 
 };
 
