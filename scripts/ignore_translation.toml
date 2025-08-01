@@ -1026,8 +1026,5 @@ ignore = [
 
 [zh_TW]
 ignore = [
-    'lang.dzo',
-    'lang.iku',
-    'lang.que',
     'language.direction',
 ]
