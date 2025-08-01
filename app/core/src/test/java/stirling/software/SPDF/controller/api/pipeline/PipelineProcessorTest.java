@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -20,11 +22,11 @@ import org.springframework.http.ResponseEntity;
 
 import jakarta.servlet.ServletContext;
 
-import stirling.software.common.service.UserServiceInterface;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
+import stirling.software.common.service.UserServiceInterface;
 
 @ExtendWith(MockitoExtension.class)
 class PipelineProcessorTest {
@@ -42,40 +44,46 @@ class PipelineProcessorTest {
         pipelineProcessor = spy(new PipelineProcessor(apiDocService, userService, servletContext));
     }
 
-    @Test
-    void runPipelineWithFilterSetsFlag() throws Exception {
-        PipelineOperation op = new PipelineOperation();
-        op.setOperation("/api/v1/filter/filter-page-count");
-        op.setParameters(Map.of());
-        PipelineConfig config = new PipelineConfig();
-        config.setOperations(List.of(op));
+    @Nested
+    @DisplayName("Pipeline Filtering Tests")
+    class FilteringTests {
 
-        Resource file =
-                new ByteArrayResource("data".getBytes()) {
-                    @Override
-                    public String getFilename() {
-                        return "test.pdf";
-                    }
-                };
+        @Test
+        @DisplayName("Should set filter flag and produce empty output when filter is applied")
+        void runPipelineWithFilterSetsFlag() throws Exception {
+            PipelineOperation op = new PipelineOperation();
+            op.setOperation("/api/v1/filter/filter-page-count");
+            op.setParameters(Map.of());
+            PipelineConfig config = new PipelineConfig();
+            config.setOperations(List.of(op));
 
-        List<Resource> files = List.of(file);
+            Resource file =
+                    new ByteArrayResource("data".getBytes()) {
+                        @Override
+                        public String getFilename() {
+                            return "test.pdf";
+                        }
+                    };
 
-        when(apiDocService.isMultiInput("/api/v1/filter/filter-page-count")).thenReturn(false);
-        when(apiDocService.getExtensionTypes(false, "/api/v1/filter/filter-page-count"))
-                .thenReturn(List.of("pdf"));
-        when(apiDocService.isValidOperation(eq("/api/v1/filter/filter-page-count"), anyMap()))
-                .thenReturn(true);
+            List<Resource> files = List.of(file);
 
-        doReturn(new ResponseEntity<>(new byte[0], HttpStatus.OK))
-                .when(pipelineProcessor)
-                .sendWebRequest(anyString(), any());
+            when(apiDocService.isMultiInput("/api/v1/filter/filter-page-count")).thenReturn(false);
+            when(apiDocService.getExtensionTypes(false, "/api/v1/filter/filter-page-count"))
+                    .thenReturn(List.of("pdf"));
+            when(apiDocService.isValidOperation(eq("/api/v1/filter/filter-page-count"), anyMap()))
+                    .thenReturn(true);
 
-        PipelineResult result = pipelineProcessor.runPipelineAgainstFiles(files, config);
+            doReturn(new ResponseEntity<>(new byte[0], HttpStatus.OK))
+                    .when(pipelineProcessor)
+                    .sendWebRequest(anyString(), any());
 
-        assertTrue(
-                result.isFiltersApplied(),
-                "Filter flag should be true when operation filters file");
-        assertFalse(result.isHasErrors(), "No errors should occur");
-        assertTrue(result.getOutputFiles().isEmpty(), "Filtered file list should be empty");
+            PipelineResult result = pipelineProcessor.runPipelineAgainstFiles(files, config);
+
+            assertTrue(
+                    result.isFiltersApplied(),
+                    "Filter flag should be true when operation filters file");
+            assertFalse(result.isHasErrors(), "No errors should occur");
+            assertTrue(result.getOutputFiles().isEmpty(), "Filtered file list should be empty");
+        }
     }
 }

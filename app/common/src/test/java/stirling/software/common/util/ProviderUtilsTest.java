@@ -1,5 +1,9 @@
 package stirling.software.common.util;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -16,10 +20,6 @@ import stirling.software.common.model.enumeration.UsernameAttribute;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.Provider;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProviderUtils Tests")
@@ -42,7 +42,9 @@ class ProviderUtilsTest {
             boolean result = ProviderUtils.validateProvider(provider);
 
             // Assert
-            assertTrue(result, "Should return true when all required fields are set for GitHubProvider");
+            assertTrue(
+                    result,
+                    "Should return true when all required fields are set for GitHubProvider");
         }
 
         @Test
@@ -58,7 +60,9 @@ class ProviderUtilsTest {
             boolean result = ProviderUtils.validateProvider(provider);
 
             // Assert
-            assertTrue(result, "Should return true when all required fields are set for GoogleProvider");
+            assertTrue(
+                    result,
+                    "Should return true when all required fields are set for GoogleProvider");
         }
     }
 
@@ -76,8 +80,10 @@ class ProviderUtilsTest {
         public static Stream<Arguments> providerParams() {
             Provider generic = null;
             var google =
-                new GoogleProvider(null, "clientSecret", List.of("scope"), UsernameAttribute.EMAIL);
-            var github = new GitHubProvider("clientId", "", List.of("scope"), UsernameAttribute.LOGIN);
+                    new GoogleProvider(
+                            null, "clientSecret", List.of("scope"), UsernameAttribute.EMAIL);
+            var github =
+                    new GitHubProvider("clientId", "", List.of("scope"), UsernameAttribute.LOGIN);
 
             return Stream.of(Arguments.of(generic), Arguments.of(google), Arguments.of(github));
         }

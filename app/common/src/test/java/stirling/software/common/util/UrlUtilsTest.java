@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,8 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UrlUtils Tests")
@@ -39,7 +38,10 @@ class UrlUtilsTest {
             String origin = UrlUtils.getOrigin(request);
 
             // Assert
-            assertEquals("http://localhost:8080/myapp", origin, "Origin URL should be correctly formatted with context path");
+            assertEquals(
+                    "http://localhost:8080/myapp",
+                    origin,
+                    "Origin URL should be correctly formatted with context path");
         }
 
         @Test
@@ -55,7 +57,10 @@ class UrlUtilsTest {
             String origin = UrlUtils.getOrigin(request);
 
             // Assert
-            assertEquals("https://example.com:443", origin, "HTTPS origin URL should be correctly formatted");
+            assertEquals(
+                    "https://example.com:443",
+                    origin,
+                    "HTTPS origin URL should be correctly formatted");
         }
 
         @Test
@@ -71,7 +76,10 @@ class UrlUtilsTest {
             String origin = UrlUtils.getOrigin(request);
 
             // Assert
-            assertEquals("http://localhost:8080", origin, "Origin URL with empty context path should be correct");
+            assertEquals(
+                    "http://localhost:8080",
+                    origin,
+                    "Origin URL with empty context path should be correct");
         }
 
         @Test
@@ -87,8 +95,10 @@ class UrlUtilsTest {
             String origin = UrlUtils.getOrigin(request);
 
             // Assert
-            assertEquals("https://internal-server.example-domain.com:8443/app-v1.2", origin,
-                "Origin URL with special characters should be correctly formatted");
+            assertEquals(
+                    "https://internal-server.example-domain.com:8443/app-v1.2",
+                    origin,
+                    "Origin URL with special characters should be correctly formatted");
         }
 
         @Test
@@ -104,8 +114,10 @@ class UrlUtilsTest {
             String origin = UrlUtils.getOrigin(request);
 
             // Assert
-            assertEquals("http://192.168.1.100:8080/app", origin,
-                "Origin URL with IPv4 address should be correctly formatted");
+            assertEquals(
+                    "http://192.168.1.100:8080/app",
+                    origin,
+                    "Origin URL with IPv4 address should be correctly formatted");
         }
 
         @Test
@@ -121,8 +133,10 @@ class UrlUtilsTest {
             String origin = UrlUtils.getOrigin(request);
 
             // Assert
-            assertEquals("https://example.org:8443/api", origin,
-                "Origin URL with non-standard port should be correctly formatted");
+            assertEquals(
+                    "https://example.org:8443/api",
+                    origin,
+                    "Origin URL with non-standard port should be correctly formatted");
         }
     }
 
@@ -148,11 +162,14 @@ class UrlUtilsTest {
 
                 // Assert
                 assertTrue(initialAvailability, "Port should be available initially");
-                assertFalse(afterSocketCreation, "Port should not be available after socket is created");
+                assertFalse(
+                        afterSocketCreation,
+                        "Port should not be available after socket is created");
             } catch (IOException e) {
                 // If the port is already in use by another process
-                assertFalse(UrlUtils.isPortAvailable(port),
-                    "Port should not be available if exception is thrown");
+                assertFalse(
+                        UrlUtils.isPortAvailable(port),
+                        "Port should not be available if exception is thrown");
             } finally {
                 if (socket != null && !socket.isClosed()) {
                     try {
@@ -178,8 +195,10 @@ class UrlUtilsTest {
                 String availablePort = UrlUtils.findAvailablePort(startPort);
 
                 // Assert the returned port is not the occupied one
-                assertNotEquals(String.valueOf(startPort), availablePort,
-                    "findAvailablePort should not return an occupied port");
+                assertNotEquals(
+                        String.valueOf(startPort),
+                        availablePort,
+                        "findAvailablePort should not return an occupied port");
 
                 // Verify the returned port is actually available
                 int portNumber = Integer.parseInt(availablePort);
@@ -189,8 +208,9 @@ class UrlUtilsTest {
                 socket = null;
 
                 // The port should now be available
-                assertTrue(UrlUtils.isPortAvailable(portNumber),
-                    "The port returned by findAvailablePort should be available");
+                assertTrue(
+                        UrlUtils.isPortAvailable(portNumber),
+                        "The port returned by findAvailablePort should be available");
             } catch (IOException e) {
                 // Skip assertion if we can't create the socket
             } finally {
@@ -215,8 +235,10 @@ class UrlUtilsTest {
                 String availablePort = UrlUtils.findAvailablePort(startPort);
 
                 // Assert the returned port is the start port since it's available
-                assertEquals(String.valueOf(startPort), availablePort,
-                    "findAvailablePort should return the start port if it's available");
+                assertEquals(
+                        String.valueOf(startPort),
+                        availablePort,
+                        "findAvailablePort should return the start port if it's available");
             }
         }
 
@@ -242,8 +264,9 @@ class UrlUtilsTest {
                 int foundPort = Integer.parseInt(availablePort);
 
                 // Should have skipped the two occupied ports
-                assertTrue(foundPort >= startPort + 2,
-                    "findAvailablePort should skip sequential occupied ports");
+                assertTrue(
+                        foundPort >= startPort + 2,
+                        "findAvailablePort should skip sequential occupied ports");
 
                 // Verify the found port is actually available
                 try (ServerSocket testSocket = new ServerSocket(foundPort)) {

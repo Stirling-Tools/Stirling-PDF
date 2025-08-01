@@ -47,7 +47,7 @@ class LanguageServiceTest {
         void testGetSupportedLanguages_NoRestrictions() throws IOException {
             // Setup
             Set<String> expectedLanguages =
-                new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
+                    new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
 
             // Mock the resource resolver response
             Resource[] mockResources = createMockResources(expectedLanguages);
@@ -61,9 +61,9 @@ class LanguageServiceTest {
 
             // Verify
             assertEquals(
-                expectedLanguages,
-                supportedLanguages,
-                "Should return all languages when no restrictions");
+                    expectedLanguages,
+                    supportedLanguages,
+                    "Should return all languages when no restrictions");
         }
 
         @Test
@@ -71,7 +71,7 @@ class LanguageServiceTest {
         void testGetSupportedLanguages_WithRestrictions() throws IOException {
             // Setup
             Set<String> expectedLanguages =
-                new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
+                    new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
             Set<String> allowedLanguages = new HashSet<>(Arrays.asList("en_US", "fr_FR", "en_GB"));
 
             // Mock the resource resolver response
@@ -80,16 +80,16 @@ class LanguageServiceTest {
 
             // Set language restrictions in properties
             when(applicationProperties.getUi().getLanguages())
-                .thenReturn(Arrays.asList("en_US", "fr_FR")); // en_GB is always allowed
+                    .thenReturn(Arrays.asList("en_US", "fr_FR")); // en_GB is always allowed
 
             // Test
             Set<String> supportedLanguages = languageService.getSupportedLanguages();
 
             // Verify
             assertEquals(
-                allowedLanguages,
-                supportedLanguages,
-                "Should return only allowed languages, plus en_GB which is always allowed");
+                    allowedLanguages,
+                    supportedLanguages,
+                    "Should return only allowed languages, plus en_GB which is always allowed");
             assertTrue(supportedLanguages.contains("en_GB"), "en_GB should always be included");
         }
 
@@ -111,15 +111,15 @@ class LanguageServiceTest {
         void testGetSupportedLanguages_FilteringNonMatchingFiles() throws IOException {
             // Setup with some valid and some invalid filenames
             Resource[] mixedResources =
-                new Resource[] {
-                    createMockResource("messages_en_US.properties"),
-                    createMockResource(
-                        "messages_en_GB.properties"), // Explicitly add en_GB resource
-                    createMockResource("messages_fr_FR.properties"),
-                    createMockResource("not_a_messages_file.properties"),
-                    createMockResource("messages_.properties"), // Invalid format
-                    createMockResource(null) // Null filename
-                };
+                    new Resource[] {
+                        createMockResource("messages_en_US.properties"),
+                        createMockResource(
+                                "messages_en_GB.properties"), // Explicitly add en_GB resource
+                        createMockResource("messages_fr_FR.properties"),
+                        createMockResource("not_a_messages_file.properties"),
+                        createMockResource("messages_.properties"), // Invalid format
+                        createMockResource(null) // Null filename
+                    };
 
             ((LanguageServiceForTest) languageService).setMockResources(mixedResources);
             when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
@@ -134,16 +134,16 @@ class LanguageServiceTest {
 
             // Verify no invalid formats are included
             assertFalse(
-                supportedLanguages.contains("not_a_messages_file"),
-                "Invalid format should be excluded");
+                    supportedLanguages.contains("not_a_messages_file"),
+                    "Invalid format should be excluded");
         }
     }
 
     // Helper methods to create mock resources
     private Resource[] createMockResources(Set<String> languages) {
         return languages.stream()
-            .map(lang -> createMockResource("messages_" + lang + ".properties"))
-            .toArray(Resource[]::new);
+                .map(lang -> createMockResource("messages_" + lang + ".properties"))
+                .toArray(Resource[]::new);
     }
 
     private Resource createMockResource(String filename) {

@@ -1,6 +1,6 @@
 package stirling.software.common.service;
 
-
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
@@ -22,26 +22,23 @@ import org.springframework.test.util.ReflectionTestUtils;
 import stirling.software.common.service.ResourceMonitor.ResourceMetrics;
 import stirling.software.common.service.ResourceMonitor.ResourceStatus;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ResourceMonitor Tests")
 class ResourceMonitorTest {
 
-    @InjectMocks
-    private ResourceMonitor resourceMonitor;
+    @InjectMocks private ResourceMonitor resourceMonitor;
 
-    @Mock
-    private OperatingSystemMXBean osMXBean;
+    @Mock private OperatingSystemMXBean osMXBean;
 
-    @Mock
-    private MemoryMXBean memoryMXBean;
+    @Mock private MemoryMXBean memoryMXBean;
 
     @Spy
-    private AtomicReference<ResourceStatus> currentStatus = new AtomicReference<>(ResourceStatus.OK);
+    private AtomicReference<ResourceStatus> currentStatus =
+            new AtomicReference<>(ResourceStatus.OK);
 
     @Spy
-    private AtomicReference<ResourceMetrics> latestMetrics = new AtomicReference<>(new ResourceMetrics());
+    private AtomicReference<ResourceMetrics> latestMetrics =
+            new AtomicReference<>(new ResourceMetrics());
 
     @BeforeEach
     void setUp() {
@@ -57,7 +54,8 @@ class ResourceMonitorTest {
     }
 
     @Test
-    @DisplayName("calculateDynamicQueueCapacity returns adjusted capacities based on resource status")
+    @DisplayName(
+            "calculateDynamicQueueCapacity returns adjusted capacities based on resource status")
     void shouldCalculateDynamicQueueCapacity() {
         int baseCapacity = 10;
         int minCapacity = 2;
@@ -65,7 +63,8 @@ class ResourceMonitorTest {
         // When status is OK
         currentStatus.set(ResourceStatus.OK);
         int capacity = resourceMonitor.calculateDynamicQueueCapacity(baseCapacity, minCapacity);
-        assertEquals(baseCapacity, capacity, "Capacity should match base capacity when status is OK");
+        assertEquals(
+                baseCapacity, capacity, "Capacity should match base capacity when status is OK");
 
         // When status is WARNING
         currentStatus.set(ResourceStatus.WARNING);
@@ -75,7 +74,8 @@ class ResourceMonitorTest {
         // When status is CRITICAL
         currentStatus.set(ResourceStatus.CRITICAL);
         capacity = resourceMonitor.calculateDynamicQueueCapacity(baseCapacity, minCapacity);
-        assertEquals(3, capacity, "Capacity should be 30% of base capacity when status is CRITICAL");
+        assertEquals(
+                3, capacity, "Capacity should be 30% of base capacity when status is CRITICAL");
 
         // Capacity should not go below minimum capacity
         int smallBase = 1;
@@ -85,24 +85,28 @@ class ResourceMonitorTest {
 
     @ParameterizedTest(name = "Job weight: {0}, Status: {1} -> shouldQueue: {2}")
     @CsvSource({
-        "10, OK, false",      // Light job, OK status
+        "10, OK, false", // Light job, OK status
         "10, WARNING, false", // Light job, WARNING status
         "10, CRITICAL, true", // Light job, CRITICAL status
-        "30, OK, false",      // Medium job, OK status
-        "30, WARNING, true",  // Medium job, WARNING status
+        "30, OK, false", // Medium job, OK status
+        "30, WARNING, true", // Medium job, WARNING status
         "30, CRITICAL, true", // Medium job, CRITICAL status
-        "80, OK, true",       // Heavy job, OK status
-        "80, WARNING, true",  // Heavy job, WARNING status
-        "80, CRITICAL, true"  // Heavy job, CRITICAL status
+        "80, OK, true", // Heavy job, OK status
+        "80, WARNING, true", // Heavy job, WARNING status
+        "80, CRITICAL, true" // Heavy job, CRITICAL status
     })
     @DisplayName("shouldQueueJob correctly determines queuing based on weight and resource status")
-    void shouldQueueJobBasedOnWeightAndStatus(int jobWeight, ResourceStatus status, boolean expected) {
+    void shouldQueueJobBasedOnWeightAndStatus(
+            int jobWeight, ResourceStatus status, boolean expected) {
         currentStatus.set(status);
         boolean actual = resourceMonitor.shouldQueueJob(jobWeight);
-        assertEquals(expected, actual,
-            () -> String.format(
-                "Expected shouldQueue=%s for jobWeight=%d and status=%s",
-                expected, jobWeight, status));
+        assertEquals(
+                expected,
+                actual,
+                () ->
+                        String.format(
+                                "Expected shouldQueue=%s for jobWeight=%d and status=%s",
+                                expected, jobWeight, status));
     }
 
     @Test
@@ -113,7 +117,9 @@ class ResourceMonitorTest {
         ResourceMetrics staleMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, staleTime);
         ResourceMetrics freshMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, now);
 
-        assertTrue(staleMetrics.isStale(5000), "Metrics timestamp older than threshold should be stale");
+        assertTrue(
+                staleMetrics.isStale(5000),
+                "Metrics timestamp older than threshold should be stale");
         assertFalse(freshMetrics.isStale(5000), "Recent metrics should not be stale");
     }
 }

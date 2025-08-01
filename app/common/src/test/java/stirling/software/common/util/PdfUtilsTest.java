@@ -36,15 +36,23 @@ public class PdfUtilsTest {
         @Test
         @DisplayName("Returns correct PDRectangle for supported page size strings")
         void testTextToPageSize_ValidInput() {
-            assertEquals(PDRectangle.A4, PdfUtils.textToPageSize("A4"), "Should return A4 size for 'A4' input");
-            assertEquals(PDRectangle.LETTER, PdfUtils.textToPageSize("LETTER"), "Should return LETTER size for 'LETTER' input");
+            assertEquals(
+                    PDRectangle.A4,
+                    PdfUtils.textToPageSize("A4"),
+                    "Should return A4 size for 'A4' input");
+            assertEquals(
+                    PDRectangle.LETTER,
+                    PdfUtils.textToPageSize("LETTER"),
+                    "Should return LETTER size for 'LETTER' input");
         }
 
         @Test
         @DisplayName("Throws IllegalArgumentException for invalid page size string")
         void testTextToPageSize_InvalidInput() {
-            assertThrows(IllegalArgumentException.class, () -> PdfUtils.textToPageSize("INVALID"),
-                "Should throw exception for invalid page size string");
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> PdfUtils.textToPageSize("INVALID"),
+                    "Should throw exception for invalid page size string");
         }
     }
 
@@ -61,7 +69,9 @@ public class PdfUtilsTest {
             Mockito.when(page.getResources()).thenReturn(resources);
             Mockito.when(resources.getXObjectNames()).thenReturn(Collections.emptySet());
 
-            assertFalse(PdfUtils.hasImagesOnPage(page), "Should return false when no images are present");
+            assertFalse(
+                    PdfUtils.hasImagesOnPage(page),
+                    "Should return false when no images are present");
         }
 
         @Test
@@ -80,7 +90,8 @@ public class PdfUtilsTest {
             Mockito.when(resources.getXObjectNames()).thenReturn(xObjectNames);
             Mockito.when(resources.getXObject(cosName)).thenReturn(imageXObject);
 
-            assertTrue(PdfUtils.hasImagesOnPage(page), "Should return true when images are present");
+            assertTrue(
+                    PdfUtils.hasImagesOnPage(page), "Should return true when images are present");
         }
     }
 
@@ -96,7 +107,9 @@ public class PdfUtilsTest {
             doc.addPage(new PDPage());
             doc.addPage(new PDPage());
             PdfUtils utils = new PdfUtils();
-            assertTrue(utils.pageCount(doc, 2, "greater"), "Should return true for page count greater than 2");
+            assertTrue(
+                    utils.pageCount(doc, 2, "greater"),
+                    "Should return true for page count greater than 2");
             doc.close();
         }
 
@@ -108,7 +121,9 @@ public class PdfUtilsTest {
             doc.addPage(new PDPage());
             doc.addPage(new PDPage());
             PdfUtils utils = new PdfUtils();
-            assertTrue(utils.pageCount(doc, 3, "equal"), "Should return true for page count equal to 3");
+            assertTrue(
+                    utils.pageCount(doc, 3, "equal"),
+                    "Should return true for page count equal to 3");
             doc.close();
         }
 
@@ -119,7 +134,9 @@ public class PdfUtilsTest {
             doc.addPage(new PDPage());
             doc.addPage(new PDPage());
             PdfUtils utils = new PdfUtils();
-            assertTrue(utils.pageCount(doc, 5, "less"), "Should return true for page count less than 5");
+            assertTrue(
+                    utils.pageCount(doc, 5, "less"),
+                    "Should return true for page count less than 5");
             doc.close();
         }
 
@@ -129,8 +146,10 @@ public class PdfUtilsTest {
             PDDocument doc = new PDDocument();
             doc.addPage(new PDPage());
             PdfUtils utils = new PdfUtils();
-            assertThrows(IllegalArgumentException.class, () -> utils.pageCount(doc, 1, "bad"),
-                "Should throw exception for invalid comparator");
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> utils.pageCount(doc, 1, "bad"),
+                    "Should throw exception for invalid comparator");
             doc.close();
         }
     }
@@ -148,7 +167,9 @@ public class PdfUtilsTest {
             PDRectangle rect = page.getMediaBox();
             String expected = rect.getWidth() + "x" + rect.getHeight();
             PdfUtils utils = new PdfUtils();
-            assertTrue(utils.pageSize(doc, expected), "Should return true for matching page dimensions");
+            assertTrue(
+                    utils.pageSize(doc, expected),
+                    "Should return true for matching page dimensions");
             doc.close();
         }
     }
@@ -175,14 +196,17 @@ public class PdfUtilsTest {
             javax.imageio.ImageIO.write(image, "png", imgOut);
 
             PdfMetadataService meta =
-                new PdfMetadataService(new ApplicationProperties(), "label", false, null);
+                    new PdfMetadataService(new ApplicationProperties(), "label", false, null);
             CustomPDFDocumentFactory factory = new CustomPDFDocumentFactory(meta);
 
             byte[] result =
-                PdfUtils.overlayImage(
-                    factory, pdfOut.toByteArray(), imgOut.toByteArray(), 0, 0, false);
+                    PdfUtils.overlayImage(
+                            factory, pdfOut.toByteArray(), imgOut.toByteArray(), 0, 0, false);
             try (PDDocument resultDoc = factory.load(result)) {
-                assertEquals(1, resultDoc.getNumberOfPages(), "Should preserve the original page count after overlay");
+                assertEquals(
+                        1,
+                        resultDoc.getNumberOfPages(),
+                        "Should preserve the original page count after overlay");
             }
         }
     }

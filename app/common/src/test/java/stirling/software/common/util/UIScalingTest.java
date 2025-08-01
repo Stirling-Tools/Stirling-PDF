@@ -1,6 +1,9 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 import java.awt.Dimension;
 import java.awt.Font;
@@ -15,10 +18,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @DisplayName("UIScaling Tests")
 class UIScalingTest {
@@ -58,7 +57,8 @@ class UIScalingTest {
             double scaleFactor = UIScaling.getWidthScaleFactor();
 
             // Assert
-            assertEquals(2.0, scaleFactor, 0.001, "Width scale factor should be 2.0 for 4K resolution");
+            assertEquals(
+                    2.0, scaleFactor, 0.001, "Width scale factor should be 2.0 for 4K resolution");
             verify(mockedDefaultToolkit, times(1)).getScreenSize();
         }
 
@@ -73,7 +73,8 @@ class UIScalingTest {
             double scaleFactor = UIScaling.getHeightScaleFactor();
 
             // Assert
-            assertEquals(2.0, scaleFactor, 0.001, "Height scale factor should be 2.0 for 4K resolution");
+            assertEquals(
+                    2.0, scaleFactor, 0.001, "Height scale factor should be 2.0 for 4K resolution");
             verify(mockedDefaultToolkit, times(1)).getScreenSize();
         }
 
@@ -88,7 +89,8 @@ class UIScalingTest {
             double scaleFactor = UIScaling.getWidthScaleFactor();
 
             // Assert
-            assertEquals(1.0, scaleFactor, 0.001, "Width scale factor should be 1.0 for HD resolution");
+            assertEquals(
+                    1.0, scaleFactor, 0.001, "Width scale factor should be 1.0 for HD resolution");
         }
 
         @Test
@@ -102,7 +104,8 @@ class UIScalingTest {
             double scaleFactor = UIScaling.getHeightScaleFactor();
 
             // Assert
-            assertEquals(1.0, scaleFactor, 0.001, "Height scale factor should be 1.0 for HD resolution");
+            assertEquals(
+                    1.0, scaleFactor, 0.001, "Height scale factor should be 1.0 for HD resolution");
         }
 
         @Test
@@ -116,7 +119,11 @@ class UIScalingTest {
             double scaleFactor = UIScaling.getWidthScaleFactor();
 
             // Assert
-            assertEquals(0.711, scaleFactor, 0.001, "Width scale factor should be ~0.711 for 1366x768 resolution");
+            assertEquals(
+                    0.711,
+                    scaleFactor,
+                    0.001,
+                    "Width scale factor should be ~0.711 for 1366x768 resolution");
         }
 
         @Test
@@ -130,7 +137,11 @@ class UIScalingTest {
             double scaleFactor = UIScaling.getHeightScaleFactor();
 
             // Assert
-            assertEquals(0.711, scaleFactor, 0.001, "Height scale factor should be ~0.711 for 1366x768 resolution");
+            assertEquals(
+                    0.711,
+                    scaleFactor,
+                    0.001,
+                    "Height scale factor should be ~0.711 for 1366x768 resolution");
         }
     }
 
@@ -149,7 +160,8 @@ class UIScalingTest {
             int scaledWidth = UIScaling.scaleWidth(100);
 
             // Assert
-            assertEquals(200, scaledWidth, "Width should be scaled by factor of 2 for 4K resolution");
+            assertEquals(
+                    200, scaledWidth, "Width should be scaled by factor of 2 for 4K resolution");
         }
 
         @Test
@@ -163,7 +175,8 @@ class UIScalingTest {
             int scaledHeight = UIScaling.scaleHeight(100);
 
             // Assert
-            assertEquals(200, scaledHeight, "Height should be scaled by factor of 2 for 4K resolution");
+            assertEquals(
+                    200, scaledHeight, "Height should be scaled by factor of 2 for 4K resolution");
         }
 
         @Test
@@ -177,7 +190,8 @@ class UIScalingTest {
             int scaledWidth = UIScaling.scaleWidth(100);
 
             // Assert
-            assertEquals(50, scaledWidth, "Width should be scaled by factor of 0.5 for small screen");
+            assertEquals(
+                    50, scaledWidth, "Width should be scaled by factor of 0.5 for small screen");
         }
 
         @Test
@@ -191,7 +205,8 @@ class UIScalingTest {
             int scaledHeight = UIScaling.scaleHeight(100);
 
             // Assert
-            assertEquals(50, scaledHeight, "Height should be scaled by factor of 0.5 for small screen");
+            assertEquals(
+                    50, scaledHeight, "Height should be scaled by factor of 0.5 for small screen");
         }
 
         @Test
@@ -237,7 +252,8 @@ class UIScalingTest {
             // Verify the original insets are not modified
             assertEquals(10, originalInsets.top, "Original top inset should remain unchanged");
             assertEquals(20, originalInsets.left, "Original left inset should remain unchanged");
-            assertEquals(30, originalInsets.bottom, "Original bottom inset should remain unchanged");
+            assertEquals(
+                    30, originalInsets.bottom, "Original bottom inset should remain unchanged");
             assertEquals(40, originalInsets.right, "Original right inset should remain unchanged");
         }
     }
@@ -258,7 +274,11 @@ class UIScalingTest {
             Font scaledFont = UIScaling.scaleFont(originalFont);
 
             // Assert
-            assertEquals(24.0f, scaledFont.getSize2D(), 0.001f, "Font size should be scaled by factor of 2");
+            assertEquals(
+                    24.0f,
+                    scaledFont.getSize2D(),
+                    0.001f,
+                    "Font size should be scaled by factor of 2");
             assertEquals(Font.PLAIN, scaledFont.getStyle(), "Font style should remain unchanged");
         }
 
@@ -266,7 +286,8 @@ class UIScalingTest {
         @DisplayName("Scales font size by factor of ~1.33 for 2560x1440 resolution")
         void testScaleFont_DifferentWidthHeightScales() {
             // Arrange - Different width and height scaling factors
-            Dimension screenSize = new Dimension(2560, 1440); // ~1.33x width, ~1.33x height of base resolution
+            Dimension screenSize =
+                    new Dimension(2560, 1440); // ~1.33x width, ~1.33x height of base resolution
             when(mockedDefaultToolkit.getScreenSize()).thenReturn(screenSize);
             Font originalFont = new Font("Arial", Font.PLAIN, 12);
 
@@ -274,7 +295,11 @@ class UIScalingTest {
             Font scaledFont = UIScaling.scaleFont(originalFont);
 
             // Assert
-            assertEquals(16.0f, scaledFont.getSize2D(), 0.001f, "Font size should be scaled by factor of ~1.33");
+            assertEquals(
+                    16.0f,
+                    scaledFont.getSize2D(),
+                    0.001f,
+                    "Font size should be scaled by factor of ~1.33");
         }
 
         @Test
@@ -289,7 +314,11 @@ class UIScalingTest {
             Font scaledFont = UIScaling.scaleFont(originalFont);
 
             // Assert - should use the smaller of the two scale factors (height in this case)
-            assertEquals(12.0f, scaledFont.getSize2D(), 0.001f, "Font size should be scaled by the smaller factor (1.0)");
+            assertEquals(
+                    12.0f,
+                    scaledFont.getSize2D(),
+                    0.001f,
+                    "Font size should be scaled by the smaller factor (1.0)");
         }
     }
 

@@ -25,17 +25,17 @@ class CustomColorReplaceStrategyTest {
     void setUp() {
         // Create a mock file
         mockFile =
-            new MockMultipartFile(
-                "file", "test.pdf", "application/pdf", "test pdf content".getBytes());
+                new MockMultipartFile(
+                        "file", "test.pdf", "application/pdf", "test pdf content".getBytes());
 
         // Initialize strategy with custom colors
         strategy =
-            new CustomColorReplaceStrategy(
-                mockFile,
-                ReplaceAndInvert.CUSTOM_COLOR,
-                "000000", // Black text color
-                "FFFFFF", // White background color
-                null); // Not using high contrast combination for CUSTOM_COLOR
+                new CustomColorReplaceStrategy(
+                        mockFile,
+                        ReplaceAndInvert.CUSTOM_COLOR,
+                        "000000", // Black text color
+                        "FFFFFF", // White background color
+                        null); // Not using high contrast combination for CUSTOM_COLOR
     }
 
     @Nested
@@ -47,9 +47,14 @@ class CustomColorReplaceStrategyTest {
         void testConstructor() {
             // Test the constructor sets values correctly
             assertNotNull(strategy, "Strategy instance should not be null");
-            assertEquals(mockFile, strategy.getFileInput(), "File input should match the provided value");
-            assertEquals(ReplaceAndInvert.CUSTOM_COLOR, strategy.getReplaceAndInvert(),
-                "ReplaceAndInvert option should match the provided value");
+            assertEquals(
+                    mockFile,
+                    strategy.getFileInput(),
+                    "File input should match the provided value");
+            assertEquals(
+                    ReplaceAndInvert.CUSTOM_COLOR,
+                    strategy.getReplaceAndInvert(),
+                    "ReplaceAndInvert option should match the provided value");
         }
     }
 
@@ -62,8 +67,8 @@ class CustomColorReplaceStrategyTest {
         void testCheckSupportedFontForCharacter() throws Exception {
             // Use reflection to access private method
             Method method =
-                CustomColorReplaceStrategy.class.getDeclaredMethod(
-                    "checkSupportedFontForCharacter", String.class);
+                    CustomColorReplaceStrategy.class.getDeclaredMethod(
+                            "checkSupportedFontForCharacter", String.class);
             method.setAccessible(true);
 
             // Test with ASCII character which should be supported by standard fonts
@@ -76,12 +81,12 @@ class CustomColorReplaceStrategyTest {
         void testHighContrastColors() {
             // Create a new strategy with HIGH_CONTRAST_COLOR setting
             CustomColorReplaceStrategy highContrastStrategy =
-                new CustomColorReplaceStrategy(
-                    mockFile,
-                    ReplaceAndInvert.HIGH_CONTRAST_COLOR,
-                    null, // These will be overridden by the high contrast settings
-                    null,
-                    HighContrastColorCombination.BLACK_TEXT_ON_WHITE);
+                    new CustomColorReplaceStrategy(
+                            mockFile,
+                            ReplaceAndInvert.HIGH_CONTRAST_COLOR,
+                            null, // These will be overridden by the high contrast settings
+                            null,
+                            HighContrastColorCombination.BLACK_TEXT_ON_WHITE);
 
             // Verify the colors after replace() is called
             try {
@@ -97,10 +102,10 @@ class CustomColorReplaceStrategyTest {
 
                 // Use reflection to access private fields
                 java.lang.reflect.Field textColorField =
-                    CustomColorReplaceStrategy.class.getDeclaredField("textColor");
+                        CustomColorReplaceStrategy.class.getDeclaredField("textColor");
                 textColorField.setAccessible(true);
                 java.lang.reflect.Field backgroundColorField =
-                    CustomColorReplaceStrategy.class.getDeclaredField("backgroundColor");
+                        CustomColorReplaceStrategy.class.getDeclaredField("backgroundColor");
                 backgroundColorField.setAccessible(true);
 
                 String textColor = (String) textColorField.get(highContrastStrategy);
@@ -110,7 +115,7 @@ class CustomColorReplaceStrategyTest {
                 // "16777215"
                 assertEquals("0", textColor, "Text color should be black (0)");
                 assertEquals(
-                    "16777215", backgroundColor, "Background color should be white (16777215)");
+                        "16777215", backgroundColor, "Background color should be white (16777215)");
 
             } catch (Exception e) {
                 // If we get here, the test failed

@@ -1,6 +1,9 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -19,10 +22,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.general.RotatePDFRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
-import java.io.IOException;
-
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RotationController Tests")
 class RotationControllerTest {
@@ -40,7 +39,8 @@ class RotationControllerTest {
         void testRotatePDF() throws IOException {
             // Arrange
             MockMultipartFile mockFile =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
+                    new MockMultipartFile(
+                            "file", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
             RotatePDFRequest request = new RotatePDFRequest();
             request.setFileInput(mockFile);
             request.setAngle(90);
@@ -52,7 +52,7 @@ class RotationControllerTest {
             when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
             when(mockDocument.getPages()).thenReturn(mockPages);
             when(mockPages.iterator())
-                .thenReturn(java.util.Collections.singletonList(mockPage).iterator());
+                    .thenReturn(java.util.Collections.singletonList(mockPage).iterator());
             when(mockPage.getRotation()).thenReturn(0);
 
             // Act
@@ -74,17 +74,18 @@ class RotationControllerTest {
         void testRotatePDFInvalidAngle() throws IOException {
             // Arrange
             MockMultipartFile mockFile =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
+                    new MockMultipartFile(
+                            "file", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
             RotatePDFRequest request = new RotatePDFRequest();
             request.setFileInput(mockFile);
             request.setAngle(45); // Invalid angle
 
             // Act & Assert
             IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> rotationController.rotatePDF(request));
-        assertEquals("Angle must be a multiple of 90", exception.getMessage());
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> rotationController.rotatePDF(request));
+            assertEquals("Angle must be a multiple of 90", exception.getMessage());
+        }
     }
 }
-    }

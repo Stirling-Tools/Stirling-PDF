@@ -87,7 +87,8 @@ class StringToMapPropertyEditorTest {
         @DisplayName("Set as text handles nested JSON as string values")
         void testSetAsText_NestedJson() {
             // Arrange
-            String json = "{\"key1\":\"value1\",\"key2\":\"{\\\"nestedKey\\\":\\\"nestedValue\\\"}\"}";
+            String json =
+                    "{\"key1\":\"value1\",\"key2\":\"{\\\"nestedKey\\\":\\\"nestedValue\\\"}\"}";
 
             // Act
             editor.setAsText(json);
@@ -101,8 +102,10 @@ class StringToMapPropertyEditorTest {
             Map<String, String> map = (Map<String, String>) value;
             assertEquals(2, map.size(), "Map should contain 2 entries");
             assertEquals("value1", map.get("key1"), "First entry should be key1=value1");
-            assertEquals("{\"nestedKey\":\"nestedValue\"}", map.get("key2"),
-                "Second entry should be the nested JSON as a string");
+            assertEquals(
+                    "{\"nestedKey\":\"nestedValue\"}",
+                    map.get("key2"),
+                    "Second entry should be the nested JSON as a string");
         }
     }
 
@@ -118,19 +121,25 @@ class StringToMapPropertyEditorTest {
 
             // Act & Assert
             IllegalArgumentException exception =
-                assertThrows(IllegalArgumentException.class, () -> editor.setAsText(json),
-                    "Should throw IllegalArgumentException for invalid JSON");
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> editor.setAsText(json),
+                            "Should throw IllegalArgumentException for invalid JSON");
 
-            assertEquals("Failed to convert java.lang.String to java.util.Map", exception.getMessage(),
-                "Exception message should match expected error");
+            assertEquals(
+                    "Failed to convert java.lang.String to java.util.Map",
+                    exception.getMessage(),
+                    "Exception message should match expected error");
         }
 
         @Test
         @DisplayName("Set as text throws IllegalArgumentException for null input")
         void testSetAsText_Null() {
             // Act & Assert
-            assertThrows(IllegalArgumentException.class, () -> editor.setAsText(null),
-                "Should throw IllegalArgumentException for null input");
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> editor.setAsText(null),
+                    "Should throw IllegalArgumentException for null input");
         }
     }
 }

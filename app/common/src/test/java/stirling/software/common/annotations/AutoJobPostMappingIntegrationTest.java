@@ -1,5 +1,8 @@
 package stirling.software.common.annotations;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.util.function.Supplier;
 
@@ -14,15 +17,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import stirling.software.common.aop.AutoJobAspect;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileOrUploadService;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AutoJobPostMapping Integration Tests")
@@ -38,7 +38,7 @@ class AutoJobPostMappingIntegrationTest {
 
     @Mock private FileStorage fileStorage;
 
-    @InjectMocks private AutoJobAspect aspectInjected;  // Optional - for @InjectMocks based usage
+    @InjectMocks private AutoJobAspect aspectInjected; // Optional - for @InjectMocks based usage
 
     @Mock private ProceedingJoinPoint joinPoint;
 
@@ -57,12 +57,8 @@ class AutoJobPostMappingIntegrationTest {
     @BeforeEach
     void setUp() {
         // Setting up the AutoJobAspect with mocks (manual or use @InjectMocks)
-        autoJobAspect = new AutoJobAspect(
-            jobExecutorService,
-            request,
-            fileOrUploadService,
-            fileStorage
-        );
+        autoJobAspect =
+                new AutoJobAspect(jobExecutorService, request, fileOrUploadService, fileStorage);
     }
 
     @Test
@@ -71,7 +67,7 @@ class AutoJobPostMappingIntegrationTest {
         // Arrange: Create PDFFile argument with fileId set
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileId("test-file-id");
-        Object[] args = new Object[] { pdfFile };
+        Object[] args = new Object[] {pdfFile};
 
         when(joinPoint.getArgs()).thenReturn(args);
 
@@ -87,21 +83,25 @@ class AutoJobPostMappingIntegrationTest {
         when(fileStorage.retrieveFile("test-file-id")).thenReturn(mockFile);
 
         when(jobExecutorService.runJobGeneric(
-            anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
-            .thenReturn(ResponseEntity.ok("success"));
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                .thenReturn(ResponseEntity.ok("success"));
 
         // Act
         Object result = autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
 
         // Assert
-        assertEquals(ResponseEntity.ok("success"), result, "Job execution should return success response");
+        assertEquals(
+                ResponseEntity.ok("success"),
+                result,
+                "Job execution should return success response");
 
-        verify(jobExecutorService).runJobGeneric(
-            asyncCaptor.capture(),
-            workCaptor.capture(),
-            timeoutCaptor.capture(),
-            queueableCaptor.capture(),
-            resourceWeightCaptor.capture());
+        verify(jobExecutorService)
+                .runJobGeneric(
+                        asyncCaptor.capture(),
+                        workCaptor.capture(),
+                        timeoutCaptor.capture(),
+                        queueableCaptor.capture(),
+                        resourceWeightCaptor.capture());
 
         // Validate the captured arguments against expected values
         assertTrue(asyncCaptor.getValue(), "Async flag should be true");
@@ -128,19 +128,20 @@ class AutoJobPostMappingIntegrationTest {
 
         // Setup joinPoint.proceed() to throw on first call, succeed on second
         when(joinPoint.proceed(any()))
-            .thenThrow(new RuntimeException("First attempt failed"))
-            .thenReturn(ResponseEntity.ok("retry succeeded"));
+                .thenThrow(new RuntimeException("First attempt failed"))
+                .thenReturn(ResponseEntity.ok("retry succeeded"));
 
         // We simulate runJobGeneric immediately invoking the Supplier work
         when(jobExecutorService.runJobGeneric(
-            anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
-            .thenAnswer(invocation -> invocation.getArgument(1, Supplier.class).get());
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                .thenAnswer(invocation -> invocation.getArgument(1, Supplier.class).get());
 
         // Act
         Object result = autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
 
         // Assert
-        assertEquals(ResponseEntity.ok("retry succeeded"), result, "Job should succeed after retry");
+        assertEquals(
+                ResponseEntity.ok("retry succeeded"), result, "Job should succeed after retry");
 
         // Verify joinPoint.proceed was called twice due to retry
         verify(joinPoint, times(2)).proceed(any());
@@ -154,7 +155,7 @@ class AutoJobPostMappingIntegrationTest {
         MultipartFile mockMultipartFile = mock(MultipartFile.class);
         pdfFile.setFileInput(mockMultipartFile);
 
-        Object[] args = new Object[] { pdfFile };
+        Object[] args = new Object[] {pdfFile};
         when(joinPoint.getArgs()).thenReturn(args);
         when(request.getParameter("async")).thenReturn("true");
         when(autoJobPostMapping.retryCount()).thenReturn(1);
@@ -163,14 +164,17 @@ class AutoJobPostMappingIntegrationTest {
         when(fileStorage.retrieveFile("stored-file-id")).thenReturn(mockMultipartFile);
 
         when(jobExecutorService.runJobGeneric(
-            anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
-            .thenReturn(ResponseEntity.ok("success"));
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                .thenReturn(ResponseEntity.ok("success"));
 
         // Act
         autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
 
         // Assert PDFFile state updated correctly
-        assertEquals("stored-file-id", pdfFile.getFileId(), "PDFFile should have updated fileId after storage");
+        assertEquals(
+                "stored-file-id",
+                pdfFile.getFileId(),
+                "PDFFile should have updated fileId after storage");
         assertNotNull(pdfFile.getFileInput(), "PDFFile fileInput should be set to stored file");
 
         // Verify file storage methods were called

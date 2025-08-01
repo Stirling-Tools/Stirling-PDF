@@ -1,13 +1,15 @@
 package stirling.software.common.util.propertyeditor;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import stirling.software.common.model.api.security.RedactionArea;
 
-import static org.junit.jupiter.api.Assertions.*;
+import stirling.software.common.model.api.security.RedactionArea;
 
 @DisplayName("StringToArrayListPropertyEditor Tests")
 class StringToArrayListPropertyEditorTest {
@@ -28,7 +30,7 @@ class StringToArrayListPropertyEditorTest {
         void testSetAsText_ValidJson() {
             // Arrange
             String json =
-                "[{\"x\":10.5,\"y\":20.5,\"width\":100.0,\"height\":50.0,\"page\":1,\"color\":\"#FF0000\"}]";
+                    "[{\"x\":10.5,\"y\":20.5,\"width\":100.0,\"height\":50.0,\"page\":1,\"color\":\"#FF0000\"}]";
 
             // Act
             editor.setAsText(json);
@@ -56,10 +58,10 @@ class StringToArrayListPropertyEditorTest {
         void testSetAsText_MultipleItems() {
             // Arrange
             String json =
-                "["
-                    + "{\"x\":10.0,\"y\":20.0,\"width\":100.0,\"height\":50.0,\"page\":1,\"color\":\"#FF0000\"},"
-                    + "{\"x\":30.0,\"y\":40.0,\"width\":200.0,\"height\":150.0,\"page\":2,\"color\":\"#00FF00\"}"
-                    + "]";
+                    "["
+                            + "{\"x\":10.0,\"y\":20.0,\"width\":100.0,\"height\":50.0,\"page\":1,\"color\":\"#FF0000\"},"
+                            + "{\"x\":30.0,\"y\":40.0,\"width\":200.0,\"height\":150.0,\"page\":2,\"color\":\"#00FF00\"}"
+                            + "]";
 
             // Act
             editor.setAsText(json);
@@ -89,7 +91,7 @@ class StringToArrayListPropertyEditorTest {
         void testSetAsText_SingleItemAsArray() {
             // Arrange - note this is a single object, not an array
             String json =
-                "{\"x\":10.0,\"y\":20.0,\"width\":100.0,\"height\":50.0,\"page\":1,\"color\":\"#FF0000\"}";
+                    "{\"x\":10.0,\"y\":20.0,\"width\":100.0,\"height\":50.0,\"page\":1,\"color\":\"#FF0000\"}";
 
             // Act
             editor.setAsText(json);
@@ -160,8 +162,10 @@ class StringToArrayListPropertyEditorTest {
             String json = "invalid json";
 
             // Act & Assert
-            assertThrows(IllegalArgumentException.class, () -> editor.setAsText(json),
-                "Should throw IllegalArgumentException for invalid JSON");
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> editor.setAsText(json),
+                    "Should throw IllegalArgumentException for invalid JSON");
         }
 
         @Test
@@ -171,8 +175,10 @@ class StringToArrayListPropertyEditorTest {
             String json = "[{\"invalid\":\"structure\"}]";
 
             // Act & Assert
-            assertThrows(IllegalArgumentException.class, () -> editor.setAsText(json),
-                "Should throw IllegalArgumentException for invalid structure");
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> editor.setAsText(json),
+                    "Should throw IllegalArgumentException for invalid structure");
         }
     }
 }

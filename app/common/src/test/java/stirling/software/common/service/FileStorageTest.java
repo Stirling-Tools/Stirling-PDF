@@ -3,7 +3,6 @@ package stirling.software.common.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,14 +20,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 class FileStorageTest {
 
-    @TempDir
-    Path tempDir;
+    @TempDir Path tempDir;
 
-    @Mock
-    private FileOrUploadService fileOrUploadService;
+    @Mock private FileOrUploadService fileOrUploadService;
 
-    @InjectMocks
-    private FileStorage fileStorage;
+    @InjectMocks private FileStorage fileStorage;
 
     private MultipartFile mockFile;
 
@@ -51,11 +47,14 @@ class FileStorageTest {
         when(mockFile.getBytes()).thenReturn(fileContent);
 
         // Set up mock to handle transferTo by writing the file
-        doAnswer(invocation -> {
-            java.io.File file = invocation.getArgument(0);
-            Files.write(file.toPath(), fileContent);
-            return null;
-        }).when(mockFile).transferTo(any(java.io.File.class));
+        doAnswer(
+                        invocation -> {
+                            java.io.File file = invocation.getArgument(0);
+                            Files.write(file.toPath(), fileContent);
+                            return null;
+                        })
+                .when(mockFile)
+                .transferTo(any(java.io.File.class));
 
         // Act
         String fileId = fileStorage.storeFile(mockFile);
@@ -93,7 +92,7 @@ class FileStorageTest {
 
         MultipartFile expectedFile = mock(MultipartFile.class);
         when(fileOrUploadService.toMockMultipartFile(eq(fileId), eq(fileContent)))
-            .thenReturn(expectedFile);
+                .thenReturn(expectedFile);
 
         // Act
         MultipartFile result = fileStorage.retrieveFile(fileId);

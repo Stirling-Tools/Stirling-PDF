@@ -1,14 +1,13 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
-
-import static org.mockito.Mockito.*;
 
 @DisplayName("SpringContextHolder Tests")
 public class SpringContextHolderTest {
@@ -32,9 +31,9 @@ public class SpringContextHolderTest {
             // Act
             contextHolder.setApplicationContext(mockApplicationContext);
 
-        // Assert
-        assertTrue(SpringContextHolder.isInitialized());
-    }
+            // Assert
+            assertTrue(SpringContextHolder.isInitialized());
+        }
 
         @Test
         @DisplayName("Returns bean of specified type when ApplicationContext is set")
@@ -67,7 +66,8 @@ public class SpringContextHolderTest {
         void testGetBean_BeanNotFound() {
             // Arrange
             contextHolder.setApplicationContext(mockApplicationContext);
-            when(mockApplicationContext.getBean(TestBean.class)).thenThrow(new org.springframework.beans.BeansException("Bean not found") {});
+            when(mockApplicationContext.getBean(TestBean.class))
+                    .thenThrow(new org.springframework.beans.BeansException("Bean not found") {});
 
             // Act
             TestBean result = SpringContextHolder.getBean(TestBean.class);
@@ -78,6 +78,5 @@ public class SpringContextHolderTest {
     }
 
     // Simple test class
-    private static class TestBean {
-    }
+    private static class TestBean {}
 }

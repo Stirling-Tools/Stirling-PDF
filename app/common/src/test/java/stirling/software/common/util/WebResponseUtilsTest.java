@@ -31,16 +31,22 @@ public class WebResponseUtilsTest {
                 String docName = "sample.pdf";
 
                 ResponseEntity<byte[]> responseEntity =
-                    WebResponseUtils.baosToWebResponse(baos, docName);
+                        WebResponseUtils.baosToWebResponse(baos, docName);
 
                 assertNotNull(responseEntity, "ResponseEntity should not be null");
-                assertEquals(HttpStatus.OK, responseEntity.getStatusCode(), "Status code should be OK");
+                assertEquals(
+                        HttpStatus.OK, responseEntity.getStatusCode(), "Status code should be OK");
                 assertNotNull(responseEntity.getBody(), "Response body should not be null");
 
                 HttpHeaders headers = responseEntity.getHeaders();
                 assertNotNull(headers, "Headers should not be null");
-                assertEquals(MediaType.APPLICATION_PDF, headers.getContentType(), "Content type should be PDF");
-                assertNotNull(headers.getContentDisposition(), "Content disposition header should be present");
+                assertEquals(
+                        MediaType.APPLICATION_PDF,
+                        headers.getContentType(),
+                        "Content type should be PDF");
+                assertNotNull(
+                        headers.getContentDisposition(),
+                        "Content disposition header should be present");
             } catch (IOException e) {
                 fail("Exception thrown during test: " + e.getMessage());
             }
@@ -57,19 +63,25 @@ public class WebResponseUtilsTest {
             try {
                 byte[] fileContent = "Sample file content".getBytes();
                 MockMultipartFile file =
-                    new MockMultipartFile("file", "sample.txt", "text/plain", fileContent);
+                        new MockMultipartFile("file", "sample.txt", "text/plain", fileContent);
 
                 ResponseEntity<byte[]> responseEntity =
-                    WebResponseUtils.multiPartFileToWebResponse(file);
+                        WebResponseUtils.multiPartFileToWebResponse(file);
 
                 assertNotNull(responseEntity, "ResponseEntity should not be null");
-                assertEquals(HttpStatus.OK, responseEntity.getStatusCode(), "Status code should be OK");
+                assertEquals(
+                        HttpStatus.OK, responseEntity.getStatusCode(), "Status code should be OK");
                 assertNotNull(responseEntity.getBody(), "Response body should not be null");
 
                 HttpHeaders headers = responseEntity.getHeaders();
                 assertNotNull(headers, "Headers should not be null");
-                assertEquals(MediaType.TEXT_PLAIN, headers.getContentType(), "Content type should be text/plain");
-                assertNotNull(headers.getContentDisposition(), "Content disposition header should be present");
+                assertEquals(
+                        MediaType.TEXT_PLAIN,
+                        headers.getContentType(),
+                        "Content type should be text/plain");
+                assertNotNull(
+                        headers.getContentDisposition(),
+                        "Content disposition header should be present");
             } catch (IOException e) {
                 fail("Exception thrown during test: " + e.getMessage());
             }
@@ -89,16 +101,22 @@ public class WebResponseUtilsTest {
                 MediaType mediaType = MediaType.TEXT_PLAIN;
 
                 ResponseEntity<byte[]> responseEntity =
-                    WebResponseUtils.bytesToWebResponse(bytes, docName, mediaType);
+                        WebResponseUtils.bytesToWebResponse(bytes, docName, mediaType);
 
                 assertNotNull(responseEntity, "ResponseEntity should not be null");
-                assertEquals(HttpStatus.OK, responseEntity.getStatusCode(), "Status code should be OK");
+                assertEquals(
+                        HttpStatus.OK, responseEntity.getStatusCode(), "Status code should be OK");
                 assertNotNull(responseEntity.getBody(), "Response body should not be null");
 
                 HttpHeaders headers = responseEntity.getHeaders();
                 assertNotNull(headers, "Headers should not be null");
-                assertEquals(MediaType.TEXT_PLAIN, headers.getContentType(), "Content type should be text/plain");
-                assertNotNull(headers.getContentDisposition(), "Content disposition header should be present");
+                assertEquals(
+                        MediaType.TEXT_PLAIN,
+                        headers.getContentType(),
+                        "Content type should be text/plain");
+                assertNotNull(
+                        headers.getContentDisposition(),
+                        "Content disposition header should be present");
             } catch (IOException e) {
                 fail("Exception thrown during test: " + e.getMessage());
             }
@@ -118,16 +136,22 @@ public class WebResponseUtilsTest {
                 String docName = "sample.pdf";
 
                 ResponseEntity<byte[]> responseEntity =
-                    WebResponseUtils.pdfDocToWebResponse(document, docName);
+                        WebResponseUtils.pdfDocToWebResponse(document, docName);
 
                 assertNotNull(responseEntity, "ResponseEntity should not be null");
-                assertEquals(HttpStatus.OK, responseEntity.getStatusCode(), "Status code should be OK");
+                assertEquals(
+                        HttpStatus.OK, responseEntity.getStatusCode(), "Status code should be OK");
                 assertNotNull(responseEntity.getBody(), "Response body should not be null");
 
                 HttpHeaders headers = responseEntity.getHeaders();
                 assertNotNull(headers, "Headers should not be null");
-                assertEquals(MediaType.APPLICATION_PDF, headers.getContentType(), "Content type should be PDF");
-                assertNotNull(headers.getContentDisposition(), "Content disposition header should be present");
+                assertEquals(
+                        MediaType.APPLICATION_PDF,
+                        headers.getContentType(),
+                        "Content type should be PDF");
+                assertNotNull(
+                        headers.getContentDisposition(),
+                        "Content disposition header should be present");
                 document.close();
             } catch (IOException e) {
                 fail("Exception thrown during test: " + e.getMessage());

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import stirling.software.common.configuration.RuntimePathConfig;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,7 +61,9 @@ class FileMonitorTest {
             Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
 
             // Assert
-            assertTrue(fileMonitor.isFileReadyForProcessing(testFile), "Old file should be ready for processing");
+            assertTrue(
+                    fileMonitor.isFileReadyForProcessing(testFile),
+                    "Old file should be ready for processing");
         }
 
         @Test
@@ -74,7 +77,9 @@ class FileMonitorTest {
             Files.setLastModifiedTime(testFile, FileTime.from(Instant.now()));
 
             // Assert
-            assertFalse(fileMonitor.isFileReadyForProcessing(testFile), "Recent file should not be ready for processing");
+            assertFalse(
+                    fileMonitor.isFileReadyForProcessing(testFile),
+                    "Recent file should not be ready for processing");
         }
 
         @Test
@@ -84,7 +89,9 @@ class FileMonitorTest {
             Path nonExistentFile = tempDir.resolve("non-existent-file.txt");
 
             // Assert
-            assertFalse(fileMonitor.isFileReadyForProcessing(nonExistentFile), "Non-existent file should not be ready");
+            assertFalse(
+                    fileMonitor.isFileReadyForProcessing(nonExistentFile),
+                    "Non-existent file should not be ready");
         }
 
         @Test
@@ -98,7 +105,9 @@ class FileMonitorTest {
             Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
 
             // Assert
-            assertTrue(fileMonitor.isFileReadyForProcessing(testFile), "Old file should be ready regardless of locks");
+            assertTrue(
+                    fileMonitor.isFileReadyForProcessing(testFile),
+                    "Old file should be ready regardless of locks");
         }
 
         @Test
@@ -112,14 +121,18 @@ class FileMonitorTest {
             Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
 
             // Assert initial readiness
-            assertTrue(fileMonitor.isFileReadyForProcessing(testFile), "File should be ready initially");
+            assertTrue(
+                    fileMonitor.isFileReadyForProcessing(testFile),
+                    "File should be ready initially");
 
             // Modify file content and reset modified time to 10 seconds ago
             Files.write(testFile, "updated content".getBytes());
             Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
 
             // Assert still ready
-            assertTrue(fileMonitor.isFileReadyForProcessing(testFile), "File should remain ready after update");
+            assertTrue(
+                    fileMonitor.isFileReadyForProcessing(testFile),
+                    "File should remain ready after update");
         }
 
         @Test
@@ -133,7 +146,9 @@ class FileMonitorTest {
             Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
 
             // Assert
-            assertTrue(fileMonitor.isFileReadyForProcessing(testFile.toAbsolutePath()), "Absolute path should be handled correctly");
+            assertTrue(
+                    fileMonitor.isFileReadyForProcessing(testFile.toAbsolutePath()),
+                    "Absolute path should be handled correctly");
         }
 
         @Test
@@ -147,7 +162,9 @@ class FileMonitorTest {
             Files.setLastModifiedTime(testDir, FileTime.from(Instant.now().minusMillis(10000)));
 
             // Assert
-            assertFalse(fileMonitor.isFileReadyForProcessing(testDir), "Directory should not be ready for processing");
+            assertFalse(
+                    fileMonitor.isFileReadyForProcessing(testDir),
+                    "Directory should not be ready for processing");
         }
     }
 
@@ -175,7 +192,9 @@ class FileMonitorTest {
             Files.setLastModifiedTime(txtFile, FileTime.from(Instant.now().minusMillis(10000)));
 
             // Assert
-            assertTrue(pdfMonitor.isFileReadyForProcessing(pdfFile), "PDF file should be ready for processing");
+            assertTrue(
+                    pdfMonitor.isFileReadyForProcessing(pdfFile),
+                    "PDF file should be ready for processing");
             assertFalse(pdfFilter.test(txtFile), "PDF filter should reject txt files");
             assertTrue(pdfFilter.test(pdfFile), "PDF filter should accept pdf files");
         }

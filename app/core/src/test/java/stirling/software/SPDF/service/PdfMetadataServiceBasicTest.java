@@ -45,11 +45,11 @@ class PdfMetadataServiceBasicTest {
 
         // Set up the service under test
         pdfMetadataService =
-            new PdfMetadataService(
-                applicationProperties,
-                STIRLING_PDF_LABEL,
-                false, // not running Pro or higher
-                userService);
+                new PdfMetadataService(
+                        applicationProperties,
+                        STIRLING_PDF_LABEL,
+                        false, // not running Pro or higher
+                        userService);
     }
 
     @Nested
@@ -95,7 +95,10 @@ class PdfMetadataServiceBasicTest {
             assertEquals(testSubject, metadata.getSubject(), "Subject should match");
             assertEquals(testKeywords, metadata.getKeywords(), "Keywords should match");
             assertEquals(creationDate, metadata.getCreationDate(), "Creation date should match");
-            assertEquals(modificationDate, metadata.getModificationDate(), "Modification date should match");
+            assertEquals(
+                    modificationDate,
+                    metadata.getModificationDate(),
+                    "Modification date should match");
         }
     }
 

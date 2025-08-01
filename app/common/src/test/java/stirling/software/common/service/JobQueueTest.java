@@ -1,6 +1,5 @@
 package stirling.software.common.service;
 
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.lenient;
@@ -23,16 +22,17 @@ class JobQueueTest {
 
     private JobQueue jobQueue;
 
-    @Mock
-    private ResourceMonitor resourceMonitor;
+    @Mock private ResourceMonitor resourceMonitor;
 
-
-    private final AtomicReference<ResourceStatus> statusRef = new AtomicReference<>(ResourceStatus.OK);
+    private final AtomicReference<ResourceStatus> statusRef =
+            new AtomicReference<>(ResourceStatus.OK);
 
     @BeforeEach
     void setUp() {
         // Mark stubbing as lenient to avoid UnnecessaryStubbingException
-        lenient().when(resourceMonitor.calculateDynamicQueueCapacity(anyInt(), anyInt())).thenReturn(10);
+        lenient()
+                .when(resourceMonitor.calculateDynamicQueueCapacity(anyInt(), anyInt()))
+                .thenReturn(10);
         lenient().when(resourceMonitor.getCurrentStatus()).thenReturn(statusRef);
 
         // Initialize JobQueue with mocked ResourceMonitor
@@ -47,7 +47,6 @@ class JobQueueTest {
         long timeoutMs = 1000;
 
         jobQueue.queueJob(jobId, resourceWeight, work, timeoutMs);
-
 
         assertTrue(jobQueue.isJobQueued(jobId));
         assertEquals(1, jobQueue.getTotalQueuedJobs());

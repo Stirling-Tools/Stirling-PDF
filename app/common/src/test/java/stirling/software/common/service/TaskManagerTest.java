@@ -23,11 +23,9 @@ import stirling.software.common.model.job.ResultFile;
 
 class TaskManagerTest {
 
-    @Mock
-    private FileStorage fileStorage;
+    @Mock private FileStorage fileStorage;
 
-    @InjectMocks
-    private TaskManager taskManager;
+    @InjectMocks private TaskManager taskManager;
 
     private AutoCloseable closeable;
 
@@ -244,18 +242,20 @@ class TaskManagerTest {
         ReflectionTestUtils.setField(oldJob, "complete", true);
 
         // Create a ResultFile and set it using the new approach
-        ResultFile resultFile = ResultFile.builder()
-                .fileId("file-id")
-                .fileName("test.pdf")
-                .contentType("application/pdf")
-                .fileSize(1024L)
-                .build();
+        ResultFile resultFile =
+                ResultFile.builder()
+                        .fileId("file-id")
+                        .fileName("test.pdf")
+                        .contentType("application/pdf")
+                        .fileSize(1024L)
+                        .build();
         ReflectionTestUtils.setField(oldJob, "resultFiles", java.util.List.of(resultFile));
 
         when(fileStorage.deleteFile("file-id")).thenReturn(true);
 
         // Obtain access to the private jobResults map
-        Map<String, JobResult> jobResultsMap = (Map<String, JobResult>) ReflectionTestUtils.getField(taskManager, "jobResults");
+        Map<String, JobResult> jobResultsMap =
+                (Map<String, JobResult>) ReflectionTestUtils.getField(taskManager, "jobResults");
 
         // 3. Create an active job
         String activeJobId = "active-job";

@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 
-import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.SPDF.model.SignatureFile;
+import stirling.software.common.configuration.InstallationPathConfig;
 
 @DisplayName("SignatureService Tests")
 class SignatureServiceTest {
@@ -41,17 +41,17 @@ class SignatureServiceTest {
 
         // Create test signature files
         Files.write(
-            personalSignatureFolder.resolve("personal.png"),
-            "personal signature content".getBytes());
+                personalSignatureFolder.resolve("personal.png"),
+                "personal signature content".getBytes());
         Files.write(
-            sharedSignatureFolder.resolve("shared.jpg"), "shared signature content".getBytes());
+                sharedSignatureFolder.resolve("shared.jpg"), "shared signature content".getBytes());
 
         // Use try-with-resources for mockStatic
         try (MockedStatic<InstallationPathConfig> mockedConfig =
-                 mockStatic(InstallationPathConfig.class)) {
+                mockStatic(InstallationPathConfig.class)) {
             mockedConfig
-                .when(InstallationPathConfig::getSignaturesPath)
-                .thenReturn(tempDir.toString());
+                    .when(InstallationPathConfig::getSignaturesPath)
+                    .thenReturn(tempDir.toString());
 
             // Initialize the service with our temp directory
             signatureService = new SignatureService();
@@ -66,10 +66,10 @@ class SignatureServiceTest {
         @DisplayName("Grants access to personal file when it exists")
         void testHasAccessToFile_PersonalFileExists() throws IOException {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 boolean hasAccess = signatureService.hasAccessToFile(TEST_USER, "personal.png");
 
@@ -81,10 +81,10 @@ class SignatureServiceTest {
         @DisplayName("Grants access to shared file when it exists")
         void testHasAccessToFile_SharedFileExists() throws IOException {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 boolean hasAccess = signatureService.hasAccessToFile(TEST_USER, "shared.jpg");
 
@@ -96,10 +96,10 @@ class SignatureServiceTest {
         @DisplayName("Denies access to non-existent file")
         void testHasAccessToFile_FileDoesNotExist() throws IOException {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 boolean hasAccess = signatureService.hasAccessToFile(TEST_USER, "nonexistent.png");
 
@@ -111,20 +111,20 @@ class SignatureServiceTest {
         @DisplayName("Throws exception for invalid file name with directory traversal")
         void testHasAccessToFile_InvalidFileName() {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 assertThrows(
-                    IllegalArgumentException.class,
-                    () -> signatureService.hasAccessToFile(TEST_USER, "../invalid.png"),
-                    "Should throw exception for file names with directory traversal");
+                        IllegalArgumentException.class,
+                        () -> signatureService.hasAccessToFile(TEST_USER, "../invalid.png"),
+                        "Should throw exception for file names with directory traversal");
 
                 assertThrows(
-                    IllegalArgumentException.class,
-                    () -> signatureService.hasAccessToFile(TEST_USER, "invalid/file.png"),
-                    "Should throw exception for file names with paths");
+                        IllegalArgumentException.class,
+                        () -> signatureService.hasAccessToFile(TEST_USER, "invalid/file.png"),
+                        "Should throw exception for file names with paths");
             }
         }
     }
@@ -137,27 +137,28 @@ class SignatureServiceTest {
         @DisplayName("Retrieves available signatures for user including personal and shared")
         void testGetAvailableSignatures() {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 List<SignatureFile> signatures = signatureService.getAvailableSignatures(TEST_USER);
 
-                assertEquals(2, signatures.size(), "Should return both personal and shared signatures");
+                assertEquals(
+                        2, signatures.size(), "Should return both personal and shared signatures");
 
                 boolean hasPersonal =
-                    signatures.stream()
-                        .anyMatch(
-                            sig ->
-                                "personal.png".equals(sig.getFileName())
-                                    && "Personal".equals(sig.getCategory()));
+                        signatures.stream()
+                                .anyMatch(
+                                        sig ->
+                                                "personal.png".equals(sig.getFileName())
+                                                        && "Personal".equals(sig.getCategory()));
                 boolean hasShared =
-                    signatures.stream()
-                        .anyMatch(
-                            sig ->
-                                "shared.jpg".equals(sig.getFileName())
-                                    && "Shared".equals(sig.getCategory()));
+                        signatures.stream()
+                                .anyMatch(
+                                        sig ->
+                                                "shared.jpg".equals(sig.getFileName())
+                                                        && "Shared".equals(sig.getCategory()));
 
                 assertTrue(hasPersonal, "Should include personal signature");
                 assertTrue(hasShared, "Should include shared signature");
@@ -168,23 +169,25 @@ class SignatureServiceTest {
         @DisplayName("Retrieves only shared signatures for empty username")
         void testGetAvailableSignatures_EmptyUsername() throws IOException {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 List<SignatureFile> signatures = signatureService.getAvailableSignatures("");
 
                 assertEquals(
-                    1,
-                    signatures.size(),
-                    "Should return only shared signatures for empty username");
+                        1,
+                        signatures.size(),
+                        "Should return only shared signatures for empty username");
                 assertEquals(
-                    "shared.jpg",
-                    signatures.get(0).getFileName(),
-                    "Should have the shared signature");
+                        "shared.jpg",
+                        signatures.get(0).getFileName(),
+                        "Should have the shared signature");
                 assertEquals(
-                    "Shared", signatures.get(0).getCategory(), "Should be categorized as shared");
+                        "Shared",
+                        signatures.get(0).getCategory(),
+                        "Should be categorized as shared");
             }
         }
 
@@ -192,24 +195,26 @@ class SignatureServiceTest {
         @DisplayName("Retrieves only shared signatures for non-existent user")
         void testGetAvailableSignatures_NonExistentUser() throws IOException {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 List<SignatureFile> signatures =
-                    signatureService.getAvailableSignatures("nonExistentUser");
+                        signatureService.getAvailableSignatures("nonExistentUser");
 
                 assertEquals(
-                    1,
-                    signatures.size(),
-                    "Should return only shared signatures for non-existent user");
+                        1,
+                        signatures.size(),
+                        "Should return only shared signatures for non-existent user");
                 assertEquals(
-                    "shared.jpg",
-                    signatures.get(0).getFileName(),
-                    "Should have the shared signature");
+                        "shared.jpg",
+                        signatures.get(0).getFileName(),
+                        "Should have the shared signature");
                 assertEquals(
-                    "Shared", signatures.get(0).getCategory(), "Should be categorized as shared");
+                        "Shared",
+                        signatures.get(0).getCategory(),
+                        "Should be categorized as shared");
             }
         }
     }
@@ -222,17 +227,17 @@ class SignatureServiceTest {
         @DisplayName("Retrieves content of personal signature file")
         void testGetSignatureBytes_PersonalFile() throws IOException {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 byte[] bytes = signatureService.getSignatureBytes(TEST_USER, "personal.png");
 
                 assertEquals(
-                    "personal signature content",
-                    new String(bytes),
-                    "Should return the correct content for personal file");
+                        "personal signature content",
+                        new String(bytes),
+                        "Should return the correct content for personal file");
             }
         }
 
@@ -240,17 +245,17 @@ class SignatureServiceTest {
         @DisplayName("Retrieves content of shared signature file")
         void testGetSignatureBytes_SharedFile() throws IOException {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 byte[] bytes = signatureService.getSignatureBytes(TEST_USER, "shared.jpg");
 
                 assertEquals(
-                    "shared signature content",
-                    new String(bytes),
-                    "Should return the correct content for shared file");
+                        "shared signature content",
+                        new String(bytes),
+                        "Should return the correct content for shared file");
             }
         }
 
@@ -258,15 +263,15 @@ class SignatureServiceTest {
         @DisplayName("Throws exception when retrieving non-existent file")
         void testGetSignatureBytes_FileNotFound() {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 assertThrows(
-                    FileNotFoundException.class,
-                    () -> signatureService.getSignatureBytes(TEST_USER, "nonexistent.png"),
-                    "Should throw exception for non-existent files");
+                        FileNotFoundException.class,
+                        () -> signatureService.getSignatureBytes(TEST_USER, "nonexistent.png"),
+                        "Should throw exception for non-existent files");
             }
         }
 
@@ -274,15 +279,15 @@ class SignatureServiceTest {
         @DisplayName("Throws exception for invalid file name during content retrieval")
         void testGetSignatureBytes_InvalidFileName() {
             try (MockedStatic<InstallationPathConfig> mockedConfig =
-                     mockStatic(InstallationPathConfig.class)) {
+                    mockStatic(InstallationPathConfig.class)) {
                 mockedConfig
-                    .when(InstallationPathConfig::getSignaturesPath)
-                    .thenReturn(tempDir.toString());
+                        .when(InstallationPathConfig::getSignaturesPath)
+                        .thenReturn(tempDir.toString());
 
                 assertThrows(
-                    IllegalArgumentException.class,
-                    () -> signatureService.getSignatureBytes(TEST_USER, "../invalid.png"),
-                    "Should throw exception for file names with directory traversal");
+                        IllegalArgumentException.class,
+                        () -> signatureService.getSignatureBytes(TEST_USER, "../invalid.png"),
+                        "Should throw exception for file names with directory traversal");
             }
         }
     }

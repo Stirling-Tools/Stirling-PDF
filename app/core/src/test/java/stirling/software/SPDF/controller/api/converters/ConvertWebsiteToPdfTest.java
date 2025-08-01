@@ -29,8 +29,8 @@ public class ConvertWebsiteToPdfTest {
         ApplicationProperties applicationProperties = new ApplicationProperties();
         applicationProperties.getSystem().setEnableUrlToPDF(true);
         convertWebsiteToPDF =
-            new ConvertWebsiteToPDF(
-                mockPdfDocumentFactory, runtimePathConfig, applicationProperties);
+                new ConvertWebsiteToPDF(
+                        mockPdfDocumentFactory, runtimePathConfig, applicationProperties);
     }
 
     @Nested
@@ -47,14 +47,16 @@ public class ConvertWebsiteToPdfTest {
 
             // Act
             IllegalArgumentException thrown =
-                assertThrows(
-                    IllegalArgumentException.class,
-                    () -> convertWebsiteToPDF.urlToPdf(request),
-                    "Should throw IllegalArgumentException for invalid URL format");
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> convertWebsiteToPDF.urlToPdf(request),
+                            "Should throw IllegalArgumentException for invalid URL format");
 
             // Assert
-            assertEquals("Invalid URL format: provided format is invalid", thrown.getMessage(),
-                "Exception message should indicate invalid URL format");
+            assertEquals(
+                    "Invalid URL format: provided format is invalid",
+                    thrown.getMessage(),
+                    "Exception message should indicate invalid URL format");
         }
 
         @Test
@@ -67,14 +69,16 @@ public class ConvertWebsiteToPdfTest {
 
             // Act
             IllegalArgumentException thrown =
-                assertThrows(
-                    IllegalArgumentException.class,
-                    () -> convertWebsiteToPDF.urlToPdf(request),
-                    "Should throw IllegalArgumentException for unreachable URL");
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> convertWebsiteToPDF.urlToPdf(request),
+                            "Should throw IllegalArgumentException for unreachable URL");
 
             // Assert
-            assertEquals("URL is not reachable, please provide a valid URL", thrown.getMessage(),
-                "Exception message should indicate URL is not reachable");
+            assertEquals(
+                    "URL is not reachable, please provide a valid URL",
+                    thrown.getMessage(),
+                    "Exception message should indicate URL is not reachable");
         }
 
         @Test
@@ -86,14 +90,16 @@ public class ConvertWebsiteToPdfTest {
 
             // Act
             IllegalArgumentException thrown =
-                assertThrows(
-                    IllegalArgumentException.class,
-                    () -> convertWebsiteToPDF.urlToPdf(request),
-                    "Should throw IllegalArgumentException for empty URL");
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> convertWebsiteToPDF.urlToPdf(request),
+                            "Should throw IllegalArgumentException for empty URL");
 
             // Assert
-            assertEquals("Invalid URL format: provided format is invalid", thrown.getMessage(),
-                "Exception message should indicate invalid URL format");
+            assertEquals(
+                    "Invalid URL format: provided format is invalid",
+                    thrown.getMessage(),
+                    "Exception message should indicate invalid URL format");
         }
     }
 
@@ -108,22 +114,24 @@ public class ConvertWebsiteToPdfTest {
             ApplicationProperties applicationProperties = new ApplicationProperties();
             applicationProperties.getSystem().setEnableUrlToPDF(false);
             ConvertWebsiteToPDF disabledConvertWebsiteToPDF =
-                new ConvertWebsiteToPDF(
-                    mockPdfDocumentFactory, runtimePathConfig, applicationProperties);
+                    new ConvertWebsiteToPDF(
+                            mockPdfDocumentFactory, runtimePathConfig, applicationProperties);
 
             UrlToPdfRequest request = new UrlToPdfRequest();
             request.setUrlInput("https://www.example.com");
 
             // Act
             IllegalArgumentException thrown =
-                assertThrows(
-                    IllegalArgumentException.class,
-                    () -> disabledConvertWebsiteToPDF.urlToPdf(request),
-                    "Should throw IllegalArgumentException when URL to PDF is disabled");
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> disabledConvertWebsiteToPDF.urlToPdf(request),
+                            "Should throw IllegalArgumentException when URL to PDF is disabled");
 
             // Assert
-            assertEquals("This endpoint has been disabled by the admin", thrown.getMessage(),
-                "Exception message should indicate endpoint is disabled");
+            assertEquals(
+                    "This endpoint has been disabled by the admin",
+                    thrown.getMessage(),
+                    "Exception message should indicate endpoint is disabled");
         }
     }
 }

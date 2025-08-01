@@ -149,18 +149,18 @@ class PdfImageRemovalServiceTest {
     // Helper method for matching COSName in verification
     private static COSName eq(final COSName value) {
         return Mockito.argThat(
-            new org.mockito.ArgumentMatcher<>() {
-                @Override
-                public boolean matches(COSName argument) {
-                    if (argument == null && value == null) return true;
-                    if (argument == null || value == null) return false;
-                    return argument.getName().equals(value.getName());
-                }
+                new org.mockito.ArgumentMatcher<>() {
+                    @Override
+                    public boolean matches(COSName argument) {
+                        if (argument == null && value == null) return true;
+                        if (argument == null || value == null) return false;
+                        return argument.getName().equals(value.getName());
+                    }
 
-                @Override
-                public String toString() {
-                    return "eq(" + (value != null ? value.getName() : "null") + ")";
-                }
-            });
+                    @Override
+                    public String toString() {
+                        return "eq(" + (value != null ? value.getName() : "null") + ")";
+                    }
+                });
     }
 }

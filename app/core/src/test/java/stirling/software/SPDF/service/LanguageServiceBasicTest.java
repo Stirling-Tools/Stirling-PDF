@@ -65,11 +65,11 @@ class LanguageServiceBasicTest {
         void testGetSupportedLanguages_FilteringInvalidFiles() throws IOException {
             // Set up mocked resources with invalid files
             Resource[] mockResources =
-                new Resource[] {
-                    createMockResource("messages_en_US.properties"), // Valid
-                    createMockResource("invalid_file.properties"), // Invalid
-                    createMockResource(null) // Null filename
-                };
+                    new Resource[] {
+                        createMockResource("messages_en_US.properties"), // Valid
+                        createMockResource("invalid_file.properties"), // Invalid
+                        createMockResource(null) // Null filename
+                    };
 
             // Configure the test service
             ((LanguageServiceForTest) languageService).setMockResources(mockResources);
@@ -81,8 +81,8 @@ class LanguageServiceBasicTest {
             // Verify filtering
             assertTrue(supportedLanguages.contains("en_US"), "Valid language should be included");
             assertFalse(
-                supportedLanguages.contains("invalid_file"),
-                "Invalid filename should be filtered out");
+                    supportedLanguages.contains("invalid_file"),
+                    "Invalid filename should be filtered out");
         }
 
         @Test
@@ -90,19 +90,19 @@ class LanguageServiceBasicTest {
         void testGetSupportedLanguages_WithRestrictions() throws IOException {
             // Set up test resources
             Resource[] mockResources =
-                new Resource[] {
-                    createMockResource("messages_en_US.properties"),
-                    createMockResource("messages_fr_FR.properties"),
-                    createMockResource("messages_de_DE.properties"),
-                    createMockResource("messages_en_GB.properties")
-                };
+                    new Resource[] {
+                        createMockResource("messages_en_US.properties"),
+                        createMockResource("messages_fr_FR.properties"),
+                        createMockResource("messages_de_DE.properties"),
+                        createMockResource("messages_en_GB.properties")
+                    };
 
             // Configure the test service
             ((LanguageServiceForTest) languageService).setMockResources(mockResources);
 
             // Allow only specific languages (en_GB is always included)
             when(applicationProperties.getUi().getLanguages())
-                .thenReturn(Arrays.asList("en_US", "fr_FR"));
+                    .thenReturn(Arrays.asList("en_US", "fr_FR"));
 
             // Execute the method
             Set<String> supportedLanguages = languageService.getSupportedLanguages();
@@ -111,7 +111,8 @@ class LanguageServiceBasicTest {
             assertTrue(supportedLanguages.contains("en_US"), "Allowed language should be included");
             assertTrue(supportedLanguages.contains("fr_FR"), "Allowed language should be included");
             assertTrue(supportedLanguages.contains("en_GB"), "en_GB should always be included");
-            assertFalse(supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
+            assertFalse(
+                    supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
         }
     }
 

@@ -39,8 +39,8 @@ class CertificateValidationServiceTest {
 
         // Set up behaviors for expired certificate
         doThrow(new CertificateExpiredException("Certificate expired"))
-            .when(expiredCertificate)
-            .checkValidity();
+                .when(expiredCertificate)
+                .checkValidity();
     }
 
     @Nested
@@ -96,7 +96,8 @@ class CertificateValidationServiceTest {
 
             boolean result = validationService.validateTrustWithCustomCert(signedCert, issuingCert);
 
-            assertFalse(result, "Certificate with non-matching issuer and subject should not validate");
+            assertFalse(
+                    result, "Certificate with non-matching issuer and subject should not validate");
         }
     }
 
@@ -115,7 +116,8 @@ class CertificateValidationServiceTest {
             doNothing().when(signedCert).verify(Mockito.any());
 
             boolean result =
-                validationService.validateCertificateChainWithCustomCert(signedCert, signingCert);
+                    validationService.validateCertificateChainWithCustomCert(
+                            signedCert, signingCert);
 
             assertTrue(result, "Certificate chain with proper signing should validate");
         }
@@ -129,11 +131,12 @@ class CertificateValidationServiceTest {
 
             when(signingCert.getPublicKey()).thenReturn(publicKey);
             doThrow(new java.security.SignatureException("Verification failed"))
-                .when(signedCert)
-                .verify(Mockito.any());
+                    .when(signedCert)
+                    .verify(Mockito.any());
 
             boolean result =
-                validationService.validateCertificateChainWithCustomCert(signedCert, signingCert);
+                    validationService.validateCertificateChainWithCustomCert(
+                            signedCert, signingCert);
 
             assertFalse(result, "Certificate chain with failed signing should not validate");
         }

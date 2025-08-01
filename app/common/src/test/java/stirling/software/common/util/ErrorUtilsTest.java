@@ -31,10 +31,13 @@ public class ErrorUtilsTest {
 
             // Verify the result
             assertNotNull(resultModel, "Resulting model should not be null");
-            assertEquals("Test Exception", resultModel.getAttribute("errorMessage"),
-                "Error message should match the exception message");
-            assertNotNull(resultModel.getAttribute("stackTrace"),
-                "Stack trace should be present in the model");
+            assertEquals(
+                    "Test Exception",
+                    resultModel.getAttribute("errorMessage"),
+                    "Error message should match the exception message");
+            assertNotNull(
+                    resultModel.getAttribute("stackTrace"),
+                    "Stack trace should be present in the model");
         }
     }
 
@@ -56,10 +59,13 @@ public class ErrorUtilsTest {
 
             // Verify the result
             assertNotNull(modelAndView, "ModelAndView should not be null");
-            assertEquals("Test Exception", modelAndView.getModel().get("errorMessage"),
-                "Error message should match the exception message");
-            assertNotNull(modelAndView.getModel().get("stackTrace"),
-                "Stack trace should be present in the ModelAndView");
+            assertEquals(
+                    "Test Exception",
+                    modelAndView.getModel().get("errorMessage"),
+                    "Error message should match the exception message");
+            assertNotNull(
+                    modelAndView.getModel().get("stackTrace"),
+                    "Stack trace should be present in the ModelAndView");
         }
     }
 }

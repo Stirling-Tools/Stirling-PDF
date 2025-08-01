@@ -36,10 +36,11 @@ public class ProcessExecutorTest {
 
             // Act
             ProcessExecutor.ProcessExecutorResult result =
-                processExecutor.runCommandWithOutputHandling(command);
+                    processExecutor.runCommandWithOutputHandling(command);
 
             // Assert
-            assertEquals(0, result.getRc(), "Exit code should be 0 for successful command execution");
+            assertEquals(
+                    0, result.getRc(), "Exit code should be 0 for successful command execution");
             assertNotNull(result.getMessages(), "Output messages should not be null");
         }
 
@@ -52,17 +53,17 @@ public class ProcessExecutorTest {
 
             // Act & Assert
             IOException thrown =
-                assertThrows(
-                    IOException.class,
-                    () -> processExecutor.runCommandWithOutputHandling(command),
-                    "Should throw IOException for non-existent command");
+                    assertThrows(
+                            IOException.class,
+                            () -> processExecutor.runCommandWithOutputHandling(command),
+                            "Should throw IOException for non-existent command");
 
             // Assert
             String errorMessage = thrown.getMessage();
             assertTrue(
-                errorMessage.contains("error=2")
-                    || errorMessage.contains("No such file or directory"),
-                "Error message should indicate command not found: " + errorMessage);
+                    errorMessage.contains("error=2")
+                            || errorMessage.contains("No such file or directory"),
+                    "Error message should indicate command not found: " + errorMessage);
         }
     }
 }

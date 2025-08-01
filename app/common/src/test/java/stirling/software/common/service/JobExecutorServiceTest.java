@@ -1,5 +1,9 @@
 package stirling.software.common.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -21,47 +25,37 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.common.model.job.JobResponse;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JobExecutorService Tests")
 class JobExecutorServiceTest {
 
     private JobExecutorService jobExecutorService;
 
-    @Mock
-    private TaskManager taskManager;
+    @Mock private TaskManager taskManager;
 
-    @Mock
-    private FileStorage fileStorage;
+    @Mock private FileStorage fileStorage;
 
-    @Mock
-    private HttpServletRequest request;
+    @Mock private HttpServletRequest request;
 
-    @Mock
-    private ResourceMonitor resourceMonitor;
+    @Mock private ResourceMonitor resourceMonitor;
 
-    @Mock
-    private JobQueue jobQueue;
+    @Mock private JobQueue jobQueue;
 
-    @Captor
-    private ArgumentCaptor<String> jobIdCaptor;
+    @Captor private ArgumentCaptor<String> jobIdCaptor;
 
     @BeforeEach
     void setUp() {
         // Initialize the service manually with all its dependencies
-        jobExecutorService = new JobExecutorService(
-            taskManager,
-            fileStorage,
-            request,
-            resourceMonitor,
-            jobQueue,
-            30000L, // asyncRequestTimeoutMs
-            "30m"   // sessionTimeout
-        );
+        jobExecutorService =
+                new JobExecutorService(
+                        taskManager,
+                        fileStorage,
+                        request,
+                        resourceMonitor,
+                        jobQueue,
+                        30000L, // asyncRequestTimeoutMs
+                        "30m" // sessionTimeout
+                        );
     }
 
     @Test
@@ -92,7 +86,8 @@ class JobExecutorServiceTest {
 
         // Then
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Response status should be OK");
-        assertInstanceOf(JobResponse.class, response.getBody(), "Response body should be JobResponse");
+        assertInstanceOf(
+                JobResponse.class, response.getBody(), "Response body should be JobResponse");
         JobResponse<?> jobResponse = (JobResponse<?>) response.getBody();
         assertTrue(jobResponse.isAsync(), "JobResponse should indicate async");
         assertNotNull(jobResponse.getJobId(), "Job ID should be generated");
@@ -105,20 +100,27 @@ class JobExecutorServiceTest {
     @DisplayName("Should handle error in synchronous job and return error response")
     void shouldHandleSyncJobError() {
         // Given
-        Supplier<Object> work = () -> {
-            throw new RuntimeException("Test error");
-        };
+        Supplier<Object> work =
+                () -> {
+                    throw new RuntimeException("Test error");
+                };
 
         // When
         ResponseEntity<?> response = jobExecutorService.runJobGeneric(false, work);
 
         // Then
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode(), "Response status should be INTERNAL_SERVER_ERROR");
+        assertEquals(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                response.getStatusCode(),
+                "Response status should be INTERNAL_SERVER_ERROR");
 
         @SuppressWarnings("unchecked")
         Map<String, String> errorMap = (Map<String, String>) response.getBody();
         assertNotNull(errorMap, "Error response body should not be null");
-        assertEquals("Job failed: Test error", errorMap.get("error"), "Error message should match exception");
+        assertEquals(
+                "Job failed: Test error",
+                errorMap.get("error"),
+                "Error message should match exception");
     }
 
     @Test
@@ -135,12 +137,12 @@ class JobExecutorServiceTest {
         when(jobQueue.queueJob(anyString(), eq(80), any(), anyLong())).thenReturn(future);
 
         // When
-        ResponseEntity<?> response = jobExecutorService.runJobGeneric(
-            true, work, 5000, true, 80);
+        ResponseEntity<?> response = jobExecutorService.runJobGeneric(true, work, 5000, true, 80);
 
         // Then
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Response status should be OK");
-        assertInstanceOf(JobResponse.class, response.getBody(), "Response body should be JobResponse");
+        assertInstanceOf(
+                JobResponse.class, response.getBody(), "Response body should be JobResponse");
 
         // Verify job was queued
         verify(jobQueue).queueJob(anyString(), eq(80), any(), eq(5000L));
@@ -166,19 +168,21 @@ class JobExecutorServiceTest {
     @DisplayName("Should handle timeout exception during job execution")
     void shouldHandleTimeout() throws Exception {
         // Given
-        Supplier<Object> work = () -> {
-            try {
-                Thread.sleep(100); // Simulate long-running job
-                return "test-result";
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException(e);
-            }
-        };
+        Supplier<Object> work =
+                () -> {
+                    try {
+                        Thread.sleep(100); // Simulate long-running job
+                        return "test-result";
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
+                    }
+                };
 
         // Use reflection to access the private executeWithTimeout method
-        java.lang.reflect.Method executeMethod = JobExecutorService.class
-                .getDeclaredMethod("executeWithTimeout", Supplier.class, long.class);
+        java.lang.reflect.Method executeMethod =
+                JobExecutorService.class.getDeclaredMethod(
+                        "executeWithTimeout", Supplier.class, long.class);
         executeMethod.setAccessible(true);
 
         // When/Then

@@ -27,17 +27,33 @@ public class ImageProcessingUtilsTest {
         void testConvertColorTypeToGreyscale() {
             BufferedImage sourceImage = createSourceImage();
 
-            BufferedImage convertedImage = ImageProcessingUtils.convertColorType(sourceImage, "greyscale");
+            BufferedImage convertedImage =
+                    ImageProcessingUtils.convertColorType(sourceImage, "greyscale");
 
             assertNotNull(convertedImage, "Converted image should not be null");
-            assertEquals(BufferedImage.TYPE_BYTE_GRAY, convertedImage.getType(), "Image type should be greyscale");
-            assertEquals(sourceImage.getWidth(), convertedImage.getWidth(), "Width should remain unchanged");
-            assertEquals(sourceImage.getHeight(), convertedImage.getHeight(), "Height should remain unchanged");
+            assertEquals(
+                    BufferedImage.TYPE_BYTE_GRAY,
+                    convertedImage.getType(),
+                    "Image type should be greyscale");
+            assertEquals(
+                    sourceImage.getWidth(),
+                    convertedImage.getWidth(),
+                    "Width should remain unchanged");
+            assertEquals(
+                    sourceImage.getHeight(),
+                    convertedImage.getHeight(),
+                    "Height should remain unchanged");
 
             // Check if a pixel is correctly converted to greyscale
             Color grey = new Color(convertedImage.getRGB(0, 0));
-            assertEquals(grey.getRed(), grey.getGreen(), "Red and green channels should be equal in greyscale");
-            assertEquals(grey.getGreen(), grey.getBlue(), "Green and blue channels should be equal in greyscale");
+            assertEquals(
+                    grey.getRed(),
+                    grey.getGreen(),
+                    "Red and green channels should be equal in greyscale");
+            assertEquals(
+                    grey.getGreen(),
+                    grey.getBlue(),
+                    "Green and blue channels should be equal in greyscale");
         }
     }
 
@@ -50,17 +66,28 @@ public class ImageProcessingUtilsTest {
         void testConvertColorTypeToBlackWhite() {
             BufferedImage sourceImage = createSourceImage();
 
-            BufferedImage convertedImage = ImageProcessingUtils.convertColorType(sourceImage, "blackwhite");
+            BufferedImage convertedImage =
+                    ImageProcessingUtils.convertColorType(sourceImage, "blackwhite");
 
             assertNotNull(convertedImage, "Converted image should not be null");
-            assertEquals(BufferedImage.TYPE_BYTE_BINARY, convertedImage.getType(), "Image type should be black and white");
-            assertEquals(sourceImage.getWidth(), convertedImage.getWidth(), "Width should remain unchanged");
-            assertEquals(sourceImage.getHeight(), convertedImage.getHeight(), "Height should remain unchanged");
+            assertEquals(
+                    BufferedImage.TYPE_BYTE_BINARY,
+                    convertedImage.getType(),
+                    "Image type should be black and white");
+            assertEquals(
+                    sourceImage.getWidth(),
+                    convertedImage.getWidth(),
+                    "Width should remain unchanged");
+            assertEquals(
+                    sourceImage.getHeight(),
+                    convertedImage.getHeight(),
+                    "Height should remain unchanged");
 
             // Check if a pixel is converted correctly (binary image will be either black or white)
             int rgb = convertedImage.getRGB(0, 0);
-            assertTrue(rgb == Color.BLACK.getRGB() || rgb == Color.WHITE.getRGB(),
-                "Pixel should be either black or white in binary image");
+            assertTrue(
+                    rgb == Color.BLACK.getRGB() || rgb == Color.WHITE.getRGB(),
+                    "Pixel should be either black or white in binary image");
         }
     }
 
@@ -73,10 +100,12 @@ public class ImageProcessingUtilsTest {
         void testConvertColorTypeToFullColor() {
             BufferedImage sourceImage = createSourceImage();
 
-            BufferedImage convertedImage = ImageProcessingUtils.convertColorType(sourceImage, "fullcolor");
+            BufferedImage convertedImage =
+                    ImageProcessingUtils.convertColorType(sourceImage, "fullcolor");
 
             assertNotNull(convertedImage, "Converted image should not be null");
-            assertSame(sourceImage, convertedImage, "Should return the original image for full color");
+            assertSame(
+                    sourceImage, convertedImage, "Should return the original image for full color");
         }
 
         @Test
@@ -84,10 +113,14 @@ public class ImageProcessingUtilsTest {
         void testConvertColorTypeInvalid() {
             BufferedImage sourceImage = createSourceImage();
 
-            BufferedImage convertedImage = ImageProcessingUtils.convertColorType(sourceImage, "invalidtype");
+            BufferedImage convertedImage =
+                    ImageProcessingUtils.convertColorType(sourceImage, "invalidtype");
 
             assertNotNull(convertedImage, "Converted image should not be null");
-            assertSame(sourceImage, convertedImage, "Should return the original image for invalid type");
+            assertSame(
+                    sourceImage,
+                    convertedImage,
+                    "Should return the original image for invalid type");
         }
     }
 

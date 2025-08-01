@@ -32,8 +32,7 @@ class CustomPDFDocumentFactoryTest {
     private SpyPDFDocumentFactory factory;
     private byte[] basePdfBytes;
 
-    @TempDir
-    Path tempDir;
+    @TempDir Path tempDir;
 
     @BeforeAll
     void loadBasePdf() throws IOException {
@@ -59,8 +58,10 @@ class CustomPDFDocumentFactoryTest {
             assertNotNull(doc, "Loaded PDDocument must not be null");
 
             StrategyType expected = StrategyType.valueOf(expectedName);
-            assertEquals(expected, factory.lastStrategyUsed,
-                "Expected strategy " + expected + " for file size " + sizeMB + "MB");
+            assertEquals(
+                    expected,
+                    factory.lastStrategyUsed,
+                    "Expected strategy " + expected + " for file size " + sizeMB + "MB");
         }
     }
 
@@ -85,7 +86,7 @@ class CustomPDFDocumentFactoryTest {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
 
         try (InputStream is = new ByteArrayInputStream(inflated);
-             PDDocument doc = factory.load(is)) {
+                PDDocument doc = factory.load(is)) {
             assertNotNull(doc);
 
             StrategyType expected = StrategyType.valueOf(expectedName);
@@ -98,7 +99,8 @@ class CustomPDFDocumentFactoryTest {
     @DisplayName("Verify loading strategy based on MultipartFile size")
     void testStrategy_MultipartFile(int sizeMB, String expectedName) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
-        MockMultipartFile multipart = new MockMultipartFile("file", "doc.pdf", "application/pdf", inflated);
+        MockMultipartFile multipart =
+                new MockMultipartFile("file", "doc.pdf", "application/pdf", inflated);
 
         try (PDDocument doc = factory.load(multipart)) {
             assertNotNull(doc);
@@ -113,7 +115,8 @@ class CustomPDFDocumentFactoryTest {
     @DisplayName("Verify loading strategy based on PDFFile composed object")
     void testStrategy_PDFFile(int sizeMB, String expectedName) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
-        MockMultipartFile multipart = new MockMultipartFile("file", "doc.pdf", "application/pdf", inflated);
+        MockMultipartFile multipart =
+                new MockMultipartFile("file", "doc.pdf", "application/pdf", inflated);
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileInput(multipart);
 
@@ -175,7 +178,7 @@ class CustomPDFDocumentFactoryTest {
         byte[] inflated = inflatePdf(basePdfBytes, 5);
 
         try (PDDocument oldDoc = Loader.loadPDF(inflated);
-             PDDocument newDoc = factory.createNewDocumentBasedOnOldDocument(oldDoc)) {
+                PDDocument newDoc = factory.createNewDocumentBasedOnOldDocument(oldDoc)) {
             assertNotNull(newDoc);
         }
     }
@@ -225,8 +228,8 @@ class CustomPDFDocumentFactoryTest {
             stream.getCOSObject().setItem(COSName.SUBTYPE, COSName.IMAGE);
 
             doc.getDocumentCatalog()
-                .getCOSObject()
-                .setItem(COSName.getPDFName("DummyBigStream"), stream.getCOSObject());
+                    .getCOSObject()
+                    .setItem(COSName.getPDFName("DummyBigStream"), stream.getCOSObject());
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             doc.save(out);

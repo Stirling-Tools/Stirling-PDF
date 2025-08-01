@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -31,22 +30,17 @@ import stirling.software.common.service.TaskManager;
 @DisplayName("JobController Tests")
 public class JobControllerTest {
 
-    @Mock
-    private TaskManager taskManager;
+    @Mock private TaskManager taskManager;
 
-    @Mock
-    private FileStorage fileStorage;
+    @Mock private FileStorage fileStorage;
 
-    @Mock
-    private JobQueue jobQueue;
+    @Mock private JobQueue jobQueue;
 
-    @Mock
-    private HttpServletRequest request;
+    @Mock private HttpServletRequest request;
 
     private MockHttpSession session;
 
-    @InjectMocks
-    private JobController controller;
+    @InjectMocks private JobController controller;
 
     @BeforeEach
     void setUp() {
@@ -118,7 +112,10 @@ public class JobControllerTest {
             ResponseEntity<?> response = controller.getJobStatus(jobId);
 
             // Assert
-            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), "Status code should be NOT_FOUND");
+            assertEquals(
+                    HttpStatus.NOT_FOUND,
+                    response.getStatusCode(),
+                    "Status code should be NOT_FOUND");
         }
     }
 
@@ -143,7 +140,8 @@ public class JobControllerTest {
 
             // Assert
             assertEquals(HttpStatus.OK, response.getStatusCode(), "Status code should be OK");
-            assertEquals(resultObject, response.getBody(), "Response body should match result object");
+            assertEquals(
+                    resultObject, response.getBody(), "Response body should match result object");
         }
 
         @Test
@@ -158,7 +156,8 @@ public class JobControllerTest {
 
             JobResult mockResult = new JobResult();
             mockResult.setJobId(jobId);
-            mockResult.completeWithSingleFile(fileId, originalFileName, contentType, fileContent.length);
+            mockResult.completeWithSingleFile(
+                    fileId, originalFileName, contentType, fileContent.length);
 
             when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
             when(fileStorage.retrieveBytes(fileId)).thenReturn(fileContent);
@@ -168,10 +167,16 @@ public class JobControllerTest {
 
             // Assert
             assertEquals(HttpStatus.OK, response.getStatusCode(), "Status code should be OK");
-            assertEquals(contentType, response.getHeaders().getFirst("Content-Type"), "Content type should match");
-            assertTrue(Objects.requireNonNull(response.getHeaders().getFirst("Content-Disposition")).contains(originalFileName),
-                "Content disposition should contain original file name");
-            assertEquals(fileContent, response.getBody(), "Response body should match file content");
+            assertEquals(
+                    contentType,
+                    response.getHeaders().getFirst("Content-Type"),
+                    "Content type should match");
+            assertTrue(
+                    Objects.requireNonNull(response.getHeaders().getFirst("Content-Disposition"))
+                            .contains(originalFileName),
+                    "Content disposition should contain original file name");
+            assertEquals(
+                    fileContent, response.getBody(), "Response body should match file content");
         }
 
         @Test
@@ -191,9 +196,14 @@ public class JobControllerTest {
             ResponseEntity<?> response = controller.getJobResult(jobId);
 
             // Assert
-            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Status code should be BAD_REQUEST");
+            assertEquals(
+                    HttpStatus.BAD_REQUEST,
+                    response.getStatusCode(),
+                    "Status code should be BAD_REQUEST");
             assertNotNull(response.getBody());
-            assertTrue(response.getBody().toString().contains(errorMessage), "Response body should contain error message");
+            assertTrue(
+                    response.getBody().toString().contains(errorMessage),
+                    "Response body should contain error message");
         }
 
         @Test
@@ -212,9 +222,14 @@ public class JobControllerTest {
             ResponseEntity<?> response = controller.getJobResult(jobId);
 
             // Assert
-            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Status code should be BAD_REQUEST");
+            assertEquals(
+                    HttpStatus.BAD_REQUEST,
+                    response.getStatusCode(),
+                    "Status code should be BAD_REQUEST");
             assertNotNull(response.getBody());
-            assertTrue(response.getBody().toString().contains("not complete"), "Response body should indicate job is not complete");
+            assertTrue(
+                    response.getBody().toString().contains("not complete"),
+                    "Response body should indicate job is not complete");
         }
 
         @Test
@@ -228,7 +243,10 @@ public class JobControllerTest {
             ResponseEntity<?> response = controller.getJobResult(jobId);
 
             // Assert
-            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), "Status code should be NOT_FOUND");
+            assertEquals(
+                    HttpStatus.NOT_FOUND,
+                    response.getStatusCode(),
+                    "Status code should be NOT_FOUND");
         }
 
         @Test
@@ -245,15 +263,21 @@ public class JobControllerTest {
             mockResult.completeWithSingleFile(fileId, originalFileName, contentType, 1024L);
 
             when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
-            when(fileStorage.retrieveBytes(fileId)).thenThrow(new RuntimeException("File not found"));
+            when(fileStorage.retrieveBytes(fileId))
+                    .thenThrow(new RuntimeException("File not found"));
 
             // Act
             ResponseEntity<?> response = controller.getJobResult(jobId);
 
             // Assert
-            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode(), "Status code should be INTERNAL_SERVER_ERROR");
+            assertEquals(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    response.getStatusCode(),
+                    "Status code should be INTERNAL_SERVER_ERROR");
             assertNotNull(response.getBody());
-            assertTrue(response.getBody().toString().contains("Error retrieving file"), "Response body should indicate file retrieval error");
+            assertTrue(
+                    response.getBody().toString().contains("Error retrieving file"),
+                    "Response body should indicate file retrieval error");
         }
     }
 
@@ -285,7 +309,10 @@ public class JobControllerTest {
             @SuppressWarnings("unchecked")
             Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
             assertNotNull(responseBody);
-            assertEquals("Job cancelled successfully", responseBody.get("message"), "Message should indicate successful cancellation");
+            assertEquals(
+                    "Job cancelled successfully",
+                    responseBody.get("message"),
+                    "Message should indicate successful cancellation");
             assertTrue((Boolean) responseBody.get("wasQueued"), "Should indicate job was in queue");
             assertEquals(2, responseBody.get("queuePosition"), "Queue position should match");
 
@@ -319,9 +346,17 @@ public class JobControllerTest {
             @SuppressWarnings("unchecked")
             Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
             assertNotNull(responseBody);
-            assertEquals("Job cancelled successfully", responseBody.get("message"), "Message should indicate successful cancellation");
-            assertFalse((Boolean) responseBody.get("wasQueued"), "Should indicate job was not in queue");
-            assertEquals("n/a", responseBody.get("queuePosition"), "Queue position should be 'n/a' for running jobs");
+            assertEquals(
+                    "Job cancelled successfully",
+                    responseBody.get("message"),
+                    "Message should indicate successful cancellation");
+            assertFalse(
+                    (Boolean) responseBody.get("wasQueued"),
+                    "Should indicate job was not in queue");
+            assertEquals(
+                    "n/a",
+                    responseBody.get("queuePosition"),
+                    "Queue position should be 'n/a' for running jobs");
 
             verify(jobQueue, never()).cancelJob(jobId);
             verify(taskManager).setError(jobId, "Job was cancelled by user");
@@ -345,7 +380,10 @@ public class JobControllerTest {
             ResponseEntity<?> response = controller.cancelJob(jobId);
 
             // Assert
-            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), "Status code should be NOT_FOUND");
+            assertEquals(
+                    HttpStatus.NOT_FOUND,
+                    response.getStatusCode(),
+                    "Status code should be NOT_FOUND");
         }
 
         @Test
@@ -369,13 +407,18 @@ public class JobControllerTest {
             ResponseEntity<?> response = controller.cancelJob(jobId);
 
             // Assert
-            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Status code should be BAD_REQUEST");
+            assertEquals(
+                    HttpStatus.BAD_REQUEST,
+                    response.getStatusCode(),
+                    "Status code should be BAD_REQUEST");
 
             @SuppressWarnings("unchecked")
             Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
             assertNotNull(responseBody);
-            assertEquals("Cannot cancel job that is already complete", responseBody.get("message"),
-                "Message should indicate job is already complete");
+            assertEquals(
+                    "Cannot cancel job that is already complete",
+                    responseBody.get("message"),
+                    "Message should indicate job is already complete");
         }
 
         @Test
@@ -394,13 +437,18 @@ public class JobControllerTest {
             ResponseEntity<?> response = controller.cancelJob(jobId);
 
             // Assert
-            assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(), "Status code should be FORBIDDEN");
+            assertEquals(
+                    HttpStatus.FORBIDDEN,
+                    response.getStatusCode(),
+                    "Status code should be FORBIDDEN");
 
             @SuppressWarnings("unchecked")
             Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
             assertNotNull(responseBody);
-            assertEquals("You are not authorized to cancel this job", responseBody.get("message"),
-                "Message should indicate unauthorized access");
+            assertEquals(
+                    "You are not authorized to cancel this job",
+                    responseBody.get("message"),
+                    "Message should indicate unauthorized access");
 
             // Verify no cancellation attempts were made
             verify(jobQueue, never()).isJobQueued(anyString());

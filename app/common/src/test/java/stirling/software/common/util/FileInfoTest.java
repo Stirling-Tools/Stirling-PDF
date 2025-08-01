@@ -26,14 +26,16 @@ public class FileInfoTest {
     })
     void testGetFormattedFileSize(long fileSize, String expectedFormattedSize) {
         FileInfo fileInfo =
-            new FileInfo(
-                "example.txt",
-                "/path/to/example.txt",
-                LocalDateTime.now(),
-                fileSize,
-                LocalDateTime.now().minusDays(1));
+                new FileInfo(
+                        "example.txt",
+                        "/path/to/example.txt",
+                        LocalDateTime.now(),
+                        fileSize,
+                        LocalDateTime.now().minusDays(1));
 
-        assertEquals(expectedFormattedSize, fileInfo.getFormattedFileSize(),
-            "File size " + fileSize + " bytes should format as " + expectedFormattedSize);
+        assertEquals(
+                expectedFormattedSize,
+                fileInfo.getFormattedFileSize(),
+                "File size " + fileSize + " bytes should format as " + expectedFormattedSize);
     }
 }

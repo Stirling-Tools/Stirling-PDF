@@ -1,8 +1,12 @@
 package stirling.software.common.util;
 
-import java.nio.file.Files;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,11 +16,6 @@ import org.junit.jupiter.api.Test;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.service.SsrfProtectionService;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 @DisplayName("FileToPdf Tests")
 class FileToPdfTest {
 
@@ -25,14 +24,17 @@ class FileToPdfTest {
     @BeforeEach
     void setUp() {
         SsrfProtectionService mockSsrfProtectionService = mock(SsrfProtectionService.class);
-        stirling.software.common.model.ApplicationProperties mockApplicationProperties = mock(stirling.software.common.model.ApplicationProperties.class);
-        stirling.software.common.model.ApplicationProperties.System mockSystem = mock(stirling.software.common.model.ApplicationProperties.System.class);
+        stirling.software.common.model.ApplicationProperties mockApplicationProperties =
+                mock(stirling.software.common.model.ApplicationProperties.class);
+        stirling.software.common.model.ApplicationProperties.System mockSystem =
+                mock(stirling.software.common.model.ApplicationProperties.System.class);
 
         when(mockSsrfProtectionService.isUrlAllowed(anyString())).thenReturn(true);
         when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
         when(mockSystem.getDisableSanitize()).thenReturn(false);
 
-        customHtmlSanitizer = new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
+        customHtmlSanitizer =
+                new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
     }
 
     @Nested
@@ -49,17 +51,24 @@ class FileToPdfTest {
             // Mock temp file creation
             try {
                 when(tempFileManager.createTempFile(anyString()))
-                    .thenReturn(Files.createTempFile("test", ".pdf").toFile())
-                    .thenReturn(Files.createTempFile("test", ".html").toFile());
+                        .thenReturn(Files.createTempFile("test", ".pdf").toFile())
+                        .thenReturn(Files.createTempFile("test", ".html").toFile());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
-            Throwable thrown = assertThrows(
-                Exception.class,
-                () -> FileToPdf.convertHtmlToPdf("/path/", request, fileBytes, fileName, tempFileManager, customHtmlSanitizer),
-                "Should throw exception for empty input or invalid environment"
-            );
+            Throwable thrown =
+                    assertThrows(
+                            Exception.class,
+                            () ->
+                                    FileToPdf.convertHtmlToPdf(
+                                            "/path/",
+                                            request,
+                                            fileBytes,
+                                            fileName,
+                                            tempFileManager,
+                                            customHtmlSanitizer),
+                            "Should throw exception for empty input or invalid environment");
             assertNotNull(thrown, "Exception should not be null");
         }
     }
@@ -71,8 +80,14 @@ class FileToPdfTest {
         @Test
         @DisplayName("Returns empty string for null or empty input")
         void testSanitizeZipFilename_NullOrEmpty() {
-            assertEquals("", FileToPdf.sanitizeZipFilename(null), "Null input should result in empty string");
-            assertEquals("", FileToPdf.sanitizeZipFilename("   "), "Blank input should result in empty string");
+            assertEquals(
+                    "",
+                    FileToPdf.sanitizeZipFilename(null),
+                    "Null input should result in empty string");
+            assertEquals(
+                    "",
+                    FileToPdf.sanitizeZipFilename("   "),
+                    "Blank input should result in empty string");
         }
 
         @Test
@@ -80,7 +95,10 @@ class FileToPdfTest {
         void testSanitizeZipFilename_RemovesTraversalSequences() {
             String input = "../some/../path/..\\to\\file.txt";
             String expected = "some/path/to/file.txt";
-            assertEquals(expected, FileToPdf.sanitizeZipFilename(input), "Traversal sequences should be removed");
+            assertEquals(
+                    expected,
+                    FileToPdf.sanitizeZipFilename(input),
+                    "Traversal sequences should be removed");
         }
 
         @Test
@@ -88,18 +106,27 @@ class FileToPdfTest {
         void testSanitizeZipFilename_RemovesLeadingDriveAndSlashes() {
             String input = "C:\\folder\\file.txt";
             String expected = "folder/file.txt";
-            assertEquals(expected, FileToPdf.sanitizeZipFilename(input), "Leading drive letters should be removed");
+            assertEquals(
+                    expected,
+                    FileToPdf.sanitizeZipFilename(input),
+                    "Leading drive letters should be removed");
 
             input = "/folder/file.txt";
             expected = "folder/file.txt";
-            assertEquals(expected, FileToPdf.sanitizeZipFilename(input), "Leading slash should be removed");
+            assertEquals(
+                    expected,
+                    FileToPdf.sanitizeZipFilename(input),
+                    "Leading slash should be removed");
         }
 
         @Test
         @DisplayName("Leaves safe filenames unchanged")
         void testSanitizeZipFilename_NoChangeForSafeNames() {
             String input = "folder/subfolder/file.txt";
-            assertEquals(input, FileToPdf.sanitizeZipFilename(input), "Safe filename should be unchanged");
+            assertEquals(
+                    input,
+                    FileToPdf.sanitizeZipFilename(input),
+                    "Safe filename should be unchanged");
         }
     }
 }
