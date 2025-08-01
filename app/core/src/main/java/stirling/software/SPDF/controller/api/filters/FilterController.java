@@ -84,6 +84,7 @@ public class FilterController {
         PDDocument document = pdfDocumentFactory.load(inputFile);
         int actualPageCount = document.getNumberOfPages();
 
+        // Perform the comparison
         boolean valid = switch (comparator) {
             case "Greater" -> actualPageCount > pageCount;
             case "Equal" -> actualPageCount == pageCount;
@@ -119,6 +120,7 @@ public class FilterController {
         PDRectangle standardSize = PdfUtils.textToPageSize(standardPageSize);
         float standardArea = standardSize.getWidth() * standardSize.getHeight();
 
+        // Perform the comparison
         boolean valid = switch (comparator) {
             case "Greater" -> actualArea > standardArea;
             case "Equal" -> actualArea == standardArea;
@@ -126,7 +128,6 @@ public class FilterController {
             default ->
                 throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         };
-        // Perform the comparison
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
@@ -145,21 +146,14 @@ public class FilterController {
         // Get the file size
         long actualFileSize = inputFile.getSize();
 
-        boolean valid = false;
         // Perform the comparison
-        switch (comparator) {
-            case "Greater":
-                valid = actualFileSize > fileSize;
-                break;
-            case "Equal":
-                valid = actualFileSize == fileSize;
-                break;
-            case "Less":
-                valid = actualFileSize < fileSize;
-                break;
-            default:
+        boolean valid = switch (comparator) {
+            case "Greater" -> actualFileSize > fileSize;
+            case "Equal" -> actualFileSize == fileSize;
+            case "Less" -> actualFileSize < fileSize;
+            default ->
                 throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        }
+        };
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
@@ -181,6 +175,8 @@ public class FilterController {
         // Get the rotation of the first page
         PDPage firstPage = document.getPage(0);
         int actualRotation = firstPage.getRotation();
+
+        // Perform the comparison
         boolean valid = switch (comparator) {
             case "Greater" -> actualRotation > rotation;
             case "Equal" -> actualRotation == rotation;
@@ -188,7 +184,6 @@ public class FilterController {
             default ->
                 throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         };
-        // Perform the comparison
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
