@@ -7,12 +7,14 @@ import static org.mockito.Mockito.when;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import stirling.software.common.model.ApplicationProperties;
 
+@DisplayName("UploadLimitService Tests")
 class UploadLimitServiceTest {
 
     private UploadLimitService uploadLimitService;
@@ -38,6 +40,7 @@ class UploadLimitServiceTest {
 
     @ParameterizedTest(name = "getUploadLimit case #{index}: input={0}, expected={1}")
     @MethodSource("uploadLimitParams")
+    @DisplayName("Upload Limit Computation Tests")
     void shouldComputeUploadLimitCorrectly(String input, long expected) {
         when(systemProps.getFileUploadLimit()).thenReturn(input);
 
@@ -56,13 +59,14 @@ class UploadLimitServiceTest {
                 // valid formats
                 Arguments.of("10KB", 10 * 1024L),
                 Arguments.of("2MB", 2 * 1024 * 1024L),
-                Arguments.of("1GB", 1L * 1024 * 1024 * 1024),
+                Arguments.of("1GB", (long) 1024 * 1024 * 1024),
                 Arguments.of("5mb", 5 * 1024 * 1024L),
                 Arguments.of("0MB", 0L));
     }
 
     @ParameterizedTest(name = "getReadableUploadLimit case #{index}: rawValue={0}, expected={1}")
     @MethodSource("readableLimitParams")
+    @DisplayName("Readable Upload Limit Tests")
     void shouldReturnReadableFormat(String rawValue, String expected) {
         when(systemProps.getFileUploadLimit()).thenReturn(rawValue);
         String result = uploadLimitService.getReadableUploadLimit();

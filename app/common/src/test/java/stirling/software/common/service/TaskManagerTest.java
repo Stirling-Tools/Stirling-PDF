@@ -1,15 +1,16 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -22,11 +23,9 @@ import stirling.software.common.model.job.ResultFile;
 
 class TaskManagerTest {
 
-    @Mock
-    private FileStorage fileStorage;
+    @Mock private FileStorage fileStorage;
 
-    @InjectMocks
-    private TaskManager taskManager;
+    @InjectMocks private TaskManager taskManager;
 
     private AutoCloseable closeable;
 
@@ -42,6 +41,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test creating a task")
     void testCreateTask() {
         // Act
         String jobId = UUID.randomUUID().toString();
@@ -56,6 +56,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test getting a job result")
     void testSetResult() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -74,6 +75,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test setting file result")
     void testSetFileResult() throws Exception {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -108,6 +110,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test setting error on job")
     void testSetError() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -126,6 +129,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test setting job as complete with existing result")
     void testSetComplete_WithExistingResult() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -144,6 +148,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test setting job as complete without existing result")
     void testSetComplete_WithoutExistingResult() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -160,6 +165,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test getting job result for non-existent job")
     void testIsComplete() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -176,6 +182,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test getting job result for non-existent job")
     void testGetJobStats() throws Exception {
         // Arrange
         // Mock fileStorage.getFileSize for file operations
@@ -216,6 +223,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test cleanup of old jobs")
     void testCleanupOldJobs() throws Exception {
         // Arrange
         // 1. Create a recent completed job
@@ -234,24 +242,27 @@ class TaskManagerTest {
         ReflectionTestUtils.setField(oldJob, "complete", true);
 
         // Create a ResultFile and set it using the new approach
-        ResultFile resultFile = ResultFile.builder()
-                .fileId("file-id")
-                .fileName("test.pdf")
-                .contentType("application/pdf")
-                .fileSize(1024L)
-                .build();
+        ResultFile resultFile =
+                ResultFile.builder()
+                        .fileId("file-id")
+                        .fileName("test.pdf")
+                        .contentType("application/pdf")
+                        .fileSize(1024L)
+                        .build();
         ReflectionTestUtils.setField(oldJob, "resultFiles", java.util.List.of(resultFile));
 
         when(fileStorage.deleteFile("file-id")).thenReturn(true);
 
         // Obtain access to the private jobResults map
-        Map<String, JobResult> jobResultsMap = (Map<String, JobResult>) ReflectionTestUtils.getField(taskManager, "jobResults");
+        Map<String, JobResult> jobResultsMap =
+                (Map<String, JobResult>) ReflectionTestUtils.getField(taskManager, "jobResults");
 
         // 3. Create an active job
         String activeJobId = "active-job";
         taskManager.createTask(activeJobId);
 
         // Verify all jobs are in the map
+        assertNotNull(jobResultsMap);
         assertTrue(jobResultsMap.containsKey(recentJobId));
         assertTrue(jobResultsMap.containsKey(oldJobId));
         assertTrue(jobResultsMap.containsKey(activeJobId));
@@ -267,6 +278,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test cleanup of old jobs with no completed jobs")
     void testShutdown() throws Exception {
         // This mainly tests that the shutdown method doesn't throw exceptions
         taskManager.shutdown();
@@ -276,6 +288,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test adding a note to a job")
     void testAddNote() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -295,6 +308,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test adding a note to a non-existent job")
     void testAddNote_NonExistentJob() {
         // Arrange
         String jobId = "non-existent-job";
