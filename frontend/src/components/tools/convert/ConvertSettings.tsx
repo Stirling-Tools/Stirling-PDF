@@ -35,13 +35,13 @@ const ConvertSettings = ({
   onParameterChange,
   getAvailableToExtensions,
   selectedFiles,
-  disabled = false 
+  disabled = false
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const { setSelectedFiles } = useFileSelectionActions();
-  const { setSelectedFiles: setContextSelectedFiles } = useFileContext();
+  const { activeFiles, setSelectedFiles: setContextSelectedFiles } = useFileContext();
 
   const allEndpoints = useMemo(() => {
     const endpoints = new Set<string>();
@@ -105,14 +105,7 @@ const ConvertSettings = ({
     }));
   }, [parameters.fromExtension, getAvailableToExtensions, endpointStatus]);
 
-  const handleFromExtensionChange = (value: string) => {
-    onParameterChange('fromExtension', value);
-    
-    // Auto-select target if only one option available
-    const availableToOptions = getAvailableToExtensions(value);
-    const autoTarget = availableToOptions.length === 1 ? availableToOptions[0].value : '';
-    onParameterChange('toExtension', autoTarget);
-    
+  const resetParametersToDefaults = () => {
     onParameterChange('imageOptions', {
       colorType: COLOR_TYPES.COLOR,
       dpi: 300,
@@ -132,24 +125,44 @@ const ConvertSettings = ({
     });
     onParameterChange('isSmartDetection', false);
     onParameterChange('smartDetectionType', 'none');
-    
-    if (selectedFiles.length > 0 && value !== 'any') {
-      const matchingFiles = selectedFiles.filter(file => {
-        const extension = file.name.split('.').pop()?.toLowerCase() || '';
-        
-        if (value === 'image') {
-          return isImageFormat(extension);
-        }
-        
-        return extension === value;
-      });
+  };
+
+  const setAutoTargetExtension = (fromExtension: string) => {
+    const availableToOptions = getAvailableToExtensions(fromExtension);
+    const autoTarget = availableToOptions.length === 1 ? availableToOptions[0].value : '';
+    onParameterChange('toExtension', autoTarget);
+  };
+
+  const filterFilesByExtension = (extension: string) => {
+    return activeFiles.filter(file => {
+      const fileExtension = detectFileExtension(file.name);
       
-      if (matchingFiles.length !== selectedFiles.length) {
-        setSelectedFiles(matchingFiles);
-        
-        const matchingFileIds = matchingFiles.map(file => (file as any).id || file.name);
-        setContextSelectedFiles(matchingFileIds);
+      if (extension === 'any') {
+        return true;
+      } else if (extension === 'image') {
+        return isImageFormat(fileExtension);
+      } else {
+        return fileExtension === extension;
       }
+    });
+  };
+
+  const updateFileSelection = (files: File[]) => {
+    setSelectedFiles(files);
+    const fileIds = files.map(file => (file as any).id || file.name);
+    setContextSelectedFiles(fileIds);
+  };
+
+  const handleFromExtensionChange = (value: string) => {
+    onParameterChange('fromExtension', value);
+    setAutoTargetExtension(value);
+    resetParametersToDefaults();
+    
+    if (activeFiles.length > 0) {
+      const matchingFiles = filterFilesByExtension(value);
+      updateFileSelection(matchingFiles);
+    } else {
+      updateFileSelection([]);
     }
   };
 

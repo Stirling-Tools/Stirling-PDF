@@ -20,7 +20,7 @@ import { BaseToolProps } from "../types/tool";
 
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
+  const { setCurrentMode, activeFiles } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -49,9 +49,13 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     if (selectedFiles.length > 0) {
       convertParams.analyzeFileTypes(selectedFiles);
     } else {
-      convertParams.resetParameters();
+      // Only reset when there are no active files at all
+      // If there are active files but no selected files, keep current format (user filtered by format)
+      if (activeFiles.length === 0) {
+        convertParams.resetParameters();
+      }
     }
-  }, [selectedFiles]);
+  }, [selectedFiles, activeFiles]);
 
   useEffect(() => {
     convertOperation.resetResults();
