@@ -91,7 +91,6 @@ public class FilterController {
             default ->
                 throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         };
-        // Perform the comparison
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
