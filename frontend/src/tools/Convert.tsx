@@ -58,9 +58,12 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   }, [selectedFiles, activeFiles]);
 
   useEffect(() => {
-    convertOperation.resetResults();
-    onPreviewFile?.(null);
-  }, [convertParams.parameters, selectedFiles]);
+    // Only clear results if we're not currently processing and parameters changed
+    if (!convertOperation.isLoading) {
+      convertOperation.resetResults();
+      onPreviewFile?.(null);
+    }
+  }, [convertParams.parameters.fromExtension, convertParams.parameters.toExtension]);
 
   useEffect(() => {
     if (hasFiles) {
