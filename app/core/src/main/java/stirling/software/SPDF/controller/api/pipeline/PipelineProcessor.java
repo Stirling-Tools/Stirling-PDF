@@ -108,9 +108,13 @@ public class PipelineProcessor {
             if (inputFileTypes == null) {
                 inputFileTypes = new ArrayList<String>(Arrays.asList("ALL"));
             }
-            if (!operation.matches("^[a-zA-Z0-9_-]+$")) {
-                throw new IllegalArgumentException("Invalid operation value received.");
+
+            if (!apiDocService.isValidOperation(operation, parameters)) {
+                log.error("Invalid operation or parameters: o:{} p:{}", operation, parameters);
+                throw new IllegalArgumentException(
+                        "Invalid operation: " + operation + " with parameters: " + parameters);
             }
+
             String url = getBaseUrl() + operation;
             List<Resource> newOutputFiles = new ArrayList<>();
             if (!isMultiInputOperation) {
@@ -136,7 +140,7 @@ public class PipelineProcessor {
                             // skip
                             // this
                             // file
-                            if (operation.startsWith("filter-")
+                            if (operation.startsWith("/api/v1/filter/filter-")
                                     && (response.getBody() == null
                                             || response.getBody().length == 0)) {
                                 filtersApplied = true;
