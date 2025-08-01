@@ -15,6 +15,7 @@ configurations {
 spotless {
     java {
         target sourceSets.main.allJava
+        target sourceSets.test.allJava
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
