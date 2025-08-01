@@ -83,25 +83,13 @@ public class StampController {
         float overrideY = request.getOverrideY(); // New field for Y override
 
         String customColor = request.getCustomColor();
-        float marginFactor;
-
-        switch (request.getCustomMargin().toLowerCase()) {
-            case "small":
-                marginFactor = 0.02f;
-                break;
-            case "medium":
-                marginFactor = 0.035f;
-                break;
-            case "large":
-                marginFactor = 0.05f;
-                break;
-            case "x-large":
-                marginFactor = 0.075f;
-                break;
-            default:
-                marginFactor = 0.035f;
-                break;
-        }
+        float marginFactor = switch (request.getCustomMargin().toLowerCase()) {
+            case "small" -> 0.02f;
+            case "medium" -> 0.035f;
+            case "large" -> 0.05f;
+            case "x-large" -> 0.075f;
+            default -> 0.035f;
+        };
 
         // Load the input PDF
         PDDocument document = pdfDocumentFactory.load(pdfFile);
@@ -177,27 +165,14 @@ public class StampController {
             throws IOException {
         String resourceDir = "";
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        switch (alphabet) {
-            case "arabic":
-                resourceDir = "static/fonts/NotoSansArabic-Regular.ttf";
-                break;
-            case "japanese":
-                resourceDir = "static/fonts/Meiryo.ttf";
-                break;
-            case "korean":
-                resourceDir = "static/fonts/malgun.ttf";
-                break;
-            case "chinese":
-                resourceDir = "static/fonts/SimSun.ttf";
-                break;
-            case "thai":
-                resourceDir = "static/fonts/NotoSansThai-Regular.ttf";
-                break;
-            case "roman":
-            default:
-                resourceDir = "static/fonts/NotoSans-Regular.ttf";
-                break;
-        }
+                resourceDir = switch (alphabet) {
+                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
+                    case "japanese" -> "static/fonts/Meiryo.ttf";
+                    case "korean" -> "static/fonts/malgun.ttf";
+                    case "chinese" -> "static/fonts/SimSun.ttf";
+                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
+                    default -> "static/fonts/NotoSans-Regular.ttf";
+                };
 
         if (!"".equals(resourceDir)) {
             ClassPathResource classPathResource = new ClassPathResource(resourceDir);
@@ -319,30 +294,28 @@ public class StampController {
             throws IOException {
         float actualWidth =
                 (text != null) ? calculateTextWidth(text, font, fontSize) : contentWidth;
-        switch (position % 3) {
-            case 1: // Left
-                return pageSize.getLowerLeftX() + margin;
-            case 2: // Center
-                return (pageSize.getWidth() - actualWidth) / 2;
-            case 0: // Right
-                return pageSize.getUpperRightX() - actualWidth - margin;
-            default:
-                return 0;
-        }
+        return switch (position % 3) {
+            case 1 -> // Left
+                pageSize.getLowerLeftX() + margin;
+            case 2 -> // Center
+                (pageSize.getWidth() - actualWidth) / 2;
+            case 0 -> // Right
+                pageSize.getUpperRightX() - actualWidth - margin;
+            default -> 0;
+        };
     }
 
     private float calculatePositionY(
             PDRectangle pageSize, int position, float height, float margin) {
-        switch ((position - 1) / 3) {
-            case 0: // Top
-                return pageSize.getUpperRightY() - height - margin;
-            case 1: // Middle
-                return (pageSize.getHeight() - height) / 2;
-            case 2: // Bottom
-                return pageSize.getLowerLeftY() + margin;
-            default:
-                return 0;
-        }
+        return switch ((position - 1) / 3) {
+            case 0 -> // Top
+                pageSize.getUpperRightY() - height - margin;
+            case 1 -> // Middle
+                (pageSize.getHeight() - height) / 2;
+            case 2 -> // Bottom
+                pageSize.getLowerLeftY() + margin;
+            default -> 0;
+        };
     }
 
     private float calculateTextWidth(String text, PDFont font, float fontSize) throws IOException {
