@@ -2,8 +2,9 @@ name: Pre-commit
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * 1"
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -45,6 +46,15 @@ jobs:
 
       - run: pre-commit run --all-files -c .pre-commit-config.yaml
         continue-on-error: true
+
+      - name: Set up JDK
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: 17
+          distribution: "temurin"
+
+      - name: Build with Gradle
+        run: ./gradlew clean build
 
       - name: git add
         run: |
