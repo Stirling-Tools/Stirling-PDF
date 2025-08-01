@@ -7,24 +7,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
-
-import java.util.Arrays;
 import java.util.function.Supplier;
 
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -45,62 +40,44 @@ class AutoJobPostMappingIntegrationTest {
 
     private AutoJobAspect autoJobAspect;
 
-    @Mock
-    private JobExecutorService jobExecutorService;
+    @Mock private JobExecutorService jobExecutorService;
 
-    @Mock
-    private HttpServletRequest request;
+    @Mock private HttpServletRequest request;
 
-    @Mock
-    private FileOrUploadService fileOrUploadService;
+    @Mock private FileOrUploadService fileOrUploadService;
 
-    @Mock
-    private FileStorage fileStorage;
+    @Mock private FileStorage fileStorage;
 
+    @Mock private ResourceMonitor resourceMonitor;
 
-    @Mock
-    private ResourceMonitor resourceMonitor;
-
-    @Mock
-    private JobQueue jobQueue;
+    @Mock private JobQueue jobQueue;
 
     @BeforeEach
     void setUp() {
-        autoJobAspect = new AutoJobAspect(
-            jobExecutorService,
-            request,
-            fileOrUploadService,
-            fileStorage
-        );
+        autoJobAspect =
+                new AutoJobAspect(jobExecutorService, request, fileOrUploadService, fileStorage);
     }
 
-    @Mock
-    private ProceedingJoinPoint joinPoint;
+    @Mock private ProceedingJoinPoint joinPoint;
 
-    @Mock
-    private AutoJobPostMapping autoJobPostMapping;
+    @Mock private AutoJobPostMapping autoJobPostMapping;
 
-    @Captor
-    private ArgumentCaptor<Supplier<Object>> workCaptor;
+    @Captor private ArgumentCaptor<Supplier<Object>> workCaptor;
 
-    @Captor
-    private ArgumentCaptor<Boolean> asyncCaptor;
+    @Captor private ArgumentCaptor<Boolean> asyncCaptor;
 
-    @Captor
-    private ArgumentCaptor<Long> timeoutCaptor;
+    @Captor private ArgumentCaptor<Long> timeoutCaptor;
 
-    @Captor
-    private ArgumentCaptor<Boolean> queueableCaptor;
+    @Captor private ArgumentCaptor<Boolean> queueableCaptor;
 
-    @Captor
-    private ArgumentCaptor<Integer> resourceWeightCaptor;
+    @Captor private ArgumentCaptor<Integer> resourceWeightCaptor;
 
     @Test
     void shouldExecuteWithCustomParameters() throws Throwable {
         // Given
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileId("test-file-id");
-        Object[] args = new Object[] { pdfFile };
+        Object[] args = new Object[] {pdfFile};
 
         when(joinPoint.getArgs()).thenReturn(args);
         when(request.getParameter("async")).thenReturn("true");
@@ -113,9 +90,8 @@ class AutoJobPostMappingIntegrationTest {
         MultipartFile mockFile = mock(MultipartFile.class);
         when(fileStorage.retrieveFile("test-file-id")).thenReturn(mockFile);
 
-
         when(jobExecutorService.runJobGeneric(
-                anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
                 .thenReturn(ResponseEntity.ok("success"));
 
         // When
@@ -124,12 +100,13 @@ class AutoJobPostMappingIntegrationTest {
         // Then
         assertEquals(ResponseEntity.ok("success"), result);
 
-        verify(jobExecutorService).runJobGeneric(
-                asyncCaptor.capture(),
-                workCaptor.capture(),
-                timeoutCaptor.capture(),
-                queueableCaptor.capture(),
-                resourceWeightCaptor.capture());
+        verify(jobExecutorService)
+                .runJobGeneric(
+                        asyncCaptor.capture(),
+                        workCaptor.capture(),
+                        timeoutCaptor.capture(),
+                        queueableCaptor.capture(),
+                        resourceWeightCaptor.capture());
 
         assertTrue(asyncCaptor.getValue(), "Async should be true");
         assertEquals(60000L, timeoutCaptor.getValue(), "Timeout should be 60000ms");
@@ -158,11 +135,12 @@ class AutoJobPostMappingIntegrationTest {
 
         // Mock jobExecutorService to execute the work immediately
         when(jobExecutorService.runJobGeneric(
-                anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
-                .thenAnswer(invocation -> {
-                    Supplier<Object> work = invocation.getArgument(1);
-                    return work.get();
-                });
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                .thenAnswer(
+                        invocation -> {
+                            Supplier<Object> work = invocation.getArgument(1);
+                            return work.get();
+                        });
 
         // When
         Object result = autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
@@ -179,7 +157,7 @@ class AutoJobPostMappingIntegrationTest {
         // Given
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileInput(mock(MultipartFile.class));
-        Object[] args = new Object[] { pdfFile };
+        Object[] args = new Object[] {pdfFile};
 
         when(joinPoint.getArgs()).thenReturn(args);
         when(request.getParameter("async")).thenReturn("true");
@@ -190,14 +168,16 @@ class AutoJobPostMappingIntegrationTest {
 
         // Mock job executor to return a successful response
         when(jobExecutorService.runJobGeneric(
-                anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
                 .thenReturn(ResponseEntity.ok("success"));
 
         // When
         autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
 
         // Then
-        assertEquals("stored-file-id", pdfFile.getFileId(),
+        assertEquals(
+                "stored-file-id",
+                pdfFile.getFileId(),
                 "FileId should be set to the stored file id");
         assertNotNull(pdfFile.getFileInput(), "FileInput should be replaced with persistent file");
 
