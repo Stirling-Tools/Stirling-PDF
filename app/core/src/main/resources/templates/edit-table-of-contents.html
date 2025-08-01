@@ -51,6 +51,12 @@
               <p>
                 <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
                   aria-expanded="false" aria-controls="info" th:text="#{info}"></a>
+                <button type="button"
+                  id="copyBookmarksBtn"
+                  class="btn btn-outline-primary"
+                  th:text="#{editTableOfContents.copyBookmarks}"
+                  th:title="#{editTableOfContents.copyBookmarksHint}">
+                </button>
               </p>
               <div class="collapse" id="info">
                 <p th:text="#{editTableOfContents.desc.1}"></p>

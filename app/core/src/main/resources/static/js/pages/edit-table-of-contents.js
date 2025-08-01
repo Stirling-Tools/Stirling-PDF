@@ -597,6 +597,20 @@ document.addEventListener('DOMContentLoaded', function() {
     updateEmptyStateButton();
   }
 
+  // Add copy bookmarks to clipboard functionality
+  async function copyBookmarksStringToClipboard() {
+    const bookmarkData = bookmarkDataInput.value;
+    try {
+      await navigator.clipboard.writeText(bookmarkData);
+    } catch (error) {
+      throw new Error(`Failed to copy bookmarks: ${error.message}`);
+    }
+  }
+
+  // Add event listener to the copy bookmarks button
+  const copyBookmarksBtn = document.getElementById('copyBookmarksBtn');
+  copyBookmarksBtn.addEventListener('click', copyBookmarksStringToClipboard);
+
   // Listen for theme changes to update badge colors
   const observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
