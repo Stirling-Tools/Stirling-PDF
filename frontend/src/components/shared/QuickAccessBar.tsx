@@ -11,6 +11,7 @@ import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import rainbowStyles from '../../styles/rainbow.module.css';
 import AppConfigModal from './AppConfigModal';
 import { useIsOverflowing } from '../../hooks/useIsOverflowing';
+import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import './QuickAccessBar.css';
 
 interface QuickAccessBarProps {
@@ -30,6 +31,7 @@ interface ButtonConfig {
   isRound?: boolean;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   onClick: () => void;
+  type?: 'navigation' | 'modal' | 'action'; // navigation = main nav, modal = triggers modal, action = other actions
 }
 
 function NavHeader({ 
@@ -111,10 +113,15 @@ const QuickAccessBar = ({
   readerMode,
 }: QuickAccessBarProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
+  const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
+
+  const handleFilesButtonClick = () => {
+    openFilesModal();
+  };
 
   const buttonConfigs: ButtonConfig[] = [
     {
@@ -124,6 +131,7 @@ const QuickAccessBar = ({
       tooltip: 'Read documents',
       size: 'lg',
       isRound: false,
+      type: 'navigation',
       onClick: () => {
         setActiveButton('read');
         onReaderToggle();
@@ -139,6 +147,7 @@ const QuickAccessBar = ({
       tooltip: 'Sign your document',
       size: 'lg',
       isRound: false,
+      type: 'navigation',
       onClick: () => setActiveButton('sign')
     },
     {
@@ -148,6 +157,7 @@ const QuickAccessBar = ({
       tooltip: 'Automate workflows',
       size: 'lg',
       isRound: false,
+      type: 'navigation',
       onClick: () => setActiveButton('automate')
     },
     {
@@ -157,7 +167,8 @@ const QuickAccessBar = ({
       tooltip: 'Manage files',
       isRound: true,
       size: 'lg',
-      onClick: () => setActiveButton('files')
+      type: 'modal',
+      onClick: handleFilesButtonClick
     },
     {
       id: 'activity',
@@ -169,6 +180,7 @@ const QuickAccessBar = ({
       tooltip: 'View activity and analytics',
       isRound: true,
       size: 'lg',
+      type: 'navigation',
       onClick: () => setActiveButton('activity')
     },
     {
@@ -177,6 +189,7 @@ const QuickAccessBar = ({
       icon: <SettingsIcon sx={{ fontSize: "1rem" }} />,
       tooltip: 'Configure settings',
       size: 'lg',
+      type: 'modal',
       onClick: () => {
         setConfigModalOpen(true);
       }
@@ -190,8 +203,16 @@ const QuickAccessBar = ({
     return config.isRound ? CIRCULAR_BORDER_RADIUS : ROUND_BORDER_RADIUS;
   };
 
+  const isButtonActive = (config: ButtonConfig): boolean => {
+    return (
+      (config.type === 'navigation' && activeButton === config.id) ||
+      (config.type === 'modal' && config.id === 'files' && isFilesModalOpen) ||
+      (config.type === 'modal' && config.id === 'config' && configModalOpen)
+    );
+  };
+
   const getButtonStyle = (config: ButtonConfig) => {
-    const isActive = activeButton === config.id;
+    const isActive = isButtonActive(config);
     
     if (isActive) {
       return {
@@ -202,7 +223,7 @@ const QuickAccessBar = ({
       };
     }
     
-    // Inactive state - use consistent inactive colors
+    // Inactive state for all buttons
     return {
       backgroundColor: 'var(--icon-inactive-bg)',
       color: 'var(--icon-inactive-color)',
@@ -254,13 +275,13 @@ const QuickAccessBar = ({
                       variant="subtle"
                       onClick={config.onClick}
                       style={getButtonStyle(config)}
-                      className={activeButton === config.id ? 'activeIconScale' : ''}
+                      className={isButtonActive(config) ? 'activeIconScale' : ''}
                     >
                       <span className="iconContainer">
                         {config.icon}
                       </span>
                     </ActionIcon>
-                    <span className={`button-text ${activeButton === config.id ? 'active' : 'inactive'}`}>
+                    <span className={`button-text ${isButtonActive(config) ? 'active' : 'inactive'}`}>
                       {config.name}
                     </span>
                   </div>
@@ -281,30 +302,28 @@ const QuickAccessBar = ({
           <div className="spacer" />
           
           {/* Config button at the bottom */}
-          <Tooltip label="Configure settings" position="right">
-            <div className="flex flex-col items-center gap-1">
-              <ActionIcon
-                size="lg"
-                variant="subtle"
-                onClick={() => {
-                  setConfigModalOpen(true);
-                }}
-                style={{
-                  backgroundColor: 'var(--icon-inactive-bg)',
-                  color: 'var(--icon-inactive-color)',
-                  border: 'none',
-                  borderRadius: '8px',
-                }}
-              >
-                <span className="iconContainer">
-                  <SettingsIcon sx={{ fontSize: "1rem" }} />
-                </span>
-              </ActionIcon>
-              <span className="config-button-text">
-                Config
-              </span>
-            </div>
-          </Tooltip>
+          {buttonConfigs
+            .filter(config => config.id === 'config')
+            .map(config => (
+              <Tooltip key={config.id} label={config.tooltip} position="right">
+                <div className="flex flex-col items-center gap-1">
+                  <ActionIcon
+                    size={config.size || 'lg'}
+                    variant="subtle"
+                    onClick={config.onClick}
+                    style={getButtonStyle(config)}
+                    className={isButtonActive(config) ? 'activeIconScale' : ''}
+                  >
+                    <span className="iconContainer">
+                      {config.icon}
+                    </span>
+                  </ActionIcon>
+                  <span className={`button-text ${isButtonActive(config) ? 'active' : 'inactive'}`}>
+                    {config.name}
+                  </span>
+                </div>
+              </Tooltip>
+            ))}
         </div>
       </div>
 

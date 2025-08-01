@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect} from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from "../contexts/FileContext";
 import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
 import { useToolManagement } from "../hooks/useToolManagement";
-import { Group, Box, Button, Container } from "@mantine/core";
+import { useFileHandler } from "../hooks/useFileHandler";
+import { Group, Box, Button } from "@mantine/core";
 import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
 import { PageEditorFunctions } from "../types/pageEditor";
 import rainbowStyles from '../styles/rainbow.module.css';
@@ -14,17 +15,18 @@ import FileEditor from "../components/fileEditor/FileEditor";
 import PageEditor from "../components/pageEditor/PageEditor";
 import PageEditorControls from "../components/pageEditor/PageEditorControls";
 import Viewer from "../components/viewer/Viewer";
-import FileUploadSelector from "../components/shared/FileUploadSelector";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
+import LandingPage from "../components/shared/LandingPage";
 
 function HomePageContent() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
 
   const fileContext = useFileContext();
-  const { activeFiles, currentView, currentMode, setCurrentView, addFiles } = fileContext;
+  const { activeFiles, currentView, setCurrentView } = fileContext;
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
+  const { addToActiveFiles } = useFileHandler();
 
   const {
     selectedToolKey,
@@ -77,12 +79,6 @@ function HomePageContent() {
     setCurrentView(view as any);
   }, [setCurrentView]);
 
-  const addToActiveFiles = useCallback(async (file: File) => {
-    const exists = activeFiles.some(f => f.name === file.name && f.size === file.size);
-    if (!exists) {
-      await addFiles([file]);
-    }
-  }, [activeFiles, addFiles]);
 
 
 
@@ -183,25 +179,12 @@ function HomePageContent() {
             }}
           >
             {!activeFiles[0] ? (
-              <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <FileUploadSelector
-                  title={currentView === "viewer"
-                    ? t("fileUpload.selectPdfToView", "Select a PDF to view")
-                    : t("fileUpload.selectPdfToEdit", "Select a PDF to edit")
-                  }
-                  subtitle={t("fileUpload.chooseFromStorage", "Choose a file from storage or upload a new PDF")}
-                  onFileSelect={(file) => {
-                    addToActiveFiles(file);
-                  }}
-                  onFilesSelect={(files) => {
-                    files.forEach(addToActiveFiles);
-                  }}
-                  accept={["application/pdf"]}
-                  loading={false}
-                  showRecentFiles={true}
-                  maxRecentFiles={8}
-                />
-              </Container>
+              <LandingPage
+                title={currentView === "viewer"
+                  ? t("fileUpload.selectPdfToView", "Select a PDF to view")
+                  : t("fileUpload.selectPdfToEdit", "Select a PDF to edit")
+                }
+              />
             ) : currentView === "fileEditor" ? (
               <FileEditor
                 toolMode={!!selectedToolKey}
@@ -271,22 +254,9 @@ function HomePageContent() {
                 selectedToolKey={selectedToolKey}
               />
             ) : (
-              <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <FileUploadSelector
-                  title="File Management"
-                  subtitle="Choose files from storage or upload new PDFs"
-                  onFileSelect={(file) => {
-                    addToActiveFiles(file);
-                  }}
-                  onFilesSelect={(files) => {
-                    files.forEach(addToActiveFiles);
-                  }}
-                  accept={["application/pdf"]}
-                  loading={false}
-                  showRecentFiles={true}
-                  maxRecentFiles={8}
-                />
-              </Container>
+              <LandingPage 
+                title="File Management" 
+              />
             )}
           </Box>
       </Box>
