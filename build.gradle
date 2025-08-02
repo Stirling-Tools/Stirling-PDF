@@ -198,6 +198,10 @@ subprojects {
             finalizedBy("copySwaggerDoc")
             doNotTrackState("OpenAPI plugin writes outside build directory")
         }
+        tasks.named("spotlessJava") {
+            dependsOn(":common:compileJava")
+            dependsOn(":proprietary:compileJava")
+        }
     }
 }
 
@@ -542,6 +546,12 @@ spotless {
     }
     yaml {
         target '**/*.yml', '**/*.yaml'
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    format 'gradle', {
+        target '*.gradle', 'gradle/*.gradle','**/*.gradle', 'gradle/**/*.gradle', 'app/**/*.gradle'
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
