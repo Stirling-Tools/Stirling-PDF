@@ -5,9 +5,8 @@ bootRun {
     enabled = false
 }
 spotless {
-    java {
-        target sourceSets.main.allJava
-        target sourceSets.test.allJava
+        java {
+        target 'src/**/java/**/*.java'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
@@ -23,7 +22,7 @@ spotless {
         endWithNewline()
     }
     format 'gradle', {
-        target 'build.gradle'
+        target '**/gradle/*.gradle', '**/*.gradle'
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
