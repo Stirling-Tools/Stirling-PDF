@@ -198,10 +198,6 @@ subprojects {
             finalizedBy("copySwaggerDoc")
             doNotTrackState("OpenAPI plugin writes outside build directory")
         }
-        tasks.named("spotlessJava") {
-            dependsOn(":common:compileJava")
-            dependsOn(":proprietary:compileJava")
-        }
     }
 }
 

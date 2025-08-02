@@ -4,7 +4,8 @@ repositories {
 bootRun {
     enabled = false
 }
-
+spotless {
+}
 dependencies {
     implementation project(':common')
 

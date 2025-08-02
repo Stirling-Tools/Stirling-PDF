@@ -12,6 +12,9 @@ configurations {
     }
 }
 
+spotless {
+}
+
 dependencies {
     if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
         || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
