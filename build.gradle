@@ -29,7 +29,7 @@ ext {
     springSecuritySamlVersion = "6.5.2"
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.25.0"
-    googleJavaFormatVersion = "1.27.0"
+    googleJavaFormatVersion = "1.28.0"
     tempJrePath = null
 }
 
@@ -158,9 +158,9 @@ subprojects {
         useJUnitPlatform()
     }
 
-	tasks.named("processResources") {
-	  dependsOn(rootProject.tasks.writeVersion)
-	}
+    tasks.named("processResources") {
+        dependsOn(rootProject.tasks.writeVersion)
+    }
 
     if (name == 'stirling-pdf') {
         apply plugin: 'org.springdoc.openapi-gradle-plugin'
@@ -528,20 +528,14 @@ launch4j {
 }
 
 spotless {
-    java {
-        target sourceSets.main.allJava
-        target sourceSets.test.allJava
-        target project(':common').sourceSets.main.allJava
-        target project(':common').sourceSets.test.allJava
-        target project(':proprietary').sourceSets.main.allJava
-        target project(':proprietary').sourceSets.test.allJava
-        target project(':stirling-pdf').sourceSets.main.allJava
-        target project(':stirling-pdf').sourceSets.test.allJava
-
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
-
-        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
+    yaml {
+        target '*.yml', '*.yaml'
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    format 'gradle', {
+        target 'build.gradle', 'settings.gradle', 'gradle/*.gradle', 'gradle/**/*.gradle'
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
