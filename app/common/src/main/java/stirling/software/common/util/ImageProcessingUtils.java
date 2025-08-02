@@ -82,19 +82,16 @@ public class ImageProcessingUtils {
                 return 0;
             }
             int orientationTag = directory.getInt(ExifSubIFDDirectory.TAG_ORIENTATION);
-            switch (orientationTag) {
-                case 1:
-                    return 0;
-                case 6:
-                    return 90;
-                case 3:
-                    return 180;
-                case 8:
-                    return 270;
-                default:
+            return switch (orientationTag) {
+                case 1 -> 0;
+                case 6 -> 90;
+                case 3 -> 180;
+                case 8 -> 270;
+                default -> {
                     log.warn("Unknown orientation tag: {}", orientationTag);
-                    return 0;
-            }
+                    yield 0;
+                }
+            };
         } catch (ImageProcessingException | MetadataException e) {
             return 0;
         }
