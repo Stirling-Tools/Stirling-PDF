@@ -77,8 +77,11 @@ public class AccountWebController {
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
-        // If the user is already authenticated, redirect them to the home page.
-        if (authentication != null && authentication.isAuthenticated()) {
+        // If the user is already authenticated and it's not a logout scenario, redirect them to the
+        // home page.
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && request.getParameter("logout") == null) {
             return "redirect:/";
         }
 
@@ -184,7 +187,7 @@ public class AccountWebController {
                         errorOAuth = "login.relyingPartyRegistrationNotFound";
                 // Valid InResponseTo was not available from the validation context, unable to
                 // evaluate
-                case "invalid_in_response_to" -> errorOAuth = "login.invalid_in_response_to";
+                case "invalid_in_response_to" -> errorOAuth = "login.invalidInResponseTo";
                 case "not_authentication_provider_found" ->
                         errorOAuth = "login.not_authentication_provider_found";
             }
