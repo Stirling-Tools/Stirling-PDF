@@ -1,15 +1,14 @@
 package stirling.software.common.util;
 
-import java.nio.file.Files;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.anyString;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,14 +23,18 @@ public class FileToPdfTest {
     @BeforeEach
     void setUp() {
         SsrfProtectionService mockSsrfProtectionService = mock(SsrfProtectionService.class);
-        stirling.software.common.model.ApplicationProperties mockApplicationProperties = mock(stirling.software.common.model.ApplicationProperties.class);
-        stirling.software.common.model.ApplicationProperties.System mockSystem = mock(stirling.software.common.model.ApplicationProperties.System.class);
+        stirling.software.common.model.ApplicationProperties mockApplicationProperties =
+                mock(stirling.software.common.model.ApplicationProperties.class);
+        stirling.software.common.model.ApplicationProperties.System mockSystem =
+                mock(stirling.software.common.model.ApplicationProperties.System.class);
 
-        when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
+        when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(true);
         when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
         when(mockSystem.getDisableSanitize()).thenReturn(false);
 
-        customHtmlSanitizer = new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
+        customHtmlSanitizer =
+                new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
     }
 
     /**
@@ -48,8 +51,8 @@ public class FileToPdfTest {
         // Mock the temp file creation to return real temp files
         try {
             when(tempFileManager.createTempFile(anyString()))
-                .thenReturn(Files.createTempFile("test", ".pdf").toFile())
-                .thenReturn(Files.createTempFile("test", ".html").toFile());
+                    .thenReturn(Files.createTempFile("test", ".pdf").toFile())
+                    .thenReturn(Files.createTempFile("test", ".html").toFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -60,7 +63,12 @@ public class FileToPdfTest {
                         Exception.class,
                         () ->
                                 FileToPdf.convertHtmlToPdf(
-                                        "/path/", request, fileBytes, fileName, tempFileManager, customHtmlSanitizer));
+                                        "/path/",
+                                        request,
+                                        fileBytes,
+                                        fileName,
+                                        tempFileManager,
+                                        customHtmlSanitizer));
         assertNotNull(thrown);
     }
 

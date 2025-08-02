@@ -23,15 +23,19 @@ class CustomHtmlSanitizerTest {
     @BeforeEach
     void setUp() {
         SsrfProtectionService mockSsrfProtectionService = mock(SsrfProtectionService.class);
-        stirling.software.common.model.ApplicationProperties mockApplicationProperties = mock(stirling.software.common.model.ApplicationProperties.class);
-        stirling.software.common.model.ApplicationProperties.System mockSystem = mock(stirling.software.common.model.ApplicationProperties.System.class);
+        stirling.software.common.model.ApplicationProperties mockApplicationProperties =
+                mock(stirling.software.common.model.ApplicationProperties.class);
+        stirling.software.common.model.ApplicationProperties.System mockSystem =
+                mock(stirling.software.common.model.ApplicationProperties.System.class);
 
         // Allow all URLs by default for basic tests
-        when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
+        when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(true);
         when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
         when(mockSystem.getDisableSanitize()).thenReturn(false); // Enable sanitization for tests
 
-        customHtmlSanitizer = new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
+        customHtmlSanitizer =
+                new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
     }
 
     @ParameterizedTest
