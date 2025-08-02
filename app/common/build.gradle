@@ -2,31 +2,6 @@
 bootRun {
     enabled = false
 }
-spotless {
-    java {
-        target sourceSets.main.allJava
-        target sourceSets.test.allJava
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
-
-        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    yaml {
-        target '**/*.yml', '**/*.yaml'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    format 'gradle', {
-        target '*.gradle', 'gradle/*.gradle','**/*.gradle', 'gradle/**/*.gradle', 'app/**/*.gradle'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-}
 dependencies {
     api 'org.springframework.boot:spring-boot-starter-web'
     api 'org.springframework.boot:spring-boot-starter-aop'

@@ -529,14 +529,7 @@ launch4j {
 
 spotless {
     java {
-        target sourceSets.main.allJava
-        target sourceSets.test.allJava
-        target project(':common').sourceSets.main.allJava
-        target project(':common').sourceSets.test.allJava
-        target project(':proprietary').sourceSets.main.allJava
-        target project(':proprietary').sourceSets.test.allJava
-        target project(':stirling-pdf').sourceSets.main.allJava
-        target project(':stirling-pdf').sourceSets.test.allJava
+        target '*.java', 'app/**/*.java'
 
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
@@ -632,11 +625,4 @@ tasks.named('build') {
     doFirst {
         println "Delegating to :stirling-pdf:bootJar"
     }
-}
-
-tasks.named('spotlessGradle') {
-    mustRunAfter ':common:processTestResources'
-    mustRunAfter ':common:spotlessGradle'
-    mustRunAfter ':stirling-pdf:spotlessGradle'
-    mustRunAfter ':proprietary:spotlessGradle'
 }
