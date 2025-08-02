@@ -15,7 +15,7 @@ on:
 # This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
 # in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -127,7 +127,7 @@ jobs:
 
             // Filter for relevant files based on the PR changes
             const changedFiles = files
-              .filter(file => 
+              .filter(file =>
                 file.status !== "removed" &&
                 /^app\/core\/src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file.filename)
               )
