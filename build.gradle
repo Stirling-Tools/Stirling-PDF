@@ -528,25 +528,14 @@ launch4j {
 }
 
 spotless {
-    java {
-        target '*.java', 'app/**/*.java'
-
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
-
-        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
     yaml {
-        target '**/*.yml', '**/*.yaml'
+        target '*.yml', '*.yaml'
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
     }
     format 'gradle', {
-        target '*.gradle', 'gradle/*.gradle','**/*.gradle', 'gradle/**/*.gradle', 'app/**/*.gradle'
+        target 'build.gradle', 'settings.gradle', 'gradle/*.gradle', 'gradle/**/*.gradle'
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()

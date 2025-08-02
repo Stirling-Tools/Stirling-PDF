@@ -12,6 +12,32 @@ configurations {
     }
 }
 
+spotless {
+    java {
+        target sourceSets.main.allJava
+        target sourceSets.test.allJava
+        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+
+        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
+        toggleOffOn()
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    yaml {
+        target '**/*.yml', '**/*.yaml'
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    format 'gradle', {
+        target 'build.gradle'
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+}
+
 dependencies {
     if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
         || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
