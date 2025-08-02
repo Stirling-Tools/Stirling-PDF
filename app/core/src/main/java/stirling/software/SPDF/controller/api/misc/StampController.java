@@ -70,9 +70,11 @@ public class StampController {
         String stampType = request.getStampType();
         String stampText = request.getStampText();
         MultipartFile stampImage = request.getStampImage();
-        String stampImageName = stampImage.getOriginalFilename();
-        if (stampImageName.contains("..") || stampImageName.startsWith("/")) {
-            throw new IllegalArgumentException("Invalid stamp image file path");
+        if ("image".equalsIgnoreCase(stampType)) {
+            String stampImageName = stampImage.getOriginalFilename();
+            if (stampImageName.contains("..") || stampImageName.startsWith("/")) {
+                throw new IllegalArgumentException("Invalid stamp image file path");
+            }
         }
         String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();
