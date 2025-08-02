@@ -546,12 +546,6 @@ spotless {
         leadingTabsToSpaces()
         endWithNewline()
     }
-    format 'gradle', {
-        target '*.gradle', 'gradle/*.gradle','**/*.gradle', 'gradle/**/*.gradle', 'app/**/*.gradle'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
 }
 
 sonar {
