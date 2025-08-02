@@ -538,7 +538,6 @@ spotless {
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
-        // formatAnnotations()
     }
     yaml {
         target '**/*.yml', '**/*.yaml'
