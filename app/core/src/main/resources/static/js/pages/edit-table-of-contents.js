@@ -640,8 +640,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Add event listeners for import/export buttons
-  document.getElementById('importBookmarksBtn').addEventListener('click', importBookmarkStringFromClipboard);
-  document.getElementById('exportBookmarksBtn').addEventListener('click', exportBookmarkStringToClipboard);
+  const importBookmarksBtn = document.getElementById('importBookmarksBtn');
+  const exportBookmarksBtn = document.getElementById('exportBookmarksBtn');
+  importBookmarksBtn.addEventListener('click', importBookmarkStringFromClipboard);
+  exportBookmarksBtn.addEventListener('click', exportBookmarkStringToClipboard);
+
+  // display import/export buttons if supported
+  if (navigator.clipboard && navigator.clipboard.writeText && navigator.clipboard.readText) {
+    importBookmarksBtn.classList.remove('d-none');
+    exportBookmarksBtn.classList.remove('d-none');
+  }
 
   // Listen for theme changes to update badge colors
   const observer = new MutationObserver(function(mutations) {
