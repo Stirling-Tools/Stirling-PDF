@@ -20,6 +20,11 @@
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-pdf-by-sections'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div class="mb-3">
+                  <label for="pageToSplit" th:text="#{split-by-sections.pageToSplit}"></label>
+                  <input type="text" class="form-control" id="pageToSplit" name="pageNumbers"
+                         th:placeholder="#{split-by-sections.pageToSplit.placeholder}" required>
+                </div>
                 <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal Divisions</label>
                 <input type="number" id="horizontalDivisions" name="horizontalDivisions" class="form-control" min="0" max="300" value="0" required th:placeholder="#{split-by-sections.horizontal.placeholder}">
                 <br>
