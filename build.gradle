@@ -635,8 +635,8 @@ tasks.named('build') {
 }
 
 tasks.named('spotlessGradle') {
-    dependsOn ':common:processTestResources'
-    dependsOn ':common:spotlessGradle'
-    dependsOn ':stirling-pdf:spotlessGradle'
-    dependsOn ':proprietary:spotlessGradle'
+    mustRunAfter ':common:processTestResources'
+    mustRunAfter ':common:spotlessGradle'
+    mustRunAfter ':stirling-pdf:spotlessGradle'
+    mustRunAfter ':proprietary:spotlessGradle'
 }
