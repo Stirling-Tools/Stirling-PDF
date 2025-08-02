@@ -72,7 +72,7 @@ public class StampController {
         MultipartFile stampImage = request.getStampImage();
         if ("image".equalsIgnoreCase(stampType)) {
             String stampImageName = stampImage.getOriginalFilename();
-            if (stampImageName.contains("..") || stampImageName.startsWith("/")) {
+            if (stampImageName == null || stampImageName.contains("..") || stampImageName.startsWith("/")) {
                 throw new IllegalArgumentException("Invalid stamp image file path");
             }
         }
