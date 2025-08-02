@@ -597,6 +597,60 @@ document.addEventListener('DOMContentLoaded', function() {
     updateEmptyStateButton();
   }
 
+  // Add import/export bookmarks to clipboard functionality
+  function flashButtonSuccess(button) {
+    const originalClass = button.className;
+
+    button.classList.remove('btn-outline-primary');
+    button.classList.add('btn-success', 'success-flash');
+
+    setTimeout(() => {
+      button.className = originalClass;
+    }, 1000);
+  }
+
+  async function importBookmarkStringFromClipboard() {
+    const button = document.getElementById('importBookmarksBtn');
+    try {
+      const newBookmarkDataString = await navigator.clipboard.readText();
+      const newBookmarkData = JSON.parse(newBookmarkDataString);
+
+      if (!newBookmarkData || newBookmarkData.length === 0) {
+        // don't change bookmarks for empty import data
+        return;
+      }
+
+      bookmarks = newBookmarkData.map(convertExtractedBookmark);
+      updateBookmarksUI();
+      flashButtonSuccess(button);
+    } catch (error) {
+      throw new Error(`Failed to import bookmarks: ${error.message}`);
+    }
+  }
+
+  async function exportBookmarkStringToClipboard() {
+    const button = document.getElementById('exportBookmarksBtn');
+    const bookmarkData = bookmarkDataInput.value;
+    try {
+      await navigator.clipboard.writeText(bookmarkData);
+      flashButtonSuccess(button);
+    } catch (error) {
+      throw new Error(`Failed to export bookmarks: ${error.message}`);
+    }
+  }
+
+  // Add event listeners for import/export buttons
+  const importBookmarksBtn = document.getElementById('importBookmarksBtn');
+  const exportBookmarksBtn = document.getElementById('exportBookmarksBtn');
+  importBookmarksBtn.addEventListener('click', importBookmarkStringFromClipboard);
+  exportBookmarksBtn.addEventListener('click', exportBookmarkStringToClipboard);
+
+  // display import/export buttons if supported
+  if (navigator.clipboard && navigator.clipboard.writeText && navigator.clipboard.readText) {
+    importBookmarksBtn.classList.remove('d-none');
+    exportBookmarksBtn.classList.remove('d-none');
+  }
+
   // Listen for theme changes to update badge colors
   const observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
