@@ -5,14 +5,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +49,15 @@ public class TempFileCleanupService {
 
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
+
+    // Maximum consecutive failures before aborting batch cleanup
+    private static final int MAX_CONSECUTIVE_FAILURES = 10;
+
+    // Cleanup state management
+    private final AtomicBoolean cleanupRunning = new AtomicBoolean(false);
+    private final AtomicLong lastCleanupDuration = new AtomicLong(0);
+    private final AtomicLong cleanupCount = new AtomicLong(0);
+    private final AtomicLong lastCleanupTimestamp = new AtomicLong(0);
 
     // File patterns that identify our temp files
     private static final Predicate<String> IS_OUR_TEMP_FILE =
@@ -121,12 +134,78 @@ public class TempFileCleanupService {
     }
 
     /** Scheduled task to clean up old temporary files. Runs at the configured interval. */
+    @Async("cleanupExecutor")
     @Scheduled(
             fixedDelayString =
                     "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
             timeUnit = TimeUnit.MINUTES)
-    public void scheduledCleanup() {
-        log.info("Running scheduled temporary file cleanup");
+    public CompletableFuture<Void> scheduledCleanup() {
+        // Check if cleanup is already running
+        if (!cleanupRunning.compareAndSet(false, true)) {
+            log.warn(
+                    "Cleanup already in progress (running for {}ms), skipping this cycle",
+                    System.currentTimeMillis() - lastCleanupTimestamp.get());
+            return CompletableFuture.completedFuture(null);
+        }
+
+        // Calculate timeout as 2x cleanup interval
+        long timeoutMinutes =
+                applicationProperties
+                                .getSystem()
+                                .getTempFileManagement()
+                                .getCleanupIntervalMinutes()
+                        * 2;
+
+        CompletableFuture<Void> cleanupFuture =
+                CompletableFuture.runAsync(
+                        () -> {
+                            long startTime = System.currentTimeMillis();
+                            lastCleanupTimestamp.set(startTime);
+                            long cleanupNumber = cleanupCount.incrementAndGet();
+
+                            try {
+                                log.info(
+                                        "Starting cleanup #{} with {}min timeout",
+                                        cleanupNumber,
+                                        timeoutMinutes);
+                                doScheduledCleanup();
+
+                                long duration = System.currentTimeMillis() - startTime;
+                                lastCleanupDuration.set(duration);
+                                log.info(
+                                        "Cleanup #{} completed successfully in {}ms",
+                                        cleanupNumber,
+                                        duration);
+                            } catch (Exception e) {
+                                long duration = System.currentTimeMillis() - startTime;
+                                lastCleanupDuration.set(duration);
+                                log.error(
+                                        "Cleanup #{} failed after {}ms",
+                                        cleanupNumber,
+                                        duration,
+                                        e);
+                            } finally {
+                                cleanupRunning.set(false);
+                            }
+                        });
+
+        return cleanupFuture
+                .orTimeout(timeoutMinutes, TimeUnit.MINUTES)
+                .exceptionally(
+                        throwable -> {
+                            if (throwable.getCause() instanceof TimeoutException) {
+                                log.error(
+                                        "Cleanup #{} timed out after {}min - forcing cleanup state reset",
+                                        cleanupCount.get(),
+                                        timeoutMinutes);
+                                cleanupRunning.set(false);
+                            }
+                            return null;
+                        });
+    }
+
+    /** Internal method that performs the actual cleanup work */
+    private void doScheduledCleanup() {
         long maxAgeMillis = tempFileManager.getMaxAgeMillis();
 
         // Clean up registered temp files (managed by TempFileRegistry)
@@ -310,44 +389,81 @@ public class TempFileCleanupService {
         }
 
         java.util.List<Path> subdirectories = new java.util.ArrayList<>();
+        int batchSize = applicationProperties.getSystem().getTempFileManagement().getBatchSize();
+        long pauseMs =
+                applicationProperties
+                        .getSystem()
+                        .getTempFileManagement()
+                        .getPauseBetweenBatchesMs();
+        int processed = 0;
+        int consecutiveFailures = 0;
 
-        try (Stream<Path> pathStream = Files.list(directory)) {
-            pathStream.forEach(
-                    path -> {
+        try (java.nio.file.DirectoryStream<Path> stream = Files.newDirectoryStream(directory)) {
+            for (Path path : stream) {
+                try {
+                    String fileName = path.getFileName().toString();
+
+                    if (SHOULD_SKIP.test(fileName)) {
+                        continue;
+                    }
+
+                    if (Files.isDirectory(path)) {
+                        subdirectories.add(path);
+                        continue;
+                    }
+
+                    if (registry.contains(path.toFile())) {
+                        continue;
+                    }
+
+                    if (shouldDeleteFile(path, fileName, containerMode, maxAgeMillis)) {
                         try {
-                            String fileName = path.getFileName().toString();
-
-                            if (SHOULD_SKIP.test(fileName)) {
-                                return;
+                            Files.deleteIfExists(path);
+                            onDeleteCallback.accept(path);
+                            consecutiveFailures = 0; // Reset failure count on success
+                        } catch (IOException e) {
+                            consecutiveFailures++;
+                            if (e.getMessage() != null
+                                    && e.getMessage().contains("being used by another process")) {
+                                log.debug("File locked, skipping delete: {}", path);
+                            } else {
+                                log.warn("Failed to delete temp file: {}", path, e);
                             }
 
-                            if (Files.isDirectory(path)) {
-                                subdirectories.add(path);
-                                return;
+                            if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                                log.error(
+                                        "Aborting directory cleanup after {} consecutive failures in: {}",
+                                        consecutiveFailures,
+                                        directory);
+                                return; // Early exit from cleanup
                             }
-
-                            if (registry.contains(path.toFile())) {
-                                return;
-                            }
-
-                            if (shouldDeleteFile(path, fileName, containerMode, maxAgeMillis)) {
-                                try {
-                                    Files.deleteIfExists(path);
-                                    onDeleteCallback.accept(path);
-                                } catch (IOException e) {
-                                    if (e.getMessage() != null
-                                            && e.getMessage()
-                                                    .contains("being used by another process")) {
-                                        log.debug("File locked, skipping delete: {}", path);
-                                    } else {
-                                        log.warn("Failed to delete temp file: {}", path, e);
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            log.warn("Error processing path: {}", path, e);
                         }
-                    });
+                    }
+                } catch (Exception e) {
+                    consecutiveFailures++;
+                    log.warn("Error processing path: {}", path, e);
+
+                    if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                        log.error(
+                                "Aborting directory cleanup after {} consecutive failures in: {}",
+                                consecutiveFailures,
+                                directory);
+                        return; // Early exit from cleanup
+                    }
+                }
+
+                processed++;
+                if (batchSize > 0 && processed >= batchSize) {
+                    if (pauseMs > 0) {
+                        try {
+                            Thread.sleep(pauseMs);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                    processed = 0;
+                }
+            }
         }
 
         for (Path subdirectory : subdirectories) {
@@ -446,4 +562,41 @@ public class TempFileCleanupService {
             log.warn("Failed to clean up PDFBox cache file", e);
         }
     }
+
+    /** Get cleanup status and metrics for monitoring */
+    public String getCleanupStatus() {
+        if (cleanupRunning.get()) {
+            long runningTime = System.currentTimeMillis() - lastCleanupTimestamp.get();
+            return String.format("Running for %dms (cleanup #%d)", runningTime, cleanupCount.get());
+        } else {
+            long lastDuration = lastCleanupDuration.get();
+            long lastTime = lastCleanupTimestamp.get();
+            if (lastTime > 0) {
+                long timeSinceLastRun = System.currentTimeMillis() - lastTime;
+                return String.format(
+                        "Last cleanup #%d: %dms duration, %dms ago",
+                        cleanupCount.get(), lastDuration, timeSinceLastRun);
+            } else {
+                return "No cleanup runs yet";
+            }
+        }
+    }
+
+    /** Check if cleanup is currently running */
+    public boolean isCleanupRunning() {
+        return cleanupRunning.get();
+    }
+
+    /** Get cleanup metrics */
+    public CleanupMetrics getMetrics() {
+        return new CleanupMetrics(
+                cleanupCount.get(),
+                lastCleanupDuration.get(),
+                lastCleanupTimestamp.get(),
+                cleanupRunning.get());
+    }
+
+    /** Simple record for cleanup metrics */
+    public record CleanupMetrics(
+            long totalRuns, long lastDurationMs, long lastRunTimestamp, boolean currentlyRunning) {}
 }
