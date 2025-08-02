@@ -571,16 +571,13 @@ public class PdfUtils {
         int actualPageCount = pdfDocument.getNumberOfPages();
         pdfDocument.close();
 
-        switch (comparator.toLowerCase()) {
-            case "greater":
-                return actualPageCount > pageCount;
-            case "equal":
-                return actualPageCount == pageCount;
-            case "less":
-                return actualPageCount < pageCount;
-            default:
+        return switch (comparator.toLowerCase()) {
+            case "greater" -> actualPageCount > pageCount;
+            case "equal" -> actualPageCount == pageCount;
+            case "less" -> actualPageCount < pageCount;
+            default ->
                 throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        }
+        };
     }
 
     public boolean pageSize(PDDocument pdfDocument, String expectedPageSize) throws IOException {
@@ -602,9 +599,15 @@ public class PdfUtils {
         return actualPageWidth == expectedPageWidth && actualPageHeight == expectedPageHeight;
     }
 
-    /** Key for storing the dimensions of a rendered image in a map. */
-    private record PdfRenderSettingsKey(float mediaBoxWidth, float mediaBoxHeight, int rotation) {}
+    /**
+     * Key for storing the dimensions of a rendered image in a map.
+     */
+    private record PdfRenderSettingsKey(float mediaBoxWidth, float mediaBoxHeight, int rotation) {
+    }
 
-    /** Value for storing the dimensions of a rendered image in a map. */
-    private record PdfImageDimensionValue(int width, int height) {}
+    /**
+     * Value for storing the dimensions of a rendered image in a map.
+     */
+    private record PdfImageDimensionValue(int width, int height) {
+    }
 }
