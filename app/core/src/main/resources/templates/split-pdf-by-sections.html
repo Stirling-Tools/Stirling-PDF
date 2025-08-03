@@ -79,6 +79,12 @@
 
                   // Initial draw
                   updateVisualAid();
+                  
+                  // Removes all whitespace characters (spaces, tabs, newlines) as the user types
+                  document.getElementById('pageToSplit').addEventListener('input', function () {
+                    this.value = this.value.replace(/\s+/g, '');;
+                  });
+                  
                 </script>
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{split-by-sections.submit}">Submit</button>
