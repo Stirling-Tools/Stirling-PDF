@@ -1,12 +1,12 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const bookmarksContainer = document.getElementById('bookmarks-container');
-  const addBookmarkBtn = document.getElementById('addBookmarkBtn');
-  const bookmarkDataInput = document.getElementById('bookmarkData');
+document.addEventListener("DOMContentLoaded", function () {
+  const bookmarksContainer = document.getElementById("bookmarks-container");
+  const addBookmarkBtn = document.getElementById("addBookmarkBtn");
+  const bookmarkDataInput = document.getElementById("bookmarkData");
   let bookmarks = [];
   let counter = 0; // Used for generating unique IDs
 
   // Add event listener to the file input to extract existing bookmarks
-  document.getElementById('fileInput-input').addEventListener('change', async function(e) {
+  document.getElementById("fileInput-input").addEventListener("change", async function (e) {
     if (!e.target.files || e.target.files.length === 0) {
       return;
     }
@@ -16,16 +16,16 @@ document.addEventListener('DOMContentLoaded', function() {
     updateBookmarksUI();
 
     const formData = new FormData();
-    formData.append('file', e.target.files[0]);
+    formData.append("file", e.target.files[0]);
 
     // Show loading indicator
     showLoadingIndicator();
 
     try {
       // Call the API to extract bookmarks using fetchWithCsrf for CSRF protection
-      const response = await fetchWithCsrf('/api/v1/general/extract-bookmarks', {
-        method: 'POST',
-        body: formData
+      const response = await fetchWithCsrf("/api/v1/general/extract-bookmarks", {
+        method: "POST",
+        body: formData,
       });
 
       if (!response.ok) {
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     } catch (error) {
       // Show error message
-      showErrorMessage('Failed to extract bookmarks. You can still create new ones.');
+      showErrorMessage("Failed to extract bookmarks. You can still create new ones.");
 
       // Add a default bookmark if no bookmarks and error
       if (bookmarks.length === 0) {
@@ -58,31 +58,31 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function showLoadingIndicator() {
-    const loadingEl = document.createElement('div');
-    loadingEl.className = 'alert alert-info';
-    loadingEl.textContent = 'Loading bookmarks from PDF...';
-    loadingEl.id = 'loading-bookmarks';
-    bookmarksContainer.innerHTML = '';
+    const loadingEl = document.createElement("div");
+    loadingEl.className = "alert alert-info";
+    loadingEl.textContent = "Loading bookmarks from PDF...";
+    loadingEl.id = "loading-bookmarks";
+    bookmarksContainer.innerHTML = "";
     bookmarksContainer.appendChild(loadingEl);
   }
 
   function removeLoadingIndicator() {
-    const loadingEl = document.getElementById('loading-bookmarks');
+    const loadingEl = document.getElementById("loading-bookmarks");
     if (loadingEl) {
       loadingEl.remove();
     }
   }
 
   function showErrorMessage(message) {
-    const errorEl = document.createElement('div');
-    errorEl.className = 'alert alert-danger';
+    const errorEl = document.createElement("div");
+    errorEl.className = "alert alert-danger";
     errorEl.textContent = message;
     bookmarksContainer.appendChild(errorEl);
   }
 
   function showEmptyState() {
-    const emptyStateEl = document.createElement('div');
-    emptyStateEl.className = 'empty-bookmarks mb-3';
+    const emptyStateEl = document.createElement("div");
+    emptyStateEl.className = "empty-bookmarks mb-3";
     emptyStateEl.innerHTML = `
       <span class="material-symbols-rounded mb-2" style="font-size: 48px;">bookmark_add</span>
       <h5>No bookmarks found</h5>
@@ -93,8 +93,8 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     // Add event listener to the "Add First Bookmark" button
-    emptyStateEl.querySelector('.btn-add-first-bookmark').addEventListener('click', function() {
-      addBookmark(null, 'New Bookmark', 1);
+    emptyStateEl.querySelector(".btn-add-first-bookmark").addEventListener("click", function () {
+      addBookmark(null, "New Bookmark", 1);
       emptyStateEl.remove();
     });
 
@@ -106,15 +106,15 @@ document.addEventListener('DOMContentLoaded', function() {
     counter++;
     const result = {
       id: Date.now() + counter, // Generate a unique ID
-      title: bookmark.title || 'Untitled Bookmark',
+      title: bookmark.title || "Untitled Bookmark",
       pageNumber: bookmark.pageNumber || 1,
       children: [],
-      expanded: false // All bookmarks start collapsed for better visibility
+      expanded: false, // All bookmarks start collapsed for better visibility
     };
 
     // Convert children recursively
     if (bookmark.children && bookmark.children.length > 0) {
-      result.children = bookmark.children.map(child => {
+      result.children = bookmark.children.map((child) => {
         return convertExtractedBookmark(child);
       });
     }
@@ -123,24 +123,24 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Add bookmark button click handler
-  addBookmarkBtn.addEventListener('click', function(e) {
+  addBookmarkBtn.addEventListener("click", function (e) {
     e.preventDefault();
     addBookmark();
   });
 
   // Add form submit handler to update JSON data
-  document.getElementById('editTocForm').addEventListener('submit', function() {
+  document.getElementById("editTocForm").addEventListener("submit", function () {
     updateBookmarkData();
   });
 
-  function addBookmark(parent = null, title = '', pageNumber = 1) {
+  function addBookmark(parent = null, title = "", pageNumber = 1) {
     counter++;
     const newBookmark = {
       id: Date.now() + counter,
-      title: title || 'New Bookmark',
+      title: title || "New Bookmark",
       pageNumber: pageNumber || 1,
       children: [],
-      expanded: false // New bookmarks start collapsed
+      expanded: false, // New bookmarks start collapsed
     };
 
     if (parent === null) {
@@ -162,13 +162,13 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
       const newElement = document.querySelector(`[data-id="${newBookmark.id}"]`);
       if (newElement) {
-        const titleInput = newElement.querySelector('.bookmark-title');
+        const titleInput = newElement.querySelector(".bookmark-title");
         if (titleInput) {
           titleInput.focus();
           titleInput.select();
         }
         // Scroll to the new element
-        newElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        newElement.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }, 50);
   }
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function removeBookmark(id) {
     // Remove from top level
-    const index = bookmarks.findIndex(b => b.id === id);
+    const index = bookmarks.findIndex((b) => b.id === id);
     if (index !== -1) {
       bookmarks.splice(index, 1);
       updateBookmarksUI();
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Remove from children
     function removeFromChildren(bookmarkArray, id) {
       for (const bookmark of bookmarkArray) {
-        const childIndex = bookmark.children.findIndex(b => b.id === id);
+        const childIndex = bookmark.children.findIndex((b) => b.id === id);
         if (childIndex !== -1) {
           bookmark.children.splice(childIndex, 1);
           return true;
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return {
       title: bookmark.title,
       pageNumber: bookmark.pageNumber,
-      children: bookmark.children.map(cleanBookmark)
+      children: bookmark.children.map(cleanBookmark),
     };
   }
 
@@ -263,22 +263,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Only clear the container if there are no error messages or loading indicators
-    if (!document.querySelector('#bookmarks-container .alert')) {
-      bookmarksContainer.innerHTML = '';
+    if (!document.querySelector("#bookmarks-container .alert")) {
+      bookmarksContainer.innerHTML = "";
     }
 
     // Check if there are bookmarks to display
-    if (bookmarks.length === 0 && !document.querySelector('.empty-bookmarks')) {
+    if (bookmarks.length === 0 && !document.querySelector(".empty-bookmarks")) {
       showEmptyState();
     } else {
       // Remove empty state if it exists and there are bookmarks
-      const emptyState = document.querySelector('.empty-bookmarks');
+      const emptyState = document.querySelector(".empty-bookmarks");
       if (emptyState && bookmarks.length > 0) {
         emptyState.remove();
       }
 
       // Create bookmark elements
-      bookmarks.forEach(bookmark => {
+      bookmarks.forEach((bookmark) => {
         const bookmarkElement = createBookmarkElement(bookmark);
         bookmarksContainer.appendChild(bookmarkElement);
       });
@@ -287,15 +287,15 @@ document.addEventListener('DOMContentLoaded', function() {
     updateBookmarkData();
 
     // Initialize tooltips for dynamically added elements
-    if (typeof $ !== 'undefined') {
+    if (typeof $ !== "undefined") {
       $('[data-bs-toggle="tooltip"]').tooltip();
     }
   }
 
   // Create the main bookmark element with collapsible interface
   function createBookmarkElement(bookmark, level = 0) {
-    const bookmarkEl = document.createElement('div');
-    bookmarkEl.className = 'bookmark-item';
+    const bookmarkEl = document.createElement("div");
+    bookmarkEl.className = "bookmark-item";
     bookmarkEl.dataset.id = bookmark.id;
     bookmarkEl.dataset.level = level;
 
@@ -304,10 +304,10 @@ document.addEventListener('DOMContentLoaded', function() {
     bookmarkEl.appendChild(header);
 
     // Create the content (collapsible part)
-    const content = document.createElement('div');
-    content.className = 'bookmark-content';
+    const content = document.createElement("div");
+    content.className = "bookmark-content";
     if (!bookmark.expanded) {
-      content.style.display = 'none';
+      content.style.display = "none";
     }
 
     // Main input row
@@ -328,48 +328,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Create the header that's always visible
   function createBookmarkHeader(bookmark, level) {
-    const header = document.createElement('div');
-    header.className = 'bookmark-header';
+    const header = document.createElement("div");
+    header.className = "bookmark-header";
     if (!bookmark.expanded) {
-      header.classList.add('collapsed');
+      header.classList.add("collapsed");
     }
 
     // Left side of header with expand/collapse and info
-    const headerLeft = document.createElement('div');
-    headerLeft.className = 'd-flex align-items-center';
+    const headerLeft = document.createElement("div");
+    headerLeft.className = "d-flex align-items-center";
 
     // Toggle expand/collapse icon with child count
-    const toggleContainer = document.createElement('div');
-    toggleContainer.className = 'd-flex align-items-center';
-    toggleContainer.style.marginRight = '8px';
+    const toggleContainer = document.createElement("div");
+    toggleContainer.className = "d-flex align-items-center";
+    toggleContainer.style.marginRight = "8px";
 
     // Only show toggle if has children
     if (bookmark.children && bookmark.children.length > 0) {
       // Create toggle icon
-      const toggleIcon = document.createElement('span');
-      toggleIcon.className = 'material-symbols-rounded toggle-icon me-1';
-      toggleIcon.textContent = 'expand_more';
-      toggleIcon.style.cursor = 'pointer';
+      const toggleIcon = document.createElement("span");
+      toggleIcon.className = "material-symbols-rounded toggle-icon me-1";
+      toggleIcon.textContent = "expand_more";
+      toggleIcon.style.cursor = "pointer";
       toggleContainer.appendChild(toggleIcon);
 
       // Add child count indicator
-      const childCount = document.createElement('span');
-      childCount.className = 'badge rounded-pill';
+      const childCount = document.createElement("span");
+      childCount.className = "badge rounded-pill";
       // Use theme-appropriate badge color
-      const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-      childCount.classList.add(isDarkMode ? 'bg-info' : 'bg-secondary');
-      childCount.style.fontSize = '0.7rem';
-      childCount.style.padding = '0.2em 0.5em';
+      const isDarkMode = document.documentElement.getAttribute("data-bs-theme") === "dark";
+      childCount.classList.add(isDarkMode ? "bg-info" : "bg-secondary");
+      childCount.style.fontSize = "0.7rem";
+      childCount.style.padding = "0.2em 0.5em";
       childCount.textContent = bookmark.children.length;
-      childCount.setAttribute('data-bs-toggle', 'tooltip');
-      childCount.setAttribute('data-bs-placement', 'top');
-      childCount.title = `${bookmark.children.length} child bookmark${bookmark.children.length > 1 ? 's' : ''}`;
+      childCount.setAttribute("data-bs-toggle", "tooltip");
+      childCount.setAttribute("data-bs-placement", "top");
+      childCount.title = `${bookmark.children.length} child bookmark${bookmark.children.length > 1 ? "s" : ""}`;
       toggleContainer.appendChild(childCount);
     } else {
       // Add spacer if no children
-      const spacer = document.createElement('span');
-      spacer.style.width = '24px';
-      spacer.style.display = 'inline-block';
+      const spacer = document.createElement("span");
+      spacer.style.width = "24px";
+      spacer.style.display = "inline-block";
       toggleContainer.appendChild(spacer);
     }
 
@@ -378,65 +378,68 @@ document.addEventListener('DOMContentLoaded', function() {
     // Level indicator for nested items
     if (level > 0) {
       // Add relationship indicator visual line
-      const relationshipIndicator = document.createElement('div');
-      relationshipIndicator.className = 'bookmark-relationship-indicator';
+      const relationshipIndicator = document.createElement("div");
+      relationshipIndicator.className = "bookmark-relationship-indicator";
 
-      const line = document.createElement('div');
-      line.className = 'relationship-line';
+      const line = document.createElement("div");
+      line.className = "relationship-line";
       relationshipIndicator.appendChild(line);
 
-      const arrow = document.createElement('div');
-      arrow.className = 'relationship-arrow';
+      const arrow = document.createElement("div");
+      arrow.className = "relationship-arrow";
       relationshipIndicator.appendChild(arrow);
 
       header.appendChild(relationshipIndicator);
 
       // Text indicator
-      const levelIndicator = document.createElement('span');
-      levelIndicator.className = 'bookmark-level-indicator';
+      const levelIndicator = document.createElement("span");
+      levelIndicator.className = "bookmark-level-indicator";
       levelIndicator.textContent = `Child`;
       headerLeft.appendChild(levelIndicator);
     }
 
     // Title preview
-    const titlePreview = document.createElement('span');
-    titlePreview.className = 'bookmark-title-preview';
+    const titlePreview = document.createElement("span");
+    titlePreview.className = "bookmark-title-preview";
     titlePreview.textContent = bookmark.title;
     headerLeft.appendChild(titlePreview);
 
     // Page number preview
-    const pagePreview = document.createElement('span');
-    pagePreview.className = 'bookmark-page-preview';
+    const pagePreview = document.createElement("span");
+    pagePreview.className = "bookmark-page-preview";
     pagePreview.textContent = `Page ${bookmark.pageNumber}`;
     headerLeft.appendChild(pagePreview);
 
     // Right side of header with action buttons
-    const headerRight = document.createElement('div');
-    headerRight.className = 'bookmark-actions-header';
+    const headerRight = document.createElement("div");
+    headerRight.className = "bookmark-actions-header";
 
     // Quick add buttons with clear visual distinction - using Stirling-PDF's tooltip system
-    const quickAddChildButton = createButton('subdirectory_arrow_right', 'btn-add-child', 'Add child bookmark', function(e) {
+    const quickAddChildButton = createButton("subdirectory_arrow_right", "btn-add-child", "Add child bookmark", function (e) {
       e.preventDefault();
       e.stopPropagation();
       addBookmark(bookmark.id);
     });
 
-    const quickAddSiblingButton = createButton('add', 'btn-add-sibling', 'Add sibling bookmark', function(e) {
+    const quickAddSiblingButton = createButton("add", "btn-add-sibling", "Add sibling bookmark", function (e) {
       e.preventDefault();
       e.stopPropagation();
 
       // Find parent of current bookmark
       const parentId = findParentBookmark(bookmarks, bookmark.id);
-      addBookmark(parentId, '', bookmark.pageNumber); // Same level as current bookmark
+      addBookmark(parentId, "", bookmark.pageNumber); // Same level as current bookmark
     });
 
     // Quick remove button
-    const quickRemoveButton = createButton('delete', 'btn-outline-danger', 'Remove bookmark', function(e) {
+    const quickRemoveButton = createButton("delete", "btn-outline-danger", "Remove bookmark", function (e) {
       e.preventDefault();
       e.stopPropagation();
 
-      if (confirm('Are you sure you want to remove this bookmark' +
-                  (bookmark.children.length > 0 ? ' and all its children?' : '?'))) {
+      if (
+        confirm(
+          "Are you sure you want to remove this bookmark" + (bookmark.children.length > 0 ? " and all its children?" : "?")
+        )
+      ) {
         removeBookmark(bookmark.id);
       }
     });
@@ -450,9 +453,9 @@ document.addEventListener('DOMContentLoaded', function() {
     header.appendChild(headerRight);
 
     // Add click handler for expansion toggle
-    header.addEventListener('click', function(e) {
+    header.addEventListener("click", function (e) {
       // Only toggle if not clicking on buttons
-      if (!e.target.closest('button')) {
+      if (!e.target.closest("button")) {
         toggleBookmarkExpanded(bookmark.id);
       }
     });
@@ -461,8 +464,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function createInputRow(bookmark) {
-    const row = document.createElement('div');
-    row.className = 'row';
+    const row = document.createElement("div");
+    row.className = "row";
 
     // Title input
     row.appendChild(createTitleInputElement(bookmark));
@@ -474,26 +477,26 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function createTitleInputElement(bookmark) {
-    const titleCol = document.createElement('div');
-    titleCol.className = 'col-md-8';
+    const titleCol = document.createElement("div");
+    titleCol.className = "col-md-8";
 
-    const titleGroup = document.createElement('div');
-    titleGroup.className = 'mb-3';
+    const titleGroup = document.createElement("div");
+    titleGroup.className = "mb-3";
 
-    const titleLabel = document.createElement('label');
-    titleLabel.textContent = 'Title';
-    titleLabel.className = 'form-label';
+    const titleLabel = document.createElement("label");
+    titleLabel.textContent = "Title";
+    titleLabel.className = "form-label";
 
-    const titleInput = document.createElement('input');
-    titleInput.type = 'text';
-    titleInput.className = 'form-control bookmark-title';
+    const titleInput = document.createElement("input");
+    titleInput.type = "text";
+    titleInput.className = "form-control bookmark-title";
     titleInput.value = bookmark.title;
-    titleInput.addEventListener('input', function() {
+    titleInput.addEventListener("input", function () {
       bookmark.title = this.value;
       updateBookmarkData();
 
       // Also update the preview in the header
-      const header = titleInput.closest('.bookmark-item').querySelector('.bookmark-title-preview');
+      const header = titleInput.closest(".bookmark-item").querySelector(".bookmark-title-preview");
       if (header) {
         header.textContent = this.value;
       }
@@ -507,27 +510,27 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function createPageInputElement(bookmark) {
-    const pageCol = document.createElement('div');
-    pageCol.className = 'col-md-4';
+    const pageCol = document.createElement("div");
+    pageCol.className = "col-md-4";
 
-    const pageGroup = document.createElement('div');
-    pageGroup.className = 'mb-3';
+    const pageGroup = document.createElement("div");
+    pageGroup.className = "mb-3";
 
-    const pageLabel = document.createElement('label');
-    pageLabel.textContent = 'Page';
-    pageLabel.className = 'form-label';
+    const pageLabel = document.createElement("label");
+    pageLabel.textContent = "Page";
+    pageLabel.className = "form-label";
 
-    const pageInput = document.createElement('input');
-    pageInput.type = 'number';
-    pageInput.className = 'form-control bookmark-page';
+    const pageInput = document.createElement("input");
+    pageInput.type = "number";
+    pageInput.className = "form-control bookmark-page";
     pageInput.value = bookmark.pageNumber;
     pageInput.min = 1;
-    pageInput.addEventListener('input', function() {
+    pageInput.addEventListener("input", function () {
       bookmark.pageNumber = parseInt(this.value) || 1;
       updateBookmarkData();
 
       // Also update the preview in the header
-      const header = pageInput.closest('.bookmark-item').querySelector('.bookmark-page-preview');
+      const header = pageInput.closest(".bookmark-item").querySelector(".bookmark-page-preview");
       if (header) {
         header.textContent = `Page ${bookmark.pageNumber}`;
       }
@@ -541,25 +544,25 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function createButton(icon, className, title, clickHandler) {
-    const button = document.createElement('button');
-    button.type = 'button';
+    const button = document.createElement("button");
+    button.type = "button";
     button.className = `btn ${className} btn-bookmark-action`;
     button.innerHTML = `<span class="material-symbols-rounded">${icon}</span>`;
 
     // Use Bootstrap tooltips
-    button.setAttribute('data-bs-toggle', 'tooltip');
-    button.setAttribute('data-bs-placement', 'top');
+    button.setAttribute("data-bs-toggle", "tooltip");
+    button.setAttribute("data-bs-placement", "top");
     button.title = title;
 
-    button.addEventListener('click', clickHandler);
+    button.addEventListener("click", clickHandler);
     return button;
   }
 
   function createChildrenContainer(bookmark, level) {
-    const childrenContainer = document.createElement('div');
-    childrenContainer.className = 'bookmark-children';
+    const childrenContainer = document.createElement("div");
+    childrenContainer.className = "bookmark-children";
 
-    bookmark.children.forEach(child => {
+    bookmark.children.forEach((child) => {
       childrenContainer.appendChild(createBookmarkElement(child, level + 1));
     });
 
@@ -568,24 +571,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Update the add bookmark button appearance with clear visual cue
   addBookmarkBtn.innerHTML = '<span class="material-symbols-rounded">add</span> Add Top-level Bookmark';
-  addBookmarkBtn.className = 'btn btn-primary btn-add-bookmark top-level';
+  addBookmarkBtn.className = "btn btn-primary btn-add-bookmark top-level";
 
   // Use Bootstrap tooltips
-  addBookmarkBtn.setAttribute('data-bs-toggle', 'tooltip');
-  addBookmarkBtn.setAttribute('data-bs-placement', 'top');
-  addBookmarkBtn.title = 'Add a new top-level bookmark';
+  addBookmarkBtn.setAttribute("data-bs-toggle", "tooltip");
+  addBookmarkBtn.setAttribute("data-bs-placement", "top");
+  addBookmarkBtn.title = "Add a new top-level bookmark";
 
   // Add icon to empty state button as well
-  const updateEmptyStateButton = function() {
-    const emptyStateBtn = document.querySelector('.btn-add-first-bookmark');
+  const updateEmptyStateButton = function () {
+    const emptyStateBtn = document.querySelector(".btn-add-first-bookmark");
     if (emptyStateBtn) {
       emptyStateBtn.innerHTML = '<span class="material-symbols-rounded">add</span> Add First Bookmark';
-      emptyStateBtn.setAttribute('data-bs-toggle', 'tooltip');
-      emptyStateBtn.setAttribute('data-bs-placement', 'top');
-      emptyStateBtn.title = 'Add first bookmark';
+      emptyStateBtn.setAttribute("data-bs-toggle", "tooltip");
+      emptyStateBtn.setAttribute("data-bs-placement", "top");
+      emptyStateBtn.title = "Add first bookmark";
 
       // Initialize tooltips for the empty state button
-      if (typeof $ !== 'undefined') {
+      if (typeof $ !== "undefined") {
         $('[data-bs-toggle="tooltip"]').tooltip();
       }
     }
@@ -601,8 +604,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function flashButtonSuccess(button) {
     const originalClass = button.className;
 
-    button.classList.remove('btn-outline-primary');
-    button.classList.add('btn-success', 'success-flash');
+    button.classList.remove("btn-outline-primary");
+    button.classList.add("btn-success", "success-flash");
 
     setTimeout(() => {
       button.className = originalClass;
@@ -610,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   async function importBookmarkStringFromClipboard() {
-    const button = document.getElementById('importBookmarksBtn');
+    const button = document.getElementById("importBookmarksBtn");
     try {
       const newBookmarkDataString = await navigator.clipboard.readText();
       const newBookmarkData = JSON.parse(newBookmarkDataString);
@@ -629,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   async function exportBookmarkStringToClipboard() {
-    const button = document.getElementById('exportBookmarksBtn');
+    const button = document.getElementById("exportBookmarksBtn");
     const bookmarkData = bookmarkDataInput.value;
     try {
       await navigator.clipboard.writeText(bookmarkData);
@@ -640,25 +643,25 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Add event listeners for import/export buttons
-  const importBookmarksBtn = document.getElementById('importBookmarksBtn');
-  const exportBookmarksBtn = document.getElementById('exportBookmarksBtn');
-  importBookmarksBtn.addEventListener('click', importBookmarkStringFromClipboard);
-  exportBookmarksBtn.addEventListener('click', exportBookmarkStringToClipboard);
+  const importBookmarksBtn = document.getElementById("importBookmarksBtn");
+  const exportBookmarksBtn = document.getElementById("exportBookmarksBtn");
+  importBookmarksBtn.addEventListener("click", importBookmarkStringFromClipboard);
+  exportBookmarksBtn.addEventListener("click", exportBookmarkStringToClipboard);
 
   // display import/export buttons if supported
   if (navigator.clipboard && navigator.clipboard.writeText && navigator.clipboard.readText) {
-    importBookmarksBtn.classList.remove('d-none');
-    exportBookmarksBtn.classList.remove('d-none');
+    importBookmarksBtn.classList.remove("d-none");
+    exportBookmarksBtn.classList.remove("d-none");
   }
 
   // Listen for theme changes to update badge colors
-  const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-      if (mutation.attributeName === 'data-bs-theme') {
-        const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-        document.querySelectorAll('.badge').forEach(badge => {
-          badge.classList.remove('bg-secondary', 'bg-info');
-          badge.classList.add(isDarkMode ? 'bg-info' : 'bg-secondary');
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
+      if (mutation.attributeName === "data-bs-theme") {
+        const isDarkMode = document.documentElement.getAttribute("data-bs-theme") === "dark";
+        document.querySelectorAll(".badge").forEach((badge) => {
+          badge.classList.remove("bg-secondary", "bg-info");
+          badge.classList.add(isDarkMode ? "bg-info" : "bg-secondary");
         });
       }
     });
@@ -667,26 +670,26 @@ document.addEventListener('DOMContentLoaded', function() {
   observer.observe(document.documentElement, { attributes: true });
 
   // Add visual enhancement to clearly show the top-level/child relationship
-  document.addEventListener('mouseover', function(e) {
+  document.addEventListener("mouseover", function (e) {
     // When hovering over add buttons, highlight their relationship targets
-    const button = e.target.closest('.btn-add-child, .btn-add-sibling');
+    const button = e.target.closest(".btn-add-child, .btn-add-sibling");
     if (button) {
-      if (button.classList.contains('btn-add-child')) {
+      if (button.classList.contains("btn-add-child")) {
         // Highlight parent-child relationship
-        const bookmarkItem = button.closest('.bookmark-item');
+        const bookmarkItem = button.closest(".bookmark-item");
         if (bookmarkItem) {
-          bookmarkItem.style.boxShadow = '0 0 0 2px var(--btn-add-child-border, #198754)';
+          bookmarkItem.style.boxShadow = "0 0 0 2px var(--btn-add-child-border, #198754)";
         }
-      } else if (button.classList.contains('btn-add-sibling')) {
+      } else if (button.classList.contains("btn-add-sibling")) {
         // Highlight sibling relationship
-        const bookmarkItem = button.closest('.bookmark-item');
+        const bookmarkItem = button.closest(".bookmark-item");
         if (bookmarkItem) {
           // Find siblings
           const parent = bookmarkItem.parentElement;
-          const siblings = parent.querySelectorAll(':scope > .bookmark-item');
-          siblings.forEach(sibling => {
+          const siblings = parent.querySelectorAll(":scope > .bookmark-item");
+          siblings.forEach((sibling) => {
             if (sibling !== bookmarkItem) {
-              sibling.style.boxShadow = '0 0 0 2px var(--btn-add-sibling-border, #0d6efd)';
+              sibling.style.boxShadow = "0 0 0 2px var(--btn-add-sibling-border, #0d6efd)";
             }
           });
         }
@@ -694,13 +697,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  document.addEventListener('mouseout', function(e) {
+  document.addEventListener("mouseout", function (e) {
     // Remove highlights when not hovering
-    const button = e.target.closest('.btn-add-child, .btn-add-sibling');
+    const button = e.target.closest(".btn-add-child, .btn-add-sibling");
     if (button) {
       // Remove all highlights
-      document.querySelectorAll('.bookmark-item').forEach(item => {
-        item.style.boxShadow = '';
+      document.querySelectorAll(".bookmark-item").forEach((item) => {
+        item.style.boxShadow = "";
       });
     }
   });
