@@ -74,10 +74,8 @@ async function getUpdateSummary() {
 
 async function getFullUpdateInfo() {
   // Map Java License enum to API types
-  let type = 'community';
-  if (licenseType === 'NORMAL') {
-    type = 'community';
-  } else if (licenseType === 'PRO') {
+  let type = 'normal';
+  if (licenseType === 'PRO') {
     type = 'pro';
   } else if (licenseType === 'ENTERPRISE') {
     type = 'enterprise';
