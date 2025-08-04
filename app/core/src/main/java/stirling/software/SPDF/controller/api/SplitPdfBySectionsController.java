@@ -58,10 +58,11 @@ public class SplitPdfBySectionsController {
 
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();
-        SplitTypes splitMode = Optional.ofNullable(request.getSplitMode())
-            .map(SplitTypes::valueOf)
-            .orElse(SplitTypes.SPLIT_ALL);
-        
+        SplitTypes splitMode =
+                Optional.ofNullable(request.getSplitMode())
+                        .map(SplitTypes::valueOf)
+                        .orElse(SplitTypes.SPLIT_ALL);
+
         PDDocument sourceDocument = pdfDocumentFactory.load(file);
 
         Set<Integer> pagesToSplit =

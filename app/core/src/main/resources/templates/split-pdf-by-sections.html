@@ -21,7 +21,7 @@
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-pdf-by-sections'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
-                  <label for="splitMode" th:text="#{split-by-sections.mode}">Mode</label>
+                  <label for="splitMode" th:text="#{split-by-sections.mode}">Split Mode</label>
                   <select class="form-control" id="splitMode" name="splitMode">
                     <option value="SPLIT_ALL_EXCEPT_FIRST_AND_LAST" th:text="#{split-by-sections.mode.1}">Split all except first and last</option>
                     <option value="SPLIT_ALL_EXCEPT_FIRST" th:text="#{split-by-sections.mode.2}">Split all except first</option>
@@ -30,10 +30,10 @@
                     <option value="CUSTOM" th:text="#{split-by-sections.mode.5}">Specify pages to split</option>
                   </select>
                 </div>
-                <div class="mb-3">
+                <div class="mb-3" id="pageToSplitSection">
                   <label for="pageToSplit" th:text="#{split-by-sections.pageToSplit}"></label>
                   <input type="text" class="form-control" id="pageToSplit" name="pageNumbers"
-                         th:placeholder="#{split-by-sections.pageToSplit.placeholder}" required>
+                         th:placeholder="#{split-by-sections.pageToSplit.placeholder}">
                 </div>
                 <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal Divisions</label>
                 <input type="number" id="horizontalDivisions" name="horizontalDivisions" class="form-control" min="0" max="300" value="0" required th:placeholder="#{split-by-sections.horizontal.placeholder}">
@@ -95,11 +95,17 @@
                     this.value = this.value.replace(/\s+/g, '');;
                   });
 
-                  // Only enable the page list input field when split mode is custom.
+                  // Only display the page input field when split mode is custom.
                   function togglePageInput() {
                     const mode = document.getElementById('splitMode').value;
-                    const pageListInput = document.getElementById('pageToSplit');
-                    pageListInput.disabled = mode !== "CUSTOM";
+                    const pageInputSection = document.getElementById('pageToSplitSection');
+                    if (mode === "CUSTOM") {
+                      pageInputSection.style.display = "block";
+                      document.getElementById('pageToSplit').setAttribute("required", "true");
+                    } else {
+                      pageInputSection.style.display = "none";
+                      document.getElementById('pageToSplit').removeAttribute("required", "true");
+                    }
                   }
 
                   document.getElementById('splitMode').addEventListener('change', togglePageInput);
