@@ -665,46 +665,35 @@ const FileEditor = ({
 
 
   return (
-    <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
-      <LoadingOverlay visible={false} />
+    <Dropzone
+      onDrop={handleFileUpload}
+      accept={["*/*"]}
+      multiple={true}
+      maxSize={2 * 1024 * 1024 * 1024}
+      style={{ 
+        height: '100vh',
+        border: 'none',
+        borderRadius: 0,
+        backgroundColor: 'transparent'
+      }}
+      activateOnClick={false}
+      activateOnDrag={true}
+    >
+      <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
+        <LoadingOverlay visible={false} />
 
-      <Box p="md" pt="xl">
-        <Group mb="md">
-          {showBulkActions && !toolMode && (
-            <>
-              <Button onClick={selectAll} variant="light">Select All</Button>
-              <Button onClick={deselectAll} variant="light">Deselect All</Button>
-              <Button onClick={closeAllFiles} variant="light" color="orange">
-                Close All
-              </Button>
-            </>
-          )}
-
-          {/* Load from storage and upload buttons */}
-          {showUpload && (
-            <>
-              <Button
-                variant="outline"
-                color="blue"
-                onClick={() => setShowFilePickerModal(true)}
-              >
-                Load from Storage
-              </Button>
-
-              <Dropzone
-                onDrop={handleFileUpload}
-                accept={["*/*"]}
-                multiple={true}
-                maxSize={2 * 1024 * 1024 * 1024}
-                style={{ display: 'contents' }}
-              >
-                <Button variant="outline" color="green">
-                  Upload Files
+        <Box p="md" pt="xl">
+          <Group mb="md">
+            {showBulkActions && !toolMode && (
+              <>
+                <Button onClick={selectAll} variant="light">Select All</Button>
+                <Button onClick={deselectAll} variant="light">Deselect All</Button>
+                <Button onClick={closeAllFiles} variant="light" color="orange">
+                  Close All
                 </Button>
-              </Dropzone>
-            </>
-          )}
-        </Group>
+              </>
+            )}
+          </Group>
 
 
         {files.length === 0 && !localLoading && !zipExtractionProgress.isExtracting ? (
@@ -866,7 +855,8 @@ const FileEditor = ({
           {error}
         </Notification>
       )}
-    </Box>
+      </Box>
+    </Dropzone>
   );
 };
 
