@@ -205,6 +205,18 @@ async function showUpdateModal() {
   const updateBtn = document.getElementById("update-btn");
   const summaryData = JSON.parse(updateBtn.getAttribute('data-update-summary'));
   
+  // Utility function to escape HTML special characters
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return str;
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/\//g, '&#x2F;');
+  }
+
   // Create initial modal with loading state
   const initialModalHtml = `
     <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true">
@@ -221,22 +233,22 @@ async function showUpdateModal() {
               <div class="row mb-3">
                 <div class="${summaryData.latest_stable_version ? 'col-4' : 'col-6'} text-center">
                   <small class="text-muted">Current</small><br>
-                  <strong>${currentVersion}</strong>
+                  <strong>${escapeHtml(currentVersion)}</strong>
                 </div>
                 <div class="${summaryData.latest_stable_version ? 'col-4' : 'col-6'} text-center">
                   <small class="text-muted">Latest</small><br>
-                  <strong class="text-primary">${summaryData.latest_version}</strong>
+                  <strong class="text-primary">${escapeHtml(summaryData.latest_version)}</strong>
                 </div>
                 ${summaryData.latest_stable_version ? `
                 <div class="col-4 text-center">
                   <small class="text-muted">Latest Stable</small><br>
-                  <strong class="text-success">${summaryData.latest_stable_version}</strong>
+                  <strong class="text-success">${escapeHtml(summaryData.latest_stable_version)}</strong>
                 </div>
                 ` : ''}
               </div>
               <div class="alert ${summaryData.max_priority === 'urgent' ? 'alert-danger' : 'alert-warning'}" role="alert">
-                <strong>Priority:</strong> ${summaryData.max_priority.toUpperCase()}
-                ${summaryData.recommended_action ? `<br><strong>Recommended Action:</strong> ${summaryData.recommended_action}` : ''}
+                <strong>Priority:</strong> ${escapeHtml(summaryData.max_priority.toUpperCase())}
+                ${summaryData.recommended_action ? `<br><strong>Recommended Action:</strong> ${escapeHtml(summaryData.recommended_action)}` : ''}
               </div>
             </div>
             
@@ -254,9 +266,9 @@ async function showUpdateModal() {
                   ${summaryData.migration_guides.map(guide => `
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                       <div>
-                        <strong>Version ${guide.version}:</strong> ${guide.notes}
+                        <strong>Version ${escapeHtml(guide.version)}:</strong> ${escapeHtml(guide.notes)}
                       </div>
-                      <a href="${guide.url}" target="_blank" class="btn btn-sm btn-outline-primary">View Guide</a>
+                      <a href="${escapeHtml(guide.url)}" target="_blank" class="btn btn-sm btn-outline-primary">View Guide</a>
                     </li>
                   `).join('')}
                 </ul>
@@ -273,7 +285,7 @@ async function showUpdateModal() {
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" class="btn btn-outline-primary">View All Releases</a>
-            ${getDownloadUrl() ? `<a href="${getDownloadUrl()}" class="btn btn-success" target="_blank">Download Latest</a>` : ''}
+            ${getDownloadUrl() ? `<a href="${escapeHtml(getDownloadUrl())}" class="btn btn-success" target="_blank">Download Latest</a>` : ''}
           </div>
         </div>
       </div>
