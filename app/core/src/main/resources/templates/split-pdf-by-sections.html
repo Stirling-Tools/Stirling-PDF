@@ -21,6 +21,16 @@
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-pdf-by-sections'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
+                  <label for="splitMode" th:text="#{split-by-sections.mode}">Mode</label>
+                  <select class="form-control" id="splitMode" name="splitMode">
+                    <option value="SPLIT_ALL_EXCEPT_FIRST_AND_LAST" th:text="#{split-by-sections.mode.1}">Split all except first and last</option>
+                    <option value="SPLIT_ALL_EXCEPT_FIRST" th:text="#{split-by-sections.mode.2}">Split all except first</option>
+                    <option value="SPLIT_ALL_EXCEPT_LAST" th:text="#{split-by-sections.mode.3}">Split all except last</option>
+                    <option value="SPLIT_ALL" th:text="#{split-by-sections.mode.4}">Split all</option>
+                    <option value="CUSTOM" th:text="#{split-by-sections.mode.5}">Specify pages to split</option>
+                  </select>
+                </div>
+                <div class="mb-3">
                   <label for="pageToSplit" th:text="#{split-by-sections.pageToSplit}"></label>
                   <input type="text" class="form-control" id="pageToSplit" name="pageNumbers"
                          th:placeholder="#{split-by-sections.pageToSplit.placeholder}" required>
@@ -84,7 +94,17 @@
                   document.getElementById('pageToSplit').addEventListener('input', function () {
                     this.value = this.value.replace(/\s+/g, '');;
                   });
-                  
+
+                  // Only enable the page list input field when split mode is custom.
+                  function togglePageInput() {
+                    const mode = document.getElementById('splitMode').value;
+                    const pageListInput = document.getElementById('pageToSplit');
+                    pageListInput.disabled = mode !== "CUSTOM";
+                  }
+
+                  document.getElementById('splitMode').addEventListener('change', togglePageInput);
+                  window.addEventListener('DOMContentLoaded', togglePageInput);
+
                 </script>
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{split-by-sections.submit}">Submit</button>

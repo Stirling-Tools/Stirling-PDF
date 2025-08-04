@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.model.SplitTypes;
 import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
@@ -51,7 +52,8 @@ public class SplitPdfBySectionsController {
             summary = "Split PDF pages into smaller sections",
             description =
                     "Split each page of a PDF into smaller sections based on the user's choice"
-                            + " (halves, thirds, quarters, etc.), both vertically and horizontally."
+                            + " which page to split, and how to split"
+                            + " ( halves, thirds, quarters, etc.), both vertically and horizontally."
                             + " Input:PDF Output:ZIP-PDF Type:SISO")
     public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfBySectionsRequest request)
             throws Exception {
@@ -59,13 +61,10 @@ public class SplitPdfBySectionsController {
 
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();
+        String splitMode = request.getSplitMode();
         PDDocument sourceDocument = pdfDocumentFactory.load(file);
 
-        // Split the page order string into an array of page numbers or range of numbers
-        String[] pageOrderArr = pageNumbers.split(",");
-        List<Integer> pageListToSplit =
-            GeneralUtils.parsePageList(pageOrderArr, sourceDocument.getNumberOfPages(), false);
-        Set<Integer> pagesToSplit = new HashSet<>(pageListToSplit);
+        Set<Integer> pagesToSplit = getPagesToSplit(pageNumbers, splitMode, sourceDocument.getNumberOfPages());
 
         // Process the PDF based on split parameters
         int horiz = request.getHorizontalDivisions() + 1;
@@ -118,6 +117,52 @@ public class SplitPdfBySectionsController {
             Files.deleteIfExists(zipFile);
         }
     }
+
+    // Based on the mode, get the pages that need to be split and return the pages set
+    private Set<Integer> getPagesToSplit(String pageNumbers, String splitMode, int totalPages) {
+        Set<Integer> pagesToSplit = new HashSet<>();
+
+        switch (SplitTypes.valueOf(splitMode)) {
+            case CUSTOM:
+                if (pageNumbers == null || pageNumbers.isBlank()) {
+                    throw new IllegalArgumentException("Custom mode requires page numbers input.");
+                }
+                String[] pageOrderArr = pageNumbers.split(",");
+                List<Integer> pageListToSplit = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+                pagesToSplit.addAll(pageListToSplit);
+                break;
+
+            case SPLIT_ALL:
+                for (int i = 0; i < totalPages; i++) {
+                    pagesToSplit.add(i);
+                }
+                break;
+
+            case SPLIT_ALL_EXCEPT_FIRST:
+                for (int i = 1; i < totalPages; i++) {
+                    pagesToSplit.add(i);
+                }
+                break;
+
+            case SPLIT_ALL_EXCEPT_LAST:
+                for (int i = 0; i < totalPages - 1; i++) {
+                    pagesToSplit.add(i);
+                }
+                break;
+
+            case SPLIT_ALL_EXCEPT_FIRST_AND_LAST:
+                for (int i = 1; i < totalPages - 1; i++) {
+                    pagesToSplit.add(i);
+                }
+                break;
+
+            default:
+                throw new IllegalArgumentException("Unsupported split mode: " + splitMode);
+        }
+
+        return pagesToSplit;
+    }
+
 
     public List<PDDocument> splitPdfPages(
             PDDocument document, int horizontalDivisions, int verticalDivisions, Set<Integer> pagesToSplit)
