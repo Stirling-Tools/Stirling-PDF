@@ -11,6 +11,9 @@
   </script>
   <script th:inline="javascript">
     const currentVersion = /*[[${@appVersion}]]*/ '';
+    const licenseType = /*[[${@license}]]*/ '';
+    const machineType = /*[[${@machineType}]]*/ '';
+    const activeSecurity = /*[[${@activeSecurity}]]*/ false;
     const noFavourites = /*[[#{noFavourites}]]*/ '';
     console.log(noFavourites);
     const updateAvailable = /*[[#{settings.updateAvailable}]]*/ '';

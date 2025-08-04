@@ -16,21 +16,89 @@ function compareVersions(version1, version2) {
   return 0;
 }
 
-async function getLatestReleaseVersion() {
-  const url = "https://api.github.com/repos/Stirling-Tools/Stirling-PDF/releases/latest";
+function getDownloadUrl() {
+  // Only show download for non-Docker installations
+  if (machineType === 'Docker' || machineType === 'Kubernetes') {
+    return null;
+  }
+  
+  const baseUrl = 'https://files.stirlingpdf.com/';
+  
+  // Determine file based on machine type and security
+  if (machineType === 'Server-jar') {
+    return baseUrl + (activeSecurity ? 'Stirling-PDF-with-login.jar' : 'Stirling-PDF.jar');
+  }
+  
+  // Client installations
+  if (machineType.startsWith('Client-')) {
+    const os = machineType.replace('Client-', ''); // win, mac, unix
+    const type = activeSecurity ? '-server-security' : '-server';
+    
+    if (os === 'unix') {
+      return baseUrl + os + type + '.jar';
+    } else if (os === 'win') {
+      return baseUrl + os + '-installer.exe';
+    } else if (os === 'mac') {
+      return baseUrl + os + '-installer.dmg';
+    }
+  }
+  
+  return null;
+}
+
+async function getUpdateSummary() {
+  // Map Java License enum to API types
+  let type = 'community';
+  if (licenseType === 'NORMAL') {
+    type = 'community';
+  } else if (licenseType === 'PRO') {
+    type = 'pro';
+  } else if (licenseType === 'ENTERPRISE') {
+    type = 'enterprise';
+  }
+  const url = `https://supabase.stirling.com/functions/v1/updates?from=${currentVersion}&type=${type}&summary=true`;
+  console.log("Fetching update summary from:", url);
   try {
     const response = await fetch(url);
+    console.log("Response status:", response.status);
     if (response.status === 200) {
       const data = await response.json();
-      return data.tag_name ? data.tag_name.substring(1) : "";
+      return data;
     } else {
-      // If the status is not 200, try to get the version from build.gradle
-      return await getCurrentVersionFromBypass();
+      console.error("Failed to fetch update summary from Supabase:", response.status);
+      return null;
     }
   } catch (error) {
-    console.error("Failed to fetch latest version from GitHub:", error);
-    // If an error occurs, try to get the version from build.gradle
-    return await getCurrentVersionFromBypass();
+    console.error("Failed to fetch update summary from Supabase:", error);
+    return null;
+  }
+}
+
+async function getFullUpdateInfo() {
+  // Map Java License enum to API types
+  let type = 'community';
+  if (licenseType === 'NORMAL') {
+    type = 'community';
+  } else if (licenseType === 'PRO') {
+    type = 'pro';
+  } else if (licenseType === 'ENTERPRISE') {
+    type = 'enterprise';
+  }
+  const url = `https://supabase.stirling.com/functions/v1/updates?from=${currentVersion}&type=${type}&summary=false`;
+  console.log("Fetching full update info from:", url);
+  try {
+    const response = await fetch(url);
+    console.log("Full update response status:", response.status);
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    } else {
+      console.error("Failed to fetch full update info from Supabase:", response.status);
+      return null;
+    }
+  } catch (error) {
+    console.error("Failed to fetch full update info from Supabase:", error);
+    return null;
   }
 }
 
@@ -60,6 +128,7 @@ async function checkForUpdate() {
   var updateLinkLegacy = document.getElementById("update-link-legacy") || null;
   if (updateBtn !== null) {
     updateBtn.style.display = "none";
+    updateBtn.classList.remove("btn-danger", "btn-warning", "btn-outline-primary");
   }
   if (updateLink !== null) {
     updateLink.style.display = "none";
@@ -71,19 +140,47 @@ async function checkForUpdate() {
     }
   }
 
-  const latestVersion = await getLatestReleaseVersion();
-  console.log("latestVersion=" + latestVersion);
+  const updateSummary = await getUpdateSummary();
+  if (!updateSummary) {
+    console.log("No update summary available");
+    return;
+  }
+
+  console.log("updateSummary=", updateSummary);
   console.log("currentVersion=" + currentVersion);
-  console.log("compareVersions(latestVersion, currentVersion) > 0)=" + compareVersions(latestVersion, currentVersion));
-  if (latestVersion && compareVersions(latestVersion, currentVersion) > 0) {
+  console.log("latestVersion=" + updateSummary.latest_version);
+  
+  if (updateSummary.latest_version && compareVersions(updateSummary.latest_version, currentVersion) > 0) {
+    const priority = updateSummary.max_priority || 'normal';
+    
     if (updateBtn != null) {
-      document.getElementById("update-btn").style.display = "block";
+      // Style button based on priority
+      if (priority === 'urgent') {
+        updateBtn.classList.add("btn-danger");
+        updateBtn.innerHTML = "🚨 Update Available";
+      } else if (priority === 'normal') {
+        updateBtn.classList.add("btn-warning");
+        updateBtn.innerHTML = "Update Available";
+      } else {
+        updateBtn.classList.add("btn-outline-primary");
+        updateBtn.innerHTML = "Update Available";
+      }
+      
+      // Store summary for initial display
+      updateBtn.setAttribute('data-update-summary', JSON.stringify(updateSummary));
+      updateBtn.style.display = "block";
+      
+      // Add click handler for update details modal
+      updateBtn.onclick = function(e) {
+        e.preventDefault();
+        showUpdateModal();
+      };
     }
     if (updateLink !== null) {
       document.getElementById("update-link").style.display = "flex";
     }
     if (updateLinkLegacy !== null) {
-      document.getElementById("app-update").innerHTML = updateAvailable.replace("{0}", '<b>' + currentVersion + '</b>').replace("{1}", '<b>' + latestVersion + '</b>');
+      document.getElementById("app-update").innerHTML = updateAvailable.replace("{0}", '<b>' + currentVersion + '</b>').replace("{1}", '<b>' + updateSummary.latest_version + '</b>');
       if (updateLinkLegacy.classList.contains("visually-hidden")) {
         updateLinkLegacy.classList.remove("visually-hidden");
       }
@@ -96,6 +193,160 @@ async function checkForUpdate() {
       }
     }
     console.log("hidden");
+  }
+}
+
+async function showUpdateModal() {
+  // Close settings modal if open
+  const settingsModal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+  if (settingsModal) {
+    settingsModal.hide();
+  }
+
+  // Get summary data from button
+  const updateBtn = document.getElementById("update-btn");
+  const summaryData = JSON.parse(updateBtn.getAttribute('data-update-summary'));
+  
+  // Create initial modal with loading state
+  const initialModalHtml = `
+    <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document" style="max-height: 80vh;">
+        <div class="modal-content" style="max-height: 80vh;">
+          <div class="modal-header">
+            <h5 class="modal-title" id="updateModalLabel">Update Available</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+          <div class="modal-body" id="updateModalBody" style="max-height: 60vh; overflow-y: auto;">
+            <div class="update-summary mb-4">
+              <div class="row mb-3">
+                <div class="${summaryData.latest_stable_version ? 'col-4' : 'col-6'} text-center">
+                  <small class="text-muted">Current</small><br>
+                  <strong>${currentVersion}</strong>
+                </div>
+                <div class="${summaryData.latest_stable_version ? 'col-4' : 'col-6'} text-center">
+                  <small class="text-muted">Latest</small><br>
+                  <strong class="text-primary">${summaryData.latest_version}</strong>
+                </div>
+                ${summaryData.latest_stable_version ? `
+                <div class="col-4 text-center">
+                  <small class="text-muted">Latest Stable</small><br>
+                  <strong class="text-success">${summaryData.latest_stable_version}</strong>
+                </div>
+                ` : ''}
+              </div>
+              <div class="alert ${summaryData.max_priority === 'urgent' ? 'alert-danger' : 'alert-warning'}" role="alert">
+                <strong>Priority:</strong> ${summaryData.max_priority.toUpperCase()}
+                ${summaryData.recommended_action ? `<br><strong>Recommended Action:</strong> ${summaryData.recommended_action}` : ''}
+              </div>
+            </div>
+            
+            ${summaryData.any_breaking ? `
+              <div class="alert alert-warning" role="alert">
+                <h6><strong>⚠️ Breaking Changes Detected</strong></h6>
+                <p>This update contains breaking changes. Please review the migration guides below.</p>
+              </div>
+            ` : ''}
+            
+            ${summaryData.migration_guides && summaryData.migration_guides.length > 0 ? `
+              <div class="migration-guides mb-4">
+                <h6>Migration Guides:</h6>
+                <ul class="list-group">
+                  ${summaryData.migration_guides.map(guide => `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>Version ${guide.version}:</strong> ${guide.notes}
+                      </div>
+                      <a href="${guide.url}" target="_blank" class="btn btn-sm btn-outline-primary">View Guide</a>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            
+            <div class="text-center">
+              <div class="spinner-border text-primary" role="status" id="loadingSpinner">
+                <span class="visually-hidden">Loading detailed version information...</span>
+              </div>
+              <p class="mt-2">Loading detailed version information...</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" class="btn btn-outline-primary">View All Releases</a>
+            ${getDownloadUrl() ? `<a href="${getDownloadUrl()}" class="btn btn-success" target="_blank">Download Latest</a>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Remove existing modal if present
+  const existingModal = document.getElementById('updateModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  // Add modal to body
+  document.body.insertAdjacentHTML('beforeend', initialModalHtml);
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('updateModal'));
+  modal.show();
+  
+  // Fetch full update info
+  const fullUpdateInfo = await getFullUpdateInfo();
+  
+  // Update modal with full information
+  const modalBody = document.getElementById('updateModalBody');
+  if (fullUpdateInfo && fullUpdateInfo.new_versions) {
+    const detailedVersionsHtml = `
+      <div class="detailed-versions mt-4">
+        <h6>Available Updates:</h6>
+        <div class="accordion" id="versionsAccordion">
+          ${fullUpdateInfo.new_versions.map((version, index) => `
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading${index}">
+                <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#collapse${index}" aria-expanded="${index === 0 ? 'true' : 'false'}" aria-controls="collapse${index}">
+                  <div class="d-flex justify-content-between w-100 me-3">
+                    <span><strong>Version ${version.version}</strong></span>
+                    <span class="badge ${version.priority === 'urgent' ? 'bg-danger' : version.priority === 'normal' ? 'bg-warning' : 'bg-secondary'}">${version.priority}</span>
+                  </div>
+                </button>
+              </h2>
+              <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" 
+                   aria-labelledby="heading${index}" data-bs-parent="#versionsAccordion">
+                <div class="accordion-body">
+                  <h6>${version.announcement.title}</h6>
+                  <p>${version.announcement.message}</p>
+                  ${version.compatibility.breaking_changes ? `
+                    <div class="alert alert-warning alert-sm" role="alert">
+                      <small><strong>⚠️ Breaking Changes:</strong> ${version.compatibility.breaking_description || 'This version contains breaking changes'}</small>
+                      ${version.compatibility.migration_guide_url ? `<br><a href="${version.compatibility.migration_guide_url}" target="_blank" class="btn btn-sm btn-outline-warning mt-1">Migration Guide</a>` : ''}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    
+    // Remove loading spinner and add detailed info
+    const spinner = document.getElementById('loadingSpinner');
+    if (spinner) {
+      spinner.parentElement.remove();
+    }
+    modalBody.insertAdjacentHTML('beforeend', detailedVersionsHtml);
+  } else {
+    // Remove loading spinner if failed to load
+    const spinner = document.getElementById('loadingSpinner');
+    if (spinner) {
+      spinner.parentElement.innerHTML = '<p class="text-muted">Unable to load detailed version information.</p>';
+    }
   }
 }
 
