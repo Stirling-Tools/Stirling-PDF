@@ -349,7 +349,7 @@
     },
     "convert": {
       "title": "Convert",
-      "desc": "Convert files between different formats",
+      "desc": "Convert files between different formats"
     },
     "imageToPdf": {
       "title": "Image to PDF",
