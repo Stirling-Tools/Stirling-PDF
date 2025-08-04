@@ -3,9 +3,7 @@ import { SPLIT_MODES, SPLIT_TYPES, ENDPOINTS, type SplitMode, type SplitType } f
 import { SplitParameters } from '../../../components/tools/split/SplitSettings';
 
 export interface SplitParametersHook {
-  mode: SplitMode | '';
   parameters: SplitParameters;
-  setMode: (mode: SplitMode | '') => void;
   updateParameter: (parameter: keyof SplitParameters, value: string | boolean) => void;
   resetParameters: () => void;
   validateParameters: () => boolean;
@@ -13,6 +11,7 @@ export interface SplitParametersHook {
 }
 
 const initialParameters: SplitParameters = {
+  mode: '',
   pages: '',
   hDiv: '2',
   vDiv: '2',
@@ -25,7 +24,6 @@ const initialParameters: SplitParameters = {
 };
 
 export const useSplitParameters = (): SplitParametersHook => {
-  const [mode, setMode] = useState<SplitMode | ''>('');
   const [parameters, setParameters] = useState<SplitParameters>(initialParameters);
 
   const updateParameter = (parameter: keyof SplitParameters, value: string | boolean) => {
@@ -34,13 +32,12 @@ export const useSplitParameters = (): SplitParametersHook => {
 
   const resetParameters = () => {
     setParameters(initialParameters);
-    setMode('');
   };
 
   const validateParameters = () => {
-    if (!mode) return false;
+    if (!parameters.mode) return false;
 
-    switch (mode) {
+    switch (parameters.mode) {
       case SPLIT_MODES.BY_PAGES:
         return parameters.pages.trim() !== "";
       case SPLIT_MODES.BY_SECTIONS:
@@ -55,14 +52,12 @@ export const useSplitParameters = (): SplitParametersHook => {
   };
 
   const getEndpointName = () => {
-    if (!mode) return ENDPOINTS[SPLIT_MODES.BY_PAGES];
-    return ENDPOINTS[mode as SplitMode];
+    if (!parameters.mode) return ENDPOINTS[SPLIT_MODES.BY_PAGES];
+    return ENDPOINTS[parameters.mode as SplitMode];
   };
 
   return {
-    mode,
     parameters,
-    setMode,
     updateParameter,
     resetParameters,
     validateParameters,

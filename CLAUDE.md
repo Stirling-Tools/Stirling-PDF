@@ -59,12 +59,53 @@ Frontend designed for **stateful document processing**:
 Without cleanup: browser crashes with memory leaks.
 
 #### Tool Development
-- **Pattern**: Follow `src/tools/Split.tsx` as reference implementation
-- **File Access**: Tools receive `selectedFiles` prop (computed from activeFiles based on user selection)
-- **File Selection**: Users select files in FileEditor (tool mode) → stored as IDs → computed to File objects for tools
-- **Integration**: All files are part of FileContext ecosystem - automatic memory management and operation tracking
-- **Parameters**: Tool parameter handling patterns still being standardized
-- **Preview Integration**: Tools can implement preview functionality (see Split tool's thumbnail preview)
+
+**Architecture**: Modular hook-based system with clear separation of concerns:
+
+- **useToolOperation** (`frontend/src/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
+  - Coordinates all tool operations with consistent interface
+  - Integrates with FileContext for operation tracking
+  - Handles validation, error handling, and UI state management
+
+- **Supporting Hooks**:
+  - **useToolState**: UI state management (loading, progress, error, files)
+  - **useToolApiCalls**: HTTP requests and file processing
+  - **useToolResources**: Blob URLs, thumbnails, ZIP downloads
+
+- **Utilities**:
+  - **toolErrorHandler**: Standardized error extraction and i18n support
+  - **toolResponseProcessor**: API response handling (single/zip/custom)
+  - **toolOperationTracker**: FileContext integration utilities
+
+**Tool Implementation Pattern**:
+1. Create hook in `frontend/src/hooks/tools/[toolname]/use[ToolName]Operation.ts`
+2. Define parameters interface and validation
+3. Implement `buildFormData` function for API requests
+4. Configure `useToolOperation` with endpoints and settings
+5. UI components consume the hook's state and actions
+
+**Example Pattern** (see `useCompressOperation.ts`):
+```typescript
+export const useCompressOperation = () => {
+  const { t } = useTranslation();
+  
+  return useToolOperation<CompressParameters>({
+    operationType: 'compress',
+    endpoint: '/api/v1/misc/compress-pdf',
+    buildFormData,
+    filePrefix: 'compressed_',
+    validateParams: (params) => { /* validation logic */ },
+    getErrorMessage: createStandardErrorHandler(t('compress.error.failed'))
+  });
+};
+```
+
+**Benefits**:
+- **Consistent**: All tools follow same pattern and interface
+- **Maintainable**: Single responsibility hooks, easy to test and modify
+- **i18n Ready**: Built-in internationalization support
+- **Type Safe**: Full TypeScript support with generic interfaces
+- **Memory Safe**: Automatic resource cleanup and blob URL management
 
 ## Architecture Overview
 
@@ -126,7 +167,10 @@ Without cleanup: browser crashes with memory leaks.
 - **Core Status**: React SPA architecture complete with multi-tool workflow support
 - **State Management**: FileContext handles all file operations and tool navigation  
 - **File Processing**: Production-ready with memory management for large PDF workflows (up to 100GB+)
-- **Tool Integration**: Standardized tool interface - see `src/tools/Split.tsx` as reference
+- **Tool Integration**: Modular hook architecture with `useToolOperation` orchestrator
+  - Individual hooks: `useToolState`, `useToolApiCalls`, `useToolResources`
+  - Utilities: `toolErrorHandler`, `toolResponseProcessor`, `toolOperationTracker`
+  - Pattern: Each tool creates focused operation hook, UI consumes state/actions
 - **Preview System**: Tool results can be previewed without polluting file context (Split tool example)
 - **Performance**: Web Worker thumbnails, IndexedDB persistence, background processing
 
@@ -141,7 +185,7 @@ Without cleanup: browser crashes with memory leaks.
 - **Security**: When `DOCKER_ENABLE_SECURITY=false`, security-related classes are excluded from compilation
 - **FileContext**: All file operations MUST go through FileContext - never bypass with direct File handling
 - **Memory Management**: Manual cleanup required for PDF.js documents and blob URLs - don't remove cleanup code
-- **Tool Development**: New tools should follow Split tool pattern (`src/tools/Split.tsx`)
+- **Tool Development**: New tools should follow `useToolOperation` hook pattern (see `useCompressOperation.ts`)
 - **Performance Target**: Must handle PDFs up to 100GB+ without browser crashes
 - **Preview System**: Tools can preview results without polluting main file context (see Split tool implementation)
 
