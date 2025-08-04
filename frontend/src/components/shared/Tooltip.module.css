@@ -1,0 +1,184 @@
+/* Tooltip Container */
+.tooltip-container {
+  position: fixed;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background-color: var(--bg-raised);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  font-size: 14px;
+  line-height: 1.5;
+  pointer-events: auto;
+  z-index: 9999;
+  transition: opacity 100ms ease-out, transform 100ms ease-out;
+  min-width: 400px;
+  max-width: 50vh;
+  max-height: 80vh;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pinned tooltip indicator */
+.tooltip-container.pinned {
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Close button */
+.tooltip-pin-button {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  font-size: 14px;
+  background: var(--bg-raised);
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid var(--primary-color, #3b82f6);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.tooltip-pin-button .material-symbols-outlined {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.tooltip-pin-button:hover {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+}
+
+/* Tooltip Header */
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: var(--tooltip-header-bg);
+  color: var(--tooltip-header-color);
+  font-size: 14px;
+  font-weight: 500;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  margin: -1px -1px 0 -1px;
+  border: 1px solid var(--tooltip-border);
+  flex-shrink: 0;
+}
+
+.tooltip-logo {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tooltip-title {
+  flex: 1;
+}
+
+/* Tooltip Body */
+.tooltip-body {
+  padding: 16px !important;
+  color: var(--text-primary) !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.tooltip-body * {
+  color: var(--text-primary) !important;
+}
+
+/* Link styling within tooltips */
+.tooltip-body a {
+  color: var(--link-color, #3b82f6) !important;
+  text-decoration: underline;
+  text-decoration-color: var(--link-underline-color, rgba(59, 130, 246, 0.3));
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.tooltip-body a:hover {
+  color: var(--link-hover-color, #2563eb) !important;
+  text-decoration-color: var(--link-hover-underline-color, rgba(37, 99, 235, 0.5));
+}
+
+.tooltip-container .tooltip-body {
+  color: var(--text-primary) !important;
+}
+
+.tooltip-container .tooltip-body * {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure links maintain their styling */
+.tooltip-container .tooltip-body a {
+  color: var(--link-color, #3b82f6) !important;
+  text-decoration: underline;
+  text-decoration-color: var(--link-underline-color, rgba(59, 130, 246, 0.3));
+}
+
+.tooltip-container .tooltip-body a:hover {
+  color: var(--link-hover-color, #2563eb) !important;
+  text-decoration-color: var(--link-hover-underline-color, rgba(37, 99, 235, 0.5));
+}
+
+
+/* Tooltip Arrows */
+.tooltip-arrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  transform: rotate(45deg);
+}
+
+
+.tooltip-arrow-sidebar {
+  top: 50%;
+  left: -4px;
+  transform: translateY(-50%) rotate(45deg);
+  border-left: none;
+  border-bottom: none;
+}
+
+.tooltip-arrow-top {
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  border-top: none;
+  border-left: none;
+}
+
+.tooltip-arrow-bottom {
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  border-bottom: none;
+  border-right: none;
+}
+
+.tooltip-arrow-left {
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-left: none;
+  border-bottom: none;
+}
+
+.tooltip-arrow-right {
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-right: none;
+  border-top: none;
+} 

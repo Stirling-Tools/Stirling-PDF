@@ -103,6 +103,13 @@
   --icon-config-bg: #9CA3AF;
   --icon-config-color: #FFFFFF;
 
+  /* Colors for tooltips */
+  --tooltip-title-bg: #DBEFFF;
+  --tooltip-title-color: #31528E;
+  --tooltip-header-bg: #31528E;
+  --tooltip-header-color: white;
+  --tooltip-border: var(--border-default);
+
   /* Inactive icon colors for light mode */
   --icon-inactive-bg: #9CA3AF;
   --icon-inactive-color: #FFFFFF;
@@ -176,6 +183,14 @@
   /* Inactive icon colors for dark mode */
   --icon-inactive-bg: #2A2F36;
   --icon-inactive-color: #6E7581;
+
+  /* Dark mode tooltip colors */
+  --tooltip-title-bg: #4B525A;
+  --tooltip-title-color: #fff;
+  --tooltip-header-bg: var(--bg-raised);
+  --tooltip-header-color: var(--text-primary);
+  --tooltip-border: var(--border-default);
+
 
   /* Adjust shadows for dark mode */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);

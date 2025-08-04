@@ -104,6 +104,7 @@ function HomePageContent() {
 
       {/* Left: Tool Picker or Selected Tool Panel */}
       <div
+        data-sidebar="tool-panel"
         className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
         style={{
           width: sidebarsVisible && !readerMode ? '14vw' : '0',

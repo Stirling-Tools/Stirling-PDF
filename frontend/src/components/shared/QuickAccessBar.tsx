@@ -213,6 +213,7 @@ const QuickAccessBar = ({
 
   return (
     <div
+      data-sidebar="quick-access"
       className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
     >
       {/* Fixed header outside scrollable area */}
