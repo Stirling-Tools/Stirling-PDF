@@ -48,15 +48,13 @@ function getDownloadUrl() {
 
 async function getUpdateSummary() {
   // Map Java License enum to API types
-  let type = 'community';
-  if (licenseType === 'NORMAL') {
-    type = 'community';
-  } else if (licenseType === 'PRO') {
+  let type = 'normal';
+  if (licenseType === 'PRO') {
     type = 'pro';
   } else if (licenseType === 'ENTERPRISE') {
     type = 'enterprise';
   }
-  const url = `https://supabase.stirling.com/functions/v1/updates?from=${currentVersion}&type=${type}&summary=true`;
+  const url = `https://supabase.stirling.com/functions/v1/updates?from=${currentVersion}&type=${type}&login=${activeSecurity}&summary=true`;
   console.log("Fetching update summary from:", url);
   try {
     const response = await fetch(url);
@@ -84,7 +82,7 @@ async function getFullUpdateInfo() {
   } else if (licenseType === 'ENTERPRISE') {
     type = 'enterprise';
   }
-  const url = `https://supabase.stirling.com/functions/v1/updates?from=${currentVersion}&type=${type}&summary=false`;
+  const url = `https://supabase.stirling.com/functions/v1/updates?from=${currentVersion}&type=${type}&login=${activeSecurity}&summary=false`;
   console.log("Fetching full update info from:", url);
   try {
     const response = await fetch(url);
