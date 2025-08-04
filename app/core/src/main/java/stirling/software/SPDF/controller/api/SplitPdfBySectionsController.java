@@ -4,10 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -61,10 +58,14 @@ public class SplitPdfBySectionsController {
 
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();
-        String splitMode = request.getSplitMode();
+        SplitTypes splitMode = Optional.ofNullable(request.getSplitMode())
+            .map(SplitTypes::valueOf)
+            .orElse(SplitTypes.SPLIT_ALL);
+        
         PDDocument sourceDocument = pdfDocumentFactory.load(file);
 
-        Set<Integer> pagesToSplit = getPagesToSplit(pageNumbers, splitMode, sourceDocument.getNumberOfPages());
+        Set<Integer> pagesToSplit =
+                getPagesToSplit(pageNumbers, splitMode, sourceDocument.getNumberOfPages());
 
         // Process the PDF based on split parameters
         int horiz = request.getHorizontalDivisions() + 1;
@@ -119,16 +120,17 @@ public class SplitPdfBySectionsController {
     }
 
     // Based on the mode, get the pages that need to be split and return the pages set
-    private Set<Integer> getPagesToSplit(String pageNumbers, String splitMode, int totalPages) {
+    private Set<Integer> getPagesToSplit(String pageNumbers, SplitTypes splitMode, int totalPages) {
         Set<Integer> pagesToSplit = new HashSet<>();
 
-        switch (SplitTypes.valueOf(splitMode)) {
+        switch (splitMode) {
             case CUSTOM:
                 if (pageNumbers == null || pageNumbers.isBlank()) {
                     throw new IllegalArgumentException("Custom mode requires page numbers input.");
                 }
                 String[] pageOrderArr = pageNumbers.split(",");
-                List<Integer> pageListToSplit = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+                List<Integer> pageListToSplit =
+                        GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
                 pagesToSplit.addAll(pageListToSplit);
                 break;
 
@@ -163,9 +165,11 @@ public class SplitPdfBySectionsController {
         return pagesToSplit;
     }
 
-
     public List<PDDocument> splitPdfPages(
-            PDDocument document, int horizontalDivisions, int verticalDivisions, Set<Integer> pagesToSplit)
+            PDDocument document,
+            int horizontalDivisions,
+            int verticalDivisions,
+            Set<Integer> pagesToSplit)
             throws IOException {
         List<PDDocument> splitDocuments = new ArrayList<>();
 
@@ -193,12 +197,12 @@ public class SplitPdfBySectionsController {
                         subDoc.addPage(subPage);
 
                         PDFormXObject form =
-                            layerUtility.importPageAsForm(
-                                document, document.getPages().indexOf(originalPage));
+                                layerUtility.importPageAsForm(
+                                        document, document.getPages().indexOf(originalPage));
 
                         try (PDPageContentStream contentStream =
-                                 new PDPageContentStream(
-                                     subDoc, subPage, AppendMode.APPEND, true, true)) {
+                                new PDPageContentStream(
+                                        subDoc, subPage, AppendMode.APPEND, true, true)) {
                             // Set clipping area and position
                             float translateX = -subPageWidth * i;
 
