@@ -128,6 +128,13 @@ subprojects {
         imports {
             mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
         }
+        dependencies {
+            // Security vulnerability fixes - remove when Spring Security updates these
+            dependency 'com.nimbusds:nimbus-jose-jwt:10.0.2' // CVE-2025-53864 - from spring-boot-starter-oauth2-client
+            dependency 'com.google.guava:guava:33.4.8-jre' // CVE-2023-2976, CVE-2020-8908 - from OpenSAML dependencies
+            dependency 'commons-io:commons-io:2.14.0' // CVE-2024-47554 - from various dependencies
+            dependency 'org.apache.commons:commons-lang3:3.18.0' // CVE-2025-48924 - from transitive dependencies
+        }
     }
 
     dependencies {

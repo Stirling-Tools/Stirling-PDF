@@ -56,6 +56,9 @@ dependencies {
         implementation "org.opensaml:opensaml-core:$openSamlVersion"
         implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
         implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
+        // Security vulnerability fixes - remove when parent dependencies update
+        implementation 'com.nimbusds:nimbus-jose-jwt:10.0.2' // CVE-2025-53864 - from spring-boot-starter-oauth2-client
+        implementation 'com.google.guava:guava:33.4.8-jre' // CVE-2023-2976, CVE-2020-8908 - from OpenSAML dependencies above
     }
     implementation 'com.coveo:saml-client:5.0.0'
 }

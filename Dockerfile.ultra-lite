@@ -36,7 +36,9 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         curl \
         shadow \
         su-exec \
-        openjdk21-jre && \
+        openjdk21-jre \
+        # Security updates
+        libjxl@testing && \
     # User permissions
     mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
     chmod +x /scripts/*.sh && \

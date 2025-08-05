@@ -55,6 +55,8 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     openssl \
     openssl-dev \
     openjdk21-jre \
+    # Security updates
+    libjxl@testing \
     # Doc conversion
     gcompat \
     libc6-compat \
