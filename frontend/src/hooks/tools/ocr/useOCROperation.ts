@@ -87,8 +87,7 @@ export const useOCROperation = () => {
       try {
         const formData = buildFormData(file, parameters);
         const response = await axios.post('/api/v1/misc/ocr-pdf', formData, { 
-          responseType: "blob",
-          timeout: 300000 // 5 minute timeout for OCR
+          responseType: "blob"
         });
 
         // Check for HTTP errors
@@ -174,7 +173,6 @@ export const useOCROperation = () => {
     buildFormData, // Not used with customProcessor but required
     filePrefix: 'ocr_',
     customProcessor: customOCRProcessor,
-    timeout: 300000, // 5 minute timeout for OCR
     validateParams: (params) => {
       if (params.languages.length === 0) {
         return { valid: false, errors: [t('ocr.validation.languageRequired', 'Please select at least one language for OCR processing.')] };

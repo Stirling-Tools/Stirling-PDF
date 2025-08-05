@@ -77,31 +77,51 @@ Without cleanup: browser crashes with memory leaks.
   - **toolResponseProcessor**: API response handling (single/zip/custom)
   - **toolOperationTracker**: FileContext integration utilities
 
-**Tool Implementation Pattern**:
-1. Create hook in `frontend/src/hooks/tools/[toolname]/use[ToolName]Operation.ts`
-2. Define parameters interface and validation
-3. Implement `buildFormData` function for API requests
-4. Configure `useToolOperation` with endpoints and settings
-5. UI components consume the hook's state and actions
+**Three Tool Patterns**:
 
-**Example Pattern** (see `useCompressOperation.ts`):
+**Pattern 1: Single-File Tools** (Individual processing)
+- Backend processes one file per API call
+- Set `multiFileEndpoint: false`
+- Examples: Compress, Rotate
 ```typescript
-export const useCompressOperation = () => {
-  const { t } = useTranslation();
-  
-  return useToolOperation<CompressParameters>({
-    operationType: 'compress',
-    endpoint: '/api/v1/misc/compress-pdf',
-    buildFormData,
-    filePrefix: 'compressed_',
-    validateParams: (params) => { /* validation logic */ },
-    getErrorMessage: createStandardErrorHandler(t('compress.error.failed'))
-  });
-};
+return useToolOperation({
+  operationType: 'compress',
+  endpoint: '/api/v1/misc/compress-pdf',
+  buildFormData: (params, file: File) => { /* single file */ },
+  multiFileEndpoint: false,
+  filePrefix: 'compressed_'
+});
+```
+
+**Pattern 2: Multi-File Tools** (Batch processing)
+- Backend accepts `MultipartFile[]` arrays in single API call
+- Set `multiFileEndpoint: true`
+- Examples: Split, Merge, Overlay
+```typescript
+return useToolOperation({
+  operationType: 'split',
+  endpoint: '/api/v1/general/split-pages',
+  buildFormData: (params, files: File[]) => { /* all files */ },
+  multiFileEndpoint: true,
+  filePrefix: 'split_'
+});
+```
+
+**Pattern 3: Complex Tools** (Custom processing)
+- Tools with complex routing logic or non-standard processing
+- Provide `customProcessor` for full control
+- Examples: Convert, OCR
+```typescript
+return useToolOperation({
+  operationType: 'convert',
+  customProcessor: async (params, files) => { /* custom logic */ },
+  filePrefix: 'converted_'
+});
 ```
 
 **Benefits**:
-- **Consistent**: All tools follow same pattern and interface
+- **No Timeouts**: Operations run until completion (supports 100GB+ files)
+- **Consistent**: All tools follow same pattern and interface  
 - **Maintainable**: Single responsibility hooks, easy to test and modify
 - **i18n Ready**: Built-in internationalization support
 - **Type Safe**: Full TypeScript support with generic interfaces

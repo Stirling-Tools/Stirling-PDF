@@ -63,8 +63,9 @@ export const useSplitOperation = () => {
   return useToolOperation<SplitParameters>({
     operationType: 'split',
     endpoint: (params) => getEndpoint(params),
-    buildFormData: buildFormData, // Clean multi-file signature: (params, selectedFiles) => FormData  
+    buildFormData: buildFormData, // Multi-file signature: (params, selectedFiles) => FormData  
     filePrefix: 'split_',
+    multiFileEndpoint: true, // Single API call with all files
     responseHandler: {
       type: 'zip',
       useZipExtractor: true

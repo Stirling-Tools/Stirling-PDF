@@ -28,8 +28,7 @@ export class EnhancedPDFProcessingService {
     thumbnailQuality: 'medium',
     priorityPageCount: 10,
     useWebWorker: false,
-    maxRetries: 3,
-    timeoutMs: 300000 // 5 minutes
+    maxRetries: 3
   };
 
   private constructor() {}
@@ -87,7 +86,7 @@ export class EnhancedPDFProcessingService {
     estimatedTime: number
   ): Promise<void> {
     // Create cancellation token
-    const cancellationToken = ProcessingErrorHandler.createTimeoutController(config.timeoutMs);
+    const cancellationToken = new AbortController();
     
     // Set initial state
     const state: ProcessingState = {

@@ -5,9 +5,7 @@ import { ConvertParameters } from './useConvertParameters';
 import { detectFileExtension } from '../../../utils/fileUtils';
 import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
 import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
-
 import { getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
-
 
 const shouldProcessFilesSeparately = (
   selectedFiles: File[], 
@@ -29,18 +27,6 @@ const shouldProcessFilesSeparately = (
     // Mixed file types (smart detection)
     (parameters.isSmartDetection && parameters.smartDetectionType === 'mixed')
   );
-};
-
-const createFileFromResponse = (
-  responseData: any,
-  headers: any,
-  originalFileName: string,
-  targetExtension: string
-): File => {
-  const originalName = originalFileName.split('.')[0];
-  const fallbackFilename = `${originalName}_converted.${targetExtension}`;
-  
-  return createFileFromApiResponse(responseData, headers, fallbackFilename);
 };
 
 const buildFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
@@ -83,20 +69,66 @@ const buildFormData = (parameters: ConvertParameters, selectedFiles: File[]): Fo
   return formData;
 };
 
+const createFileFromResponse = (
+  responseData: any,
+  headers: any,
+  originalFileName: string,
+  targetExtension: string
+): File => {
+  const originalName = originalFileName.split('.')[0];
+  const fallbackFilename = `${originalName}_converted.${targetExtension}`;
+  
+  return createFileFromApiResponse(responseData, headers, fallbackFilename);
+};
+
 export const useConvertOperation = () => {
   const { t } = useTranslation();
   
+  const customConvertProcessor = useCallback(async (
+    parameters: ConvertParameters,
+    selectedFiles: File[]
+  ): Promise<File[]> => {
+    const processedFiles: File[] = [];
+    const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
+    
+    if (!endpoint) {
+      throw new Error('Unsupported conversion format');
+    }
+
+    // Convert-specific routing logic: decide batch vs individual processing
+    if (shouldProcessFilesSeparately(selectedFiles, parameters)) {
+      // Individual processing for complex cases (PDF→image, smart detection, etc.)
+      for (const file of selectedFiles) {
+        const formData = buildFormData(parameters, [file]);
+        const response = await axios.post(endpoint, formData, { responseType: 'blob' });
+        
+        const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
+        
+        processedFiles.push(convertedFile);
+      }
+    } else {
+      // Batch processing for simple cases (image→PDF combine)
+      const formData = buildFormData(parameters, selectedFiles);
+      const response = await axios.post(endpoint, formData, { responseType: 'blob' });
+      
+      const baseFilename = selectedFiles.length === 1 
+        ? selectedFiles[0].name
+        : 'converted_files';
+      
+      const convertedFile = createFileFromResponse(response.data, response.headers, baseFilename, parameters.toExtension);
+      processedFiles.push(convertedFile);
+    }
+
+    return processedFiles;
+  }, [t]);
 
   return useToolOperation<ConvertParameters>({
     operationType: 'convert',
-    endpoint: (params) => getEndpointUrl(params.fromExtension, params.toExtension) || '',
-    buildFormData: buildFormData, // Clean multi-file signature: (params, selectedFiles) => FormData
+    endpoint: '', // Not used with customProcessor but required
+    buildFormData, // Not used with customProcessor but required  
     filePrefix: 'converted_',
-    responseHandler: {
-      type: 'single'
-    },
+    customProcessor: customConvertProcessor, // Convert handles its own routing
     validateParams: (params) => {
-      // Add any validation if needed
       return { valid: true };
     },
     getErrorMessage: (error) => {

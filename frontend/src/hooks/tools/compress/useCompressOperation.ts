@@ -31,14 +31,13 @@ const buildFormData = (parameters: CompressParameters, file: File): FormData => 
 
 export const useCompressOperation = () => {
   const { t } = useTranslation();
-  
+
   return useToolOperation<CompressParameters>({
     operationType: 'compress',
     endpoint: '/api/v1/misc/compress-pdf',
     buildFormData,
     filePrefix: 'compressed_',
-    singleFileMode: false, // Process files individually
-    timeout: 60000, // 1 minute timeout per file
+1    multiFileEndpoint: false, // Individual API calls per file
     validateParams: (params) => {
       if (params.compressionMethod === 'filesize' && !params.fileSizeValue) {
         return { valid: false, errors: [t('compress.validation.fileSizeRequired', 'File size value is required when using filesize method')] };

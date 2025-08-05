@@ -8,7 +8,6 @@ export interface ApiCallsConfig<TParams = void> {
   buildFormData: (file: File, params: TParams) => FormData;
   filePrefix: string;
   responseHandler?: ResponseHandler;
-  timeout?: number;
 }
 
 export const useToolApiCalls = <TParams = void>() => {
@@ -39,7 +38,6 @@ export const useToolApiCalls = <TParams = void>() => {
         const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
         const response = await axios.post(endpoint, formData, {
           responseType: 'blob',
-          timeout: config.timeout || 120000,
           cancelToken: cancelTokenRef.current.token
         });
 
