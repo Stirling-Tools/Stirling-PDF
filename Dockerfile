@@ -55,8 +55,9 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     openssl \
     openssl-dev \
     openjdk21-jre \
-    # Security updates
-    libjxl@testing \
+    # Security updates - remove when Alpine base image updates these
+    libjxl@community \  # CVE-2024-11403, CVE-2024-11498 - libjxl vulnerabilities
+    rav1e@community \   # CVE-2025-4574, GHSA-2rxc-gjrp-vjhx, RUSTSEC-2024-0404, GHSA-pg9f-39pc-qf8g - Rust crossbeam-channel/anstream via rav1e
     # Doc conversion
     gcompat \
     libc6-compat \
@@ -75,7 +76,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     python3 \
     ocrmypdf \
     py3-pip \
-    py3-pillow@testing \
+    py3-pillow@community \  # CVE-2025-48379 - ensure Pillow 11.3.0+ instead of 11.2.1
     py3-pdf2image@testing \
     # URW Base 35 fonts for better PDF rendering
     font-urw-base35 && \

@@ -37,8 +37,9 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         shadow \
         su-exec \
         openjdk21-jre \
-        # Security updates
-        libjxl@testing && \
+        # Security updates - remove when Alpine base image updates these
+        libjxl@community \  # CVE-2024-11403, CVE-2024-11498 - libjxl vulnerabilities
+        rav1e@community && \ # CVE-2025-4574, GHSA-2rxc-gjrp-vjhx, RUSTSEC-2024-0404, GHSA-pg9f-39pc-qf8g - Rust crossbeam-channel/anstream via rav1e
     # User permissions
     mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
     chmod +x /scripts/*.sh && \
