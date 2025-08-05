@@ -18,7 +18,7 @@ import AdvancedOCRSettings from "../components/tools/ocr/AdvancedOCRSettings";
 import { useOCRParameters } from "../hooks/tools/ocr/useOCRParameters";
 import { useOCROperation } from "../hooks/tools/ocr/useOCROperation";
 import { BaseToolProps } from "../types/tool";
-import { ocrTips } from "../components/tips/OCR_TIPS";
+import { useOcrTips } from "../components/tips/OCR_TIPS";
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -27,6 +27,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const ocrParams = useOCRParameters();
   const ocrOperation = useOCROperation();
+  const ocrTips = useOcrTips();
 
   // Step expansion state management
   const [expandedStep, setExpandedStep] = useState<'files' | 'settings' | 'advanced' | null>('files');
