@@ -1,0 +1,29 @@
+{
+  "convert": {
+    "selectSourceFormat": "Select source file format",
+    "selectTargetFormat": "Select target file format",
+    "selectFirst": "Select a source format first",
+    "imageOptions": "Image Options:",
+    "emailOptions": "Email Options:",
+    "colorType": "Color Type",
+    "dpi": "DPI",
+    "singleOrMultiple": "Output",
+    "emailNote": "Email attachments and embedded images will be included"
+  },
+  "common": {
+    "color": "Color",
+    "grayscale": "Grayscale",
+    "blackWhite": "Black & White",
+    "single": "Single Image",
+    "multiple": "Multiple Images"
+  },
+  "groups": {
+    "document": "Document",
+    "spreadsheet": "Spreadsheet",
+    "presentation": "Presentation",
+    "image": "Image",
+    "web": "Web",
+    "text": "Text",
+    "email": "Email"
+  }
+}

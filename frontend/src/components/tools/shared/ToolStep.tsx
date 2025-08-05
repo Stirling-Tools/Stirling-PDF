@@ -53,7 +53,7 @@ const ToolStep = ({
     return parent ? parent.visibleStepCount >= 3 : false;
   }, [showNumber, parent]);
 
-  const stepNumber = useContext(ToolStepContext)?.getStepNumber?.() || 1;
+  const stepNumber = parent?.getStepNumber?.() || 1;
 
   return (
     <Paper

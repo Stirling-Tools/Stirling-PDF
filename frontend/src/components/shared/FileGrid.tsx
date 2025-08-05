@@ -20,6 +20,7 @@ interface FileGridProps {
   onShowAll?: () => void;
   showingAll?: boolean;
   onDeleteAll?: () => void;
+  isFileSupported?: (fileName: string) => boolean; // Function to check if file is supported
 }
 
 type SortOption = 'date' | 'name' | 'size';
@@ -37,7 +38,8 @@ const FileGrid = ({
   maxDisplay,
   onShowAll,
   showingAll = false,
-  onDeleteAll
+  onDeleteAll,
+  isFileSupported
 }: FileGridProps) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
@@ -123,16 +125,18 @@ const FileGrid = ({
         {displayFiles.map((file, idx) => {
           const fileId = file.id || file.name;
           const originalIdx = files.findIndex(f => (f.id || f.name) === fileId);
+          const supported = isFileSupported ? isFileSupported(file.name) : true;
           return (
             <FileCard
               key={fileId + idx}
               file={file}
               onRemove={onRemove ? () => onRemove(originalIdx) : undefined}
-              onDoubleClick={onDoubleClick ? () => onDoubleClick(file) : undefined}
-              onView={onView ? () => onView(file) : undefined}
-              onEdit={onEdit ? () => onEdit(file) : undefined}
+              onDoubleClick={onDoubleClick && supported ? () => onDoubleClick(file) : undefined}
+              onView={onView && supported ? () => onView(file) : undefined}
+              onEdit={onEdit && supported ? () => onEdit(file) : undefined}
               isSelected={selectedFiles.includes(fileId)}
-              onSelect={onSelect ? () => onSelect(fileId) : undefined}
+              onSelect={onSelect && supported ? () => onSelect(fileId) : undefined}
+              isSupported={supported}
             />
           );
         })}

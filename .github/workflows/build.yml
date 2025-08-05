@@ -130,7 +130,7 @@ jobs:
       - name: Build frontend
         run: cd frontend && npm run build
       - name: Run frontend tests
-        run: cd frontend && npm test --passWithNoTests --watchAll=false || true
+        run: cd frontend && npm run test -- --run
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4.6.2
         with:
