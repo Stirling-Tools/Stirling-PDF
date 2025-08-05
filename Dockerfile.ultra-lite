@@ -24,9 +24,10 @@ COPY scripts/installFonts.sh /scripts/installFonts.sh
 COPY app/core/build/libs/*.jar app.jar
 
 # Set up necessary directories and permissions
-RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk update && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
         ca-certificates \
@@ -38,10 +39,10 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         su-exec \
         openjdk21-jre \
         # Security updates - remove when Alpine base image updates these
-        # libjxl@community fixes CVE-2024-11403, CVE-2024-11498
-        # rav1e@community fixes CVE-2025-4574, GHSA-2rxc-gjrp-vjhx, RUSTSEC-2024-0404, GHSA-pg9f-39pc-qf8g
-        libjxl@community \
-        rav1e@community && \
+        # libjxl fixes CVE-2024-11403, CVE-2024-11498
+        # rav1e fixes CVE-2025-4574, GHSA-2rxc-gjrp-vjhx, RUSTSEC-2024-0404, GHSA-pg9f-39pc-qf8g
+        libjxl \
+        rav1e && \
     # User permissions
     mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
     chmod +x /scripts/*.sh && \

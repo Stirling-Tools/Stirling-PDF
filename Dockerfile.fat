@@ -57,6 +57,7 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk update && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
     ca-certificates \
@@ -70,10 +71,10 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     openssl-dev \
     openjdk21-jre \
     # Security updates - remove when Alpine base image updates these
-    # libjxl@community fixes CVE-2024-11403, CVE-2024-11498
-    # rav1e@community fixes CVE-2025-4574, GHSA-2rxc-gjrp-vjhx, RUSTSEC-2024-0404, GHSA-pg9f-39pc-qf8g
-    libjxl@community \
-    rav1e@community \
+    # libjxl fixes CVE-2024-11403, CVE-2024-11498
+    # rav1e fixes CVE-2025-4574, GHSA-2rxc-gjrp-vjhx, RUSTSEC-2024-0404, GHSA-pg9f-39pc-qf8g
+    libjxl \
+    rav1e \
     # Doc conversion
     gcompat \
     libc6-compat \
@@ -93,9 +94,9 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     python3 \
     ocrmypdf \
     py3-pip \
-    # py3-pillow@community fixes CVE-2025-48379 - ensure Pillow 11.3.0+ instead of 11.2.1
-    py3-pillow@community \
-    py3-pdf2image@testing && \
+    # py3-pillow fixes CVE-2025-48379 - ensure Pillow 11.3.0+ instead of 11.2.1
+    py3-pillow \
+    py3-pdf2image && \
     python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
