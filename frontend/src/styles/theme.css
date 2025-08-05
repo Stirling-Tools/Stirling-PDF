@@ -74,6 +74,9 @@
   --bg-muted: #f3f4f6;
   --bg-background: #f9fafb;
   --bg-toolbar: #ffffff;
+  --bg-file-manager: #F5F6F8;
+  --bg-file-list: #ffffff;
+  --btn-open-file: #0A8BFF;
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-muted: #6b7280;
@@ -144,6 +147,9 @@
   --bg-muted: #1F2329;
   --bg-background: #2A2F36;
   --bg-toolbar: #272A2E;
+  --bg-file-manager: #1F2329;
+  --bg-file-list: #2A2F36;
+  --btn-open-file: #0A8BFF;
   --text-primary: #f9fafb;
   --text-secondary: #d1d5db;
   --text-muted: #9ca3af;

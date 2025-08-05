@@ -14,8 +14,22 @@ const MobileLayout: React.FC = () => {
     modalHeight,
   } = useFileManagerContext();
 
+  // Calculate the height more accurately based on actual content
+  const calculateFileListHeight = () => {
+    // Base modal height minus padding and gaps
+    const baseHeight = `calc(${modalHeight} - 2rem)`; // Account for Stack padding
+    
+    // Estimate heights of fixed components
+    const fileSourceHeight = '3rem'; // FileSourceButtons height
+    const fileDetailsHeight = selectedFiles.length > 0 ? '10rem' : '8rem'; // FileDetails compact height
+    const searchHeight = activeSource === 'recent' ? '3rem' : '0rem'; // SearchInput height
+    const gapHeight = activeSource === 'recent' ? '3rem' : '2rem'; // Stack gaps
+    
+    return `calc(${baseHeight} - ${fileSourceHeight} - ${fileDetailsHeight} - ${searchHeight} - ${gapHeight})`;
+  };
+
   return (
-    <Stack h="100%" gap="sm" p="sm">
+    <Box h="100%" p="sm" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
       {/* Section 1: File Sources - Fixed at top */}
       <Box style={{ flexShrink: 0 }}>
         <FileSourceButtons horizontal={true} />
@@ -25,24 +39,44 @@ const MobileLayout: React.FC = () => {
         <FileDetails compact={true} />
       </Box>
       
-      {/* Section 3: Search Bar - Fixed above file list */}
-      {activeSource === 'recent' && (
-        <Box style={{ flexShrink: 0 }}>
-          <SearchInput />
+      {/* Section 3 & 4: Search Bar + File List - Unified background extending to modal edge */}
+      <Box style={{ 
+        flex: 1,
+        display: 'flex', 
+        flexDirection: 'column',
+        backgroundColor: 'var(--bg-file-list)',
+        borderRadius: '8px',
+        border: '1px solid var(--mantine-color-gray-2)',
+        overflow: 'hidden',
+        minHeight: 0
+      }}>
+        {activeSource === 'recent' && (
+          <Box style={{ 
+            flexShrink: 0,
+            borderBottom: '1px solid var(--mantine-color-gray-2)'
+          }}>
+            <SearchInput />
+          </Box>
+        )}
+        
+        <Box style={{ flex: 1, minHeight: 0 }}>
+          <FileListArea
+            scrollAreaHeight={calculateFileListHeight()}
+            scrollAreaStyle={{ 
+              height: calculateFileListHeight(),
+              maxHeight: '60vh',
+              minHeight: '150px',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderRadius: 0
+            }}
+          />
         </Box>
-      )}
-      
-      {/* Section 4: File List - Fixed height scrollable area */}
-      <Box style={{ flexShrink: 0 }}>
-        <FileListArea
-          scrollAreaHeight={`calc(${modalHeight} - ${selectedFiles.length > 0 ? '300px' : '200px'})`}
-          scrollAreaStyle={{ maxHeight: '400px', minHeight: '150px' }}
-        />
       </Box>
       
       {/* Hidden file input for local file selection */}
       <HiddenFileInput />
-    </Stack>
+    </Box>
   );
 };
 

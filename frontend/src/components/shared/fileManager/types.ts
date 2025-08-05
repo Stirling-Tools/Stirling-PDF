@@ -9,5 +9,6 @@ export interface FileListItemProps {
   onSelect: () => void;
   onRemove: () => void;
   onDoubleClick?: () => void;
+  isLast?: boolean;
 }
 

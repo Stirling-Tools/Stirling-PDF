@@ -22,7 +22,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile } = useFileManager();
+  const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile, touchFile } = useFileManager();
 
   // File management handlers
   const isFileSupported = useCallback((fileName: string) => {
@@ -70,7 +70,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   }, [handleRemoveFile, recentFiles]);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1030);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -99,10 +99,10 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
 
   // Modal size constants for consistent scaling
   const modalHeight = '80vh';
-  const modalWidth = isMobile ? '100%' : '60vw';
+  const modalWidth = isMobile ? '100%' : '80vw';
   const modalMaxWidth = isMobile ? '100%' : '1200px';
   const modalMaxHeight = '1200px';
-  const modalMinWidth = isMobile ? '320px' : '1030px';
+  const modalMinWidth = isMobile ? '320px' : '800px';
 
   return (
     <Modal
@@ -140,12 +140,11 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
           multiple={true}
           activateOnClick={false}
           style={{ 
-            padding: '1rem', 
             height: '100%', 
             width: '100%',
             border: 'none',
             borderRadius: '30px',
-            backgroundColor: 'transparent'
+            backgroundColor: 'var(--bg-file-manager)'
           }}
           styles={{
             inner: { pointerEvents: 'all' }
@@ -159,6 +158,8 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             isOpen={isFilesModalOpen}
             onFileRemove={handleRemoveFileByIndex}
             modalHeight={modalHeight}
+            storeFile={storeFile}
+            refreshRecentFiles={refreshRecentFiles}
           >
             {isMobile ? <MobileLayout /> : <DesktopLayout />}
           </FileManagerProvider>

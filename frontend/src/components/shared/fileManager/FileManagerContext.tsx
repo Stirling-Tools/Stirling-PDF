@@ -41,6 +41,8 @@ interface FileManagerProviderProps {
   isOpen: boolean;
   onFileRemove: (index: number) => void;
   modalHeight: string;
+  storeFile: (file: File) => Promise<void>;
+  refreshRecentFiles: () => Promise<void>;
 }
 
 export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
@@ -52,6 +54,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   isOpen,
   onFileRemove,
   modalHeight,
+  storeFile,
+  refreshRecentFiles,
 }) => {
   const [activeSource, setActiveSource] = useState<FileSource>('recent');
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
@@ -115,26 +119,35 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     setSearchTerm(value);
   }, []);
 
-  const handleFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
-      const fileWithUrls = files.map(file => {
-        const url = URL.createObjectURL(file);
-        createdBlobUrls.current.add(url);
-        return {
-          id: `local-${Date.now()}-${Math.random()}`,
-          name: file.name,
-          file,
-          url,
-          size: file.size,
-          lastModified: file.lastModified,
-        };
-      });
-      onFilesSelected(fileWithUrls);
-      onClose();
+      try {
+        // Store files and refresh recent files (same as drag-and-drop)
+        await Promise.all(files.map(file => storeFile(file)));
+        
+        const fileWithUrls = files.map(file => {
+          const url = URL.createObjectURL(file);
+          createdBlobUrls.current.add(url);
+          return {
+            id: `local-${Date.now()}-${Math.random()}`,
+            name: file.name,
+            file,
+            url,
+            size: file.size,
+            lastModified: file.lastModified,
+          };
+        });
+        
+        onFilesSelected(fileWithUrls);
+        await refreshRecentFiles();
+        onClose();
+      } catch (error) {
+        console.error('Failed to process selected files:', error);
+      }
     }
     event.target.value = '';
-  }, [onFilesSelected, onClose]);
+  }, [storeFile, onFilesSelected, refreshRecentFiles, onClose]);
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {

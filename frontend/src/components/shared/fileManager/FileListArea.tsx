@@ -45,11 +45,13 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     return (
       <ScrollArea 
         h={scrollAreaHeight}
-        style={{ ...scrollAreaStyle }}
+        style={{ 
+          ...scrollAreaStyle
+        }}
         type="always" 
         scrollbarSize={8}
       >
-        <Stack gap="xs" p="xs">
+        <Stack gap={0}>
           {filteredFiles.map((file, index) => (
             <FileListItem
               key={file.id || file.name}

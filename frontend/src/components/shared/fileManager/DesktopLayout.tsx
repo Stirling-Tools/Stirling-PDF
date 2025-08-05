@@ -15,11 +15,11 @@ const DesktopLayout: React.FC = () => {
   } = useFileManagerContext();
 
   return (
-    <Grid gutter="md" h="100%" grow={false} style={{ flexWrap: 'nowrap' }}>
+    <Grid gutter="xs" h="100%" grow={false} style={{ flexWrap: 'nowrap', minWidth: 0 }}>
       {/* Column 1: File Sources */}
-      <Grid.Col span="content" style={{ 
-        minWidth: '15.625rem', 
-        width: '15.625rem', 
+      <Grid.Col span="content" p="lg" style={{ 
+        minWidth: '13.625rem', 
+        width: '13.625rem', 
         flexShrink: 0, 
         height: '100%',
       }}>
@@ -27,24 +27,55 @@ const DesktopLayout: React.FC = () => {
       </Grid.Col>
       
       {/* Column 2: File List */}
-      <Grid.Col span="auto" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-        {activeSource === 'recent' && (
-          <SearchInput style={{ marginBottom: '1rem', flexShrink: 0 }} />
-        )}
-        
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <FileListArea
-            scrollAreaHeight={`calc(${modalHeight} - 6rem)`}
-            scrollAreaStyle={{ 
-              height: activeSource === 'recent' && recentFiles.length > 0 ? `calc(${modalHeight} - 6rem)` : '100%'
-            }}
-          />
+      <Grid.Col span="auto" style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: '100%', 
+        minHeight: 0,
+        minWidth: 0,
+        flex: '1 1 0px'
+      }}>
+        <div style={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column',
+          backgroundColor: 'var(--bg-file-list)',
+          border: '1px solid var(--mantine-color-gray-2)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          overflow: 'hidden'
+        }}>
+          {activeSource === 'recent' && (
+            <div style={{ 
+              flexShrink: 0,
+              borderBottom: '1px solid var(--mantine-color-gray-3)'
+            }}>
+              <SearchInput />
+            </div>
+          )}
+          
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <FileListArea
+              scrollAreaHeight={`calc(${modalHeight} )`}
+              scrollAreaStyle={{ 
+                height: activeSource === 'recent' && recentFiles.length > 0 ? modalHeight : '100%',
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderRadius: 0
+              }}
+            />
+          </div>
         </div>
       </Grid.Col>
       
       {/* Column 3: File Details */}
-      <Grid.Col span="content" style={{ minWidth: '20rem', width: '20rem', flexShrink: 0, height: '100%' }}>
-        <div style={{ height: '100%' }}>
+      <Grid.Col p="xl" span="content" style={{ 
+        minWidth: '25rem', 
+        width: '25rem', 
+        flexShrink: 0, 
+        height: '100%',
+        maxWidth: '18rem'
+      }}>
+        <div style={{ height: '100%', overflow: 'hidden' }}>
           <FileDetails />
         </div>
       </Grid.Col>

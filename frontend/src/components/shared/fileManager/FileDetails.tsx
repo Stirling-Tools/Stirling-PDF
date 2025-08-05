@@ -62,9 +62,9 @@ const FileDetails: React.FC<FileDetailsProps> = ({
     return (
       <Stack gap="xs" style={{ height: '100%' }}>
         {/* Compact mobile layout */}
-        <Box style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <Box style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {/* Small preview */}
-          <Box style={{ width: '60px', height: '80px', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box style={{ width: '120px', height: '150px', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {currentFile && getCurrentThumbnail() ? (
               <img 
                 src={getCurrentThumbnail()} 
@@ -134,6 +134,10 @@ const FileDetails: React.FC<FileDetailsProps> = ({
           onClick={onOpenFiles}
           disabled={!hasSelection}
           fullWidth
+          style={{ 
+            backgroundColor: hasSelection ? 'var(--btn-open-file)' : 'var(--mantine-color-gray-4)', 
+            color: 'white' 
+          }}
         >
           {selectedFiles.length > 1 
             ? t('fileManager.openFiles', `Open ${selectedFiles.length} Files`)
@@ -145,7 +149,7 @@ const FileDetails: React.FC<FileDetailsProps> = ({
   }
 
   return (
-    <Stack gap="sm" h={`calc(${modalHeight} - 2rem)`}>
+    <Stack gap="lg" h={`calc(${modalHeight} - 2rem)`}>
       {/* Section 1: Thumbnail Preview */}
       <Box p="xs" style={{ textAlign: 'center', flexShrink: 0 }}>
         <Box style={{ position: 'relative', width: "100%", height: `calc(${modalHeight} * 0.5 - 2rem)`, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -182,7 +186,6 @@ const FileDetails: React.FC<FileDetailsProps> = ({
                       width: '100%',
                       height: '100%',
                       backgroundColor: 'var(--mantine-color-gray-2)',
-                      borderRadius: '8px',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                       transform: 'translate(12px, 12px) rotate(2deg)',
                       zIndex: 1
@@ -197,7 +200,6 @@ const FileDetails: React.FC<FileDetailsProps> = ({
                     width: '100%',
                     height: '100%',
                     backgroundColor: 'var(--mantine-color-gray-1)',
-                    borderRadius: '8px',
                     boxShadow: '0 3px 10px rgba(0, 0, 0, 0.12)',
                     transform: 'translate(6px, 6px) rotate(1deg)',
                     zIndex: 2
@@ -212,14 +214,13 @@ const FileDetails: React.FC<FileDetailsProps> = ({
                 src={getCurrentThumbnail()} 
                 alt={currentFile.name} 
                 fit="contain" 
-                radius="md" 
                 style={{ 
                   maxWidth: '100%', 
                   maxHeight: '100%', 
                   width: 'auto', 
                   height: 'auto',
                   boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
-                  borderRadius: '8px',
+          
                   position: 'relative',
                   zIndex: 3,
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -232,7 +233,6 @@ const FileDetails: React.FC<FileDetailsProps> = ({
                 width: '80%', 
                 height: '80%', 
                 backgroundColor: 'var(--mantine-color-gray-1)', 
-                borderRadius: 8,
                 boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
                 position: 'relative',
                 zIndex: 3,
@@ -275,7 +275,7 @@ const FileDetails: React.FC<FileDetailsProps> = ({
           </Text>
         </Box>
         <ScrollArea style={{ flex: 1 }} p="md">
-          <Stack gap={0}>
+          <Stack gap="sm">
             <Group justify="space-between" py="xs">
               <Text size="sm" c="dimmed">{t('fileManager.fileName', 'Name')}</Text>
               <Text size="sm" fw={500} style={{ maxWidth: '60%', textAlign: 'right' }} truncate>
@@ -328,10 +328,15 @@ const FileDetails: React.FC<FileDetailsProps> = ({
       
       <Button 
         size="md" 
+        mb="xl"
         onClick={onOpenFiles}
         disabled={!hasSelection}
         fullWidth
-        style={{ flexShrink: 0 }}
+        style={{ 
+          flexShrink: 0, 
+          backgroundColor: hasSelection ? 'var(--btn-open-file)' : 'var(--mantine-color-gray-4)', 
+          color: 'white' 
+        }}
       >
         {selectedFiles.length > 1 
           ? t('fileManager.openFiles', `Open ${selectedFiles.length} Files`)

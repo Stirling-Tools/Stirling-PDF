@@ -111,12 +111,21 @@ export const useFileManager = () => {
     };
   }, [convertToFile]);
 
+  const touchFile = useCallback(async (id: string) => {
+    try {
+      await fileStorage.touchFile(id);
+    } catch (error) {
+      console.error('Failed to touch file:', error);
+    }
+  }, []);
+
   return {
     loading,
     convertToFile,
     loadRecentFiles,
     handleRemoveFile,
     storeFile,
+    touchFile,
     createFileSelectionHandlers
   };
 };

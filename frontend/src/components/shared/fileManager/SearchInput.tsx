@@ -18,7 +18,14 @@ const SearchInput: React.FC<SearchInputProps> = ({ style }) => {
       leftSection={<SearchIcon />}
       value={searchTerm}
       onChange={(e) => onSearchChange(e.target.value)}
-      style={style}
+      
+      style={{ padding: '0.5rem', ...style }}
+      styles={{
+        input: {
+          border: 'none',
+          backgroundColor: 'transparent'
+        }
+      }}
     />
   );
 };

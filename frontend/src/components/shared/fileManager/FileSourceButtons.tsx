@@ -18,10 +18,11 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
 
   const buttonProps = {
     variant: (source: string) => activeSource === source ? 'filled' : 'subtle',
-    getColor: (source: string) => activeSource === source ? 'var(--mantine-color-gray-4)' : undefined,
+    getColor: (source: string) => activeSource === source ? 'var(--mantine-color-gray-2)' : undefined,
     getStyles: (source: string) => ({
       root: {
         backgroundColor: activeSource === source ? undefined : 'transparent',
+        color: activeSource === source ? 'var(--mantine-color-gray-9)' : 'var(--mantine-color-gray-6)',
         border: 'none',
         '&:hover': {
           backgroundColor: activeSource === source ? undefined : 'var(--mantine-color-gray-0)'
@@ -33,7 +34,6 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const buttons = (
     <>
       <Button
-        variant={buttonProps.variant('recent')}
         leftSection={<HistoryIcon />}
         justify={horizontal ? "center" : "flex-start"}
         onClick={() => onSourceChange('recent')}
@@ -47,7 +47,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       
       <Button
         variant="subtle"
-        color='var(--mantine-color-gray-5)'
+        color='var(--mantine-color-gray-6)'
         leftSection={<FolderIcon />}
         justify={horizontal ? "center" : "flex-start"}
         onClick={onLocalFileClick}
@@ -77,14 +77,14 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
         color={activeSource === 'drive' ? 'gray' : undefined}
         styles={buttonProps.getStyles('drive')}
       >
-        {horizontal ? t('fileManager.googleDrive', 'Drive') : t('fileManager.googleDrive', 'Google Drive')}
+        {horizontal ? t('fileManager.googleDriveShort', 'Drive') : t('fileManager.googleDrive', 'Google Drive')}
       </Button>
     </>
   );
 
   if (horizontal) {
     return (
-      <Group gap="md" justify="center" style={{ width: '100%' }}>
+      <Group gap="xs" justify="center" style={{ width: '100%' }}>
         {buttons}
       </Group>
     );
@@ -92,7 +92,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
 
   return (
     <Stack gap="xs" style={{ height: '100%' }}>
-      <Text size="sm" fw={500} c="dimmed" mb="xs">
+      <Text size="sm" pt="sm" fw={500} c="dimmed" mb="xs" style={{ paddingLeft: '1rem' }}>
         {t('fileManager.myFiles', 'My Files')}
       </Text>
       {buttons}
