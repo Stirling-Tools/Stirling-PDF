@@ -3,7 +3,6 @@ import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
@@ -23,7 +22,6 @@ const generateSanitizedFileName = (originalFileName?: string): string => {
 
 const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
 
   const sanitizeParams = useSanitizeParameters();
@@ -65,7 +63,6 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleSettingsReset = () => {
     sanitizeOperation.resetResults();
     onPreviewFile?.(null);
-    // JB: Does this need setCurrentMode()?
   };
 
   const hasFiles = selectedFiles.length > 0;
