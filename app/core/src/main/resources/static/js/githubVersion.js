@@ -309,8 +309,9 @@ async function showUpdateModal() {
   // Update modal with full information
   const modalBody = document.getElementById('updateModalBody');
   if (fullUpdateInfo && fullUpdateInfo.new_versions) {
-    // Check if dark mode is active
-    const isDarkMode = localStorage.getItem("dark-mode") === "on";
+   const storedMode = localStorage.getItem("dark-mode");
+    const isDarkMode = storedMode === "on" || 
+                      (storedMode === null && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
     const darkClasses = isDarkMode ? {
       accordionItem: 'bg-dark border-secondary text-light',
       accordionButton: 'bg-dark text-light border-secondary',
@@ -372,9 +373,9 @@ async function showUpdateModal() {
       });
       var accordionButtons = document.querySelectorAll("#versionsAccordion .accordion-button");
       accordionButtons.forEach((button) => {
-        button.style.color = "";
-        button.style.backgroundColor = "";
-        button.style.borderColor = "";
+        button.style.color = "var(--md-sys-color-on-surface)";
+        button.style.backgroundColor = "var(--md-sys-color-surface-5)";
+        button.style.borderColor = "var(--md-sys-color-outline-variant)";
       });
       var accordionBodies = document.querySelectorAll("#versionsAccordion .accordion-body");
       accordionBodies.forEach((body) => {
