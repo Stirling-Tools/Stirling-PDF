@@ -1,6 +1,22 @@
 import { useState, useEffect } from "react";
 import { getDocument } from "pdfjs-dist";
 import { FileWithUrl } from "../types/file";
+import { fileStorage } from "../services/fileStorage";
+
+/**
+ * Calculate optimal scale for thumbnail generation
+ * Ensures high quality while preventing oversized renders
+ */
+function calculateThumbnailScale(pageViewport: { width: number; height: number }): number {
+  const maxWidth = 400;  // Max thumbnail width
+  const maxHeight = 600; // Max thumbnail height
+  
+  const scaleX = maxWidth / pageViewport.width;
+  const scaleY = maxHeight / pageViewport.height;
+  
+  // Don't upscale, only downscale if needed
+  return Math.min(scaleX, scaleY, 1.0);
+}
 
 /**
  * Hook for IndexedDB-aware thumbnail loading
@@ -28,21 +44,41 @@ export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
         return;
       }
 
-      // Second priority: for IndexedDB files without stored thumbnails, just use placeholder
-      if (file.storedInIndexedDB && file.id) {
-        // Don't generate thumbnails for files loaded from IndexedDB - just use placeholder
-        setThumb(null);
-        return;
-      }
-      
-      // Third priority: generate from blob for regular files during upload (small files only)
-      if (!file.storedInIndexedDB && file.size < 50 * 1024 * 1024 && !generating) {
+      // Second priority: generate from blob for files (both IndexedDB and regular files, small files only)
+      if (file.size < 50 * 1024 * 1024 && !generating) {
         setGenerating(true);
         try {
-          const arrayBuffer = await file.arrayBuffer();
+          let arrayBuffer: ArrayBuffer;
+          
+          // Handle IndexedDB files vs regular File objects
+          if (file.storedInIndexedDB && file.id) {
+            // For IndexedDB files, get the data from storage
+            const storedFile = await fileStorage.getFile(file.id);
+            if (!storedFile) {
+              throw new Error('File not found in IndexedDB');
+            }
+            arrayBuffer = storedFile.data;
+          } else if (typeof file.arrayBuffer === 'function') {
+            // For regular File objects, use arrayBuffer method
+            arrayBuffer = await file.arrayBuffer();
+          } else if (file.id) {
+            // Fallback: try to get from IndexedDB even if storedInIndexedDB flag is missing
+            const storedFile = await fileStorage.getFile(file.id);
+            if (!storedFile) {
+              throw new Error('File has no arrayBuffer method and not found in IndexedDB');
+            }
+            arrayBuffer = storedFile.data;
+          } else {
+            throw new Error('File object has no arrayBuffer method and no ID for IndexedDB lookup');
+          }
+          
           const pdf = await getDocument({ data: arrayBuffer }).promise;
           const page = await pdf.getPage(1);
-          const viewport = page.getViewport({ scale: 0.2 });
+          
+          // Calculate optimal scale and create viewport
+          const baseViewport = page.getViewport({ scale: 1.0 });
+          const scale = calculateThumbnailScale(baseViewport);
+          const viewport = page.getViewport({ scale });
           const canvas = document.createElement("canvas");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
@@ -53,7 +89,7 @@ export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
           }
           pdf.destroy(); // Clean up memory
         } catch (error) {
-          console.warn('Failed to generate thumbnail for regular file', file.name, error);
+          console.warn('Failed to generate thumbnail for file', file.name, error);
           if (!cancelled) setThumb(null);
         } finally {
           if (!cancelled) setGenerating(false);
