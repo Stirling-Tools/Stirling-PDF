@@ -24,6 +24,13 @@
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
+/* Pinned tooltip header */
+.tooltip-container.pinned .tooltip-header {
+  background-color: var(--primary-color, #3b82f6);
+  color: white;
+  border-color: var(--primary-color, #3b82f6);
+}
+
 /* Close button */
 .tooltip-pin-button {
   position: absolute;
