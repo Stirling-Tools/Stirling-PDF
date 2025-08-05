@@ -4,6 +4,7 @@ import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ApiIcon from "@mui/icons-material/Api";
+import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
 
@@ -74,6 +75,15 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     category: "utility",
     description: "Extract text from images using OCR",
     endpoints: ["ocr-pdf"]
+  },
+  sanitize: {
+    id: "sanitize",
+    icon: <CleaningServicesIcon />,
+    component: React.lazy(() => import("../tools/Sanitize")),
+    maxFiles: 1,
+    category: "security",
+    description: "Remove potentially harmful elements from PDF files",
+    endpoints: ["sanitize-pdf"]
   },
 
 };
