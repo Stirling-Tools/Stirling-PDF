@@ -75,7 +75,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   return (
     <ToolStepContainer>
-      <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
+      <Stack gap="sm" p="sm" style={{ height: 'calc(100vh - 200px)', overflow: 'auto' }}>
         {/* Files Step */}
         <ToolStep
           title={t('sanitize.steps.files', 'Files')}
