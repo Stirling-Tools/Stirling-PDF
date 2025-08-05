@@ -56,13 +56,20 @@ public class TempFileCleanupService {
                             || fileName.startsWith("pdf-stream-")
                             || fileName.startsWith("PDFBox")
                             || fileName.startsWith("input_")
-                            || fileName.startsWith("overlay-");
+                            || fileName.startsWith("overlay-")
+                            || fileName.startsWith("signature")
+                            || fileName.startsWith("original_")
+                            || fileName.startsWith("preprocessed_")
+                            || fileName.startsWith("temp")
+                            || fileName.startsWith("gs_")
+                            || fileName.startsWith("MultiPart");
 
     // File patterns that identify common system temp files
     private static final Predicate<String> IS_SYSTEM_TEMP_FILE =
             fileName ->
-                    fileName.matches("lu\\d+[a-z0-9]*\\.tmp")
+                    fileName.matches("lu\\d+[a-z0-9]*(\\.tmp)?")
                             || fileName.matches("ocr_process\\d+")
+                            || fileName.contains("ocrmypdf.io.")
                             || (fileName.startsWith("tmp") && !fileName.contains("jetty"))
                             || fileName.startsWith("OSL_PIPE_")
                             || (fileName.endsWith(".tmp") && !fileName.contains("jetty"));
@@ -70,8 +77,9 @@ public class TempFileCleanupService {
     // File patterns that should be excluded from cleanup
     private static final Predicate<String> SHOULD_SKIP =
             fileName ->
-                    fileName.contains("jetty")
-                            || fileName.startsWith("jetty-")
+                    (fileName.contains("jetty")
+                                    && !fileName.startsWith("jetty-0_0_0_0-8080--_-any-"))
+                            || fileName.startsWith("jetty-docbase")
                             || "proc".equals(fileName)
                             || "sys".equals(fileName)
                             || "dev".equals(fileName)
@@ -395,6 +403,18 @@ public class TempFileCleanupService {
             log.debug("Could not check file info, skipping: {}", path);
         }
 
+        // Fallback: if file is in our managed temp directories and older than maxAge, delete it
+        // regardless of filename pattern (this catches any temp files we might have missed)
+        if (!shouldDelete && maxAgeMillis > 0 && lastModified > 0) {
+            boolean isInManagedTempDir = isInManagedTempDirectory(path);
+            boolean isOlderThanMaxAge = (currentTime - lastModified) > maxAgeMillis;
+
+            if (isInManagedTempDir && isOlderThanMaxAge) {
+                shouldDelete = true;
+                log.debug("Deleting old file in managed temp directory: {}", path);
+            }
+        }
+
         // Check file age against maxAgeMillis only if it's not an empty file that we've already
         // decided to delete
         if (!isEmptyFile && shouldDelete && maxAgeMillis > 0) {
@@ -403,6 +423,38 @@ public class TempFileCleanupService {
         }
 
         return shouldDelete;
+    }
+
+    /** Check if a path is within one of our managed temp directories. */
+    private boolean isInManagedTempDirectory(Path path) {
+        try {
+            ApplicationProperties.TempFileManagement tempFiles =
+                    applicationProperties.getSystem().getTempFileManagement();
+
+            String baseTmpDir = tempFiles.getBaseTmpDir();
+            String libreOfficeDir = tempFiles.getLibreofficeDir();
+
+            // Check if path is under our main temp directory
+            if (baseTmpDir != null && !baseTmpDir.isEmpty()) {
+                Path baseTempPath = Path.of(baseTmpDir).toAbsolutePath().normalize();
+                if (path.toAbsolutePath().normalize().startsWith(baseTempPath)) {
+                    return true;
+                }
+            }
+
+            // Check if path is under LibreOffice temp directory
+            if (libreOfficeDir != null && !libreOfficeDir.isEmpty()) {
+                Path libreOfficePath = Path.of(libreOfficeDir).toAbsolutePath().normalize();
+                if (path.toAbsolutePath().normalize().startsWith(libreOfficePath)) {
+                    return true;
+                }
+            }
+
+        } catch (Exception e) {
+            log.debug("Error checking if path is in managed temp directory: {}", path, e);
+        }
+
+        return false;
     }
 
     /** Clean up LibreOffice temporary files. This method is called after LibreOffice operations. */
