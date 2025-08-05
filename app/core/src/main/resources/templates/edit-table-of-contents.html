@@ -64,23 +64,59 @@
                       id="addBookmarkBtn"
                       class="btn btn-outline-primary"
                       th:text="#{editTableOfContents.addBookmark}"></button>
+
                     <div class="d-flex flex-wrap justify-content-end gap-2">
-                      <button type="button"
-                        id="importBookmarksBtn"
-                        class="d-none btn btn-outline-primary"
-                        th:text="#{editTableOfContents.importBookmarks}"
-                        th:data-bs-original-title="#{editTableOfContents.importBookmarksHint}"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top">
-                      </button>
-                      <button type="button"
-                        id="exportBookmarksBtn"
-                        class="d-none btn btn-outline-primary"
-                        th:text="#{editTableOfContents.exportBookmarks}"
-                        th:data-bs-original-title="#{editTableOfContents.exportBookmarksHint}"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top">
-                      </button>
+                      <!-- Import Split Button -->
+                      <div class="btn-group">
+                        <label
+                          id="importDefaultBtn"
+                          for="importUploadJsonFileInput"
+                          class="btn btn-outline-primary"
+                          style="border-top-left-radius: 1.25rem !important; border-bottom-left-radius: 1.25rem !important;"
+                          th:text="#{editTableOfContents.importBookmarksDefault}">
+                        </label>
+                        <button type="button"
+                          class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false">
+                          <span class="visually-hidden">Toggle Import Options</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><label class="dropdown-item"
+                              id="importUploadJsonFileBtn"
+                              for="importUploadJsonFileInput"
+                              style="cursor: pointer;"
+                              th:text="#{editTableOfContents.importBookmarksFromJsonFile}"></label></li>
+                          <li class="d-none"><a class="dropdown-item"
+                              href="#bookmarks-container"
+                              id="importPasteFromClipboardBtn"
+                              th:text="#{editTableOfContents.importBookmarksFromClipboard}"></a></li>
+                        </ul>
+                      </div>
+
+                      <!-- Export Split Button -->
+                      <div class="btn-group">
+                        <button type="button"
+                          id="exportDefaultBtn"
+                          class="btn btn-outline-primary"
+                          th:text="#{editTableOfContents.exportBookmarksDefault}"></button>
+                        <button type="button"
+                          class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false">
+                          <span class="visually-hidden">Toggle Export Options</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><a class="dropdown-item"
+                              href="#bookmarks-container"
+                              id="exportDownloadJsonFileBtn"
+                              th:text="#{editTableOfContents.exportBookmarksAsJson}"></a></li>
+                          <li class="d-none"><a class="dropdown-item"
+                              href="#bookmarks-container"
+                              id="exportCopyToClipboardBtn"
+                              th:text="#{editTableOfContents.exportBookmarksAsText}"></a></li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
 
@@ -113,6 +149,12 @@
                   class="btn btn-primary"
                   th:text="#{editTableOfContents.submit}"></button>
               </form>
+
+              <!-- Hidden file input for JSON import (outside of form)-->
+              <input type="file"
+                id="importUploadJsonFileInput"
+                accept="application/json"
+                style="display: none;">
             </div>
           </div>
         </div>

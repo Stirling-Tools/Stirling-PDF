@@ -33,6 +33,23 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // callback function on file input change to extract bookmarks from JSON
+  async function getBookmarkDataFromJson(event) {
+    if (!event.target.files || event.target.files.length === 0) {
+      return;
+    }
+
+    const file = event.target.files[0];
+
+    try {
+      const fileText = await file.text();
+      const jsonData = JSON.parse(fileText);
+      return jsonData;
+    } catch (error) {
+      throw new Error(`Error extracting bookmark data: error while reading or parsing JSON file: ${error.message}`);
+    }
+  }
+
   // display new bookmark data given by a callback function that loads or fetches the data
   async function loadBookmarks(getBookmarkDataCallback) {
     // reset bookmarks
@@ -612,7 +629,24 @@ document.addEventListener("DOMContentLoaded", function () {
     updateEmptyStateButton();
   }
 
-  // Add import/export bookmarks to clipboard functionality
+  // Add bookmarks Import/Export functionality
+
+  // Import/Export button references
+  const importDefaultBtn = document.getElementById("importDefaultBtn");
+  const exportDefaultBtn = document.getElementById("exportDefaultBtn");
+  const importUploadJsonFileInput = document.getElementById("importUploadJsonFileInput");
+  const importPasteFromClipboardBtn = document.getElementById("importPasteFromClipboardBtn");
+  const exportDownloadJsonFileBtn = document.getElementById("exportDownloadJsonFileBtn");
+  const exportCopyToClipboardBtn = document.getElementById("exportCopyToClipboardBtn");
+
+  // display import/export from/to clipboard buttons if supported
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    importPasteFromClipboardBtn.parentElement.classList.remove("d-none");
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    exportCopyToClipboardBtn.parentElement.classList.remove("d-none");
+  }
+
   function flashButtonSuccess(button) {
     const originalClass = button.className;
 
@@ -624,47 +658,109 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 1000);
   }
 
-  async function importBookmarkStringFromClipboard() {
-    const button = document.getElementById("importBookmarksBtn");
+  // Import handlers
+  async function handleJsonFileInputChange(event) {
     try {
-      const newBookmarkDataString = await navigator.clipboard.readText();
-      const newBookmarkData = JSON.parse(newBookmarkDataString);
-
-      if (!newBookmarkData || newBookmarkData.length === 0) {
-        // don't change bookmarks for empty import data
-        return;
-      }
-
-      bookmarks = newBookmarkData.map(convertExtractedBookmark);
-      updateBookmarksUI();
-      flashButtonSuccess(button);
+      await loadBookmarks(async function () {
+        return getBookmarkDataFromJson(event);
+      });
+      flashButtonSuccess(importDefaultBtn);
     } catch (error) {
-      throw new Error(`Failed to import bookmarks: ${error.message}`);
+      console.error(`Failed to import bookmarks from JSON file: ${error.message}`);
     }
   }
 
-  async function exportBookmarkStringToClipboard() {
-    const button = document.getElementById("exportBookmarksBtn");
+  async function importBookmarksFromClipboard() {
+    console.log("Importing bookmarks from clipboard...");
+
+    try {
+      await loadBookmarks(async function () {
+        const clipboardText = await navigator.clipboard.readText();
+        if (!clipboardText) return [];
+
+        return JSON.parse(clipboardText);
+      });
+      flashButtonSuccess(importDefaultBtn);
+    } catch (error) {
+      console.error(`Failed to import bookmarks from clipboard: ${error.message}`);
+    }
+  }
+
+  async function handleBookmarksPasteFromClipboard(event) {
+    // do not override normal paste behavior on input fields
+    if (event.target.tagName.toLowerCase() === "input") return;
+
+    try {
+      await loadBookmarks(async function () {
+        const clipboardText = event.clipboardData?.getData("text/plain");
+        if (!clipboardText) return [];
+
+        return JSON.parse(clipboardText);
+      });
+      flashButtonSuccess(importDefaultBtn);
+    } catch (error) {
+      console.error(`Failed to import bookmarks from clipboard (ctrl-v): ${error.message}`);
+    }
+  }
+
+  // Export handlers
+  async function exportBookmarksToJson() {
+    console.log("Exporting bookmarks to JSON...");
+
+    try {
+      const bookmarkData = bookmarkDataInput.value;
+      const blob = new Blob([bookmarkData], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "bookmarks.json";
+      document.body.appendChild(a);
+      a.click();
+
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      flashButtonSuccess(exportDefaultBtn);
+    } catch (error) {
+      console.error(`Failed to export bookmarks to JSON: ${error.message}`);
+    }
+  }
+
+  async function exportBookmarksToClipboard() {
     const bookmarkData = bookmarkDataInput.value;
     try {
       await navigator.clipboard.writeText(bookmarkData);
-      flashButtonSuccess(button);
+      flashButtonSuccess(exportDefaultBtn);
     } catch (error) {
-      throw new Error(`Failed to export bookmarks: ${error.message}`);
+      console.error(`Failed to export bookmarks to clipboard: ${error.message}`);
     }
   }
 
-  // Add event listeners for import/export buttons
-  const importBookmarksBtn = document.getElementById("importBookmarksBtn");
-  const exportBookmarksBtn = document.getElementById("exportBookmarksBtn");
-  importBookmarksBtn.addEventListener("click", importBookmarkStringFromClipboard);
-  exportBookmarksBtn.addEventListener("click", exportBookmarkStringToClipboard);
+  async function handleBookmarksCopyToClipboard(event) {
+    // do not override normal copy behavior on input fields
+    if (event.target.tagName.toLowerCase() === "input") return;
 
-  // display import/export buttons if supported
-  if (navigator.clipboard && navigator.clipboard.writeText && navigator.clipboard.readText) {
-    importBookmarksBtn.classList.remove("d-none");
-    exportBookmarksBtn.classList.remove("d-none");
+    const bookmarkData = bookmarkDataInput.value;
+
+    try {
+      event.clipboardData.setData("text/plain", bookmarkData);
+      event.preventDefault();
+      flashButtonSuccess(exportDefaultBtn);
+    } catch (error) {
+      console.error(`Failed to export bookmarks to clipboard (ctrl-c): ${error.message}`);
+    }
   }
+
+  // register event listeners for import/export functions
+  importUploadJsonFileInput.addEventListener("change", handleJsonFileInputChange);
+  importPasteFromClipboardBtn.addEventListener("click", importBookmarksFromClipboard);
+  exportDownloadJsonFileBtn.addEventListener("click", exportBookmarksToJson);
+  exportCopyToClipboardBtn.addEventListener("click", exportBookmarksToClipboard);
+  document.body.addEventListener("copy", handleBookmarksCopyToClipboard);
+  document.body.addEventListener("paste", handleBookmarksPasteFromClipboard);
+  // set default actions
+  // importDefaultBtn is already handled by being a label for the file input
+  exportDefaultBtn.addEventListener("click", exportBookmarksToJson);
 
   // Listen for theme changes to update badge colors
   const observer = new MutationObserver(function (mutations) {
