@@ -4,14 +4,16 @@ import HistoryIcon from '@mui/icons-material/History';
 import FolderIcon from '@mui/icons-material/Folder';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { useTranslation } from 'react-i18next';
-import { FileSourceButtonsProps } from './types';
+import { useFileManagerContext } from './FileManagerContext';
 
-const FileSourceButtons: React.FC<FileSourceButtonsProps & { horizontal?: boolean }> = ({ 
-  activeSource, 
-  onSourceChange, 
-  onLocalFileClick,
+interface FileSourceButtonsProps {
+  horizontal?: boolean;
+}
+
+const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ 
   horizontal = false
 }) => {
+  const { activeSource, onSourceChange, onLocalFileClick } = useFileManagerContext();
   const { t } = useTranslation();
 
   const buttonProps = {

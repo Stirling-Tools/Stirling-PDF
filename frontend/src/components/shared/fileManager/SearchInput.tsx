@@ -2,22 +2,22 @@ import React from 'react';
 import { TextInput } from '@mantine/core';
 import SearchIcon from '@mui/icons-material/Search';
 import { useTranslation } from 'react-i18next';
+import { useFileManagerContext } from './FileManagerContext';
 
 interface SearchInputProps {
-  value: string;
-  onChange: (value: string) => void;
   style?: React.CSSProperties;
 }
 
-const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, style }) => {
+const SearchInput: React.FC<SearchInputProps> = ({ style }) => {
   const { t } = useTranslation();
+  const { searchTerm, onSearchChange } = useFileManagerContext();
 
   return (
     <TextInput
       placeholder={t('fileManager.searchFiles', 'Search files...')}
       leftSection={<SearchIcon />}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
+      value={searchTerm}
+      onChange={(e) => onSearchChange(e.target.value)}
       style={style}
     />
   );

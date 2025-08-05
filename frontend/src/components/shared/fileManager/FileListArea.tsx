@@ -3,35 +3,28 @@ import { Center, ScrollArea, Text, Stack } from '@mantine/core';
 import CloudIcon from '@mui/icons-material/Cloud';
 import HistoryIcon from '@mui/icons-material/History';
 import { useTranslation } from 'react-i18next';
-import { FileWithUrl } from '../../../types/file';
 import FileListItem from './FileListItem';
-import { FileSource } from './types';
+import { useFileManagerContext } from './FileManagerContext';
 
 interface FileListAreaProps {
-  activeSource: FileSource;
-  recentFiles: FileWithUrl[];
-  filteredFiles: FileWithUrl[];
-  selectedFileIds: string[];
-  onFileSelect: (file: FileWithUrl) => void;
-  onFileRemove: (index: number) => void;
-  onFileDoubleClick: (file: FileWithUrl) => void;
-  isFileSupported: (fileName: string) => boolean;
   scrollAreaHeight: string;
   scrollAreaStyle?: React.CSSProperties;
 }
 
 const FileListArea: React.FC<FileListAreaProps> = ({
-  activeSource,
-  recentFiles,
-  filteredFiles,
-  selectedFileIds,
-  onFileSelect,
-  onFileRemove,
-  onFileDoubleClick,
-  isFileSupported,
   scrollAreaHeight,
   scrollAreaStyle = {},
 }) => {
+  const {
+    activeSource,
+    recentFiles,
+    filteredFiles,
+    selectedFileIds,
+    onFileSelect,
+    onFileRemove,
+    onFileDoubleClick,
+    isFileSupported,
+  } = useFileManagerContext();
   const { t } = useTranslation();
 
   if (activeSource === 'recent') {

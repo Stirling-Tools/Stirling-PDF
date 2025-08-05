@@ -11,13 +11,3 @@ export interface FileListItemProps {
   onDoubleClick?: () => void;
 }
 
-export interface FileDetailsProps {
-  selectedFiles: FileWithUrl[];
-  onOpenFiles: () => void;
-}
-
-export interface FileSourceButtonsProps {
-  activeSource: FileSource;
-  onSourceChange: (source: FileSource) => void;
-  onLocalFileClick: () => void;
-}

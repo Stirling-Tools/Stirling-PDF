@@ -1,17 +1,15 @@
 import React from 'react';
+import { useFileManagerContext } from './FileManagerContext';
 
-interface HiddenFileInputProps {
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  onFileInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-}
+const HiddenFileInput: React.FC = () => {
+  const { fileInputRef, onFileInputChange } = useFileManagerContext();
 
-const HiddenFileInput: React.FC<HiddenFileInputProps> = ({ fileInputRef, onFileInputChange }) => {
   return (
     <input
       ref={fileInputRef}
       type="file"
       multiple={true}
-      accept={["*/*"].join(',')}
+      accept="*/*"
       onChange={onFileInputChange}
       style={{ display: 'none' }}
       data-testid="file-input"

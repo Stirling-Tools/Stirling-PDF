@@ -6,77 +6,31 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useTranslation } from 'react-i18next';
 import { detectFileExtension, getFileSize } from '../../../utils/fileUtils';
 import { useIndexedDBThumbnail } from '../../../hooks/useIndexedDBThumbnail';
-import { FileWithUrl } from '../../../types/file';
-import { FileDetailsProps } from './types';
+import { useFileManagerContext } from './FileManagerContext';
 
-const FileDetails: React.FC<FileDetailsProps & { compact?: boolean; modalHeight?: string }> = ({ selectedFiles, onOpenFiles, compact = false, modalHeight = '80vh' }) => {
+interface FileDetailsProps {
+  compact?: boolean;
+}
+
+const FileDetails: React.FC<FileDetailsProps> = ({ 
+  compact = false
+}) => {
+  const { selectedFiles, onOpenFiles, modalHeight } = useFileManagerContext();
   const { t } = useTranslation();
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
-  const [thumbnailCache, setThumbnailCache] = useState<Record<string, string>>({});
-  const [loadingFile, setLoadingFile] = useState<FileWithUrl | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   
   // Get the currently displayed file
   const currentFile = selectedFiles.length > 0 ? selectedFiles[currentFileIndex] : null;
   const hasSelection = selectedFiles.length > 0;
   const hasMultipleFiles = selectedFiles.length > 1;
+
+  // Use IndexedDB hook for the current file
+  const { thumbnail: currentThumbnail } = useIndexedDBThumbnail(currentFile);
   
-  // Only load thumbnail for files not in cache
-  const shouldLoadThumbnail = loadingFile && !thumbnailCache[loadingFile.id || loadingFile.name];
-  const { thumbnail } = useIndexedDBThumbnail(shouldLoadThumbnail ? loadingFile : ({} as FileWithUrl));
-  
-  // Load thumbnails for all selected files
-  useEffect(() => {
-    // Start loading thumbnails for uncached files
-    const uncachedFiles = selectedFiles.filter(file => !thumbnailCache[file.id || file.name]);
-    if (uncachedFiles.length > 0 && !loadingFile) {
-      setLoadingFile(uncachedFiles[0]);
-    }
-  }, [selectedFiles, thumbnailCache, loadingFile]);
-  
-  // Cache thumbnail when it loads and move to next uncached file
-  useEffect(() => {
-    if (loadingFile && thumbnail) {
-      const fileId = loadingFile.id || loadingFile.name;
-      setThumbnailCache(prev => ({
-        ...prev,
-        [fileId]: thumbnail
-      }));
-      
-      // Find next uncached file to load
-      const uncachedFiles = selectedFiles.filter(file => 
-        !thumbnailCache[file.id || file.name] && 
-        (file.id || file.name) !== fileId
-      );
-      
-      if (uncachedFiles.length > 0) {
-        setLoadingFile(uncachedFiles[0]);
-      } else {
-        setLoadingFile(null);
-      }
-    }
-  }, [loadingFile, thumbnail, selectedFiles, thumbnailCache]);
-  
-  // Clear cache when selection changes completely
-  useEffect(() => {
-    const selectedFileIds = selectedFiles.map(f => f.id || f.name);
-    setThumbnailCache(prev => {
-      const newCache: Record<string, string> = {};
-      selectedFileIds.forEach(id => {
-        if (prev[id]) {
-          newCache[id] = prev[id];
-        }
-      });
-      return newCache;
-    });
-    setLoadingFile(null);
-  }, [selectedFiles]);
-  
-  // Get thumbnail from cache only
+  // Get thumbnail for current file
   const getCurrentThumbnail = () => {
-    if (!currentFile) return null;
-    const fileId = currentFile.id || currentFile.name;
-    return thumbnailCache[fileId];
+    return currentThumbnail;
   };
   
   const handlePrevious = () => {
@@ -372,7 +326,6 @@ const FileDetails: React.FC<FileDetailsProps & { compact?: boolean; modalHeight?
         </ScrollArea>
       </Card>
       
-      {/* Section 3: Action Button */}
       <Button 
         size="md" 
         onClick={onOpenFiles}
