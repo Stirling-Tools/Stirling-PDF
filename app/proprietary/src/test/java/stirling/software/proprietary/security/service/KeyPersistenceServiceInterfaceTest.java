@@ -198,45 +198,4 @@ class KeyPersistenceServiceInterfaceTest {
             assertNotNull(result.getVerifyingKey());
         }
     }
-
-    @Test
-    void testGetPublicKey() throws Exception {
-        String keyId = "test-key-public";
-        String publicKeyBase64 = Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded());
-
-        JwtVerificationKey signingKey = new JwtVerificationKey(keyId, publicKeyBase64);
-
-        try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
-            mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
-
-            // Add the key to cache for testing
-            var cache = cacheManager.getCache("verifyingKeys");
-            cache.put(keyId, signingKey);
-
-            var result = keyPersistenceService.getPublicKey(keyId);
-
-            assertNotNull(result);
-            assertEquals(testKeyPair.getPublic().getAlgorithm(), result.getAlgorithm());
-        }
-    }
-
-    @Test
-    void testGetPrivateKey() throws Exception {
-        String keyId = "test-key-private";
-        String privateKeyBase64 = Base64.getEncoder().encodeToString(testKeyPair.getPrivate().getEncoded());
-
-        Path keyFile = tempDir.resolve(keyId + ".key");
-        Files.writeString(keyFile, privateKeyBase64);
-
-        try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
-            mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
-
-            var result = keyPersistenceService.getPrivateKey(keyId);
-
-            assertNotNull(result);
-            assertEquals(testKeyPair.getPrivate().getAlgorithm(), result.getAlgorithm());
-        }
-    }
 }

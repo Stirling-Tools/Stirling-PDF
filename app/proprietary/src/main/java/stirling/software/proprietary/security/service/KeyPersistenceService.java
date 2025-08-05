@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.service;
 
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,7 +20,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -27,11 +28,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.annotation.PostConstruct;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
@@ -239,30 +235,5 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(keySpec);
-    }
-
-    @Override
-    public PublicKey getPublicKey(String keyId) {
-        try {
-            JwtVerificationKey verifyingKey =
-                    verifyingKeyCache.get(keyId, JwtVerificationKey.class);
-            if (verifyingKey == null) {
-                return null;
-            }
-            return decodePublicKey(verifyingKey.getVerifyingKey());
-        } catch (Exception e) {
-            log.error("Failed to get public key for keyId: {}", keyId, e);
-            return null;
-        }
-    }
-
-    @Override
-    public PrivateKey getPrivateKey(String keyId) {
-        try {
-            return loadPrivateKey(keyId);
-        } catch (Exception e) {
-            log.error("Failed to get private key for keyId: {}", keyId, e);
-            return null;
-        }
     }
 }

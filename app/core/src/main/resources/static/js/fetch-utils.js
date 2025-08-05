@@ -1,59 +1,14 @@
-// JWT Management Utility
+// Authentication utility for cookie-based JWT
 window.JWTManager = {
-    JWT_STORAGE_KEY: 'stirling_jwt',
-    
-    // Store JWT token in localStorage
-    storeToken: function(token) {
-        if (token) {
-            localStorage.setItem(this.JWT_STORAGE_KEY, token);
-        }
-    },
-    
-    // Get JWT token from localStorage
-    getToken: function() {
-        return localStorage.getItem(this.JWT_STORAGE_KEY);
-    },
-    
-    // Remove JWT token from localStorage
-    removeToken: function() {
-        localStorage.removeItem(this.JWT_STORAGE_KEY);
-    },
-    
-    // Extract JWT from Authorization header in response
-    extractTokenFromResponse: function(response) {
-        const authHeader = response.headers.get('Authorization');
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-            const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-            this.storeToken(token);
-            return token;
-        }
-        return null;
-    },
-    
-    // Check if user is authenticated (has valid JWT)
+    // Check if user is authenticated (simplified for cookie-based auth)
     isAuthenticated: function() {
-        const token = this.getToken();
-        if (!token) return false;
-        
-        try {
-            // Basic JWT expiration check (decode payload)
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const now = Date.now() / 1000;
-            return payload.exp > now;
-        } catch (error) {
-            console.warn('Invalid JWT token:', error);
-            this.removeToken();
-            return false;
-        }
+        // With cookie-based JWT, we rely on server-side validation
+        // This is a simplified check - actual authentication status is determined server-side
+        return document.cookie.includes('stirling_jwt=');
     },
     
-    // Logout - remove token and redirect to login
+    // Logout - clear cookies and redirect to login
     logout: function() {
-        this.removeToken();
-        
-        // Clear all possible token storage locations
-        localStorage.removeItem(this.JWT_STORAGE_KEY);
-        sessionStorage.removeItem(this.JWT_STORAGE_KEY);
         
         // Clear JWT cookie manually (fallback)
         document.cookie = 'stirling_jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure';
@@ -101,19 +56,11 @@ window.fetchWithCsrf = async function(url, options = {}) {
         fetchOptions.headers['X-XSRF-TOKEN'] = csrfToken;
     }
 
-    // Add JWT token to Authorization header if available
-    const jwtToken = window.JWTManager.getToken();
-    if (jwtToken) {
-        fetchOptions.headers['Authorization'] = `Bearer ${jwtToken}`;
-        // Include credentials when JWT is enabled
-        fetchOptions.credentials = 'include';
-    }
+    // Always include credentials to send JWT cookies
+    fetchOptions.credentials = 'include';
 
     // Make the request
     const response = await fetch(url, fetchOptions);
-    
-    // Extract JWT from response if present
-    window.JWTManager.extractTokenFromResponse(response);
     
     // Handle 401 responses (unauthorized)
     if (response.status === 401) {

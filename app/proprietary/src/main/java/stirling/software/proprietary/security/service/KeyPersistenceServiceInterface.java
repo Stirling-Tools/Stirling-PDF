@@ -2,13 +2,11 @@ package stirling.software.proprietary.security.service;
 
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 
 public interface KeyPersistenceServiceInterface {
@@ -27,8 +25,4 @@ public interface KeyPersistenceServiceInterface {
 
     PublicKey decodePublicKey(String encodedKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException;
-
-    PublicKey getPublicKey(String keyId);
-
-    PrivateKey getPrivateKey(String keyId);
 }

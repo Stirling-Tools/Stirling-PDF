@@ -1,14 +1,14 @@
-// JWT Initialization Script
-// This script handles JWT token extraction during OAuth/Login flows and initializes the JWT manager
+// JWT Authentication Management Script
+// This script handles cookie-based JWT authentication and page access control
 
 (function() {
-    // Extract JWT token from URL parameters (for OAuth redirects)
-    function extractTokenFromUrl() {
+    // Clean up JWT token from URL parameters after OAuth/Login flows
+    function cleanupTokenFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('jwt') || urlParams.get('token');
-        if (token) {
-            window.JWTManager.storeToken(token);
+        const hasToken = urlParams.get('jwt') || urlParams.get('token');
+        if (hasToken) {
             // Clean up URL by removing token parameter
+            // Token should now be set as cookie by server
             urlParams.delete('jwt');
             urlParams.delete('token');
             const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
@@ -16,35 +16,16 @@
         }
     }
 
-    // Extract JWT token from cookie on page load (fallback)
-    function extractTokenFromCookie() {
-        const cookieValue = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('stirling_jwt='))
-            ?.split('=')[1];
-        
-        if (cookieValue) {
-            window.JWTManager.storeToken(cookieValue);
-            // Clear the cookie since we're using localStorage with consistent SameSite policy
-            document.cookie = 'stirling_jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure';
-        }
-    }
-
     // Initialize JWT handling when page loads
     function initializeJWT() {
-        // Try to extract token from URL first (OAuth flow)
-        extractTokenFromUrl();
+        // Clean up any JWT tokens from URL (OAuth flow)
+        cleanupTokenFromUrl();
         
-        // If no token in URL, try cookie (login flow)
-        if (!window.JWTManager.getToken()) {
-            extractTokenFromCookie();
-        }
-        
-        // Check if user is authenticated
+        // Check if user is authenticated via cookie
         if (window.JWTManager.isAuthenticated()) {
-            console.log('User is authenticated with JWT');
+            console.log('User is authenticated with JWT cookie');
         } else {
-            console.log('User is not authenticated or token expired');
+            console.log('User is not authenticated');
             // Only redirect to login if we're not already on login/register pages
             const currentPath = window.location.pathname;
             const currentSearch = window.location.search;
@@ -63,23 +44,11 @@
         }
     }
 
-    // Override form submissions to include JWT
+    // No form enhancement needed for cookie-based JWT
+    // Cookies are automatically sent with form submissions
     function enhanceFormSubmissions() {
-        // Override form submit for login forms
-        document.addEventListener('submit', function(event) {
-            const form = event.target;
-            
-            // Add JWT to form data if available
-            const jwtToken = window.JWTManager.getToken();
-            if (jwtToken && form.method && form.method.toLowerCase() !== 'get') {
-                // Create a hidden input for JWT
-                const jwtInput = document.createElement('input');
-                jwtInput.type = 'hidden';
-                jwtInput.name = 'jwt';
-                jwtInput.value = jwtToken;
-                form.appendChild(jwtInput);
-            }
-        });
+        // Cookie-based JWT is automatically included in form submissions
+        // No additional processing needed
     }
 
     // Add logout functionality to logout buttons
@@ -99,12 +68,10 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             initializeJWT();
-            enhanceFormSubmissions();
             enhanceLogoutButtons();
         });
     } else {
         initializeJWT();
-        enhanceFormSubmissions();
         enhanceLogoutButtons();
     }
 
