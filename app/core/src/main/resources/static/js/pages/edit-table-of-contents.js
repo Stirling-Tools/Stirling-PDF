@@ -1,25 +1,19 @@
 document.addEventListener("DOMContentLoaded", function () {
   const bookmarksContainer = document.getElementById("bookmarks-container");
+  const errorMessageContainer = document.getElementById("error-message-container");
   const addBookmarkBtn = document.getElementById("addBookmarkBtn");
   const bookmarkDataInput = document.getElementById("bookmarkData");
   let bookmarks = [];
   let counter = 0; // Used for generating unique IDs
 
-  // Add event listener to the file input to extract existing bookmarks
-  document.getElementById("fileInput-input").addEventListener("change", async function (e) {
-    if (!e.target.files || e.target.files.length === 0) {
+  // callback function on file input change to extract bookmarks from PDF
+  async function getBookmarkDataFromPdf(event) {
+    if (!event.target.files || event.target.files.length === 0) {
       return;
     }
 
-    // Reset bookmarks initially
-    bookmarks = [];
-    updateBookmarksUI();
-
     const formData = new FormData();
-    formData.append("file", e.target.files[0]);
-
-    // Show loading indicator
-    showLoadingIndicator();
+    formData.append("file", event.target.files[0]);
 
     try {
       // Call the API to extract bookmarks using fetchWithCsrf for CSRF protection
@@ -29,31 +23,48 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to extract bookmarks: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to fetch API: ${response.status} ${response.statusText}`);
       }
 
       const extractedBookmarks = await response.json();
+      return extractedBookmarks;
+    } catch (error) {
+      throw new Error("Error extracting bookmark data:", error);
+    }
+  }
+
+  // display new bookmark data given by a callback function that loads or fetches the data
+  async function loadBookmarks(getBookmarkDataCallback) {
+    // reset bookmarks
+    bookmarks = [];
+    updateBookmarksUI();
+    showLoadingIndicator();
+
+    try {
+      // Get new bookmarks from the callback
+      const newBookmarks = await getBookmarkDataCallback();
 
       // Convert extracted bookmarks to our format with IDs
-      if (extractedBookmarks && extractedBookmarks.length > 0) {
-        bookmarks = extractedBookmarks.map(convertExtractedBookmark);
-      } else {
-        showEmptyState();
+      if (newBookmarks && newBookmarks.length > 0) {
+        bookmarks = newBookmarks.map(convertExtractedBookmark);
       }
     } catch (error) {
-      // Show error message
-      showErrorMessage("Failed to extract bookmarks. You can still create new ones.");
-
-      // Add a default bookmark if no bookmarks and error
-      if (bookmarks.length === 0) {
-        showEmptyState();
-      }
+      bookmarks = [];
+      throw new Error(`Error loading bookmarks: ${error}`);
     } finally {
-      // Remove loading indicator
       removeLoadingIndicator();
-
-      // Update the UI
       updateBookmarksUI();
+    }
+  }
+
+  // Add event listener to the file input to extract existing bookmarks
+  document.getElementById("fileInput-input").addEventListener("change", async function (event) {
+    try {
+      await loadBookmarks(async function () {
+        return getBookmarkDataFromPdf(event);
+      });
+    } catch {
+      showErrorMessage("Failed to extract bookmarks. You can still create new ones.");
     }
   });
 
@@ -62,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadingEl.className = "alert alert-info";
     loadingEl.textContent = "Loading bookmarks from PDF...";
     loadingEl.id = "loading-bookmarks";
+    errorMessageContainer.innerHTML = "";
     bookmarksContainer.innerHTML = "";
     bookmarksContainer.appendChild(loadingEl);
   }
@@ -77,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const errorEl = document.createElement("div");
     errorEl.className = "alert alert-danger";
     errorEl.textContent = message;
-    bookmarksContainer.appendChild(errorEl);
+    errorMessageContainer.appendChild(errorEl);
   }
 
   function showEmptyState() {
