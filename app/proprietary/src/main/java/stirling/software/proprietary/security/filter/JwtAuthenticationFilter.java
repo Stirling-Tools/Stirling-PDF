@@ -7,6 +7,7 @@ import static stirling.software.proprietary.security.model.AuthenticationType.SA
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,7 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
@@ -68,55 +71,83 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String jwtToken = jwtService.extractToken(request);
-        // todo: X-API-KEY
-        if (jwtToken == null) {
-            // If they are unauthenticated and navigating to '/', redirect to '/login' instead of
-            // sending a 401
-            // todo: any unauthenticated requests should redirect to login
-            if ("/".equals(request.getRequestURI())
-                    && "GET".equalsIgnoreCase(request.getMethod())) {
-                response.sendRedirect("/login");
+        if (!apiKeyExists(request, response)) {
+            String jwtToken = jwtService.extractToken(request);
+
+            if (jwtToken == null) {
+                // Any unauthenticated requests should redirect to /login
+                String requestURI = request.getRequestURI();
+                String contextPath = request.getContextPath();
+
+                if (!requestURI.startsWith(contextPath + "/login")) {
+                    response.sendRedirect("/login");
+                    return;
+                }
+            }
+
+            try {
+                jwtService.validateToken(jwtToken);
+            } catch (AuthenticationFailureException e) {
+                jwtService.clearToken(response);
+                handleAuthenticationFailure(request, response, e);
                 return;
             }
-            handleAuthenticationFailure(
-                    request,
-                    response,
-                    new AuthenticationFailureException("JWT is missing from the request"));
-            return;
-        }
 
-        try {
-            jwtService.validateToken(jwtToken);
-        } catch (AuthenticationFailureException e) {
-            // Clear invalid tokens from response
-            jwtService.clearToken(response);
-            handleAuthenticationFailure(request, response, e);
-            return;
-        }
+            Map<String, Object> claims = jwtService.extractClaims(jwtToken);
+            String tokenUsername = claims.get("sub").toString();
 
-        Map<String, Object> claims = jwtService.extractClaims(jwtToken);
-        String tokenUsername = claims.get("sub").toString();
-
-        try {
-            Authentication authentication = createAuthentication(request, claims);
-            String jwt = jwtService.generateToken(authentication, claims);
-
-            jwtService.addToken(response, jwt);
-        } catch (SQLException | UnsupportedProviderException e) {
-            log.error("Error processing user authentication for user: {}", tokenUsername, e);
-            handleAuthenticationFailure(
-                    request,
-                    response,
-                    new AuthenticationFailureException("Error processing user authentication", e));
-            return;
+            try {
+                authenticate(request, claims);
+            } catch (SQLException | UnsupportedProviderException e) {
+                log.error("Error processing user authentication for user: {}", tokenUsername, e);
+                handleAuthenticationFailure(
+                        request,
+                        response,
+                        new AuthenticationFailureException(
+                                "Error processing user authentication", e));
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private Authentication createAuthentication(
-            HttpServletRequest request, Map<String, Object> claims)
+    private boolean apiKeyExists(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            String apiKey = request.getHeader("X-API-KEY");
+
+            if (apiKey != null && !apiKey.isBlank()) {
+                try {
+                    Optional<User> user = userService.getUserByApiKey(apiKey);
+                    if (user.isEmpty()) {
+                        handleAuthenticationFailure(
+                                request,
+                                response,
+                                new AuthenticationFailureException("Invalid API Key"));
+                        return false;
+                    }
+                    authentication =
+                            new ApiKeyAuthenticationToken(
+                                    user.get(), apiKey, user.get().getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } catch (AuthenticationException e) {
+                    handleAuthenticationFailure(
+                            request,
+                            response,
+                            new AuthenticationFailureException("Invalid API Key", e));
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    private void authenticate(HttpServletRequest request, Map<String, Object> claims)
             throws SQLException, UnsupportedProviderException {
         String username = claims.get("sub").toString();
 
@@ -135,8 +166,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new UsernameNotFoundException("User not found: " + username);
             }
         }
-
-        return SecurityContextHolder.getContext().getAuthentication();
     }
 
     private void processUserAuthenticationType(Map<String, Object> claims, String username)

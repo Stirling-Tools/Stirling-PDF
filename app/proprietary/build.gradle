@@ -47,6 +47,8 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
     api 'org.springframework.boot:spring-boot-starter-oauth2-client'
     api 'org.springframework.boot:spring-boot-starter-mail'
+    api 'org.springframework.boot:spring-boot-starter-cache'
+    api 'com.github.ben-manes.caffeine:caffeine'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.35'
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.14.0'
 

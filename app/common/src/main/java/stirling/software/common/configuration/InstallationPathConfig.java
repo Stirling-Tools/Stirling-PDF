@@ -46,7 +46,7 @@ public class InstallationPathConfig {
         STATIC_PATH = CUSTOM_FILES_PATH + "static" + File.separator;
         TEMPLATES_PATH = CUSTOM_FILES_PATH + "templates" + File.separator;
         SIGNATURES_PATH = CUSTOM_FILES_PATH + "signatures" + File.separator;
-        PRIVATE_KEY_PATH = CONFIG_PATH + "keys" + File.separator;
+        PRIVATE_KEY_PATH = CONFIG_PATH + "db" + File.separator + "keys" + File.separator;
     }
 
     private static String initializeBasePath() {

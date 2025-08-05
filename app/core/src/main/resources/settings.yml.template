@@ -64,7 +64,6 @@ security:
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
     keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
-    cleanupBatchSize: 100 # Number of keys to clean up in each batch. The default is 100.
     secureCookie: false # Set to 'true' to use secure cookies for JWTs
 
 premium:

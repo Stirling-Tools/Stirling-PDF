@@ -1,9 +1,13 @@
 package stirling.software.proprietary.security.service;
 
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -31,6 +35,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
@@ -39,22 +44,21 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 public class JwtService implements JwtServiceInterface {
 
     private static final String JWT_COOKIE_NAME = "stirling_jwt";
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
     private static final String ISSUER = "Stirling PDF";
     private static final long EXPIRATION = 3600000;
 
     @Value("${stirling.security.jwt.secureCookie:true}")
     private boolean secureCookie;
 
-    private final KeystoreServiceInterface keystoreService;
+    private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;
 
     @Autowired
     public JwtService(
-            @Qualifier("v2Enabled") boolean v2Enabled, KeystoreServiceInterface keystoreService) {
+            @Qualifier("v2Enabled") boolean v2Enabled,
+            KeyPersistenceServiceInterface keyPersistenceService) {
         this.v2Enabled = v2Enabled;
-        this.keystoreService = keystoreService;
+        this.keyPersistenceService = keyPersistenceService;
     }
 
     @Override
@@ -75,23 +79,34 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String generateToken(String username, Map<String, Object> claims) {
-        KeyPair keyPair = keystoreService.getActiveKeyPair();
+        try {
+            JwtVerificationKey activeKey = keyPersistenceService.getActiveKey();
+            Optional<KeyPair> keyPairOpt = keyPersistenceService.getKeyPair(activeKey.getKeyId());
 
-        var builder =
-                Jwts.builder()
-                        .claims(claims)
-                        .subject(username)
-                        .issuer(ISSUER)
-                        .issuedAt(new Date())
-                        .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                        .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
+            if (keyPairOpt.isEmpty()) {
+                throw new RuntimeException("Unable to retrieve key pair for active key");
+            }
 
-        String keyId = keystoreService.getActiveKeyId();
-        if (keyId != null) {
-            builder.header().keyId(keyId);
+            KeyPair keyPair = keyPairOpt.get();
+
+            var builder =
+                    Jwts.builder()
+                            .claims(claims)
+                            .subject(username)
+                            .issuer(ISSUER)
+                            .issuedAt(new Date())
+                            .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
+                            .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
+
+            String keyId = activeKey.getKeyId();
+            if (keyId != null) {
+                builder.header().keyId(keyId);
+            }
+
+            return builder.compact();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate token", e);
         }
-
-        return builder.compact();
     }
 
     @Override
@@ -134,27 +149,43 @@ public class JwtService implements JwtServiceInterface {
             KeyPair keyPair;
 
             if (keyId != null) {
-                log.debug("Looking up key pair for key ID: {}", keyId);
-                Optional<KeyPair> specificKeyPair =
-                        keystoreService.getKeyPairByKeyId(keyId); // todo: move to in-memory cache
+                Optional<KeyPair> specificKeyPair = keyPersistenceService.getKeyPair(keyId);
 
                 if (specificKeyPair.isPresent()) {
                     keyPair = specificKeyPair.get();
-                    log.debug("Successfully found key pair for key ID: {}", keyId);
                 } else {
                     log.warn(
-                            "Key ID {} not found in keystore, token may have been signed with a rotated key",
+                            "Key ID {} not found in keystore, token may have been signed with an expired key",
                             keyId);
-                    if (keystoreService.getActiveKeyId().equals(keyId)) {
-                        log.debug("Rotating key pairs");
-                        keystoreService.refreshKeyPairs();
-                    }
 
-                    keyPair = keystoreService.getActiveKeyPair();
+                    if (keyId.equals(keyPersistenceService.getActiveKey().getKeyId())) {
+                        JwtVerificationKey verificationKey =
+                                keyPersistenceService.refreshActiveKeyPair();
+                        Optional<KeyPair> refreshedKeyPair =
+                                keyPersistenceService.getKeyPair(verificationKey.getKeyId());
+                        if (refreshedKeyPair.isPresent()) {
+                            keyPair = refreshedKeyPair.get();
+                        } else {
+                            throw new AuthenticationFailureException(
+                                    "Failed to retrieve refreshed key pair");
+                        }
+                    } else {
+                        // Try to use active key as fallback
+                        JwtVerificationKey activeKey = keyPersistenceService.getActiveKey();
+                        Optional<KeyPair> activeKeyPair =
+                                keyPersistenceService.getKeyPair(activeKey.getKeyId());
+                        if (activeKeyPair.isPresent()) {
+                            keyPair = activeKeyPair.get();
+                        } else {
+                            throw new AuthenticationFailureException(
+                                    "Failed to retrieve active key pair");
+                        }
+                    }
                 }
             } else {
-                log.debug("No key ID in token header, using active key pair");
-                keyPair = keystoreService.getActiveKeyPair();
+                log.debug("No key ID in token header, trying all available keys");
+                // Try all available keys when no keyId is present
+                return tryAllKeys(token);
             }
 
             return Jwts.parser()
@@ -180,6 +211,53 @@ public class JwtService implements JwtServiceInterface {
         }
     }
 
+    private Claims tryAllKeys(String token) throws AuthenticationFailureException {
+        // First try the active key
+        try {
+            JwtVerificationKey activeKey = keyPersistenceService.getActiveKey();
+            PublicKey publicKey =
+                    keyPersistenceService.decodePublicKey(activeKey.getVerifyingKey());
+            return Jwts.parser()
+                    .verifyWith(publicKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (SignatureException
+                | NoSuchAlgorithmException
+                | InvalidKeySpecException activeKeyException) {
+            log.debug("Active key failed, trying all available keys from cache");
+
+            // If active key fails, try all available keys from cache
+            List<JwtVerificationKey> allKeys =
+                    keyPersistenceService.getKeysEligibleForCleanup(
+                            LocalDateTime.now().plusDays(1));
+
+            for (JwtVerificationKey verificationKey : allKeys) {
+                try {
+                    PublicKey publicKey =
+                            keyPersistenceService.decodePublicKey(
+                                    verificationKey.getVerifyingKey());
+                    return Jwts.parser()
+                            .verifyWith(publicKey)
+                            .build()
+                            .parseSignedClaims(token)
+                            .getPayload();
+                } catch (SignatureException
+                        | NoSuchAlgorithmException
+                        | InvalidKeySpecException e) {
+                    log.debug(
+                            "Key {} failed to verify token, trying next key",
+                            verificationKey.getKeyId());
+                    // Continue to next key
+                }
+            }
+
+            throw new AuthenticationFailureException(
+                    "Token signature could not be verified with any available key",
+                    activeKeyException);
+        }
+    }
+
     @Override
     public String extractToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
@@ -197,8 +275,6 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public void addToken(HttpServletResponse response, String token) {
-        response.setHeader(AUTHORIZATION_HEADER, Newlines.stripAll(BEARER_PREFIX + token));
-
         ResponseCookie cookie =
                 ResponseCookie.from(JWT_COOKIE_NAME, Newlines.stripAll(token))
                         .httpOnly(true)
@@ -213,8 +289,6 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public void clearToken(HttpServletResponse response) {
-        response.setHeader(AUTHORIZATION_HEADER, null);
-
         ResponseCookie cookie =
                 ResponseCookie.from(JWT_COOKIE_NAME, "")
                         .httpOnly(true)
@@ -234,7 +308,9 @@ public class JwtService implements JwtServiceInterface {
 
     private String extractKeyId(String token) {
         try {
-            PublicKey signingKey = keystoreService.getActiveKeyPair().getPublic();
+            PublicKey signingKey =
+                    keyPersistenceService.decodePublicKey(
+                            keyPersistenceService.getActiveKey().getVerifyingKey());
 
             String keyId =
                     (String)
