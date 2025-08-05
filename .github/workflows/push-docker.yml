@@ -88,7 +88,7 @@ jobs:
 
       - name: Generate tags
         id: meta
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
         if: github.ref != 'refs/heads/main'
         with:
           images: |
@@ -134,7 +134,7 @@ jobs:
 
       - name: Generate tags ultra-lite
         id: meta2
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
         if: github.ref != 'refs/heads/main'
         with:
           images: |
@@ -165,7 +165,7 @@ jobs:
 
       - name: Generate tags fat
         id: meta3
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
