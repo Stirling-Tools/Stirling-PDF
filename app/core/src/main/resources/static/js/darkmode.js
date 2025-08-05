@@ -45,6 +45,25 @@ function setMode(mode) {
     tables.forEach((table) => {
       table.classList.add("table-dark");
     });
+    
+    // Handle dynamically created accordion elements
+    var accordionItems = document.querySelectorAll(".accordion-item");
+    accordionItems.forEach((item) => {
+      item.style.color = "var(--md-sys-color-on-surface)";
+      item.style.backgroundColor = "var(--md-sys-color-surface-5)";
+      item.style.border = "1px solid var(--md-sys-color-outline-variant)";
+    });
+    var accordionButtons = document.querySelectorAll(".accordion-button");
+    accordionButtons.forEach((button) => {
+      button.style.color = "var(--md-sys-color-on-surface)";
+      button.style.backgroundColor = "var(--md-sys-color-surface-5)";
+      button.style.borderColor = "var(--md-sys-color-outline-variant)";
+    });
+    var accordionBodies = document.querySelectorAll(".accordion-body");
+    accordionBodies.forEach((body) => {
+      body.style.color = "var(--md-sys-color-on-surface)";
+      body.style.backgroundColor = "var(--md-sys-color-surface-5)";
+    });
   } else if (mode === "off") {
     if (elements && elements.darkModeIcon) {
       elements.darkModeIcon.textContent = "light_mode";

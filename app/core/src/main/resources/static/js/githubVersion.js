@@ -21,19 +21,19 @@ function getDownloadUrl() {
   if (machineType === 'Docker' || machineType === 'Kubernetes') {
     return null;
   }
-  
+
   const baseUrl = 'https://files.stirlingpdf.com/';
-  
+
   // Determine file based on machine type and security
   if (machineType === 'Server-jar') {
     return baseUrl + (activeSecurity ? 'Stirling-PDF-with-login.jar' : 'Stirling-PDF.jar');
   }
-  
+
   // Client installations
   if (machineType.startsWith('Client-')) {
     const os = machineType.replace('Client-', ''); // win, mac, unix
     const type = activeSecurity ? '-server-security' : '-server';
-    
+
     if (os === 'unix') {
       return baseUrl + os + type + '.jar';
     } else if (os === 'win') {
@@ -42,7 +42,7 @@ function getDownloadUrl() {
       return baseUrl + os + '-installer.dmg';
     }
   }
-  
+
   return null;
 }
 
@@ -145,10 +145,10 @@ async function checkForUpdate() {
   console.log("updateSummary=", updateSummary);
   console.log("currentVersion=" + currentVersion);
   console.log("latestVersion=" + updateSummary.latest_version);
-  
+
   if (updateSummary.latest_version && compareVersions(updateSummary.latest_version, currentVersion) > 0) {
     const priority = updateSummary.max_priority || 'normal';
-    
+
     if (updateBtn != null) {
       // Style button based on priority
       if (priority === 'urgent') {
@@ -161,11 +161,11 @@ async function checkForUpdate() {
         updateBtn.classList.add("btn-outline-primary");
         updateBtn.innerHTML = "Update Available";
       }
-      
+
       // Store summary for initial display
       updateBtn.setAttribute('data-update-summary', JSON.stringify(updateSummary));
       updateBtn.style.display = "block";
-      
+
       // Add click handler for update details modal
       updateBtn.onclick = function(e) {
         e.preventDefault();
@@ -202,7 +202,7 @@ async function showUpdateModal() {
   // Get summary data from button
   const updateBtn = document.getElementById("update-btn");
   const summaryData = JSON.parse(updateBtn.getAttribute('data-update-summary'));
-  
+
   // Utility function to escape HTML special characters
   function escapeHtml(str) {
     if (typeof str !== 'string') return str;
@@ -249,14 +249,14 @@ async function showUpdateModal() {
                 ${summaryData.recommended_action ? `<br><strong>Recommended Action:</strong> ${escapeHtml(summaryData.recommended_action)}` : ''}
               </div>
             </div>
-            
+
             ${summaryData.any_breaking ? `
               <div class="alert alert-warning" role="alert">
                 <h6><strong>⚠️ Breaking Changes Detected</strong></h6>
                 <p>This update contains breaking changes. Please review the migration guides below.</p>
               </div>
             ` : ''}
-            
+
             ${summaryData.migration_guides && summaryData.migration_guides.length > 0 ? `
               <div class="migration-guides mb-4">
                 <h6>Migration Guides:</h6>
@@ -272,7 +272,7 @@ async function showUpdateModal() {
                 </ul>
               </div>
             ` : ''}
-            
+
             <div class="text-center">
               <div class="spinner-border text-primary" role="status" id="loadingSpinner">
                 <span class="visually-hidden">Loading detailed version information...</span>
@@ -289,26 +289,38 @@ async function showUpdateModal() {
       </div>
     </div>
   `;
-  
+
   // Remove existing modal if present
   const existingModal = document.getElementById('updateModal');
   if (existingModal) {
     existingModal.remove();
   }
-  
+
   // Add modal to body
   document.body.insertAdjacentHTML('beforeend', initialModalHtml);
-  
+
   // Show modal
   const modal = new bootstrap.Modal(document.getElementById('updateModal'));
   modal.show();
-  
+
   // Fetch full update info
   const fullUpdateInfo = await getFullUpdateInfo();
-  
+
   // Update modal with full information
   const modalBody = document.getElementById('updateModalBody');
   if (fullUpdateInfo && fullUpdateInfo.new_versions) {
+    // Check if dark mode is active
+    const isDarkMode = localStorage.getItem("dark-mode") === "on";
+    const darkClasses = isDarkMode ? {
+      accordionItem: 'bg-dark border-secondary text-light',
+      accordionButton: 'bg-dark text-light border-secondary',
+      accordionBody: 'bg-dark text-light'
+    } : {
+      accordionItem: '',
+      accordionButton: '',
+      accordionBody: ''
+    };
+
     const detailedVersionsHtml = `
       <div class="detailed-versions mt-4">
         <h6>Available Updates:</h6>
@@ -316,7 +328,7 @@ async function showUpdateModal() {
           ${fullUpdateInfo.new_versions.map((version, index) => `
             <div class="accordion-item">
               <h2 class="accordion-header" id="heading${index}">
-                <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" 
+                <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse"
                         data-bs-target="#collapse${index}" aria-expanded="${index === 0 ? 'true' : 'false'}" aria-controls="collapse${index}">
                   <div class="d-flex justify-content-between w-100 me-3">
                     <span><strong>Version ${version.version}</strong></span>
@@ -324,8 +336,8 @@ async function showUpdateModal() {
                   </div>
                 </button>
               </h2>
-              <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" 
-                   aria-labelledby="heading${index}" data-bs-parent="#versionsAccordion">
+              <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}"
+                  aria-labelledby="heading${index}" data-bs-parent="#versionsAccordion">
                 <div class="accordion-body">
                   <h6>${version.announcement.title}</h6>
                   <p>${version.announcement.message}</p>
@@ -342,13 +354,34 @@ async function showUpdateModal() {
         </div>
       </div>
     `;
-    
+
     // Remove loading spinner and add detailed info
     const spinner = document.getElementById('loadingSpinner');
     if (spinner) {
       spinner.parentElement.remove();
     }
     modalBody.insertAdjacentHTML('beforeend', detailedVersionsHtml);
+
+    // Apply dark mode styling if active
+    if (isDarkMode) {
+      var accordionItems = document.querySelectorAll("#versionsAccordion .accordion-item");
+      accordionItems.forEach((item) => {
+        item.style.color = "var(--md-sys-color-on-surface)";
+        item.style.backgroundColor = "var(--md-sys-color-surface-5)";
+        item.style.border = "1px solid var(--md-sys-color-outline-variant)";
+      });
+      var accordionButtons = document.querySelectorAll("#versionsAccordion .accordion-button");
+      accordionButtons.forEach((button) => {
+        button.style.color = "";
+        button.style.backgroundColor = "";
+        button.style.borderColor = "";
+      });
+      var accordionBodies = document.querySelectorAll("#versionsAccordion .accordion-body");
+      accordionBodies.forEach((body) => {
+        body.style.color = "var(--md-sys-color-on-surface)";
+        body.style.backgroundColor = "var(--md-sys-color-surface-5)";
+      });
+    }
   } else {
     // Remove loading spinner if failed to load
     const spinner = document.getElementById('loadingSpinner');
