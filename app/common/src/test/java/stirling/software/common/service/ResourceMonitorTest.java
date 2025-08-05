@@ -1,14 +1,10 @@
 package stirling.software.common.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,20 +26,19 @@ import stirling.software.common.service.ResourceMonitor.ResourceStatus;
 @ExtendWith(MockitoExtension.class)
 class ResourceMonitorTest {
 
-    @InjectMocks
-    private ResourceMonitor resourceMonitor;
+    @InjectMocks private ResourceMonitor resourceMonitor;
 
-    @Mock
-    private OperatingSystemMXBean osMXBean;
+    @Mock private OperatingSystemMXBean osMXBean;
 
-    @Mock
-    private MemoryMXBean memoryMXBean;
+    @Mock private MemoryMXBean memoryMXBean;
 
     @Spy
-    private AtomicReference<ResourceStatus> currentStatus = new AtomicReference<>(ResourceStatus.OK);
+    private AtomicReference<ResourceStatus> currentStatus =
+            new AtomicReference<>(ResourceStatus.OK);
 
     @Spy
-    private AtomicReference<ResourceMetrics> latestMetrics = new AtomicReference<>(new ResourceMetrics());
+    private AtomicReference<ResourceMetrics> latestMetrics =
+            new AtomicReference<>(new ResourceMetrics());
 
     @BeforeEach
     void setUp() {
@@ -92,23 +87,26 @@ class ResourceMonitorTest {
         assertEquals(3, capacity, "With CRITICAL status, capacity should be reduced to 30%");
 
         // Test minimum capacity enforcement
-        assertEquals(minCapacity, resourceMonitor.calculateDynamicQueueCapacity(1, minCapacity),
+        assertEquals(
+                minCapacity,
+                resourceMonitor.calculateDynamicQueueCapacity(1, minCapacity),
                 "Should never go below minimum capacity");
     }
 
     @ParameterizedTest
     @CsvSource({
-        "10, OK, false",      // Light job, OK status
+        "10, OK, false", // Light job, OK status
         "10, WARNING, false", // Light job, WARNING status
         "10, CRITICAL, true", // Light job, CRITICAL status
-        "30, OK, false",      // Medium job, OK status
-        "30, WARNING, true",  // Medium job, WARNING status
+        "30, OK, false", // Medium job, OK status
+        "30, WARNING, true", // Medium job, WARNING status
         "30, CRITICAL, true", // Medium job, CRITICAL status
-        "80, OK, true",       // Heavy job, OK status
-        "80, WARNING, true",  // Heavy job, WARNING status
-        "80, CRITICAL, true"  // Heavy job, CRITICAL status
+        "80, OK, true", // Heavy job, OK status
+        "80, WARNING, true", // Heavy job, WARNING status
+        "80, CRITICAL, true" // Heavy job, CRITICAL status
     })
-    void shouldQueueJobBasedOnWeightAndStatus(int weight, ResourceStatus status, boolean shouldQueue) {
+    void shouldQueueJobBasedOnWeightAndStatus(
+            int weight, ResourceStatus status, boolean shouldQueue) {
         // Given
         currentStatus.set(status);
 
@@ -116,8 +114,11 @@ class ResourceMonitorTest {
         boolean result = resourceMonitor.shouldQueueJob(weight);
 
         // Then
-        assertEquals(shouldQueue, result,
-                String.format("For weight %d and status %s, shouldQueue should be %s",
+        assertEquals(
+                shouldQueue,
+                result,
+                String.format(
+                        "For weight %d and status %s, shouldQueue should be %s",
                         weight, status, shouldQueue));
     }
 
@@ -131,7 +132,9 @@ class ResourceMonitorTest {
         ResourceMetrics freshMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, now);
 
         // When/Then
-        assertTrue(staleMetrics.isStale(5000), "Metrics from 6 seconds ago should be stale with 5s threshold");
+        assertTrue(
+                staleMetrics.isStale(5000),
+                "Metrics from 6 seconds ago should be stale with 5s threshold");
         assertFalse(freshMetrics.isStale(5000), "Fresh metrics should not be stale");
     }
 }

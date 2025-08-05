@@ -14,11 +14,23 @@ configurations {
 
 spotless {
     java {
-        target sourceSets.main.allJava
+        target 'src/**/java/**/*.java'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         toggleOffOn()
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    yaml {
+        target '**/*.yml', '**/*.yaml'
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    format 'gradle', {
+        target '**/gradle/*.gradle', '**/*.gradle'
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
@@ -62,7 +74,7 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
-    implementation 'com.opencsv:opencsv:5.11.2' // https://mvnrepository.com/artifact/com.opencsv/opencsv
+    implementation 'com.opencsv:opencsv:5.12.0' // https://mvnrepository.com/artifact/com.opencsv/opencsv
 
     // Batik
     implementation 'org.apache.xmlgraphics:batik-all:1.19'
