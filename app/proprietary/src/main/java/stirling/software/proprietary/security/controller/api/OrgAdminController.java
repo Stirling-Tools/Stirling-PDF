@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,7 @@ import stirling.software.proprietary.security.service.RoleBasedAuthorizationServ
 @Slf4j
 @RequiredArgsConstructor
 @PremiumEndpoint
+@PreAuthorize("@roleBasedAuthorizationService.canManageOrgUsers() or @roleBasedAuthorizationService.canManageOrgTeams()")
 public class OrgAdminController {
 
     private final TeamRepository teamRepository;
@@ -37,11 +39,8 @@ public class OrgAdminController {
 
     /** Get all teams in the org admin's organization */
     @GetMapping("/teams")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageOrgTeams()")
     public ResponseEntity<List<Team>> getOrganizationTeams() {
-        if (!authorizationService.canManageOrgTeams()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
         User currentUser = authorizationService.getCurrentUser();
         if (currentUser == null || currentUser.getOrganization() == null) {
             return ResponseEntity.badRequest().build();

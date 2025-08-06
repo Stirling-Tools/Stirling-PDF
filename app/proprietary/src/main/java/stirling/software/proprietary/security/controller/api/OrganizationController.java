@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import stirling.software.proprietary.security.service.RoleBasedAuthorizationServ
 @RestController
 @RequestMapping("/api/v1/organizations")
 @RequiredArgsConstructor
+@PreAuthorize("@roleBasedAuthorizationService.canManageOrganizations()")
 public class OrganizationController {
 
     private final OrganizationRepository organizationRepository;
@@ -26,15 +28,13 @@ public class OrganizationController {
 
     @GetMapping
     public ResponseEntity<List<OrganizationWithTeamCountDTO>> getAllOrganizations() {
-        if (!authorizationService.canManageOrganizations()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
         List<OrganizationWithTeamCountDTO> organizations =
                 organizationRepository.findAllOrganizationsWithTeamCount();
         return ResponseEntity.ok(organizations);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@roleBasedAuthorizationService.canViewOrganization(@organizationRepository.findById(#id).orElse(null))")
     public ResponseEntity<Organization> getOrganization(@PathVariable Long id) {
         Optional<Organization> organizationOpt = organizationRepository.findById(id);
         if (organizationOpt.isEmpty()) {
@@ -42,20 +42,11 @@ public class OrganizationController {
         }
 
         Organization organization = organizationOpt.get();
-        if (!authorizationService.canViewOrganization(organization)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
         return ResponseEntity.ok(organization);
     }
 
     @PostMapping
     public ResponseEntity<?> createOrganization(@RequestBody Organization organization) {
-        if (!authorizationService.canManageOrganizations()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Not authorized to create organizations");
-        }
-
         if (organizationRepository.existsByNameIgnoreCase(organization.getName())) {
             return ResponseEntity.badRequest()
                     .body("Organization with name '" + organization.getName() + "' already exists");
@@ -67,11 +58,6 @@ public class OrganizationController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateOrganization(
             @PathVariable Long id, @RequestBody Organization organization) {
-        if (!authorizationService.canManageOrganizations()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Not authorized to update organizations");
-        }
-
         Optional<Organization> existingOrganization = organizationRepository.findById(id);
         if (existingOrganization.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -90,11 +76,6 @@ public class OrganizationController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrganization(@PathVariable Long id) {
-        if (!authorizationService.canManageOrganizations()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Not authorized to delete organizations");
-        }
-
         Optional<Organization> organization = organizationRepository.findById(id);
         if (organization.isEmpty()) {
             return ResponseEntity.notFound().build();

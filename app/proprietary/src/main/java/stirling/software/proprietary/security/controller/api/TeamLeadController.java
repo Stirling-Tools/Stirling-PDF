@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,7 @@ import stirling.software.proprietary.security.service.RoleBasedAuthorizationServ
 @Slf4j
 @RequiredArgsConstructor
 @PremiumEndpoint
+@PreAuthorize("@roleBasedAuthorizationService.canManageTeamUsers()")
 public class TeamLeadController {
 
     private final TeamRepository teamRepository;
