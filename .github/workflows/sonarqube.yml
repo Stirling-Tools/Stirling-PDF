@@ -18,7 +18,7 @@ on:
 # This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
 # in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
   cancel-in-progress: true
 
 permissions:
