@@ -80,7 +80,7 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     id: "sanitize",
     icon: <CleaningServicesIcon />,
     component: React.lazy(() => import("../tools/Sanitize")),
-    maxFiles: 1,
+    maxFiles: -1,
     category: "security",
     description: "Remove potentially harmful elements from PDF files",
     endpoints: ["sanitize-pdf"]

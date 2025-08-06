@@ -82,7 +82,11 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isVisible={true}
           isCollapsed={filesCollapsed}
           isCompleted={filesCollapsed}
-          completedMessage={hasFiles ? t('sanitize.files.selected', 'Selected: {{filename}}', { filename: selectedFiles[0]?.name }) : undefined}
+          completedMessage={hasFiles ?
+            selectedFiles.length === 1
+              ? t('fileSelected', 'Selected: {{filename}}', { filename: selectedFiles[0].name })
+              : t('filesSelected', 'Selected: {{count}} files', { count: selectedFiles.length })
+            : undefined}
         >
           <FileStatusIndicator
             selectedFiles={selectedFiles}
@@ -135,13 +139,19 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               <Button
                 component="a"
                 href={sanitizeOperation.downloadUrl}
-                download={generateSanitizedFileName(selectedFiles[0]?.name)}
+                download={sanitizeOperation.files.length === 1
+                  ? generateSanitizedFileName(selectedFiles[0]?.name)
+                  : 'sanitized_files.zip'
+                }
                 leftSection={<DownloadIcon />}
                 color="green"
                 fullWidth
                 mb="md"
               >
-                {t("download", "Download")}
+                {sanitizeOperation.files.length === 1
+                  ? t("download", "Download")
+                  : t("downloadZip", "Download ZIP")
+                }
               </Button>
             )}
 
