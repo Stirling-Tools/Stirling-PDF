@@ -20,6 +20,16 @@ vi.mock('react-i18next', () => ({
   })
 }));
 
+// Mock FileContext
+vi.mock('../../../contexts/FileContext', () => ({
+  useFileContext: () => ({
+    recordOperation: vi.fn(),
+    markOperationApplied: vi.fn(),
+    markOperationFailed: vi.fn(),
+    addFiles: vi.fn()
+  })
+}));
+
 // Mock fetch
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -29,6 +39,11 @@ globalThis.URL.createObjectURL = vi.fn(() => 'mock-blob-url');
 globalThis.URL.revokeObjectURL = vi.fn();
 
 describe('useSanitizeOperation', () => {
+  const mockGenerateSanitizedFileName = (originalFileName?: string): string => {
+    const baseName = originalFileName?.replace(/\.[^/.]+$/, '') || 'document';
+    return `sanitized_${baseName}.pdf`;
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -68,7 +83,7 @@ describe('useSanitizeOperation', () => {
     const testFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
 
     await act(async () => {
-      await result.current.executeOperation(parameters, [testFile]);
+      await result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName);
     });
 
     expect(mockFetch).toHaveBeenCalledWith('/api/v1/security/sanitize-pdf', {
@@ -104,14 +119,14 @@ describe('useSanitizeOperation', () => {
 
     await act(async () => {
       try {
-        await result.current.executeOperation(parameters, [testFile]);
+        await result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName);
       } catch (error) {
         // Expected to throw
       }
     });
 
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.errorMessage).toBe('Sanitization failed: Server error');
+    expect(result.current.errorMessage).toBe('Failed to sanitize all files: test.pdf');
     expect(result.current.downloadUrl).toBe(null);
     expect(result.current.status).toBe(null);
   });
@@ -131,7 +146,7 @@ describe('useSanitizeOperation', () => {
     let thrownError: Error | null = null;
     await act(async () => {
       try {
-        await result.current.executeOperation(parameters, []);
+        await result.current.executeOperation(parameters, [], mockGenerateSanitizedFileName);
       } catch (error) {
         thrownError = error as Error;
       }
@@ -165,7 +180,7 @@ describe('useSanitizeOperation', () => {
     const testFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
 
     await act(async () => {
-      await result.current.executeOperation(parameters, [testFile]);
+      await result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName);
     });
 
     const [url, options] = mockFetch.mock.calls[0];
@@ -219,13 +234,13 @@ describe('useSanitizeOperation', () => {
     // Trigger an API error
     await act(async () => {
       try {
-        await result.current.executeOperation(parameters, [testFile]);
+        await result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName);
       } catch (error) {
         // Expected to throw
       }
     });
 
-    expect(result.current.errorMessage).toBeTruthy();
+    expect(result.current.errorMessage).toBe('Failed to sanitize all files: test.pdf');
 
     act(() => {
       result.current.clearError();
