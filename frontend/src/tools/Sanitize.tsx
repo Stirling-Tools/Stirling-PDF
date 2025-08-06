@@ -9,20 +9,23 @@ import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep
 import OperationButton from "../components/tools/shared/OperationButton";
 import ErrorNotification from "../components/tools/shared/ErrorNotification";
 import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator";
+import ResultsPreview from "../components/tools/shared/ResultsPreview";
 import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
 
 import { useSanitizeParameters } from "../hooks/tools/sanitize/useSanitizeParameters";
 import { useSanitizeOperation } from "../hooks/tools/sanitize/useSanitizeOperation";
 import { BaseToolProps } from "../types/tool";
+import { useFileContext } from "../contexts/FileContext";
 
 const generateSanitizedFileName = (originalFileName?: string): string => {
   const baseName = originalFileName?.replace(/\.[^/.]+$/, '') || 'document';
-  return `${baseName}_sanitized.pdf`;
+  return `sanitized_${baseName}.pdf`;
 };
 
 const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedFiles } = useToolFileSelection();
+  const { setCurrentMode } = useFileContext();
 
   const sanitizeParams = useSanitizeParameters();
   const sanitizeOperation = useSanitizeOperation();
@@ -41,17 +44,11 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     try {
       await sanitizeOperation.executeOperation(
         sanitizeParams.parameters,
-        selectedFiles
+        selectedFiles,
+        generateSanitizedFileName
       );
-      if (sanitizeOperation.downloadUrl && onComplete) {
-        // Create a File object from the download URL for completion callback
-        const response = await fetch(sanitizeOperation.downloadUrl);
-        const blob = await response.blob();
-        const sanitizedFileName = generateSanitizedFileName(selectedFiles[0]?.name);
-        const file = new File([blob], sanitizedFileName, {
-          type: 'application/pdf'
-        });
-        onComplete([file]);
+      if (sanitizeOperation.files && onComplete) {
+        onComplete(sanitizeOperation.files);
       }
     } catch (error) {
       if (onError) {
@@ -65,8 +62,14 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   };
 
+  const handleThumbnailClick = (file: File) => {
+    onPreviewFile?.(file);
+    sessionStorage.setItem('previousMode', 'sanitize');
+    setCurrentMode('viewer');
+  };
+
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = sanitizeOperation.downloadUrl !== null;
+  const hasResults = sanitizeOperation.files.length > 0;
   const filesCollapsed = hasFiles;
   const settingsCollapsed = hasResults;
 
@@ -141,6 +144,16 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 {t("download", "Download")}
               </Button>
             )}
+
+            <ResultsPreview
+              files={sanitizeOperation.files.map((file, index) => ({
+                file,
+                thumbnail: sanitizeOperation.thumbnails[index]
+              }))}
+              onFileClick={handleThumbnailClick}
+              isGeneratingThumbnails={sanitizeOperation.isGeneratingThumbnails}
+              title={t("sanitize.sanitizationResults", "Sanitization Results")}
+            />
           </Stack>
         </ToolStep>
       </Stack>
