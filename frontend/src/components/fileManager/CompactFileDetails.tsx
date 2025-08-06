@@ -12,7 +12,7 @@ interface CompactFileDetailsProps {
   thumbnail: string | null;
   selectedFiles: FileWithUrl[];
   currentFileIndex: number;
-  hasMultipleFiles: boolean;
+  numberOfFiles: number;
   isAnimating: boolean;
   onPrevious: () => void;
   onNext: () => void;
@@ -24,7 +24,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
   thumbnail,
   selectedFiles,
   currentFileIndex,
-  hasMultipleFiles,
+  numberOfFiles,
   isAnimating,
   onPrevious,
   onNext,
@@ -32,6 +32,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
 }) => {
   const { t } = useTranslation();
   const hasSelection = selectedFiles.length > 0;
+  const hasMultipleFiles = numberOfFiles > 1;
 
   return (
     <Stack gap="xs" style={{ height: '100%' }}>

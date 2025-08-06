@@ -64,7 +64,7 @@ const FileDetails: React.FC<FileDetailsProps> = ({
         thumbnail={getCurrentThumbnail()}
         selectedFiles={selectedFiles}
         currentFileIndex={currentFileIndex}
-        hasMultipleFiles={hasMultipleFiles}
+        numberOfFiles={selectedFiles.length}
         isAnimating={isAnimating}
         onPrevious={handlePrevious}
         onNext={handleNext}
@@ -79,7 +79,7 @@ const FileDetails: React.FC<FileDetailsProps> = ({
       <FilePreview
         currentFile={currentFile}
         thumbnail={getCurrentThumbnail()}
-        hasMultipleFiles={hasMultipleFiles}
+        numberOfFiles={selectedFiles.length}
         isAnimating={isAnimating}
         modalHeight={modalHeight}
         onPrevious={handlePrevious}
