@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Modal } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { useTranslation } from 'react-i18next';
 import { FileWithUrl } from '../types/file';
 import { useFileManager } from '../hooks/useFileManager';
 import { useFilesModalContext } from '../contexts/FilesModalContext';
@@ -16,13 +15,12 @@ interface FileManagerProps {
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
-  const { t } = useTranslation();
-  const { isFilesModalOpen, closeFilesModal, onFileSelect, onFilesSelect } = useFilesModalContext();
+  const { isFilesModalOpen, closeFilesModal, onFilesSelect } = useFilesModalContext();
   const [recentFiles, setRecentFiles] = useState<FileWithUrl[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile, touchFile } = useFileManager();
+  const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile } = useFileManager();
 
   // File management handlers
   const isFileSupported = useCallback((fileName: string) => {
@@ -40,9 +38,6 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
     try {
       const fileObjects = await Promise.all(
         files.map(async (fileWithUrl) => {
-          if (fileWithUrl.file) {
-            return fileWithUrl.file;
-          }
           return await convertToFile(fileWithUrl);
         })
       );
@@ -55,15 +50,14 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const handleNewFileUpload = useCallback(async (files: File[]) => {
     if (files.length > 0) {
       try {
-        // Store files and refresh recent files
-        await Promise.all(files.map(file => storeFile(file)));
+        // Files will get IDs assigned through onFilesSelect -> FileContext addFiles
         onFilesSelect(files);
         await refreshRecentFiles();
       } catch (error) {
         console.error('Failed to process dropped files:', error);
       }
     }
-  }, [storeFile, onFilesSelect, refreshRecentFiles]);
+  }, [onFilesSelect, refreshRecentFiles]);
 
   const handleRemoveFileByIndex = useCallback(async (index: number) => {
     await handleRemoveFile(index, recentFiles, setRecentFiles);

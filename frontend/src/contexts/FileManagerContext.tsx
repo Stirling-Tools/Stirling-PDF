@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { FileWithUrl } from '../types/file';
+import { StoredFile } from '../services/fileStorage';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
@@ -40,7 +41,7 @@ interface FileManagerProviderProps {
   isOpen: boolean;
   onFileRemove: (index: number) => void;
   modalHeight: string;
-  storeFile: (file: File) => Promise<void>;
+  storeFile: (file: File) => Promise<StoredFile>;
   refreshRecentFiles: () => Promise<void>;
 }
 
@@ -65,7 +66,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const createdBlobUrls = useRef<Set<string>>(new Set());
 
   // Computed values (with null safety)
-  const selectedFiles = (recentFiles || []).filter(file => selectedFileIds.includes(file.id));
+  const selectedFiles = (recentFiles || []).filter(file => selectedFileIds.includes(file.id || file.name));
   const filteredFiles = (recentFiles || []).filter(file =>
     file.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -122,14 +123,13 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
       try {
-        // Store files and refresh recent files (same as drag-and-drop)
-        await Promise.all(files.map(file => storeFile(file)));
-        
+        // Create FileWithUrl objects - FileContext will handle storage and ID assignment
         const fileWithUrls = files.map(file => {
           const url = URL.createObjectURL(file);
           createdBlobUrls.current.add(url);
+          
           return {
-            id: `local-${Date.now()}-${Math.random()}`,
+            // No ID assigned here - FileContext will handle storage and ID assignment
             name: file.name,
             file,
             url,

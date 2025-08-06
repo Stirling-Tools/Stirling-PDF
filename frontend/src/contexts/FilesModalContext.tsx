@@ -1,21 +1,58 @@
-import React, { createContext, useContext } from 'react';
-import { useFilesModal, UseFilesModalReturn } from '../hooks/useFilesModal';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useFileHandler } from '../hooks/useFileHandler';
 
-interface FilesModalContextType extends UseFilesModalReturn {}
+interface FilesModalContextType {
+  isFilesModalOpen: boolean;
+  openFilesModal: () => void;
+  closeFilesModal: () => void;
+  onFileSelect: (file: File) => void;
+  onFilesSelect: (files: File[]) => void;
+  onModalClose: () => void;
+  setOnModalClose: (callback: () => void) => void;
+}
 
 const FilesModalContext = createContext<FilesModalContextType | null>(null);
 
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { addToActiveFiles, addMultipleFiles } = useFileHandler();
-  
-  const filesModal = useFilesModal({
-    onFileSelect: addToActiveFiles,
-    onFilesSelect: addMultipleFiles,
-  });
+  const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
+  const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
+
+  const openFilesModal = useCallback(() => {
+    setIsFilesModalOpen(true);
+  }, []);
+
+  const closeFilesModal = useCallback(() => {
+    setIsFilesModalOpen(false);
+    onModalClose?.();
+  }, [onModalClose]);
+
+  const handleFileSelect = useCallback((file: File) => {
+    addToActiveFiles(file);
+    closeFilesModal();
+  }, [addToActiveFiles, closeFilesModal]);
+
+  const handleFilesSelect = useCallback((files: File[]) => {
+    addMultipleFiles(files);
+    closeFilesModal();
+  }, [addMultipleFiles, closeFilesModal]);
+
+  const setModalCloseCallback = useCallback((callback: () => void) => {
+    setOnModalClose(() => callback);
+  }, []);
+
+  const contextValue: FilesModalContextType = {
+    isFilesModalOpen,
+    openFilesModal,
+    closeFilesModal,
+    onFileSelect: handleFileSelect,
+    onFilesSelect: handleFilesSelect,
+    onModalClose,
+    setOnModalClose: setModalCloseCallback,
+  };
 
   return (
-    <FilesModalContext.Provider value={filesModal}>
+    <FilesModalContext.Provider value={contextValue}>
       {children}
     </FilesModalContext.Provider>
   );
