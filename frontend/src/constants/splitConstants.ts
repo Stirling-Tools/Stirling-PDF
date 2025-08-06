@@ -1,6 +1,6 @@
 export const SPLIT_MODES = {
   BY_PAGES: 'byPages',
-  BY_SECTIONS: 'bySections', 
+  BY_SECTIONS: 'bySections',
   BY_SIZE_OR_COUNT: 'bySizeOrCount',
   BY_CHAPTERS: 'byChapters'
 } as const;
@@ -20,3 +20,11 @@ export const ENDPOINTS = {
 
 export type SplitMode = typeof SPLIT_MODES[keyof typeof SPLIT_MODES];
 export type SplitType = typeof SPLIT_TYPES[keyof typeof SPLIT_TYPES];
+
+export const isSplitMode = (value: string | null): value is SplitMode => {
+  return Object.values(SPLIT_MODES).includes(value as SplitMode);
+}
+
+export const isSplitType = (value: string | null): value is SplitType => {
+  return Object.values(SPLIT_TYPES).includes(value as SplitType);
+}

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { fileStorage } from '../services/fileStorage';
 import { FileWithUrl } from '../types/file';
+import { createEnhancedFileFromStored } from '../utils/fileUtils';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 
 export const useFileManager = () => {
@@ -42,7 +43,7 @@ export const useFileManager = () => {
     try {
       const files = await fileStorage.getAllFiles();
       const sortedFiles = files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-      return sortedFiles;
+      return sortedFiles.map(file => createEnhancedFileFromStored(file));
     } catch (error) {
       console.error('Failed to load recent files:', error);
       return [];
@@ -66,10 +67,10 @@ export const useFileManager = () => {
     try {
       // Generate thumbnail for the file
       const thumbnail = await generateThumbnailForFile(file);
-      
+
       // Store file with thumbnail
       const storedFile = await fileStorage.storeFile(file, thumbnail);
-      
+
       // Add the ID to the file object
       Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
       return storedFile;

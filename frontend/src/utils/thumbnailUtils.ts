@@ -6,9 +6,9 @@ import { getDocument } from "pdfjs-dist";
  */
 export function calculateScaleFromFileSize(fileSize: number): number {
   const MB = 1024 * 1024;
-  
+
   if (fileSize < 1 * MB) return 0.6;      // < 1MB: High quality
-  if (fileSize < 5 * MB) return 0.4;      // 1-5MB: Medium-high quality  
+  if (fileSize < 5 * MB) return 0.4;      // 1-5MB: Medium-high quality
   if (fileSize < 15 * MB) return 0.3;     // 5-15MB: Medium quality
   if (fileSize < 30 * MB) return 0.2;     // 15-30MB: Low-medium quality
   return 0.15;                            // 30MB+: Low quality
@@ -182,43 +182,41 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
     console.log('File is not a PDF or image, generating placeholder:', file.name);
     return generatePlaceholderThumbnail(file);
   }
-  
+
+  // Calculate quality scale based on file size
+  console.log('Generating thumbnail for', file.name);
+  const scale = calculateScaleFromFileSize(file.size);
+  console.log(`Using scale ${scale} for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
   try {
-    console.log('Generating thumbnail for', file.name);
-    
-    // Calculate quality scale based on file size
-    const scale = calculateScaleFromFileSize(file.size);
-    console.log(`Using scale ${scale} for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
-    
     // Only read first 2MB for thumbnail generation to save memory
     const chunkSize = 2 * 1024 * 1024; // 2MB
     const chunk = file.slice(0, Math.min(chunkSize, file.size));
     const arrayBuffer = await chunk.arrayBuffer();
-    
-    const pdf = await getDocument({ 
+
+    const pdf = await getDocument({
       data: arrayBuffer,
       disableAutoFetch: true,
       disableStream: true
     }).promise;
-    
+
     const page = await pdf.getPage(1);
     const viewport = page.getViewport({ scale }); // Dynamic scale based on file size
     const canvas = document.createElement("canvas");
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     const context = canvas.getContext("2d");
-    
+
     if (!context) {
       throw new Error('Could not get canvas context');
     }
-    
+
     await page.render({ canvasContext: context, viewport }).promise;
     const thumbnail = canvas.toDataURL();
-    
+
     // Immediately clean up memory after thumbnail generation
     pdf.destroy();
     console.log('Thumbnail generated and PDF destroyed for', file.name);
-    
+
     return thumbnail;
   } catch (error) {
     if (error instanceof Error) {
@@ -227,27 +225,27 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
         // Return a placeholder or try with full file instead of chunk
         try {
           const fullArrayBuffer = await file.arrayBuffer();
-          const pdf = await getDocument({ 
+          const pdf = await getDocument({
             data: fullArrayBuffer,
             disableAutoFetch: true,
             disableStream: true,
             verbosity: 0 // Reduce PDF.js warnings
           }).promise;
-          
+
           const page = await pdf.getPage(1);
           const viewport = page.getViewport({ scale });
           const canvas = document.createElement("canvas");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           const context = canvas.getContext("2d");
-          
+
           if (!context) {
             throw new Error('Could not get canvas context');
           }
-          
+
           await page.render({ canvasContext: context, viewport }).promise;
           const thumbnail = canvas.toDataURL();
-          
+
           pdf.destroy();
           return thumbnail;
         } catch (fallbackError) {

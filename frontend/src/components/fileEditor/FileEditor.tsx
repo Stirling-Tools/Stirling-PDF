@@ -185,7 +185,7 @@ const FileEditor = ({
               id: `file-${Date.now()}-${Math.random()}`,
               name: file.name,
               pageCount: processedFile?.totalPages || Math.floor(Math.random() * 20) + 1,
-              thumbnail,
+              thumbnail: thumbnail || '',
               size: file.size,
               file,
             };
@@ -605,10 +605,8 @@ const FileEditor = ({
       removeFiles([fileId], false);
 
       // Remove from context selections
-      setContextSelectedFiles(prev => {
-        const safePrev = Array.isArray(prev) ? prev : [];
-        return safePrev.filter(id => id !== fileId);
-      });
+      const newSelection = contextSelectedIds.filter(id => id !== fileId);
+      setContextSelectedFiles(newSelection);
       // Mark operation as applied
       markOperationApplied(fileName, operationId);
     } else {
@@ -800,8 +798,6 @@ const FileEditor = ({
               onToggleFile={toggleFile}
               onDeleteFile={handleDeleteFile}
               onViewFile={handleViewFile}
-              onMergeFromHere={handleMergeFromHere}
-              onSplitFile={handleSplitFile}
               onSetStatus={setStatus}
               toolMode={toolMode}
               isSupported={isFileSupported(file.name)}
@@ -830,7 +826,6 @@ const FileEditor = ({
         onClose={() => setShowFilePickerModal(false)}
         storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
         onSelectFiles={handleLoadFromStorage}
-        allowMultiple={true}
       />
 
       {status && (

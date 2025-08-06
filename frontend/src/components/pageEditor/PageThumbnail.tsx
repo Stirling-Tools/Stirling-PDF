@@ -7,9 +7,9 @@ import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { PDFPage, PDFDocument } from '../../../types/pageEditor';
-import { RotatePagesCommand, DeletePagesCommand, ToggleSplitCommand } from '../../../commands/pageCommands';
-import { Command } from '../../../hooks/useUndoRedo';
+import { PDFPage, PDFDocument } from '../../types/pageEditor';
+import { RotatePagesCommand, DeletePagesCommand, ToggleSplitCommand } from '../../commands/pageCommands';
+import { Command } from '../../hooks/useUndoRedo';
 import styles from './PageEditor.module.css';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
