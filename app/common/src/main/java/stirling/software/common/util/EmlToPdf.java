@@ -1301,8 +1301,7 @@ public class EmlToPdf {
                             Object attachmentContent = getContent.invoke(part);
                             byte[] attachmentData = null;
 
-                            if (attachmentContent instanceof InputStream) {
-                                InputStream inputStream = (InputStream) attachmentContent;
+                            if (attachmentContent instanceof InputStream inputStream) {
                                 // Enhanced stream handling with EOF protection
                                 try (InputStream stream = inputStream) {
                                     attachmentData = stream.readAllBytes();
@@ -1891,7 +1890,11 @@ public class EmlToPdf {
         }
 
         if (!mimeUtilityChecked) {
-            initializeMimeUtilityDecoding();
+            synchronized (EmlToPdf.class) {
+                if (!mimeUtilityChecked) {
+                    initializeMimeUtilityDecoding();
+                }
+            }
         }
 
         if (mimeUtilityDecodeTextMethod != null) {
@@ -1904,11 +1907,7 @@ public class EmlToPdf {
         return decodeMimeHeader(headerValue.trim());
     }
 
-    private static synchronized void initializeMimeUtilityDecoding() {
-        if (mimeUtilityChecked) {
-            return; // Already initialized
-        }
-
+    private static void initializeMimeUtilityDecoding() {
         try {
             Class<?> mimeUtilityClass = Class.forName("jakarta.mail.internet.MimeUtility");
             mimeUtilityDecodeTextMethod = mimeUtilityClass.getMethod("decodeText", String.class);
