@@ -53,6 +53,103 @@ export const useSanitizeOperation = () => {
     return { operation, operationId, fileId };
   }, []);
 
+  const buildFormData = useCallback((parameters: SanitizeParameters, file: File): FormData => {
+    const formData = new FormData();
+    formData.append('fileInput', file);
+    
+    // Add parameters
+    formData.append('removeJavaScript', parameters.removeJavaScript.toString());
+    formData.append('removeEmbeddedFiles', parameters.removeEmbeddedFiles.toString());
+    formData.append('removeXMPMetadata', parameters.removeXMPMetadata.toString());
+    formData.append('removeMetadata', parameters.removeMetadata.toString());
+    formData.append('removeLinks', parameters.removeLinks.toString());
+    formData.append('removeFonts', parameters.removeFonts.toString());
+    
+    return formData;
+  }, []);
+
+  const sanitizeFile = useCallback(async (
+    file: File,
+    parameters: SanitizeParameters,
+    generateSanitizedFileName: (originalFileName?: string) => string,
+    operationId: string,
+    fileId: string
+  ): Promise<File | null> => {
+    try {
+      const formData = buildFormData(parameters, file);
+
+      const response = await fetch('/api/v1/security/sanitize-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        markOperationFailed(fileId, operationId, errorText);
+        console.error(`Error sanitizing file ${file.name}:`, errorText);
+        return null;
+      }
+
+      const blob = await response.blob();
+      const sanitizedFileName = generateSanitizedFileName(file.name);
+      const sanitizedFile = new File([blob], sanitizedFileName, { type: blob.type });
+      
+      markOperationApplied(fileId, operationId);
+      return sanitizedFile;
+    } catch (error) {
+      console.error(`Error sanitizing file ${file.name}:`, error);
+      markOperationFailed(fileId, operationId, error instanceof Error ? error.message : 'Unknown error');
+      return null;
+    }
+  }, [buildFormData, markOperationApplied, markOperationFailed]);
+
+  const createDownloadInfo = useCallback(async (results: File[]): Promise<void> => {
+    if (results.length === 1) {
+      const url = window.URL.createObjectURL(results[0]);
+      setDownloadUrl(url);
+    } else {
+      const { zipFile } = await zipFileService.createZipFromFiles(results, 'sanitized_files.zip');
+      const url = window.URL.createObjectURL(zipFile);
+      setDownloadUrl(url);
+    }
+  }, []);
+
+  const generateThumbnailsForResults = useCallback(async (results: File[]): Promise<void> => {
+    const thumbnails = await Promise.all(
+      results.map(async (file) => {
+        try {
+          const thumbnail = await generateThumbnailForFile(file);
+          return thumbnail || '';
+        } catch (error) {
+          console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
+          return '';
+        }
+      })
+    );
+
+    setThumbnails(thumbnails);
+  }, []);
+
+  const processResults = useCallback(async (results: File[]): Promise<void> => {
+    setFiles(results);
+    setIsGeneratingThumbnails(true);
+
+    // Add sanitized files to FileContext for future use
+    await addFiles(results);
+
+    // Create download info - single file or ZIP
+    await createDownloadInfo(results);
+
+    // Generate thumbnails
+    await generateThumbnailsForResults(results);
+
+    setIsGeneratingThumbnails(false);
+    setStatus(results.length === 1 
+      ? t('sanitize.completed', 'Sanitization completed successfully') 
+      : t('sanitize.completedMultiple', 'Sanitized {{count}} files successfully', { count: results.length })
+    );
+  }, [addFiles, createDownloadInfo, generateThumbnailsForResults, t]);
+
   const executeOperation = useCallback(async (
     parameters: SanitizeParameters,
     selectedFiles: File[],
@@ -64,8 +161,8 @@ export const useSanitizeOperation = () => {
 
     setIsLoading(true);
     setErrorMessage(null);
-    setStatus(selectedFiles.length === 1 
-      ? t('sanitize.processing', 'Sanitizing PDF...') 
+    setStatus(selectedFiles.length === 1
+      ? t('sanitize.processing', 'Sanitizing PDF...')
       : t('sanitize.processingMultiple', 'Sanitizing {{count}} PDFs...', { count: selectedFiles.length })
     );
 
@@ -79,49 +176,20 @@ export const useSanitizeOperation = () => {
         const { operation, operationId, fileId } = createOperation(parameters, [file]);
         recordOperation(fileId, operation);
 
-        setStatus(selectedFiles.length === 1 
-          ? t('sanitize.processing', 'Sanitizing PDF...') 
-          : t('sanitize.processingFile', 'Processing file {{current}} of {{total}}: {{filename}}', { 
-              current: i + 1, 
-              total: selectedFiles.length, 
-              filename: file.name 
+        setStatus(selectedFiles.length === 1
+          ? t('sanitize.processing', 'Sanitizing PDF...')
+          : t('sanitize.processingFile', 'Processing file {{current}} of {{total}}: {{filename}}', {
+              current: i + 1,
+              total: selectedFiles.length,
+              filename: file.name
             })
         );
 
-        try {
-          const formData = new FormData();
-          formData.append('fileInput', file);
-          
-          // Add parameters
-          formData.append('removeJavaScript', parameters.removeJavaScript.toString());
-          formData.append('removeEmbeddedFiles', parameters.removeEmbeddedFiles.toString());
-          formData.append('removeXMPMetadata', parameters.removeXMPMetadata.toString());
-          formData.append('removeMetadata', parameters.removeMetadata.toString());
-          formData.append('removeLinks', parameters.removeLinks.toString());
-          formData.append('removeFonts', parameters.removeFonts.toString());
-
-          const response = await fetch('/api/v1/security/sanitize-pdf', {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            markOperationFailed(fileId, operationId, errorText);
-            console.error(`Error sanitizing file ${file.name}:`, errorText);
-            failedFiles.push(file.name);
-            continue;
-          }
-
-          const blob = await response.blob();
-          const sanitizedFileName = generateSanitizedFileName(file.name);
-          const sanitizedFile = new File([blob], sanitizedFileName, { type: blob.type });
-          
+        const sanitizedFile = await sanitizeFile(file, parameters, generateSanitizedFileName, operationId, fileId);
+        
+        if (sanitizedFile) {
           results.push(sanitizedFile);
-          markOperationApplied(fileId, operationId);
-        } catch (error) {
-          console.error(`Error sanitizing file ${file.name}:`, error);
-          markOperationFailed(fileId, operationId, error instanceof Error ? error.message : 'Unknown error');
+        } else {
           failedFiles.push(file.name);
         }
       }
@@ -135,41 +203,7 @@ export const useSanitizeOperation = () => {
       }
 
       if (results.length > 0) {
-        setFiles(results);
-        setIsGeneratingThumbnails(true);
-
-        // Add sanitized files to FileContext for future use
-        await addFiles(results);
-
-        // Create download info - single file or ZIP
-        if (results.length === 1) {
-          const url = window.URL.createObjectURL(results[0]);
-          setDownloadUrl(url);
-        } else {
-          const { zipFile } = await zipFileService.createZipFromFiles(results, 'sanitized_files.zip');
-          const url = window.URL.createObjectURL(zipFile);
-          setDownloadUrl(url);
-        }
-
-        // Generate thumbnails
-        const thumbnails = await Promise.all(
-          results.map(async (file) => {
-            try {
-              const thumbnail = await generateThumbnailForFile(file);
-              return thumbnail || '';
-            } catch (error) {
-              console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
-              return '';
-            }
-          })
-        );
-
-        setThumbnails(thumbnails);
-        setIsGeneratingThumbnails(false);
-        setStatus(results.length === 1 
-          ? t('sanitize.completed', 'Sanitization completed successfully') 
-          : t('sanitize.completedMultiple', 'Sanitized {{count}} files successfully', { count: results.length })
-        );
+        await processResults(results);
       } else {
         setErrorMessage(t('sanitize.errorAllFilesFailed', 'All files failed to sanitize'));
       }
@@ -182,7 +216,7 @@ export const useSanitizeOperation = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [t, createOperation, recordOperation, markOperationApplied, markOperationFailed, addFiles]);
+  }, [t, createOperation, recordOperation, sanitizeFile, processResults]);
 
   const resetResults = useCallback(() => {
     if (downloadUrl) {
