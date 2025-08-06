@@ -2,7 +2,7 @@ import React from 'react';
 import { TextInput } from '@mantine/core';
 import SearchIcon from '@mui/icons-material/Search';
 import { useTranslation } from 'react-i18next';
-import { useFileManagerContext } from './FileManagerContext';
+import { useFileManagerContext } from '../../contexts/FileManagerContext';
 
 interface SearchInputProps {
   style?: React.CSSProperties;

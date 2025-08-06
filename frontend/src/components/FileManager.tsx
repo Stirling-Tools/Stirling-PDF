@@ -2,14 +2,14 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Modal } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
-import { FileWithUrl } from '../../types/file';
-import { useFileManager } from '../../hooks/useFileManager';
-import { useFilesModalContext } from '../../contexts/FilesModalContext';
-import { Tool } from '../../types/tool';
+import { FileWithUrl } from '../types/file';
+import { useFileManager } from '../hooks/useFileManager';
+import { useFilesModalContext } from '../contexts/FilesModalContext';
+import { Tool } from '../types/tool';
 import MobileLayout from './fileManager/MobileLayout';
 import DesktopLayout from './fileManager/DesktopLayout';
 import DragOverlay from './fileManager/DragOverlay';
-import { FileManagerProvider } from './fileManager/FileManagerContext';
+import { FileManagerProvider } from '../contexts/FileManagerContext';
 
 interface FileManagerProps {
   selectedTool?: Tool | null;

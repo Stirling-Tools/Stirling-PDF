@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { getDocument } from "pdfjs-dist";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
+import { generateThumbnailForFile } from "../utils/thumbnailUtils";
 
 /**
  * Calculate optimal scale for thumbnail generation
@@ -44,50 +44,47 @@ export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
         return;
       }
 
-      // Second priority: generate from blob for files (both IndexedDB and regular files, small files only)
-      if (file.size < 50 * 1024 * 1024 && !generating) {
+      // Second priority: generate thumbnail for any file type
+      if (file.size < 100 * 1024 * 1024 && !generating) {
         setGenerating(true);
         try {
-          let arrayBuffer: ArrayBuffer;
+          let fileObject: File;
           
           // Handle IndexedDB files vs regular File objects
           if (file.storedInIndexedDB && file.id) {
-            // For IndexedDB files, get the data from storage
+            // For IndexedDB files, recreate File object from stored data
             const storedFile = await fileStorage.getFile(file.id);
             if (!storedFile) {
               throw new Error('File not found in IndexedDB');
             }
-            arrayBuffer = storedFile.data;
-          } else if (typeof file.arrayBuffer === 'function') {
-            // For regular File objects, use arrayBuffer method
-            arrayBuffer = await file.arrayBuffer();
+            fileObject = new File([storedFile.data], storedFile.name, {
+              type: storedFile.type,
+              lastModified: storedFile.lastModified
+            });
+          } else if (file.file) {
+            // For FileWithUrl objects that have a File object
+            fileObject = file.file;
           } else if (file.id) {
             // Fallback: try to get from IndexedDB even if storedInIndexedDB flag is missing
             const storedFile = await fileStorage.getFile(file.id);
             if (!storedFile) {
-              throw new Error('File has no arrayBuffer method and not found in IndexedDB');
+              throw new Error('File not found in IndexedDB and no File object available');
             }
-            arrayBuffer = storedFile.data;
+            fileObject = new File([storedFile.data], storedFile.name, {
+              type: storedFile.type,
+              lastModified: storedFile.lastModified
+            });
           } else {
-            throw new Error('File object has no arrayBuffer method and no ID for IndexedDB lookup');
+            throw new Error('File object not available and no ID for IndexedDB lookup');
           }
           
-          const pdf = await getDocument({ data: arrayBuffer }).promise;
-          const page = await pdf.getPage(1);
-          
-          // Calculate optimal scale and create viewport
-          const baseViewport = page.getViewport({ scale: 1.0 });
-          const scale = calculateThumbnailScale(baseViewport);
-          const viewport = page.getViewport({ scale });
-          const canvas = document.createElement("canvas");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const context = canvas.getContext("2d");
-          if (context && !cancelled) {
-            await page.render({ canvasContext: context, viewport }).promise;
-            if (!cancelled) setThumb(canvas.toDataURL());
+          // Use the universal thumbnail generator
+          const thumbnail = await generateThumbnailForFile(fileObject);
+          if (!cancelled && thumbnail) {
+            setThumb(thumbnail);
+          } else if (!cancelled) {
+            setThumb(null);
           }
-          pdf.destroy(); // Clean up memory
         } catch (error) {
           console.warn('Failed to generate thumbnail for file', file.name, error);
           if (!cancelled) setThumb(null);
@@ -95,7 +92,7 @@ export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
           if (!cancelled) setGenerating(false);
         }
       } else {
-        // Large files or files without proper conditions - show placeholder
+        // Large files - generate placeholder
         setThumb(null);
       }
     }

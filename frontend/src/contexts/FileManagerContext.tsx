@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
-import { FileWithUrl } from '../../../types/file';
-import { FileSource } from './types';
+import { FileWithUrl } from '../types/file';
+import { FileSource } from '../components/fileManager/types';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {

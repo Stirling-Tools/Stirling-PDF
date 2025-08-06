@@ -5,7 +5,7 @@ import FileDetails from './FileDetails';
 import SearchInput from './SearchInput';
 import FileListArea from './FileListArea';
 import HiddenFileInput from './HiddenFileInput';
-import { useFileManagerContext } from './FileManagerContext';
+import { useFileManagerContext } from '../../contexts/FileManagerContext';
 
 const DesktopLayout: React.FC = () => {
   const {

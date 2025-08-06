@@ -18,7 +18,7 @@ import Viewer from "../components/viewer/Viewer";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import LandingPage from "../components/shared/LandingPage";
-import FileManager from "../components/shared/FileManager";
+import FileManager from "../components/FileManager";
 
 function HomePageContent() {
   const { t } = useTranslation();

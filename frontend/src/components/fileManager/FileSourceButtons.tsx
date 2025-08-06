@@ -4,7 +4,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import FolderIcon from '@mui/icons-material/Folder';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { useTranslation } from 'react-i18next';
-import { useFileManagerContext } from './FileManagerContext';
+import { useFileManagerContext } from '../../contexts/FileManagerContext';
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;

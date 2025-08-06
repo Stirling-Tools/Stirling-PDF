@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { fileStorage } from '../services/fileStorage';
 import { FileWithUrl } from '../types/file';
+import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
@@ -63,7 +64,12 @@ export const useFileManager = () => {
 
   const storeFile = useCallback(async (file: File) => {
     try {
-      const storedFile = await fileStorage.storeFile(file);
+      // Generate thumbnail for the file
+      const thumbnail = await generateThumbnailForFile(file);
+      
+      // Store file with thumbnail
+      const storedFile = await fileStorage.storeFile(file, thumbnail);
+      
       // Add the ID to the file object
       Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
       return storedFile;

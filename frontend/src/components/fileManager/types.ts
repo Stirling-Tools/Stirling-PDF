@@ -1,4 +1,4 @@
-import { FileWithUrl } from '../../../types/file';
+import { FileWithUrl } from '../../types/file';
 
 export type FileSource = 'recent' | 'local' | 'drive';
 

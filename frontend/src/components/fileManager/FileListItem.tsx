@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Group, Box, Text, ActionIcon, Checkbox, Divider } from '@mantine/core';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { getFileSize, getFileDate } from '../../../utils/fileUtils';
+import { getFileSize, getFileDate } from '../../utils/fileUtils';
 import { FileListItemProps } from './types';
 
 const FileListItem: React.FC<FileListItemProps> = ({ 

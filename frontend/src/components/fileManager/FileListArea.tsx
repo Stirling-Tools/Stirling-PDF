@@ -4,7 +4,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import HistoryIcon from '@mui/icons-material/History';
 import { useTranslation } from 'react-i18next';
 import FileListItem from './FileListItem';
-import { useFileManagerContext } from './FileManagerContext';
+import { useFileManagerContext } from '../../contexts/FileManagerContext';
 
 interface FileListAreaProps {
   scrollAreaHeight: string;
@@ -28,20 +28,6 @@ const FileListArea: React.FC<FileListAreaProps> = ({
   const { t } = useTranslation();
 
   if (activeSource === 'recent') {
-    if (recentFiles.length === 0) {
-      return (
-        <Center style={{ height: '200px' }}>
-          <Stack align="center" gap="sm">
-            <HistoryIcon style={{ fontSize: 48, color: 'var(--mantine-color-gray-5)' }} />
-            <Text c="dimmed" ta="center">{t('fileManager.noRecentFiles', 'No recent files')}</Text>
-            <Text size="xs" c="dimmed" ta="center" style={{ opacity: 0.7 }}>
-              {t('fileManager.dropFilesHint', 'Drop files anywhere to upload')}
-            </Text>
-          </Stack>
-        </Center>
-      );
-    }
-
     return (
       <ScrollArea 
         h={scrollAreaHeight}
@@ -52,17 +38,29 @@ const FileListArea: React.FC<FileListAreaProps> = ({
         scrollbarSize={8}
       >
         <Stack gap={0}>
-          {filteredFiles.map((file, index) => (
-            <FileListItem
-              key={file.id || file.name}
-              file={file}
-              isSelected={selectedFileIds.includes(file.id || file.name)}
-              isSupported={isFileSupported(file.name)}
-              onSelect={() => onFileSelect(file)}
-              onRemove={() => onFileRemove(index)}
-              onDoubleClick={() => onFileDoubleClick(file)}
-            />
-          ))}
+          {recentFiles.length === 0 ? (
+            <Center style={{ height: '200px' }}>
+              <Stack align="center" gap="sm">
+                <HistoryIcon style={{ fontSize: 48, color: 'var(--mantine-color-gray-5)' }} />
+                <Text c="dimmed" ta="center">{t('fileManager.noRecentFiles', 'No recent files')}</Text>
+                <Text size="xs" c="dimmed" ta="center" style={{ opacity: 0.7 }}>
+                  {t('fileManager.dropFilesHint', 'Drop files anywhere to upload')}
+                </Text>
+              </Stack>
+            </Center>
+          ) : (
+            filteredFiles.map((file, index) => (
+              <FileListItem
+                key={file.id || file.name}
+                file={file}
+                isSelected={selectedFileIds.includes(file.id || file.name)}
+                isSupported={isFileSupported(file.name)}
+                onSelect={() => onFileSelect(file)}
+                onRemove={() => onFileRemove(index)}
+                onDoubleClick={() => onFileDoubleClick(file)}
+              />
+            ))
+          )}
         </Stack>
       </ScrollArea>
     );
