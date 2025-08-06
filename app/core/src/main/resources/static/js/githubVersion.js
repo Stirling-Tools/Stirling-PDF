@@ -327,9 +327,10 @@ async function showUpdateModal() {
         <h6>Available Updates:</h6>
         <div class="accordion" id="versionsAccordion">
           ${fullUpdateInfo.new_versions.map((version, index) => `
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="heading${index}">
-                <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse"
+            <div class="accordion-item" style="border-color: var(--md-sys-color-outline);">
+                          <h2 class="accordion-header"  id="heading${index}">
+                             <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" style="color: var(--md-sys-color-on-surface); background-color:
+             var(--md-sys-color-surface);" type="button" data-bs-toggle="collapse"
                         data-bs-target="#collapse${index}" aria-expanded="${index === 0 ? 'true' : 'false'}" aria-controls="collapse${index}">
                   <div class="d-flex justify-content-between w-100 me-3">
                     <span><strong>Version ${version.version}</strong></span>
@@ -339,7 +340,8 @@ async function showUpdateModal() {
               </h2>
               <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}"
                   aria-labelledby="heading${index}" data-bs-parent="#versionsAccordion">
-                <div class="accordion-body">
+                <div class="accordion-body"  style="color: var(--md-sys-color-on-surface); background-color:
+             var(--md-sys-color-surface-bright);">
                   <h6>${version.announcement.title}</h6>
                   <p>${version.announcement.message}</p>
                   ${version.compatibility.breaking_changes ? `
@@ -363,27 +365,7 @@ async function showUpdateModal() {
     }
     modalBody.insertAdjacentHTML('beforeend', detailedVersionsHtml);
 
-    // Apply dark mode styling if active
-    if (isDarkMode) {
-      var accordionItems = document.querySelectorAll("#versionsAccordion .accordion-item");
-      accordionItems.forEach((item) => {
-        item.style.color = "var(--md-sys-color-on-surface)";
-        item.style.backgroundColor = "var(--md-sys-color-surface-5)";
-        item.style.border = "1px solid var(--md-sys-color-outline-variant)";
-      });
-      var accordionButtons = document.querySelectorAll("#versionsAccordion .accordion-button");
-      accordionButtons.forEach((button) => {
-        button.style.color = "var(--md-sys-color-on-surface)";
-        button.style.backgroundColor = "var(--md-sys-color-surface-5)";
-        button.style.borderColor = "var(--md-sys-color-outline-variant)";
-      });
-      var accordionBodies = document.querySelectorAll("#versionsAccordion .accordion-body");
-      accordionBodies.forEach((body) => {
-        body.style.color = "var(--md-sys-color-on-surface)";
-        body.style.backgroundColor = "var(--md-sys-color-surface-5)";
-      });
-    }
-  } else {
+      } else {
     // Remove loading spinner if failed to load
     const spinner = document.getElementById('loadingSpinner');
     if (spinner) {
