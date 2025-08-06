@@ -34,8 +34,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "npx tsc --noEmit && vite",
+    "build": "npx tsc --noEmit && vite build",
     "preview": "vite preview",
     "generate-licenses": "node scripts/generate-licenses.js",
     "test": "vitest",
