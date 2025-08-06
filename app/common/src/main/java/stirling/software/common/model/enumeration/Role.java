@@ -29,15 +29,6 @@ public enum Role {
     // Regular user with unlimited access within their team/org
     USER("ROLE_USER", Integer.MAX_VALUE, Integer.MAX_VALUE, "adminUserSettings.user"),
 
-    // 40 API calls Per Day, 40 web calls
-    LIMITED_API_USER("ROLE_LIMITED_API_USER", 40, 40, "adminUserSettings.apiUser"),
-
-    // 20 API calls Per Day, 20 web calls
-    EXTRA_LIMITED_API_USER("ROLE_EXTRA_LIMITED_API_USER", 20, 20, "adminUserSettings.extraApiUser"),
-
-    // 0 API calls per day and 20 web calls
-    WEB_ONLY_USER("ROLE_WEB_ONLY_USER", 0, 20, "adminUserSettings.webOnlyUser"),
-
     INTERNAL_API_USER(
             "STIRLING-PDF-BACKEND-API-USER",
             Integer.MAX_VALUE,

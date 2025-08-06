@@ -50,6 +50,7 @@ public class InitialSecuritySetup {
 
             userService.migrateOauth2ToSSO();
             migrateAdminRolesToSystemAdmin();
+            migrateDeprecatedRolesToUser();
             assignTeamsToDefaultOrganizationIfMissing();
             assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
@@ -215,6 +216,51 @@ public class InitialSecuritySetup {
             log.info(
                     "Successfully migrated {} users from ROLE_ADMIN to SYSTEM_ADMIN",
                     migratedCount);
+        }
+    }
+
+    private void migrateDeprecatedRolesToUser() {
+        String[] deprecatedRoles = {
+            "ROLE_WEB_ONLY_USER", 
+            "ROLE_EXTRA_LIMITED_API_USER",
+            "ROLE_LIMITED_API_USER"
+        };
+
+        int totalMigrated = 0;
+        
+        for (String deprecatedRole : deprecatedRoles) {
+            List<User> usersWithDeprecatedRole = userService.findByRole(deprecatedRole);
+            
+            if (!usersWithDeprecatedRole.isEmpty()) {
+                log.info("Found {} users with role {}. Converting to USER...", 
+                        usersWithDeprecatedRole.size(), deprecatedRole);
+                
+                int migratedCount = 0;
+                for (User user : usersWithDeprecatedRole) {
+                    try {
+                        user.setUserRole(Role.USER);
+                        userService.saveUser(user);
+                        log.debug("Converted user '{}' from {} to USER", 
+                                user.getUsername(), deprecatedRole);
+                        migratedCount++;
+                    } catch (Exception e) {
+                        log.error("Failed to migrate user '{}' from {} to USER: {}",
+                                user.getUsername(), deprecatedRole, e.getMessage());
+                    }
+                }
+                
+                if (migratedCount > 0) {
+                    log.info("Successfully migrated {} users from {} to USER", 
+                            migratedCount, deprecatedRole);
+                    totalMigrated += migratedCount;
+                }
+            }
+        }
+        
+        if (totalMigrated == 0) {
+            log.debug("No users with deprecated roles found - migration not needed");
+        } else {
+            log.info("Total users migrated from deprecated roles to USER: {}", totalMigrated);
         }
     }
 }

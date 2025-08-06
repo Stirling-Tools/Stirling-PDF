@@ -286,7 +286,7 @@ class UserServiceTest {
         String username = "testuser";
         String password = "password123";
         Long teamId = 1L;
-        String customRole = Role.LIMITED_API_USER.getRoleId();
+        String customRole = Role.USER.getRoleId();
         String encodedPassword = "encodedPassword123";
 
         when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
