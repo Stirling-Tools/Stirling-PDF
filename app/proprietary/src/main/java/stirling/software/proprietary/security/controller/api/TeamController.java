@@ -62,7 +62,8 @@ public class TeamController {
     }
 
     @PostMapping("/rename")
-    @PreAuthorize("@roleBasedAuthorizationService.canManageTeam(@teamRepository.findById(#teamId).orElse(null))")
+    @PreAuthorize(
+            "@roleBasedAuthorizationService.canManageTeam(@teamRepository.findById(#teamId).orElse(null))")
     public RedirectView renameTeam(
             @RequestParam("teamId") Long teamId, @RequestParam("newName") String newName) {
         Optional<Team> existing = teamRepository.findById(teamId);
@@ -88,7 +89,8 @@ public class TeamController {
 
     @PostMapping("/delete")
     @Transactional
-    @PreAuthorize("@roleBasedAuthorizationService.canManageTeam(@teamRepository.findById(#teamId).orElse(null))")
+    @PreAuthorize(
+            "@roleBasedAuthorizationService.canManageTeam(@teamRepository.findById(#teamId).orElse(null))")
     public RedirectView deleteTeam(@RequestParam("teamId") Long teamId) {
         Optional<Team> teamOpt = teamRepository.findById(teamId);
         if (teamOpt.isEmpty()) {
@@ -113,7 +115,8 @@ public class TeamController {
 
     @PostMapping("/addUser")
     @Transactional
-    @PreAuthorize("@roleBasedAuthorizationService.canAddUserToTeam(#userId, @teamRepository.findById(#teamId).orElse(null))")
+    @PreAuthorize(
+            "@roleBasedAuthorizationService.canAddUserToTeam(#userId, @teamRepository.findById(#teamId).orElse(null))")
     public RedirectView addUserToTeam(
             @RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
 

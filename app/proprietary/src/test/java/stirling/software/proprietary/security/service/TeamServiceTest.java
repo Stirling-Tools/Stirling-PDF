@@ -11,25 +11,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import stirling.software.proprietary.model.Organization;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.repository.TeamRepository;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
 
     @Mock private TeamRepository teamRepository;
 
-    @Mock
-    private OrganizationService organizationService;
+    @Mock private OrganizationService organizationService;
 
-    @InjectMocks
-    private TeamService teamService;
+    @InjectMocks private TeamService teamService;
 
     @Test
     void getDefaultTeam() {
@@ -42,7 +36,8 @@ class TeamServiceTest {
         team.setOrganization(organization);
 
         when(organizationService.getOrCreateDefaultOrganization()).thenReturn(organization);
-        when(teamRepository.findByNameAndOrganizationId(TeamService.DEFAULT_TEAM_NAME, organization.getId()))
+        when(teamRepository.findByNameAndOrganizationId(
+                        TeamService.DEFAULT_TEAM_NAME, organization.getId()))
                 .thenReturn(Optional.of(team));
 
         Team result = teamService.getOrCreateDefaultTeam();
@@ -83,8 +78,9 @@ class TeamServiceTest {
         team.setOrganization(organization);
 
         when(organizationService.getOrCreateInternalOrganization()).thenReturn(organization);
-        when(teamRepository.findByNameAndOrganizationId(TeamService.INTERNAL_TEAM_NAME, organization.getId()))
-            .thenReturn(Optional.of(team));
+        when(teamRepository.findByNameAndOrganizationId(
+                        TeamService.INTERNAL_TEAM_NAME, organization.getId()))
+                .thenReturn(Optional.of(team));
 
         Team result = teamService.getOrCreateInternalTeam();
 
@@ -104,8 +100,9 @@ class TeamServiceTest {
         internalTeam.setOrganization(organization);
 
         when(organizationService.getOrCreateInternalOrganization()).thenReturn(organization);
-        when(teamRepository.findByNameAndOrganizationId(TeamService.INTERNAL_TEAM_NAME, organization.getId()))
-            .thenReturn(Optional.empty());
+        when(teamRepository.findByNameAndOrganizationId(
+                        TeamService.INTERNAL_TEAM_NAME, organization.getId()))
+                .thenReturn(Optional.empty());
         when(teamRepository.save(any(Team.class))).thenReturn(internalTeam);
 
         Team result = teamService.getOrCreateInternalTeam();

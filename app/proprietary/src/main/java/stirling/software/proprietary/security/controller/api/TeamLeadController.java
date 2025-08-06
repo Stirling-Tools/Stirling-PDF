@@ -116,26 +116,6 @@ public class TeamLeadController {
         return ResponseEntity.ok().body("User removed from team successfully");
     }
 
-    /** Get users that can be added to the team (within same organization, not in any team) */
-    @GetMapping("/available-users")
-    public ResponseEntity<List<User>> getAvailableUsers() {
-        if (!authorizationService.canManageTeamUsers()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        User currentUser = authorizationService.getCurrentUser();
-        if (currentUser == null || currentUser.getOrganization() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        // Find users in the same organization who are not in any team
-        List<User> availableUsers =
-                userRepository.findUsersInOrganizationWithoutTeam(
-                        currentUser.getOrganization().getId());
-
-        return ResponseEntity.ok(availableUsers);
-    }
-
     /** Update a team member's role (team leads can only assign USER role) */
     @PostMapping("/update-member-role")
     @Transactional

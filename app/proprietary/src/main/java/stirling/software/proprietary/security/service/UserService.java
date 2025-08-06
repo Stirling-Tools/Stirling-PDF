@@ -624,7 +624,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public List<User> getUsersWithoutTeam() {
-        return userRepository.findAllWithoutTeam();
+        return userRepository.findUsersWithoutTeam();
     }
 
     public void saveAll(List<User> users) {

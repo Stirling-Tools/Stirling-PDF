@@ -34,7 +34,8 @@ public class OrganizationController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("@roleBasedAuthorizationService.canViewOrganization(@organizationRepository.findById(#id).orElse(null))")
+    @PreAuthorize(
+            "@roleBasedAuthorizationService.canViewOrganization(@organizationRepository.findById(#id).orElse(null))")
     public ResponseEntity<Organization> getOrganization(@PathVariable Long id) {
         Optional<Organization> organizationOpt = organizationRepository.findById(id);
         if (organizationOpt.isEmpty()) {

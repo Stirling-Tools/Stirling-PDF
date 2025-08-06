@@ -220,15 +220,13 @@ public class AccountWebController {
         List<User> allUsers = userRepository.findAllWithTeam();
         Iterator<User> iterator = allUsers.iterator();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
-        
+
         // Filter role details to only show SYSTEM_ADMIN, USER, and DEMO_USER in UI
         Map<String, String> filteredRoleDetails = new LinkedHashMap<>();
         String[] allowedRoles = {
-            Role.SYSTEM_ADMIN.getRoleId(),
-            Role.USER.getRoleId(), 
-            Role.DEMO_USER.getRoleId()
+            Role.SYSTEM_ADMIN.getRoleId(), Role.USER.getRoleId(), Role.DEMO_USER.getRoleId()
         };
-        
+
         for (String roleId : allowedRoles) {
             if (roleDetails.containsKey(roleId)) {
                 filteredRoleDetails.put(roleId, roleDetails.get(roleId));

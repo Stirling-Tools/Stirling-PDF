@@ -30,7 +30,8 @@ import stirling.software.proprietary.security.service.RoleBasedAuthorizationServ
 @Slf4j
 @RequiredArgsConstructor
 @PremiumEndpoint
-@PreAuthorize("@roleBasedAuthorizationService.canManageOrgUsers() or @roleBasedAuthorizationService.canManageOrgTeams()")
+@PreAuthorize(
+        "@roleBasedAuthorizationService.canManageOrgUsers() or @roleBasedAuthorizationService.canManageOrgTeams()")
 public class OrgAdminController {
 
     private final TeamRepository teamRepository;
