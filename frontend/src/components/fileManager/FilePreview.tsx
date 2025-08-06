@@ -60,7 +60,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                   height: '100%',
                   backgroundColor: 'var(--mantine-color-gray-2)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                  transform: 'translate(12px, 12px) rotate(2deg)',
+                  transform: 'translate(0.75rem, 0.75rem) rotate(2deg)',
                   zIndex: 1
                 }}
               />
@@ -73,7 +73,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                   height: '100%',
                   backgroundColor: 'var(--mantine-color-gray-1)',
                   boxShadow: '0 3px 10px rgba(0, 0, 0, 0.12)',
-                  transform: 'translate(6px, 6px) rotate(1deg)',
+                  transform: 'translate(0.375rem, 0.375rem) rotate(1deg)',
                   zIndex: 2
                 }}
               />
@@ -92,11 +92,11 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                 width: 'auto', 
                 height: 'auto',
                 boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
-                borderRadius: '8px',
+                borderRadius: '0.5rem',
                 position: 'relative',
                 zIndex: 3,
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: isAnimating ? 'scale(0.95) translateX(20px)' : 'scale(1) translateX(0)',
+                transform: isAnimating ? 'scale(0.95) translateX(1.25rem)' : 'scale(1) translateX(0)',
                 opacity: isAnimating ? 0.7 : 1
               }}
             />
@@ -109,10 +109,10 @@ const FilePreview: React.FC<FilePreviewProps> = ({
               position: 'relative',
               zIndex: 3,
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: isAnimating ? 'scale(0.95) translateX(20px)' : 'scale(1) translateX(0)',
+              transform: isAnimating ? 'scale(0.95) translateX(1.25rem)' : 'scale(1) translateX(0)',
               opacity: isAnimating ? 0.7 : 1
             }}>
-              <PictureAsPdfIcon style={{ fontSize: 48, color: 'var(--mantine-color-gray-6)' }} />
+              <PictureAsPdfIcon style={{ fontSize: '3rem', color: 'var(--mantine-color-gray-6)' }} />
             </Center>
           ) : null}
         </Box>

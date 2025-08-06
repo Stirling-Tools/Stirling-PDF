@@ -38,7 +38,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
       {/* Compact mobile layout */}
       <Box style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
         {/* Small preview */}
-        <Box style={{ width: '120px', height: '150px', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box style={{ width: '7.5rem', height: '9.375rem', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {currentFile && thumbnail ? (
             <img 
               src={thumbnail} 
@@ -47,7 +47,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
                 maxWidth: '100%', 
                 maxHeight: '100%', 
                 objectFit: 'contain',
-                borderRadius: '4px',
+                borderRadius: '0.25rem',
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
               }}
             />
@@ -81,7 +81,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         
         {/* Navigation arrows for multiple files */}
         {hasMultipleFiles && (
-          <Box style={{ display: 'flex', gap: '4px' }}>
+          <Box style={{ display: 'flex', gap: '0.25rem' }}>
             <ActionIcon
               variant="subtle"
               size="sm"

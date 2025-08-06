@@ -39,9 +39,9 @@ const FileListArea: React.FC<FileListAreaProps> = ({
       >
         <Stack gap={0}>
           {recentFiles.length === 0 ? (
-            <Center style={{ height: '200px' }}>
+            <Center style={{ height: '12.5rem' }}>
               <Stack align="center" gap="sm">
-                <HistoryIcon style={{ fontSize: 48, color: 'var(--mantine-color-gray-5)' }} />
+                <HistoryIcon style={{ fontSize: '3rem', color: 'var(--mantine-color-gray-5)' }} />
                 <Text c="dimmed" ta="center">{t('fileManager.noRecentFiles', 'No recent files')}</Text>
                 <Text size="xs" c="dimmed" ta="center" style={{ opacity: 0.7 }}>
                   {t('fileManager.dropFilesHint', 'Drop files anywhere to upload')}
@@ -68,9 +68,9 @@ const FileListArea: React.FC<FileListAreaProps> = ({
 
   // Google Drive placeholder
   return (
-    <Center style={{ height: '200px' }}>
+    <Center style={{ height: '12.5rem' }}>
       <Stack align="center" gap="sm">
-        <CloudIcon style={{ fontSize: 48, color: 'var(--mantine-color-gray-5)' }} />
+        <CloudIcon style={{ fontSize: '3rem', color: 'var(--mantine-color-gray-5)' }} />
         <Text c="dimmed" ta="center">{t('fileManager.googleDriveNotAvailable', 'Google Drive integration coming soon')}</Text>
       </Stack>
     </Center>

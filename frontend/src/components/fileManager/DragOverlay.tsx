@@ -22,8 +22,8 @@ const DragOverlay: React.FC<DragOverlayProps> = ({ isVisible }) => {
         right: 0,
         bottom: 0,
         backgroundColor: alpha(theme.colors.blue[6], 0.1),
-        border: `2px dashed ${theme.colors.blue[6]}`,
-        borderRadius: 30,
+        border: `0.125rem dashed ${theme.colors.blue[6]}`,
+        borderRadius: '1.875rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -32,7 +32,7 @@ const DragOverlay: React.FC<DragOverlayProps> = ({ isVisible }) => {
       }}
     >
       <Stack align="center" gap="md">
-        <UploadFileIcon style={{ fontSize: 64, color: theme.colors.blue[6] }} />
+        <UploadFileIcon style={{ fontSize: '4rem', color: theme.colors.blue[6] }} />
         <Text size="xl" fw={500} c="blue.6">
           {t('fileManager.dropFilesHere', 'Drop files here to upload')}
         </Text>

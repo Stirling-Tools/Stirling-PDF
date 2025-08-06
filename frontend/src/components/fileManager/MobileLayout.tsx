@@ -45,7 +45,7 @@ const MobileLayout: React.FC = () => {
         display: 'flex', 
         flexDirection: 'column',
         backgroundColor: 'var(--bg-file-list)',
-        borderRadius: '8px',
+        borderRadius: '0.5rem',
         border: '1px solid var(--mantine-color-gray-2)',
         overflow: 'hidden',
         minHeight: 0
@@ -65,7 +65,7 @@ const MobileLayout: React.FC = () => {
             scrollAreaStyle={{ 
               height: calculateFileListHeight(),
               maxHeight: '60vh',
-              minHeight: '150px',
+              minHeight: '9.375rem',
               backgroundColor: 'transparent',
               border: 'none',
               borderRadius: 0
