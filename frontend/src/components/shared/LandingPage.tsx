@@ -2,12 +2,14 @@ import React from 'react';
 import { Container, Text, Button, Checkbox, Group, useMantineColorScheme } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import AddIcon from '@mui/icons-material/Add';
+import { useTranslation } from 'react-i18next';
 import { useFileHandler } from '../../hooks/useFileHandler';
 
 const LandingPage = () => {
   const { addMultipleFiles } = useFileHandler();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { colorScheme } = useMantineColorScheme();
+  const { t } = useTranslation();
 
   const handleFileDrop = async (files: File[]) => {
     await addMultipleFiles(files);
@@ -112,7 +114,7 @@ const LandingPage = () => {
             >
               <AddIcon className="text-[var(--accent-interactive)]" />
               <span>
-                Add Files
+                {t('fileUpload.addFiles', 'Add Files')}
               </span>
             </Button>
 
@@ -133,7 +135,7 @@ const LandingPage = () => {
             className="text-[var(--accent-interactive)]"
             style={{ fontSize: '.8rem' }}
           >
-            Drag files in or click "Add Files" to browse
+            {t('fileUpload.dragFilesInOrClick', 'Drag files in or click "Add Files" to browse')}
           </span>
         </div>
       </Dropzone>
