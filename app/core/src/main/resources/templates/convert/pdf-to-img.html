@@ -7,7 +7,7 @@
   <script th:inline="javascript">
     document.addEventListener("DOMContentLoaded", function () {
       const maxDPI = /*[[${maxDPI}]]*/ 500; // Maximum DPI for PDF to image conversion
-      const maxDPILabelRaw = /*[[#{pdfToImage.dpi}]]*/ "DPI (The server limit is {0} dpi)"; // Maximum DPI for PDF to image conversion
+      const maxDPILabelRaw = /*[[#{pdfToImage.dpi}]]*/ "DPI (The server limit is {0} dpi)";
       const maxDPILabel = maxDPILabelRaw.replace("{0}", maxDPI); // Replace with actual value from properties
       const dpilabel = document.querySelector('label[for="dpi"]');
       if (dpilabel) {
