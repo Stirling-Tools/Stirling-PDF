@@ -122,6 +122,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (apiKey != null && !apiKey.isBlank()) {
                 try {
                     Optional<User> user = userService.getUserByApiKey(apiKey);
+
                     if (user.isEmpty()) {
                         handleAuthenticationFailure(
                                 request,
@@ -129,10 +130,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 new AuthenticationFailureException("Invalid API Key"));
                         return false;
                     }
+
                     authentication =
                             new ApiKeyAuthenticationToken(
                                     user.get(), apiKey, user.get().getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    return true;
                 } catch (AuthenticationException e) {
                     handleAuthenticationFailure(
                             request,
@@ -141,6 +144,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return false;
                 }
             }
+
             return false;
         }
 
