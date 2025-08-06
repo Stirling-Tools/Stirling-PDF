@@ -443,10 +443,6 @@ public class AccountWebController {
                 model.addAttribute("messageType", messageType);
                 model.addAttribute("role", user.get().getRolesAsString());
                 model.addAttribute("isSystemAdmin", user.get().isSystemAdmin());
-                System.out.println("user.get().getRolesAsString()" + user.get().getRolesAsString());
-
-                System.out.println(
-                        "isSystemAdmin\", user.get().isSystemAdmin()" + user.get().isSystemAdmin());
                 model.addAttribute("settings", settingsJson);
                 model.addAttribute("changeCredsFlag", user.get().isFirstLogin());
                 model.addAttribute("currentPage", "account");

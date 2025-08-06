@@ -38,9 +38,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByTeam(Team team);
 
-    List<User> findAllByTeam(Team team);
-
-    @Query("SELECT u FROM User u WHERE u.team IS NULL")
+    @Query("SELECT u FROM User u WHERE u.team IS NULL AND u.organization.id = :organizationId")
     List<User> findUsersInOrganizationWithoutTeam(@Param("organizationId") Long organizationId);
 
     @Query("SELECT u FROM User u JOIN u.authorities a WHERE a.authority = :role")
