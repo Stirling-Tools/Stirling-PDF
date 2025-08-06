@@ -68,7 +68,7 @@ public class PdfAttachmentHandler {
         try (PDDocument document = pdfDocumentFactory.load(pdfBytes);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-            List<MultipartFile> multipartAttachments = new ArrayList<>();
+            List<MultipartFile> multipartAttachments = new ArrayList<>(attachments.size());
             for (int i = 0; i < attachments.size(); i++) {
                 EmlParser.EmailAttachment attachment = attachments.get(i);
                 if (attachment.getData() != null && attachment.getData().length > 0) {
@@ -469,7 +469,10 @@ public class PdfAttachmentHandler {
             }
 
             String normalizedFilename =
-                    java.text.Normalizer.normalize(filename, java.text.Normalizer.Form.NFC);
+                    isAscii(filename)
+                            ? filename
+                            : java.text.Normalizer.normalize(
+                                    filename, java.text.Normalizer.Form.NFC);
             String uniqueFilename =
                     ensureUniqueFilename(normalizedFilename, existingNames.keySet());
 
@@ -663,5 +666,15 @@ public class PdfAttachmentHandler {
                 "EmbeddedFile_" + attachmentIndex + "_" + embeddedFilename);
 
         page.getAnnotations().add(fileAnnotation);
+    }
+
+    private static boolean isAscii(String str) {
+        if (str == null) return true;
+        for (int i = 0; i < str.length(); i++) {
+            if (str.charAt(i) > 127) {
+                return false;
+            }
+        }
+        return true;
     }
 }
