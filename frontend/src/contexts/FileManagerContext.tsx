@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { FileWithUrl } from '../types/file';
-import { FileSource } from '../components/fileManager/types';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
   // State
-  activeSource: FileSource;
+  activeSource: 'recent' | 'local' | 'drive';
   selectedFileIds: string[];
   searchTerm: string;
   selectedFiles: FileWithUrl[];
@@ -13,7 +12,7 @@ interface FileManagerContextValue {
   fileInputRef: React.RefObject<HTMLInputElement>;
   
   // Handlers
-  onSourceChange: (source: FileSource) => void;
+  onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
   onLocalFileClick: () => void;
   onFileSelect: (file: FileWithUrl) => void;
   onFileRemove: (index: number) => void;
@@ -57,7 +56,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   storeFile,
   refreshRecentFiles,
 }) => {
-  const [activeSource, setActiveSource] = useState<FileSource>('recent');
+  const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +70,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     file.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSourceChange = useCallback((source: FileSource) => {
+  const handleSourceChange = useCallback((source: 'recent' | 'local' | 'drive') => {
     setActiveSource(source);
     if (source !== 'recent') {
       setSelectedFileIds([]);

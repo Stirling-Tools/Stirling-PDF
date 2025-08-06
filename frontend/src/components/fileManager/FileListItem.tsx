@@ -2,7 +2,17 @@ import React, { useState } from 'react';
 import { Group, Box, Text, ActionIcon, Checkbox, Divider } from '@mantine/core';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
-import { FileListItemProps } from './types';
+import { FileWithUrl } from '../../types/file';
+
+interface FileListItemProps {
+  file: FileWithUrl;
+  isSelected: boolean;
+  isSupported: boolean;
+  onSelect: () => void;
+  onRemove: () => void;
+  onDoubleClick?: () => void;
+  isLast?: boolean;
+}
 
 const FileListItem: React.FC<FileListItemProps> = ({ 
   file, 
