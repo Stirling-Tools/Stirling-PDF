@@ -1,6 +1,6 @@
 /**
  * ToolWorkflowContext - Manages tool selection, UI state, and workflow coordination
- * Reduces prop drilling and improves performance through selective subscriptions
+ * Eliminates prop drilling with a single, simple context
  */
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
@@ -158,8 +158,7 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     setReaderMode(true);
   }, [setReaderMode]);
 
-  // Computed values (memoized to prevent unnecessary recalculations)
-  // Separate filteredTools memoization to avoid context re-renders
+  // Filter tools based on search query
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
     return Object.entries(toolRegistry).filter(([_, { name }]) =>
@@ -172,17 +171,10 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     [state.sidebarsVisible, state.readerMode]
   );
 
-  // Context value (memoized to prevent unnecessary rerenders)
+  // Simple context value with basic memoization
   const contextValue = useMemo((): ToolWorkflowContextValue => ({
-    // State - destructure to avoid object reference changes
-    sidebarsVisible: state.sidebarsVisible,
-    leftPanelView: state.leftPanelView,
-    readerMode: state.readerMode,
-    previewFile: state.previewFile,
-    pageEditorFunctions: state.pageEditorFunctions,
-    searchQuery: state.searchQuery,
-    
-    // Tool state
+    // State
+    ...state,
     selectedToolKey,
     selectedTool,
     toolRegistry,
@@ -205,36 +197,7 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     // Computed
     filteredTools,
     isPanelVisible,
-  }), [
-    // State values (not the state object itself)
-    state.sidebarsVisible,
-    state.leftPanelView,
-    state.readerMode,
-    state.previewFile,
-    state.pageEditorFunctions,
-    state.searchQuery,
-    
-    // Tool state (toolRegistry removed from deps - it's passed through but doesn't affect memoization)
-    selectedToolKey,
-    selectedTool,
-    
-    // Actions are stable due to useCallback
-    setSidebarsVisible,
-    setLeftPanelView,
-    setReaderMode,
-    setPreviewFile,
-    setPageEditorFunctions,
-    setSearchQuery,
-    selectTool,
-    clearToolSelection,
-    handleToolSelect,
-    handleBackToTools,
-    handleReaderToggle,
-    
-    // Computed values
-    filteredTools,
-    isPanelVisible,
-  ]);
+  }), [state, selectedToolKey, selectedTool, toolRegistry, filteredTools, isPanelVisible]);
 
   return (
     <ToolWorkflowContext.Provider value={contextValue}>
@@ -252,48 +215,7 @@ export function useToolWorkflow(): ToolWorkflowContextValue {
   return context;
 }
 
-// Selective hooks for performance (only subscribe to specific parts of state)
-export function useToolSelection() {
-  const { selectedToolKey, selectedTool, selectTool, clearToolSelection, handleToolSelect } = useToolWorkflow();
-  return { selectedToolKey, selectedTool, selectTool, clearToolSelection, handleToolSelect };
-}
-
-export function useToolPanelState() {
-  const { 
-    leftPanelView, 
-    isPanelVisible, 
-    searchQuery, 
-    filteredTools,
-    setLeftPanelView, 
-    setSearchQuery,
-    handleBackToTools
-  } = useToolWorkflow();
-  return { 
-    leftPanelView, 
-    isPanelVisible, 
-    searchQuery, 
-    filteredTools,
-    setLeftPanelView, 
-    setSearchQuery,
-    handleBackToTools
-  };
-}
-
-export function useWorkbenchState() {
-  const { 
-    previewFile, 
-    pageEditorFunctions, 
-    sidebarsVisible,
-    setPreviewFile, 
-    setPageEditorFunctions,
-    setSidebarsVisible
-  } = useToolWorkflow();
-  return { 
-    previewFile, 
-    pageEditorFunctions, 
-    sidebarsVisible,
-    setPreviewFile, 
-    setPageEditorFunctions,
-    setSidebarsVisible
-  };
-}
+// Convenience exports for specific use cases (optional - components can use useToolWorkflow directly)
+export const useToolSelection = useToolWorkflow;
+export const useToolPanelState = useToolWorkflow;  
+export const useWorkbenchState = useToolWorkflow;
