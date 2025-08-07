@@ -2,18 +2,20 @@ import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useSanitizeParameters } from './useSanitizeParameters';
 
+const defaultParameters = {
+  removeJavaScript: true,
+  removeEmbeddedFiles: true,
+  removeXMPMetadata: false,
+  removeMetadata: false,
+  removeLinks: false,
+  removeFonts: false,
+}
+
 describe('useSanitizeParameters', () => {
   test('should initialize with default parameters', () => {
     const { result } = renderHook(() => useSanitizeParameters());
 
-    expect(result.current.parameters).toEqual({
-      removeJavaScript: true,
-      removeEmbeddedFiles: true,
-      removeXMPMetadata: false,
-      removeMetadata: false,
-      removeLinks: false,
-      removeFonts: false,
-    });
+    expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
 
   test('should update individual parameters', () => {
@@ -23,9 +25,10 @@ describe('useSanitizeParameters', () => {
       result.current.updateParameter('removeXMPMetadata', true);
     });
 
-    expect(result.current.parameters.removeXMPMetadata).toBe(true);
-    expect(result.current.parameters.removeJavaScript).toBe(true); // Other params unchanged
-    expect(result.current.parameters.removeLinks).toBe(false); // Other params unchanged
+    expect(result.current.parameters).toStrictEqual({
+      ...defaultParameters, // Other params unchanged
+      removeXMPMetadata: true,
+    });
   });
 
   test('should reset parameters to defaults', () => {
@@ -45,14 +48,7 @@ describe('useSanitizeParameters', () => {
       result.current.resetParameters();
     });
 
-    expect(result.current.parameters).toEqual({
-      removeJavaScript: true,
-      removeEmbeddedFiles: true,
-      removeXMPMetadata: false,
-      removeMetadata: false,
-      removeLinks: false,
-      removeFonts: false,
-    });
+    expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
 
   test('should return correct endpoint name', () => {
@@ -86,14 +82,7 @@ describe('useSanitizeParameters', () => {
   test('should handle all parameter types correctly', () => {
     const { result } = renderHook(() => useSanitizeParameters());
 
-    const allParameters = [
-      'removeJavaScript',
-      'removeEmbeddedFiles',
-      'removeXMPMetadata',
-      'removeMetadata',
-      'removeLinks',
-      'removeFonts'
-    ] as const;
+    const allParameters = Object.keys(defaultParameters) as (keyof typeof defaultParameters)[];
 
     allParameters.forEach(param => {
       act(() => {
