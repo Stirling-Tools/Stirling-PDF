@@ -106,6 +106,9 @@
   /* Inactive icon colors for light mode */
   --icon-inactive-bg: #9CA3AF;
   --icon-inactive-color: #FFFFFF;
+
+  /* New theme colors for text and icons */
+  --tools-text-and-icon-color: #374151;
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -183,6 +186,8 @@
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
+
+  --tools-text-and-icon-color: #D0D6DC;
 }
 
 /* Smooth transitions for theme switching */

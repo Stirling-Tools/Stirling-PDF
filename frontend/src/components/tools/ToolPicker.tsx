@@ -119,12 +119,24 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
         onClick={() => onSelect(id)}
         size="md"
         radius="md"
-        leftSection={tool.icon}
+        leftSection={
+          <div style={{ color: 'var(--tools-text-and-icon-color)' }}>
+            {tool.icon}
+          </div>
+        }
         fullWidth
         justify="flex-start"
-        style={{ borderRadius: '0' }}
+        style={{ 
+          borderRadius: '0',
+          color: 'var(--tools-text-and-icon-color)'
+        }}
       >
-        <span style={{ marginRight: '8px', opacity: 0.6, fontSize: '0.8em' }}>
+        <span style={{ 
+          marginRight: '8px', 
+          opacity: 0.6, 
+          fontSize: '0.8em',
+          color: 'var(--tools-text-and-icon-color)'
+        }}>
           {index + 1}.
         </span>
         {tool.name}
@@ -147,7 +159,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
           onChange={(e) => setSearch(e.currentTarget.value)}
           autoComplete="off"
           className="search-input rounded-lg"
-          leftSection={<SearchIcon sx={{ fontSize: 16, color: 'var(--search-text)' }} />}
+          leftSection={<SearchIcon sx={{ fontSize: 16, color: 'var(--tools-text-and-icon-color)' }} />}
         />
       <Box
         className="tool-picker-scrollable"
@@ -176,7 +188,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
                       transition: 'transform 0.2s ease',
                       transform: expandedCategories.has(category) ? 'rotate(90deg)' : 'rotate(0deg)'
                     }}>
-                      <ChevronRightIcon sx={{ fontSize: 16, color: 'var(--text-primary)' }} />
+                      <ChevronRightIcon sx={{ fontSize: 16, color: 'var(--tools-text-and-icon-color)' }} />
                     </div>
                   }
                   fullWidth
@@ -189,7 +201,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
                     borderBottom: '1px solid var(--border-default)',
                     borderRadius: '0',
                     padding: '0.75rem 1rem',
-                    color: 'var(--text-primary)'
+                    color: 'var(--tools-text-and-icon-color)'
                   }}
                 >
                   {category.toUpperCase()}
@@ -213,7 +225,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
                               paddingBottom: '0.5rem',
                               marginLeft: '1rem',
                               marginRight: '1rem',
-                              color: 'var(--text-secondary)'
+                              color: 'var(--tools-text-and-icon-color)'
                             }}
                           >
                             {subcategory}
