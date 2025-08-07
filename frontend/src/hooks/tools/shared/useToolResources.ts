@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { generateThumbnailForFile } from '../../../utils/thumbnailUtils';
 import { zipFileService } from '../../../services/zipFileService';
 
+
 export const useToolResources = () => {
   const [blobUrls, setBlobUrls] = useState<string[]>([]);
 
@@ -50,9 +51,39 @@ export const useToolResources = () => {
   }, []);
 
   const extractZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
-    const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
-    const extractionResult = await zipFileService.extractPdfFiles(zipFile);
-    return extractionResult.success ? extractionResult.extractedFiles : [];
+    try {
+      const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
+      const extractionResult = await zipFileService.extractPdfFiles(zipFile);
+      return extractionResult.success ? extractionResult.extractedFiles : [];
+    } catch (error) {
+      console.error('useToolResources.extractZipFiles - Error:', error);
+      return [];
+    }
+  }, []);
+
+  const extractAllZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
+    try {
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      
+      const arrayBuffer = await zipBlob.arrayBuffer();
+      const zipContent = await zip.loadAsync(arrayBuffer);
+      
+      const extractedFiles: File[] = [];
+      
+      for (const [filename, file] of Object.entries(zipContent.files)) {
+        if (!file.dir) {
+          const content = await file.async('blob');
+          const extractedFile = new File([content], filename, { type: 'application/pdf' });
+          extractedFiles.push(extractedFile);
+        }
+      }
+      
+      return extractedFiles;
+    } catch (error) {
+      console.error('Error in extractAllZipFiles:', error);
+      return [];
+    }
   }, []);
 
   const createDownloadInfo = useCallback(async (
@@ -77,6 +108,7 @@ export const useToolResources = () => {
     generateThumbnails,
     createDownloadInfo,
     extractZipFiles,
+    extractAllZipFiles,
     cleanupBlobUrls,
   };
 };

@@ -117,7 +117,7 @@ export const useToolOperation = <TParams = void>(
   // Composed hooks
   const { state, actions } = useToolState();
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
-  const { generateThumbnails, createDownloadInfo, cleanupBlobUrls } = useToolResources();
+  const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles } = useToolResources();
 
   const executeOperation = useCallback(async (
     params: TParams,
@@ -172,7 +172,12 @@ export const useToolOperation = <TParams = void>(
           // Handle response based on responseHandler
           if (config.responseHandler?.type === 'zip' && config.responseHandler?.useZipExtractor) {
             // Use tool resources for ZIP extraction
-            processedFiles = await toolResources.extractZipFiles(response.data);
+            processedFiles = await extractZipFiles(response.data);
+            
+            if (processedFiles.length === 0) {
+              // Try the generic extraction as fallback
+              processedFiles = await extractAllZipFiles(response.data);
+            }
           } else {
             // Single file response
             const filename = validFiles.length === 1 
@@ -227,7 +232,7 @@ export const useToolOperation = <TParams = void>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls]);
+  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();
