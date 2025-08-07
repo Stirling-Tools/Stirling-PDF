@@ -67,6 +67,7 @@ const LandingPage = () => {
               width: '10rem',
               height: 'auto',
               pointerEvents: 'none',
+              marginTop: '-0.5rem'
             }}
           />
         </div>
