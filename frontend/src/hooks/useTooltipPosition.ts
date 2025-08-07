@@ -98,14 +98,6 @@ export function useTooltipPosition({
       left = currentSidebarRight + 20;
       top = triggerRect.top; // Align top of tooltip with trigger element
 
-      console.log('Sidebar tooltip positioning:', {
-        currentSidebarRight,
-        triggerRect,
-        calculatedLeft: left,
-        calculatedTop: top,
-        isCorrectSidebar: sidebarInfo.isCorrectSidebar
-      });
-
       // Only clamp if we have tooltip dimensions
       if (tooltipRef.current) {
         const tooltipRect = tooltipRef.current.getBoundingClientRect();

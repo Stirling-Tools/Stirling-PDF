@@ -42,7 +42,7 @@ export function isClickOutside(event: MouseEvent, element: HTMLElement | null): 
 }
 
 /**
- * Gets the sidebar rectangle for tooltip positioning
+ * Gets the All tools sidebar 
  * @returns Object containing the sidebar rect and whether it's the correct sidebar
  */
 export function getSidebarRect(): { rect: DOMRect | null, isCorrectSidebar: boolean } {
@@ -83,16 +83,6 @@ export function getSidebarRect(): { rect: DOMRect | null, isCorrectSidebar: bool
 
     // Only consider it correct if we're using the ToolPanel (expanded All Tools sidebar)
     const isCorrectSidebar = rightmostSidebar.element === 'ToolPanel';
-
-    console.log('✅ Tooltip positioning using:', {
-      element: rightmostSidebar.element,
-      selector: rightmostSidebar.selector,
-      width: rightmostSidebar.rect.width,
-      right: rightmostSidebar.rect.right,
-      isCorrectSidebar,
-      rect: rightmostSidebar.rect
-    });
-
     return { rect: rightmostSidebar.rect, isCorrectSidebar };
   }
 
