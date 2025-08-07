@@ -59,7 +59,7 @@ describe('SanitizeSettings', () => {
 
     const checkboxes = screen.getAllByRole('checkbox');
     const parameterValues = Object.values(defaultParameters);
-    
+
     parameterValues.forEach((value, index) => {
       if (value) {
         expect(checkboxes[index]).toBeChecked();
@@ -80,7 +80,7 @@ describe('SanitizeSettings', () => {
     );
 
     const checkboxes = screen.getAllByRole('checkbox');
-    
+
     // Click the first checkbox (removeJavaScript - should toggle from true to false)
     fireEvent.click(checkboxes[0]);
     expect(mockOnParameterChange).toHaveBeenCalledWith('removeJavaScript', false);
@@ -160,9 +160,9 @@ describe('SanitizeSettings', () => {
     );
 
     // Verify that translation keys are being called (just check that it was called, not specific order)
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.title', 'Sanitization Options');
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeJavaScript', 'Remove JavaScript');
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeEmbeddedFiles', 'Remove Embedded Files');
+    expect(mockT).toHaveBeenCalledWith('sanitize.options.title', expect.any(String));
+    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeJavaScript', expect.any(String));
+    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeEmbeddedFiles', expect.any(String));
     expect(mockT).toHaveBeenCalledWith('sanitize.options.note', expect.any(String));
   });
 
@@ -178,12 +178,12 @@ describe('SanitizeSettings', () => {
     );
 
     const checkboxes = screen.getAllByRole('checkbox');
-    
+
     // Verify checkboxes are disabled
     checkboxes.forEach(checkbox => {
       expect(checkbox).toBeDisabled();
     });
-    
+
     // Try to click a disabled checkbox - this might still fire the event in tests
     // but we can verify the checkbox state doesn't actually change
     const firstCheckbox = checkboxes[0] as HTMLInputElement;

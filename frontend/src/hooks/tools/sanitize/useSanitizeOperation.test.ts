@@ -32,11 +32,15 @@ vi.mock('../../../contexts/FileContext', () => ({
 
 // Mock fetch
 const mockFetch = vi.fn();
-globalThis.fetch = mockFetch;
+vi.stubGlobal('fetch', mockFetch);
 
 // Mock URL.createObjectURL and revokeObjectURL
-globalThis.URL.createObjectURL = vi.fn(() => 'mock-blob-url');
-globalThis.URL.revokeObjectURL = vi.fn();
+const mockCreateObjectURL = vi.fn(() => 'mock-blob-url');
+const mockRevokeObjectURL = vi.fn();
+vi.stubGlobal('URL', {
+  createObjectURL: mockCreateObjectURL,
+  revokeObjectURL: mockRevokeObjectURL
+});
 
 describe('useSanitizeOperation', () => {
   const mockGenerateSanitizedFileName = (originalFileName?: string): string => {
