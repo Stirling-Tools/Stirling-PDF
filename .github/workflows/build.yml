@@ -53,7 +53,7 @@ jobs:
         with:
           gradle-version: 8.14
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew clean build
+        run: ./gradlew clean build -PnoSpotless
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
       - name: Check Test Reports Exist
