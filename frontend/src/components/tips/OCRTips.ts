@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { TooltipContent } from './types';
+import { TooltipContent } from '../../types/tips';
 
 export const OcrTips = (): TooltipContent => {
   const { t } = useTranslation();

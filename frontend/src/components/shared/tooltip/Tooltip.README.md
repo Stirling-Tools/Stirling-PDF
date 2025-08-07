@@ -217,5 +217,7 @@ Links automatically get proper styling with hover states and open in new tabs wh
 ### Sidebar Tooltips
 - When `sidebarTooltip={true}`, horizontal positioning is locked to the right of the sidebar
 - Vertical positioning follows the trigger but clamps to viewport
-- Automatically detects sidebar width or falls back to 240px
+- **Smart sidebar detection**: Uses `getSidebarInfo()` to determine which sidebar is active (tool panel vs quick access bar) and gets its exact position
+- **Dynamic positioning**: Adapts to whether the tool panel is expanded or collapsed
+- **Conditional display**: Only shows tooltips when the tool panel is active (`sidebarInfo.isToolPanelActive`)
 - **No arrows** - sidebar tooltips don't show arrows

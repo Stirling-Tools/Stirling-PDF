@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { clamp } from '../utils/genericUtils';
-import { getSidebarRect } from '../utils/sidebarUtils';
+import { getSidebarInfo } from '../utils/sidebarUtils';
+import { SidebarRefs, SidebarState } from '../types/sidebar';
 
 type Position = 'right' | 'left' | 'top' | 'bottom';
 
@@ -51,7 +52,9 @@ export function useTooltipPosition({
   position,
   gap,
   triggerRef,
-  tooltipRef
+  tooltipRef,
+  sidebarRefs,
+  sidebarState
 }: {
   open: boolean;
   sidebarTooltip: boolean;
@@ -59,6 +62,8 @@ export function useTooltipPosition({
   gap: number;
   triggerRef: React.RefObject<HTMLElement | null>;
   tooltipRef: React.RefObject<HTMLDivElement | null>;
+  sidebarRefs?: SidebarRefs;
+  sidebarState?: SidebarState;
 }): PositionState {
   const [coords, setCoords] = useState<{ top: number; left: number; arrowOffset: number | null }>({ 
     top: 0, 
@@ -67,12 +72,8 @@ export function useTooltipPosition({
   });
   const [positionReady, setPositionReady] = useState(false);
 
-  // Memoize sidebar position for performance
-  const sidebarLeft = useMemo(() => {
-    if (!sidebarTooltip) return 0;
-    const sidebarInfo = getSidebarRect();
-    return sidebarInfo.rect ? sidebarInfo.rect.right : 240;
-  }, [sidebarTooltip]);
+  // Fallback sidebar position (only used as last resort)
+  const sidebarLeft = 240;
 
   const updatePosition = () => {
     if (!triggerRef.current || !open) return;
@@ -84,18 +85,24 @@ export function useTooltipPosition({
     let arrowOffset: number | null = null;
 
     if (sidebarTooltip) {
-      // Get fresh sidebar position each time
-      const sidebarInfo = getSidebarRect();
-      const currentSidebarRight = sidebarInfo.rect ? sidebarInfo.rect.right : sidebarLeft;
-
-      // Only show tooltip if we have the correct sidebar (ToolPanel)
-      if (!sidebarInfo.isCorrectSidebar) {
-        console.log('🚫 Not showing tooltip - wrong sidebar detected');
+      // Require sidebar refs and state for proper positioning
+      if (!sidebarRefs || !sidebarState) {
+        console.warn('⚠️ Sidebar tooltip requires sidebarRefs and sidebarState props');
         setPositionReady(false);
         return;
       }
 
-      // Position to the right of correct sidebar with 20px gap
+      const sidebarInfo = getSidebarInfo(sidebarRefs, sidebarState);
+      const currentSidebarRight = sidebarInfo.rect ? sidebarInfo.rect.right : sidebarLeft;
+
+      // Only show tooltip if we have the tool panel active
+      if (!sidebarInfo.isToolPanelActive) {
+        console.log('🚫 Not showing tooltip - tool panel not active');
+        setPositionReady(false);
+        return;
+      }
+
+      // Position to the right of active sidebar with 20px gap
       left = currentSidebarRight + 20;
       top = triggerRect.top; // Align top of tooltip with trigger element
 

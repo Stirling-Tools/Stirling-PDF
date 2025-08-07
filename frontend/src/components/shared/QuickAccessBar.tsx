@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, forwardRef } from "react";
 import { ActionIcon, Stack, Tooltip, Divider } from "@mantine/core";
 import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
 import AppsIcon from "@mui/icons-material/AppsRounded";
@@ -8,31 +8,11 @@ import FolderIcon from "@mui/icons-material/FolderRounded";
 import PersonIcon from "@mui/icons-material/PersonRounded";
 import NotificationsIcon from "@mui/icons-material/NotificationsRounded";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
-import rainbowStyles from '../../styles/rainbow.module.css';
 import AppConfigModal from './AppConfigModal';
 import { useIsOverflowing } from '../../hooks/useIsOverflowing';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
+import { QuickAccessBarProps, ButtonConfig } from '../../types/sidebar';
 import './QuickAccessBar.css';
-
-interface QuickAccessBarProps {
-  onToolsClick: () => void;
-  onReaderToggle: () => void;
-  selectedToolKey?: string;
-  toolRegistry: any;
-  leftPanelView: 'toolPicker' | 'toolContent';
-  readerMode: boolean;
-}
-
-interface ButtonConfig {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  tooltip: string;
-  isRound?: boolean;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  onClick: () => void;
-  type?: 'navigation' | 'modal' | 'action'; // navigation = main nav, modal = triggers modal, action = other actions
-}
 
 function NavHeader({ 
   activeButton, 
@@ -104,14 +84,10 @@ function NavHeader({
   );
 }
 
-const QuickAccessBar = ({
+const QuickAccessBar = forwardRef<HTMLDivElement, QuickAccessBarProps>(({
   onToolsClick,
   onReaderToggle,
-  selectedToolKey,
-  toolRegistry,
-  leftPanelView,
-  readerMode,
-}: QuickAccessBarProps) => {
+}, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -234,6 +210,7 @@ const QuickAccessBar = ({
 
   return (
     <div
+      ref={ref}
       data-sidebar="quick-access"
       className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
     >
@@ -336,6 +313,6 @@ const QuickAccessBar = ({
       />
     </div>
   );
-};
+});
 
 export default QuickAccessBar;

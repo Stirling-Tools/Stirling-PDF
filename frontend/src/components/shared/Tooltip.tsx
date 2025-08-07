@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { isClickOutside, addEventListenerWithCleanup } from '../../utils/genericUtils';
 import { useTooltipPosition } from '../../hooks/useTooltipPosition';
 import { TooltipContent, TooltipTip } from './tooltip/TooltipContent';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import styles from './tooltip/Tooltip.module.css'
 
 export interface TooltipProps {
@@ -42,6 +43,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const triggerRef = useRef<HTMLElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Get sidebar context for tooltip positioning
+  const sidebarContext = sidebarTooltip ? useSidebarContext() : null;
 
   // Always use controlled mode - if no controlled props provided, use internal state
   const isControlled = controlledOpen !== undefined;
@@ -80,7 +84,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
     position,
     gap,
     triggerRef,
-    tooltipRef
+    tooltipRef,
+    sidebarRefs: sidebarContext?.sidebarRefs,
+    sidebarState: sidebarContext?.sidebarState
   });
 
   // Add document click listener for unpinning
