@@ -48,6 +48,7 @@ jobs:
             "DarioGii"
             "ConnorYoh"
             "EthanHealy01"
+            "jbrunton96"
           )
           
           # Check if author is in the authorized list
@@ -317,6 +318,7 @@ jobs:
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
+                SWAGGER_SERVER_URL: "http://${{ secrets.VPS_HOST }}:${V2_PORT}"
               restart: on-failure:5
               
             stirling-pdf-v2-frontend:
@@ -385,10 +387,12 @@ jobs:
             }
             
             const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${v2Port}`;
-            
+            const httpsUrl = `https://${v2Port}.ssl.stirlingpdf.cloud`;
+
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `Your V2 PR with the new frontend/backend split architecture has been deployed!\n\n` +
-                              `🔗 **V2 Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `🔐 **Secure HTTPS URL**: [${httpsUrl}](${httpsUrl})\n\n` +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
 

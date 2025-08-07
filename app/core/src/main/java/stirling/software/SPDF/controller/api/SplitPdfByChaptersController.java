@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -117,7 +119,7 @@ public class SplitPdfByChaptersController {
         return bookmarks;
     }
 
-    @PostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
     @Operation(
             summary = "Split PDFs by Chapters",
             description = "Splits a PDF into chapters and returns a ZIP file.")

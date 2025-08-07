@@ -167,6 +167,39 @@ export const mantineTheme = createTheme({
       },
     },
 
+    MultiSelect: {
+      styles: {
+        input: {
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-default)',
+          color: 'var(--text-primary)',
+          '&:focus': {
+            borderColor: 'var(--color-primary-500)',
+            boxShadow: '0 0 0 1px var(--color-primary-500)',
+          },
+        },
+        label: {
+          color: 'var(--text-secondary)',
+          fontWeight: 'var(--font-weight-medium)',
+        },
+        dropdown: {
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-subtle)',
+          boxShadow: 'var(--shadow-lg)',
+        },
+        option: {
+          color: 'var(--text-primary)',
+          '&[data-hovered]': {
+            backgroundColor: 'var(--hover-bg)',
+          },
+          '&[data-selected]': {
+            backgroundColor: 'var(--color-primary-100)',
+            color: 'var(--color-primary-900)',
+          },
+        },
+      },
+    },
+
     Checkbox: {
       styles: {
         input: {

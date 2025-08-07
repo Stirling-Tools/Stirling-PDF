@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,7 +46,7 @@ public class EditTableOfContentsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
 
-    @PostMapping(value = "/extract-bookmarks", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/extract-bookmarks", consumes = "multipart/form-data")
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
@@ -152,7 +154,7 @@ public class EditTableOfContentsController {
         return bookmark;
     }
 
-    @PostMapping(value = "/edit-table-of-contents", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/edit-table-of-contents", consumes = "multipart/form-data")
     @Operation(
             summary = "Edit Table of Contents",
             description = "Add or edit bookmarks/table of contents in a PDF document.")

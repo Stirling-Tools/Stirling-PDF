@@ -27,7 +27,7 @@ clientWebUI/
 !cucumber/exampleFiles/
 !cucumber/exampleFiles/example_html.zip
 exampleYmlFiles/stirling/
-stirling/
+/stirling/
 /testing/file_snapshots
 SwaggerDoc.json
 

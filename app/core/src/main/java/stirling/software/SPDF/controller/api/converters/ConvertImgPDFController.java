@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -51,7 +53,7 @@ public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/img")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/img")
     @Operation(
             summary = "Convert PDF to image(s)",
             description =
@@ -211,7 +213,7 @@ public class ConvertImgPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/img/pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/img/pdf")
     @Operation(
             summary = "Convert images to a PDF file",
             description =

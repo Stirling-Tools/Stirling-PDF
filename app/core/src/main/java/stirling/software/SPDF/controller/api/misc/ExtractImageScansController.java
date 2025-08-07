@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.image.BufferedImage;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -50,7 +52,7 @@ public class ExtractImageScansController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(
             summary = "Extract image scans from an input file",
             description =

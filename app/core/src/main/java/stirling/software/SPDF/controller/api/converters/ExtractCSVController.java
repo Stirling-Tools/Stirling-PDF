@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -46,7 +48,7 @@ public class ExtractCSVController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
     @Operation(
             summary = "Extracts a CSV document from a PDF",
             description =

@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,7 +43,7 @@ public class SplitPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/split-pages")
     @Operation(
             summary = "Split a PDF file into separate documents",
             description =
