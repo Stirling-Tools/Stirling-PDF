@@ -207,7 +207,13 @@ tasks.withType(JavaCompile).configureEach {
         dependsOn "spotlessApply"
     }
 }
-
+gradle.taskGraph.whenReady { graph ->
+    if (project.hasProperty("noSpotless")) {
+        tasks.matching { it.name.startsWith("spotless") }.configureEach {
+            enabled = false
+        }
+    }
+}
 licenseReport {
     projects = [project]
     renderers = [new JsonReportRenderer()]
