@@ -122,11 +122,8 @@ describe('useSanitizeOperation', () => {
     const testFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
 
     await act(async () => {
-      try {
-        await result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName);
-      } catch (error) {
-        // Expected to throw
-      }
+      await expect(result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName))
+        .rejects.toThrow('Failed to sanitize all files: test.pdf');
     });
 
     expect(result.current.isLoading).toBe(false);
@@ -147,18 +144,11 @@ describe('useSanitizeOperation', () => {
       removeFonts: false
     };
 
-    let thrownError: Error | null = null;
     await act(async () => {
-      try {
-        await result.current.executeOperation(parameters, [], mockGenerateSanitizedFileName);
-      } catch (error) {
-        thrownError = error as Error;
-      }
+      await expect(result.current.executeOperation(parameters, [], mockGenerateSanitizedFileName))
+        .rejects.toThrow('No files selected');
     });
 
-    // The error should be thrown
-    expect(thrownError).toBeInstanceOf(Error);
-    expect(thrownError!.message).toBe('No files selected');
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
@@ -211,7 +201,7 @@ describe('useSanitizeOperation', () => {
     expect(result.current.downloadUrl).toBe(null);
     expect(result.current.errorMessage).toBe(null);
     expect(result.current.status).toBe(null);
-    expect(globalThis.URL.revokeObjectURL).not.toHaveBeenCalled(); // No URL to revoke initially
+    expect(mockRevokeObjectURL).not.toHaveBeenCalled(); // No URL to revoke initially
   });
 
   test('should clear error message', async () => {
@@ -237,11 +227,8 @@ describe('useSanitizeOperation', () => {
 
     // Trigger an API error
     await act(async () => {
-      try {
-        await result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName);
-      } catch (error) {
-        // Expected to throw
-      }
+      await expect(result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName))
+        .rejects.toThrow('Failed to sanitize all files: test.pdf');
     });
 
     expect(result.current.errorMessage).toBe('Failed to sanitize all files: test.pdf');
