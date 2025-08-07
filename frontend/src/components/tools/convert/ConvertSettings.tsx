@@ -198,7 +198,7 @@ const ConvertSettings = ({
         </Text>
         <GroupedFormatDropdown
           name="convert-from-dropdown"
-          data-testid="from-format-dropdown"
+          data-testid="convert-from-dropdown"
           value={parameters.fromExtension}
           placeholder={t("convert.sourceFormatPlaceholder", "Source format")}
           options={enhancedFromOptions}
@@ -236,7 +236,7 @@ const ConvertSettings = ({
         ) : (
           <GroupedFormatDropdown
             name="convert-to-dropdown"
-            data-testid="to-format-dropdown"
+            data-testid="convert-to-dropdown"
             value={parameters.toExtension}
             placeholder={t("convert.targetFormatPlaceholder", "Target format")}
             options={enhancedToOptions}

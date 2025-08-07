@@ -128,6 +128,27 @@ const getExpectedExtension = (toFormat: string): string => {
 };
 
 /**
+ * Helper function to upload files through the modal system
+ */
+async function uploadFileViaModal(page: Page, filePath: string) {
+  // Click the Files button in the QuickAccessBar to open the modal
+  await page.click('[data-testid="files-button"]');
+  
+  // Wait for the modal to open
+  await page.waitForSelector('.mantine-Modal-overlay', { state: 'visible' }, { timeout: 5000 });
+  //await page.waitForSelector('[data-testid="file-upload-modal"]', { timeout: 5000 });
+  
+  // Upload the file through the modal's file input
+  await page.setInputFiles('input[type="file"]', filePath);
+  
+  // Wait for the file to be processed and the modal to close
+  await page.waitForSelector('[data-testid="file-upload-modal"]', { state: 'hidden' });
+  
+  // Wait for the file thumbnail to appear in the main interface
+  await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+}
+
+/**
  * Generic test function for any conversion
  */
 async function testConversion(page: Page, conversion: ConversionEndpoint) {
@@ -288,8 +309,8 @@ test.describe('Convert Tool E2E Tests', () => {
     // Wait for the page to load
     await page.waitForLoadState('networkidle');
     
-    // Wait for the file upload area to appear (shown when no active files)
-    await page.waitForSelector('[data-testid="file-dropzone"]', { timeout: 10000 });
+    // Wait for the QuickAccessBar to appear
+    await page.waitForSelector('[data-testid="files-button"]', { timeout: 10000 });
   });
 
   test.describe('Dynamic Conversion Tests', () => {
@@ -302,8 +323,7 @@ test.describe('Convert Tool E2E Tests', () => {
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
       const testFile = getTestFileForFormat(conversion.fromFormat);
-      await page.setInputFiles('input[type="file"]', testFile);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, testFile);
       
       await testConversion(page, conversion);
     });
@@ -314,8 +334,7 @@ test.describe('Convert Tool E2E Tests', () => {
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
       const testFile = getTestFileForFormat(conversion.fromFormat);
-      await page.setInputFiles('input[type="file"]', testFile);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, testFile);
       
       await testConversion(page, conversion);
     });
@@ -326,8 +345,7 @@ test.describe('Convert Tool E2E Tests', () => {
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
       const testFile = getTestFileForFormat(conversion.fromFormat);
-      await page.setInputFiles('input[type="file"]', testFile);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, testFile);
       
       await testConversion(page, conversion);
     });
@@ -338,8 +356,7 @@ test.describe('Convert Tool E2E Tests', () => {
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
       const testFile = getTestFileForFormat(conversion.fromFormat);
-      await page.setInputFiles('input[type="file"]', testFile);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, testFile);
       
       await testConversion(page, conversion);
     });
@@ -350,8 +367,7 @@ test.describe('Convert Tool E2E Tests', () => {
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
       const testFile = getTestFileForFormat(conversion.fromFormat);
-      await page.setInputFiles('input[type="file"]', testFile);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, testFile);
       
       await testConversion(page, conversion);
     });
@@ -362,8 +378,7 @@ test.describe('Convert Tool E2E Tests', () => {
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
       const testFile = getTestFileForFormat(conversion.fromFormat);
-      await page.setInputFiles('input[type="file"]', testFile);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, testFile);
       
       await testConversion(page, conversion);
     });
@@ -374,8 +389,7 @@ test.describe('Convert Tool E2E Tests', () => {
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
       const testFile = getTestFileForFormat(conversion.fromFormat);
-      await page.setInputFiles('input[type="file"]', testFile);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, testFile);
       
       await testConversion(page, conversion);
     });
@@ -386,8 +400,7 @@ test.describe('Convert Tool E2E Tests', () => {
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
       const testFile = getTestFileForFormat(conversion.fromFormat);
-      await page.setInputFiles('input[type="file"]', testFile);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, testFile);
       
       await testConversion(page, conversion);
     });
@@ -398,8 +411,7 @@ test.describe('Convert Tool E2E Tests', () => {
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
       const testFile = getTestFileForFormat(conversion.fromFormat);
-      await page.setInputFiles('input[type="file"]', testFile);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, testFile);
       
       await testConversion(page, conversion);
     });
@@ -410,8 +422,7 @@ test.describe('Convert Tool E2E Tests', () => {
     // Test that disabled conversions don't appear in dropdowns when they shouldn't
     test('should not show conversion button when no valid conversions available', async ({ page }) => {
       // This test ensures the convert button is disabled when no valid conversion is possible
-      await page.setInputFiles('input[type="file"]', TEST_FILES.pdf);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+      await uploadFileViaModal(page, TEST_FILES.pdf);
       
       // Click the Convert tool button
       await page.click('[data-testid="tool-convert"]');
