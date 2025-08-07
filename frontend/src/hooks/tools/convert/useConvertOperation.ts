@@ -88,23 +88,28 @@ export const useConvertOperation = () => {
     parameters: ConvertParameters,
     selectedFiles: File[]
   ): Promise<File[]> => {
+
     const processedFiles: File[] = [];
     const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
     
     if (!endpoint) {
-      throw new Error('Unsupported conversion format');
+      throw new Error(t('errorNotSupported', 'Unsupported conversion format'));
     }
 
     // Convert-specific routing logic: decide batch vs individual processing
     if (shouldProcessFilesSeparately(selectedFiles, parameters)) {
       // Individual processing for complex cases (PDF→image, smart detection, etc.)
       for (const file of selectedFiles) {
-        const formData = buildFormData(parameters, [file]);
-        const response = await axios.post(endpoint, formData, { responseType: 'blob' });
-        
-        const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
-        
-        processedFiles.push(convertedFile);
+        try {
+          const formData = buildFormData(parameters, [file]);
+          const response = await axios.post(endpoint, formData, { responseType: 'blob' });
+          
+          const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
+          
+          processedFiles.push(convertedFile);
+        } catch (error) {
+          console.warn(`Failed to convert file ${file.name}:`, error);
+        }
       }
     } else {
       // Batch processing for simple cases (image→PDF combine)

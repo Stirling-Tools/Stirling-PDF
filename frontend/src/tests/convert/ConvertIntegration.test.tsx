@@ -389,7 +389,7 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       expect(mockedAxios.post).not.toHaveBeenCalled();
-      expect(result.current.status).toContain('noFileSelected');
+      expect(result.current.errorMessage).toContain('noFileSelected');
     });
   });
 
