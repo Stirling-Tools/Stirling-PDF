@@ -311,6 +311,7 @@ public class ApplicationProperties {
         private Boolean enableAnalytics;
         private Datasource datasource;
         private Boolean disableSanitize;
+        private int maxDPI;
         private Boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
