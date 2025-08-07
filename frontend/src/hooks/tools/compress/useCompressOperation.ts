@@ -37,7 +37,7 @@ export const useCompressOperation = () => {
     endpoint: '/api/v1/misc/compress-pdf',
     buildFormData,
     filePrefix: 'compressed_',
-1    multiFileEndpoint: false, // Individual API calls per file
+    multiFileEndpoint: false, // Individual API calls per file
     validateParams: (params) => {
       if (params.compressionMethod === 'filesize' && !params.fileSizeValue) {
         return { valid: false, errors: [t('compress.validation.fileSizeRequired', 'File size value is required when using filesize method')] };
