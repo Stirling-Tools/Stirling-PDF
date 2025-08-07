@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { TooltipContent } from './types';
 
-export const useCompressTips = (): TooltipContent => {
+export const CompressTips = (): TooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -11,11 +11,11 @@ export const useCompressTips = (): TooltipContent => {
     tips: [
       {
         title: t("compress.tooltip.description.title", "Description"),
-        description: t("compress.tooltip.description.text", "Compression is an easy way to reduce your file size. Pick <strong>File Size</strong> to enter a target size and have us adjust quality for you. Pick <strong>Quality</strong> to set compression strength manually.")
+        description: t("compress.tooltip.description.text", "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually.")
       },
       {
         title: t("compress.tooltip.qualityAdjustment.title", "Quality Adjustment"),
-        description: t("compress.tooltip.qualityAdjustment.text", "Drag the slider to adjust the compression strength. <strong>Lower values (1-3)</strong> preserve quality but result in larger files. <strong>Higher values (7-9)</strong> shrink the file more but reduce image clarity."),
+        description: t("compress.tooltip.qualityAdjustment.text", "Drag the slider to adjust the compression strength. Lower values (1-3) preserve quality but result in larger files. Higher values (7-9) shrink the file more but reduce image clarity."),
         bullets: [
           t("compress.tooltip.qualityAdjustment.bullet1", "Lower values preserve quality"),
           t("compress.tooltip.qualityAdjustment.bullet2", "Higher values reduce file size")

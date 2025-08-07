@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo, useRef } from 'react';
 import { Paper, Text, Stack, Box, Flex } from '@mantine/core';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Tooltip, TooltipTip } from '../../shared/Tooltip';
+import { Tooltip, TooltipTip } from '../../shared/tooltip/Tooltip';
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -30,6 +30,38 @@ export interface ToolStepProps {
     };
   };
 }
+
+const renderTooltipTitle = (
+  title: string,
+  tooltip: ToolStepProps['tooltip'],
+  isCollapsed: boolean
+) => {
+  if (tooltip && !isCollapsed) {
+    return (
+      <Tooltip
+        content={tooltip.content}
+        tips={tooltip.tips}
+        header={tooltip.header}
+        sidebarTooltip={true}
+      >
+        <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
+          <Text fw={500} size="lg">
+            {title}
+          </Text>
+          <span className="material-symbols-rounded" style={{ fontSize: '1.2rem', color: 'var(--icon-files-color)' }}>
+            gpp_maybe
+          </span>
+        </Flex>
+      </Tooltip>
+    );
+  }
+  
+  return (
+    <Text fw={500} size="lg">
+      {title}
+    </Text>
+  );
+};
 
 const ToolStep = ({
   title,
@@ -80,27 +112,7 @@ const ToolStep = ({
               {stepNumber}
             </Text>
           )}
-          {tooltip && !isCollapsed ? (
-            <Tooltip
-              content={tooltip.content}
-              tips={tooltip.tips}
-              header={tooltip.header}
-              sidebarTooltip={true}
-            >
-              <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
-                <Text fw={500} size="lg">
-                  {title}
-                </Text>
-                <span className="material-symbols-rounded" style={{ fontSize: '1.2rem', color: 'var(--icon-files-color)' }}>
-                  gpp_maybe
-                </span>
-              </Flex>
-            </Tooltip>
-          ) : (
-            <Text fw={500} size="lg">
-              {title}
-            </Text>
-          )}
+          {renderTooltipTitle(title, tooltip, isCollapsed)}
         </Flex>
         
         {isCollapsed ? (

@@ -1,16 +1,16 @@
 /* Tooltip Container */
 .tooltip-container {
   position: fixed;
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
+  border: 0.0625rem solid var(--border-default);
+  border-radius: 0.75rem;
   background-color: var(--bg-raised);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  font-size: 14px;
+  box-shadow: 0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1), 0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05);
+  font-size: 0.875rem;
   line-height: 1.5;
   pointer-events: auto;
   z-index: 9999;
   transition: opacity 100ms ease-out, transform 100ms ease-out;
-  min-width: 400px;
+  min-width: 25rem;
   max-width: 50vh;
   max-height: 80vh;
   color: var(--text-primary);
@@ -21,7 +21,7 @@
 /* Pinned tooltip indicator */
 .tooltip-container.pinned {
   border-color: var(--primary-color, #3b82f6);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 2px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1), 0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05), 0 0 0 0.125rem rgba(59, 130, 246, 0.1);
 }
 
 /* Pinned tooltip header */
@@ -34,25 +34,25 @@
 /* Close button */
 .tooltip-pin-button {
   position: absolute;
-  top: -8px;
-  right: 8px;
-  font-size: 14px;
+  top: -0.5rem;
+  right: 0.5rem;
+  font-size: 0.875rem;
   background: var(--bg-raised);
-  padding: 4px;
-  border-radius: 4px;
-  border: 1px solid var(--primary-color, #3b82f6);
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  border: 0.0625rem solid var(--primary-color, #3b82f6);
   cursor: pointer;
   transition: background-color 0.2s ease, border-color 0.2s ease;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
 }
 
 .tooltip-pin-button .material-symbols-outlined {
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1;
 }
 
@@ -65,22 +65,22 @@
 .tooltip-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
   background-color: var(--tooltip-header-bg);
   color: var(--tooltip-header-color);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  margin: -1px -1px 0 -1px;
-  border: 1px solid var(--tooltip-border);
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+  margin: -0.0625rem -0.0625rem 0 -0.0625rem;
+  border: 0.0625rem solid var(--tooltip-border);
   flex-shrink: 0;
 }
 
 .tooltip-logo {
-  width: 16px;
-  height: 16px;
+  width: 1rem;
+  height: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,9 +92,9 @@
 
 /* Tooltip Body */
 .tooltip-body {
-  padding: 16px !important;
+  padding: 1rem !important;
   color: var(--text-primary) !important;
-  font-size: 14px !important;
+  font-size: 0.875rem !important;
   line-height: 1.6 !important;
   overflow-y: auto;
   flex: 1;
@@ -142,24 +142,24 @@
 /* Tooltip Arrows */
 .tooltip-arrow {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 0.5rem;
+  height: 0.5rem;
   background: var(--bg-raised);
-  border: 1px solid var(--border-default);
+  border: 0.0625rem solid var(--border-default);
   transform: rotate(45deg);
 }
 
 
 .tooltip-arrow-sidebar {
   top: 50%;
-  left: -4px;
+  left: -0.25rem;
   transform: translateY(-50%) rotate(45deg);
   border-left: none;
   border-bottom: none;
 }
 
 .tooltip-arrow-top {
-  top: -4px;
+  top: -0.25rem;
   left: 50%;
   transform: translateX(-50%) rotate(45deg);
   border-top: none;
@@ -167,7 +167,7 @@
 }
 
 .tooltip-arrow-bottom {
-  bottom: -4px;
+  bottom: -0.25rem;
   left: 50%;
   transform: translateX(-50%) rotate(45deg);
   border-bottom: none;
@@ -175,7 +175,7 @@
 }
 
 .tooltip-arrow-left {
-  right: -4px;
+  right: -0.25rem;
   top: 50%;
   transform: translateY(-50%) rotate(45deg);
   border-left: none;
@@ -183,7 +183,7 @@
 }
 
 .tooltip-arrow-right {
-  left: -4px;
+  left: -0.25rem;
   top: 50%;
   transform: translateY(-50%) rotate(45deg);
   border-right: none;

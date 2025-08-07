@@ -6,7 +6,7 @@ A flexible, accessible tooltip component that supports both regular positioning 
 
 - 🎯 **Smart Positioning**: Automatically positions tooltips to stay within viewport bounds
 - 📱 **Sidebar Support**: Special positioning logic for sidebar/navigation elements
-- ♿ **Accessible**: Works with both mouse and keyboard interactions
+- ♿ **Accessible**: Works with mouse interactions and click-to-pin functionality
 - 🎨 **Customizable**: Support for arrows, structured content, and custom JSX
 - 🌙 **Theme Support**: Built-in dark mode and theme variable support
 - ⚡ **Performance**: Memoized calculations and efficient event handling

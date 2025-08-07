@@ -17,7 +17,7 @@ import CompressSettings from "../components/tools/compress/CompressSettings";
 import { useCompressParameters } from "../hooks/tools/compress/useCompressParameters";
 import { useCompressOperation } from "../hooks/tools/compress/useCompressOperation";
 import { BaseToolProps } from "../types/tool";
-import { useCompressTips } from "../components/tips/COMPRESS_TIPS";
+import { CompressTips } from "../components/tips/CompressTips";
 
 const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -26,7 +26,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const compressParams = useCompressParameters();
   const compressOperation = useCompressOperation();
-  const compressTips = useCompressTips();
+  const compressTips = CompressTips();
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("compress-pdf");
