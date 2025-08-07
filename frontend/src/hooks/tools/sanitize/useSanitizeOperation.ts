@@ -18,6 +18,7 @@ export const useSanitizeOperation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [downloadFilename, setDownloadFilename] = useState<string>('');
   const [status, setStatus] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [thumbnails, setThumbnails] = useState<string[]>([]);
@@ -56,7 +57,7 @@ export const useSanitizeOperation = () => {
   const buildFormData = useCallback((parameters: SanitizeParameters, file: File): FormData => {
     const formData = new FormData();
     formData.append('fileInput', file);
-    
+
     // Add parameters
     formData.append('removeJavaScript', parameters.removeJavaScript.toString());
     formData.append('removeEmbeddedFiles', parameters.removeEmbeddedFiles.toString());
@@ -64,14 +65,19 @@ export const useSanitizeOperation = () => {
     formData.append('removeMetadata', parameters.removeMetadata.toString());
     formData.append('removeLinks', parameters.removeLinks.toString());
     formData.append('removeFonts', parameters.removeFonts.toString());
-    
+
     return formData;
   }, []);
+
+  const generateSanitizedFileName = (originalFileName: string): string => {
+    const baseName = originalFileName.replace(/\.[^/.]+$/, '');
+    const prefix = t('sanitize.filenamePrefix', 'sanitized');
+    return `${prefix}_${baseName}.pdf`;
+  };
 
   const sanitizeFile = useCallback(async (
     file: File,
     parameters: SanitizeParameters,
-    generateSanitizedFileName: (originalFileName?: string) => string,
     operationId: string,
     fileId: string
   ): Promise<File | null> => {
@@ -93,7 +99,7 @@ export const useSanitizeOperation = () => {
       const blob = await response.blob();
       const sanitizedFileName = generateSanitizedFileName(file.name);
       const sanitizedFile = new File([blob], sanitizedFileName, { type: blob.type });
-      
+
       markOperationApplied(fileId, operationId);
       return sanitizedFile;
     } catch (error) {
@@ -107,11 +113,13 @@ export const useSanitizeOperation = () => {
     if (results.length === 1) {
       const url = window.URL.createObjectURL(results[0]);
       setDownloadUrl(url);
+      setDownloadFilename(results[0].name);
     } else {
       const zipFilename = `${t('sanitize.filenamePrefix', 'sanitized')}_files.zip`;
       const { zipFile } = await zipFileService.createZipFromFiles(results, zipFilename);
       const url = window.URL.createObjectURL(zipFile);
       setDownloadUrl(url);
+      setDownloadFilename(zipFilename);
     }
   }, [t]);
 
@@ -145,8 +153,8 @@ export const useSanitizeOperation = () => {
     await generateThumbnailsForResults(results);
 
     setIsGeneratingThumbnails(false);
-    setStatus(results.length === 1 
-      ? t('sanitize.completed', 'Sanitization completed successfully') 
+    setStatus(results.length === 1
+      ? t('sanitize.completed', 'Sanitization completed successfully')
       : t('sanitize.completedMultiple', 'Sanitized {{count}} files successfully', { count: results.length })
     );
   }, [addFiles, createDownloadInfo, generateThumbnailsForResults, t]);
@@ -154,7 +162,6 @@ export const useSanitizeOperation = () => {
   const executeOperation = useCallback(async (
     parameters: SanitizeParameters,
     selectedFiles: File[],
-    generateSanitizedFileName: (originalFileName?: string) => string
   ) => {
     if (selectedFiles.length === 0) {
       throw new Error(t('error.noFilesSelected', 'No files selected'));
@@ -186,8 +193,8 @@ export const useSanitizeOperation = () => {
             })
         );
 
-        const sanitizedFile = await sanitizeFile(file, parameters, generateSanitizedFileName, operationId, fileId);
-        
+        const sanitizedFile = await sanitizeFile(file, parameters, operationId, fileId);
+
         if (sanitizedFile) {
           results.push(sanitizedFile);
         } else {
@@ -227,6 +234,7 @@ export const useSanitizeOperation = () => {
     setThumbnails([]);
     setIsGeneratingThumbnails(false);
     setDownloadUrl(null);
+    setDownloadFilename('');
     setErrorMessage(null);
     setStatus(null);
   }, [downloadUrl]);
@@ -248,6 +256,7 @@ export const useSanitizeOperation = () => {
     isLoading,
     errorMessage,
     downloadUrl,
+    downloadFilename,
     status,
     files,
     thumbnails,

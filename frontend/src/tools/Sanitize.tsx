@@ -20,12 +20,6 @@ import { useFileContext } from "../contexts/FileContext";
 const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const generateSanitizedFileName = (originalFileName?: string): string => {
-    const baseName = originalFileName?.replace(/\.[^/.]+$/, '') || 'document';
-    const prefix = t('sanitize.filenamePrefix', 'sanitized');
-    return `${prefix}_${baseName}.pdf`;
-  };
-
   const { selectedFiles } = useToolFileSelection();
   const { setCurrentMode } = useFileContext();
 
@@ -47,7 +41,6 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       await sanitizeOperation.executeOperation(
         sanitizeParams.parameters,
         selectedFiles,
-        generateSanitizedFileName
       );
       if (sanitizeOperation.files && onComplete) {
         onComplete(sanitizeOperation.files);
@@ -141,10 +134,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               <Button
                 component="a"
                 href={sanitizeOperation.downloadUrl}
-                download={sanitizeOperation.files.length === 1
-                  ? generateSanitizedFileName(selectedFiles[0]?.name)
-                  : `${t('sanitize.filenamePrefix', 'sanitized')}_files.zip`
-                }
+                download={sanitizeOperation.downloadFilename}
                 leftSection={<DownloadIcon />}
                 color="green"
                 fullWidth

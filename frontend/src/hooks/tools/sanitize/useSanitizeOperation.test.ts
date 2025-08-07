@@ -43,11 +43,6 @@ vi.stubGlobal('URL', {
 });
 
 describe('useSanitizeOperation', () => {
-  const mockGenerateSanitizedFileName = (originalFileName?: string): string => {
-    const baseName = originalFileName?.replace(/\.[^/.]+$/, '') || 'document';
-    return `sanitized_${baseName}.pdf`;
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -87,7 +82,7 @@ describe('useSanitizeOperation', () => {
     const testFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
 
     await act(async () => {
-      await result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName);
+      await result.current.executeOperation(parameters, [testFile]);
     });
 
     expect(mockFetch).toHaveBeenCalledWith('/api/v1/security/sanitize-pdf', {
@@ -122,7 +117,7 @@ describe('useSanitizeOperation', () => {
     const testFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
 
     await act(async () => {
-      await expect(result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName))
+      await expect(result.current.executeOperation(parameters, [testFile]))
         .rejects.toThrow('Failed to sanitize all files: test.pdf');
     });
 
@@ -145,7 +140,7 @@ describe('useSanitizeOperation', () => {
     };
 
     await act(async () => {
-      await expect(result.current.executeOperation(parameters, [], mockGenerateSanitizedFileName))
+      await expect(result.current.executeOperation(parameters, []))
         .rejects.toThrow('No files selected');
     });
 
@@ -174,7 +169,7 @@ describe('useSanitizeOperation', () => {
     const testFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
 
     await act(async () => {
-      await result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName);
+      await result.current.executeOperation(parameters, [testFile]);
     });
 
     const [url, options] = mockFetch.mock.calls[0];
@@ -227,7 +222,7 @@ describe('useSanitizeOperation', () => {
 
     // Trigger an API error
     await act(async () => {
-      await expect(result.current.executeOperation(parameters, [testFile], mockGenerateSanitizedFileName))
+      await expect(result.current.executeOperation(parameters, [testFile]))
         .rejects.toThrow('Failed to sanitize all files: test.pdf');
     });
 
