@@ -1,23 +1,5 @@
 package stirling.software.proprietary.security.saml2;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.saml2.provider.service.authentication.Saml2PostAuthenticationRequest;
-import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
-import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
-import org.springframework.security.saml2.provider.service.registration.AssertingPartyMetadata;
-import stirling.software.proprietary.security.service.JwtServiceInterface;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -28,6 +10,28 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.saml2.provider.service.authentication.Saml2PostAuthenticationRequest;
+import org.springframework.security.saml2.provider.service.registration.AssertingPartyMetadata;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import stirling.software.proprietary.security.service.JwtServiceInterface;
+
 @ExtendWith(MockitoExtension.class)
 class JwtSaml2AuthenticationRequestRepositoryTest {
 
@@ -35,19 +39,18 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
 
     private Map<String, String> tokenStore;
 
-    @Mock
-    private JwtServiceInterface jwtService;
+    @Mock private JwtServiceInterface jwtService;
 
-    @Mock
-    private RelyingPartyRegistrationRepository relyingPartyRegistrationRepository;
+    @Mock private RelyingPartyRegistrationRepository relyingPartyRegistrationRepository;
 
     private JwtSaml2AuthenticationRequestRepository jwtSaml2AuthenticationRequestRepository;
 
     @BeforeEach
     void setUp() {
         tokenStore = new ConcurrentHashMap<>();
-        jwtSaml2AuthenticationRequestRepository = new JwtSaml2AuthenticationRequestRepository(
-                tokenStore, jwtService, relyingPartyRegistrationRepository);
+        jwtSaml2AuthenticationRequestRepository =
+                new JwtSaml2AuthenticationRequestRepository(
+                        tokenStore, jwtService, relyingPartyRegistrationRepository);
     }
 
     @Test
@@ -71,7 +74,8 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         when(authRequest.getRelyingPartyRegistrationId()).thenReturn(relyingPartyRegistrationId);
         when(jwtService.generateToken(eq(""), anyMap())).thenReturn(token);
 
-        jwtSaml2AuthenticationRequestRepository.saveAuthenticationRequest(authRequest, request, response);
+        jwtSaml2AuthenticationRequestRepository.saveAuthenticationRequest(
+                authRequest, request, response);
 
         verify(request).setAttribute(SAML_REQUEST_TOKEN, relayState);
         verify(response).addHeader(SAML_REQUEST_TOKEN, relayState);
@@ -94,20 +98,23 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         var assertingPartyMetadata = mock(AssertingPartyMetadata.class);
         String relayState = "testRelayState";
         String token = "testToken";
-        Map<String, Object> claims = Map.of(
-                "id", "testId",
-                "relyingPartyRegistrationId", "stirling-pdf",
-                "authenticationRequestUri", "example.com/authnRequest",
-                "samlRequest", "testSamlRequest",
-                "relayState", relayState
-        );
+        Map<String, Object> claims =
+                Map.of(
+                        "id", "testId",
+                        "relyingPartyRegistrationId", "stirling-pdf",
+                        "authenticationRequestUri", "example.com/authnRequest",
+                        "samlRequest", "testSamlRequest",
+                        "relayState", relayState);
 
         when(request.getParameter("RelayState")).thenReturn(relayState);
         when(jwtService.extractClaims(token)).thenReturn(claims);
-        when(relyingPartyRegistrationRepository.findByRegistrationId("stirling-pdf")).thenReturn(relyingPartyRegistration);
+        when(relyingPartyRegistrationRepository.findByRegistrationId("stirling-pdf"))
+                .thenReturn(relyingPartyRegistration);
         when(relyingPartyRegistration.getRegistrationId()).thenReturn("stirling-pdf");
-        when(relyingPartyRegistration.getAssertingPartyMetadata()).thenReturn(assertingPartyMetadata);
-        when(assertingPartyMetadata.getSingleSignOnServiceLocation()).thenReturn("https://example.com/sso");
+        when(relyingPartyRegistration.getAssertingPartyMetadata())
+                .thenReturn(assertingPartyMetadata);
+        when(assertingPartyMetadata.getSingleSignOnServiceLocation())
+                .thenReturn("https://example.com/sso");
         tokenStore.put(relayState, token);
 
         var result = jwtSaml2AuthenticationRequestRepository.loadAuthenticationRequest(request);
@@ -142,17 +149,18 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         var request = mock(MockHttpServletRequest.class);
         String relayState = "testRelayState";
         String token = "testToken";
-        Map<String, Object> claims = Map.of(
-                "id", "testId",
-                "relyingPartyRegistrationId", "stirling-pdf",
-                "authenticationRequestUri", "example.com/authnRequest",
-                "samlRequest", "testSamlRequest",
-                "relayState", relayState
-        );
+        Map<String, Object> claims =
+                Map.of(
+                        "id", "testId",
+                        "relyingPartyRegistrationId", "stirling-pdf",
+                        "authenticationRequestUri", "example.com/authnRequest",
+                        "samlRequest", "testSamlRequest",
+                        "relayState", relayState);
 
         when(request.getParameter("RelayState")).thenReturn(relayState);
         when(jwtService.extractClaims(token)).thenReturn(claims);
-        when(relyingPartyRegistrationRepository.findByRegistrationId("stirling-pdf")).thenReturn(null);
+        when(relyingPartyRegistrationRepository.findByRegistrationId("stirling-pdf"))
+                .thenReturn(null);
         tokenStore.put(relayState, token);
 
         var result = jwtSaml2AuthenticationRequestRepository.loadAuthenticationRequest(request);
@@ -168,23 +176,28 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         var assertingPartyMetadata = mock(AssertingPartyMetadata.class);
         String relayState = "testRelayState";
         String token = "testToken";
-        Map<String, Object> claims = Map.of(
-                "id", "testId",
-                "relyingPartyRegistrationId", "stirling-pdf",
-                "authenticationRequestUri", "example.com/authnRequest",
-                "samlRequest", "testSamlRequest",
-                "relayState", relayState
-        );
+        Map<String, Object> claims =
+                Map.of(
+                        "id", "testId",
+                        "relyingPartyRegistrationId", "stirling-pdf",
+                        "authenticationRequestUri", "example.com/authnRequest",
+                        "samlRequest", "testSamlRequest",
+                        "relayState", relayState);
 
         when(request.getParameter("RelayState")).thenReturn(relayState);
         when(jwtService.extractClaims(token)).thenReturn(claims);
-        when(relyingPartyRegistrationRepository.findByRegistrationId("stirling-pdf")).thenReturn(relyingPartyRegistration);
+        when(relyingPartyRegistrationRepository.findByRegistrationId("stirling-pdf"))
+                .thenReturn(relyingPartyRegistration);
         when(relyingPartyRegistration.getRegistrationId()).thenReturn("stirling-pdf");
-        when(relyingPartyRegistration.getAssertingPartyMetadata()).thenReturn(assertingPartyMetadata);
-        when(assertingPartyMetadata.getSingleSignOnServiceLocation()).thenReturn("https://example.com/sso");
+        when(relyingPartyRegistration.getAssertingPartyMetadata())
+                .thenReturn(assertingPartyMetadata);
+        when(assertingPartyMetadata.getSingleSignOnServiceLocation())
+                .thenReturn("https://example.com/sso");
         tokenStore.put(relayState, token);
 
-        var result = jwtSaml2AuthenticationRequestRepository.removeAuthenticationRequest(request, response);
+        var result =
+                jwtSaml2AuthenticationRequestRepository.removeAuthenticationRequest(
+                        request, response);
 
         assertNotNull(result);
         assertFalse(tokenStore.containsKey(relayState));
@@ -196,7 +209,9 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         var response = mock(HttpServletResponse.class);
         when(request.getParameter("RelayState")).thenReturn(null);
 
-        var result = jwtSaml2AuthenticationRequestRepository.removeAuthenticationRequest(request, response);
+        var result =
+                jwtSaml2AuthenticationRequestRepository.removeAuthenticationRequest(
+                        request, response);
 
         assertNull(result);
     }
@@ -207,7 +222,9 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         var response = mock(HttpServletResponse.class);
         when(request.getParameter("RelayState")).thenReturn("nonExistentRelayState");
 
-        var result = jwtSaml2AuthenticationRequestRepository.removeAuthenticationRequest(request, response);
+        var result =
+                jwtSaml2AuthenticationRequestRepository.removeAuthenticationRequest(
+                        request, response);
 
         assertNull(result);
     }
@@ -220,7 +237,9 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
 
         when(request.getParameter("RelayState")).thenReturn(relayState);
 
-        var result = jwtSaml2AuthenticationRequestRepository.removeAuthenticationRequest(request, response);
+        var result =
+                jwtSaml2AuthenticationRequestRepository.removeAuthenticationRequest(
+                        request, response);
 
         assertNull(result);
         assertFalse(tokenStore.containsKey(relayState));

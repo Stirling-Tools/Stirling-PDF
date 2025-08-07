@@ -59,7 +59,7 @@ security:
     idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
-  jwt:
+  jwt: # This feature is currently under development and not yet fully supported. Do not use in production.
     persistence: true # Set to 'true' to enable JWT key store
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup

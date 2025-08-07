@@ -1,11 +1,5 @@
 // Authentication utility for cookie-based JWT
 window.JWTManager = {
-    // Check if user is authenticated (simplified for cookie-based auth)
-    isAuthenticated: function() {
-        // With cookie-based JWT, we rely on server-side validation
-        // This is a simplified check - actual authentication status is determined server-side
-        return document.cookie.includes('stirling_jwt=');
-    },
     
     // Logout - clear cookies and redirect to login
     logout: function() {
@@ -72,7 +66,3 @@ window.fetchWithCsrf = async function(url, options = {}) {
     return response;
 }
 
-// Enhanced fetch function that always includes JWT
-window.fetchWithJWT = async function(url, options = {}) {
-    return window.fetchWithCsrf(url, options);
-}

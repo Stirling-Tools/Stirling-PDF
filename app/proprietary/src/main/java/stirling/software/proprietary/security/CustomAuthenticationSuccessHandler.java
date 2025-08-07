@@ -54,15 +54,11 @@ public class CustomAuthenticationSuccessHandler
         loginAttemptService.loginSucceeded(userName);
 
         if (jwtService.isJwtEnabled()) {
-            try {
-                String jwt =
-                        jwtService.generateToken(
-                                authentication, Map.of("authType", AuthenticationType.WEB));
-                jwtService.addToken(response, jwt);
-                log.debug("JWT generated for user: {}", userName);
-            } catch (Exception e) {
-                log.error("Failed to generate JWT token for user: {}", userName, e);
-            }
+            String jwt =
+                    jwtService.generateToken(
+                            authentication, Map.of("authType", AuthenticationType.WEB));
+            jwtService.addToken(response, jwt);
+            log.debug("JWT generated for user: {}", userName);
 
             getRedirectStrategy().sendRedirect(request, response, "/");
         } else {
