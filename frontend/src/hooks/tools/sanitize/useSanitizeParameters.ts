@@ -9,7 +9,7 @@ export interface SanitizeParameters {
   removeFonts: boolean;
 }
 
-const defaultParameters: SanitizeParameters = {
+export const defaultParameters: SanitizeParameters = {
   removeJavaScript: true,
   removeEmbeddedFiles: true,
   removeXMPMetadata: false,

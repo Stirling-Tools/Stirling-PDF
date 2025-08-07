@@ -1,15 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useSanitizeParameters } from './useSanitizeParameters';
-
-const defaultParameters = {
-  removeJavaScript: true,
-  removeEmbeddedFiles: true,
-  removeXMPMetadata: false,
-  removeMetadata: false,
-  removeLinks: false,
-  removeFonts: false,
-}
+import { defaultParameters, useSanitizeParameters } from './useSanitizeParameters';
 
 describe('useSanitizeParameters', () => {
   test('should initialize with default parameters', () => {

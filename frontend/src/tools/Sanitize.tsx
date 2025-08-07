@@ -25,6 +25,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     const prefix = t('sanitize.filenamePrefix', 'sanitized');
     return `${prefix}_${baseName}.pdf`;
   };
+
   const { selectedFiles } = useToolFileSelection();
   const { setCurrentMode } = useFileContext();
 
@@ -76,7 +77,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   return (
     <ToolStepContainer>
-      <Stack gap="sm" p="sm" style={{ height: 'calc(100vh - 200px)', overflow: 'auto' }}>
+      <Stack gap="sm" p="sm" style={{ height: '80vh', overflow: 'auto' }}>
         {/* Files Step */}
         <ToolStep
           title={t('sanitize.steps.files', 'Files')}
