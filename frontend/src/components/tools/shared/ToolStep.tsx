@@ -2,7 +2,8 @@ import React, { createContext, useContext, useMemo, useRef } from 'react';
 import { Paper, Text, Stack, Box, Flex } from '@mantine/core';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Tooltip, TooltipTip } from '../../shared/tooltip/Tooltip';
+import { Tooltip } from '../../shared/Tooltip';
+import { TooltipTip } from '../../shared/tooltip/TooltipContent';
 
 interface ToolStepContextType {
   visibleStepCount: number;

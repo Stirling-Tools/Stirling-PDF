@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { clamp, getSidebarRect } from '../utils/domUtils';
+import { clamp } from '../utils/genericUtils';
+import { getSidebarRect } from '../utils/sidebarUtils';
 
 type Position = 'right' | 'left' | 'top' | 'bottom';
 

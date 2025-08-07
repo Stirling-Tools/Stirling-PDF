@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { isClickOutside, addEventListenerWithCleanup } from '../../../utils/domUtils';
-import { useTooltipPosition } from '../../../hooks/useTooltipPosition';
-import { TooltipContent, TooltipTip } from './TooltipContent';
-import styles from './Tooltip.module.css';
+import { isClickOutside, addEventListenerWithCleanup } from '../../utils/genericUtils';
+import { useTooltipPosition } from '../../hooks/useTooltipPosition';
+import { TooltipContent, TooltipTip } from './tooltip/TooltipContent';
+import styles from './tooltip/Tooltip.module.css'
 
 export interface TooltipProps {
   sidebarTooltip?: boolean;
