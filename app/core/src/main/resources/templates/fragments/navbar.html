@@ -17,6 +17,38 @@
     const noFavourites = /*[[#{noFavourites}]]*/ '';
     console.log(noFavourites);
     const updateAvailable = /*[[#{settings.updateAvailable}]]*/ '';
+    
+    // Update notification i18n constants
+    const urgentUpdateAvailable = /*[[#{update.urgentUpdateAvailable}]]*/ '🚨 Update Available';
+    const updateAvailableText = /*[[#{update.updateAvailable}]]*/ 'Update Available';
+    const updateModalTitle = /*[[#{update.modalTitle}]]*/ 'Update Available';
+    const updateCurrent = /*[[#{update.current}]]*/ 'Current';
+    const updateLatest = /*[[#{update.latest}]]*/ 'Latest';
+    const updateLatestStable = /*[[#{update.latestStable}]]*/ 'Latest Stable';
+    const updatePriority = /*[[#{update.priority}]]*/ 'Priority';
+    const updateRecommendedAction = /*[[#{update.recommendedAction}]]*/ 'Recommended Action';
+    const updateBreakingChangesDetected = /*[[#{update.breakingChangesDetected}]]*/ '⚠️ Breaking Changes Detected';
+    const updateBreakingChangesMessage = /*[[#{update.breakingChangesMessage}]]*/ 'This update contains breaking changes. Please review the migration guides below.';
+    const updateMigrationGuides = /*[[#{update.migrationGuides}]]*/ 'Migration Guides:';
+    const updateViewGuide = /*[[#{update.viewGuide}]]*/ 'View Guide';
+    const updateLoadingDetailedInfo = /*[[#{update.loadingDetailedInfo}]]*/ 'Loading detailed version information...';
+    const updateClose = /*[[#{update.close}]]*/ 'Close';
+    const updateViewAllReleases = /*[[#{update.viewAllReleases}]]*/ 'View All Releases';
+    const updateDownloadLatest = /*[[#{update.downloadLatest}]]*/ 'Download Latest';
+    const updateAvailableUpdates = /*[[#{update.availableUpdates}]]*/ 'Available Updates:';
+    const updateUnableToLoadDetails = /*[[#{update.unableToLoadDetails}]]*/ 'Unable to load detailed version information.';
+    const updateVersion = /*[[#{update.version}]]*/ 'Version';
+    
+    // Update priority levels
+    const updatePriorityUrgent = /*[[#{update.priority.urgent}]]*/ 'URGENT';
+    const updatePriorityNormal = /*[[#{update.priority.normal}]]*/ 'NORMAL';
+    const updatePriorityMinor = /*[[#{update.priority.minor}]]*/ 'MINOR';
+    const updatePriorityLow = /*[[#{update.priority.low}]]*/ 'LOW';
+    
+    // Breaking changes text
+    const updateBreakingChanges = /*[[#{update.breakingChanges}]]*/ 'Breaking Changes:';
+    const updateBreakingChangesDefault = /*[[#{update.breakingChangesDefault}]]*/ 'This version contains breaking changes';
+    const updateMigrationGuide = /*[[#{update.migrationGuide}]]*/ 'Migration Guide';
   </script>
   <script th:src="@{'/js/homecard.js'}"></script>
   <script th:src="@{'/js/githubVersion.js'}"></script>

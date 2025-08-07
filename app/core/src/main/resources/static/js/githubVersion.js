@@ -46,6 +46,17 @@ function getDownloadUrl() {
   return null;
 }
 
+// Function to get translated priority text
+function getTranslatedPriority(priority) {
+  switch(priority?.toLowerCase()) {
+    case 'urgent': return updatePriorityUrgent;
+    case 'normal': return updatePriorityNormal;
+    case 'minor': return updatePriorityMinor;
+    case 'low': return updatePriorityLow;
+    default: return priority?.toUpperCase() || 'NORMAL';
+  }
+}
+
 async function getUpdateSummary() {
   // Map Java License enum to API types
   let type = 'normal';
@@ -153,13 +164,13 @@ async function checkForUpdate() {
       // Style button based on priority
       if (priority === 'urgent') {
         updateBtn.classList.add("btn-danger");
-        updateBtn.innerHTML = "🚨 Update Available";
+        updateBtn.innerHTML = urgentUpdateAvailable;
       } else if (priority === 'normal') {
         updateBtn.classList.add("btn-warning");
-        updateBtn.innerHTML = "Update Available";
+        updateBtn.innerHTML = updateAvailableText;
       } else {
         updateBtn.classList.add("btn-outline-primary");
-        updateBtn.innerHTML = "Update Available";
+        updateBtn.innerHTML = updateAvailableText;
       }
 
       // Store summary for initial display
@@ -221,7 +232,7 @@ async function showUpdateModal() {
       <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document" style="max-height: 80vh;">
         <div class="modal-content" style="max-height: 80vh;">
           <div class="modal-header">
-            <h5 class="modal-title" id="updateModalLabel">Update Available</h5>
+            <h5 class="modal-title" id="updateModalLabel">${updateModalTitle}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
               <span class="material-symbols-rounded">close</span>
             </button>
@@ -230,43 +241,43 @@ async function showUpdateModal() {
             <div class="update-summary mb-4">
               <div class="row mb-3">
                 <div class="${summaryData.latest_stable_version ? 'col-4' : 'col-6'} text-center">
-                  <small class="text-muted">Current</small><br>
+                  <small class="text-muted">${updateCurrent}</small><br>
                   <strong>${escapeHtml(currentVersion)}</strong>
                 </div>
                 <div class="${summaryData.latest_stable_version ? 'col-4' : 'col-6'} text-center">
-                  <small class="text-muted">Latest</small><br>
+                  <small class="text-muted">${updateLatest}</small><br>
                   <strong class="text-primary">${escapeHtml(summaryData.latest_version)}</strong>
                 </div>
                 ${summaryData.latest_stable_version ? `
                 <div class="col-4 text-center">
-                  <small class="text-muted">Latest Stable</small><br>
+                  <small class="text-muted">${updateLatestStable}</small><br>
                   <strong class="text-success">${escapeHtml(summaryData.latest_stable_version)}</strong>
                 </div>
                 ` : ''}
               </div>
               <div class="alert ${summaryData.max_priority === 'urgent' ? 'alert-danger' : 'alert-warning'}" role="alert">
-                <strong>Priority:</strong> ${escapeHtml(summaryData.max_priority.toUpperCase())}
-                ${summaryData.recommended_action ? `<br><strong>Recommended Action:</strong> ${escapeHtml(summaryData.recommended_action)}` : ''}
+                <strong>${updatePriority}:</strong> ${getTranslatedPriority(summaryData.max_priority)}
+                ${summaryData.recommended_action ? `<br><strong>${updateRecommendedAction}:</strong> ${escapeHtml(summaryData.recommended_action)}` : ''}
               </div>
             </div>
 
             ${summaryData.any_breaking ? `
               <div class="alert alert-warning" role="alert">
-                <h6><strong>⚠️ Breaking Changes Detected</strong></h6>
-                <p>This update contains breaking changes. Please review the migration guides below.</p>
+                <h6><strong>${updateBreakingChangesDetected}</strong></h6>
+                <p>${updateBreakingChangesMessage}</p>
               </div>
             ` : ''}
 
             ${summaryData.migration_guides && summaryData.migration_guides.length > 0 ? `
               <div class="migration-guides mb-4">
-                <h6>Migration Guides:</h6>
+                <h6>${updateMigrationGuides}</h6>
                 <ul class="list-group">
                   ${summaryData.migration_guides.map(guide => `
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                       <div>
-                        <strong>Version ${escapeHtml(guide.version)}:</strong> ${escapeHtml(guide.notes)}
+                        <strong>${updateVersion} ${escapeHtml(guide.version)}:</strong> ${escapeHtml(guide.notes)}
                       </div>
-                      <a href="${escapeHtml(guide.url)}" target="_blank" class="btn btn-sm btn-outline-primary">View Guide</a>
+                      <a href="${escapeHtml(guide.url)}" target="_blank" class="btn btn-sm btn-outline-primary">${updateViewGuide}</a>
                     </li>
                   `).join('')}
                 </ul>
@@ -275,15 +286,15 @@ async function showUpdateModal() {
 
             <div class="text-center">
               <div class="spinner-border text-primary" role="status" id="loadingSpinner">
-                <span class="visually-hidden">Loading detailed version information...</span>
+                <span class="visually-hidden">${updateLoadingDetailedInfo}</span>
               </div>
-              <p class="mt-2">Loading detailed version information...</p>
+              <p class="mt-2">${updateLoadingDetailedInfo}</p>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" class="btn btn-outline-primary">View All Releases</a>
-            ${getDownloadUrl() ? `<a href="${escapeHtml(getDownloadUrl())}" class="btn btn-success" target="_blank">Download Latest</a>` : ''}
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${updateClose}</button>
+            <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" class="btn btn-outline-primary">${updateViewAllReleases}</a>
+            ${getDownloadUrl() ? `<a href="${escapeHtml(getDownloadUrl())}" class="btn btn-success" target="_blank">${updateDownloadLatest}</a>` : ''}
           </div>
         </div>
       </div>
@@ -323,7 +334,7 @@ async function showUpdateModal() {
 
     const detailedVersionsHtml = `
       <div class="detailed-versions mt-4">
-        <h6>Available Updates:</h6>
+        <h6>${updateAvailableUpdates}</h6>
         <div class="accordion" id="versionsAccordion">
           ${fullUpdateInfo.new_versions.map((version, index) => `
             <div class="accordion-item">
@@ -331,8 +342,8 @@ async function showUpdateModal() {
                 <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse"
                         data-bs-target="#collapse${index}" aria-expanded="${index === 0 ? 'true' : 'false'}" aria-controls="collapse${index}">
                   <div class="d-flex justify-content-between w-100 me-3">
-                    <span><strong>Version ${version.version}</strong></span>
-                    <span class="badge ${version.priority === 'urgent' ? 'bg-danger' : version.priority === 'normal' ? 'bg-warning' : 'bg-secondary'}">${version.priority}</span>
+                    <span><strong>${updateVersion} ${version.version}</strong></span>
+                    <span class="badge ${version.priority === 'urgent' ? 'bg-danger' : version.priority === 'normal' ? 'bg-warning' : 'bg-secondary'}">${getTranslatedPriority(version.priority)}</span>
                   </div>
                 </button>
               </h2>
@@ -343,8 +354,8 @@ async function showUpdateModal() {
                   <p>${version.announcement.message}</p>
                   ${version.compatibility.breaking_changes ? `
                     <div class="alert alert-warning alert-sm" role="alert">
-                      <small><strong>⚠️ Breaking Changes:</strong> ${version.compatibility.breaking_description || 'This version contains breaking changes'}</small>
-                      ${version.compatibility.migration_guide_url ? `<br><a href="${version.compatibility.migration_guide_url}" target="_blank" class="btn btn-sm btn-outline-warning mt-1">Migration Guide</a>` : ''}
+                      <small><strong>⚠️ ${updateBreakingChanges}</strong> ${version.compatibility.breaking_description || updateBreakingChangesDefault}</small>
+                      ${version.compatibility.migration_guide_url ? `<br><a href="${version.compatibility.migration_guide_url}" target="_blank" class="btn btn-sm btn-outline-warning mt-1">${updateMigrationGuide}</a>` : ''}
                     </div>
                   ` : ''}
                 </div>
@@ -386,7 +397,7 @@ async function showUpdateModal() {
     // Remove loading spinner if failed to load
     const spinner = document.getElementById('loadingSpinner');
     if (spinner) {
-      spinner.parentElement.innerHTML = '<p class="text-muted">Unable to load detailed version information.</p>';
+      spinner.parentElement.innerHTML = `<p class="text-muted">${updateUnableToLoadDetails}</p>`;
     }
   }
 }
