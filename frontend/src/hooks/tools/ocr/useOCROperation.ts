@@ -4,42 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { OCRParameters } from '../../../components/tools/ocr/OCRSettings';
 import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-
-//Extract files from a ZIP blob
-async function extractZipFile(zipBlob: Blob): Promise<File[]> {
-  const JSZip = await import('jszip');
-  const zip = new JSZip.default();
-  
-  const arrayBuffer = await zipBlob.arrayBuffer();
-  const zipContent = await zip.loadAsync(arrayBuffer);
-  
-  const extractedFiles: File[] = [];
-  
-  for (const [filename, file] of Object.entries(zipContent.files)) {
-    if (!file.dir) {
-      const content = await file.async('blob');
-      const extractedFile = new File([content], filename, { type: getMimeType(filename) });
-      extractedFiles.push(extractedFile);
-    }
-  }
-  
-  return extractedFiles;
-}
-
-//Get MIME type based on file extension 
-function getMimeType(filename: string): string {
-  const ext = filename.toLowerCase().split('.').pop();
-  switch (ext) {
-    case 'pdf':
-      return 'application/pdf';
-    case 'txt':
-      return 'text/plain';
-    case 'zip':
-      return 'application/zip';
-    default:
-      return 'application/octet-stream';
-  }
-}
+import { useToolResources } from '../shared/useToolResources';
 
 const buildFormData = (parameters: OCRParameters, file: File): FormData => {
   const formData = new FormData();
@@ -68,15 +33,12 @@ const buildFormData = (parameters: OCRParameters, file: File): FormData => {
 
 export const useOCROperation = () => {
   const { t } = useTranslation();
+  const { extractZipFiles } = useToolResources();
   
   const customOCRProcessor = useCallback(async (
     parameters: OCRParameters,
     selectedFiles: File[]
   ): Promise<File[]> => {
-    if (parameters.languages.length === 0) {
-      throw new Error(t('ocr.validation.languageRequired', 'Please select at least one language for OCR processing.'));
-    }
-
     const processedFiles: File[] = [];
     const failedFiles: string[] = [];
 
@@ -85,7 +47,7 @@ export const useOCROperation = () => {
       const file = selectedFiles[i];
 
       try {
-        const formData = buildFormData(file, parameters);
+        const formData = buildFormData(parameters, file);
         const response = await axios.post('/api/v1/misc/ocr-pdf', formData, { 
           responseType: "blob"
         });
@@ -111,16 +73,22 @@ export const useOCROperation = () => {
         // Check if it's a ZIP file (OCR service returns ZIP when sidecar is enabled or for multi-file results)
         if (header.startsWith('PK')) {
           try {
-            // Extract ZIP file contents
-            const zipFiles = await extractZipFile(response.data);
+            // Extract ZIP file contents using tool resources
+            const zipBlob = new Blob([arrayBuffer]);
+            const extractedFiles = await extractZipFiles(zipBlob);
             
-            // Add extracted files to processed files
-            processedFiles.push(...zipFiles);
+            if (extractedFiles.length > 0) {
+              // Add extracted files to processed files
+              processedFiles.push(...extractedFiles);
+            } else {
+              // Fallback to treating as single ZIP file if extraction failed
+              const zipFile = new File([arrayBuffer], `ocr_${file.name}.zip`, { type: 'application/zip' });
+              processedFiles.push(zipFile);
+            }
           } catch (extractError) {
             // Fallback to treating as single ZIP file
-            const blob = new Blob([response.data], { type: 'application/zip' });
-            const processedFile = new File([blob], `ocr_${file.name}.zip`, { type: 'application/zip' });
-            processedFiles.push(processedFile);
+            const zipFile = new File([arrayBuffer], `ocr_${file.name}.zip`, { type: 'application/zip' });
+            processedFiles.push(zipFile);
           }
           continue; // Skip the PDF validation for ZIP files
         }
@@ -150,7 +118,7 @@ export const useOCROperation = () => {
           throw new Error(`Response is not a valid PDF file. Header: "${header}"`);
         }
 
-        const blob = new Blob([response.data], { type: contentType });
+        const blob = new Blob([arrayBuffer], { type: contentType });
         const processedFile = new File([blob], `ocr_${file.name}`, { type: contentType });
 
         processedFiles.push(processedFile);

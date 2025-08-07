@@ -171,10 +171,8 @@ export const useToolOperation = <TParams = void>(
           
           // Handle response based on responseHandler
           if (config.responseHandler?.type === 'zip' && config.responseHandler?.useZipExtractor) {
-            const zipFile = new File([response.data], 'results.zip', { type: 'application/zip' });
-            const { zipFileService } = await import('../../../services/zipFileService');
-            const extractionResult = await zipFileService.extractPdfFiles(zipFile);
-            processedFiles = extractionResult.success ? extractionResult.extractedFiles : [];
+            // Use tool resources for ZIP extraction
+            processedFiles = await toolResources.extractZipFiles(response.data);
           } else {
             // Single file response
             const filename = validFiles.length === 1 

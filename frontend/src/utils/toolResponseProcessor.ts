@@ -1,4 +1,4 @@
-import { zipFileService } from '../services/zipFileService';
+// Note: This utility should be used with useToolResources for ZIP operations
 
 export interface ResponseHandler {
   type: 'single' | 'zip' | 'custom';
@@ -12,6 +12,7 @@ const defaultResponseHandler: ResponseHandler = {
 
 /**
  * Processes API response blob based on handler configuration
+ * Note: For ZIP extraction, use useToolResources.extractZipFiles instead
  */
 export const processResponse = async (
   blob: Blob, 
@@ -24,9 +25,8 @@ export const processResponse = async (
   switch (handler.type) {
     case 'zip':
       if (handler.useZipExtractor) {
-        const zipFile = new File([blob], 'result.zip', { type: 'application/zip' });
-        const extractionResult = await zipFileService.extractPdfFiles(zipFile);
-        return extractionResult.success ? extractionResult.extractedFiles : [];
+        // This path should be avoided - use useToolResources.extractZipFiles instead
+        throw new Error('ZIP extraction should use useToolResources.extractZipFiles');
       }
       // Fall through to custom if no zip extractor
     case 'custom':

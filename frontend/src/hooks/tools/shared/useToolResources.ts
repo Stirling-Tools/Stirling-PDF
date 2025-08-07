@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { generateThumbnailForFile } from '../../../utils/thumbnailUtils';
+import { zipFileService } from '../../../services/zipFileService';
 
 export const useToolResources = () => {
   const [blobUrls, setBlobUrls] = useState<string[]>([]);
@@ -48,6 +49,12 @@ export const useToolResources = () => {
     return thumbnails;
   }, []);
 
+  const extractZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
+    const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
+    const extractionResult = await zipFileService.extractPdfFiles(zipFile);
+    return extractionResult.success ? extractionResult.extractedFiles : [];
+  }, []);
+
   const createDownloadInfo = useCallback(async (
     files: File[], 
     operationType: string
@@ -58,24 +65,18 @@ export const useToolResources = () => {
       return { url, filename: files[0].name };
     }
 
-    // Multiple files - create zip
-    const JSZip = (await import('jszip')).default;
-    const zip = new JSZip();
-    
-    files.forEach(file => {
-      zip.file(file.name, file);
-    });
-    
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(zipBlob);
+    // Multiple files - create zip using shared service
+    const { zipFile } = await zipFileService.createZipFromFiles(files, `${operationType}_results.zip`);
+    const url = URL.createObjectURL(zipFile);
     addBlobUrl(url);
     
-    return { url, filename: `${operationType}_results.zip` };
+    return { url, filename: zipFile.name };
   }, [addBlobUrl]);
 
   return {
     generateThumbnails,
     createDownloadInfo,
+    extractZipFiles,
     cleanupBlobUrls,
   };
 };
