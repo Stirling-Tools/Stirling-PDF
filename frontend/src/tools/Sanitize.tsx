@@ -17,13 +17,14 @@ import { useSanitizeOperation } from "../hooks/tools/sanitize/useSanitizeOperati
 import { BaseToolProps } from "../types/tool";
 import { useFileContext } from "../contexts/FileContext";
 
-const generateSanitizedFileName = (originalFileName?: string): string => {
-  const baseName = originalFileName?.replace(/\.[^/.]+$/, '') || 'document';
-  return `sanitized_${baseName}.pdf`;
-};
-
 const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
+
+  const generateSanitizedFileName = (originalFileName?: string): string => {
+    const baseName = originalFileName?.replace(/\.[^/.]+$/, '') || 'document';
+    const prefix = t('sanitize.filenamePrefix', 'sanitized');
+    return `${prefix}_${baseName}.pdf`;
+  };
   const { selectedFiles } = useToolFileSelection();
   const { setCurrentMode } = useFileContext();
 
@@ -141,7 +142,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 href={sanitizeOperation.downloadUrl}
                 download={sanitizeOperation.files.length === 1
                   ? generateSanitizedFileName(selectedFiles[0]?.name)
-                  : 'sanitized_files.zip'
+                  : `${t('sanitize.filenamePrefix', 'sanitized')}_files.zip`
                 }
                 leftSection={<DownloadIcon />}
                 color="green"

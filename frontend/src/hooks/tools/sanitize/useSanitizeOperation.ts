@@ -108,11 +108,12 @@ export const useSanitizeOperation = () => {
       const url = window.URL.createObjectURL(results[0]);
       setDownloadUrl(url);
     } else {
-      const { zipFile } = await zipFileService.createZipFromFiles(results, 'sanitized_files.zip');
+      const zipFilename = `${t('sanitize.filenamePrefix', 'sanitized')}_files.zip`;
+      const { zipFile } = await zipFileService.createZipFromFiles(results, zipFilename);
       const url = window.URL.createObjectURL(zipFile);
       setDownloadUrl(url);
     }
-  }, []);
+  }, [t]);
 
   const generateThumbnailsForResults = useCallback(async (results: File[]): Promise<void> => {
     const thumbnails = await Promise.all(

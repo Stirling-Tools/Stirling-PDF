@@ -1755,6 +1755,7 @@
     "completed": "Sanitisation completed successfully",
     "error": "Sanitisation failed: {{error}}",
     "error.generic": "Sanitisation failed",
+    "filenamePrefix": "sanitised",
     "steps": {
       "files": "Files",
       "settings": "Settings", 
