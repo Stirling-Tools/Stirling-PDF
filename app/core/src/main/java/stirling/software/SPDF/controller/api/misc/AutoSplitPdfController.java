@@ -118,7 +118,7 @@ public class AutoSplitPdfController {
         PDDocument document = null;
         List<PDDocument> splitDocuments = new ArrayList<>();
         Path zipFile = null;
-        byte[] data = null;
+        byte[] data;
 
         try {
             document = pdfDocumentFactory.load(file.getInputStream());

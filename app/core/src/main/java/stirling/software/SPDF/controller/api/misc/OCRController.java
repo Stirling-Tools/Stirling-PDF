@@ -126,7 +126,7 @@ public class OCRController {
             try {
                 // Use OCRmyPDF if available (no fallback - error if it fails)
                 if (isOcrMyPdfEnabled()) {
-                    if (sidecar != null && sidecar) {
+                    if (sidecar) {
                         sidecarTextFile = new TempFile(tempFileManager, ".txt");
                     }
 
@@ -165,7 +165,7 @@ public class OCRController {
                                         .replaceFirst("[.][^.]+$", "")
                                 + "_OCR.pdf";
 
-                if (sidecar != null && sidecar && sidecarTextFile != null) {
+                if (sidecar && sidecarTextFile != null) {
                     // Create a zip file containing both the PDF and the text file
                     String outputZipFilename =
                             Filenames.toSimpleFileName(inputFile.getOriginalFilename())
@@ -257,7 +257,7 @@ public class OCRController {
         if (cleanFinal != null && cleanFinal) {
             command.add("--clean-final");
         }
-        if (ocrType != null && !"".equals(ocrType)) {
+        if (ocrType != null && !ocrType.isEmpty()) {
             if ("skip-text".equals(ocrType)) {
                 command.add("--skip-text");
             } else if ("force-ocr".equals(ocrType)) {
@@ -338,7 +338,7 @@ public class OCRController {
 
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
                     PDPage page = document.getPage(pageNum);
-                    boolean hasText = false;
+                    boolean hasText;
 
                     // Check for existing text
                     try (PDDocument tempDoc = new PDDocument()) {

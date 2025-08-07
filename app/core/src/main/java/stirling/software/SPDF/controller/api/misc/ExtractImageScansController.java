@@ -69,7 +69,7 @@ public class ExtractImageScansController {
         List<String> images = new ArrayList<>();
 
         List<Path> tempImageFiles = new ArrayList<>();
-        Path tempInputFile = null;
+        Path tempInputFile;
         Path tempZipFile = null;
         List<Path> tempDirs = new ArrayList<>();
 
@@ -181,7 +181,7 @@ public class ExtractImageScansController {
                 return WebResponseUtils.bytesToWebResponse(
                         zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
             }
-            if (processedImageBytes.size() == 0) {
+            if (processedImageBytes.isEmpty()) {
                 throw new IllegalArgumentException("No images detected");
             } else {
 

@@ -88,7 +88,7 @@ public class ConvertOfficeController {
             return tempOutputFile.toFile();
         } finally {
             // Clean up the temporary files
-            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);
+            Files.deleteIfExists(tempInputFile);
         }
     }
 
