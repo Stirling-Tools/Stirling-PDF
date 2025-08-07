@@ -3,6 +3,8 @@ import { Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useWorkbenchState, useToolSelection } from '../../contexts/ToolWorkflowContext';
+import { useFileHandler } from '../../hooks/useFileHandler';
+import { useFileContext } from '../../contexts/FileContext';
 
 import TopControls from '../shared/TopControls';
 import FileEditor from '../fileEditor/FileEditor';
@@ -12,27 +14,13 @@ import Viewer from '../viewer/Viewer';
 import ToolRenderer from '../tools/ToolRenderer';
 import LandingPage from '../shared/LandingPage';
 
-interface WorkbenchProps {
-  /** Currently active files */
-  activeFiles: File[];
-  /** Current view mode */
-  currentView: string;
-  /** Handler for view changes */
-  onViewChange: (view: string) => void;
-  /** Handler for adding files to active files */
-  onAddToActiveFiles: (file: File) => void;
-}
-
-export default function Workbench({
-  activeFiles,
-  currentView,
-  onViewChange,
-  onAddToActiveFiles
-}: WorkbenchProps) {
+// No props needed - component uses contexts directly
+export default function Workbench() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   
-  // Use context-based hooks to eliminate prop drilling
+  // Use context-based hooks to eliminate all prop drilling
+  const { activeFiles, currentView, setCurrentView } = useFileContext();
   const { 
     previewFile, 
     pageEditorFunctions, 
@@ -43,6 +31,7 @@ export default function Workbench({
   } = useWorkbenchState();
   
   const { selectedToolKey, selectedTool, handleToolSelect } = useToolSelection();
+  const { addToActiveFiles } = useFileHandler();
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -58,7 +47,7 @@ export default function Workbench({
       handleToolSelect('convert');
       sessionStorage.removeItem('previousMode');
     } else {
-      onViewChange('fileEditor');
+      setCurrentView('fileEditor' as any);
     }
   };
 
@@ -84,11 +73,11 @@ export default function Workbench({
             supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
             {...(!selectedToolKey && {
               onOpenPageEditor: (file) => {
-                onViewChange("pageEditor");
+                setCurrentView("pageEditor" as any);
               },
               onMergeFiles: (filesToMerge) => {
-                filesToMerge.forEach(onAddToActiveFiles);
-                onViewChange("viewer");
+                filesToMerge.forEach(addToActiveFiles);
+                setCurrentView("viewer" as any);
               }
             })}
           />
@@ -159,7 +148,7 @@ export default function Workbench({
       {/* Top Controls */}
       <TopControls
         currentView={currentView}
-        setCurrentView={onViewChange}
+        setCurrentView={setCurrentView}
         selectedToolKey={selectedToolKey}
       />
       
