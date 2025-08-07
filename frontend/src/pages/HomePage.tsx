@@ -1,11 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from "../contexts/FileContext";
 import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
-import { useToolManagement } from "../hooks/useToolManagement";
+import { ToolWorkflowProvider, useToolSelection } from "../contexts/ToolWorkflowContext";
 import { useFileHandler } from "../hooks/useFileHandler";
 import { Group } from "@mantine/core";
-import { PageEditorFunctions } from "../types/pageEditor";
 
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
@@ -20,19 +19,7 @@ function HomePageContent() {
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
   const { addToActiveFiles } = useFileHandler();
 
-  const {
-    selectedToolKey,
-    selectedTool,
-    toolRegistry,
-    selectTool,
-    clearToolSelection,
-  } = useToolManagement();
-
-  const [sidebarsVisible, setSidebarsVisible] = useState(true);
-  const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
-  const [readerMode, setReaderMode] = useState(false);
-  const [pageEditorFunctions, setPageEditorFunctions] = useState<PageEditorFunctions | null>(null);
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const { selectedTool, selectedToolKey } = useToolSelection();
 
   // Update file selection context when tool changes
   useEffect(() => {
@@ -46,25 +33,8 @@ function HomePageContent() {
     }
   }, [selectedTool, setMaxFiles, setIsToolMode, setSelectedFiles]);
 
-  const handleToolSelect = useCallback(
-    (id: string) => {
-      selectTool(id);
-      setCurrentView('fileEditor'); // Tools use fileEditor view for file selection
-      setLeftPanelView('toolContent');
-      setReaderMode(false);
-    },
-    [selectTool, setCurrentView]
-  );
-
-  const handleQuickAccessTools = useCallback(() => {
-    setLeftPanelView('toolPicker');
-    setReaderMode(false);
-    clearToolSelection();
-  }, [clearToolSelection]);
-
-  const handleReaderToggle = useCallback(() => {
-    setReaderMode(true);
-  }, [readerMode]);
+  // These handlers are now provided by the context
+  // The context handles the coordination between tool selection and UI state
 
   const handleViewChange = useCallback((view: string) => {
     setCurrentView(view as any);
@@ -76,41 +46,14 @@ function HomePageContent() {
       gap={0}
       className="min-h-screen w-screen overflow-hidden flex-nowrap flex"
     >
-      <QuickAccessBar
-        onToolsClick={handleQuickAccessTools}
-        onReaderToggle={handleReaderToggle}
-        selectedToolKey={selectedToolKey}
-        toolRegistry={toolRegistry}
-        leftPanelView={leftPanelView}
-        readerMode={readerMode}
-      />
+      <QuickAccessBar />
 
-      <ToolPanel
-        visible={sidebarsVisible}
-        readerMode={readerMode}
-        leftPanelView={leftPanelView}
-        selectedToolKey={selectedToolKey}
-        selectedTool={selectedTool}
-        toolRegistry={toolRegistry}
-        onToolSelect={handleToolSelect}
-        onBackToTools={handleQuickAccessTools}
-        onPreviewFile={setPreviewFile}
-      />
+      <ToolPanel />
 
       <Workbench
         activeFiles={activeFiles}
         currentView={currentView}
-        selectedToolKey={selectedToolKey}
-        selectedTool={selectedTool}
-        sidebarsVisible={sidebarsVisible}
-        setSidebarsVisible={setSidebarsVisible}
-        previewFile={previewFile}
-        setPreviewFile={setPreviewFile}
-        pageEditorFunctions={pageEditorFunctions}
-        setPageEditorFunctions={setPageEditorFunctions}
         onViewChange={handleViewChange}
-        onToolSelect={selectTool}
-        onSetLeftPanelView={setLeftPanelView}
         onAddToActiveFiles={addToActiveFiles}
       />
 
@@ -120,11 +63,22 @@ function HomePageContent() {
   );
 }
 
-// Main HomePage component wrapped with FileSelectionProvider
+// HomePage wrapper that connects context to file context  
+function HomePageWrapper() {
+  const { setCurrentView } = useFileContext();
+
+  return (
+    <ToolWorkflowProvider onViewChange={setCurrentView}>
+      <HomePageContent />
+    </ToolWorkflowProvider>
+  );
+}
+
+// Main HomePage component wrapped with providers
 export default function HomePage() {
   return (
     <FileSelectionProvider>
-      <HomePageContent />
+      <HomePageWrapper />
     </FileSelectionProvider>
   );
 }

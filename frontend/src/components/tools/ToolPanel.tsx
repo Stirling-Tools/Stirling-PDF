@@ -1,52 +1,30 @@
-import React, { useState } from 'react';
-import { Button, TextInput } from '@mantine/core';
+import React from 'react';
+import { TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
-import { ToolRegistry, ToolConfiguration } from '../../types/tool';
+import { useToolPanelState, useToolSelection, useWorkbenchState } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
 import ToolRenderer from './ToolRenderer';
 import rainbowStyles from '../../styles/rainbow.module.css';
 
-interface ToolPanelProps {
-  /** Whether the tool panel is visible */
-  visible: boolean;
-  /** Whether reader mode is active (hides the panel) */
-  readerMode: boolean;
-  /** Current view mode: 'toolPicker' or 'toolContent' */
-  leftPanelView: 'toolPicker' | 'toolContent';
-  /** Currently selected tool key */
-  selectedToolKey: string | null;
-  /** Selected tool configuration */
-  selectedTool: ToolConfiguration | null;
-  /** Tool registry with all available tools */
-  toolRegistry: ToolRegistry;
-  /** Handler for tool selection */
-  onToolSelect: (toolId: string) => void;
-  /** Handler for back to tools navigation */
-  onBackToTools: () => void;
-  /** Handler for file preview */
-  onPreviewFile?: (file: File | null) => void;
-}
+// No props needed - component uses context
 
-export default function ToolPanel({
-  visible,
-  readerMode,
-  leftPanelView,
-  selectedToolKey,
-  selectedTool,
-  toolRegistry,
-  onToolSelect,
-  onBackToTools,
-  onPreviewFile
-}: ToolPanelProps) {
+export default function ToolPanel() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
-  const [search, setSearch] = useState("");
-
-  // Filter tools based on search
-  const filteredTools = Object.entries(toolRegistry).filter(([_, { name }]) =>
-    name.toLowerCase().includes(search.toLowerCase())
-  );
+  
+  // Use context-based hooks to eliminate prop drilling
+  const { 
+    leftPanelView, 
+    isPanelVisible, 
+    searchQuery, 
+    filteredTools,
+    setSearchQuery,
+    handleBackToTools
+  } = useToolPanelState();
+  
+  const { selectedToolKey, handleToolSelect } = useToolSelection();
+  const { setPreviewFile } = useWorkbenchState();
 
   return (
     <div
@@ -54,13 +32,13 @@ export default function ToolPanel({
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       }`}
       style={{
-        width: visible && !readerMode ? '20rem' : '0',
-        padding: visible && !readerMode ? '0.5rem' : '0'
+        width: isPanelVisible ? '20rem' : '0',
+        padding: isPanelVisible ? '0.5rem' : '0'
       }}
     >
       <div
         style={{
-          opacity: visible && !readerMode ? 1 : 0,
+          opacity: isPanelVisible ? 1 : 0,
           transition: 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
           height: '100%',
           display: 'flex',
@@ -71,8 +49,8 @@ export default function ToolPanel({
         <div className="mb-4">
           <TextInput
             placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.currentTarget.value)}
             autoComplete="off"
             size="sm"
           />
@@ -83,7 +61,7 @@ export default function ToolPanel({
           <div className="flex-1 flex flex-col">
             <ToolPicker
               selectedToolKey={selectedToolKey}
-              onSelect={onToolSelect}
+              onSelect={handleToolSelect}
               filteredTools={filteredTools}
             />
           </div>
@@ -94,7 +72,7 @@ export default function ToolPanel({
             <div className="flex-1 min-h-0">
               <ToolRenderer
                 selectedToolKey={selectedToolKey}
-                onPreviewFile={onPreviewFile}
+                onPreviewFile={setPreviewFile}
               />
             </div>
           </div>

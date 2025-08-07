@@ -2,8 +2,7 @@ import React from 'react';
 import { Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
-import { ToolConfiguration } from '../../types/tool';
-import { PageEditorFunctions } from '../../types/pageEditor';
+import { useWorkbenchState, useToolSelection } from '../../contexts/ToolWorkflowContext';
 
 import TopControls from '../shared/TopControls';
 import FileEditor from '../fileEditor/FileEditor';
@@ -18,28 +17,8 @@ interface WorkbenchProps {
   activeFiles: File[];
   /** Current view mode */
   currentView: string;
-  /** Currently selected tool key */
-  selectedToolKey: string | null;
-  /** Selected tool configuration */
-  selectedTool: ToolConfiguration | null;
-  /** Whether sidebars are visible */
-  sidebarsVisible: boolean;
-  /** Function to set sidebars visibility */
-  setSidebarsVisible: (visible: boolean) => void;
-  /** File to preview */
-  previewFile: File | null;
-  /** Function to clear preview file */
-  setPreviewFile: (file: File | null) => void;
-  /** Page editor functions */
-  pageEditorFunctions: PageEditorFunctions | null;
-  /** Function to set page editor functions */
-  setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   /** Handler for view changes */
   onViewChange: (view: string) => void;
-  /** Handler for tool selection */
-  onToolSelect: (toolId: string) => void;
-  /** Handler for setting left panel view */
-  onSetLeftPanelView: (view: 'toolPicker' | 'toolContent') => void;
   /** Handler for adding files to active files */
   onAddToActiveFiles: (file: File) => void;
 }
@@ -47,39 +26,36 @@ interface WorkbenchProps {
 export default function Workbench({
   activeFiles,
   currentView,
-  selectedToolKey,
-  selectedTool,
-  sidebarsVisible,
-  setSidebarsVisible,
-  previewFile,
-  setPreviewFile,
-  pageEditorFunctions,
-  setPageEditorFunctions,
   onViewChange,
-  onToolSelect,
-  onSetLeftPanelView,
   onAddToActiveFiles
 }: WorkbenchProps) {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
+  
+  // Use context-based hooks to eliminate prop drilling
+  const { 
+    previewFile, 
+    pageEditorFunctions, 
+    sidebarsVisible,
+    setPreviewFile, 
+    setPageEditorFunctions,
+    setSidebarsVisible
+  } = useWorkbenchState();
+  
+  const { selectedToolKey, selectedTool, handleToolSelect } = useToolSelection();
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
     const previousMode = sessionStorage.getItem('previousMode');
     if (previousMode === 'split') {
-      onToolSelect('split');
-      onViewChange('split');
-      onSetLeftPanelView('toolContent');
+      // Use context's handleToolSelect which coordinates tool selection and view changes
+      handleToolSelect('split');
       sessionStorage.removeItem('previousMode');
     } else if (previousMode === 'compress') {
-      onToolSelect('compress');
-      onViewChange('compress');
-      onSetLeftPanelView('toolContent');
+      handleToolSelect('compress');
       sessionStorage.removeItem('previousMode');
     } else if (previousMode === 'convert') {
-      onToolSelect('convert');
-      onViewChange('convert');
-      onSetLeftPanelView('toolContent');
+      handleToolSelect('convert');
       sessionStorage.removeItem('previousMode');
     } else {
       onViewChange('fileEditor');
@@ -124,9 +100,7 @@ export default function Workbench({
             sidebarsVisible={sidebarsVisible}
             setSidebarsVisible={setSidebarsVisible}
             previewFile={previewFile}
-            {...(previewFile && {
-              onClose: handlePreviewClose
-            })}
+            onClose={handlePreviewClose}
           />
         );
 
