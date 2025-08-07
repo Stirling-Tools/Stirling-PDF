@@ -352,10 +352,10 @@ jobs:
             docker-compose up -d
             
             # Clean up unused Docker resources to save space
-            docker system prune -af --volumes
+            docker system prune -af --volumes || true
             
             # Clean up old backend/frontend images (older than 2 weeks)
-            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
 
           # Set port for output
@@ -490,7 +490,7 @@ jobs:
             fi
             
             # Clean up old unused images (older than 2 weeks) but keep recent ones for reuse
-            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
             
             # Note: We don't remove the commit-based images since they can be reused across PRs
             # Only remove PR-specific containers and directories
