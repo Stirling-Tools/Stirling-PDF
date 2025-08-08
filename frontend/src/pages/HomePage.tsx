@@ -4,14 +4,27 @@ import { useFileContext } from "../contexts/FileContext";
 import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
 import { ToolWorkflowProvider, useToolSelection } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
+import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
 
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import FileUploadModal from "../components/shared/FileUploadModal";
 
+
 function HomePageContent() {
   const { t } = useTranslation();
+  const { 
+    sidebarState, 
+    sidebarRefs, 
+    setSidebarsVisible, 
+    setLeftPanelView, 
+    setReaderMode 
+  } = useSidebarContext();
+  
+  const { sidebarsVisible, leftPanelView, readerMode } = sidebarState;
+  const { quickAccessRef, toolPanelRef } = sidebarRefs;
+
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
 
   const { selectedTool } = useToolSelection();
@@ -34,7 +47,8 @@ function HomePageContent() {
       gap={0}
       className="min-h-screen w-screen overflow-hidden flex-nowrap flex"
     >
-      <QuickAccessBar />
+      <QuickAccessBar
+        ref={quickAccessRef} />
       <ToolPanel />
       <Workbench />
       <FileUploadModal selectedTool={selectedTool} />
@@ -47,7 +61,9 @@ export default function HomePage() {
   return (
     <FileSelectionProvider>
       <ToolWorkflowProvider onViewChange={setCurrentView}>
-        <HomePageContent />
+        <SidebarProvider>
+          <HomePageContent />
+        </SidebarProvider>
       </ToolWorkflowProvider>
     </FileSelectionProvider>
   );

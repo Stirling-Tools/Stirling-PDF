@@ -5,6 +5,7 @@ import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolPanelState, useToolSelection, useWorkbenchState } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
 import ToolRenderer from './ToolRenderer';
+import { useSidebarContext } from "../../contexts/SidebarContext";
 import rainbowStyles from '../../styles/rainbow.module.css';
 
 // No props needed - component uses context
@@ -12,6 +13,9 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 export default function ToolPanel() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
+  const { sidebarRefs } = useSidebarContext();
+  const { toolPanelRef } = sidebarRefs;
+
   
   // Use context-based hooks to eliminate prop drilling
   const { 
@@ -28,6 +32,8 @@ export default function ToolPanel() {
 
   return (
     <div
+      ref={toolPanelRef}
+      data-sidebar="tool-panel" 
       className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       }`}

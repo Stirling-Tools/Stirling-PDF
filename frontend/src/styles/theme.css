@@ -103,9 +103,40 @@
   --icon-config-bg: #9CA3AF;
   --icon-config-color: #FFFFFF;
 
+  /* Colors for tooltips */
+  --tooltip-title-bg: #DBEFFF;
+  --tooltip-title-color: #31528E;
+  --tooltip-header-bg: #31528E;
+  --tooltip-header-color: white;
+  --tooltip-border: var(--border-default);
+
   /* Inactive icon colors for light mode */
   --icon-inactive-bg: #9CA3AF;
   --icon-inactive-color: #FFFFFF;
+
+  --accent-interactive: #4A90E2;
+  --text-instruction: #4A90E2;
+  --text-brand: var(--color-gray-700);
+  --text-brand-accent: #DC2626;
+
+  /* container */
+  --landing-paper-bg: var(--bg-surface);
+  --landing-inner-paper-bg: #EEF8FF;
+  --landing-inner-paper-border: #CDEAFF;
+  --landing-button-bg: var(--bg-surface);
+  --landing-button-color: var(--icon-tools-bg);
+  --landing-button-border: #E0F2F7;
+  --landing-button-hover-bg: rgb(251, 251, 251);
+
+  /* drop state */
+  --landing-drop-paper-bg: #E3F2FD;
+  --landing-drop-inner-paper-bg: #BBDEFB;
+  --landing-drop-inner-paper-border: #90CAF9;
+
+  /* shadows */
+  --drop-shadow-color: rgba(0, 0, 0, 0.08);
+  --drop-shadow-color-strong: rgba(0, 0, 0, 0.04);
+  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(0, 0, 0, 0.08)) drop-shadow(0 0.6rem 0.6rem rgba(0, 0, 0, 0.06)) drop-shadow(0 1.2rem 1rem rgba(0, 0, 0, 0.04));
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -177,12 +208,49 @@
   --icon-inactive-bg: #2A2F36;
   --icon-inactive-color: #6E7581;
 
+  /* Dark mode tooltip colors */
+  --tooltip-title-bg: #4B525A;
+  --tooltip-title-color: #fff;
+  --tooltip-header-bg: var(--bg-raised);
+  --tooltip-header-color: var(--text-primary);
+  --tooltip-border: var(--border-default);
+
+  --accent-interactive: #ffffff;
+  --text-instruction: #ffffff;
+  --text-brand: var(--color-gray-800);
+  --text-brand-accent: #EF4444;
+
+  /* container */
+  --landing-paper-bg: #171A1F;
+  --landing-inner-paper-bg: var(--bg-raised);
+  --landing-inner-paper-border: #2D3237;
+  --landing-button-bg: #2B3037;
+  --landing-button-color: #ffffff;
+  --landing-button-border: #2D3237;
+  --landing-button-hover-bg: #4c525b;
+
+  /* drop state */
+  --landing-drop-paper-bg: #1A2332;
+  --landing-drop-inner-paper-bg: #2A3441;
+  --landing-drop-inner-paper-border: #3A4451;
+
+  /* shadows */
+  --drop-shadow-color: rgba(255, 255, 255, 0.08);
+  --drop-shadow-color-strong: rgba(255, 255, 255, 0.04);
+  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(200, 200, 200, 0.08)) drop-shadow(0 0.6rem 0.6rem rgba(200, 200, 200, 0.06)) drop-shadow(0 1.2rem 1rem rgba(200, 200, 200, 0.04));
+
   /* Adjust shadows for dark mode */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Dropzone drop state styling */
+[data-accept] .dropzone-inner {
+  background-color: var(--landing-drop-inner-paper-bg) !important;
+  border-color: var(--landing-drop-inner-paper-border) !important;
 }
 
 /* Smooth transitions for theme switching */
