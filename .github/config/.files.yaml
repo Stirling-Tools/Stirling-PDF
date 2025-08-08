@@ -27,3 +27,8 @@ project: &project
   - gradlew.bat
   - launch4jConfig.xml
   - settings.gradle
+
+frontend: &frontend
+  - frontend/**
+  - .github/workflows/testdriver.yml
+  - testing/**
