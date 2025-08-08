@@ -29,7 +29,7 @@ interface PageThumbnailProps {
   selectedPages: number[];
   selectionMode: boolean;
   draggedPage: number | null;
-  dropTarget: number | null;
+  dropTarget: number | 'end' | null;
   movingPage: number | null;
   isAnimating: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
@@ -82,7 +82,7 @@ const PageThumbnail = React.memo(({
 }: PageThumbnailProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
-  
+
   // Update thumbnail URL when page prop changes
   useEffect(() => {
     if (page.thumbnail && page.thumbnail !== thumbnailUrl) {
@@ -97,13 +97,13 @@ const PageThumbnail = React.memo(({
       console.log(`📸 PageThumbnail: Page ${page.pageNumber} already has thumbnail, skipping worker listener`);
       return; // Skip if we already have a thumbnail
     }
-    
+
     console.log(`📸 PageThumbnail: Setting up worker listener for page ${page.pageNumber} (${page.id})`);
-    
+
     const handleThumbnailReady = (event: CustomEvent) => {
       const { pageNumber, thumbnail, pageId } = event.detail;
       console.log(`📸 PageThumbnail: Received worker thumbnail for page ${pageNumber}, looking for page ${page.pageNumber} (${page.id})`);
-      
+
       if (pageNumber === page.pageNumber && pageId === page.id) {
         console.log(`✓ PageThumbnail: Thumbnail matched for page ${page.pageNumber}, setting URL`);
         setThumbnailUrl(thumbnail);
