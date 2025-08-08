@@ -5,8 +5,11 @@ import java.awt.image.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -115,7 +118,34 @@ public class ImageProcessingUtils {
 
     public static BufferedImage loadImageWithExifOrientation(MultipartFile file)
             throws IOException {
-        BufferedImage image = ImageIO.read(file.getInputStream());
+        BufferedImage image = null;
+        String filename = file.getOriginalFilename();
+        
+        // Try different approaches for different file types
+        if (filename != null && filename.toLowerCase().endsWith(".psd")) {
+            // For PSD files, try explicit ImageReader
+            Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("PSD");
+            if (readers.hasNext()) {
+                ImageReader reader = readers.next();
+                try (ImageInputStream iis = ImageIO.createImageInputStream(file.getInputStream())) {
+                    reader.setInput(iis);
+                    image = reader.read(0);
+                } finally {
+                    reader.dispose();
+                }
+            }
+        }
+        
+        // Fallback to standard ImageIO.read for all files (including PSD if explicit reader failed)
+        if (image == null) {
+            image = ImageIO.read(file.getInputStream());
+        }
+        
+        if (image == null) {
+            throw new IOException("Unable to read image from file: " + filename + 
+                ". Supported PSD formats: RGB/CMYK/Gray 8-32 bit, RLE/ZIP compression");
+        }
+        
         double orientation = extractImageOrientation(file.getInputStream());
         return applyOrientation(image, orientation);
     }
