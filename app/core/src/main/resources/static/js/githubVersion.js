@@ -16,6 +16,17 @@ function compareVersions(version1, version2) {
   return 0;
 }
 
+function formatType() {
+  // Map Java License enum to API types
+  let type = 'normal';
+  if (licenseType === 'PRO') {
+    type = 'pro';
+  } else if (licenseType === 'ENTERPRISE') {
+    type = 'enterprise';
+  }
+  return type;
+}
+
 function getDownloadUrl() {
   // Only show download for non-Docker installations
   if (machineType === 'Docker' || machineType === 'Kubernetes') {
@@ -47,13 +58,7 @@ function getDownloadUrl() {
 }
 
 async function getUpdateSummary() {
-  // Map Java License enum to API types
-  let type = 'normal';
-  if (licenseType === 'PRO') {
-    type = 'pro';
-  } else if (licenseType === 'ENTERPRISE') {
-    type = 'enterprise';
-  }
+  const type = formatType();
   const url = `https://supabase.stirling.com/functions/v1/updates?from=${currentVersion}&type=${type}&login=${activeSecurity}&summary=true`;
   console.log("Fetching update summary from:", url);
   try {
@@ -73,13 +78,7 @@ async function getUpdateSummary() {
 }
 
 async function getFullUpdateInfo() {
-  // Map Java License enum to API types
-  let type = 'normal';
-  if (licenseType === 'PRO') {
-    type = 'pro';
-  } else if (licenseType === 'ENTERPRISE') {
-    type = 'enterprise';
-  }
+  const type = formatType();
   const url = `https://supabase.stirling.com/functions/v1/updates?from=${currentVersion}&type=${type}&login=${activeSecurity}&summary=false`;
   console.log("Fetching full update info from:", url);
   try {
@@ -215,6 +214,17 @@ async function showUpdateModal() {
       .replace(/\//g, '&#x2F;');
   }
 
+  // Utility function to validate and sanitize URLs
+  function isValidUrl(url) {
+    if (typeof url !== 'string') return false;
+    try {
+      const urlObj = new URL(url);
+      return urlObj.protocol === 'https:' || urlObj.protocol === 'http:';
+    } catch {
+      return false;
+    }
+  }
+
   // Create initial modal with loading state
   const initialModalHtml = `
     <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true">
@@ -266,7 +276,7 @@ async function showUpdateModal() {
                       <div>
                         <strong>Version ${escapeHtml(guide.version)}:</strong> ${escapeHtml(guide.notes)}
                       </div>
-                      <a href="${escapeHtml(guide.url)}" target="_blank" class="btn btn-sm btn-outline-primary">View Guide</a>
+                      ${isValidUrl(guide.url) ? `<a href="${guide.url}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">View Guide</a>` : ''}
                     </li>
                   `).join('')}
                 </ul>
@@ -283,7 +293,7 @@ async function showUpdateModal() {
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" class="btn btn-outline-primary">View All Releases</a>
-            ${getDownloadUrl() ? `<a href="${escapeHtml(getDownloadUrl())}" class="btn btn-success" target="_blank">Download Latest</a>` : ''}
+            ${isValidUrl(getDownloadUrl()) ? `<a href="${getDownloadUrl()}" class="btn btn-success" target="_blank" rel="noopener noreferrer">Download Latest</a>` : ''}
           </div>
         </div>
       </div>
@@ -332,7 +342,7 @@ async function showUpdateModal() {
                   ${version.compatibility.breaking_changes ? `
                     <div class="alert alert-warning alert-sm" role="alert">
                       <small><strong>⚠️ Breaking Changes:</strong> ${version.compatibility.breaking_description || 'This version contains breaking changes'}</small>
-                      ${version.compatibility.migration_guide_url ? `<br><a href="${version.compatibility.migration_guide_url}" target="_blank" class="btn btn-sm btn-outline-warning mt-1">Migration Guide</a>` : ''}
+                      ${isValidUrl(version.compatibility.migration_guide_url) ? `<br><a href="${version.compatibility.migration_guide_url}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-warning mt-1">Migration Guide</a>` : ''}
                     </div>
                   ` : ''}
                 </div>
