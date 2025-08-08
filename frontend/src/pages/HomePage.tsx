@@ -9,7 +9,7 @@ import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
-import FileUploadModal from "../components/shared/FileUploadModal";
+import FileManager from "../components/FileManager";
 
 
 function HomePageContent() {
@@ -51,7 +51,7 @@ function HomePageContent() {
         ref={quickAccessRef} />
       <ToolPanel />
       <Workbench />
-      <FileUploadModal selectedTool={selectedTool} />
+      <FileManager selectedTool={selectedTool} />
     </Group>
   );
 }

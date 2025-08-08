@@ -358,7 +358,10 @@ export const useConvertOperation = (): ConvertOperationHook => {
       setDownloadFilename(convertedFile.name);
       setStatus(t("downloadComplete"));
 
-      await processResults(new Blob([convertedFile]), convertedFile.name);
+      // Update local files state for hook consumers
+      setFiles([convertedFile]);
+      
+      await addFiles([convertedFile]);
       markOperationApplied(fileId, operationId);
     } catch (error: any) {
       console.error(error);
