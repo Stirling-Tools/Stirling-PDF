@@ -156,7 +156,7 @@
 .bookmark-actions {
   margin-top: 20px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 
 /* Collapse/expand icons */
@@ -273,4 +273,26 @@
   --text-muted: var(--md-sys-color-on-surface-variant, #adb5bd);
   --bg-empty: var(--md-sys-color-surface-container-low, #24282e);
   --border-empty: var(--md-sys-color-outline, #495057);
+}
+
+.success-flash {
+  position: relative;
+}
+
+.success-flash::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+  font-size: 1.2em;
+  color: white;
+  opacity: 0;
+  animation: fadeOut 1s ease-in-out;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
