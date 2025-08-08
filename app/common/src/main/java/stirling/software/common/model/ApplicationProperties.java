@@ -110,8 +110,8 @@ public class ApplicationProperties {
 
     @Data
     public static class Security {
-        private Boolean enableLogin;
-        private Boolean csrfDisabled;
+        private Boolean enableLogin = false;
+        private Boolean csrfDisabled = false;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
@@ -291,8 +291,8 @@ public class ApplicationProperties {
                                 throw new UnsupportedProviderException(
                                         "Logout from the provider "
                                                 + registrationId
-                                                + " is not supported. "
-                                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                                                + " is not supported. Report it at"
+                                                + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
             }
@@ -302,17 +302,17 @@ public class ApplicationProperties {
     @Data
     public static class System {
         private String defaultLocale;
-        private Boolean googlevisibility;
+        private Boolean googlevisibility = false;
         private boolean showUpdate;
-        private Boolean showUpdateOnlyAdmin;
+        private Boolean showUpdateOnlyAdmin = false;
         private boolean customHTMLFiles;
         private String tessdataDir;
-        private Boolean enableAlphaFunctionality;
+        private Boolean enableAlphaFunctionality = false;
         private Boolean enableAnalytics;
         private Datasource datasource;
-        private Boolean disableSanitize;
+        private Boolean disableSanitize = false;
         private int maxDPI;
-        private Boolean enableUrlToPDF;
+        private Boolean enableUrlToPDF = false;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
@@ -418,10 +418,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                Driver {
-                  driverName='%s'
-                }
-                """
+            Driver {
+              driverName='%s'
+            }
+            """
                     .formatted(driverName);
         }
     }
@@ -458,7 +458,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Metrics {
-        private Boolean enabled;
+        private Boolean enabled = true;
     }
 
     @Data
