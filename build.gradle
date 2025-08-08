@@ -30,6 +30,7 @@ ext {
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.25.1"
     googleJavaFormatVersion = "1.28.0"
+    junitPlatformVersion = "1.12.2"
     tempJrePath = null
 }
 
@@ -57,7 +58,7 @@ repositories {
 
 allprojects {
     group = 'stirling.software'
-    version = '1.1.1'
+    version = '1.2.0'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
@@ -65,28 +66,11 @@ allprojects {
     }
 }
 
-tasks.register('writeVersion') {
-    def propsFile = file("$projectDir/app/common/src/main/resources/version.properties")
-    def propsDir = propsFile.parentFile
-
-    doLast {
-        if (propsDir.exists()) {
-            if (propsFile.exists()) {
-                println "File exists: $propsFile"
-            } else {
-                println "$propsFile does not exist. Creating file."
-                propsFile.createNewFile()
-            }
-        } else {
-            println "Creating directory: $propsDir"
-            propsDir.mkdirs()
-            propsFile.createNewFile()
-        }
-
-        def props = new Properties()
-        props.setProperty("version", version)
-        props.store(propsFile.newWriter(), null)
-    }
+tasks.register('writeVersion', WriteProperties) {
+    outputFile = layout.projectDirectory.file('app/common/src/main/resources/version.properties')
+    println "Writing version.properties to ${outputFile.path}"
+    comment "${new Date()}"
+    property 'version', project.provider { project.version.toString() }
 }
 
 tasks.named('createExe') {
@@ -99,6 +83,7 @@ subprojects {
     apply plugin: 'com.diffplug.spotless'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'jacoco'
 
     java {
         // 17 is lowest but we support and recommend 21
@@ -142,7 +127,7 @@ subprojects {
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -156,6 +141,16 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required.set(true)
+            csv.required.set(false)
+            html.required.set(true)
+        }
     }
 
     tasks.named("processResources") {
@@ -573,7 +568,7 @@ dependencies {
     }
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
 }
 
 tasks.named("test") {
