@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "sessions")
+@Table(name = "sessions", schema = "stirling_pdf")
 public class SessionEntity implements Serializable {
     @Id private String sessionId;
 

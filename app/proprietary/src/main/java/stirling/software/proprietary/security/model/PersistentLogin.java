@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name = "persistent_logins")
+@Table(name = "persistent_logins", schema = "stirling_pdf")
 @Data
 public class PersistentLogin {
 

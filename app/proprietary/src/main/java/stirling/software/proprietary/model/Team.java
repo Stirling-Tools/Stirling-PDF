@@ -11,7 +11,7 @@ import lombok.*;
 import stirling.software.proprietary.security.model.User;
 
 @Entity
-@Table(name = "teams")
+@Table(name = "teams", schema = "stirling_pdf")
 @NoArgsConstructor
 @Getter
 @Setter

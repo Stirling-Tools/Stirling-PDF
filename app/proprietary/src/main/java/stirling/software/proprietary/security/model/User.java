@@ -19,7 +19,7 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.model.Team;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", schema = "stirling_pdf")
 @NoArgsConstructor
 @Getter
 @Setter

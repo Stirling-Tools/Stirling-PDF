@@ -5,7 +5,9 @@
       "Bash(mkdir:*)",
       "Bash(./gradlew:*)",
       "Bash(grep:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(nc:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }

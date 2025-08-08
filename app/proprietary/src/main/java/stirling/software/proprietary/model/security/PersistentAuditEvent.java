@@ -19,7 +19,8 @@ import lombok.*;
             @jakarta.persistence.Index(
                     name = "idx_audit_type_timestamp",
                     columnList = "type,timestamp")
-        })
+        },
+        schema = "stirling_pdf")
 @Data
 @Builder
 @NoArgsConstructor
@@ -33,7 +34,9 @@ public class PersistentAuditEvent {
     private String principal;
     private String type;
 
-    @Lob private String data; // JSON blob
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String data; // JSON blob
 
     private Instant timestamp;
 }
