@@ -63,9 +63,7 @@ public class InitialSetup {
                 "0.46.0", applicationProperties.getAutomaticallyGenerated().getAppVersion())) {
             boolean csrf = applicationProperties.getSecurity().isCsrfDisabled();
             if (!csrf) {
-                GeneralUtils.saveKeyToSettings("security.csrfDisabled", false);
                 GeneralUtils.saveKeyToSettings("system.enableAnalytics", true);
-                applicationProperties.getSecurity().setCsrfDisabled(false);
             }
         }
     }
