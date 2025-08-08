@@ -55,10 +55,6 @@ export default function Workbench() {
     if (!activeFiles[0]) {
       return (
         <LandingPage
-          title={currentView === "viewer"
-            ? t("fileUpload.selectPdfToView", "Select a PDF to view")
-            : t("fileUpload.selectPdfToEdit", "Select a PDF to edit")
-          }
         />
       );
     }
