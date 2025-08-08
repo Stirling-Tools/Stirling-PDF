@@ -30,6 +30,7 @@ ext {
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.25.1"
     googleJavaFormatVersion = "1.28.0"
+    junitPlatformVersion = "1.12.2"
     tempJrePath = null
 }
 
@@ -82,6 +83,7 @@ subprojects {
     apply plugin: 'com.diffplug.spotless'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'jacoco'
 
     java {
         // 17 is lowest but we support and recommend 21
@@ -125,7 +127,7 @@ subprojects {
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -139,6 +141,16 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required.set(true)
+            csv.required.set(false)
+            html.required.set(true)
+        }
     }
 
     tasks.named("processResources") {
@@ -556,7 +568,7 @@ dependencies {
     }
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
 }
 
 tasks.named("test") {
