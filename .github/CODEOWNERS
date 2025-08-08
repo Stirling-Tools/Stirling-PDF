@@ -11,7 +11,7 @@
 #V2 frontend
 /frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96
 
-#v2 docker
+#V2 docker
 /docker/backend/** @Frooodle @Ludy87 @DarioGii
 /docker/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96
 /docker/compose/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96
