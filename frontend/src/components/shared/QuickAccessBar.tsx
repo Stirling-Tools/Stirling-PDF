@@ -27,31 +27,6 @@ function NavHeader({
 }) {
   return (
     <>
-      <div className="nav-header">
-        <Tooltip label="User Profile" position="right">
-          <ActionIcon
-            size="md"
-            variant="subtle"
-            className="action-icon-style"
-          >
-            <PersonIcon sx={{ fontSize: "1rem" }} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Notifications" position="right">
-          <ActionIcon
-            size="md"
-            variant="subtle"
-            className="action-icon-style"
-          >
-            <NotificationsIcon sx={{ fontSize: "1rem" }} />
-          </ActionIcon>
-        </Tooltip>
-      </div>
-      {/* Divider after top icons */}
-      <Divider 
-        size="xs" 
-        className="nav-header-divider"
-      />
       {/* All Tools button below divider */}
       <Tooltip label="View all available tools" position="right">
         <div className="flex flex-col items-center gap-1 mt-4 mb-2">

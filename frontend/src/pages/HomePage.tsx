@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from "../contexts/FileContext";
 import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
@@ -8,7 +8,6 @@ import { useFileHandler } from "../hooks/useFileHandler";
 import { Group, Box, Button } from "@mantine/core";
 import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
 import { PageEditorFunctions } from "../types/pageEditor";
-import { SidebarRefs, SidebarState } from "../types/sidebar";
 import rainbowStyles from '../styles/rainbow.module.css';
 
 import ToolPicker from "../components/tools/ToolPicker";

@@ -2,6 +2,8 @@ import React from 'react';
 import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
+import OCRPanel from '../tools/OCR';
+import ConvertPanel from '../tools/Convert';
 
 export type ToolRegistryEntry = {
     icon: React.ReactNode;
@@ -174,7 +176,7 @@ export const baseToolRegistry: ToolRegistry = {
     "convert": {
         icon: <span className="material-symbols-rounded">sync_alt</span>,
         name: "home.fileToPDF.title",
-        component: null,
+        component: ConvertPanel,
         view: "convert",
         description: "home.fileToPDF.desc",
         category: "Recommended Tools",
@@ -282,7 +284,7 @@ export const baseToolRegistry: ToolRegistry = {
     "ocr": {
         icon: <span className="material-symbols-rounded">quick_reference_all</span>,
         name: "home.ocr.title",
-        component: null,
+        component: OCRPanel,
         view: "convert",
         description: "home.ocr.desc",
         category: "Recommended Tools",
