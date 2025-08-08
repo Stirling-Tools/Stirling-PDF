@@ -35,6 +35,11 @@ export interface ToolResult {
   metadata?: Record<string, any>;
 }
 
+export interface ToolConfiguration {
+  maxFiles: number;
+  supportedFormats?: string[];
+}
+
 export interface Tool {
   id: string;
   name: string;

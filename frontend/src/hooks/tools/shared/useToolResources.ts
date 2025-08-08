@@ -36,17 +36,19 @@ export const useToolResources = () => {
 
   const generateThumbnails = useCallback(async (files: File[]): Promise<string[]> => {
     const thumbnails: string[] = [];
-    
+
     for (const file of files) {
       try {
         const thumbnail = await generateThumbnailForFile(file);
-        thumbnails.push(thumbnail);
+        if (thumbnail) {
+          thumbnails.push(thumbnail);
+        }
       } catch (error) {
         console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
         thumbnails.push('');
       }
     }
-    
+
     return thumbnails;
   }, []);
 
@@ -65,12 +67,12 @@ export const useToolResources = () => {
     try {
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
-      
+
       const arrayBuffer = await zipBlob.arrayBuffer();
       const zipContent = await zip.loadAsync(arrayBuffer);
-      
+
       const extractedFiles: File[] = [];
-      
+
       for (const [filename, file] of Object.entries(zipContent.files)) {
         if (!file.dir) {
           const content = await file.async('blob');
@@ -78,7 +80,7 @@ export const useToolResources = () => {
           extractedFiles.push(extractedFile);
         }
       }
-      
+
       return extractedFiles;
     } catch (error) {
       console.error('Error in extractAllZipFiles:', error);
@@ -87,7 +89,7 @@ export const useToolResources = () => {
   }, []);
 
   const createDownloadInfo = useCallback(async (
-    files: File[], 
+    files: File[],
     operationType: string
   ): Promise<{ url: string; filename: string }> => {
     if (files.length === 1) {
@@ -100,7 +102,7 @@ export const useToolResources = () => {
     const { zipFile } = await zipFileService.createZipFromFiles(files, `${operationType}_results.zip`);
     const url = URL.createObjectURL(zipFile);
     addBlobUrl(url);
-    
+
     return { url, filename: zipFile.name };
   }, [addBlobUrl]);
 

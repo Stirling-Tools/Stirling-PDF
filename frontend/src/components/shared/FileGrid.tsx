@@ -80,7 +80,7 @@ const FileGrid = ({
             {showSearch && (
               <TextInput
                 placeholder={t("fileManager.searchFiles", "Search files...")}
-                leftSection={<SearchIcon size={16} />}
+                leftSection={<SearchIcon fontSize="small" />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.currentTarget.value)}
                 style={{ flexGrow: 1, maxWidth: 300, minWidth: 200 }}
@@ -96,7 +96,7 @@ const FileGrid = ({
                 ]}
                 value={sortBy}
                 onChange={(value) => setSortBy(value as SortOption)}
-                leftSection={<SortIcon size={16} />}
+                leftSection={<SortIcon fontSize="small" />}
                 style={{ minWidth: 150 }}
               />
             )}
@@ -130,7 +130,7 @@ const FileGrid = ({
             <FileCard
               key={fileId + idx}
               file={file}
-              onRemove={onRemove ? () => onRemove(originalIdx) : undefined}
+              onRemove={onRemove ? () => onRemove(originalIdx) : () => {}}
               onDoubleClick={onDoubleClick && supported ? () => onDoubleClick(file) : undefined}
               onView={onView && supported ? () => onView(file) : undefined}
               onEdit={onEdit && supported ? () => onEdit(file) : undefined}

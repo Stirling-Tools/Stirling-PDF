@@ -22,7 +22,7 @@ export const createOperation = <TParams = void>(
       parameters: params,
       fileSize: selectedFiles.reduce((sum, f) => sum + f.size, 0)
     }
-  };
+  } as any /* FIX ME*/;
 
   return { operation, operationId, fileId };
 };

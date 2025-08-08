@@ -35,7 +35,7 @@ interface PageEditorControlsProps {
 
   // Selection state
   selectionMode: boolean;
-  selectedPages: string[];
+  selectedPages: number[];
 }
 
 const PageEditorControls = ({

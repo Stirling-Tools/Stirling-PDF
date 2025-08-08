@@ -10,10 +10,10 @@ import { generateThumbnailForFile } from "../utils/thumbnailUtils";
 function calculateThumbnailScale(pageViewport: { width: number; height: number }): number {
   const maxWidth = 400;  // Max thumbnail width
   const maxHeight = 600; // Max thumbnail height
-  
+
   const scaleX = maxWidth / pageViewport.width;
   const scaleY = maxHeight / pageViewport.height;
-  
+
   // Don't upscale, only downscale if needed
   return Math.min(scaleX, scaleY, 1.0);
 }
@@ -22,16 +22,16 @@ function calculateThumbnailScale(pageViewport: { width: number; height: number }
  * Hook for IndexedDB-aware thumbnail loading
  * Handles thumbnail generation for files not in IndexedDB
  */
-export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): { 
-  thumbnail: string | null; 
-  isGenerating: boolean 
+export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
+  thumbnail: string | null;
+  isGenerating: boolean
 } {
   const [thumb, setThumb] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    
+
     async function loadThumbnail() {
       if (!file) {
         setThumb(null);
@@ -49,7 +49,7 @@ export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
         setGenerating(true);
         try {
           let fileObject: File;
-          
+
           // Handle IndexedDB files vs regular File objects
           if (file.storedInIndexedDB && file.id) {
             // For IndexedDB files, recreate File object from stored data
@@ -61,9 +61,9 @@ export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
               type: storedFile.type,
               lastModified: storedFile.lastModified
             });
-          } else if (file.file) {
+          } else if ((file as any /* Fix me */).file) {
             // For FileWithUrl objects that have a File object
-            fileObject = file.file;
+            fileObject = (file as any /* Fix me */).file;
           } else if (file.id) {
             // Fallback: try to get from IndexedDB even if storedInIndexedDB flag is missing
             const storedFile = await fileStorage.getFile(file.id);
@@ -77,7 +77,7 @@ export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
           } else {
             throw new Error('File object not available and no ID for IndexedDB lookup');
           }
-          
+
           // Use the universal thumbnail generator
           const thumbnail = await generateThumbnailForFile(fileObject);
           if (!cancelled && thumbnail) {

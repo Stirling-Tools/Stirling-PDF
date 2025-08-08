@@ -1,6 +1,6 @@
 import { Stack, TextInput, Select, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { SPLIT_MODES, SPLIT_TYPES, type SplitMode, type SplitType } from '../../../constants/splitConstants';
+import { isSplitMode, SPLIT_MODES, SPLIT_TYPES, type SplitMode, type SplitType } from '../../../constants/splitConstants';
 
 export interface SplitParameters {
   mode: SplitMode | '';
@@ -123,7 +123,7 @@ const SplitSettings = ({
         label="Choose split method"
         placeholder="Select how to split the PDF"
         value={parameters.mode}
-        onChange={(v) => v && onParameterChange('mode', v)}
+        onChange={(v) => isSplitMode(v) && onParameterChange('mode', v)}
         disabled={disabled}
         data={[
           { value: SPLIT_MODES.BY_PAGES, label: t("split.header", "Split by Pages") + " (e.g. 1,3,5-10)" },

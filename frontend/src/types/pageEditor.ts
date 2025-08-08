@@ -13,6 +13,7 @@ export interface PDFDocument {
   file: File;
   pages: PDFPage[];
   totalPages: number;
+  destroy?: () => void;
 }
 
 export interface PageOperation {
@@ -43,7 +44,7 @@ export interface PageEditorFunctions {
   handleRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  handleRotate: () => void;
+  handleRotate: (direction: 'left' | 'right') => void;
   handleDelete: () => void;
   handleSplit: () => void;
   onExportSelected: () => void;

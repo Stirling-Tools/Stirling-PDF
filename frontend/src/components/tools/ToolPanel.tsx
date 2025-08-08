@@ -16,24 +16,24 @@ export default function ToolPanel() {
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef } = sidebarRefs;
 
-  
+
   // Use context-based hooks to eliminate prop drilling
-  const { 
-    leftPanelView, 
-    isPanelVisible, 
-    searchQuery, 
+  const {
+    leftPanelView,
+    isPanelVisible,
+    searchQuery,
     filteredTools,
     setSearchQuery,
     handleBackToTools
   } = useToolPanelState();
-  
+
   const { selectedToolKey, handleToolSelect } = useToolSelection();
   const { setPreviewFile } = useWorkbenchState();
 
   return (
     <div
       ref={toolPanelRef}
-      data-sidebar="tool-panel" 
+      data-sidebar="tool-panel"
       className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       }`}
@@ -77,7 +77,7 @@ export default function ToolPanel() {
             {/* Tool content */}
             <div className="flex-1 min-h-0">
               <ToolRenderer
-                selectedToolKey={selectedToolKey}
+                selectedToolKey={selectedToolKey || ''}
                 onPreviewFile={setPreviewFile}
               />
             </div>

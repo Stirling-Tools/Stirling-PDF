@@ -30,12 +30,12 @@ const ConvertFromImageSettings = ({
         })}
         data={[
           { value: COLOR_TYPES.COLOR, label: t("convert.color", "Color") },
-          { value: COLOR_TYPES.GREYSCALE, label: t("convert.greyscale", "Greyscale") },
+          { value: COLOR_TYPES.GRAYSCALE, label: t("convert.grayscale", "Grayscale") },
           { value: COLOR_TYPES.BLACK_WHITE, label: t("convert.blackwhite", "Black & White") },
         ]}
         disabled={disabled}
       />
-      
+
       <Select
         data-testid="fit-option-select"
         label={t("convert.fitOption", "Fit Option")}
@@ -51,7 +51,7 @@ const ConvertFromImageSettings = ({
         ]}
         disabled={disabled}
       />
-      
+
       <Switch
         data-testid="auto-rotate-switch"
         label={t("convert.autoRotate", "Auto Rotate")}
@@ -63,7 +63,7 @@ const ConvertFromImageSettings = ({
         })}
         disabled={disabled}
       />
-      
+
       <Switch
         data-testid="combine-images-switch"
         label={t("convert.combineImages", "Combine Images")}

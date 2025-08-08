@@ -31,7 +31,6 @@ const ConvertFromWebSettings = ({
           min={0.1}
           max={3.0}
           step={0.1}
-          precision={1}
           disabled={disabled}
           data-testid="zoom-level-input"
         />
