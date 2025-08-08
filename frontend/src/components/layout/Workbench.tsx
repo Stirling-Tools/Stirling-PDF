@@ -129,9 +129,7 @@ export default function Workbench() {
           );
         }
         return (
-          <LandingPage 
-            title="File Management" 
-          />
+          <LandingPage/>
         );
     }
   };
