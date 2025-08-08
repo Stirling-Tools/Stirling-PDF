@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
+import React, { useEffect } from "react";
 import { useFileContext } from "../contexts/FileContext";
 import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
 import { ToolWorkflowProvider, useToolSelection } from "../contexts/ToolWorkflowContext";
@@ -13,17 +12,11 @@ import FileManager from "../components/FileManager";
 
 
 function HomePageContent() {
-  const { t } = useTranslation();
   const { 
-    sidebarState, 
     sidebarRefs, 
-    setSidebarsVisible, 
-    setLeftPanelView, 
-    setReaderMode 
   } = useSidebarContext();
   
-  const { sidebarsVisible, leftPanelView, readerMode } = sidebarState;
-  const { quickAccessRef, toolPanelRef } = sidebarRefs;
+  const { quickAccessRef } = sidebarRefs;
 
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
 
