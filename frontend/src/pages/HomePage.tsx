@@ -20,7 +20,7 @@ import Viewer from "../components/viewer/Viewer";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import LandingPage from "../components/shared/LandingPage";
-import FileUploadModal from "../components/shared/FileUploadModal";
+import FileManager from "../components/FileManager";
 
 
 function HomePageContent() {
@@ -279,7 +279,7 @@ function HomePageContent() {
       </Box>
 
       {/* Global Modals */}
-      <FileUploadModal selectedTool={selectedTool} />
+      <FileManager selectedTool={selectedTool} />
     </Group>
   );
 }
