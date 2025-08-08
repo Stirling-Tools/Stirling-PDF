@@ -177,8 +177,8 @@ jobs:
             docker-compose down || true
             docker-compose pull
             docker-compose up -d
-            docker system prune -af --volumes
-            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
+            docker system prune -af --volumes || true
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
 
       - name: Cleanup temporary files
