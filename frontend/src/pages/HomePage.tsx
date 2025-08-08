@@ -2,11 +2,13 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from "../contexts/FileContext";
 import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
+import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
 import { useToolManagement } from "../hooks/useToolManagement";
 import { useFileHandler } from "../hooks/useFileHandler";
 import { Group, Box, Button } from "@mantine/core";
 import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
 import { PageEditorFunctions } from "../types/pageEditor";
+import { SidebarRefs, SidebarState } from "../types/sidebar";
 import rainbowStyles from '../styles/rainbow.module.css';
 
 import ToolPicker from "../components/tools/ToolPicker";
@@ -21,9 +23,20 @@ import QuickAccessBar from "../components/shared/QuickAccessBar";
 import LandingPage from "../components/shared/LandingPage";
 import FileUploadModal from "../components/shared/FileUploadModal";
 
+
 function HomePageContent() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
+  const { 
+    sidebarState, 
+    sidebarRefs, 
+    setSidebarsVisible, 
+    setLeftPanelView, 
+    setReaderMode 
+  } = useSidebarContext();
+  
+  const { sidebarsVisible, leftPanelView, readerMode } = sidebarState;
+  const { quickAccessRef, toolPanelRef } = sidebarRefs;
 
   const fileContext = useFileContext();
   const { activeFiles, currentView, setCurrentView } = fileContext;
@@ -101,17 +114,16 @@ function HomePageContent() {
     >
       {/* Quick Access Bar */}
       <QuickAccessBar
+        ref={quickAccessRef}
         onToolsClick={handleQuickAccessTools}
         onReaderToggle={handleReaderToggle}
-        selectedToolKey={selectedToolKey}
-        toolRegistry={toolRegistry}
-        leftPanelView={leftPanelView}
-        readerMode={readerMode}
       />
 
       {/* Left: Tool Picker or Selected Tool Panel */}
       <div
-        className={`h-screen flex flex-col overflow-hidden border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
+        ref={toolPanelRef}
+        data-sidebar="tool-panel"
+        className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
         style={{
           width: sidebarsVisible && !readerMode ? '280px' : '0',
           backgroundColor: 'var(--bg-toolbar)'
@@ -300,7 +312,9 @@ function HomePageContent() {
 export default function HomePage() {
   return (
     <FileSelectionProvider>
-      <HomePageContent />
+      <SidebarProvider>
+        <HomePageContent />
+      </SidebarProvider>
     </FileSelectionProvider>
   );
 }
