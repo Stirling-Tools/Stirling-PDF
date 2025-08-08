@@ -28,12 +28,6 @@ export interface SidebarProviderProps {
   children: React.ReactNode;
 }
 
-// QuickAccessBar related interfaces
-export interface QuickAccessBarProps {
-  onToolsClick: () => void;
-  onReaderToggle: () => void;
-}
-
 export interface ButtonConfig {
   id: string;
   name: string;
