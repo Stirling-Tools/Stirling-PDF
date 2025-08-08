@@ -4,7 +4,7 @@
 # Backend
 /app/** @DarioGii 
 
-#v1 frontend
+#V1 frontend
 /app/core/src/main/resources/static/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96
 /app/core/src/main/resources/templates/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96
 
