@@ -33,12 +33,11 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     splitOperation.resetResults();
     onPreviewFile?.(null);
-  }, [splitParams.mode, splitParams.parameters, selectedFiles]);
+  }, [splitParams.parameters, selectedFiles]);
 
   const handleSplit = async () => {
     try {
       await splitOperation.executeOperation(
-        splitParams.mode,
         splitParams.parameters,
         selectedFiles
       );
@@ -105,14 +104,12 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         >
           <Stack gap="sm">
             <SplitSettings
-              mode={splitParams.mode}
-              onModeChange={splitParams.setMode}
               parameters={splitParams.parameters}
               onParameterChange={splitParams.updateParameter}
               disabled={endpointLoading}
             />
 
-            {splitParams.mode && (
+            {splitParams.parameters.mode && (
               <OperationButton
                 onClick={handleSplit}
                 isLoading={splitOperation.isLoading}

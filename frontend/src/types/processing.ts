@@ -69,7 +69,6 @@ export interface ProcessingConfig {
   priorityPageCount: number; // Number of priority pages to process first
   useWebWorker: boolean;
   maxRetries: number;
-  timeoutMs: number;
 }
 
 export interface FileAnalysis {
