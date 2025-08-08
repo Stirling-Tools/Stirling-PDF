@@ -25,5 +25,19 @@
     "web": "Web",
     "text": "Text",
     "email": "Email"
-  }
+  },
+  "home": {
+    "repair": {
+      "title": "Repair",
+      "desc": "Tries to repair a corrupt/broken PDF"
+    }
+  },
+  "repair": {
+    "tags": "fix,restore,correction,recover",
+    "title": "Repair",
+    "header": "Repair PDFs",
+    "submit": "Repair"
+  },
+  "loading": "Loading...",
+  "download": "Download"
 }
