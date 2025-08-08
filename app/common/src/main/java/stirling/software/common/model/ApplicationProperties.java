@@ -110,8 +110,8 @@ public class ApplicationProperties {
 
     @Data
     public static class Security {
-        private Boolean enableLogin = false;
-        private Boolean csrfDisabled = false;
+        private boolean enableLogin;
+        private boolean csrfDisabled;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
@@ -302,17 +302,17 @@ public class ApplicationProperties {
     @Data
     public static class System {
         private String defaultLocale;
-        private Boolean googlevisibility = false;
+        private boolean googlevisibility;
         private boolean showUpdate;
-        private Boolean showUpdateOnlyAdmin = false;
+        private boolean showUpdateOnlyAdmin;
         private boolean customHTMLFiles;
         private String tessdataDir;
-        private Boolean enableAlphaFunctionality = false;
+        private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
         private Datasource datasource;
-        private Boolean disableSanitize = false;
+        private boolean disableSanitize;
         private int maxDPI;
-        private Boolean enableUrlToPDF = false;
+        private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
@@ -458,7 +458,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Metrics {
-        private Boolean enabled = true;
+        private boolean enabled;
     }
 
     @Data

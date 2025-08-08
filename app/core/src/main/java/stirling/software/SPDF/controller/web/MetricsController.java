@@ -40,7 +40,7 @@ public class MetricsController {
 
     @PostConstruct
     public void init() {
-        Boolean metricsEnabled = applicationProperties.getMetrics().getEnabled();
+        Boolean metricsEnabled = applicationProperties.getMetrics().isEnabled();
         if (metricsEnabled == null) metricsEnabled = true;
         this.metricsEnabled = metricsEnabled;
     }

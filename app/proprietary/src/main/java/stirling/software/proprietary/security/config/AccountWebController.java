@@ -126,7 +126,7 @@ public class AccountWebController {
         SAML2 saml2 = securityProps.getSaml2();
 
         if (securityProps.isSaml2Active()
-                && applicationProperties.getSystem().getEnableAlphaFunctionality()
+                && applicationProperties.getSystem().isEnableAlphaFunctionality()
                 && applicationProperties.getPremium().isEnabled()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
@@ -240,7 +240,7 @@ public class AccountWebController {
 
                 // Also check if user is part of the Internal team
                 if (user.getTeam() != null
-                        && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                        && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
                     shouldRemove = true;
                 }
 
@@ -359,11 +359,9 @@ public class AccountWebController {
                 teamRepository.findAll().stream()
                         .filter(
                                 team ->
-                                        !team.getName()
-                                                .equals(
-                                                        stirling.software.proprietary.security
-                                                                .service.TeamService
-                                                                .INTERNAL_TEAM_NAME))
+                                        !stirling.software.proprietary.security.service.TeamService
+                                                .INTERNAL_TEAM_NAME
+                                                .equals(team.getName()))
                         .toList();
         model.addAttribute("teams", allTeams);
 

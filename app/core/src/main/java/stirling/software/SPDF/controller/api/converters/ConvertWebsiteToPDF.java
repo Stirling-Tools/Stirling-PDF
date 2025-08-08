@@ -50,7 +50,7 @@ public class ConvertWebsiteToPDF {
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
 
-        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
+        if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.endpointDisabled", "This endpoint has been disabled by the admin");
         }
