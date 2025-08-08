@@ -103,6 +103,13 @@
   --icon-config-bg: #9CA3AF;
   --icon-config-color: #FFFFFF;
 
+  /* Colors for tooltips */
+  --tooltip-title-bg: #DBEFFF;
+  --tooltip-title-color: #31528E;
+  --tooltip-header-bg: #31528E;
+  --tooltip-header-color: white;
+  --tooltip-border: var(--border-default);
+
   /* Inactive icon colors for light mode */
   --icon-inactive-bg: #9CA3AF;
   --icon-inactive-color: #FFFFFF;
@@ -201,6 +208,13 @@
   --icon-inactive-bg: #2A2F36;
   --icon-inactive-color: #6E7581;
 
+  /* Dark mode tooltip colors */
+  --tooltip-title-bg: #4B525A;
+  --tooltip-title-color: #fff;
+  --tooltip-header-bg: var(--bg-raised);
+  --tooltip-header-color: var(--text-primary);
+  --tooltip-border: var(--border-default);
+
   --accent-interactive: #ffffff;
   --text-instruction: #ffffff;
   --text-brand: var(--color-gray-800);
@@ -224,6 +238,7 @@
   --drop-shadow-color: rgba(255, 255, 255, 0.08);
   --drop-shadow-color-strong: rgba(255, 255, 255, 0.04);
   --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(200, 200, 200, 0.08)) drop-shadow(0 0.6rem 0.6rem rgba(200, 200, 200, 0.06)) drop-shadow(0 1.2rem 1rem rgba(200, 200, 200, 0.04));
+
   /* Adjust shadows for dark mode */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
