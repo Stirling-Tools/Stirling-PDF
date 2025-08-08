@@ -121,7 +121,6 @@ public class ImageProcessingUtils {
         BufferedImage image = null;
         String filename = file.getOriginalFilename();
         
-        // Try different approaches for different file types
         if (filename != null && filename.toLowerCase().endsWith(".psd")) {
             // For PSD files, try explicit ImageReader
             Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("PSD");
@@ -134,16 +133,17 @@ public class ImageProcessingUtils {
                     reader.dispose();
                 }
             }
-        }
-        
-        // Fallback to standard ImageIO.read for all files (including PSD if explicit reader failed)
-        if (image == null) {
+            if (image == null) {
+                throw new IOException("Unable to read image from file: " + filename + 
+                    ". Supported PSD formats: RGB/CMYK/Gray 8-32 bit, RLE/ZIP compression");
+            }
+        } else {
+            // For non-PSD files, use standard ImageIO
             image = ImageIO.read(file.getInputStream());
         }
         
         if (image == null) {
-            throw new IOException("Unable to read image from file: " + filename + 
-                ". Supported PSD formats: RGB/CMYK/Gray 8-32 bit, RLE/ZIP compression");
+            throw new IOException("Unable to read image from file: " + filename);
         }
         
         double orientation = extractImageOrientation(file.getInputStream());
