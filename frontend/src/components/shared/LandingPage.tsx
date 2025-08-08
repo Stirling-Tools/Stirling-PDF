@@ -61,7 +61,7 @@ const LandingPage = () => {
           }}
         >
           <img
-            src={colorScheme === 'dark' ? '/StirlingLandingLogoDark.png' : '/StirlingLandingLogoLight.png'}
+            src={colorScheme === 'dark' ? '/branding/StirlingPDFLogoNoTextDark.svg' : '/branding/StirlingPDFLogoNoTextLight.svg'}
             alt="Stirling PDF Logo"
             style={{
               width: '10rem',
@@ -88,14 +88,11 @@ const LandingPage = () => {
           <div className="flex flex-col items-center gap-4 flex-none w-full">
             {/* Stirling PDF Branding */}
             <Group gap="xs" align="center">
-              <span className="text-[var(--text-brand)]"
-                style={{ fontWeight: 'bold', fontSize: '2rem' }}>
-                Stirling{' '}
-                <span className="text-[var(--text-brand-accent)]"
-                  style={{ fontWeight: 'bold', fontSize: '2rem' }}>
-                  PDF
-                </span>
-              </span>
+              <img
+                src={colorScheme === 'dark' ? '/branding/StirlingPDFLogoWhiteText.svg' : '/branding/StirlingPDFLogoGreyText.svg'}
+                alt="Stirling PDF"
+                style={{ height: '2.2rem', width: 'auto' }}
+              />
             </Group>
 
             {/* Add Files Button */}
