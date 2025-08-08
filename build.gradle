@@ -65,28 +65,11 @@ allprojects {
     }
 }
 
-tasks.register('writeVersion') {
-    def propsFile = file("$projectDir/app/common/src/main/resources/version.properties")
-    def propsDir = propsFile.parentFile
-
-    doLast {
-        if (propsDir.exists()) {
-            if (propsFile.exists()) {
-                println "File exists: $propsFile"
-            } else {
-                println "$propsFile does not exist. Creating file."
-                propsFile.createNewFile()
-            }
-        } else {
-            println "Creating directory: $propsDir"
-            propsDir.mkdirs()
-            propsFile.createNewFile()
-        }
-
-        def props = new Properties()
-        props.setProperty("version", version)
-        props.store(propsFile.newWriter(), null)
-    }
+tasks.register('writeVersion', WriteProperties) {
+    outputFile = layout.projectDirectory.file('app/common/src/main/resources/version.properties')
+    println "Writing version.properties to ${outputFile.path}"
+    comment "${new Date()}"
+    property 'version', project.provider { project.version.toString() }
 }
 
 tasks.named('createExe') {
