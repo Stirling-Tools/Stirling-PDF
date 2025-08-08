@@ -43,10 +43,6 @@ function HomePageContent() {
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
   const { addToActiveFiles } = useFileHandler();
 
-  const [sidebarsVisible, setSidebarsVisible] = useState(true);
-  const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
-  const [readerMode, setReaderMode] = useState(false);
-
   const {
     selectedToolKey,
     selectedTool,
