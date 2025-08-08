@@ -9,7 +9,7 @@ import { SPLIT_MODES } from '../../../constants/splitConstants';
 
 const buildFormData = (parameters: SplitParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
-  
+
   selectedFiles.forEach(file => {
     formData.append("fileInput", file);
   });
@@ -59,26 +59,22 @@ const getEndpoint = (parameters: SplitParameters): string => {
 
 export const useSplitOperation = () => {
   const { t } = useTranslation();
-  
+
   return useToolOperation<SplitParameters>({
     operationType: 'split',
     endpoint: (params) => getEndpoint(params),
-    buildFormData: buildFormData, // Multi-file signature: (params, selectedFiles) => FormData  
+    buildFormData: buildFormData, // Multi-file signature: (params, selectedFiles) => FormData
     filePrefix: 'split_',
     multiFileEndpoint: true, // Single API call with all files
-    responseHandler: {
-      type: 'zip',
-      useZipExtractor: true
-    },
     validateParams: (params) => {
       if (!params.mode) {
         return { valid: false, errors: [t('split.validation.modeRequired', 'Split mode is required')] };
       }
-      
+
       if (params.mode === SPLIT_MODES.BY_PAGES && !params.pages) {
         return { valid: false, errors: [t('split.validation.pagesRequired', 'Page numbers are required for split by pages')] };
       }
-      
+
       return { valid: true };
     },
     getErrorMessage: createStandardErrorHandler(t('split.error.failed', 'An error occurred while splitting the PDF.'))

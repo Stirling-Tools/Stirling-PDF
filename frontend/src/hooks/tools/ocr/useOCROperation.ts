@@ -1,161 +1,117 @@
 import { useCallback } from 'react';
-import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { OCRParameters } from '../../../components/tools/ocr/OCRSettings';
 import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { useToolResources } from '../shared/useToolResources';
 
-const buildFormData = (parameters: OCRParameters, file: File): FormData => {
+// Helper: get MIME type based on file extension
+function getMimeType(filename: string): string {
+  const ext = filename.toLowerCase().split('.').pop();
+  switch (ext) {
+    case 'pdf': return 'application/pdf';
+    case 'txt': return 'text/plain';
+    case 'zip': return 'application/zip';
+    default: return 'application/octet-stream';
+  }
+}
+
+// Lightweight ZIP extractor (keep or replace with a shared util if you have one)
+async function extractZipFile(zipBlob: Blob): Promise<File[]> {
+  const JSZip = await import('jszip');
+  const zip = new JSZip.default();
+  const zipContent = await zip.loadAsync(await zipBlob.arrayBuffer());
+  const out: File[] = [];
+  for (const [filename, file] of Object.entries(zipContent.files)) {
+    if (!file.dir) {
+      const content = await file.async('blob');
+      out.push(new File([content], filename, { type: getMimeType(filename) }));
+    }
+  }
+  return out;
+}
+
+// Helper: strip extension
+function stripExt(name: string): string {
+  const i = name.lastIndexOf('.');
+  return i > 0 ? name.slice(0, i) : name;
+}
+
+// Signature must be (file, params)
+const buildFormData = (file: File, parameters: OCRParameters): FormData => {
   const formData = new FormData();
-
-  // Add the file
   formData.append('fileInput', file);
-
-  // Add languages as multiple parameters with same name (like checkboxes)
-  parameters.languages.forEach(lang => {
-    formData.append('languages', lang);
-  });
-
-  // Add other parameters
+  parameters.languages.forEach((lang) => formData.append('languages', lang));
   formData.append('ocrType', parameters.ocrType);
   formData.append('ocrRenderType', parameters.ocrRenderType);
-  
-  // Handle additional options - convert array to individual boolean parameters
   formData.append('sidecar', parameters.additionalOptions.includes('sidecar').toString());
   formData.append('deskew', parameters.additionalOptions.includes('deskew').toString());
   formData.append('clean', parameters.additionalOptions.includes('clean').toString());
   formData.append('cleanFinal', parameters.additionalOptions.includes('cleanFinal').toString());
   formData.append('removeImagesAfter', parameters.additionalOptions.includes('removeImagesAfter').toString());
-
   return formData;
 };
 
 export const useOCROperation = () => {
   const { t } = useTranslation();
   const { extractZipFiles } = useToolResources();
-  
-  const customOCRProcessor = useCallback(async (
-    parameters: OCRParameters,
-    selectedFiles: File[]
-  ): Promise<File[]> => {
-    const processedFiles: File[] = [];
-    const failedFiles: string[] = [];
 
-    // OCR typically processes one file at a time
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
+  // OCR-specific parsing: ZIP (sidecar) vs PDF vs HTML error
+  const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
+    const headBuf = await blob.slice(0, 8).arrayBuffer();
+    const head = new TextDecoder().decode(new Uint8Array(headBuf));
 
+    // ZIP: sidecar or multi-asset output
+    if (head.startsWith('PK')) {
+      const base = stripExt(originalFiles[0].name);
       try {
-        const formData = buildFormData(parameters, file);
-        const response = await axios.post('/api/v1/misc/ocr-pdf', formData, { 
-          responseType: "blob"
-        });
+        const extracted = await extractZipFiles(blob);
+        if (extracted.length > 0) return extracted;
+      } catch { /* ignore and try local extractor */ }
+      try {
+        const local = await extractZipFile(blob); // local fallback
+        if (local.length > 0) return local;
+      } catch { /* fall through */ }
+      return [new File([blob], `ocr_${base}.zip`, { type: 'application/zip' })];
+    }
 
-        // Check for HTTP errors
-        if (response.status >= 400) {
-          const errorText = await response.data.text();
-          throw new Error(`OCR service HTTP error ${response.status}: ${errorText.substring(0, 300)}`);
+    // Not a PDF: surface error details if present
+    if (!head.startsWith('%PDF')) {
+      const textBuf = await blob.slice(0, 1024).arrayBuffer();
+      const text = new TextDecoder().decode(new Uint8Array(textBuf));
+      if (/error|exception|html/i.test(text)) {
+        if (text.includes('OCR tools') && text.includes('not installed')) {
+          throw new Error('OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.');
         }
-
-        // Validate response
-        if (!response.data || response.data.size === 0) {
-          throw new Error('Empty response from OCR service');
-        }
-
-        const contentType = response.headers['content-type'] || 'application/pdf';
-        
-        // Check if response is actually a PDF by examining the first few bytes
-        const arrayBuffer = await response.data.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const header = new TextDecoder().decode(uint8Array.slice(0, 4));
-        
-        // Check if it's a ZIP file (OCR service returns ZIP when sidecar is enabled or for multi-file results)
-        if (header.startsWith('PK')) {
-          try {
-            // Extract ZIP file contents using tool resources
-            const zipBlob = new Blob([arrayBuffer]);
-            const extractedFiles = await extractZipFiles(zipBlob);
-            
-            if (extractedFiles.length > 0) {
-              // Add extracted files to processed files
-              processedFiles.push(...extractedFiles);
-            } else {
-              // Fallback to treating as single ZIP file if extraction failed
-              const zipFile = new File([arrayBuffer], `ocr_${file.name}.zip`, { type: 'application/zip' });
-              processedFiles.push(zipFile);
-            }
-          } catch (extractError) {
-            // Fallback to treating as single ZIP file
-            const zipFile = new File([arrayBuffer], `ocr_${file.name}.zip`, { type: 'application/zip' });
-            processedFiles.push(zipFile);
-          }
-          continue; // Skip the PDF validation for ZIP files
-        }
-        
-        if (!header.startsWith('%PDF')) {
-          // Check if it's an error response
-          const text = new TextDecoder().decode(uint8Array.slice(0, 500));
-          
-          if (text.includes('error') || text.includes('Error') || text.includes('exception') || text.includes('html')) {
-            // Check for specific OCR tool unavailable error
-            if (text.includes('OCR tools') && text.includes('not installed')) {
-              throw new Error('OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.');
-            }
-            throw new Error(`OCR service error: ${text.substring(0, 300)}`);
-          }
-          
-          // Check if it's an HTML error page
-          if (text.includes('<html') || text.includes('<!DOCTYPE')) {
-            // Try to extract error message from HTML
-            const errorMatch = text.match(/<title[^>]*>([^<]+)<\/title>/i) || 
-                             text.match(/<h1[^>]*>([^<]+)<\/h1>/i) ||
-                             text.match(/<body[^>]*>([^<]+)<\/body>/i);
-            const errorMessage = errorMatch ? errorMatch[1].trim() : t('ocr.error.unknown', 'Unknown error');
-            throw new Error(`OCR service error: ${errorMessage}`);
-          }
-          
-          throw new Error(`Response is not a valid PDF file. Header: "${header}"`);
-        }
-
-        const blob = new Blob([arrayBuffer], { type: contentType });
-        const processedFile = new File([blob], `ocr_${file.name}`, { type: contentType });
-
-        processedFiles.push(processedFile);
-      } catch (fileError) {
-        const errorMessage = fileError instanceof Error ? fileError.message : t('ocr.error.unknown', 'Unknown error');
-        failedFiles.push(`${file.name} (${errorMessage})`);
+        const title =
+          text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ||
+          text.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] ||
+          t('ocr.error.unknown', 'Unknown error');
+        throw new Error(`OCR service error: ${title}`);
       }
+      throw new Error(`Response is not a valid PDF. Header: "${head}"`);
     }
 
-    if (failedFiles.length > 0 && processedFiles.length === 0) {
-      throw new Error(`Failed to process OCR for all files: ${failedFiles.join(', ')}`);
-    }
-
-    return processedFiles;
-  }, [t]);
+    const base = stripExt(originalFiles[0].name);
+    return [new File([blob], `ocr_${base}.pdf`, { type: 'application/pdf' })];
+  }, [t, extractZipFiles]);
 
   const ocrConfig: ToolOperationConfig<OCRParameters> = {
     operationType: 'ocr',
-    endpoint: '/api/v1/misc/ocr-pdf', // Not used with customProcessor but required
-    buildFormData, // Not used with customProcessor but required
+    endpoint: '/api/v1/misc/ocr-pdf',
+    buildFormData,
     filePrefix: 'ocr_',
-    customProcessor: customOCRProcessor,
-    validateParams: (params) => {
-      if (params.languages.length === 0) {
-        return { valid: false, errors: [t('ocr.validation.languageRequired', 'Please select at least one language for OCR processing.')] };
-      }
-      return { valid: true };
-    },
-    getErrorMessage: (error) => {
-      // Handle OCR-specific error first
-      if (error.message?.includes('OCR tools') && error.message?.includes('not installed')) {
-        return 'OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.';
-      }
-      // Fall back to standard error handling
-      return createStandardErrorHandler(t('ocr.error.failed', 'OCR operation failed'))(error);
-    }
+    multiFileEndpoint: false, // Process files individually
+    responseHandler, // use shared flow
+    validateParams: (params) =>
+      params.languages.length === 0
+        ? { valid: false, errors: [t('ocr.validation.languageRequired', 'Please select at least one language for OCR processing.')] }
+        : { valid: true },
+    getErrorMessage: (error) =>
+      error.message?.includes('OCR tools') && error.message?.includes('not installed')
+        ? 'OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.'
+        : createStandardErrorHandler(t('ocr.error.failed', 'OCR operation failed'))(error),
   };
 
   return useToolOperation(ocrConfig);
-}; 
+};

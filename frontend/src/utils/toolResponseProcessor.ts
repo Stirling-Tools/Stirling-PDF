@@ -1,45 +1,25 @@
 // Note: This utility should be used with useToolResources for ZIP operations
 
-export interface ResponseHandler {
-  type: 'single' | 'zip' | 'custom';
-  processor?: (blob: Blob) => Promise<File[]>;
-  useZipExtractor?: boolean;
-}
-
-const defaultResponseHandler: ResponseHandler = {
-  type: 'single'
-};
+export type ResponseHandler = (blob: Blob, originalFiles: File[]) => Promise<File[]> | File[];
 
 /**
- * Processes API response blob based on handler configuration
- * Note: For ZIP extraction, use useToolResources.extractZipFiles instead
+ * Processes a blob response into File(s).
+ * - If a tool-specific responseHandler is provided, it is used.
+ * - Otherwise, create a single file using the filePrefix + original name.
  */
-export const processResponse = async (
-  blob: Blob, 
-  originalFiles: File[], 
+export async function processResponse(
+  blob: Blob,
+  originalFiles: File[],
   filePrefix: string,
   responseHandler?: ResponseHandler
-): Promise<File[]> => {
-  const handler = responseHandler || defaultResponseHandler;
-  
-  switch (handler.type) {
-    case 'zip':
-      if (handler.useZipExtractor) {
-        // This path should be avoided - use useToolResources.extractZipFiles instead
-        throw new Error('ZIP extraction should use useToolResources.extractZipFiles');
-      }
-      // Fall through to custom if no zip extractor
-    case 'custom':
-      if (handler.processor) {
-        return await handler.processor(blob);
-      }
-      // Fall through to single
-    case 'single':
-    default:
-      const contentType = blob.type || 'application/pdf';
-      const filename = originalFiles.length === 1 
-        ? `${filePrefix}${originalFiles[0].name}`
-        : `${filePrefix}result.pdf`;
-      return [new File([blob], filename, { type: contentType })];
+): Promise<File[]> {
+  if (responseHandler) {
+    const out = await responseHandler(blob, originalFiles);
+    return Array.isArray(out) ? out : [out as unknown as File];
   }
-};
+
+  const original = originalFiles[0]?.name ?? 'result.pdf';
+  const name = `${filePrefix}${original}`;
+  const type = blob.type || 'application/octet-stream';
+  return [new File([blob], name, { type })];
+}

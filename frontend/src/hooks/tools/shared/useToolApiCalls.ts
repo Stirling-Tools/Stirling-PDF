@@ -29,7 +29,7 @@ export const useToolApiCalls = <TParams = void>() => {
 
     for (let i = 0; i < validFiles.length; i++) {
       const file = validFiles[i];
-      
+
       onProgress({ current: i + 1, total, currentFileName: file.name });
       onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
@@ -38,12 +38,13 @@ export const useToolApiCalls = <TParams = void>() => {
         const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
         const response = await axios.post(endpoint, formData, {
           responseType: 'blob',
-          cancelToken: cancelTokenRef.current.token
+          cancelToken: cancelTokenRef.current.token,
         });
 
+        // Forward to shared response processor (uses tool-specific responseHandler if provided)
         const responseFiles = await processResponse(
-          response.data, 
-          [file], 
+          response.data,
+          [file],
           config.filePrefix,
           config.responseHandler
         );
