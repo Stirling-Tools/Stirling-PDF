@@ -10,6 +10,7 @@ import { PageEditorFunctions } from "../types/pageEditor";
 import rainbowStyles from '../styles/rainbow.module.css';
 
 import ToolPicker from "../components/tools/ToolPicker";
+import ToolSearch from "../components/tools/toolPicker/ToolSearch";
 import TopControls from "../components/shared/TopControls";
 import FileEditor from "../components/fileEditor/FileEditor";
 import PageEditor from "../components/pageEditor/PageEditor";
@@ -29,6 +30,10 @@ function HomePageContent() {
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
   const { addToActiveFiles } = useFileHandler();
 
+  const [sidebarsVisible, setSidebarsVisible] = useState(true);
+  const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
+  const [readerMode, setReaderMode] = useState(false);
+
   const {
     selectedToolKey,
     selectedTool,
@@ -37,11 +42,9 @@ function HomePageContent() {
     clearToolSelection,
   } = useToolManagement();
 
-  const [sidebarsVisible, setSidebarsVisible] = useState(true);
-  const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
-  const [readerMode, setReaderMode] = useState(false);
   const [pageEditorFunctions, setPageEditorFunctions] = useState<PageEditorFunctions | null>(null);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [toolSearch, setToolSearch] = useState("");
 
   // Update file selection context when tool changes
   useEffect(() => {
@@ -81,7 +84,13 @@ function HomePageContent() {
     setCurrentView(view as any);
   }, [setCurrentView]);
 
-
+  const handleToolSearchSelect = useCallback((toolId: string) => {
+    selectTool(toolId);
+    setCurrentView('fileEditor');
+    setLeftPanelView('toolContent');
+    setReaderMode(false);
+    setToolSearch(''); // Clear search after selection
+  }, [selectTool, setCurrentView]);
 
 
   return (
@@ -129,8 +138,20 @@ function HomePageContent() {
             ) : (
               // Selected Tool Content View
               <div className="flex-1 flex flex-col">
+                {/* Search bar for quick tool switching */}
+                <div className="mb-4 border-b-1 border-b-[var(--border-default)] mb-4" >
+                  <ToolSearch
+                    value={toolSearch}
+                    onChange={setToolSearch}
+                    toolRegistry={toolRegistry}
+                    onToolSelect={handleToolSearchSelect}
+                    mode="dropdown"
+                    selectedToolKey={selectedToolKey}
+                  />
+                </div>
+
                 {/* Back button */}
-                <div className="mb-4" style={{ padding: '0 1rem' }}>
+                <div className="mb-4" style={{ padding: '0 1rem', marginTop: '1rem'}}>
                   <Button
                     variant="subtle"
                     size="sm"

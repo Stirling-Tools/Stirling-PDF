@@ -1,251 +1,302 @@
-import React, { useState, useMemo } from "react";
-import { Box, Text, Stack, Button, TextInput, Group, Tooltip, Collapse, ActionIcon } from "@mantine/core";
+import React, { useState, useMemo, useRef, useLayoutEffect } from "react";
+import { Box, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import SearchIcon from "@mui/icons-material/Search";
-import { baseToolRegistry } from "../../data/toolRegistry";
-import "./ToolPicker.css";
-
-type Tool = {
-  icon: React.ReactNode;
-  name: string;
-  description: string;
-};
-
-type ToolRegistry = {
-  [id: string]: Tool;
-};
+import { baseToolRegistry, type ToolRegistryEntry } from "../../data/toolRegistry";
+import ToolSearch from "./toolPicker/ToolSearch";
+import ToolButton from "./toolPicker/ToolButton";
+import "./toolPicker/ToolPicker.css";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
-  toolRegistry: ToolRegistry;
+  toolRegistry: Readonly<Record<string, ToolRegistryEntry>>;
 }
 
 interface GroupedTools {
   [category: string]: {
-    [subcategory: string]: Array<{ id: string; tool: Tool }>;
+    [subcategory: string]: Array<{ id: string; tool: ToolRegistryEntry }>;
   };
 }
 
 const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps) => {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
-  // Group tools by category and subcategory in a single pass - O(n)
+  const [search, setSearch] = useState("");
+  const [quickHeaderHeight, setQuickHeaderHeight] = useState(0);
+  const [allHeaderHeight, setAllHeaderHeight] = useState(0);
+
+  const scrollableRef = useRef<HTMLDivElement>(null);
+  const quickHeaderRef = useRef<HTMLDivElement>(null);
+  const allHeaderRef = useRef<HTMLDivElement>(null);
+  const quickAccessRef = useRef<HTMLDivElement>(null);
+  const allToolsRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const update = () => {
+      if (quickHeaderRef.current) {
+        setQuickHeaderHeight(quickHeaderRef.current.offsetHeight);
+      }
+      if (allHeaderRef.current) {
+        setAllHeaderHeight(allHeaderRef.current.offsetHeight);
+      }
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   const groupedTools = useMemo(() => {
     const grouped: GroupedTools = {};
-
     Object.entries(toolRegistry).forEach(([id, tool]) => {
-      // Get category and subcategory from the base registry
       const baseTool = baseToolRegistry[id as keyof typeof baseToolRegistry];
-      const category = baseTool?.category || "Other";
+      const category = baseTool?.category || "OTHER";
       const subcategory = baseTool?.subcategory || "General";
-
-      if (!grouped[category]) {
-        grouped[category] = {};
-      }
-      if (!grouped[category][subcategory]) {
-        grouped[category][subcategory] = [];
-      }
-
+      if (!grouped[category]) grouped[category] = {};
+      if (!grouped[category][subcategory]) grouped[category][subcategory] = [];
       grouped[category][subcategory].push({ id, tool });
     });
-
     return grouped;
   }, [toolRegistry]);
 
-  // Sort categories in custom order and subcategories alphabetically - O(c * s * log(s))
-  const sortedCategories = useMemo(() => {
-    const categoryOrder = ['RECOMMENDED TOOLS', 'STANDARD TOOLS', 'ADVANCED TOOLS'];
-
-    return Object.entries(groupedTools)
-      .map(([category, subcategories]) => ({
-        category,
-        subcategories: Object.entries(subcategories)
-          .sort(([a], [b]) => a.localeCompare(b)) // Sort subcategories alphabetically
-          .map(([subcategory, tools]) => ({
-            subcategory,
-            tools: tools.sort((a, b) => a.tool.name.localeCompare(b.tool.name)) // Sort tools alphabetically
-          }))
-      }))
-      .sort((a, b) => {
-        const aIndex = categoryOrder.indexOf(a.category.toUpperCase());
-        const bIndex = categoryOrder.indexOf(b.category.toUpperCase());
-        return aIndex - bIndex;
+  const sections = useMemo(() => {
+    const mapping: Record<string, "QUICK ACCESS" | "ALL TOOLS"> = {
+      "RECOMMENDED TOOLS": "QUICK ACCESS",
+      "STANDARD TOOLS": "ALL TOOLS",
+      "ADVANCED TOOLS": "ALL TOOLS"
+    };
+    const quick: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
+    const all: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
+    Object.entries(groupedTools).forEach(([origCat, subs]) => {
+      const bucket = mapping[origCat.toUpperCase()] || "ALL TOOLS";
+      const target = bucket === "QUICK ACCESS" ? quick : all;
+      Object.entries(subs).forEach(([sub, tools]) => {
+        if (!target[sub]) target[sub] = [];
+        target[sub].push(...tools);
       });
-  }, [groupedTools, t]);
-
-  // Filter tools based on search - O(n)
-  const filteredCategories = useMemo(() => {
-    if (!search.trim()) return sortedCategories;
-
-    return sortedCategories.map(({ category, subcategories }) => ({
-      category,
-      subcategories: subcategories.map(({ subcategory, tools }) => ({
-        subcategory,
-        tools: tools.filter(({ tool }) =>
-          tool.name.toLowerCase().includes(search.toLowerCase()) ||
-          tool.description.toLowerCase().includes(search.toLowerCase())
-        )
-      })).filter(({ tools }) => tools.length > 0)
-    })).filter(({ subcategories }) => subcategories.length > 0);
-  }, [sortedCategories, search, t]);
-
-  const toggleCategory = (category: string) => {
-    setExpandedCategories(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(category)) {
-        newSet.delete(category);
-      } else {
-        newSet.add(category);
-      }
-      return newSet;
     });
-  };
 
-  const renderToolButton = (id: string, tool: Tool, index: number) => (
-    <Tooltip
-      key={id}
-      label={tool.description}
-      position="right"
-      withArrow
-      openDelay={500}
-    >
-      <Button
-        variant={selectedToolKey === id ? "filled" : "subtle"}
-        onClick={() => onSelect(id)}
-        size="md"
-        radius="md"
-        leftSection={
-          <div style={{ color: 'var(--tools-text-and-icon-color)' }}>
-            {tool.icon}
-          </div>
-        }
-        fullWidth
-        justify="flex-start"
-        style={{ 
-          borderRadius: '0',
-          color: 'var(--tools-text-and-icon-color)'
-        }}
-      >
-        <span style={{ 
-          marginRight: '8px', 
-          opacity: 0.6, 
-          fontSize: '0.8em',
-          color: 'var(--tools-text-and-icon-color)'
-        }}>
-          {index + 1}.
-        </span>
-        {tool.name}
-      </Button>
-    </Tooltip>
+    const sortSubs = (obj: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>>) =>
+      Object.entries(obj)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([subcategory, tools]) => ({
+          subcategory,
+          tools: tools.sort((a, b) => a.tool.name.localeCompare(b.tool.name))
+        }));
+
+    return [
+      { title: "QUICK ACCESS", ref: quickAccessRef, subcategories: sortSubs(quick) },
+      { title: "ALL TOOLS", ref: allToolsRef, subcategories: sortSubs(all) }
+    ];
+  }, [groupedTools]);
+
+  const visibleSections = useMemo(() => {
+    if (!search.trim()) return sections;
+    const term = search.toLowerCase();
+    return sections
+      .map(s => ({
+        ...s,
+        subcategories: s.subcategories
+          .map(sc => ({
+            ...sc,
+            tools: sc.tools.filter(({ tool }) =>
+              tool.name.toLowerCase().includes(term) ||
+              tool.description.toLowerCase().includes(term)
+            )
+          }))
+          .filter(sc => sc.tools.length)
+      }))
+      .filter(s => s.subcategories.length);
+  }, [sections, search]);
+
+  const quickSection = useMemo(
+    () => visibleSections.find(s => s.title === "QUICK ACCESS"),
+    [visibleSections]
+  );
+  const allSection = useMemo(
+    () => visibleSections.find(s => s.title === "ALL TOOLS"),
+    [visibleSections]
   );
 
+  const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) => {
+    const container = scrollableRef.current;
+    const target = ref.current;
+    if (container && target) {
+      const stackedOffset = ref === allToolsRef
+        ? (quickHeaderHeight + allHeaderHeight)
+        : quickHeaderHeight;
+      const top = target.offsetTop - container.offsetTop - (stackedOffset || 0);
+      container.scrollTo({
+        top: Math.max(0, top),
+        behavior: "smooth"
+      });
+    }
+  };
+
   return (
-    <Box style={{
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: 'var(--bg-toolbar)',
-      padding: '0'
-    }}>
-        <TextInput
-          placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
-          value={search}
-          radius="md"
-          onChange={(e) => setSearch(e.currentTarget.value)}
-          autoComplete="off"
-          className="search-input rounded-lg"
-          leftSection={<SearchIcon sx={{ fontSize: 16, color: 'var(--tools-text-and-icon-color)' }} />}
-        />
+    <Box
+      h="100vh"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        background: "var(--bg-toolbar)"
+      }}
+    >
+      <ToolSearch value={search} onChange={setSearch} toolRegistry={toolRegistry} mode="filter" />
       <Box
-        className="tool-picker-scrollable"
+        ref={scrollableRef}
         style={{
           flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
+          overflowY: "auto",
+          overflowX: "hidden",
           minHeight: 0,
-          maxHeight: 'calc(100vh - 200px)'
+          height: "calc(100vh - 120px)"
         }}
+        className="tool-picker-scrollable"
       >
-        <Stack align="flex-start" gap="xs">
-          {filteredCategories.length === 0 ? (
-            <Text c="dimmed" size="sm">
-              {t("toolPicker.noToolsFound", "No tools found")}
-            </Text>
-          ) : (
-            filteredCategories.map(({ category, subcategories }) => (
-              <Box key={category} style={{ width: '100%' }}>
-                {/* Category Header */}
-                <Button
-                  variant="subtle"
-                  onClick={() => toggleCategory(category)}
-                  rightSection={
-                    <div style={{
-                      transition: 'transform 0.2s ease',
-                      transform: expandedCategories.has(category) ? 'rotate(90deg)' : 'rotate(0deg)'
-                    }}>
-                      <ChevronRightIcon sx={{ fontSize: 16, color: 'var(--tools-text-and-icon-color)' }} />
-                    </div>
-                  }
-                  fullWidth
-                  justify="space-between"
-                  style={{
-                    fontWeight: 'bold',
-                    backgroundColor: 'var(--bg-toolbar)',
-                    marginBottom: '0',
-                    borderTop: '1px solid var(--border-default)',
-                    borderBottom: '1px solid var(--border-default)',
-                    borderRadius: '0',
-                    padding: '0.75rem 1rem',
-                    color: 'var(--tools-text-and-icon-color)'
-                  }}
-                >
-                  {category.toUpperCase()}
-                </Button>
+        {quickSection && (
+          <>
+            <div
+              ref={quickHeaderRef}
+              style={{
+                position: "sticky",
+                top: 0,
+                zIndex: 2,
+                borderTop: `1px solid var(--tool-header-border)`,
+                borderBottom: `1px solid var(--tool-header-border)`,
+                marginBottom: -1,
+                padding: "0.5rem 1rem",
+                fontWeight: 700,
+                background: "var(--tool-header-bg)",
+                color: "var(--tool-header-text)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}
+              onClick={() => scrollTo(quickAccessRef)}
+            >
+              <span>QUICK ACCESS</span>
+              <span
+                style={{
+                  background: "var(--tool-header-badge-bg)",
+                  color: "var(--tool-header-badge-text)",
+                  borderRadius: 8,
+                  padding: "2px 8px",
+                  fontSize: 12,
+                  fontWeight: 700
+                }}
+              >
+                {quickSection.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
+              </span>
+            </div>
 
-                {/* Subcategories */}
-                <Collapse in={expandedCategories.has(category)}>
-                  <Stack gap="xs" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
-                    {subcategories.map(({ subcategory, tools }) => (
-                      <Box key={subcategory}>
-                        {/* Subcategory Header (only show if there are multiple subcategories) */}
-                        {subcategories.length > 1 && (
-                          <Text
-                            size="sm"
-                            fw={500}
-                            style={{
-                              marginBottom: '4px',
-                              textTransform: 'uppercase',
-                              fontSize: '0.75rem',
-                              borderBottom: '1px solid var(--border-default)',
-                              paddingBottom: '0.5rem',
-                              marginLeft: '1rem',
-                              marginRight: '1rem',
-                              color: 'var(--tools-text-and-icon-color)'
-                            }}
-                          >
-                            {subcategory}
-                          </Text>
-                        )}
+            <Box ref={quickAccessRef} w="100%">
+              <Stack p="sm" gap="xs">
+                {quickSection.subcategories.map(sc => (
+                  <Box key={sc.subcategory} w="100%">
+                    {quickSection.subcategories.length > 1 && (
+                      <Text
+                        size="sm"
+                        fw={500}
+                        mb="0.25rem"
+                        mt="1rem"
+                        className="tool-subcategory-title"
+                      >
+                        {sc.subcategory}
+                      </Text>
+                    )}
+                    <Stack gap="xs">
+                      {sc.tools.map(({ id, tool }) => (
+                        <ToolButton
+                          key={id}
+                          id={id}
+                          tool={tool}
+                          isSelected={selectedToolKey === id}
+                          onSelect={onSelect}
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          </>
+        )}
 
-                        {/* Tools in this subcategory */}
-                        <Stack gap="xs">
-                          {tools.map(({ id, tool }, index) =>
-                            renderToolButton(id, tool, index)
-                          )}
-                        </Stack>
-                      </Box>
-                    ))}
-                  </Stack>
-                </Collapse>
-              </Box>
-            ))
-          )}
-        </Stack>
+        {allSection && (
+          <>
+            <div
+              ref={allHeaderRef}
+              style={{
+                position: "sticky",
+                top: quickSection ? quickHeaderHeight - 1: 0,
+                zIndex: 2,
+                borderTop: `1px solid var(--tool-header-border)`,
+                borderBottom: `1px solid var(--tool-header-border)`,
+                padding: "0.5rem 1rem",
+                fontWeight: 700,
+                background: "var(--tool-header-bg)",
+                color: "var(--tool-header-text)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}
+              onClick={() => scrollTo(allToolsRef)}
+            >
+              <span>ALL TOOLS</span>
+              <span
+                style={{
+                  background: "var(--tool-header-badge-bg)",
+                  color: "var(--tool-header-badge-text)",
+                  borderRadius: 8,
+                  padding: "2px 8px",
+                  fontSize: 12,
+                  fontWeight: 700
+                }}
+              >
+                {allSection.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
+              </span>
+            </div>
+
+            <Box ref={allToolsRef} w="100%">
+              <Stack p="sm" gap="xs">
+                {allSection.subcategories.map(sc => (
+                  <Box key={sc.subcategory} w="100%">
+                    {allSection.subcategories.length > 1 && (
+                      <Text
+                        size="sm"
+                        fw={500}
+                        mb="0.25rem"
+                        mt="1rem"
+                        className="tool-subcategory-title"
+                      >
+                        {sc.subcategory}
+                      </Text>
+                    )}
+                    <Stack gap="xs">
+                      {sc.tools.map(({ id, tool }) => (
+                        <ToolButton
+                          key={id}
+                          id={id}
+                          tool={tool}
+                          isSelected={selectedToolKey === id}
+                          onSelect={onSelect}
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          </>
+        )}
+
+        {!quickSection && !allSection && (
+          <Text c="dimmed" size="sm" p="sm">
+            {t("toolPicker.noToolsFound", "No tools found")}
+          </Text>
+        )}
       </Box>
     </Box>
   );

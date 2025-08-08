@@ -109,6 +109,16 @@
 
   /* New theme colors for text and icons */
   --tools-text-and-icon-color: #374151;
+
+  /* Tool picker sticky header variables (light mode) */
+  --tool-header-bg: #DBEFFF;
+  --tool-header-border: #BEE2FF;
+  --tool-header-text: #1E88E5;
+  --tool-header-badge-bg: #C0DDFF;
+  --tool-header-badge-text: #004E99;
+
+  /* Subcategory title styling (light mode) */
+  --tool-subcategory-text-color: #6B7280;
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -188,6 +198,16 @@
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
 
   --tools-text-and-icon-color: #D0D6DC;
+
+  /* Tool picker sticky header variables (dark mode) */
+  --tool-header-bg: #2A2F36;
+  --tool-header-border: #3A4047;
+  --tool-header-text: #D0D6DC;
+  --tool-header-badge-bg: #4B525A;
+  --tool-header-badge-text: #FFFFFF;
+
+  /* Subcategory title styling (dark mode) */
+  --tool-subcategory-text-color: #6B7280;
 }
 
 /* Smooth transitions for theme switching */
