@@ -91,7 +91,7 @@ dependencies {
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
