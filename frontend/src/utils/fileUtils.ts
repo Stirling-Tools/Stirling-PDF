@@ -1,8 +1,8 @@
 import { FileWithUrl } from "../types/file";
 import { StoredFile, fileStorage } from "../services/fileStorage";
 
-export function getFileId(file: File): string {
-  return (file as File & { id?: string }).id || file.name;
+export function getFileId(file: File): string | null {
+  return (file as File & { id?: string }).id || null;
 }
 
 /**

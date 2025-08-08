@@ -226,6 +226,32 @@ class FileStorageService {
   }
 
   /**
+   * Update the lastModified timestamp of a file (for most recently used sorting)
+   */
+  async touchFile(id: string): Promise<boolean> {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+      
+      const getRequest = store.get(id);
+      getRequest.onsuccess = () => {
+        const file = getRequest.result;
+        if (file) {
+          // Update lastModified to current timestamp
+          file.lastModified = Date.now();
+          const updateRequest = store.put(file);
+          updateRequest.onsuccess = () => resolve(true);
+          updateRequest.onerror = () => reject(updateRequest.error);
+        } else {
+          resolve(false); // File not found
+        }
+      };
+      getRequest.onerror = () => reject(getRequest.error);
+    });
+  }
+
+  /**
    * Clear all stored files
    */
   async clearAll(): Promise<void> {

@@ -18,9 +18,31 @@ import { detectFileExtension } from '../../utils/fileUtils';
 vi.mock('axios');
 const mockedAxios = vi.mocked(axios);
 
-// Mock utility modules
-vi.mock('../../utils/thumbnailUtils', () => ({
-  generateThumbnailForFile: vi.fn().mockResolvedValue('data:image/png;base64,fake-thumbnail')
+// Mock only essential services that are actually called by the tests
+vi.mock('../../services/fileStorage', () => ({
+  fileStorage: {
+    init: vi.fn().mockResolvedValue(undefined),
+    storeFile: vi.fn().mockImplementation((file, thumbnail) => {
+      return Promise.resolve({ 
+        id: `mock-id-${file.name}`, 
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+        thumbnail: thumbnail
+      });
+    }),
+    getAllFileMetadata: vi.fn().mockResolvedValue([]),
+    cleanup: vi.fn().mockResolvedValue(undefined)
+  }
+}));
+
+vi.mock('../../services/thumbnailGenerationService', () => ({
+  thumbnailGenerationService: {
+    generateThumbnail: vi.fn().mockResolvedValue('data:image/png;base64,fake-thumbnail'),
+    cleanup: vi.fn(),
+    destroy: vi.fn()
+  }
 }));
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (

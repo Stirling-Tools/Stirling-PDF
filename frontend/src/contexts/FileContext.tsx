@@ -100,7 +100,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
     case 'REMOVE_FILES':
       const remainingFiles = state.activeFiles.filter(file => {
         const fileId = getFileId(file);
-        return !action.payload.includes(fileId);
+        return !fileId || !action.payload.includes(fileId);
       });
       const safeSelectedFileIds = Array.isArray(state.selectedFileIds) ? state.selectedFileIds : [];
       return {
@@ -491,26 +491,38 @@ export function FileContextProvider({
   }, [cleanupFile]);
 
   // Action implementations
-  const addFiles = useCallback(async (files: File[]) => {
+  const addFiles = useCallback(async (files: File[]): Promise<File[]> => {
     dispatch({ type: 'ADD_FILES', payload: files });
     
     // Auto-save to IndexedDB if persistence enabled
     if (enablePersistence) {
       for (const file of files) {
         try {
-          // Check if file already has an ID (already in IndexedDB)
+          // Check if file already has an explicit ID property (already in IndexedDB)
           const fileId = getFileId(file);
           if (!fileId) {
-            // File doesn't have ID, store it and get the ID
-            const storedFile = await fileStorage.storeFile(file);
-            // Add the ID to the file object
-            Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            // File doesn't have explicit ID, store it with thumbnail
+            try {
+              // Generate thumbnail for better recent files experience
+              const thumbnail = await thumbnailGenerationService.generateThumbnail(file);
+              const storedFile = await fileStorage.storeFile(file, thumbnail);
+              // Add the ID to the file object
+              Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            } catch (thumbnailError) {
+              // If thumbnail generation fails, store without thumbnail
+              console.warn('Failed to generate thumbnail, storing without:', thumbnailError);
+              const storedFile = await fileStorage.storeFile(file);
+              Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            }
           }
         } catch (error) {
           console.error('Failed to store file:', error);
         }
       }
     }
+    
+    // Return files with their IDs assigned
+    return files;
   }, [enablePersistence]);
 
   const removeFiles = useCallback((fileIds: string[], deleteFromStorage: boolean = true) => {
@@ -682,7 +694,7 @@ export function FileContextProvider({
   const getFileById = useCallback((fileId: string): File | undefined => {
     return state.activeFiles.find(file => {
       const actualFileId = getFileId(file);
-      return actualFileId === fileId;
+      return actualFileId && actualFileId === fileId;
     });
   }, [state.activeFiles]);
 

@@ -23,13 +23,31 @@ import axios from 'axios';
 vi.mock('axios');
 const mockedAxios = vi.mocked(axios);
 
-// Mock utility modules
-vi.mock('../../utils/thumbnailUtils', () => ({
-  generateThumbnailForFile: vi.fn().mockResolvedValue('data:image/png;base64,fake-thumbnail')
+// Mock only essential services that are actually called by the tests
+vi.mock('../../services/fileStorage', () => ({
+  fileStorage: {
+    init: vi.fn().mockResolvedValue(undefined),
+    storeFile: vi.fn().mockImplementation((file, thumbnail) => {
+      return Promise.resolve({ 
+        id: `mock-id-${file.name}`, 
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+        thumbnail: thumbnail
+      });
+    }),
+    getAllFileMetadata: vi.fn().mockResolvedValue([]),
+    cleanup: vi.fn().mockResolvedValue(undefined)
+  }
 }));
 
-vi.mock('../../utils/api', () => ({
-  makeApiUrl: vi.fn((path: string) => `/api/v1${path}`)
+vi.mock('../../services/thumbnailGenerationService', () => ({
+  thumbnailGenerationService: {
+    generateThumbnail: vi.fn().mockResolvedValue('data:image/png;base64,fake-thumbnail'),
+    cleanup: vi.fn(),
+    destroy: vi.fn()
+  }
 }));
 
 // Create realistic test files
@@ -194,7 +212,14 @@ describe('Convert Tool Integration Tests', () => {
     
     test('should correctly map image conversion parameters to API call', async () => {
       const mockBlob = new Blob(['fake-data'], { type: 'image/jpeg' });
-      mockedAxios.post.mockResolvedValueOnce({ data: mockBlob });
+      mockedAxios.post.mockResolvedValueOnce({ 
+        data: mockBlob,
+        status: 200,
+        headers: {
+          'content-type': 'image/jpeg',
+          'content-disposition': 'attachment; filename="test_converted.jpg"'
+        }
+      });
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -472,7 +497,14 @@ describe('Convert Tool Integration Tests', () => {
     
     test('should record operation in FileContext', async () => {
       const mockBlob = new Blob(['fake-data'], { type: 'image/png' });
-      mockedAxios.post.mockResolvedValueOnce({ data: mockBlob });
+      mockedAxios.post.mockResolvedValueOnce({ 
+        data: mockBlob,
+        status: 200,
+        headers: {
+          'content-type': 'image/png',
+          'content-disposition': 'attachment; filename="test_converted.png"'
+        }
+      });
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -506,7 +538,14 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should clean up blob URLs on reset', async () => {
       const mockBlob = new Blob(['fake-data'], { type: 'image/png' });
-      mockedAxios.post.mockResolvedValueOnce({ data: mockBlob });
+      mockedAxios.post.mockResolvedValueOnce({ 
+        data: mockBlob,
+        status: 200,
+        headers: {
+          'content-type': 'image/png',
+          'content-disposition': 'attachment; filename="test_converted.png"'
+        }
+      });
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
