@@ -321,7 +321,7 @@ async function showUpdateModal() {
   const modalBody = document.getElementById('updateModalBody');
   if (fullUpdateInfo && fullUpdateInfo.new_versions) {
    const storedMode = localStorage.getItem("dark-mode");
-    const isDarkMode = storedMode === "on" || 
+    const isDarkMode = storedMode === "on" ||
                       (storedMode === null && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
     const darkClasses = isDarkMode ? {
       accordionItem: 'bg-dark border-secondary text-light',
