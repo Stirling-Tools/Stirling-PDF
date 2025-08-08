@@ -18,7 +18,7 @@ import AdvancedOCRSettings from "../components/tools/ocr/AdvancedOCRSettings";
 import { useOCRParameters } from "../hooks/tools/ocr/useOCRParameters";
 import { useOCROperation } from "../hooks/tools/ocr/useOCROperation";
 import { BaseToolProps } from "../types/tool";
-import { OcrTips } from "../components/tips/OCRTips";
+import { OcrTips } from "../components/tooltips/OCRTips";
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

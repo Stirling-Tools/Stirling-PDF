@@ -17,7 +17,7 @@ import CompressSettings from "../components/tools/compress/CompressSettings";
 import { useCompressParameters } from "../hooks/tools/compress/useCompressParameters";
 import { useCompressOperation } from "../hooks/tools/compress/useCompressOperation";
 import { BaseToolProps } from "../types/tool";
-import { CompressTips } from "../components/tips/CompressTips";
+import { CompressTips } from "../components/tooltips/CompressTips";
 
 const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
