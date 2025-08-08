@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 import java.time.LocalDateTime;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -37,7 +38,7 @@ public class FileInfoTest {
         assertEquals(expectedFormattedSize, fileInfo.getFormattedFileSize());
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testGetFilePathAsPath() {
         FileInfo fileInfo =
                 new FileInfo(
@@ -51,7 +52,7 @@ public class FileInfoTest {
                 fileInfo.getFilePathAsPath().toString());
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testGetFormattedModificationDate() {
         LocalDateTime modDate = LocalDateTime.of(2024, 6, 1, 15, 30, 45);
         FileInfo fileInfo =
@@ -64,7 +65,7 @@ public class FileInfoTest {
         assertEquals("2024-06-01 15:30:45", fileInfo.getFormattedModificationDate());
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testGetFormattedCreationDate() {
         LocalDateTime creationDate = LocalDateTime.of(2023, 12, 25, 8, 15, 0);
         FileInfo fileInfo =
@@ -77,7 +78,7 @@ public class FileInfoTest {
         assertEquals("2023-12-25 08:15:00", fileInfo.getFormattedCreationDate());
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testGettersAndSetters() {
         LocalDateTime now = LocalDateTime.now();
         FileInfo fileInfo =
