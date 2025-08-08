@@ -23,10 +23,10 @@
                 <div class="mb-3">
                   <label for="splitMode" th:text="#{split-by-sections.mode}">Split Mode</label>
                   <select class="form-control" id="splitMode" name="splitMode">
+                    <option value="SPLIT_ALL" th:text="#{split-by-sections.mode.4}">Split all</option>
                     <option value="SPLIT_ALL_EXCEPT_FIRST_AND_LAST" th:text="#{split-by-sections.mode.1}">Split all except first and last</option>
                     <option value="SPLIT_ALL_EXCEPT_FIRST" th:text="#{split-by-sections.mode.2}">Split all except first</option>
                     <option value="SPLIT_ALL_EXCEPT_LAST" th:text="#{split-by-sections.mode.3}">Split all except last</option>
-                    <option value="SPLIT_ALL" th:text="#{split-by-sections.mode.4}">Split all</option>
                     <option value="CUSTOM" th:text="#{split-by-sections.mode.5}">Specify pages to split</option>
                   </select>
                 </div>
