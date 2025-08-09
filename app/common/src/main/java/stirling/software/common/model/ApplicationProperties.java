@@ -197,7 +197,7 @@ public class ApplicationProperties {
             @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
-                    return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
+                    return new ClassPathResource(idpMetadataUri.substring("classpath:".length()))
                             .getInputStream();
                 }
                 try {
@@ -233,6 +233,7 @@ public class ApplicationProperties {
 
             @JsonIgnore
             public Resource getPrivateKey() {
+                if (privateKey == null) return null;
                 if (privateKey.startsWith("classpath:")) {
                     return new ClassPathResource(privateKey.substring("classpath:".length()));
                 } else {
@@ -311,6 +312,7 @@ public class ApplicationProperties {
         private Boolean enableAnalytics;
         private Datasource datasource;
         private Boolean disableSanitize;
+        private int maxDPI;
         private Boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
