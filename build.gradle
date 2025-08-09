@@ -30,7 +30,7 @@ ext {
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.25.1"
     googleJavaFormatVersion = "1.28.0"
-    junitPlatformVersion = "1.12.2"
+    junitPlatformVersion = "1.13.4"
     tempJrePath = null
 }
 
