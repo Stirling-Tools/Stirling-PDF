@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.userdetails.UserDetails;
+
 import jakarta.persistence.*;
 
 import lombok.EqualsAndHashCode;
@@ -25,7 +27,7 @@ import stirling.software.proprietary.model.Team;
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-public class User implements Serializable {
+public class User implements UserDetails, Serializable {
 
     private static final long serialVersionUID = 1L;
 

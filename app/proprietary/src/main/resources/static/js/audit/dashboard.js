@@ -230,7 +230,7 @@ function loadAuditData(targetPage, realPageSize) {
         document.getElementById('page-indicator').textContent = `Page ${requestedPage + 1} of ?`;
     }
 
-    fetch(url)
+    fetchWithCsrf(url)
         .then(response => {
             return response.json();
         })
@@ -302,7 +302,7 @@ function loadStats(days) {
     showLoading('user-chart-loading');
     showLoading('time-chart-loading');
 
-    fetch(`/audit/stats?days=${days}`)
+    fetchWithCsrf(`/audit/stats?days=${days}`)
         .then(response => response.json())
         .then(data => {
             document.getElementById('total-events').textContent = data.totalEvents;
@@ -835,7 +835,7 @@ function hideLoading(id) {
 
 // Load event types from the server for filter dropdowns
 function loadEventTypes() {
-    fetch('/audit/types')
+    fetchWithCsrf('/audit/types')
         .then(response => response.json())
         .then(types => {
             if (!types || types.length === 0) {

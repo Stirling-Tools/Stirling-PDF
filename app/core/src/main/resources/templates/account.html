@@ -390,8 +390,13 @@
 	             key.includes('clientSubmissionOrder') || 
 	             key.includes('lastSubmitTime') || 
 	             key.includes('lastClientId') || 
-	             
-	             
+	             key.includes('stirling_jwt') ||
+	             key.includes('JSESSIONID') ||
+	             key.includes('XSRF-TOKEN') ||
+	             key.includes('remember-me') ||
+	             key.includes('auth') ||
+	             key.includes('token') ||
+	             key.includes('session') ||
 	             key.includes('posthog') || key.includes('ssoRedirectAttempts') || key.includes('lastRedirectAttempt') || key.includes('surveyVersion') || 
 	             key.includes('pageViews');
 	    }
