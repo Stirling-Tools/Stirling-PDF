@@ -84,6 +84,6 @@ public class SPDFApplicationTest {
         String[] args = {};
         String[] profiles = SPDFApplication.getActiveProfile(args);
         assertEquals(1, profiles.length);
-        assertEquals("default", profiles[0]);
+        assertEquals("security", profiles[0]);
     }
 }
