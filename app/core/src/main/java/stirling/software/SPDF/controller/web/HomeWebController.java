@@ -32,14 +32,16 @@ public class HomeWebController {
 
     private final ApplicationProperties applicationProperties;
 
-    @GetMapping("/about")
+    @Deprecated
+    // @GetMapping("/about")
     @Hidden
     public String gameForm(Model model) {
         model.addAttribute("currentPage", "about");
         return "about";
     }
 
-    @GetMapping("/licenses")
+    @Deprecated
+    // @GetMapping("/licenses")
     @Hidden
     public String licensesForm(Model model) {
         model.addAttribute("currentPage", "licenses");
@@ -56,12 +58,14 @@ public class HomeWebController {
         return "licenses";
     }
 
-    @GetMapping("/releases")
+    @Deprecated
+    // @GetMapping("/releases")
     public String getReleaseNotes(Model model) {
         return "releases";
     }
 
-    @GetMapping("/")
+    @Deprecated
+    // @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("currentPage", "home");
         String showSurvey = System.getenv("SHOW_SURVEY");
@@ -70,12 +74,14 @@ public class HomeWebController {
         return "home";
     }
 
-    @GetMapping("/home")
+    @Deprecated
+    // @GetMapping("/home")
     public String root(Model model) {
         return "redirect:/";
     }
 
-    @GetMapping("/home-legacy")
+    @Deprecated
+    // @GetMapping("/home-legacy")
     public String redirectHomeLegacy() {
         return "redirect:/";
     }

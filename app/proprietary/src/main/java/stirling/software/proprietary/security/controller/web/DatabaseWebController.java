@@ -6,7 +6,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -24,8 +23,9 @@ public class DatabaseWebController {
 
     private final DatabaseService databaseService;
 
+    @Deprecated
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/database")
+    // @GetMapping("/database")
     public String database(HttpServletRequest request, Model model, Authentication authentication) {
         String error = request.getParameter("error");
         String confirmed = request.getParameter("infoMessage");
