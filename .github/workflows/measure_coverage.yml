@@ -1,7 +1,11 @@
 name: Measure coverage
 
 on:
-  pull_request:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
 
 jobs:
   measure_coverage:
@@ -23,6 +27,10 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
 
       - name: Set up JDK ${{ matrix.jdk-version }}
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
@@ -45,7 +53,7 @@ jobs:
         uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
         with:
           paths: |
-            ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml,
+            ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 10
           min-coverage-changed-files: 0
