@@ -4,7 +4,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  measure_coverage:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
