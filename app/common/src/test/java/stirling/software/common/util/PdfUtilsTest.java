@@ -1,27 +1,32 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -31,32 +36,87 @@ public class PdfUtilsTest {
 
     @Test
     void testTextToPageSize() {
+        assertEquals(PDRectangle.A0, PdfUtils.textToPageSize("A0"));
+        assertEquals(PDRectangle.A1, PdfUtils.textToPageSize("A1"));
+        assertEquals(PDRectangle.A2, PdfUtils.textToPageSize("A2"));
+        assertEquals(PDRectangle.A3, PdfUtils.textToPageSize("A3"));
         assertEquals(PDRectangle.A4, PdfUtils.textToPageSize("A4"));
+        assertEquals(PDRectangle.A5, PdfUtils.textToPageSize("A5"));
+        assertEquals(PDRectangle.A6, PdfUtils.textToPageSize("A6"));
         assertEquals(PDRectangle.LETTER, PdfUtils.textToPageSize("LETTER"));
+        assertEquals(PDRectangle.LEGAL, PdfUtils.textToPageSize("LEGAL"));
         assertThrows(IllegalArgumentException.class, () -> PdfUtils.textToPageSize("INVALID"));
     }
 
     @Test
-    void testHasImagesOnPage() throws IOException {
-        // Mock a PDPage and its resources
-        PDPage page = Mockito.mock(PDPage.class);
-        PDResources resources = Mockito.mock(PDResources.class);
-        Mockito.when(page.getResources()).thenReturn(resources);
+    void testGetAllImages() throws Exception {
+        // Root resources
+        PDResources root = mock(PDResources.class);
 
-        // Case 1: No images in resources
-        Mockito.when(resources.getXObjectNames()).thenReturn(Collections.emptySet());
-        assertFalse(PdfUtils.hasImagesOnPage(page));
+        COSName im1 = COSName.getPDFName("Im1");
+        COSName form1 = COSName.getPDFName("Form1");
+        COSName other1 = COSName.getPDFName("Other1");
+        when(root.getXObjectNames()).thenReturn(Arrays.asList(im1, form1, other1));
 
-        // Case 2: Resources with an image
-        Set<COSName> xObjectNames = new HashSet<>();
-        COSName cosName = Mockito.mock(COSName.class);
-        xObjectNames.add(cosName);
+        // Direct image at root
+        PDImageXObject imgXObj1 = mock(PDImageXObject.class);
+        BufferedImage img1 = new BufferedImage(2, 2, BufferedImage.TYPE_INT_ARGB);
+        when(imgXObj1.getImage()).thenReturn(img1);
+        when(root.getXObject(im1)).thenReturn(imgXObj1);
 
-        PDImageXObject imageXObject = Mockito.mock(PDImageXObject.class);
-        Mockito.when(resources.getXObjectNames()).thenReturn(xObjectNames);
-        Mockito.when(resources.getXObject(cosName)).thenReturn(imageXObject);
+        // "Other" XObject that should be ignored
+        PDXObject otherXObj = mock(PDXObject.class);
+        when(root.getXObject(other1)).thenReturn(otherXObj);
 
-        assertTrue(PdfUtils.hasImagesOnPage(page));
+        // Form XObject with its own resources
+        PDFormXObject formXObj = mock(PDFormXObject.class);
+        PDResources formRes = mock(PDResources.class);
+        when(formXObj.getResources()).thenReturn(formRes);
+        when(root.getXObject(form1)).thenReturn(formXObj);
+
+        // Inside the form: one image and a nested form
+        COSName im2 = COSName.getPDFName("Im2");
+        COSName nestedForm = COSName.getPDFName("NestedForm");
+        when(formRes.getXObjectNames()).thenReturn(Arrays.asList(im2, nestedForm));
+
+        PDImageXObject imgXObj2 = mock(PDImageXObject.class);
+        BufferedImage img2 = new BufferedImage(3, 3, BufferedImage.TYPE_INT_RGB);
+        when(imgXObj2.getImage()).thenReturn(img2);
+        when(formRes.getXObject(im2)).thenReturn(imgXObj2);
+
+        PDFormXObject nestedFormXObj = mock(PDFormXObject.class);
+        PDResources nestedRes = mock(PDResources.class);
+        when(nestedFormXObj.getResources()).thenReturn(nestedRes);
+        when(formRes.getXObject(nestedForm)).thenReturn(nestedFormXObj);
+
+        // Deep nest: another image
+        COSName im3 = COSName.getPDFName("Im3");
+        when(nestedRes.getXObjectNames()).thenReturn(List.of(im3));
+
+        PDImageXObject imgXObj3 = mock(PDImageXObject.class);
+        BufferedImage img3 = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        when(imgXObj3.getImage()).thenReturn(img3);
+        when(nestedRes.getXObject(im3)).thenReturn(imgXObj3);
+
+        // Act
+        List<RenderedImage> result = PdfUtils.getAllImages(root);
+
+        // Assert
+        assertEquals(
+                3, result.size(), "It should find exactly 3 images (root + form + nested form).");
+        assertTrue(
+                result.containsAll(List.of(img1, img2, img3)),
+                "All expected images must be present.");
+    }
+
+    // Helper method to draw a tiny image on a PDF page
+    private static void drawTinyImage(PDDocument doc, PDPage page) throws IOException {
+        BufferedImage bi = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
+        PDImageXObject ximg = LosslessFactory.createFromImage(doc, bi);
+        try (PDPageContentStream cs =
+                new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
+            cs.drawImage(ximg, 10, 10, 10, 10);
+        }
     }
 
     @Test

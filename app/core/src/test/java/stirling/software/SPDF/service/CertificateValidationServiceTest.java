@@ -1,5 +1,6 @@
 package stirling.software.SPDF.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
@@ -77,6 +78,9 @@ class CertificateValidationServiceTest {
 
         // Then validation should succeed
         assertTrue(result, "Certificate with matching issuer and subject should validate");
+
+        // Ensure no exceptions are thrown during validation
+        assertDoesNotThrow(() -> validationService.validateTrustWithCustomCert(null, issuingCert));
     }
 
     @Test
