@@ -176,11 +176,9 @@ public class SanitizeController {
     private void sanitizeLinks(PDDocument document) throws IOException {
         for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
-                if (annotation != null && annotation instanceof PDAnnotationLink linkAnnotation) {
+                if (annotation instanceof PDAnnotationLink linkAnnotation) {
                     PDAction action = linkAnnotation.getAction();
-                    if (action != null
-                            && (action instanceof PDActionLaunch
-                                    || action instanceof PDActionURI)) {
+                    if ((action instanceof PDActionLaunch || action instanceof PDActionURI)) {
                         linkAnnotation.setAction(null);
                     }
                 }
