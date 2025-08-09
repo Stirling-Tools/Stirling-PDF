@@ -18,7 +18,6 @@ class ApplicationPropertiesDynamicYamlPropertySourceTest {
 
     @Test
     void loads_yaml_into_environment() throws Exception {
-        // YAML-Config in Temp-Datei schreiben
         String yaml =
                 ""
                         + "ui:\n"
@@ -28,7 +27,6 @@ class ApplicationPropertiesDynamicYamlPropertySourceTest {
         Path tmp = Files.createTempFile("spdf-settings-", ".yml");
         Files.writeString(tmp, yaml);
 
-        // Pfad per statischem Mock liefern
         try (MockedStatic<InstallationPathConfig> mocked =
                 Mockito.mockStatic(InstallationPathConfig.class)) {
             mocked.when(InstallationPathConfig::getSettingsPath).thenReturn(tmp.toString());
@@ -36,7 +34,7 @@ class ApplicationPropertiesDynamicYamlPropertySourceTest {
             ConfigurableEnvironment env = new StandardEnvironment();
             ApplicationProperties props = new ApplicationProperties();
 
-            props.dynamicYamlPropertySource(env); // fügt PropertySource an erster Stelle ein
+            props.dynamicYamlPropertySource(env);
 
             assertEquals("My App", env.getProperty("ui.appName"));
             assertEquals("true", env.getProperty("system.enableAnalytics"));

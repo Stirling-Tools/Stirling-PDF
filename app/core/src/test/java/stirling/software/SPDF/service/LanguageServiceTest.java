@@ -1,9 +1,12 @@
 package stirling.software.SPDF.service;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -16,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Ui;
@@ -143,6 +147,45 @@ class LanguageServiceTest {
         Resource mockResource = mock(Resource.class);
         when(mockResource.getFilename()).thenReturn(filename);
         return mockResource;
+    }
+
+    @Test
+    void delegatesToResolverAndReturnsResources() throws IOException {
+        LanguageService service = new LanguageService(applicationProperties);
+        PathMatchingResourcePatternResolver resolver =
+                mock(PathMatchingResourcePatternResolver.class);
+        Resource r1 = mock(Resource.class);
+        Resource r2 = mock(Resource.class);
+        String pattern = "classpath*:messages_*.properties";
+
+        when(resolver.getResources(pattern)).thenReturn(new Resource[] {r1, r2});
+
+        // Inject the mocked resolver into the private final field
+        ReflectionTestUtils.setField(service, "resourcePatternResolver", resolver);
+
+        Resource[] result = service.getResourcesFromPattern(pattern);
+
+        assertArrayEquals(
+                new Resource[] {r1, r2}, result, "Should return exactly what the resolver returns");
+        verify(resolver).getResources(pattern);
+    }
+
+    @Test
+    void propagatesIOExceptionFromResolver() throws IOException {
+        LanguageService service = new LanguageService(applicationProperties);
+        PathMatchingResourcePatternResolver resolver =
+                mock(PathMatchingResourcePatternResolver.class);
+        String pattern = "classpath*:does-not-matter";
+
+        when(resolver.getResources(pattern)).thenThrow(new IOException("boom"));
+
+        // Inject the mocked resolver into the private final field
+        ReflectionTestUtils.setField(service, "resourcePatternResolver", resolver);
+
+        assertThrows(
+                IOException.class,
+                () -> service.getResourcesFromPattern(pattern),
+                "IOException from resolver should propagate");
     }
 
     // Test subclass that allows us to control the resource resolver
