@@ -14,11 +14,16 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.model.Organization;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.OrganizationRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.security.service.OrganizationService;
+import stirling.software.proprietary.security.service.OrganizationValidationService;
+import stirling.software.proprietary.security.service.RoleBasedAuthorizationService;
 import stirling.software.proprietary.security.service.TeamService;
 
 @Controller
@@ -27,35 +32,50 @@ import stirling.software.proprietary.security.service.TeamService;
 @Slf4j
 @RequiredArgsConstructor
 @PremiumEndpoint
+@PreAuthorize("@roleBasedAuthorizationService.canManageOrgTeams()")
 public class TeamController {
 
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
+    private final OrganizationRepository organizationRepository;
+    private final OrganizationService organizationService;
+    private final OrganizationValidationService organizationValidationService;
+    private final RoleBasedAuthorizationService authorizationService;
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/create")
-    public RedirectView createTeam(@RequestParam("name") String name) {
-        if (teamRepository.existsByNameIgnoreCase(name)) {
+    public RedirectView createTeam(
+            @RequestParam("name") String name,
+            @RequestParam("organizationId") Long organizationId) {
+        Organization organization = organizationService.getOrCreateDefaultOrganization();
+        if (organizationId != null) {
+            organization = organizationRepository.findById(organizationId).orElse(organization);
+        }
+
+        if (teamRepository.existsByNameIgnoreCaseAndOrganizationId(name, organization.getId())) {
             return new RedirectView("/teams?messageType=teamExists");
         }
         Team team = new Team();
         team.setName(name);
+        team.setOrganization(organization);
         teamRepository.save(team);
         return new RedirectView("/teams?messageType=teamCreated");
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/rename")
+    @PreAuthorize(
+            "@roleBasedAuthorizationService.canManageTeam(@teamRepository.findById(#teamId).orElse(null))")
     public RedirectView renameTeam(
             @RequestParam("teamId") Long teamId, @RequestParam("newName") String newName) {
         Optional<Team> existing = teamRepository.findById(teamId);
         if (existing.isEmpty()) {
             return new RedirectView("/teams?messageType=teamNotFound");
         }
-        if (teamRepository.existsByNameIgnoreCase(newName)) {
+        Team team = existing.get();
+
+        if (teamRepository.existsByNameIgnoreCaseAndOrganizationId(
+                newName, team.getOrganization().getId())) {
             return new RedirectView("/teams?messageType=teamNameExists");
         }
-        Team team = existing.get();
 
         // Prevent renaming the Internal team
         if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
@@ -67,9 +87,10 @@ public class TeamController {
         return new RedirectView("/teams?messageType=teamRenamed");
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/delete")
     @Transactional
+    @PreAuthorize(
+            "@roleBasedAuthorizationService.canManageTeam(@teamRepository.findById(#teamId).orElse(null))")
     public RedirectView deleteTeam(@RequestParam("teamId") Long teamId) {
         Optional<Team> teamOpt = teamRepository.findById(teamId);
         if (teamOpt.isEmpty()) {
@@ -92,9 +113,10 @@ public class TeamController {
         return new RedirectView("/teams?messageType=teamDeleted");
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/addUser")
     @Transactional
+    @PreAuthorize(
+            "@roleBasedAuthorizationService.canAddUserToTeam(#userId, @teamRepository.findById(#teamId).orElse(null))")
     public RedirectView addUserToTeam(
             @RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
 
@@ -119,6 +141,13 @@ public class TeamController {
         if (user.getTeam() != null
                 && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
             return new RedirectView("/teams/" + teamId + "?error=cannotMoveInternalUsers");
+        }
+
+        // Ensure user and team are in the same organization (or user has no org yet)
+        if (user.getOrganization() != null
+                && !organizationValidationService.isTeamInOrganization(
+                        team, user.getOrganization())) {
+            return new RedirectView("/teams/" + teamId + "?error=userNotInSameOrganization");
         }
 
         // Assign user to team

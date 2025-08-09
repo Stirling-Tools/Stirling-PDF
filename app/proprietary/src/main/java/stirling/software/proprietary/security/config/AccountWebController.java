@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -203,7 +204,7 @@ public class AccountWebController {
         return "login";
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     @GetMapping("/usage")
     public String showUsage() {
         if (!runningEE) {
@@ -212,13 +213,26 @@ public class AccountWebController {
         return "usage";
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     @GetMapping("/adminSettings")
     public String showAddUserForm(
             HttpServletRequest request, Model model, Authentication authentication) {
         List<User> allUsers = userRepository.findAllWithTeam();
         Iterator<User> iterator = allUsers.iterator();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
+
+        // Filter role details to only show SYSTEM_ADMIN, USER, and DEMO_USER in UI
+        Map<String, String> filteredRoleDetails = new LinkedHashMap<>();
+        String[] allowedRoles = {
+            Role.SYSTEM_ADMIN.getRoleId(), Role.USER.getRoleId(), Role.DEMO_USER.getRoleId()
+        };
+
+        for (String roleId : allowedRoles) {
+            if (roleDetails.containsKey(roleId)) {
+                filteredRoleDetails.put(roleId, roleDetails.get(roleId));
+            }
+        }
+        roleDetails = filteredRoleDetails;
         // Map to store session information and user activity status
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
@@ -426,6 +440,7 @@ public class AccountWebController {
                 model.addAttribute("username", username);
                 model.addAttribute("messageType", messageType);
                 model.addAttribute("role", user.get().getRolesAsString());
+                model.addAttribute("isSystemAdmin", user.get().isSystemAdmin());
                 model.addAttribute("settings", settingsJson);
                 model.addAttribute("changeCredsFlag", user.get().isFirstLogin());
                 model.addAttribute("currentPage", "account");

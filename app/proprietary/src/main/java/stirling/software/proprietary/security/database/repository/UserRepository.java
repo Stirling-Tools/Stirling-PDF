@@ -24,9 +24,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByAuthenticationTypeIgnoreCase(String authenticationType);
 
-    @Query("SELECT u FROM User u WHERE u.team IS NULL")
-    List<User> findAllWithoutTeam();
-
     @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.team")
     List<User> findAllWithTeam();
 
@@ -36,5 +33,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByTeam(Team team);
 
-    List<User> findAllByTeam(Team team);
+    List<User> findByTeam(Team team);
+
+    @Query("SELECT u FROM User u WHERE u.team IS NULL")
+    List<User> findUsersWithoutTeam();
+
+    @Query("SELECT u FROM User u JOIN u.authorities a WHERE a.authority = :role")
+    List<User> findByRole(@Param("role") String role);
 }

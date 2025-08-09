@@ -207,7 +207,7 @@ public class UserController {
         return "redirect:/account";
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     @PostMapping("/admin/saveUser")
     public RedirectView saveUser(
             @RequestParam(name = "username", required = true) String username,
@@ -279,7 +279,7 @@ public class UserController {
                 true);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     @PostMapping("/admin/changeRole")
     @Transactional
     public RedirectView changeRole(
@@ -342,7 +342,7 @@ public class UserController {
                 true);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     @PostMapping("/admin/changeUserEnabled/{username}")
     public RedirectView changeUserEnabled(
             @PathVariable("username") String username,
@@ -392,7 +392,7 @@ public class UserController {
                 true);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     @PostMapping("/admin/deleteUser/{username}")
     public RedirectView deleteUser(
             @PathVariable("username") String username, Authentication authentication) {

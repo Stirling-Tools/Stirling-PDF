@@ -48,7 +48,7 @@ import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 @Slf4j
 @Controller
 @RequestMapping("/audit")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 public class AuditDashboardController {

@@ -37,7 +37,7 @@ class AppUpdateAuthService implements ShowAdminInterface {
         }
         Optional<User> user = userRepository.findByUsername(authentication.getName());
         if (user.isPresent() && showUpdateOnlyAdmin) {
-            return "ROLE_ADMIN".equals(user.get().getRolesAsString());
+            return user.get().isSystemAdmin();
         }
         return showUpdate;
     }
