@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
@@ -76,7 +78,7 @@ public class OCRController {
                 .toList();
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
     @Operation(
             summary = "Process a PDF file with OCR",
             description =

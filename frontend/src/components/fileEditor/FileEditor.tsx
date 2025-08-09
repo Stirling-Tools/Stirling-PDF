@@ -7,10 +7,12 @@ import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useFileContext } from '../../contexts/FileContext';
+import { useFileSelection } from '../../contexts/FileSelectionContext';
 import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';
+import { detectFileExtension } from '../../utils/fileUtils';
 import styles from '../pageEditor/PageEditor.module.css';
 import FileThumbnail from '../pageEditor/FileThumbnail';
 import DragDropGrid from '../pageEditor/DragDropGrid';
@@ -31,22 +33,26 @@ interface FileEditorProps {
   onOpenPageEditor?: (file: File) => void;
   onMergeFiles?: (files: File[]) => void;
   toolMode?: boolean;
-  multiSelect?: boolean;
   showUpload?: boolean;
   showBulkActions?: boolean;
-  onFileSelect?: (files: File[]) => void;
+  supportedExtensions?: string[];
 }
 
 const FileEditor = ({
   onOpenPageEditor,
   onMergeFiles,
   toolMode = false,
-  multiSelect = true,
   showUpload = true,
   showBulkActions = true,
-  onFileSelect
+  supportedExtensions = ["pdf"]
 }: FileEditorProps) => {
   const { t } = useTranslation();
+
+  // Utility function to check if a file extension is supported
+  const isFileSupported = useCallback((fileName: string): boolean => {
+    const extension = detectFileExtension(fileName);
+    return extension ? supportedExtensions.includes(extension) : false;
+  }, [supportedExtensions]);
 
   // Get file context
   const fileContext = useFileContext();
@@ -62,6 +68,14 @@ const FileEditor = ({
     recordOperation,
     markOperationApplied
   } = fileContext;
+
+  // Get file selection context
+  const { 
+    selectedFiles: toolSelectedFiles, 
+    setSelectedFiles: setToolSelectedFiles, 
+    maxFiles, 
+    isToolMode 
+  } = useFileSelection();
 
   const [files, setFiles] = useState<FileItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
@@ -99,14 +113,14 @@ const FileEditor = ({
   const lastActiveFilesRef = useRef<string[]>([]);
   const lastProcessedFilesRef = useRef<number>(0);
 
-  // Map context selected file names to local file IDs
-  // Defensive programming: ensure selectedFileIds is always an array
-  const safeSelectedFileIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
+  // Get selected file IDs from context (defensive programming)
+  const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
   
-  const localSelectedFiles = files
+  // Map context selections to local file IDs for UI display
+  const localSelectedIds = files
     .filter(file => {
       const fileId = (file.file as any).id || file.name;
-      return safeSelectedFileIds.includes(fileId);
+      return contextSelectedIds.includes(fileId);
     })
     .map(file => file.id);
 
@@ -219,49 +233,46 @@ const FileEditor = ({
           // Handle PDF files normally
           allExtractedFiles.push(file);
         } else if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed' || file.name.toLowerCase().endsWith('.zip')) {
-          // Handle ZIP files
+          // Handle ZIP files - only expand if they contain PDFs
           try {
             // Validate ZIP file first
             const validation = await zipFileService.validateZipFile(file);
-            if (!validation.isValid) {
-              errors.push(`ZIP file "${file.name}": ${validation.errors.join(', ')}`);
-              continue;
-            }
-
-            // Extract PDF files from ZIP
-            setZipExtractionProgress({
-              isExtracting: true,
-              currentFile: file.name,
-              progress: 0,
-              extractedCount: 0,
-              totalFiles: validation.fileCount
-            });
-
-            const extractionResult = await zipFileService.extractPdfFiles(file, (progress) => {
+            
+            if (validation.isValid && validation.containsPDFs) {
+              // ZIP contains PDFs - extract them
               setZipExtractionProgress({
                 isExtracting: true,
-                currentFile: progress.currentFile,
-                progress: progress.progress,
-                extractedCount: progress.extractedCount,
-                totalFiles: progress.totalFiles
+                currentFile: file.name,
+                progress: 0,
+                extractedCount: 0,
+                totalFiles: validation.fileCount
               });
-            });
 
-            // Reset extraction progress
-            setZipExtractionProgress({
-              isExtracting: false,
-              currentFile: '',
-              progress: 0,
-              extractedCount: 0,
-              totalFiles: 0
-            });
+              const extractionResult = await zipFileService.extractPdfFiles(file, (progress) => {
+                setZipExtractionProgress({
+                  isExtracting: true,
+                  currentFile: progress.currentFile,
+                  progress: progress.progress,
+                  extractedCount: progress.extractedCount,
+                  totalFiles: progress.totalFiles
+                });
+              });
 
-            if (extractionResult.success) {
-              allExtractedFiles.push(...extractionResult.extractedFiles);
-              
-              // Record ZIP extraction operation
-              const operationId = `zip-extract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              const operation: FileOperation = {
+              // Reset extraction progress
+              setZipExtractionProgress({
+                isExtracting: false,
+                currentFile: '',
+                progress: 0,
+                extractedCount: 0,
+                totalFiles: 0
+              });
+
+              if (extractionResult.success) {
+                allExtractedFiles.push(...extractionResult.extractedFiles);
+                
+                // Record ZIP extraction operation
+                const operationId = `zip-extract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const operation: FileOperation = {
                 id: operationId,
                 type: 'convert',
                 timestamp: Date.now(),
@@ -285,8 +296,13 @@ const FileEditor = ({
               if (extractionResult.errors.length > 0) {
                 errors.push(...extractionResult.errors);
               }
+              } else {
+                errors.push(`Failed to extract ZIP file "${file.name}": ${extractionResult.errors.join(', ')}`);
+              }
             } else {
-              errors.push(`Failed to extract ZIP file "${file.name}": ${extractionResult.errors.join(', ')}`);
+              // ZIP doesn't contain PDFs or is invalid - treat as regular file
+              console.log(`Adding ZIP file as regular file: ${file.name} (no PDFs found)`);
+              allExtractedFiles.push(file);
             }
           } catch (zipError) {
             errors.push(`Failed to process ZIP file "${file.name}": ${zipError instanceof Error ? zipError.message : 'Unknown error'}`);
@@ -299,7 +315,8 @@ const FileEditor = ({
             });
           }
         } else {
-          errors.push(`Unsupported file type: ${file.name} (${file.type})`);
+          console.log(`Adding none PDF file: ${file.name} (${file.type})`);
+          allExtractedFiles.push(file);
         }
       }
 
@@ -396,44 +413,41 @@ const FileEditor = ({
     if (!targetFile) return;
     
     const contextFileId = (targetFile.file as any).id || targetFile.name;
+    const isSelected = contextSelectedIds.includes(contextFileId);
     
-    if (!multiSelect) {
-      // Single select mode for tools - toggle on/off
-      const isCurrentlySelected = safeSelectedFileIds.includes(contextFileId);
-      if (isCurrentlySelected) {
-        // Deselect the file
-        setContextSelectedFiles([]);
-        if (onFileSelect) {
-          onFileSelect([]);
-        }
-      } else {
-        // Select the file
-        setContextSelectedFiles([contextFileId]);
-        if (onFileSelect) {
-          onFileSelect([targetFile.file]);
-        }
-      }
+    let newSelection: string[];
+    
+    if (isSelected) {
+      // Remove file from selection
+      newSelection = contextSelectedIds.filter(id => id !== contextFileId);
     } else {
-      // Multi select mode (default)
-      setContextSelectedFiles(prev => {
-        const safePrev = Array.isArray(prev) ? prev : [];
-        return safePrev.includes(contextFileId)
-          ? safePrev.filter(id => id !== contextFileId)
-          : [...safePrev, contextFileId];
-      });
-      
-      // Notify parent with selected files
-      if (onFileSelect) {
-        const selectedFiles = files
-          .filter(f => {
-            const fId = (f.file as any).id || f.name;
-            return safeSelectedFileIds.includes(fId) || fId === contextFileId;
-          })
-          .map(f => f.file);
-        onFileSelect(selectedFiles);
+      // Add file to selection
+      if (maxFiles === 1) {
+        newSelection = [contextFileId];
+      } else {
+        // Check if we've hit the selection limit
+        if (maxFiles > 1 && contextSelectedIds.length >= maxFiles) {
+          setStatus(`Maximum ${maxFiles} files can be selected`);
+          return;
+        }
+        newSelection = [...contextSelectedIds, contextFileId];
       }
     }
-  }, [files, setContextSelectedFiles, multiSelect, onFileSelect, safeSelectedFileIds]);
+    
+    // Update context
+    setContextSelectedFiles(newSelection);
+    
+    // Update tool selection context if in tool mode
+    if (isToolMode || toolMode) {
+      const selectedFiles = files
+        .filter(f => {
+          const fId = (f.file as any).id || f.name;
+          return newSelection.includes(fId);
+        })
+        .map(f => f.file);
+      setToolSelectedFiles(selectedFiles);
+    }
+  }, [files, setContextSelectedFiles, maxFiles, contextSelectedIds, setStatus, isToolMode, toolMode, setToolSelectedFiles]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
@@ -450,15 +464,15 @@ const FileEditor = ({
   const handleDragStart = useCallback((fileId: string) => {
     setDraggedFile(fileId);
 
-    if (selectionMode && localSelectedFiles.includes(fileId) && localSelectedFiles.length > 1) {
+    if (selectionMode && localSelectedIds.includes(fileId) && localSelectedIds.length > 1) {
       setMultiFileDrag({
-        fileIds: localSelectedFiles,
-        count: localSelectedFiles.length
+        fileIds: localSelectedIds,
+        count: localSelectedIds.length
       });
     } else {
       setMultiFileDrag(null);
     }
-  }, [selectionMode, localSelectedFiles]);
+  }, [selectionMode, localSelectedIds]);
 
   const handleDragEnd = useCallback(() => {
     setDraggedFile(null);
@@ -519,8 +533,8 @@ const FileEditor = ({
       if (targetIndex === -1) return;
     }
 
-    const filesToMove = selectionMode && localSelectedFiles.includes(draggedFile)
-      ? localSelectedFiles
+    const filesToMove = selectionMode && localSelectedIds.includes(draggedFile)
+      ? localSelectedIds
       : [draggedFile];
 
     // Update the local files state and sync with activeFiles
@@ -545,7 +559,7 @@ const FileEditor = ({
     const moveCount = multiFileDrag ? multiFileDrag.count : 1;
     setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
 
-  }, [draggedFile, files, selectionMode, localSelectedFiles, multiFileDrag]);
+  }, [draggedFile, files, selectionMode, localSelectedIds, multiFileDrag]);
 
   const handleEndZoneDragEnter = useCallback(() => {
     if (draggedFile) {
@@ -651,46 +665,35 @@ const FileEditor = ({
 
 
   return (
-    <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
-      <LoadingOverlay visible={false} />
+    <Dropzone
+      onDrop={handleFileUpload}
+      accept={["*/*"]}
+      multiple={true}
+      maxSize={2 * 1024 * 1024 * 1024}
+      style={{ 
+        height: '100vh',
+        border: 'none',
+        borderRadius: 0,
+        backgroundColor: 'transparent'
+      }}
+      activateOnClick={false}
+      activateOnDrag={true}
+    >
+      <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
+        <LoadingOverlay visible={false} />
 
-      <Box p="md" pt="xl">
-        <Group mb="md">
-          {showBulkActions && !toolMode && (
-            <>
-              <Button onClick={selectAll} variant="light">Select All</Button>
-              <Button onClick={deselectAll} variant="light">Deselect All</Button>
-              <Button onClick={closeAllFiles} variant="light" color="orange">
-                Close All
-              </Button>
-            </>
-          )}
-
-          {/* Load from storage and upload buttons */}
-          {showUpload && (
-            <>
-              <Button
-                variant="outline"
-                color="blue"
-                onClick={() => setShowFilePickerModal(true)}
-              >
-                Load from Storage
-              </Button>
-
-              <Dropzone
-                onDrop={handleFileUpload}
-                accept={["application/pdf", "application/zip", "application/x-zip-compressed"]}
-                multiple={true}
-                maxSize={2 * 1024 * 1024 * 1024}
-                style={{ display: 'contents' }}
-              >
-                <Button variant="outline" color="green">
-                  Upload Files
+        <Box p="md" pt="xl">
+          <Group mb="md">
+            {showBulkActions && !toolMode && (
+              <>
+                <Button onClick={selectAll} variant="light">Select All</Button>
+                <Button onClick={deselectAll} variant="light">Deselect All</Button>
+                <Button onClick={closeAllFiles} variant="light" color="orange">
+                  Close All
                 </Button>
-              </Dropzone>
-            </>
-          )}
-        </Group>
+              </>
+            )}
+          </Group>
 
 
         {files.length === 0 && !localLoading && !zipExtractionProgress.isExtracting ? (
@@ -764,7 +767,7 @@ const FileEditor = ({
         ) : (
           <DragDropGrid
             items={files}
-            selectedItems={localSelectedFiles}
+            selectedItems={localSelectedIds}
             selectionMode={selectionMode}
             isAnimating={isAnimating}
           onDragStart={handleDragStart}
@@ -783,7 +786,7 @@ const FileEditor = ({
               file={file}
               index={index}
               totalFiles={files.length}
-              selectedFiles={localSelectedFiles}
+              selectedFiles={localSelectedIds}
               selectionMode={selectionMode}
               draggedFile={draggedFile}
               dropTarget={dropTarget}
@@ -802,6 +805,7 @@ const FileEditor = ({
               onSplitFile={handleSplitFile}
               onSetStatus={setStatus}
               toolMode={toolMode}
+              isSupported={isFileSupported(file.name)}
             />
           )}
           renderSplitMarker={(file, index) => (
@@ -851,7 +855,8 @@ const FileEditor = ({
           {error}
         </Notification>
       )}
-    </Box>
+      </Box>
+    </Dropzone>
   );
 };
 

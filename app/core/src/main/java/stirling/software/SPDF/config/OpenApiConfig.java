@@ -10,6 +10,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 
 import lombok.RequiredArgsConstructor;
 
@@ -50,17 +51,26 @@ public class OpenApiConfig {
                                         .url("https://www.stirlingpdf.com")
                                         .email("contact@stirlingpdf.com"))
                         .description(DEFAULT_DESCRIPTION);
+
+        OpenAPI openAPI = new OpenAPI().info(info);
+        
+        // Add server configuration from environment variable
+        String swaggerServerUrl = System.getenv("SWAGGER_SERVER_URL");
+        if (swaggerServerUrl != null && !swaggerServerUrl.trim().isEmpty()) {
+            Server server = new Server().url(swaggerServerUrl).description("API Server");
+            openAPI.addServersItem(server);
+        }
+        
         if (!applicationProperties.getSecurity().getEnableLogin()) {
-            return new OpenAPI().components(new Components()).info(info);
+            return openAPI.components(new Components());
         } else {
             SecurityScheme apiKeyScheme =
                     new SecurityScheme()
                             .type(SecurityScheme.Type.APIKEY)
                             .in(SecurityScheme.In.HEADER)
                             .name("X-API-KEY");
-            return new OpenAPI()
+            return openAPI
                     .components(new Components().addSecuritySchemes("apiKey", apiKeyScheme))
-                    .info(info)
                     .addSecurityItem(new SecurityRequirement().addList("apiKey"));
         }
     }

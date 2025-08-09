@@ -48,6 +48,7 @@ jobs:
             "DarioGii"
             "ConnorYoh"
             "EthanHealy01"
+            "jbrunton96"
           )
           
           # Check if author is in the authorized list
@@ -317,6 +318,7 @@ jobs:
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
+                SWAGGER_SERVER_URL: "http://${{ secrets.VPS_HOST }}:${V2_PORT}"
               restart: on-failure:5
               
             stirling-pdf-v2-frontend:
@@ -350,10 +352,10 @@ jobs:
             docker-compose up -d
             
             # Clean up unused Docker resources to save space
-            docker system prune -af --volumes
+            docker system prune -af --volumes || true
             
             # Clean up old backend/frontend images (older than 2 weeks)
-            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
 
           # Set port for output
@@ -385,10 +387,12 @@ jobs:
             }
             
             const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${v2Port}`;
-            
+            const httpsUrl = `https://${v2Port}.ssl.stirlingpdf.cloud`;
+
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `Your V2 PR with the new frontend/backend split architecture has been deployed!\n\n` +
-                              `🔗 **V2 Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `🔐 **Secure HTTPS URL**: [${httpsUrl}](${httpsUrl})\n\n` +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
 
@@ -486,7 +490,7 @@ jobs:
             fi
             
             # Clean up old unused images (older than 2 weeks) but keep recent ones for reuse
-            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
             
             # Note: We don't remove the commit-based images since they can be reused across PRs
             # Only remove PR-specific containers and directories

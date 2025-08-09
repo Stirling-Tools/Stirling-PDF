@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 
 import org.springframework.core.io.InputStreamResource;
@@ -27,7 +29,7 @@ public class ReplaceAndInvertColorController {
 
     private final ReplaceAndInvertColorService replaceAndInvertColorService;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/replace-invert-pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/replace-invert-pdf")
     @Operation(
             summary = "Replace-Invert Color PDF",
             description =

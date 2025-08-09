@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -34,7 +36,7 @@ public class ConvertPDFToOffice {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/presentation")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/presentation")
     @Operation(
             summary = "Convert PDF to Presentation format",
             description =
@@ -49,7 +51,7 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/text")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/text")
     @Operation(
             summary = "Convert PDF to Text or RTF format",
             description =
@@ -77,7 +79,7 @@ public class ConvertPDFToOffice {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/word")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/word")
     @Operation(
             summary = "Convert PDF to Word document",
             description =
@@ -91,7 +93,7 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/xml")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/xml")
     @Operation(
             summary = "Convert PDF to XML",
             description =

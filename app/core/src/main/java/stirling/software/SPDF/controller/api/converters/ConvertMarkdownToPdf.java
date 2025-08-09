@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +47,7 @@ public class ConvertMarkdownToPdf {
 
     private final TempFileManager tempFileManager;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =

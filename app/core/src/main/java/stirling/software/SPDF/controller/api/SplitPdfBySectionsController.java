@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,7 +45,7 @@ public class SplitPdfBySectionsController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/split-pdf-by-sections", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/split-pdf-by-sections", consumes = "multipart/form-data")
     @Operation(
             summary = "Split PDF pages into smaller sections",
             description =

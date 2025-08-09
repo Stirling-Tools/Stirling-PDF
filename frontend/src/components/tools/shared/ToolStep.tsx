@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useMemo, useRef } from 'react';
-import { Paper, Text, Stack, Box } from '@mantine/core';
+import { Paper, Text, Stack, Box, Flex } from '@mantine/core';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { Tooltip } from '../../shared/Tooltip';
+import { TooltipTip } from '../../shared/tooltip/TooltipContent';
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -18,7 +22,47 @@ export interface ToolStepProps {
   completedMessage?: string;
   helpText?: string;
   showNumber?: boolean;
+  tooltip?: {
+    content?: React.ReactNode;
+    tips?: TooltipTip[];
+    header?: {
+      title: string;
+      logo?: React.ReactNode;
+    };
+  };
 }
+
+const renderTooltipTitle = (
+  title: string,
+  tooltip: ToolStepProps['tooltip'],
+  isCollapsed: boolean
+) => {
+  if (tooltip && !isCollapsed) {
+    return (
+      <Tooltip
+        content={tooltip.content}
+        tips={tooltip.tips}
+        header={tooltip.header}
+        sidebarTooltip={true}
+      >
+        <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
+          <Text fw={500} size="lg">
+            {title}
+          </Text>
+          <span className="material-symbols-rounded" style={{ fontSize: '1.2rem', color: 'var(--icon-files-color)' }}>
+            gpp_maybe
+          </span>
+        </Flex>
+      </Tooltip>
+    );
+  }
+  
+  return (
+    <Text fw={500} size="lg">
+      {title}
+    </Text>
+  );
+};
 
 const ToolStep = ({
   title,
@@ -29,33 +73,63 @@ const ToolStep = ({
   children,
   completedMessage,
   helpText,
-  showNumber
+  showNumber,
+  tooltip
 }: ToolStepProps) => {
   if (!isVisible) return null;
 
+  const parent = useContext(ToolStepContext);
+  
   // Auto-detect if we should show numbers based on sibling count
   const shouldShowNumber = useMemo(() => {
     if (showNumber !== undefined) return showNumber;
-    const parent = useContext(ToolStepContext);
     return parent ? parent.visibleStepCount >= 3 : false;
-  }, [showNumber]);
+  }, [showNumber, parent]);
 
-  const stepNumber = useContext(ToolStepContext)?.getStepNumber?.() || 1;
+  const stepNumber = parent?.getStepNumber?.() || 1;
 
   return (
     <Paper
       p="md"
       withBorder
       style={{
-        cursor: isCollapsed && onCollapsedClick ? 'pointer' : 'default',
         opacity: isCollapsed ? 0.8 : 1,
         transition: 'opacity 0.2s ease'
       }}
-      onClick={isCollapsed && onCollapsedClick ? onCollapsedClick : undefined}
     >
-      <Text fw={500} size="lg" mb="sm">
-        {shouldShowNumber ? `${stepNumber}. ` : ''}{title}
-      </Text>
+      {/* Chevron icon to collapse/expand the step */}
+      <Flex 
+        align="center" 
+        justify="space-between" 
+        mb="sm"
+        style={{
+          cursor: onCollapsedClick ? 'pointer' : 'default'
+        }}
+        onClick={onCollapsedClick}
+      >
+        <Flex align="center" gap="sm">
+          {shouldShowNumber && (
+            <Text fw={500} size="lg" c="dimmed">
+              {stepNumber}
+            </Text>
+          )}
+          {renderTooltipTitle(title, tooltip, isCollapsed)}
+        </Flex>
+        
+        {isCollapsed ? (
+          <ChevronRightIcon style={{ 
+            fontSize: '1.2rem', 
+            color: 'var(--mantine-color-dimmed)',
+            opacity: onCollapsedClick ? 1 : 0.5
+          }} />
+        ) : (
+          <ExpandMoreIcon style={{ 
+            fontSize: '1.2rem', 
+            color: 'var(--mantine-color-dimmed)',
+            opacity: onCollapsedClick ? 1 : 0.5
+          }} />
+        )}
+      </Flex>
 
       {isCollapsed ? (
         <Box>
@@ -96,7 +170,7 @@ export const ToolStepContainer = ({ children }: ToolStepContainerProps) => {
     let count = 0;
     React.Children.forEach(children, (child) => {
       if (React.isValidElement(child) && child.type === ToolStep) {
-        const isVisible = child.props.isVisible !== false;
+        const isVisible = (child.props as ToolStepProps).isVisible !== false;
         if (isVisible) count++;
       }
     });

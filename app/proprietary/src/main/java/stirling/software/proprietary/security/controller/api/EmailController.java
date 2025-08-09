@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +44,7 @@ public class EmailController {
      *     attachment.
      * @return ResponseEntity with success or error message.
      */
-    @PostMapping(consumes = "multipart/form-data", value = "/send-email")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/send-email")
     @Operation(
             summary = "Send an email with an attachment",
             description =

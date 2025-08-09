@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -31,7 +33,7 @@ public class SettingsController {
     private final ApplicationProperties applicationProperties;
     private final EndpointConfiguration endpointConfiguration;
 
-    @PostMapping("/update-enable-analytics")
+    @AutoJobPostMapping("/update-enable-analytics")
     @Hidden
     public ResponseEntity<String> updateApiKey(@RequestBody Boolean enabled) throws IOException {
         if (applicationProperties.getSystem().getEnableAnalytics() != null) {

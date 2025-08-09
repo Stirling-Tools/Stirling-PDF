@@ -37,28 +37,29 @@ const ResultsPreview = ({
   }
 
   return (
-    <Box mt="lg" p="md" style={{ backgroundColor: 'var(--mantine-color-gray-0)', borderRadius: 8 }}>
+    <Box mt="lg" p="md" style={{ backgroundColor: 'var(--mantine-color-gray-0)', borderRadius: 8 }} data-testid="results-preview-container">
       {title && (
-        <Text fw={500} size="md" mb="sm">
+        <Text fw={500} size="md" mb="sm" data-testid="results-preview-title">
           {title} ({files.length} files)
         </Text>
       )}
 
       {isGeneratingThumbnails ? (
-        <Center p="lg">
+        <Center p="lg" data-testid="results-preview-loading">
           <Stack align="center" gap="sm">
             <Loader size="sm" />
             <Text size="sm" c="dimmed">{loadingMessage}</Text>
           </Stack>
         </Center>
       ) : (
-        <Grid>
+        <Grid data-testid="results-preview-grid">
           {files.map((result, index) => (
             <Grid.Col span={{ base: 6, sm: 4, md: 3 }} key={index}>
               <Paper
                 p="xs"
                 withBorder
                 onClick={() => onFileClick?.(result.file)}
+                data-testid={`results-preview-thumbnail-${index}`}
                 style={{
                   textAlign: 'center',
                   height: '10rem',

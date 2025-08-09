@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.geom.AffineTransform;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,7 +35,7 @@ public class ToSinglePageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-single-page")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf-to-single-page")
     @Operation(
             summary = "Convert a multi-page PDF into a single long page PDF",
             description =

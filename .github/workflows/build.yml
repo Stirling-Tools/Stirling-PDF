@@ -53,7 +53,7 @@ jobs:
         with:
           gradle-version: 8.14
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew clean build
+        run: ./gradlew clean build -PnoSpotless
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
       - name: Check Test Reports Exist
@@ -130,7 +130,7 @@ jobs:
       - name: Build frontend
         run: cd frontend && npm run build
       - name: Run frontend tests
-        run: cd frontend && npm test --passWithNoTests --watchAll=false || true
+        run: cd frontend && npm run test -- --run
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4.6.2
         with:

@@ -15,14 +15,172 @@ export function calculateScaleFromFileSize(fileSize: number): number {
 }
 
 /**
- * Generate thumbnail for a PDF file during upload
+ * Generate modern placeholder thumbnail with file extension
+ */
+function generatePlaceholderThumbnail(file: File): string {
+  const canvas = document.createElement('canvas');
+  canvas.width = 120;
+  canvas.height = 150;
+  const ctx = canvas.getContext('2d')!;
+  
+  // Get file extension for color theming
+  const extension = file.name.split('.').pop()?.toUpperCase() || 'FILE';
+  const colorScheme = getFileTypeColorScheme(extension);
+  
+  // Create gradient background
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, colorScheme.bgTop);
+  gradient.addColorStop(1, colorScheme.bgBottom);
+  
+  // Rounded rectangle background
+  drawRoundedRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 8);
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  
+  // Subtle shadow/border
+  ctx.strokeStyle = colorScheme.border;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Modern document icon
+  drawModernDocumentIcon(ctx, canvas.width / 2, 45, colorScheme.icon);
+  
+  // Extension badge
+  drawExtensionBadge(ctx, canvas.width / 2, canvas.height / 2 + 15, extension, colorScheme);
+  
+  // File size with subtle styling
+  const sizeText = formatFileSize(file.size);
+  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = colorScheme.textSecondary;
+  ctx.textAlign = 'center';
+  ctx.fillText(sizeText, canvas.width / 2, canvas.height - 15);
+  
+  return canvas.toDataURL();
+}
+
+/**
+ * Get color scheme based on file extension
+ */
+function getFileTypeColorScheme(extension: string) {
+  const schemes: Record<string, any> = {
+    // Documents
+    'PDF': { bgTop: '#FF6B6B20', bgBottom: '#FF6B6B10', border: '#FF6B6B40', icon: '#FF6B6B', badge: '#FF6B6B', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'DOC': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'DOCX': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'TXT': { bgTop: '#95A5A620', bgBottom: '#95A5A610', border: '#95A5A640', icon: '#95A5A6', badge: '#95A5A6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    
+    // Spreadsheets
+    'XLS': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'XLSX': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'CSV': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    
+    // Presentations
+    'PPT': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'PPTX': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    
+    // Archives
+    'ZIP': { bgTop: '#9B59B620', bgBottom: '#9B59B610', border: '#9B59B640', icon: '#9B59B6', badge: '#9B59B6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'RAR': { bgTop: '#9B59B620', bgBottom: '#9B59B610', border: '#9B59B640', icon: '#9B59B6', badge: '#9B59B6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    '7Z': { bgTop: '#9B59B620', bgBottom: '#9B59B610', border: '#9B59B640', icon: '#9B59B6', badge: '#9B59B6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    
+    // Default
+    'DEFAULT': { bgTop: '#74B9FF20', bgBottom: '#74B9FF10', border: '#74B9FF40', icon: '#74B9FF', badge: '#74B9FF', textPrimary: '#FFFFFF', textSecondary: '#666666' }
+  };
+  
+  return schemes[extension] || schemes['DEFAULT'];
+}
+
+/**
+ * Draw rounded rectangle
+ */
+function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+/**
+ * Draw modern document icon
+ */
+function drawModernDocumentIcon(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, color: string) {
+  const size = 24;
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  
+  // Document body
+  drawRoundedRect(ctx, centerX - size/2, centerY - size/2, size, size * 1.2, 3);
+  ctx.fill();
+  
+  // Folded corner
+  ctx.beginPath();
+  ctx.moveTo(centerX + size/2 - 6, centerY - size/2);
+  ctx.lineTo(centerX + size/2, centerY - size/2 + 6);
+  ctx.lineTo(centerX + size/2 - 6, centerY - size/2 + 6);
+  ctx.closePath();
+  ctx.fillStyle = '#FFFFFF40';
+  ctx.fill();
+}
+
+/**
+ * Draw extension badge
+ */
+function drawExtensionBadge(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, extension: string, colorScheme: any) {
+  const badgeWidth = Math.max(extension.length * 8 + 16, 40);
+  const badgeHeight = 22;
+  
+  // Badge background
+  drawRoundedRect(ctx, centerX - badgeWidth/2, centerY - badgeHeight/2, badgeWidth, badgeHeight, 11);
+  ctx.fillStyle = colorScheme.badge;
+  ctx.fill();
+  
+  // Badge text
+  ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = colorScheme.textPrimary;
+  ctx.textAlign = 'center';
+  ctx.fillText(extension, centerX, centerY + 4);
+}
+
+/**
+ * Format file size for display
+ */
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+
+/**
+ * Generate thumbnail for any file type
  * Returns base64 data URL or undefined if generation fails
  */
 export async function generateThumbnailForFile(file: File): Promise<string | undefined> {
-  // Skip thumbnail generation for large files to avoid memory issues
-  if (file.size >= 50 * 1024 * 1024) { // 50MB limit
+  // Skip thumbnail generation for very large files to avoid memory issues
+  if (file.size >= 100 * 1024 * 1024) { // 100MB limit
     console.log('Skipping thumbnail generation for large file:', file.name);
-    return undefined;
+    return generatePlaceholderThumbnail(file);
+  }
+
+  // Handle image files - use original file directly
+  if (file.type.startsWith('image/')) {
+    return URL.createObjectURL(file);
+  }
+
+  // Handle PDF files
+  if (!file.type.startsWith('application/pdf')) {
+    console.log('File is not a PDF or image, generating placeholder:', file.name);
+    return generatePlaceholderThumbnail(file);
   }
   
   try {

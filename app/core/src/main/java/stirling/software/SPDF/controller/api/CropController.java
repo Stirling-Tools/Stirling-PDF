@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -33,7 +35,7 @@ public class CropController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/crop", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/crop", consumes = "multipart/form-data")
     @Operation(
             summary = "Crops a PDF document",
             description =

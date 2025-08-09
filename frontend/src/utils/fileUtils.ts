@@ -1,6 +1,10 @@
 import { FileWithUrl } from "../types/file";
 import { StoredFile, fileStorage } from "../services/fileStorage";
 
+export function getFileId(file: File): string | null {
+  return (file as File & { id?: string }).id || null;
+}
+
 /**
  * Consolidated file size formatting utility
  */
@@ -121,4 +125,51 @@ export function cleanupFileUrls(files: FileWithUrl[]): void {
 export function shouldUseDirectIndexedDBAccess(file: FileWithUrl): boolean {
   const FILE_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
   return file.size > FILE_SIZE_LIMIT;
+}
+
+/**
+ * Detects and normalizes file extension from filename
+ * @param filename - The filename to extract extension from
+ * @returns Normalized file extension in lowercase, empty string if no extension
+ */
+export function detectFileExtension(filename: string): string {
+  if (!filename || typeof filename !== 'string') return '';
+  
+  const parts = filename.split('.');
+  // If there's no extension (no dots or only one part), return empty string
+  if (parts.length <= 1) return '';
+  
+  // Get the last part (extension) in lowercase
+  let extension = parts[parts.length - 1].toLowerCase();
+  
+  // Normalize common extension variants
+  if (extension === 'jpeg') extension = 'jpg';
+  
+  return extension;
+}
+
+/**
+ * Gets the filename without extension
+ * @param filename - The filename to process
+ * @returns Filename without extension
+ */
+export function getFilenameWithoutExtension(filename: string): string {
+  if (!filename || typeof filename !== 'string') return '';
+  
+  const parts = filename.split('.');
+  if (parts.length <= 1) return filename;
+  
+  // Return all parts except the last one (extension)
+  return parts.slice(0, -1).join('.');
+}
+
+/**
+ * Creates a new filename with a different extension
+ * @param filename - Original filename
+ * @param newExtension - New extension (without dot)
+ * @returns New filename with the specified extension
+ */
+export function changeFileExtension(filename: string, newExtension: string): string {
+  const nameWithoutExt = getFilenameWithoutExtension(filename);
+  return `${nameWithoutExt}.${newExtension}`;
 }
