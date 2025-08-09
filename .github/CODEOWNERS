@@ -12,10 +12,10 @@
 /frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle
 
 #V2 docker
-/docker/backend/** @Frooodle @Ludy87 @DarioGii
-/docker/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle
-/docker/compose/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96 @Frooodle 
+/docker/backend/** @Frooodle @Ludy87 @DarioGii @Ludy87
+/docker/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87
+/docker/compose/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96 @Frooodle @Ludy87
 
 
 #GHA (All users)
-/.github/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96 @Frooodle
+/.github/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96 @Frooodle @Ludy87
