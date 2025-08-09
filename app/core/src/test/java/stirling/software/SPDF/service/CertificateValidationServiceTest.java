@@ -8,6 +8,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.PublicKey;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.X509Certificate;
@@ -146,5 +149,56 @@ class CertificateValidationServiceTest {
 
         // Then validation should fail
         assertFalse(result, "Certificate chain with failed signing should not validate");
+    }
+
+    @Test
+    void testValidateTrustStore_found_returnsTrue() throws Exception {
+        KeyStore ks = mock(KeyStore.class);
+
+        // Ein Zertifikat-Mock, der sowohl im Keystore liegt als auch geprüft wird:
+        X509Certificate same = mock(X509Certificate.class);
+
+        when(ks.aliases())
+                .thenReturn(java.util.Collections.enumeration(java.util.List.of("alias1")));
+        when(ks.getCertificate("alias1")).thenReturn(same);
+
+        // trustStore per Reflection setzen
+        var f = CertificateValidationService.class.getDeclaredField("trustStore");
+        f.setAccessible(true);
+        f.set(validationService, ks);
+
+        // same-Instanz -> equals() true ohne Stubbing
+        assertTrue(validationService.validateTrustStore(same));
+    }
+
+    @Test
+    void testValidateTrustStore_notFound_returnsFalse() throws Exception {
+        KeyStore ks = mock(KeyStore.class);
+
+        X509Certificate inStore = mock(X509Certificate.class);
+        X509Certificate probe = mock(X509Certificate.class);
+
+        when(ks.aliases())
+                .thenReturn(java.util.Collections.enumeration(java.util.List.of("alias1")));
+        when(ks.getCertificate("alias1")).thenReturn(inStore); // != probe
+
+        var f = CertificateValidationService.class.getDeclaredField("trustStore");
+        f.setAccessible(true);
+        f.set(validationService, ks);
+
+        assertFalse(validationService.validateTrustStore(probe));
+    }
+
+    @Test
+    void testValidateTrustStore_keyStoreAliasesThrows_returnsFalse() throws Exception {
+        KeyStore ks = mock(KeyStore.class);
+        when(ks.aliases()).thenThrow(new KeyStoreException("boom"));
+
+        Field f = CertificateValidationService.class.getDeclaredField("trustStore");
+        f.setAccessible(true);
+        f.set(validationService, ks);
+
+        X509Certificate probe = mock(X509Certificate.class);
+        assertFalse(validationService.validateTrustStore(probe));
     }
 }
