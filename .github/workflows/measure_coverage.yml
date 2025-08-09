@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk-version: [17, 21]
+        jdk-version: [17]
         spring-security: [true, false]
     steps:
       - name: Harden Runner
