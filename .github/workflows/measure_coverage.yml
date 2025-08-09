@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      issues: write
 
     strategy:
       fail-fast: false
