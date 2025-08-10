@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.web;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -9,7 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.common.util.CheckProgramInstall;
 
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConverterWebController {
 

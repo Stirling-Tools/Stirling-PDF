@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,7 +30,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @Tag(name = "General", description = "General APIs")
 @Slf4j
 public class GeneralWebController {

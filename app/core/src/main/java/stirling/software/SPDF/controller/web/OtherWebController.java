@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -17,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.CheckProgramInstall;
 
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 @RequiredArgsConstructor
 public class OtherWebController {
@@ -76,7 +75,7 @@ public class OtherWebController {
     }
 
     @Deprecated
-    //@GetMapping("/scanner-effect")
+    // @GetMapping("/scanner-effect")
     @Hidden
     public String scannerEffectForm(Model model) {
         model.addAttribute("currentPage", "scanner-effect");

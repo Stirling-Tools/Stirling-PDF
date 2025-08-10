@@ -1,12 +1,11 @@
 package stirling.software.SPDF.controller.web;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @Tag(name = "Security", description = "Security APIs")
 public class SecurityWebController {
 

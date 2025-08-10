@@ -9,7 +9,6 @@ import java.util.Map;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -26,7 +25,7 @@ import stirling.software.SPDF.model.Dependency;
 import stirling.software.common.model.ApplicationProperties;
 
 @Slf4j
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @RequiredArgsConstructor
 public class HomeWebController {
 

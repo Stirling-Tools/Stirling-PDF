@@ -22,7 +22,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,7 +45,7 @@ import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 
 /** Controller for the audit dashboard. Admin-only access. */
 @Slf4j
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @RequestMapping("/audit")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor

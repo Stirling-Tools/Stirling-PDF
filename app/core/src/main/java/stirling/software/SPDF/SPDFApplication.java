@@ -58,7 +58,6 @@ public class SPDFApplication {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         SpringApplication app = new SpringApplication(SPDFApplication.class);
-        app.setLazyInitialization(true); // Optimize startup time
 
         Properties props = new Properties();
 
