@@ -22,12 +22,11 @@ import jakarta.servlet.ServletResponse;
 /**
  * Tests for {@link CorrelationIdFilter}.
  *
- * <p>Important notes:
- * - The filter sets MDC in the try block and clears it in the finally block. Therefore,
- *   we capture the MDC values inside a special FilterChain before the clear happens (snapshot).
- * - The response header is sanitized via Newlines.stripAll(id).
- *   The current code does NOT sanitize the value stored in the MDC or the request attribute.
- *   These tests reflect the current behavior.
+ * <p>Important notes: - The filter sets MDC in the try block and clears it in the finally block.
+ * Therefore, we capture the MDC values inside a special FilterChain before the clear happens
+ * (snapshot). - The response header is sanitized via Newlines.stripAll(id). The current code does
+ * NOT sanitize the value stored in the MDC or the request attribute. These tests reflect the
+ * current behavior.
  */
 class CorrelationIdFilterTest {
 
@@ -133,7 +132,8 @@ class CorrelationIdFilterTest {
 
             assertTrue(chain.called);
 
-            // Consistency: same value in MDC, request attribute, and response header (no newline removal needed)
+            // Consistency: same value in MDC, request attribute, and response header (no newline
+            // removal needed)
             String mdcId = chain.capturedMdc.get(CorrelationIdFilter.MDC_KEY);
             assertNotNull(mdcId);
             assertEquals(mdcId, chain.requestAttr);
