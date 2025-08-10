@@ -23,17 +23,19 @@ import stirling.software.common.util.YamlHelper;
 @Slf4j
 public class ConfigInitializer {
 
+    private static final int MIN_SETTINGS_FILE_LINES = 31;
+
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // 1) If settings file doesn't exist, create from template
         Path destPath = Paths.get(InstallationPathConfig.getSettingsPath());
 
         boolean settingsFileExists = Files.exists(destPath);
 
-        long lineCount = settingsFileExists ? Files.lines(destPath).count() : 0;
+        long lineCount = settingsFileExists ? Files.readAllLines(destPath).size() : 0;
 
         log.info("Current settings file line count: {}", lineCount);
 
-        if (!settingsFileExists || lineCount < 31) {
+        if (!settingsFileExists || lineCount < MIN_SETTINGS_FILE_LINES) {
             if (settingsFileExists) {
                 // move settings.yml to settings.yml.{timestamp}.bak
                 Path backupPath =
