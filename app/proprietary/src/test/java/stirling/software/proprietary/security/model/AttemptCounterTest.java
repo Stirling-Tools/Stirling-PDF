@@ -67,7 +67,7 @@ class AttemptCounterTest {
     @Test
     @DisplayName(
             "increment(): increases attemptCount and updates lastAttemptTime (not less than"
-                + " before)")
+                    + " before)")
     void increment_shouldIncreaseCountAndUpdateTime() {
         AttemptCounter counter = new AttemptCounter();
         long prevTime = counter.getLastAttemptTime();
@@ -127,7 +127,7 @@ class AttemptCounterTest {
         @Test
         @DisplayName(
                 "returns FALSE when time difference is exactly equal to window (implementation uses"
-                    + " '>')")
+                        + " '>')")
         void shouldReturnFalseWhenExactlyWindow() {
             AttemptCounter counter = new AttemptCounter();
             long window = 200L;
@@ -188,7 +188,7 @@ class AttemptCounterTest {
     @Test
     @DisplayName(
             "Multiple increments(): Count increases monotonically and timestamp remains"
-                + " monotonically non-decreasing")
+                    + " monotonically non-decreasing")
     void multipleIncrements_shouldIncreaseMonotonically() {
         AttemptCounter counter = new AttemptCounter();
         long t1 = counter.getLastAttemptTime();
@@ -232,6 +232,6 @@ class AttemptCounterTest {
                 Integer.MIN_VALUE,
                 counter.getAttemptCount(),
                 "After increment past MAX_VALUE, int overflows to MIN_VALUE (Java standard"
-                    + " behavior)");
+                        + " behavior)");
     }
 }
