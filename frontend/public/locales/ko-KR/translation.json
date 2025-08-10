@@ -1,0 +1,1561 @@
+{
+  "language": {
+    "direction": "ltr"
+  },
+  "addPageNumbers": {
+    "fontSize": "글꼴 크기",
+    "fontName": "글꼴 이름",
+    "title": "페이지 번호 추가",
+    "header": "페이지 번호 추가",
+    "selectText": {
+      "1": "PDF 파일 선택:",
+      "2": "여백 크기",
+      "3": "위치",
+      "4": "시작 번호",
+      "5": "번호를 매길 페이지",
+      "6": "사용자 지정 텍스트"
+    },
+    "customTextDesc": "사용자 지정 텍스트",
+    "numberPagesDesc": "번호를 매길 페이지, 기본값 'all', 1-5 또는 2,5,9 등도 가능",
+    "customNumberDesc": "기본값은 {n}, '페이지 {n} / {total}', '텍스트-{n}', '{filename}-{n}' 등도 가능",
+    "submit": "페이지 번호 추가"
+  },
+  "pdfPrompt": "PDF 선택",
+  "multiPdfPrompt": "PDF 선택 (2개 이상)",
+  "multiPdfDropPrompt": "필요한 모든 PDF를 선택(또는 끌어다 놓기)하세요",
+  "imgPrompt": "이미지 선택",
+  "genericSubmit": "제출",
+  "uploadLimit": "Maximum file size:",
+  "uploadLimitExceededSingular": "is too large. Maximum allowed size is",
+  "uploadLimitExceededPlural": "are too large. Maximum allowed size is",
+  "processTimeWarning": "경고: 이 과정은 파일 크기에 따라 최대 1분이 소요될 수 있습니다",
+  "pageOrderPrompt": "사용자 지정 페이지 순서 (쉼표로 구분된 페이지 번호 목록 또는 2n+1과 같은 함수 입력):",
+  "pageSelectionPrompt": "사용자 지정 페이지 선택 (페이지 번호 1,5,6 또는 2n+1과 같은 함수를 쉼표로 구분하여 목록 입력):",
+  "goToPage": "이동",
+  "true": "참",
+  "false": "거짓",
+  "unknown": "알 수 없음",
+  "save": "저장",
+  "saveToBrowser": "브라우저에 저장",
+  "close": "닫기",
+  "filesSelected": "개의 파일이 선택됨",
+  "noFavourites": "즐겨찾기가 추가되지 않았습니다",
+  "downloadComplete": "다운로드 완료",
+  "bored": "기다리는 것이 지루하신가요?",
+  "alphabet": "알파벳",
+  "downloadPdf": "PDF 다운로드",
+  "text": "텍스트",
+  "font": "글꼴",
+  "selectFillter": "-- 선택 --",
+  "pageNum": "페이지 번호",
+  "sizes": {
+    "small": "작게",
+    "medium": "중간",
+    "large": "크게",
+    "x-large": "매우 크게"
+  },
+  "error": {
+    "pdfPassword": "PDF 문서가 비밀번호로 보호되어 있으며, 비밀번호가 제공되지 않았거나 올바르지 않습니다",
+    "_value": "오류",
+    "sorry": "문제가 발생해 죄송합니다!",
+    "needHelp": "도움이 필요하신가요 / 문제를 발견하셨나요?",
+    "contactTip": "여전히 문제가 있다면 주저하지 마시고 도움을 요청하세요. GitHub 페이지에서 티켓을 제출하거나 Discord를 통해 연락하실 수 있습니다:",
+    "404": {
+      "head": "404 - 페이지를 찾을 수 없습니다 | 이런, 코드에서 길을 잃었네요!",
+      "1": "찾으시는 페이지를 찾을 수 없습니다.",
+      "2": "문제가 발생했습니다"
+    },
+    "github": "GitHub에서 티켓 제출",
+    "showStack": "스택 추적 표시",
+    "copyStack": "스택 추적 복사",
+    "githubSubmit": "GitHub - 티켓 제출",
+    "discordSubmit": "Discord - 지원 게시물 작성"
+  },
+  "delete": "삭제",
+  "username": "사용자 이름",
+  "password": "비밀번호",
+  "welcome": "환영합니다",
+  "property": "속성",
+  "black": "검정",
+  "white": "흰색",
+  "red": "빨강",
+  "green": "초록",
+  "blue": "파랑",
+  "custom": "사용자 지정...",
+  "WorkInProgess": "작업 진행 중, 작동하지 않거나 버그가 있을 수 있습니다. 문제가 있으면 신고해 주세요!",
+  "poweredBy": "제공",
+  "yes": "예",
+  "no": "아니오",
+  "changedCredsMessage": "자격 증명이 변경되었습니다!",
+  "notAuthenticatedMessage": "사용자가 인증되지 않았습니다.",
+  "userNotFoundMessage": "사용자를 찾을 수 없습니다.",
+  "incorrectPasswordMessage": "현재 비밀번호가 올바르지 않습니다.",
+  "usernameExistsMessage": "새 사용자 이름이 이미 존재합니다.",
+  "invalidUsernameMessage": "잘못된 사용자 이름입니다. 사용자 이름은 문자, 숫자 및 @._+- 특수문자만 포함하거나 유효한 이메일 주소여야 합니다.",
+  "invalidPasswordMessage": "비밀번호는 비어 있으면 안 되며 시작과 끝에 공백이 있으면 안 됩니다.",
+  "confirmPasswordErrorMessage": "새 비밀번호와 새 비밀번호 확인이 일치해야 합니다.",
+  "deleteCurrentUserMessage": "현재 로그인된 사용자를 삭제할 수 없습니다.",
+  "deleteUsernameExistsMessage": "존재하지 않는 사용자 이름은 삭제할 수 없습니다.",
+  "downgradeCurrentUserMessage": "현재 사용자의 역할을 강등할 수 없습니다",
+  "disabledCurrentUserMessage": "현재 사용자를 비활성화할 수 없습니다",
+  "downgradeCurrentUserLongMessage": "현재 사용자의 역할을 강등할 수 없습니다. 따라서 현재 사용자는 표시되지 않습니다.",
+  "userAlreadyExistsOAuthMessage": "해당 사용자는 이미 OAuth2 사용자로 존재합니다.",
+  "userAlreadyExistsWebMessage": "해당 사용자는 이미 웹 사용자로 존재합니다.",
+  "oops": "이런!",
+  "help": "도움말",
+  "goHomepage": "홈페이지로 이동",
+  "joinDiscord": "Discord 서버 가입하기",
+  "seeDockerHub": "Docker Hub 보기",
+  "visitGithub": "Github 저장소 방문",
+  "donate": "기부하기",
+  "color": "색상",
+  "sponsor": "후원",
+  "info": "정보",
+  "pro": "프로",
+  "page": "페이지",
+  "pages": "페이지",
+  "loading": "로딩 중...",
+  "addToDoc": "문서에 추가",
+  "reset": "초기화",
+  "apply": "적용",
+  "noFileSelected": "No file selected. Please upload one.",
+  "legal": {
+    "privacy": "개인정보 처리방침",
+    "terms": "이용약관",
+    "accessibility": "접근성",
+    "cookie": "쿠키 정책",
+    "impressum": "법적 고지",
+    "showCookieBanner": "Cookie Preferences"
+  },
+  "pipeline": {
+    "header": "파이프라인 메뉴 (베타)",
+    "uploadButton": "사용자 지정 업로드",
+    "configureButton": "구성",
+    "defaultOption": "사용자 지정",
+    "submitButton": "제출",
+    "help": "파이프라인 도움말",
+    "scanHelp": "폴더 스캔 도움말",
+    "deletePrompt": "파이프라인을 삭제하시겠습니까?",
+    "tags": "자동화,순서,스크립트,일괄-처리",
+    "title": "파이프라인"
+  },
+  "pipelineOptions": {
+    "header": "파이프라인 구성",
+    "pipelineNameLabel": "파이프라인 이름",
+    "saveSettings": "작업 설정 저장",
+    "pipelineNamePrompt": "여기에 파이프라인 이름 입력",
+    "selectOperation": "작업 선택",
+    "addOperationButton": "작업 추가",
+    "pipelineHeader": "파이프라인:",
+    "saveButton": "다운로드",
+    "validateButton": "검증"
+  },
+  "enterpriseEdition": {
+    "button": "프로 버전으로 업그레이드",
+    "warning": "이 기능은 프로 사용자만 이용할 수 있습니다.",
+    "yamlAdvert": "Stirling PDF 프로는 YAML 구성 파일과 기타 SSO 기능을 지원합니다.",
+    "ssoAdvert": "더 많은 사용자 관리 기능을 찾고 계신가요? Stirling PDF Pro를 확인해보세요"
+  },
+  "analytics": {
+    "title": "Stirling PDF를 더 좋게 만들고 싶으신가요?",
+    "paragraph1": "Stirling PDF는 제품 개선을 위한 선택적 분석 기능이 있습니다. 개인정보나 파일 내용은 추적하지 않습니다.",
+    "paragraph2": "Stirling-PDF의 성장을 돕고 사용자를 더 잘 이해할 수 있도록 분석 기능 활성화를 고려해주세요.",
+    "enable": "분석 활성화",
+    "disable": "분석 비활성화",
+    "settings": "config/settings.yml 파일에서 분석 설정을 변경할 수 있습니다"
+  },
+  "navbar": {
+    "favorite": "즐겨찾기",
+    "recent": "New and recently updated",
+    "darkmode": "다크 모드",
+    "language": "언어",
+    "settings": "설정",
+    "allTools": "도구",
+    "multiTool": "멀티 도구",
+    "search": "검색",
+    "sections": {
+      "organize": "구성",
+      "convertTo": "PDF로 변환",
+      "convertFrom": "PDF에서 변환",
+      "security": "서명 & 보안",
+      "advance": "고급",
+      "edit": "보기 & 편집",
+      "popular": "인기"
+    }
+  },
+  "settings": {
+    "title": "설정",
+    "update": "업데이트 가능",
+    "updateAvailable": "{0}은(는) 현재 설치된 버전입니다. 새 버전({1})이 사용 가능합니다.",
+    "appVersion": "앱 버전:",
+    "downloadOption": {
+      "title": "다운로드 옵션 선택 (단일 파일 비압축 다운로드용):",
+      "1": "같은 창에서 열기",
+      "2": "새 창에서 열기",
+      "3": "파일 다운로드"
+    },
+    "zipThreshold": "다운로드 파일 수가 다음을 초과할 때 ZIP으로 압축",
+    "signOut": "로그아웃",
+    "accountSettings": "계정 설정",
+    "bored": {
+      "help": "이스터에그 게임 활성화"
+    },
+    "cacheInputs": {
+      "name": "입력 양식 저장",
+      "help": "다음 실행을 위해 이전에 사용한 입력을 저장하도록 활성화"
+    }
+  },
+  "changeCreds": {
+    "title": "자격 증명 변경",
+    "header": "계정 정보 업데이트",
+    "changePassword": "기본 로그인 자격 증명을 사용 중입니다. 새 비밀번호를 입력하세요",
+    "newUsername": "새 사용자 이름",
+    "oldPassword": "현재 비밀번호",
+    "newPassword": "새 비밀번호",
+    "confirmNewPassword": "새 비밀번호 확인",
+    "submit": "변경 사항 제출"
+  },
+  "account": {
+    "title": "계정 설정",
+    "accountSettings": "계정 설정",
+    "adminSettings": "관리자 설정 - 사용자 보기 및 추가",
+    "userControlSettings": "사용자 제어 설정",
+    "changeUsername": "사용자 이름 변경",
+    "newUsername": "새 사용자 이름",
+    "password": "확인 비밀번호",
+    "oldPassword": "이전 비밀번호",
+    "newPassword": "새 비밀번호",
+    "changePassword": "비밀번호 변경",
+    "confirmNewPassword": "새 비밀번호 확인",
+    "signOut": "로그아웃",
+    "yourApiKey": "API 키",
+    "syncTitle": "브라우저 설정을 계정과 동기화",
+    "settingsCompare": "설정 비교:",
+    "property": "속성",
+    "webBrowserSettings": "웹 브라우저 설정",
+    "syncToBrowser": "동기화 계정 -> 브라우저",
+    "syncToAccount": "동기화 계정 <- 브라우저"
+  },
+  "adminUserSettings": {
+    "title": "사용자 제어 설정",
+    "header": "관리자 사용자 제어 설정",
+    "admin": "관리자",
+    "user": "사용자",
+    "addUser": "새 사용자 추가",
+    "deleteUser": "사용자 삭제",
+    "confirmDeleteUser": "사용자를 삭제하시겠습니까?",
+    "confirmChangeUserStatus": "사용자를 비활성화/활성화하시겠습니까?",
+    "usernameInfo": "사용자 이름은 문자, 숫자 및 @._+- 특수문자만 포함하거나 유효한 이메일 주소여야 합니다.",
+    "roles": "역할",
+    "role": "역할",
+    "actions": "작업",
+    "apiUser": "제한된 API 사용자",
+    "extraApiUser": "추가 제한된 API 사용자",
+    "webOnlyUser": "웹 전용 사용자",
+    "demoUser": "데모 사용자 (사용자 지정 설정 없음)",
+    "internalApiUser": "내부 API 사용자",
+    "forceChange": "로그인 시 사용자 비밀번호 변경 강제",
+    "submit": "사용자 저장",
+    "changeUserRole": "사용자 역할 변경",
+    "authenticated": "인증됨",
+    "editOwnProfil": "자신의 프로필 편집",
+    "enabledUser": "활성화된 사용자",
+    "disabledUser": "비활성화된 사용자",
+    "activeUsers": "활성 사용자:",
+    "disabledUsers": "비활성화된 사용자:",
+    "totalUsers": "전체 사용자:",
+    "lastRequest": "마지막 요청",
+    "usage": "View Usage"
+  },
+  "endpointStatistics": {
+    "title": "Endpoint Statistics",
+    "header": "Endpoint Statistics",
+    "top10": "Top 10",
+    "top20": "Top 20",
+    "all": "All",
+    "refresh": "Refresh",
+    "includeHomepage": "Include Homepage ('/')",
+    "includeLoginPage": "Include Login Page ('/login')",
+    "totalEndpoints": "Total Endpoints",
+    "totalVisits": "Total Visits",
+    "showing": "Showing",
+    "selectedVisits": "Selected Visits",
+    "endpoint": "Endpoint",
+    "visits": "Visits",
+    "percentage": "Percentage",
+    "loading": "Loading...",
+    "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
+    "home": "Home",
+    "login": "Login",
+    "top": "Top",
+    "numberOfVisits": "Number of Visits",
+    "visitsTooltip": "Visits: {0} ({1}% of total)",
+    "retry": "Retry"
+  },
+  "database": {
+    "title": "데이터베이스 가져오기/내보내기",
+    "header": "데이터베이스 가져오기/내보내기",
+    "fileName": "파일 이름",
+    "creationDate": "생성 날짜",
+    "fileSize": "파일 크기",
+    "deleteBackupFile": "백업 파일 삭제",
+    "importBackupFile": "백업 파일 가져오기",
+    "createBackupFile": "백업 파일 생성",
+    "downloadBackupFile": "백업 파일 다운로드",
+    "info_1": "데이터를 가져올 때는 올바른 구조가 중요합니다. 무엇을 하고 있는지 확실하지 않다면 전문가의 조언과 지원을 받으세요. 구조에 오류가 있으면 애플리케이션 오작동이나 완전한 실행 불능까지 발생할 수 있습니다.",
+    "info_2": "업로드할 때 파일 이름은 중요하지 않습니다. 일관된 이름 지정 규칙을 위해 backup_user_yyyyMMddHHmm.sql 형식으로 이름이 변경됩니다.",
+    "submit": "백업 가져오기",
+    "importIntoDatabaseSuccessed": "데이터베이스로 가져오기 성공",
+    "backupCreated": "데이터베이스 백업 성공",
+    "fileNotFound": "파일을 찾을 수 없음",
+    "fileNullOrEmpty": "파일은 null이거나 비어 있으면 안 됩니다",
+    "failedImportFile": "파일 가져오기 실패",
+    "notSupported": "이 기능은 현재 데이터베이스 연결에서 사용할 수 없습니다."
+  },
+  "session": {
+    "expired": "세션이 만료되었습니다. 페이지를 새로 고침하고 다시 시도하세요.",
+    "refreshPage": "페이지 새로 고침"
+  },
+  "home": {
+    "desc": "PDF 관련 모든 작업을 위한 로컬 호스팅 원스톱 솔루션입니다.",
+    "searchBar": "기능 검색...",
+    "viewPdf": {
+      "title": "View/Edit PDF",
+      "desc": "보기, 주석 달기, 텍스트 또는 이미지 추가"
+    },
+    "setFavorites": "Set Favourites",
+    "hideFavorites": "Hide Favourites",
+    "showFavorites": "Show Favourites",
+    "legacyHomepage": "Old homepage",
+    "newHomePage": "Try our new homepage!",
+    "alphabetical": "Alphabetical",
+    "globalPopularity": "Global Popularity",
+    "sortBy": "Sort by:",
+    "multiTool": {
+      "title": "PDF 멀티 도구",
+      "desc": "병합, 회전, 재배치, 분할 및 페이지 제거"
+    },
+    "merge": {
+      "title": "병합",
+      "desc": "여러 PDF를 하나로 쉽게 병합합니다."
+    },
+    "split": {
+      "title": "분할",
+      "desc": "PDF를 여러 문서로 분할"
+    },
+    "rotate": {
+      "title": "회전",
+      "desc": "PDF를 쉽게 회전합니다."
+    },
+    "imageToPdf": {
+      "title": "이미지를 PDF로",
+      "desc": "이미지(PNG, JPEG, GIF)를 PDF로 변환합니다."
+    },
+    "pdfToImage": {
+      "title": "PDF를 이미지로",
+      "desc": "PDF를 이미지로 변환합니다. (PNG, JPEG, GIF)"
+    },
+    "pdfOrganiser": {
+      "title": "정리",
+      "desc": "원하는 순서로 페이지 제거/재배치"
+    },
+    "addImage": {
+      "title": "이미지 추가",
+      "desc": "PDF의 지정된 위치에 이미지 추가"
+    },
+    "watermark": {
+      "title": "워터마크 추가",
+      "desc": "PDF 문서에 사용자 지정 워터마크를 추가합니다."
+    },
+    "permissions": {
+      "title": "권한 변경",
+      "desc": "PDF 문서의 권한을 변경합니다"
+    },
+    "removePages": {
+      "title": "제거",
+      "desc": "PDF 문서에서 원하지 않는 페이지를 삭제합니다."
+    },
+    "addPassword": {
+      "title": "비밀번호 추가",
+      "desc": "PDF 문서를 비밀번호로 암호화합니다."
+    },
+    "removePassword": {
+      "title": "비밀번호 제거",
+      "desc": "PDF 문서에서 비밀번호 보호를 제거합니다."
+    },
+    "compressPdfs": {
+      "title": "압축",
+      "desc": "PDF를 압축하여 파일 크기를 줄입니다."
+    },
+    "unlockPDFForms": {
+      "title": "Unlock PDF Forms",
+      "desc": "Remove read-only property of form fields in a PDF document."
+    },
+    "changeMetadata": {
+      "title": "메타데이터 변경",
+      "desc": "PDF 문서에서 메타데이터 변경/제거/추가"
+    },
+    "fileToPDF": {
+      "title": "파일을 PDF로 변환",
+      "desc": "거의 모든 파일을 PDF로 변환합니다(DOCX, PNG, XLS, PPT, TXT 등)"
+    },
+    "ocr": {
+      "title": "OCR / 스캔 정리",
+      "desc": "스캔을 정리하고 PDF 내 이미지에서 텍스트를 감지하여 다시 텍스트로 추가합니다."
+    },
+    "extractImages": {
+      "title": "이미지 추출",
+      "desc": "PDF에서 모든 이미지를 추출하여 zip으로 저장"
+    },
+    "pdfToPDFA": {
+      "title": "PDF를 PDF/A로",
+      "desc": "장기 보관을 위해 PDF를 PDF/A로 변환"
+    },
+    "PDFToWord": {
+      "title": "PDF를 Word로",
+      "desc": "PDF를 Word 형식으로 변환 (DOC, DOCX 및 ODT)"
+    },
+    "PDFToPresentation": {
+      "title": "PDF를 프레젠테이션으로",
+      "desc": "PDF를 프레젠테이션 형식으로 변환 (PPT, PPTX 및 ODP)"
+    },
+    "PDFToText": {
+      "title": "PDF를 RTF(텍스트)로",
+      "desc": "PDF를 텍스트 또는 RTF 형식으로 변환"
+    },
+    "PDFToHTML": {
+      "title": "PDF를 HTML로",
+      "desc": "PDF를 HTML 형식으로 변환"
+    },
+    "PDFToXML": {
+      "title": "PDF를 XML로",
+      "desc": "PDF를 XML 형식으로 변환"
+    },
+    "ScannerImageSplit": {
+      "title": "스캔한 사진 감지/분할",
+      "desc": "사진/PDF 내의 여러 사진을 분할합니다"
+    },
+    "sign": {
+      "title": "서명",
+      "desc": "그리기, 텍스트 또는 이미지로 PDF에 서명 추가"
+    },
+    "flatten": {
+      "title": "평면화",
+      "desc": "PDF에서 모든 대화형 요소와 양식 제거"
+    },
+    "repair": {
+      "title": "복구",
+      "desc": "손상/깨진 PDF를 복구 시도"
+    },
+    "removeBlanks": {
+      "title": "빈 페이지 제거",
+      "desc": "문서에서 빈 페이지를 감지하고 제거합니다"
+    },
+    "removeAnnotations": {
+      "title": "주석 제거",
+      "desc": "PDF에서 모든 주석/메모를 제거합니다"
+    },
+    "compare": {
+      "title": "비교",
+      "desc": "2개의 PDF 문서를 비교하고 차이점을 보여줍니다"
+    },
+    "certSign": {
+      "title": "인증서로 서명",
+      "desc": "인증서/키(PEM/P12)로 PDF에 서명"
+    },
+    "removeCertSign": {
+      "title": "인증서 서명 제거",
+      "desc": "PDF에서 인증서 서명 제거"
+    },
+    "pageLayout": {
+      "title": "다중 페이지 레이아웃",
+      "desc": "PDF 문서의 여러 페이지를 하나의 페이지로 병합"
+    },
+    "scalePages": {
+      "title": "페이지 크기/배율 조정",
+      "desc": "페이지 및 내용의 크기/배율을 변경합니다."
+    },
+    "pipeline": {
+      "title": "파이프라인",
+      "desc": "파이프라인 스크립트를 정의하여 PDF에서 여러 작업 실행"
+    },
+    "add-page-numbers": {
+      "title": "페이지 번호 추가",
+      "desc": "문서 전체에 지정된 위치에 페이지 번호 추가"
+    },
+    "auto-rename": {
+      "title": "PDF 파일 자동 이름 변경",
+      "desc": "감지된 헤더를 기반으로 PDF 파일 이름 자동 변경"
+    },
+    "adjust-contrast": {
+      "title": "색상/대비 조정",
+      "desc": "PDF의 대비, 채도 및 밝기 조정"
+    },
+    "crop": {
+      "title": "PDF 자르기",
+      "desc": "PDF를 잘라서 크기 줄이기(텍스트 유지!)"
+    },
+    "autoSplitPDF": {
+      "title": "자동 페이지 분할",
+      "desc": "물리적 스캔 페이지 분할기 QR 코드가 있는 스캔된 PDF 자동 분할"
+    },
+    "sanitizePdf": {
+      "title": "정리",
+      "desc": "PDF 파일에서 스크립트 및 기타 요소 제거"
+    },
+    "URLToPDF": {
+      "title": "URL/웹사이트를 PDF로",
+      "desc": "http(s) URL을 PDF로 변환"
+    },
+    "HTMLToPDF": {
+      "title": "HTML을 PDF로",
+      "desc": "HTML 파일이나 zip을 PDF로 변환"
+    },
+    "MarkdownToPDF": {
+      "title": "Markdown을 PDF로",
+      "desc": "Markdown 파일을 PDF로 변환"
+    },
+    "PDFToMarkdown": {
+      "title": "PDF를 Markdown으로",
+      "desc": "PDF를 Markdown으로 변환"
+    },
+    "getPdfInfo": {
+      "title": "PDF 모든 정보 가져오기",
+      "desc": "PDF에서 가능한 모든 정보 가져오기"
+    },
+    "extractPage": {
+      "title": "페이지 추출",
+      "desc": "PDF에서 선택한 페이지 추출"
+    },
+    "PdfToSinglePage": {
+      "title": "단일 큰 페이지",
+      "desc": "모든 PDF 페이지를 하나의 큰 단일 페이지로 병합"
+    },
+    "showJS": {
+      "title": "JavaScript 보기",
+      "desc": "PDF에 삽입된 JavaScript 검색 및 표시"
+    },
+    "autoRedact": {
+      "title": "자동 검열",
+      "desc": "입력 텍스트를 기반으로 PDF의 텍스트 자동 검열(가림)"
+    },
+    "redact": {
+      "title": "수동 검열",
+      "desc": "선택한 텍스트, 그린 도형 및/또는 선택한 페이지를 기반으로 PDF 검열"
+    },
+    "tableExtraxt": {
+      "title": "PDF를 CSV로",
+      "desc": "PDF에서 표를 추출하여 CSV로 변환"
+    },
+    "autoSizeSplitPDF": {
+      "title": "크기/개수별 자동 분할",
+      "desc": "단일 PDF를 크기, 페이지 수 또는 문서 수를 기준으로 여러 문서로 분할"
+    },
+    "overlay-pdfs": {
+      "title": "PDF 오버레이",
+      "desc": "PDF를 다른 PDF 위에 오버레이"
+    },
+    "split-by-sections": {
+      "title": "섹션별 PDF 분할",
+      "desc": "PDF의 각 페이지를 더 작은 가로 및 세로 섹션으로 분할"
+    },
+    "AddStampRequest": {
+      "title": "PDF에 스탬프 추가",
+      "desc": "지정된 위치에 텍스트 또는 이미지 스탬프 추가"
+    },
+    "removeImagePdf": {
+      "title": "이미지 제거",
+      "desc": "파일 크기를 줄이기 위해 PDF에서 이미지 제거"
+    },
+    "splitPdfByChapters": {
+      "title": "챕터별 PDF 분할",
+      "desc": "PDF를 챕터 구조에 따라 여러 파일로 분할합니다."
+    },
+    "validateSignature": {
+      "title": "PDF 서명 검증",
+      "desc": "PDF 문서의 디지털 서명과 인증서 검증"
+    },
+    "replaceColorPdf": {
+      "title": "색상 교체 및 반전",
+      "desc": "PDF에서 텍스트와 배경의 색상을 교체하고 파일 크기를 줄이기 위해 전체 PDF 색상을 반전"
+    }
+  },
+  "viewPdf": {
+    "tags": "보기,읽기,주석,텍스트,이미지",
+    "title": "View/Edit PDF",
+    "header": "PDF 보기"
+  },
+  "multiTool": {
+    "tags": "멀티 도구,다중 작업,UI,클릭 드래그,프론트엔드,클라이언트 사이드,대화형,상호작용,이동,삭제,마이그레이션,분할",
+    "title": "PDF 멀티 도구",
+    "header": "PDF 멀티 도구",
+    "uploadPrompts": "파일 이름",
+    "selectAll": "모두 선택",
+    "deselectAll": "모두 선택 해제",
+    "selectPages": "페이지 선택",
+    "selectedPages": "선택된 페이지",
+    "page": "페이지",
+    "deleteSelected": "선택 항목 삭제",
+    "downloadAll": "내보내기",
+    "downloadSelected": "선택 항목 내보내기",
+    "insertPageBreak": "페이지 나누기 삽입",
+    "addFile": "파일 추가",
+    "rotateLeft": "왼쪽으로 회전",
+    "rotateRight": "오른쪽으로 회전",
+    "split": "분할",
+    "moveLeft": "왼쪽으로 이동",
+    "moveRight": "오른쪽으로 이동",
+    "delete": "삭제",
+    "dragDropMessage": "페이지 선택됨",
+    "undo": "실행 취소",
+    "redo": "다시 실행"
+  },
+  "merge": {
+    "tags": "병합,페이지 작업,백엔드,서버 사이드",
+    "title": "병합",
+    "header": "여러 PDF 병합 (2개 이상)",
+    "sortByName": "이름으로 정렬",
+    "sortByDate": "날짜로 정렬",
+    "removeCertSign": "병합된 파일에서 디지털 서명을 제거하시겠습니까?",
+    "submit": "병합"
+  },
+  "split": {
+    "tags": "페이지 작업,나누기,멀티 페이지,자르기,서버 사이드",
+    "title": "PDF 분할",
+    "header": "PDF 분할",
+    "desc": {
+      "1": "선택한 숫자는 분할하려는 페이지 번호입니다",
+      "2": "예를 들어 1,3,7-9를 선택하면 10페이지 문서가 다음과 같이 6개의 별도 PDF로 분할됩니다:",
+      "3": "문서 #1: 1페이지",
+      "4": "문서 #2: 2-3페이지",
+      "5": "문서 #3: 4-7페이지",
+      "6": "문서 #4: 8페이지",
+      "7": "문서 #5: 9페이지",
+      "8": "문서 #6: 10페이지"
+    },
+    "splitPages": "분할할 페이지 입력:",
+    "submit": "분할"
+  },
+  "rotate": {
+    "tags": "서버 사이드",
+    "title": "PDF 회전",
+    "header": "PDF 회전",
+    "selectAngle": "회전 각도 선택 (90도 단위):",
+    "submit": "회전"
+  },
+  "imageToPdf": {
+    "tags": "변환,이미지,jpg,사진"
+  },
+  "pdfToImage": {
+    "tags": "변환,이미지,jpg,사진",
+    "title": "PDF를 이미지로",
+    "header": "PDF를 이미지로",
+    "selectText": "이미지 형식",
+    "singleOrMultiple": "이미지 결과 유형",
+    "single": "단일 큰 이미지",
+    "multi": "여러 이미지",
+    "colorType": "색상 유형",
+    "color": "컬러",
+    "grey": "그레이스케일",
+    "blackwhite": "흑백 (데이터 손실 가능성 있음!)",
+    "submit": "변환",
+    "info": "WebP 변환에는 Python이 필요합니다. Python이 설치되지 않았습니다.",
+    "placeholder": "(예: 1,2,8 또는 4,7,12-16 또는 2n-1)"
+  },
+  "pdfOrganiser": {
+    "tags": "양면,짝수,홀수,정렬,이동",
+    "title": "페이지 정리",
+    "header": "PDF 페이지 정리",
+    "submit": "페이지 재배치",
+    "mode": {
+      "_value": "모드",
+      "1": "사용자 지정 페이지 순서",
+      "2": "역순",
+      "3": "양면 정렬",
+      "4": "소책자 정렬",
+      "5": "측면 스티치 소책자 정렬",
+      "6": "홀수-짝수 분할",
+      "7": "첫 페이지 제거",
+      "8": "마지막 페이지 제거",
+      "9": "첫 페이지와 마지막 페이지 제거",
+      "10": "홀수-짝수 병합",
+      "11": "Duplicate all pages"
+    },
+    "placeholder": "(예: 1,3,2 또는 4-8,2,10-12 또는 2n-1)"
+  },
+  "addImage": {
+    "tags": "이미지,jpg,사진",
+    "title": "이미지 추가",
+    "header": "PDF에 이미지 추가",
+    "everyPage": "모든 페이지?",
+    "upload": "이미지 추가",
+    "submit": "이미지 추가"
+  },
+  "watermark": {
+    "tags": "텍스트,반복,레이블,소유,저작권,상표,이미지,jpg,사진",
+    "title": "워터마크 추가",
+    "header": "워터마크 추가",
+    "customColor": "사용자 지정 텍스트 색상",
+    "selectText": {
+      "1": "워터마크를 추가할 PDF 선택:",
+      "2": "워터마크 텍스트:",
+      "3": "글꼴 크기:",
+      "4": "회전 (0-360):",
+      "5": "가로 간격 (각 워터마크 사이의 가로 간격):",
+      "6": "세로 간격 (각 워터마크 사이의 세로 간격):",
+      "7": "불투명도 (0% - 100%):",
+      "8": "워터마크 유형:",
+      "9": "워터마크 이미지:",
+      "10": "PDF를 PDF-이미지로 변환"
+    },
+    "submit": "워터마크 추가",
+    "type": {
+      "1": "텍스트",
+      "2": "이미지"
+    }
+  },
+  "permissions": {
+    "tags": "읽기,쓰기,편집,인쇄",
+    "title": "권한 변경",
+    "header": "권한 변경",
+    "warning": "이러한 권한을 변경할 수 없게 하려면 비밀번호 추가 페이지에서 비밀번호와 함께 설정하는 것이 좋습니다",
+    "selectText": {
+      "1": "권한을 변경할 PDF 선택",
+      "2": "설정할 권한",
+      "3": "문서 조립 방지",
+      "4": "콘텐츠 추출 방지",
+      "5": "접근성을 위한 추출 방지",
+      "6": "양식 작성 방지",
+      "7": "수정 방지",
+      "8": "주석 수정 방지",
+      "9": "인쇄 방지",
+      "10": "다른 형식으로 인쇄 방지"
+    },
+    "submit": "변경"
+  },
+  "removePages": {
+    "tags": "페이지 제거,페이지 삭제"
+  },
+  "addPassword": {
+    "tags": "보안,보안",
+    "title": "비밀번호 추가",
+    "header": "비밀번호 추가 (암호화)",
+    "selectText": {
+      "1": "암호화할 PDF 선택",
+      "2": "사용자 비밀번호",
+      "3": "암호화 키 길이",
+      "4": "높은 값이 더 강력하지만 낮은 값이 더 나은 호환성을 제공합니다.",
+      "5": "설정할 권한 (소유자 비밀번호와 함께 사용 권장)",
+      "6": "문서 조립 방지",
+      "7": "콘텐츠 추출 방지",
+      "8": "접근성을 위한 추출 방지",
+      "9": "양식 작성 방지",
+      "10": "수정 방지",
+      "11": "주석 수정 방지",
+      "12": "인쇄 방지",
+      "13": "다른 형식으로 인쇄 방지",
+      "14": "소유자 비밀번호",
+      "15": "문서가 열린 후 수행할 수 있는 작업 제한 (모든 리더에서 지원되지 않음)",
+      "16": "문서 자체 열기 제한"
+    },
+    "submit": "암호화"
+  },
+  "removePassword": {
+    "tags": "보안,암호 해제,보안,비밀번호 해제,비밀번호 삭제",
+    "title": "비밀번호 제거",
+    "header": "비밀번호 제거 (복호화)",
+    "selectText": {
+      "1": "복호화할 PDF 선택",
+      "2": "비밀번호"
+    },
+    "submit": "제거"
+  },
+  "compressPdfs": {
+    "tags": "압축,작게,매우 작게"
+  },
+  "unlockPDFForms": {
+    "tags": "remove,delete,form,field,readonly",
+    "title": "Remove Read-Only from Form Fields",
+    "header": "Unlock PDF Forms",
+    "submit": "Remove"
+  },
+  "changeMetadata": {
+    "tags": "제목,저자,날짜,생성,시간,출판사,제작자,통계",
+    "title": "제목:",
+    "header": "메타데이터 변경",
+    "selectText": {
+      "1": "변경하려는 변수를 편집하세요",
+      "2": "모든 메타데이터 삭제",
+      "3": "사용자 지정 메타데이터 표시:",
+      "4": "기타 메타데이터:",
+      "5": "사용자 지정 메타데이터 항목 추가"
+    },
+    "author": "저자:",
+    "creationDate": "생성 날짜 (yyyy/MM/dd HH:mm:ss):",
+    "creator": "작성자:",
+    "keywords": "키워드:",
+    "modDate": "수정 날짜 (yyyy/MM/dd HH:mm:ss):",
+    "producer": "제작자:",
+    "subject": "제목:",
+    "trapped": "트랩:",
+    "submit": "변경"
+  },
+  "fileToPDF": {
+    "tags": "변환,형식,문서,사진,슬라이드,텍스트,변환,오피스,문서,워드,엑셀,파워포인트",
+    "title": "파일을 PDF로",
+    "header": "모든 파일을 PDF로 변환",
+    "credit": "이 서비스는 파일 변환을 위해 LibreOffice와 Unoconv를 사용합니다.",
+    "supportedFileTypesInfo": "지원되는 파일 형식",
+    "supportedFileTypes": "지원되는 파일 형식은 아래와 같지만 전체 업데이트된 지원 형식 목록은 LibreOffice 문서를 참조하세요",
+    "submit": "PDF로 변환"
+  },
+  "ocr": {
+    "tags": "인식,텍스트,이미지,스캔,읽기,식별,감지,편집 가능",
+    "title": "OCR / 스캔 정리",
+    "header": "스캔 정리 / OCR (광학 문자 인식)",
+    "selectText": {
+      "1": "PDF에서 감지할 언어 선택 (현재 감지된 언어가 나열됨):",
+      "2": "OCR된 PDF와 함께 OCR 텍스트가 포함된 텍스트 파일 생성",
+      "3": "기울어진 각도로 스캔된 페이지를 올바른 위치로 회전",
+      "4": "OCR이 배경 노이즈에서 텍스트를 찾을 가능성을 줄이도록 페이지 정리 (출력 변경 없음)",
+      "5": "OCR이 배경 노이즈에서 텍스트를 찾을 가능성을 줄이도록 페이지 정리, 출력에서 정리 유지",
+      "6": "대화형 텍스트가 있는 페이지는 무시하고 이미지 페이지만 OCR",
+      "7": "강제 OCR, 모든 원본 텍스트 요소를 제거하고 모든 페이지를 OCR",
+      "8": "일반 (PDF에 텍스트가 있으면 오류 발생)",
+      "9": "추가 설정",
+      "10": "OCR 모드",
+      "11": "OCR 후 이미지 제거 (모든 이미지 제거, 변환 단계의 일부인 경우에만 유용)",
+      "12": "렌더링 유형 (고급)"
+    },
+    "help": "다른 언어 사용 방법 및/또는 Docker에서 사용하지 않는 방법에 대한 문서를 읽어보세요",
+    "credit": "이 서비스는 OCR을 위해 qpdf와 Tesseract를 사용합니다.",
+    "submit": "OCR로 PDF 처리"
+  },
+  "extractImages": {
+    "tags": "사진,저장,아카이브,zip,캡처,가져오기",
+    "title": "이미지 추출",
+    "header": "이미지 추출",
+    "selectText": "추출된 이미지를 변환할 이미지 형식 선택",
+    "allowDuplicates": "중복 이미지 저장",
+    "submit": "추출"
+  },
+  "pdfToPDFA": {
+    "tags": "아카이브,장기,표준,변환,저장,보존",
+    "title": "PDF를 PDF/A로",
+    "header": "PDF를 PDF/A로",
+    "credit": "이 서비스는 PDF/A 변환을 위해 libreoffice를 사용합니다",
+    "submit": "변환",
+    "tip": "현재 여러 입력을 한 번에 처리할 수 없습니다",
+    "outputFormat": "출력 형식",
+    "pdfWithDigitalSignature": "PDF에 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
+  },
+  "PDFToWord": {
+    "tags": "doc,docx,odt,워드,변환,형식,변환,오피스,마이크로소프트,docfile",
+    "title": "PDF를 Word로",
+    "header": "PDF를 Word로",
+    "selectText": {
+      "1": "출력 파일 형식"
+    },
+    "credit": "이 서비스는 파일 변환을 위해 LibreOffice를 사용합니다.",
+    "submit": "변환"
+  },
+  "PDFToPresentation": {
+    "tags": "슬라이드,쇼,오피스,마이크로소프트",
+    "title": "PDF를 프레젠테이션으로",
+    "header": "PDF를 프레젠테이션으로",
+    "selectText": {
+      "1": "출력 파일 형식"
+    },
+    "credit": "이 서비스는 파일 변환을 위해 LibreOffice를 사용합니다.",
+    "submit": "변환"
+  },
+  "PDFToText": {
+    "tags": "서식있는형식,서식있는텍스트형식,서식있는 텍스트 형식",
+    "title": "PDF를 RTF(텍스트)로",
+    "header": "PDF를 RTF(텍스트)로",
+    "selectText": {
+      "1": "출력 파일 형식"
+    },
+    "credit": "이 서비스는 파일 변환을 위해 LibreOffice를 사용합니다.",
+    "submit": "변환"
+  },
+  "PDFToHTML": {
+    "tags": "웹 콘텐츠,브라우저 친화적",
+    "title": "PDF를 HTML로",
+    "header": "PDF를 HTML로",
+    "credit": "이 서비스는 파일 변환을 위해 pdftohtml을 사용합니다.",
+    "submit": "변환"
+  },
+  "PDFToXML": {
+    "tags": "데이터-추출,구조화-콘텐츠,상호운용성,변환,변환",
+    "title": "PDF를 XML로",
+    "header": "PDF를 XML로",
+    "credit": "이 서비스는 파일 변환을 위해 LibreOffice를 사용합니다.",
+    "submit": "변환"
+  },
+  "ScannerImageSplit": {
+    "tags": "분리,자동-감지,스캔,다중-사진,정리",
+    "selectText": {
+      "1": "각도 임계값:",
+      "2": "이미지 회전에 필요한 최소 절대 각도를 설정합니다(기본값: 10).",
+      "3": "허용 오차:",
+      "4": "예상 배경색 주변의 색상 변화 범위를 결정합니다(기본값: 30).",
+      "5": "최소 영역:",
+      "6": "사진의 최소 영역 임계값을 설정합니다(기본값: 10000).",
+      "7": "최소 윤곽 영역:",
+      "8": "사진의 최소 윤곽선 영역 임계값을 설정합니다",
+      "9": "테두리 크기:",
+      "10": "출력에서 흰색 테두리를 방지하기 위해 추가 및 제거되는 테두리의 크기를 설정합니다(기본값: 1)."
+    },
+    "info": "Python이 설치되어 있지 않습니다. 실행하는 데 필요합니다."
+  },
+  "sign": {
+    "tags": "승인,이니셜,그린-서명,텍스트-서명,이미지-서명",
+    "title": "서명",
+    "header": "PDF 서명",
+    "upload": "이미지 업로드",
+    "draw": "서명 그리기",
+    "text": "텍스트 입력",
+    "clear": "지우기",
+    "add": "추가",
+    "saved": "저장된 서명",
+    "save": "서명 저장",
+    "personalSigs": "개인 서명",
+    "sharedSigs": "공유 서명",
+    "noSavedSigs": "저장된 서명이 없습니다",
+    "addToAll": "모든 페이지에 추가",
+    "delete": "삭제",
+    "first": "첫 페이지",
+    "last": "마지막 페이지",
+    "next": "다음 페이지",
+    "previous": "이전 페이지",
+    "maintainRatio": "종횡비 유지 토글",
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "flatten": {
+    "tags": "정적,비활성화,비대화형,간소화",
+    "title": "평면화",
+    "header": "PDF 평면화",
+    "flattenOnlyForms": "양식만 평면화",
+    "submit": "평면화"
+  },
+  "repair": {
+    "tags": "수정,복원,교정,복구",
+    "title": "복구",
+    "header": "PDF 복구",
+    "submit": "복구"
+  },
+  "removeBlanks": {
+    "tags": "정리,간소화,비콘텐츠,정리",
+    "title": "빈 페이지 제거",
+    "header": "빈 페이지 제거",
+    "threshold": "픽셀 흰색도 임계값:",
+    "thresholdDesc": "흰색 픽셀이 얼마나 흰색이어야 '흰색'으로 분류될지 결정하는 임계값. 0 = 검정, 255 순수 흰색.",
+    "whitePercent": "흰색 비율 (%):",
+    "whitePercentDesc": "제거되기 위해 필요한 '흰색' 픽셀의 페이지 비율",
+    "submit": "빈 페이지 제거"
+  },
+  "removeAnnotations": {
+    "tags": "댓글,하이라이트,노트,마크업,제거",
+    "title": "주석 제거",
+    "header": "주석 제거",
+    "submit": "제거"
+  },
+  "compare": {
+    "tags": "차이,대조,변경,분석",
+    "title": "비교",
+    "header": "PDF 비교",
+    "highlightColor": {
+      "1": "하이라이트 색상 1:",
+      "2": "하이라이트 색상 2:"
+    },
+    "document": {
+      "1": "문서 1",
+      "2": "문서 2"
+    },
+    "submit": "비교",
+    "complex": {
+      "message": "제공된 문서 중 하나 이상이 큰 파일이므로 비교의 정확도가 떨어질 수 있습니다"
+    },
+    "large": {
+      "file": {
+        "message": "제공된 문서 중 하나 이상이 처리하기에 너무 큽니다"
+      }
+    },
+    "no": {
+      "text": {
+        "message": "선택한 PDF 중 하나 이상에 텍스트 내용이 없습니다. 비교를 위해 텍스트가 있는 PDF를 선택하세요."
+      }
+    }
+  },
+  "certSign": {
+    "tags": "인증,PEM,P12,공식,암호화",
+    "title": "인증서 서명",
+    "header": "인증서로 PDF 서명 (개발 중)",
+    "selectPDF": "서명할 PDF 파일 선택:",
+    "jksNote": "참고: 인증서 유형이 아래에 나열되지 않은 경우 keytool 명령줄 도구를 사용하여 Java 키스토어(.jks) 파일로 변환한 다음 아래의 .jks 파일 옵션을 선택하세요.",
+    "selectKey": "개인 키 파일 선택 (PKCS#8 형식, .pem 또는 .der):",
+    "selectCert": "인증서 파일 선택 (X.509 형식, .pem 또는 .der):",
+    "selectP12": "PKCS#12 키스토어 파일 선택 (.p12 또는 .pfx) (선택 사항, 제공하는 경우 개인 키와 인증서 포함):",
+    "selectJKS": "Java 키스토어 파일 선택 (.jks 또는 .keystore):",
+    "certType": "인증서 유형",
+    "password": "키스토어 또는 개인 키 비밀번호 입력 (있는 경우):",
+    "showSig": "서명 표시",
+    "reason": "사유",
+    "location": "위치",
+    "name": "이름",
+    "showLogo": "로고 표시",
+    "submit": "PDF 서명"
+  },
+  "removeCertSign": {
+    "tags": "인증,PEM,P12,공식,복호화",
+    "title": "인증서 서명 제거",
+    "header": "PDF에서 디지털 서명 제거",
+    "selectPDF": "PDF 파일 선택:",
+    "submit": "서명 제거"
+  },
+  "pageLayout": {
+    "tags": "병합,합성,단일-보기,정리",
+    "title": "다중 페이지 레이아웃",
+    "header": "다중 페이지 레이아웃",
+    "pagesPerSheet": "시트당 페이지 수:",
+    "addBorder": "테두리 추가",
+    "submit": "제출"
+  },
+  "scalePages": {
+    "tags": "크기조정,수정,치수,조정",
+    "title": "페이지 크기 조정",
+    "header": "페이지 크기 조정",
+    "pageSize": "문서 페이지의 크기입니다.",
+    "keepPageSize": "원본 크기",
+    "scaleFactor": "페이지의 확대/축소 레벨(잘라내기).",
+    "submit": "제출"
+  },
+  "add-page-numbers": {
+    "tags": "페이지매김,레이블,정리,색인"
+  },
+  "auto-rename": {
+    "tags": "자동-감지,헤더-기반,정리,재레이블링",
+    "title": "자동 이름 변경",
+    "header": "PDF 자동 이름 변경",
+    "submit": "자동 이름 변경"
+  },
+  "adjust-contrast": {
+    "tags": "색상-보정,조정,수정,향상"
+  },
+  "crop": {
+    "tags": "트림,축소,편집,모양",
+    "title": "자르기",
+    "header": "PDF 자르기",
+    "submit": "제출"
+  },
+  "autoSplitPDF": {
+    "tags": "QR-기반,분리,스캔-세그먼트,정리",
+    "title": "자동 PDF 분할",
+    "header": "자동 PDF 분할",
+    "description": "인쇄하고, 삽입하고, 스캔하고, 업로드하면 나머지는 자동으로 처리됩니다. 수동 정렬 작업이 필요 없습니다.",
+    "selectText": {
+      "1": "아래에서 구분자 시트를 인쇄하세요 (흑백도 괜찮습니다).",
+      "2": "문서 사이에 구분자 시트를 넣고 한 번에 모든 문서를 스캔하세요.",
+      "3": "스캔한 단일 PDF 파일을 업로드하고 나머지는 Stirling PDF가 처리합니다.",
+      "4": "구분자 페이지는 자동으로 감지되고 제거되어 깔끔한 최종 문서를 보장합니다."
+    },
+    "formPrompt": "Stirling-PDF 페이지 구분자가 포함된 PDF 제출:",
+    "duplexMode": "양면 모드 (앞뒷면 스캔)",
+    "dividerDownload2": "'자동 분할 구분자 (설명 포함)' PDF 다운로드",
+    "submit": "제출"
+  },
+  "sanitizePdf": {
+    "tags": "청소,보안,안전,위협-제거"
+  },
+  "URLToPDF": {
+    "tags": "웹-캡처,페이지-저장,웹-문서,아카이브",
+    "title": "URL을 PDF로",
+    "header": "URL을 PDF로",
+    "submit": "변환",
+    "credit": "WeasyPrint 사용"
+  },
+  "HTMLToPDF": {
+    "tags": "마크업,웹-콘텐츠,변환,변환",
+    "title": "HTML을 PDF로",
+    "header": "HTML을 PDF로",
+    "help": "HTML 파일과 html/css/이미지 등이 포함된 ZIP을 허용합니다",
+    "submit": "변환",
+    "credit": "WeasyPrint 사용",
+    "zoom": "웹사이트 표시를 위한 확대/축소 레벨입니다.",
+    "pageWidth": "페이지 너비 - 센티미터 단위 (기본값은 비워두기)",
+    "pageHeight": "페이지 높이 - 센티미터 단위 (기본값은 비워두기)",
+    "marginTop": "페이지 상단 여백 - 밀리미터 단위 (기본값은 비워두기)",
+    "marginBottom": "페이지 하단 여백 - 밀리미터 단위 (기본값은 비워두기)",
+    "marginLeft": "페이지 왼쪽 여백 - 밀리미터 단위 (기본값은 비워두기)",
+    "marginRight": "페이지 오른쪽 여백 - 밀리미터 단위 (기본값은 비워두기)",
+    "printBackground": "웹사이트의 배경을 렌더링합니다.",
+    "defaultHeader": "기본 헤더 활성화 (이름 및 페이지 번호)",
+    "cssMediaType": "페이지의 CSS 미디어 유형을 변경합니다.",
+    "none": "없음",
+    "print": "인쇄",
+    "screen": "화면"
+  },
+  "MarkdownToPDF": {
+    "tags": "마크업,웹-콘텐츠,변환,변환,md",
+    "title": "Markdown을 PDF로",
+    "header": "Markdown을 PDF로",
+    "submit": "변환",
+    "help": "작업 진행 중",
+    "credit": "WeasyPrint 사용"
+  },
+  "PDFToMarkdown": {
+    "tags": "마크업,웹-콘텐츠,변환,변환,md",
+    "title": "PDF를 Markdown으로",
+    "header": "PDF를 Markdown으로",
+    "submit": "변환"
+  },
+  "getPdfInfo": {
+    "tags": "정보,데이터,통계,통계",
+    "title": "PDF 정보 가져오기",
+    "header": "PDF 정보 가져오기",
+    "submit": "정보 가져오기",
+    "downloadJson": "JSON 다운로드"
+  },
+  "extractPage": {
+    "tags": "추출"
+  },
+  "PdfToSinglePage": {
+    "tags": "단일 페이지"
+  },
+  "showJS": {
+    "tags": "JS",
+    "title": "JavaScript 보기",
+    "header": "JavaScript 보기",
+    "downloadJS": "JavaScript 다운로드",
+    "submit": "보기"
+  },
+  "autoRedact": {
+    "tags": "검열,숨김,검게-가림,검은색,마커,숨김",
+    "title": "자동 검열",
+    "header": "자동 검열",
+    "colorLabel": "색상",
+    "textsToRedactLabel": "검열할 텍스트 (줄 단위로 구분)",
+    "textsToRedactPlaceholder": "예: \\n기밀 \\n최고 기밀",
+    "useRegexLabel": "정규식 사용",
+    "wholeWordSearchLabel": "전체 단어 검색",
+    "customPaddingLabel": "사용자 지정 여백",
+    "convertPDFToImageLabel": "PDF를 PDF-Image로 변환 (박스 뒤의 텍스트 제거에 사용)",
+    "submitButton": "제출"
+  },
+  "redact": {
+    "tags": "검열,숨김,검게-가림,검은색,마커,숨김,수동",
+    "title": "수동 검열",
+    "header": "수동 검열",
+    "submit": "검열",
+    "textBasedRedaction": "텍스트 기반 검열",
+    "pageBasedRedaction": "페이지 기반 검열",
+    "convertPDFToImageLabel": "PDF를 PDF-이미지로 변환 (박스 뒤의 텍스트 제거에 사용)",
+    "pageRedactionNumbers": {
+      "title": "페이지",
+      "placeholder": "(예: 1,2,8 또는 4,7,12-16 또는 2n-1)"
+    },
+    "redactionColor": {
+      "title": "검열 색상"
+    },
+    "export": "내보내기",
+    "upload": "업로드",
+    "boxRedaction": "박스 그리기 검열",
+    "zoom": "확대/축소",
+    "zoomIn": "확대",
+    "zoomOut": "축소",
+    "nextPage": "다음 페이지",
+    "previousPage": "이전 페이지",
+    "toggleSidebar": "사이드바 토글",
+    "showThumbnails": "썸네일 보기",
+    "showDocumentOutline": "문서 개요 보기 (더블클릭하여 모든 항목 확장/축소)",
+    "showAttatchments": "첨부 파일 보기",
+    "showLayers": "레이어 보기 (더블클릭하여 모든 레이어를 기본 상태로 재설정)",
+    "colourPicker": "색상 선택기",
+    "findCurrentOutlineItem": "현재 개요 항목 찾기",
+    "applyChanges": "Apply Changes"
+  },
+  "tableExtraxt": {
+    "tags": "CSV,테이블-추출,추출,변환"
+  },
+  "autoSizeSplitPDF": {
+    "tags": "pdf,분할,문서,정리"
+  },
+  "overlay-pdfs": {
+    "tags": "오버레이",
+    "header": "PDF 파일 오버레이",
+    "baseFile": {
+      "label": "기본 PDF 파일 선택"
+    },
+    "overlayFiles": {
+      "label": "오버레이 PDF 파일 선택"
+    },
+    "mode": {
+      "label": "오버레이 모드 선택",
+      "sequential": "순차 오버레이",
+      "interleaved": "인터리브 오버레이",
+      "fixedRepeat": "고정 반복 오버레이"
+    },
+    "counts": {
+      "label": "오버레이 횟수 (고정 반복 모드용)",
+      "placeholder": "쉼표로 구분된 횟수 입력 (예: 2,3,1)"
+    },
+    "position": {
+      "label": "오버레이 위치 선택",
+      "foreground": "전경",
+      "background": "배경"
+    },
+    "submit": "제출"
+  },
+  "split-by-sections": {
+    "tags": "섹션 분할,나누기,사용자 지정",
+    "title": "섹션별 PDF 분할",
+    "header": "PDF를 섹션으로 분할",
+    "horizontal": {
+      "label": "수평 분할",
+      "placeholder": "수평 분할 수 입력"
+    },
+    "vertical": {
+      "label": "수직 분할",
+      "placeholder": "수직 분할 수 입력"
+    },
+    "submit": "PDF 분할",
+    "merge": "하나의 PDF로 병합"
+  },
+  "AddStampRequest": {
+    "tags": "스탬프,이미지 추가,중앙 이미지,워터마크,PDF,삽입,사용자 지정",
+    "header": "PDF 스탬프",
+    "title": "PDF 스탬프",
+    "stampType": "스탬프 유형",
+    "stampText": "스탬프 텍스트",
+    "stampImage": "스탬프 이미지",
+    "alphabet": "알파벳",
+    "fontSize": "글꼴/이미지 크기",
+    "rotation": "회전",
+    "opacity": "불투명도",
+    "position": "위치",
+    "overrideX": "X 좌표 재정의",
+    "overrideY": "Y 좌표 재정의",
+    "customMargin": "사용자 지정 여백",
+    "customColor": "사용자 지정 텍스트 색상",
+    "submit": "제출"
+  },
+  "removeImagePdf": {
+    "tags": "이미지 제거,페이지 작업,백엔드,서버 사이드"
+  },
+  "splitPdfByChapters": {
+    "tags": "분할,챕터,북마크,정리"
+  },
+  "validateSignature": {
+    "tags": "서명,확인,검증,pdf,인증서,디지털 서명,서명 검증,인증서 검증",
+    "title": "PDF 서명 검증",
+    "header": "디지털 서명 검증",
+    "selectPDF": "서명된 PDF 파일 선택",
+    "submit": "서명 검증",
+    "results": "검증 결과",
+    "status": {
+      "_value": "상태",
+      "valid": "유효함",
+      "invalid": "유효하지 않음"
+    },
+    "signer": "서명자",
+    "date": "날짜",
+    "reason": "사유",
+    "location": "위치",
+    "noSignatures": "이 문서에서 디지털 서명을 찾을 수 없습니다",
+    "chain": {
+      "invalid": "인증서 체인 검증 실패 - 서명자의 신원을 확인할 수 없음"
+    },
+    "trust": {
+      "invalid": "인증서가 신뢰 저장소에 없음 - 출처를 확인할 수 없음"
+    },
+    "cert": {
+      "expired": "인증서가 만료됨",
+      "revoked": "인증서가 취소됨",
+      "info": "인증서 세부 정보",
+      "issuer": "발급자",
+      "subject": "주체",
+      "serialNumber": "일련번호",
+      "validFrom": "유효 기간 시작",
+      "validUntil": "유효 기간 종료",
+      "algorithm": "알고리즘",
+      "keySize": "키 크기",
+      "version": "버전",
+      "keyUsage": "키 용도",
+      "selfSigned": "자체 서명",
+      "bits": "비트"
+    },
+    "signature": {
+      "info": "서명 정보",
+      "_value": "서명",
+      "mathValid": "서명이 수학적으로는 유효하지만:"
+    },
+    "selectCustomCert": "사용자 지정 인증서 파일 X.509 (선택사항)"
+  },
+  "replace-color": {
+    "title": "색상 교체-반전",
+    "header": "PDF 색상 교체-반전",
+    "selectText": {
+      "1": "색상 교체 또는 반전 옵션",
+      "2": "기본값(기본 고대비 색상)",
+      "3": "사용자 지정(사용자 지정 색상)",
+      "4": "전체 반전(모든 색상 반전)",
+      "5": "고대비 색상 옵션",
+      "6": "검정 배경에 흰색 텍스트",
+      "7": "흰색 배경에 검정 텍스트",
+      "8": "검정 배경에 노란색 텍스트",
+      "9": "검정 배경에 초록색 텍스트",
+      "10": "텍스트 색상 선택",
+      "11": "배경 색상 선택"
+    },
+    "submit": "교체"
+  },
+  "replaceColorPdf": {
+    "tags": "색상 교체,페이지 작업,백엔드,서버 사이드"
+  },
+  "login": {
+    "title": "로그인",
+    "header": "로그인",
+    "signin": "로그인",
+    "rememberme": "로그인 유지",
+    "invalid": "사용자 이름 또는 비밀번호가 잘못되었습니다.",
+    "locked": "계정이 잠겼습니다.",
+    "signinTitle": "로그인해 주세요",
+    "ssoSignIn": "단일 로그인으로 로그인",
+    "oAuth2AutoCreateDisabled": "OAuth2 사용자 자동 생성이 비활성화되었습니다",
+    "oAuth2AdminBlockedUser": "현재 미등록 사용자의 등록 또는 로그인이 차단되어 있습니다. 관리자에게 문의하세요.",
+    "oauth2RequestNotFound": "인증 요청을 찾을 수 없습니다",
+    "oauth2InvalidUserInfoResponse": "잘못된 사용자 정보 응답",
+    "oauth2invalidRequest": "잘못된 요청",
+    "oauth2AccessDenied": "접근 거부됨",
+    "oauth2InvalidTokenResponse": "잘못된 토큰 응답",
+    "oauth2InvalidIdToken": "잘못된 ID 토큰",
+    "relyingPartyRegistrationNotFound": "신뢰 당사자 등록을 찾을 수 없습니다",
+    "userIsDisabled": "사용자가 비활성화되어 있어 현재 이 사용자 이름으로 로그인할 수 없습니다. 관리자에게 문의하세요.",
+    "alreadyLoggedIn": "이미 다음에 로그인되어 있습니다",
+    "alreadyLoggedIn2": "개의 기기. 해당 기기에서 로그아웃한 후 다시 시도하세요.",
+    "toManySessions": "활성 세션이 너무 많습니다",
+    "logoutMessage": "You have been logged out."
+  },
+  "pdfToSinglePage": {
+    "title": "단일 페이지로 변환",
+    "header": "단일 페이지로 변환",
+    "submit": "단일 페이지로 변환"
+  },
+  "pageExtracter": {
+    "title": "페이지 추출",
+    "header": "페이지 추출",
+    "submit": "추출",
+    "placeholder": "(예: 1,2,8 또는 4,7,12-16 또는 2n-1)"
+  },
+  "sanitizePDF": {
+    "title": "PDF 정리",
+    "header": "PDF 파일 정리",
+    "selectText": {
+      "1": "JavaScript 작업 제거",
+      "2": "임베디드 파일 제거",
+      "3": "Remove XMP metadata",
+      "4": "링크 제거",
+      "5": "글꼴 제거",
+      "6": "Remove Document Info Metadata"
+    },
+    "submit": "PDF 정리"
+  },
+  "adjustContrast": {
+    "title": "대비 조정",
+    "header": "대비 조정",
+    "contrast": "대비:",
+    "brightness": "밝기:",
+    "saturation": "채도:",
+    "download": "다운로드"
+  },
+  "compress": {
+    "title": "압축",
+    "header": "PDF 압축",
+    "credit": "이 서비스는 PDF 압축/최적화를 위해 qpdf를 사용합니다.",
+    "grayscale": {
+      "label": "압축을 위해 그레이스케일 적용"
+    },
+    "selectText": {
+      "1": {
+        "_value": "Compression Settings",
+        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+      },
+      "2": "최적화 레벨:",
+      "4": "자동 모드 - PDF를 정확한 크기로 만들기 위해 품질 자동 조정",
+      "5": "예상 PDF 크기 (예: 25MB, 10.8MB, 25KB)"
+    },
+    "submit": "압축"
+  },
+  "decrypt": {
+    "passwordPrompt": "이 파일은 비밀번호로 보호되어 있습니다. 비밀번호를 입력하세요:",
+    "cancelled": "PDF 작업이 취소되었습니다: {0}",
+    "noPassword": "암호화된 PDF의 비밀번호가 제공되지 않았습니다: {0}",
+    "invalidPassword": "올바른 비밀번호로 다시 시도하세요.",
+    "invalidPasswordHeader": "잘못된 비밀번호 또는 지원되지 않는 암호화입니다. PDF: {0}",
+    "unexpectedError": "파일 처리 중 오류가 발생했습니다. 다시 시도하세요.",
+    "serverError": "복호화 중 서버 오류 발생: {0}",
+    "success": "파일이 성공적으로 복호화되었습니다."
+  },
+  "multiTool-advert": {
+    "message": "이 기능은 <a href=\"{0}\">멀티 도구 페이지</a>에서도 사용할 수 있습니다. 향상된 페이지별 UI와 추가 기능을 확인해보세요!"
+  },
+  "pageRemover": {
+    "title": "페이지 제거기",
+    "header": "PDF 페이지 제거기",
+    "pagesToDelete": "삭제할 페이지 (쉼표로 구분된 페이지 번호 목록 입력) :",
+    "submit": "페이지 삭제",
+    "placeholder": "(예: 1,2,6 또는 1-10,15-30)"
+  },
+  "imageToPDF": {
+    "title": "이미지를 PDF로",
+    "header": "이미지를 PDF로",
+    "submit": "변환",
+    "selectLabel": "이미지 맞춤 옵션",
+    "fillPage": "페이지 채우기",
+    "fitDocumentToImage": "이미지에 맞게 페이지 조정",
+    "maintainAspectRatio": "종횡비 유지",
+    "selectText": {
+      "2": "PDF 자동 회전",
+      "3": "다중 파일 로직 (여러 이미지 작업 시에만 활성화)",
+      "4": "단일 PDF로 병합",
+      "5": "별도의 PDF로 변환"
+    }
+  },
+  "PDFToCSV": {
+    "title": "PDF를 CSV로",
+    "header": "PDF를 CSV로",
+    "prompt": "표를 추출할 페이지 선택",
+    "submit": "추출"
+  },
+  "split-by-size-or-count": {
+    "title": "크기 또는 개수로 PDF 분할",
+    "header": "크기 또는 개수로 PDF 분할",
+    "type": {
+      "label": "분할 유형 선택",
+      "size": "크기별",
+      "pageCount": "페이지 수별",
+      "docCount": "문서 수별"
+    },
+    "value": {
+      "label": "값 입력",
+      "placeholder": "크기(예: 2MB 또는 3KB) 또는 개수(예: 5) 입력"
+    },
+    "submit": "제출"
+  },
+  "printFile": {
+    "title": "파일 인쇄",
+    "header": "프린터로 파일 인쇄",
+    "selectText": {
+      "1": "인쇄할 파일 선택",
+      "2": "프린터 이름 입력"
+    },
+    "submit": "인쇄"
+  },
+  "licenses": {
+    "nav": "라이선스",
+    "title": "제3자 라이선스",
+    "header": "제3자 라이선스",
+    "module": "모듈",
+    "version": "버전",
+    "license": "라이선스"
+  },
+  "survey": {
+    "nav": "설문조사",
+    "title": "Stirling-PDF 설문조사",
+    "description": "Stirling-PDF는 추적 기능이 없어서 사용자의 의견을 듣고 Stirling-PDF를 개선하고자 합니다!",
+    "changes": "마지막 설문조사 이후 Stirling-PDF가 변경되었습니다! 자세한 내용은 여기에서 블로그 포스트를 확인하세요:",
+    "changes2": "이러한 변경으로 유료 비즈니스 지원과 자금을 받고 있습니다",
+    "please": "설문조사에 참여해 주세요!",
+    "disabled": "(설문조사 팝업은 다음 업데이트에서 비활성화되지만 페이지 하단에서 계속 사용할 수 있습니다)",
+    "button": "설문조사 참여",
+    "dontShowAgain": "다시 표시하지 않음",
+    "meeting": {
+      "1": "If you're using Stirling PDF at work, we'd love to speak to you. We're offering technical support sessions in exchange for a 15 minute user discovery session.",
+      "2": "This is a chance to:",
+      "3": "Get help with deployment, integrations, or troubleshooting",
+      "4": "Provide direct feedback on performance, edge cases, and feature gaps",
+      "5": "Help us refine Stirling PDF for real-world enterprise use",
+      "6": "If you're interested, you can book time with our team directly. (English speaking only)",
+      "7": "Looking forward to digging into your use cases and making Stirling PDF even better!",
+      "notInterested": "Not a business and/or interested in a meeting?",
+      "button": "Book meeting"
+    }
+  },
+  "removeImage": {
+    "title": "이미지 제거",
+    "header": "이미지 제거",
+    "removeImage": "이미지 제거",
+    "submit": "이미지 제거"
+  },
+  "splitByChapters": {
+    "title": "챕터별 PDF 분할",
+    "header": "챕터별 PDF 분할",
+    "bookmarkLevel": "북마크 레벨",
+    "includeMetadata": "메타데이터 포함",
+    "allowDuplicates": "중복 허용",
+    "desc": {
+      "1": "이 도구는 PDF 파일을 챕터 구조를 기반으로 여러 PDF로 분할합니다.",
+      "2": "북마크 레벨: 분할에 사용할 북마크 레벨을 선택하세요 (0은 최상위 레벨, 1은 두 번째 레벨 등).",
+      "3": "메타데이터 포함: 체크하면 원본 PDF의 메타데이터가 각 분할된 PDF에 포함됩니다.",
+      "4": "중복 허용: 체크하면 동일한 페이지의 여러 북마크가 별도의 PDF를 생성할 수 있습니다."
+    },
+    "submit": "PDF 분할"
+  },
+  "fileChooser": {
+    "click": "클릭",
+    "or": "또는",
+    "dragAndDrop": "드래그 앤 드롭",
+    "dragAndDropPDF": "PDF 파일을 드래그 앤 드롭",
+    "dragAndDropImage": "이미지 파일을 드래그 앤 드롭",
+    "hoveredDragAndDrop": "여기에 파일을 드래그 앤 드롭하세요",
+    "extractPDF": "추출 중..."
+  },
+  "releases": {
+    "footer": "릴리스",
+    "title": "릴리스 노트",
+    "header": "릴리스 노트",
+    "current": {
+      "version": "현재 릴리스"
+    },
+    "note": "릴리스 노트는 영어로만 제공됩니다"
+  },
+  "cookieBanner": {
+    "popUp": {
+      "title": "How we use Cookies",
+      "description": {
+        "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
+        "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+      },
+      "acceptAllBtn": "Okay",
+      "acceptNecessaryBtn": "No Thanks",
+      "showPreferencesBtn": "Manage preferences"
+    },
+    "preferencesModal": {
+      "title": "Consent Preferences Center",
+      "acceptAllBtn": "Accept all",
+      "acceptNecessaryBtn": "Reject all",
+      "savePreferencesBtn": "Save preferences",
+      "closeIconLabel": "Close modal",
+      "serviceCounterLabel": "Service|Services",
+      "subtitle": "Cookie Usage",
+      "description": {
+        "1": "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.",
+        "2": "Stirling PDF cannot—and will never—track or access the content of the documents you use.",
+        "3": "Your privacy and trust are at the core of what we do."
+      },
+      "necessary": {
+        "title": {
+          "1": "Strictly Necessary Cookies",
+          "2": "Always Enabled"
+        },
+        "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  }
+}

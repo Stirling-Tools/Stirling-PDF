@@ -1,0 +1,54 @@
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: docker/backend/Dockerfile.ultra-lite
+    container_name: stirling-pdf-backend-ultra-lite
+    restart: on-failure:5
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 16
+    ports:
+      - "8080:8080"  # TODO: Remove in production - for debugging only
+    expose:
+      - "8080"
+    volumes:
+      - ../../stirling/latest/config:/configs:rw
+      - ../../stirling/latest/logs:/logs:rw
+    environment:
+      DISABLE_ADDITIONAL_FEATURES: "true"
+      SECURITY_ENABLELOGIN: "false"
+      ENDPOINTS_GROUPS_TO_REMOVE: "CLI"
+      LANGS: "en_GB,en_US"
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      UI_HOMEDESCRIPTION: Ultra-lite version of Stirling-PDF
+      UI_APPNAMENAVBAR: Stirling-PDF Ultra-lite
+      SYSTEM_MAXFILESIZE: "50"
+    networks:
+      - stirling-network
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: docker/frontend/Dockerfile
+    container_name: stirling-pdf-frontend-ultra-lite
+    restart: on-failure:5
+    ports:
+      - "3000:80"
+    environment:
+      BACKEND_URL: http://backend:8080
+    depends_on:
+      - backend
+    networks:
+      - stirling-network
+
+networks:
+  stirling-network:
+    driver: bridge

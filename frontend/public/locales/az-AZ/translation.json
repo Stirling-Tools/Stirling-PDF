@@ -1,0 +1,1561 @@
+{
+  "language": {
+    "direction": "ltr"
+  },
+  "addPageNumbers": {
+    "fontSize": "Şrift Ölçüsü",
+    "fontName": "Şrift Adı",
+    "title": "Səhifə Nömrələri əlavə edin",
+    "header": "Səhifə Nömrələri əlavə edin",
+    "selectText": {
+      "1": "PDF faylını seçin:",
+      "2": "Margin Ölçüsü",
+      "3": "Mövqe",
+      "4": "Başlanğıc nömrəsi",
+      "5": "Səhifələrə nömrə əlavə edin",
+      "6": "Fərdi Mətn"
+    },
+    "customTextDesc": "Fərdi Mətn",
+    "numberPagesDesc": "Hansı səhifələrin nömrələnəcəyini seçin, default 'all', və ya 1-5, 2,5,9 kimi yazılış qəbul olunur",
+    "customNumberDesc": "Defolt olaraq {n}, və ya 'Page {n} of {total}', 'Text-{n}', '{filename}-{n}",
+    "submit": "Səhifə Nömrələri əlavə edin"
+  },
+  "pdfPrompt": "PDF(lər)i Seç",
+  "multiPdfPrompt": "PDFləri Seç (2+)",
+  "multiPdfDropPrompt": "Ehtiyacınız olan bütün PDFləri seçin (və ya sürükləyib buraxın)",
+  "imgPrompt": "Şəkil(lər)i Seç",
+  "genericSubmit": "Təsdiq Et",
+  "uploadLimit": "Maximum file size:",
+  "uploadLimitExceededSingular": "is too large. Maximum allowed size is",
+  "uploadLimitExceededPlural": "are too large. Maximum allowed size is",
+  "processTimeWarning": "Xəbərdarlıq: Bu proses fayl ölçüsündən asılı olaraq bir dəqiqəyə qədər vaxt ala bilər",
+  "pageOrderPrompt": "Xüsusi Səhifə Ardıcıllığı (Vergüllə ayrılmış səhifə nömrələri listini və ya 2n+1 tərzində Funksiyalar daxil edin) :",
+  "pageSelectionPrompt": "Xüsusi Səhifə Seçimi (1, 5, 6 tərzində vergüllə ayrılmış səhifə nömrələri listini və ya 2n+1 tərzində Funksiyalar daxil edin) :",
+  "goToPage": "Get",
+  "true": "Doğru",
+  "false": "Yanlış",
+  "unknown": "Bilinməyən",
+  "save": "Saxla",
+  "saveToBrowser": "Brauzerdə Saxla",
+  "close": "Bağla",
+  "filesSelected": "seçilmiş fayllar",
+  "noFavourites": "Sevimlilər əlavə edilmədi",
+  "downloadComplete": "Yükləmə Tamamlandı",
+  "bored": "Gözləməkdən Sıxıldınız?",
+  "alphabet": "Əlifba",
+  "downloadPdf": "PDF Yüklə",
+  "text": "Yazı",
+  "font": "Şrift",
+  "selectFillter": "-- Seç --",
+  "pageNum": "Səhifə nömrəsi",
+  "sizes": {
+    "small": "Kiçik",
+    "medium": "Orta",
+    "large": "Böyük",
+    "x-large": "Ekstra Böyük"
+  },
+  "error": {
+    "pdfPassword": "PDF sənədi şifrlənmişdir və şifr təmin edilməmişdir və ya yanlışdır.",
+    "_value": "Xəta",
+    "sorry": "Problem üçün üzr istəyirik!",
+    "needHelp": "Kömək lazımdır / Problem tapdınız?",
+    "contactTip": "Əgər hələ də problem yaşayırsınızsa, kömək üçün bizə müraciət etməkdən çəkinməyin. GitHub səhifəmizdə bilet təqdim edə və ya Discord vasitəsilə bizimlə əlaqə saxlaya bilərsiniz:",
+    "404": {
+      "head": "404 - Səhifə tapılmadı | Ups, kodu səhv saldıq!",
+      "1": "Axtardığınız səhifəni tapa bilmirik.",
+      "2": "Xəta baş verdi"
+    },
+    "github": "GitHub-da bilet təqdim edin",
+    "showStack": "Yığın İzini göstərin",
+    "copyStack": "Stack Trace-i kopyalayın",
+    "githubSubmit": "GitHub - Bilet təqdim edin",
+    "discordSubmit": "Discord - Dəstək postunu göndərin"
+  },
+  "delete": "Sil",
+  "username": "İstifadəçi Adı",
+  "password": "Şifr",
+  "welcome": "Xoş gəldiniz",
+  "property": "Xüsusiyyət",
+  "black": "Qara",
+  "white": "Ağ",
+  "red": "Qırmızı",
+  "green": "Yaşıl",
+  "blue": "Mavi",
+  "custom": "Xüsusi...",
+  "WorkInProgess": "İş davam edir, İşləməyə bilər və ya xətalarla üzləşə bilərsiniz, Zəhmət olmasa problemləri bildirin!",
+  "poweredBy": "Təchiz edilmişdir",
+  "yes": "Bəli",
+  "no": "Xeyr",
+  "changedCredsMessage": "Etibarnamələr dəyişdirildi!",
+  "notAuthenticatedMessage": "İstifadəçinin kimliyi təsdiqlənməyib.",
+  "userNotFoundMessage": "İstifadəçi tapılmadı.",
+  "incorrectPasswordMessage": "Cari şifr yanlışdır.",
+  "usernameExistsMessage": "İstifadəçi adı mövcuddur.",
+  "invalidUsernameMessage": "Yanlış istifadəçi adı, istifadəçi adı sadəcə hərflərdən, rəqəmlərdən və @._+- xüsusi simvollarından ibarət ola bilər və ya düzgün email ünvanı olmalıdır.",
+  "invalidPasswordMessage": "Şifr boş olmamalıdır, başlanğıc və sonunda boşluqdan istifadə edilməməlidir.",
+  "confirmPasswordErrorMessage": "Yeni Şifr və Yeni Şifri Doğrula uyğun olmalıdır.",
+  "deleteCurrentUserMessage": "Hazırda daxil olmuş istifadəçini silmək mümkün deyil.",
+  "deleteUsernameExistsMessage": "İstifadəçi adı mövcud deyildir və silinə bilməz.",
+  "downgradeCurrentUserMessage": "Cari istifadəçinin rolunu aşağı salmaq mümkün deyil",
+  "disabledCurrentUserMessage": "Cari istifadəçi deaktivləşdirilə bilməz",
+  "downgradeCurrentUserLongMessage": "Cari istifadəçinin rolunu aşağı salmaq mümkün deyil. Deməli, cari istifadəçi göstərilməyəcək.",
+  "userAlreadyExistsOAuthMessage": "İstifadəçi OAuth2 istifadəçisi olaraq mövcuddur.",
+  "userAlreadyExistsWebMessage": "İstifadəçi veb istifadəçisi olaraq mövcuddur.",
+  "oops": "Oops!",
+  "help": "Yardım",
+  "goHomepage": "Ana səhifəyə get",
+  "joinDiscord": "Discord serverimizə qatıl",
+  "seeDockerHub": "Docker Hub-a bax",
+  "visitGithub": "Github Repository-ə Baş Çək",
+  "donate": "İanə Ver",
+  "color": "Rəng",
+  "sponsor": "Sponsor",
+  "info": "Məlumat",
+  "pro": "Pro",
+  "page": "Səhifə",
+  "pages": "Səhifələr",
+  "loading": "Yüklənir...",
+  "addToDoc": "Sənədə Əlavə Et",
+  "reset": "Sıfırla",
+  "apply": "Apply",
+  "noFileSelected": "No file selected. Please upload one.",
+  "legal": {
+    "privacy": "Məxfilik Siyasəti",
+    "terms": "Qaydalar və Şərtlər",
+    "accessibility": "Əlçatanlıq",
+    "cookie": "Kuki Siyasəti",
+    "impressum": "Təəssürat",
+    "showCookieBanner": "Cookie Preferences"
+  },
+  "pipeline": {
+    "header": "Pipeline Menyusu (Beta)",
+    "uploadButton": "Fərdi Yüklə",
+    "configureButton": "Konfiqurasiya Et",
+    "defaultOption": "Fərdi",
+    "submitButton": "Təsdiqlə",
+    "help": "Pipeline Köməyi",
+    "scanHelp": "Qovluq Skanlama Köməyi",
+    "deletePrompt": "Pipeline-ı silmək istədiyinizə əminsiniz?",
+    "tags": "avtomatlaşdır,ardıcıllıq,skriptlənmiş,kütləvi-proses",
+    "title": "Pipeline"
+  },
+  "pipelineOptions": {
+    "header": "Pipeline Konfiqurasiyası",
+    "pipelineNameLabel": "Pipeline Adı",
+    "saveSettings": "Əməliyyat Parametrlərini Saxla",
+    "pipelineNamePrompt": "Pipeline adını bura daxil et",
+    "selectOperation": "Əməliyyat seç",
+    "addOperationButton": "Əməliyyat əlavə et",
+    "pipelineHeader": "Pipeline:",
+    "saveButton": "Endir",
+    "validateButton": "Doğrula"
+  },
+  "enterpriseEdition": {
+    "button": "Pro versiyaya keç",
+    "warning": "Bu xüsusiyyət yalnız pro istifadəçilər üçün əlçatandır.",
+    "yamlAdvert": "Stirling PDF Pro YAML konfiqurasiya fayllarını və digər SSO xüsusiyyətlərini dəstəkləyir.",
+    "ssoAdvert": "Daha çox istifadəçi-idarəetmə xüsusiyyətləri axtarırsınız? Stirling PDF Pro-nu nəzərdən keçirin"
+  },
+  "analytics": {
+    "title": "Stirling PDF-i daha yaxşı etmək istəyirsinizmi?",
+    "paragraph1": "Stirling PDF bizə məhsulu inkişaf etdirməyə kömək etmək üçün analitikaya üstünlük verib. Biz heç bir şəxsi məlumatı və ya fayl məzmununu izləmirik.",
+    "paragraph2": "Zəhmət olmasa, Stringling-PDF-ə inkişaf etməkdə və istifadəçilərimizi daha yaxşı anlamaqda yardım etmək üçün analitikanı aktivləşdirməyi nəzərə alın.",
+    "enable": "Analitikanı aktivləşdir",
+    "disable": "Analitikanı deaktivləşdir",
+    "settings": "Analitikanın parametrlərini config/settings.yml faylından dəyişə bilərsiniz."
+  },
+  "navbar": {
+    "favorite": "Sevimlilər",
+    "recent": "New and recently updated",
+    "darkmode": "Qaranlıq Tema",
+    "language": "Dillər",
+    "settings": "Parametrlər",
+    "allTools": "Alətlər",
+    "multiTool": "Multi-Alət",
+    "search": "Axtar",
+    "sections": {
+      "organize": "Təşkil et",
+      "convertTo": "PDF-ə Çevir",
+      "convertFrom": "PDF-dən Çevir",
+      "security": "İmza & Təhlükəsizlik",
+      "advance": "Qabaqcıl",
+      "edit": "Bax & Redaktə et",
+      "popular": "Populyar"
+    }
+  },
+  "settings": {
+    "title": "Parametrlər",
+    "update": "Yeniləmə mövcuddur",
+    "updateAvailable": "{0} cari quraşdırılmış versiyadır. Yeni ({1}) versiyası mövcuddur.",
+    "appVersion": "Proqram Versiyası:",
+    "downloadOption": {
+      "title": "Yükləmə versiyasını seçin (Tək fayllı zip olmayan yükləmələr üçün):",
+      "1": "Eyni pəncərədə açın",
+      "2": "Yeni pəncərədə açın",
+      "3": "Faylı endirin"
+    },
+    "zipThreshold": "Yüklənmiş faylların sayı artıq olduqda zip faylları",
+    "signOut": "Çıxın",
+    "accountSettings": "Hesab Parametrləri",
+    "bored": {
+      "help": "Easter egg oyununu aktivləşdirir"
+    },
+    "cacheInputs": {
+      "name": "Formada daxil edilən bilgiləri yadda saxlayın",
+      "help": "Gələcək əməliyyatlar üçün əvvəllər istifadə edilmiş daxil edilmiş bilgiləri saxlamağa imkan verin"
+    }
+  },
+  "changeCreds": {
+    "title": "Məlumatları dəyişdirin",
+    "header": "Hesab Məlumatlarınızı Yeniləyin",
+    "changePassword": "Siz standart giriş məlumatlarından istifadə edirsiniz. Zəhmət olmasa, yeni şifr daxil edin",
+    "newUsername": "Yeni İstifadəçi Adı",
+    "oldPassword": "Cari Şifr",
+    "newPassword": "Yeni Şifr",
+    "confirmNewPassword": "Yeni Şifri Təsdiqləyin",
+    "submit": "Dəyişiklikləri Təsdiqlə"
+  },
+  "account": {
+    "title": "Hesab Parametrləri",
+    "accountSettings": "Hesab Parametrləri",
+    "adminSettings": "Admin Paramterləri - İstifadəçilər Əlavə Et və Onlara Bax",
+    "userControlSettings": "İstifadəçi İdarəetmə Parametrləri",
+    "changeUsername": "İstifadəçi Adını Dəyiş",
+    "newUsername": "Yeni İstifadəçi Adı",
+    "password": "Təsdiqləmə Şifri",
+    "oldPassword": "Keçmiş Şifr",
+    "newPassword": "Yeni Şifr",
+    "changePassword": "Şifri Dəyiş",
+    "confirmNewPassword": "Yeni Şifri Təsdiqlə",
+    "signOut": "Çıxış",
+    "yourApiKey": "Sizin API Açarınız",
+    "syncTitle": "Brauzer parametrlərini hesabla sinxronlaşdırın",
+    "settingsCompare": "Parametrlərin müqayisəsi:",
+    "property": "Xüsusiyyət",
+    "webBrowserSettings": "Veb Brauzer Parametrləri",
+    "syncToBrowser": "Hesabı Sinxronlaşdır -> Brauzer",
+    "syncToAccount": "Hesabı Sinxronlaşdır <- Brauzer"
+  },
+  "adminUserSettings": {
+    "title": "İstifadəçi İdarəetmə Parametrləri",
+    "header": "Admin İstifadəçi Nəzarəti Parametrləri",
+    "admin": "Admin",
+    "user": "İstifadəçi",
+    "addUser": "Yeni İstifadəçi Əlavə Et",
+    "deleteUser": "İstifadəçi Sil",
+    "confirmDeleteUser": "İstifadəçi silinməlidirmi?",
+    "confirmChangeUserStatus": "İstifadəçi aktivləşdirilməli/deaktivləşdirilməlidirmi?",
+    "usernameInfo": "İstifadəçi adı sadəcə hərflərdən, rəqəmlərdən və @._+- xüsusi simvollarından ibarət ola bilər və ya düzgün email ünvanı olmalıdır.",
+    "roles": "Rollar",
+    "role": "Rol",
+    "actions": "Fəaliyyətlər",
+    "apiUser": "Məhdudlaşdırılmış API İstifadəçisi",
+    "extraApiUser": "Əlavə Məhdudlaşdırılmış API İstifadəçisi",
+    "webOnlyUser": "Yalnız Veb İstifadəçisi",
+    "demoUser": "Demo İstifadəçisi (Fərdi parametrlər yoxdur)",
+    "internalApiUser": "Daxili API İstifadəçisi",
+    "forceChange": "İstifadəçini giriş zamanı parolu dəyişməyə məcbur et",
+    "submit": "İstifadəçini Saxla",
+    "changeUserRole": "İstifadəçinin rolunu dəyişdir",
+    "authenticated": "Doğrulanmış",
+    "editOwnProfil": "Öz profilini redaktə et",
+    "enabledUser": "aktivləşdirilmiş istifadəçi",
+    "disabledUser": "deaktivləşdirilmiş istifadəçi",
+    "activeUsers": "Aktiv İstifadəçilər:",
+    "disabledUsers": "Deaktiv İstifadəçilər:",
+    "totalUsers": "Ümumi İstifadəçilər:",
+    "lastRequest": "Son sorğu",
+    "usage": "View Usage"
+  },
+  "endpointStatistics": {
+    "title": "Endpoint Statistics",
+    "header": "Endpoint Statistics",
+    "top10": "Top 10",
+    "top20": "Top 20",
+    "all": "All",
+    "refresh": "Refresh",
+    "includeHomepage": "Include Homepage ('/')",
+    "includeLoginPage": "Include Login Page ('/login')",
+    "totalEndpoints": "Total Endpoints",
+    "totalVisits": "Total Visits",
+    "showing": "Showing",
+    "selectedVisits": "Selected Visits",
+    "endpoint": "Endpoint",
+    "visits": "Visits",
+    "percentage": "Percentage",
+    "loading": "Loading...",
+    "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
+    "home": "Home",
+    "login": "Login",
+    "top": "Top",
+    "numberOfVisits": "Number of Visits",
+    "visitsTooltip": "Visits: {0} ({1}% of total)",
+    "retry": "Retry"
+  },
+  "database": {
+    "title": "Verilənlər bazasını Daxil/Xaric Et",
+    "header": "Verilənlər bazasını Daxil/Xaric Et",
+    "fileName": "Fayl Adı",
+    "creationDate": "Yaradılma tarixi",
+    "fileSize": "Fayl Ölçüsü",
+    "deleteBackupFile": "Yedək Faylını Sil",
+    "importBackupFile": "Yedək Faylını Daxil Et",
+    "createBackupFile": "Create Backup File",
+    "downloadBackupFile": "Yedək Faylını Yüklə",
+    "info_1": "Məlumatı daxil edərkən doğru strukturun mövcudluğundan əmin olmaq vacibdir. Əgər nə etdiyinizdən əmin deyilsinizsə, professional birindən məsləhət və yardım alın. Strukturdakı xəta proqramdakı nasazlıqlardan proqramı çalışdırma qabiliyyətinin tamamilə aradan qalxmasına qədər bir sıra problemlərə səbəb ola bilər.",
+    "info_2": "Faylın adı fayl yüklənərkən önəmli deyildir. Faylın adı sonradan sabit adlandırmanın varlığından əmin olmaq məqsədilə backup_user_yyyyMMddHHmm.sql tərzində formata dəyişdiriləcəkdir.",
+    "submit": "Yedəkləməni Daxil Et",
+    "importIntoDatabaseSuccessed": "Verilənlər bazasına daxil etmə uğurla nəticələndi",
+    "backupCreated": "Database backup successful",
+    "fileNotFound": "Fayl Tapılmadı",
+    "fileNullOrEmpty": "Fayl boş və ya \"null\" olmamalıdır",
+    "failedImportFile": "Faylı daxil etmək alınmadı",
+    "notSupported": "This function is not available for your database connection."
+  },
+  "session": {
+    "expired": "Sessiyanızın vaxtı bitdi. Səhifəni yeniləyin və yenidən cəhd edin.",
+    "refreshPage": "Səhifəni Yenilə"
+  },
+  "home": {
+    "desc": "Bütün PDF ehtiyaclarınız üçün lokal-host edilən biraddımlıq həll.",
+    "searchBar": "Xüsusiyyətləri axtar...",
+    "viewPdf": {
+      "title": "View/Edit PDF",
+      "desc": "Bax, sitat götür, mətn və ya şəkil əlavə et"
+    },
+    "setFavorites": "Set Favourites",
+    "hideFavorites": "Hide Favourites",
+    "showFavorites": "Show Favourites",
+    "legacyHomepage": "Old homepage",
+    "newHomePage": "Try our new homepage!",
+    "alphabetical": "Alphabetical",
+    "globalPopularity": "Global Popularity",
+    "sortBy": "Sort by:",
+    "multiTool": {
+      "title": "PDF Multi-alət",
+      "desc": "Səhifələri Birləşdir, Çevir, Yenidən Sırala, Böl və Sil"
+    },
+    "merge": {
+      "title": "Birləşdir",
+      "desc": "Bir neçə PDF-i asanlıqla bir PDF-də birləşdir."
+    },
+    "split": {
+      "title": "Böl",
+      "desc": "PDF-ləri bir neçə sənədə böl"
+    },
+    "rotate": {
+      "title": "Çevir",
+      "desc": "PDF-lərinizi asanlıqla çevirin."
+    },
+    "imageToPdf": {
+      "title": "Şəkildən PDF-ə",
+      "desc": "Şəkli (PNG, JPEG, GIF) PDF-ə Çevir."
+    },
+    "pdfToImage": {
+      "title": "PDF-dən Şəkilə",
+      "desc": "PDF-i Şəkilə Çevir. (PNG, JPEG, GIF)"
+    },
+    "pdfOrganiser": {
+      "title": "Səhifələri Sırala",
+      "desc": "Səhifələri Sil/Sırasını Dəyiş"
+    },
+    "addImage": {
+      "title": "Şəkil əlavə et",
+      "desc": "PDF-də təyin edilmiş yerə şəkil əlavə edir"
+    },
+    "watermark": {
+      "title": "Watermark əlavə et",
+      "desc": "PDF sənədinə fərdi watermark əlavə et."
+    },
+    "permissions": {
+      "title": "İcazəni Dəyiş",
+      "desc": "PDF Sənədinin icazələrini dəyiş"
+    },
+    "removePages": {
+      "title": "Sil",
+      "desc": "PDF Sənədindən istəmədiyin şəkilləri sil."
+    },
+    "addPassword": {
+      "title": "Şifr Əlavə Et",
+      "desc": "Sənədini şifr ilə kilidlə."
+    },
+    "removePassword": {
+      "title": "Şifri Sil",
+      "desc": "PDF Sənədindən şifr qorumasını götür."
+    },
+    "compressPdfs": {
+      "title": "Sıx",
+      "desc": "PDF fayllarını sıxaraq onların ölçüsünü azalt."
+    },
+    "unlockPDFForms": {
+      "title": "Unlock PDF Forms",
+      "desc": "Remove read-only property of form fields in a PDF document."
+    },
+    "changeMetadata": {
+      "title": "Metadatanı Dəyiş",
+      "desc": "PDF sənədindəki Metadatanı Dəyiş/Sil/Əlavə et"
+    },
+    "fileToPDF": {
+      "title": "Faylı PDF-ə Çevir",
+      "desc": "Hardasa bütün faylları PDF-ə çevir (DOCX, PNG, XLS, PPT, TXT və daha çox)"
+    },
+    "ocr": {
+      "title": "OCR / Skanları Təmizlə",
+      "desc": "Skanları təmizləyir və PDF-in içərisindəki şəkillərdəki yazını tapıb mətn olaraq əlavə edir."
+    },
+    "extractImages": {
+      "title": "Şəkilləri Xaric Et",
+      "desc": "PDF-dəki şəkilləri xaric edib onları zip faylında saxlayır"
+    },
+    "pdfToPDFA": {
+      "title": "PDF-dən PDF/A-a",
+      "desc": "PDF faylını uzunmüddətli saxlama üçün PDF/A-a çevir"
+    },
+    "PDFToWord": {
+      "title": "PDF-dən Word-ə",
+      "desc": "PDF-i Word formatlarına çevir (DOC, DOCX və ODT)"
+    },
+    "PDFToPresentation": {
+      "title": "PDF-dən Təqdimata",
+      "desc": "PDF-i Təqdimat formatlarına çevir (PPT, PPTX və ODP)"
+    },
+    "PDFToText": {
+      "title": "PDF-də RTF-ə (Mətn)",
+      "desc": "PDF-i mətn və ya RTF formatına çevir"
+    },
+    "PDFToHTML": {
+      "title": "PDF-dən HTML-ə",
+      "desc": "PDF-i HTML-ə çevir"
+    },
+    "PDFToXML": {
+      "title": "PDF-dən XML-ə",
+      "desc": "PDF-i XML Formatına Çevir"
+    },
+    "ScannerImageSplit": {
+      "title": "Skan Edilmiş Şəkilləri Detektə et/Ayır",
+      "desc": "Şəkil/PDF-dən çoxlu şəkilləri ayırır"
+    },
+    "sign": {
+      "title": "İmzala",
+      "desc": "Mətn, şəkil və ya əllə çəkmə üsulu ilə PDF-ə imza əlavə edir"
+    },
+    "flatten": {
+      "title": "Sadələşdir",
+      "desc": "Bütün interaktiv elementləri və anketləri PDF-dən sil"
+    },
+    "repair": {
+      "title": "Bərpa Et",
+      "desc": "Pozulmuş PDF-i Bərpa Etməyə Çalışır"
+    },
+    "removeBlanks": {
+      "title": "Boş Səhifələri Sil",
+      "desc": "Sənəddə boş səhifələri tapır və silir"
+    },
+    "removeAnnotations": {
+      "title": "Sitatları Sil",
+      "desc": "PDF-dən bütün şərhləri və sitatları silir"
+    },
+    "compare": {
+      "title": "Müqayisə Et",
+      "desc": "2 PDF Sənədini müqayisə edir və fərqləri göstərir"
+    },
+    "certSign": {
+      "title": "Sertifikat İlə İmzala",
+      "desc": "PDF-i Sertifikat/Açar (PEM/P12) ilə imzalayır"
+    },
+    "removeCertSign": {
+      "title": "Sertifikat İmzasını Sil",
+      "desc": "PDF-dən Sertifikat imzasını götür"
+    },
+    "pageLayout": {
+      "title": "Çoxsəhifəli Tərtibat",
+      "desc": "PDF-in birdən çox səhifəsini bir səhifədə birləşdir"
+    },
+    "scalePages": {
+      "title": "Səhifə ölçüsünü/Miqyasını Dəyiş",
+      "desc": "Səhifənin və/və ya onun məzmununun ölçüsünü və miqyasını dəyiş"
+    },
+    "pipeline": {
+      "title": "Pipeline",
+      "desc": "Pipeline Skriptləri təyin edərək PDF-lər üzərində bir neçə prosesi eyni vaxtda reallaşdırın."
+    },
+    "add-page-numbers": {
+      "title": "Səhifələri Nömrələ",
+      "desc": "Sənədin səhifələrinə təyin edilmiş yerdə nömrələr əlavə edin"
+    },
+    "auto-rename": {
+      "title": "PDF Faylını Avtomatik Yenidən Adlandır",
+      "desc": "Tapılmış başlığa əsasən PDF faylının adını dəyişir"
+    },
+    "adjust-contrast": {
+      "title": "Rəngləri/Kontrastı Tənzimlə",
+      "desc": "PDF-in kontrastını, parlaqlığını, rəng doyğunluğunu tənzimlə"
+    },
+    "crop": {
+      "title": "PDF-i Kəs",
+      "desc": "Ölçüsünü azaltmaq üçün PDF-i kəs (mətni saxlayır!)"
+    },
+    "autoSplitPDF": {
+      "title": "Səhifələri Avtomatik Ayır",
+      "desc": "Fiziki skan olunmuş səhifələri QR koda əsasən ayır"
+    },
+    "sanitizePdf": {
+      "title": "Təmizlə",
+      "desc": "Skriptləri və digər elementləri PDF faylından sil"
+    },
+    "URLToPDF": {
+      "title": "URL/Veb-Sayt-dan PDF-ə",
+      "desc": "Hər hansı http(s)URL-i PDF-ə çevirir"
+    },
+    "HTMLToPDF": {
+      "title": "HTML-dən PDF-ə",
+      "desc": "Hər hansı HTML faylını və ya ZİP-i PDF-ə çevirir"
+    },
+    "MarkdownToPDF": {
+      "title": "Markdown-dan PDF-ə",
+      "desc": "Hər hansı Markdown faylını PDF-ə çevirir"
+    },
+    "PDFToMarkdown": {
+      "title": "PDF to Markdown",
+      "desc": "Converts any PDF to Markdown"
+    },
+    "getPdfInfo": {
+      "title": "PDF-in Bütün Məlumatları",
+      "desc": "PDF barədə mümkün olan bütün məlumatları əldə edir"
+    },
+    "extractPage": {
+      "title": "Səhifə(lər)i xaric et",
+      "desc": "Seçilmiş səhifələri PDF-dən xaric edərək əldə et"
+    },
+    "PdfToSinglePage": {
+      "title": "PDF-dən 1 Böyük Səhifəyə",
+      "desc": "Bütün PDF səhifələrini bir böyük səhifəyə çevirir"
+    },
+    "showJS": {
+      "title": "Javascript-i Göstər",
+      "desc": "PDF-in tərkibinə əlavə edilmiş JS-i axtarır və göstərir"
+    },
+    "autoRedact": {
+      "title": "Avtomatik Gizlətmə",
+      "desc": "Daxil edilmiş data əsasında PDF-dəki müəyyən mətn hissəsini qara qutu ilə gizlədir"
+    },
+    "redact": {
+      "title": "Manual Redaction",
+      "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
+    },
+    "tableExtraxt": {
+      "title": "PDF-dən CSV-ə",
+      "desc": "PDF-dən cədvəlləri CSV-ə çevirərək xaric edir"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Say/Ölçüyə Əsasən Avtomatik Ayır",
+      "desc": "PDF-i ölçüyə, səhifə sayına və ya sənəd sayına əsasən bir neçə PDF-ə ayır."
+    },
+    "overlay-pdfs": {
+      "title": "Üst-Üstə Qoy",
+      "desc": "Bir PDF-i digərinin üstünə qoyur"
+    },
+    "split-by-sections": {
+      "title": "PDF-i Hissələrə Əsasən Böl",
+      "desc": "PDF-in hər səhifəsini daha kiçik üfuqi və şaquli hissələrə böl"
+    },
+    "AddStampRequest": {
+      "title": "PDF-i Möhürlə",
+      "desc": "Təyin edilmiş hissələrə mətn və ya şəkil möhürləri əlavə edin"
+    },
+    "removeImagePdf": {
+      "title": "Şəkli Sil",
+      "desc": "Fayl ölçüsünü azaltmaq üçün PDF-dən şəkil sil"
+    },
+    "splitPdfByChapters": {
+      "title": "PDF-i Fəsillərə Əsasən Böl",
+      "desc": "Fəsil strukturuna əsasən PDF-i bir neçə fayla böl."
+    },
+    "validateSignature": {
+      "title": "Validate PDF Signature",
+      "desc": "Verify digital signatures and certificates in PDF documents"
+    },
+    "replaceColorPdf": {
+      "title": "Qabaqcıl Rəng Seçimləri",
+      "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    }
+  },
+  "viewPdf": {
+    "tags": "bax,oxu,sitat götür,mətn,şəkil",
+    "title": "View/Edit PDF",
+    "header": "PDF-ə baxın"
+  },
+  "multiTool": {
+    "tags": "Multi-alət,Çoxlu əməliyyat,UI,tut-sürüşdür,front end,istifadəçi-tərəf,interaktiv,qarşılıqlı,yerini dəyiş,sil,köçür,böl",
+    "title": "PDF Multi-Alət",
+    "header": "PDF Multi-Alət",
+    "uploadPrompts": "Fayl Adı",
+    "selectAll": "Hamısını Seç",
+    "deselectAll": "Hamısını Seçməni Ləğv Et",
+    "selectPages": "Səhifə Seçimi",
+    "selectedPages": "Seçilmiş Səhifələr",
+    "page": "Səhifə",
+    "deleteSelected": "Seçilmişi Sil",
+    "downloadAll": "İxrac Et",
+    "downloadSelected": "Seçilmişi İxrac Et",
+    "insertPageBreak": "Insert Page Break",
+    "addFile": "Add File",
+    "rotateLeft": "Rotate Left",
+    "rotateRight": "Rotate Right",
+    "split": "Split",
+    "moveLeft": "Move Left",
+    "moveRight": "Move Right",
+    "delete": "Delete",
+    "dragDropMessage": "Seçilmiş Səhifə(lər)",
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "merge": {
+    "tags": "birləşdir,Səhifə əməliyyatları,Back end,server-tərəf",
+    "title": "Birləşdirin",
+    "header": "Çoxsaylı PDF-ləri birləşdirin (2+)",
+    "sortByName": "Ada görə çeşidləyin",
+    "sortByDate": "Tarixə görə çeşidləyin",
+    "removeCertSign": "Birləşdirilmiş faylda rəqəmsal imza silinsin?",
+    "submit": "Birləşdirin"
+  },
+  "split": {
+    "tags": "Səhifə əməliyyarları,böl,Çoxlu Səhifə,kəs,server-tərəf",
+    "title": "PDF-i Bölün",
+    "header": "PDF-i Bölün",
+    "desc": {
+      "1": "Seçdiyiniz Nömrələr Bölmək İstədiyiniz Səhifə Nömrəsidir",
+      "2": "Beləliklə, 1,3,7-9 Seçimi 10 Səhifəlik Sənədi 6 Ayrı PDF-ə Böləcək:",
+      "3": "Sənəd #1: Səhifə 1",
+      "4": "Sənəd #2: Səhifə 2 və 3",
+      "5": "Sənəd #3: Səhifə 4, 5, 6 və 7",
+      "6": "Sənəd #4: Səhifə 8",
+      "7": "Sənəd #5: Səhifə 9",
+      "8": "Sənəd #6: Səhifə 10"
+    },
+    "splitPages": "Bölünəcək Səhifələri Daxil Edin:",
+    "submit": "Bölün"
+  },
+  "rotate": {
+    "tags": "server-tərəf",
+    "title": "PDF fırladın",
+    "header": "PDF fırladın",
+    "selectAngle": "Fırlanma bucağını seçin (90 dərəcə ilə):",
+    "submit": "Fırladın"
+  },
+  "imageToPdf": {
+    "tags": "çevirmə,şəkil,jpg,fotoşəkil,foto"
+  },
+  "pdfToImage": {
+    "tags": "çevirmə,şəkil,jpg,fotoşəkil,foto",
+    "title": "PDF-i Şəklə",
+    "header": "PDF-i Şəklə",
+    "selectText": "Şəkil Formatı",
+    "singleOrMultiple": "Nəticə Şəkil Tipi",
+    "single": "Bütün Səhifələri birləşdirən Tək Böyük Şəkil",
+    "multi": "Çoxlu Şəkil, Səhifə Başına Bir Şəkil",
+    "colorType": "Rəng Tipi",
+    "color": "Rəng",
+    "grey": "Boz Tonlama",
+    "blackwhite": "Qara və Ağ (Data İtə Bilər)",
+    "submit": "Çevir",
+    "info": "Python Yüklü Deyil.WebP Çevirməsi Üçün Vacibdir",
+    "placeholder": "(məsələn, 1,2,8 və ya 4,7,12-16 və ya 2n-1)"
+  },
+  "pdfOrganiser": {
+    "tags": "duplex,tək,cüt,sırala,yerini dəyiş",
+    "title": "Səhifə Tənzimləyicisi",
+    "header": "PDF Səhifə Tənzimləyicisi",
+    "submit": "Səhifələri Yenidən Təşkil Edin",
+    "mode": {
+      "_value": "Rejim",
+      "1": "Fərdi Səhifə Düzülüşü",
+      "2": "Tərs Düzülüş",
+      "3": "İkitərəfli Çeşidləmə",
+      "4": "Kitabça Çeşidləmə",
+      "5": "Yan Tikiş Kitabçasının Çeşidlənməsi",
+      "6": "Tək-Cüt Bölünmə",
+      "7": "Birincini Sil",
+      "8": "Sonuncunu Sil",
+      "9": "Birinci və Sonuncunu Sil",
+      "10": "Tək-Cüt Birləşdirmə",
+      "11": "Duplicate all pages"
+    },
+    "placeholder": "(məs., 1,3,2 və ya 4-8,2,10-12 və ya 2n-1)"
+  },
+  "addImage": {
+    "tags": "şəkil,jpg,fotoşəkil,foto",
+    "title": "Şəkli Əlavə Et",
+    "header": "Şəkli PDF-ə Əlavə Et",
+    "everyPage": "Bütün Səhifələr?",
+    "upload": "Şəkli Əlavə Et",
+    "submit": "Şəkli Əlavə Et"
+  },
+  "watermark": {
+    "tags": "Mətn,təkrarlanan,nişan,sahib olmaq,müəllif hüquqları,əmtəə nişanı,şəkil,jpg,fotoşəkil,foto",
+    "title": "Watermark Əlavə Et",
+    "header": "Watermark Əlavə Et",
+    "customColor": "Fərdi Mətn Rəngi",
+    "selectText": {
+      "1": "Watermark əlavə olunacaq PDF-i seç",
+      "2": "Watermark Mətni:",
+      "3": "Şrift Ölçüsü:",
+      "4": "Fırlatma (0-360):",
+      "5": "enBoşluq (Üfuqi olaraq watermark-lar arasındakı məsafə):",
+      "6": "uzunluqBoşluq (Şaquli olaraq watermark-lar arasındakı məsafə):",
+      "7": "Şəffaflıq (0% - 100%):",
+      "8": "Watermark Tipi:",
+      "9": "Watermark Şəkili:",
+      "10": "PDF-i PDF-Şəkil-ə çevir"
+    },
+    "submit": "Watermark Əlavə Et",
+    "type": {
+      "1": "Mətn",
+      "2": "Şəkil"
+    }
+  },
+  "permissions": {
+    "tags": "oxu,yaz,redaktə et,çap et",
+    "title": "İcazələri Dəyişdir",
+    "header": "İcazələri Dəyişdir",
+    "warning": "Bu İcazələrin Dəyişməz Olması İlə Bağlı Xəbərdarlıq Edərək, Onları Parol Əlavə Et Səhifəsi Vasitəsilə Parolla Təyin Etmək Tövsiyə Olunur.",
+    "selectText": {
+      "1": "İcazələri Dəyişdirmək Üçün PDF-i Seç",
+      "2": "Tənzimlənmiş İcazələr",
+      "3": "Sənədin Yığılmasının Qarşısını Al",
+      "4": "Məzmunun Çıxarılmasının Qarşısını Al",
+      "5": "Əlçatanlıq Üçün Çıxarılmasının Qarşısını Alın",
+      "6": "Formanın Doldurulmasının Qarşısını Alır",
+      "7": "Modifikasiyanın Qarşısını Al",
+      "8": "Annotasiyanın Dəyişdirilməsinin Qarşısını Almaq",
+      "9": "Çapın Qarşısını Al",
+      "10": "Fərqli Formatlarda Çapın Qarşısını Al"
+    },
+    "submit": "Dəyiş"
+  },
+  "removePages": {
+    "tags": "Səhifələri təmizlə,səhifələri sil"
+  },
+  "addPassword": {
+    "tags": "təhlükəsiz,təhlükəsizlik",
+    "title": "Şifr Əlavə Et",
+    "header": "Şifr Əlavə Et (Şifrləmə)",
+    "selectText": {
+      "1": "Şifrlənəcək PDF-i seç",
+      "2": "İstifadəçi Şifri",
+      "3": "Şifrləmə Açarı Uzunluğu",
+      "4": "Böyük dəyərlər daha güclüdür, lakin kiçik dəyərlərin uyğunluğu yüksəkdir.",
+      "5": "Təyin olunacaq icazə (Sahib (Owner) Şifri ilə birgə istifadə olunması tövsiyə olunur.)",
+      "6": "Sənədin strukturunun dəyişilməsinin qarşısını al",
+      "7": "Məzmun xaric edilməsinin qarşısını al",
+      "8": "Əlçatanlıq üçün xaricetmənin qarşısını al",
+      "9": "Anketin doldurulmasının qarşısını al",
+      "10": "Modifikasiyanın qarşısını al",
+      "11": "Sitat modifikasiyasının qarşısını al",
+      "12": "Çap etmənin qarşısını al",
+      "13": "Müxtəlif formatların çap edilməsinin qarşısını al",
+      "14": "Sahib Şifri",
+      "15": "Sənəd açıldıqdan sonra onunla nə edilə biləcəyini limitləndir (Bütün oxuyucular dəstəkləmir)",
+      "16": "Sənədin özünün açılmağını limitləndirir"
+    },
+    "submit": "Şifrlə"
+  },
+  "removePassword": {
+    "tags": "təhlükəsiz,deşifr,təhlükəsizlik,kodu aç,kodu sil",
+    "title": "Şifri Sil",
+    "header": "Şifri Sil (Deşifr)",
+    "selectText": {
+      "1": "Deşifr Üçün PDF-i Seç",
+      "2": "Şifr"
+    },
+    "submit": "Sil"
+  },
+  "compressPdfs": {
+    "tags": "sıx,balaca,kiçik"
+  },
+  "unlockPDFForms": {
+    "tags": "remove,delete,form,field,readonly",
+    "title": "Remove Read-Only from Form Fields",
+    "header": "Unlock PDF Forms",
+    "submit": "Remove"
+  },
+  "changeMetadata": {
+    "tags": "Başlıq,müəllif,tarix,yaradılış,zaman,yayımçı,istehsalçı,statistika",
+    "title": "Metadata-nı Dəyiş",
+    "header": "Metadata-nı Dəyiş",
+    "selectText": {
+      "1": "Dəyişmək istədiyiniz dəyişənləri redaktə edin",
+      "2": "Bütün Metadata-nı Sil",
+      "3": "Fərdi Metadatanı göstərin:",
+      "4": "Digər Metadata:",
+      "5": "Xüsusi Metadata girişi əlavə edin"
+    },
+    "author": "Müəllif:",
+    "creationDate": "Yaradılma Tarixi (yyyy/MM/dd HH:mm:ss):",
+    "creator": "Yaradıcı:",
+    "keywords": "Açar Sözlər:",
+    "modDate": "Dəyişiklik Tarixi (yyyy/MM/dd HH:mm:ss):",
+    "producer": "İstehsalçı:",
+    "subject": "Mövzu:",
+    "trapped": "Tələ:",
+    "submit": "Dəyiş"
+  },
+  "fileToPDF": {
+    "tags": "çevirmə,format,sənəd,şəkil,slayd,mətn,çevirmə,ofis,docs,word,excel,powerpoint",
+    "title": "Faylı PDF-ə",
+    "header": "Hər Hansı Bir Faylı PDF-ə Çevir",
+    "credit": "Bu Servis Fayl Çevirmək Üçün LibreOffice və Unoconv İşlədir",
+    "supportedFileTypesInfo": "Dəstəklənən Fayl Tipləri",
+    "supportedFileTypes": "Dəstəklənən Fayl Tipləri Aşagıdakıları Təşkil Etməlidir,ancaq Dəstəklənmiş Faylların Hamısının Yenilənmiş Siyahısı Üçün LibreOffice Sənədlərinə Baş Çəkin",
+    "submit": "PDF-ə Çevir"
+  },
+  "ocr": {
+    "tags": "tanıma,mətn,şəkil,skan,oxu,tanı,təyin et,redaktəediləbilən",
+    "title": "OST (OCR) / Skan Təmizləmə",
+    "header": "Skanları Təmizlə / OST (Optik Simvol Tanınması)",
+    "selectText": {
+      "1": "PDF-də aşkar olunacaq dilləri seçin (Göstərilmiş dillər hazırda aşkar olunmuşlardır):",
+      "2": "OST-lənmiş PDF ilə yanaşı daxilində OST edilmiş mətn olan PDF yaradın",
+      "3": "Əyri skan olunmuş səhifələri yerinə fırladaraq düzəldin",
+      "4": "OST-in arxaplandakı artıq mətni aşkar etməsinin qarşısını almaq üçün səhifəni təmizləyin. (Çıxış dəyişmir)",
+      "5": "OST-in arxaplandakı artıq mətni aşkar etməsinin qarşısını almaq üçün səhifəni təmizləyin, təmizləməni çıxışa verilən faylda saxlayır.",
+      "6": "Üzərində interaktiv yazı olan səhifələri nəzərə almır, yalnız şəkil olan səhifələri OST edir.",
+      "7": "OST-ə məcbur et, bütün orijinal mətn elementlərini silərək hər səhifəni OST edir",
+      "8": "Normal (PDF-də mətn varsa, xəta verəcək)",
+      "9": "Əlavə Parametrlər",
+      "10": "OST (OCR) Rejimi",
+      "11": "OST-dən sonra şəkilləri sil (BÜTÜN şəkilləri silir, ancaq çevirmə prosesinin bir hissəsi olduqda işə yarayır)",
+      "12": "Render Tipi (Qabaqcıl)"
+    },
+    "help": "Bunu digər dillər üçün necə istifadə etmək və/və ya docker-də istifadə etməmək üçün bu dokumentasiyanı oxuyun",
+    "credit": "Bu servis OST (OCR) üçün \"OCRmyPDF\" və \"Tesseract\" istifadə edir.",
+    "submit": "PDF-i OST ilə işlə"
+  },
+  "extractImages": {
+    "tags": "şəkil,foto,saxla,arxiv,zip,çək,götür",
+    "title": "Şəkilləri çıxarın",
+    "header": "Şəkilləri çıxarın",
+    "selectText": "Çıxarılan şəkilləri çevirmək üçün şəkil formatını seçin",
+    "allowDuplicates": "Dublikat şəkilləri yadda saxlayın",
+    "submit": "Çıxarış"
+  },
+  "pdfToPDFA": {
+    "tags": "arxiv,uzunmüddətli,standard,çevirmə,yaddaş,saxlama",
+    "title": "PDF-i PDF/A-ya",
+    "header": "PDF-i PDF/A-ya",
+    "credit": "Bu Servis PDF/A Çevirmək Üçün libreoffice İşlədir",
+    "submit": "Çevir",
+    "tip": "Hazırda Birdən Çox Giriş Üçün İşləmir",
+    "outputFormat": "Çıxış Formatı",
+    "pdfWithDigitalSignature": "PDF Rəqəmsal İmza Ehtiva Edir.Bu, növbəti addımda silinəcək."
+  },
+  "PDFToWord": {
+    "tags": "doc,docx,odt,word,dəyişmə,format,çevirmə,ofis,microsoft,docfile",
+    "title": "PDF-i Word-ə",
+    "header": "PDF-i Word-ə",
+    "selectText": {
+      "1": "Çıxış Fayl Formatı"
+    },
+    "credit": "Bu Servis Fayl Çevirmək Üçün LibreOffice İşlədir",
+    "submit": "Çevir"
+  },
+  "PDFToPresentation": {
+    "tags": "slaydlar,şou,ofis,microsoft",
+    "title": "PDF-i Təqdimata",
+    "header": "PDF-i Təqdimata",
+    "selectText": {
+      "1": "Çıxış Fayl Formatı"
+    },
+    "credit": "Bu Servis Fayl Çevirmək Üçün LibreOffice İşlədir",
+    "submit": "Çevir"
+  },
+  "PDFToText": {
+    "tags": "richformat,richtextformat,zəngin mətn formatı",
+    "title": "PDF-i RTF (Mətn)-ə",
+    "header": "PDF-i RTF (Mətn)-ə",
+    "selectText": {
+      "1": "Çıxış Fayl Formatı"
+    },
+    "credit": "Bu Servis Fayl Çevirmək Üçün LibreOffice İşlədir",
+    "submit": "Çevir"
+  },
+  "PDFToHTML": {
+    "tags": "veb-məzmun,brauzerə uyğun",
+    "title": "PDF-i HTML-ə",
+    "header": "PDF-i HTML-ə",
+    "credit": "Bu Servis Fayl Çevirmək Üçün pdftohtml İşlədir",
+    "submit": "Çevir"
+  },
+  "PDFToXML": {
+    "tags": "data-xaricetmə,strukturlu-məzmun,interop,çevirmə,dəyişmə",
+    "title": "PDF-i XML-ə",
+    "header": "PDF-i XML-ə",
+    "credit": "Bu Servis Fayl Çevirmək Üçün LibreOffice İşlədir",
+    "submit": "Çevir"
+  },
+  "ScannerImageSplit": {
+    "tags": "ayır,avtodetektə,skan,çoxlu şəkil,nizamla",
+    "selectText": {
+      "1": "Bucaq Aşağı Limiti:",
+      "2": "Şəklin fırladılması üçün lazım olan minimal mütləq bucağı təyin edir (defolt: 10).",
+      "3": "Rəng Toleransı:",
+      "4": "Təxmin olunan arxaplan rənginin ətrafındakı rəng fərqliliyi intervalını təyin edir (defolt: 30).",
+      "5": "Minimal Sahə:",
+      "6": "Foto üçün minimal sahənin aşağı limitini təyin edir (defolt: 10000).",
+      "7": "Minimal Kontur Sahəsi:",
+      "8": "Fotonun kontur sahəsi üçün minimal aşağı limiti təyin edir",
+      "9": "Sərhəd Ölçüsü:",
+      "10": "Faylda ağ sərhədlərin olmasının qarşısını almaq üçün əlavə ediləcək sərhədin ölçüsünü təyin edir (defolt: 1)."
+    },
+    "info": "Python yüklənməyib. İşə salmaq üçün Python lazımdır."
+  },
+  "sign": {
+    "tags": "təsdiqlə,baş hərflər,çəkilmiş-imza,mətn-imza,şəkil-imza",
+    "title": "İmza",
+    "header": "PDF sənədlərini imzalayın",
+    "upload": "Şəkil Yüklə",
+    "draw": "İmza çəkmək",
+    "text": "Mətn daxil etmə",
+    "clear": "Təmizləmək",
+    "add": "Əlavə et",
+    "saved": "Saxlanan İmzalar",
+    "save": "İmzanı yadda Saxla",
+    "personalSigs": "Şəxsi İmzalar",
+    "sharedSigs": "Paylaşılan İmzalar",
+    "noSavedSigs": "Saxlanmış imza tapılmadı",
+    "addToAll": "Bütün səhiflərə əlavə et",
+    "delete": "Sil",
+    "first": "İlk səhifə",
+    "last": "Son səhifə",
+    "next": "Növbəti səhifə",
+    "previous": "Əvvəlki səhifə",
+    "maintainRatio": "Toggle maintain aspect ratio",
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "flatten": {
+    "tags": "statik,deaktiv,qeyri-interaktiv,streamline",
+    "title": "Düzləşdirin",
+    "header": "PDF-i düzləşdirin",
+    "flattenOnlyForms": "Yalnız formaları düzəldin",
+    "submit": "Düzləşdirin"
+  },
+  "repair": {
+    "tags": "düzəlt,bərpa et,korreksiya et,geri qaytar",
+    "title": "Bərpa Et",
+    "header": "PDFləri Bərpa Et",
+    "submit": "Bərpa Et"
+  },
+  "removeBlanks": {
+    "tags": "təmizləmə,streamline,qeyri-məzmun,nizamla",
+    "title": "Boş Səhifələri Sil",
+    "header": "Boş SƏhifələri Silir",
+    "threshold": "Minimal Piksel Bəyazlığı:",
+    "thresholdDesc": "Pikselin \"Ağ\" hesab olunması üçün minimal nə qədər bəyaz olmalı olduğunu təyin edin. 0 = Qara, 255 Ağappaq.",
+    "whitePercent": "Bəyaz Faizi (%):",
+    "whitePercentDesc": "Silinmək üçün səhifənin neçə faizi \"ağ\" piksellərdən təşkil olunmalıdır",
+    "submit": "Boş Səhifələri Sil"
+  },
+  "removeAnnotations": {
+    "tags": "şərhlər,önə çıxanlar,qeydlər,işarələmə,sil",
+    "title": "Annotasiyaları silin",
+    "header": "Annotasiyaları silin",
+    "submit": "Sil"
+  },
+  "compare": {
+    "tags": "fərqləndir,təzad yarat,dəyişikliklər,analiz",
+    "title": "Müqayisə Et",
+    "header": "PDF-ləri Müqayisə Et",
+    "highlightColor": {
+      "1": "Önə Çıxarma Rəngi 1:",
+      "2": "Önə Çıxarma Rəngi 2:"
+    },
+    "document": {
+      "1": "Sənəd 1",
+      "2": "Sənəd 2"
+    },
+    "submit": "Müqayisə Et",
+    "complex": {
+      "message": "Fayllardan biri və ya ikisi də böyük fayldır. Müqayisə effektivliyi azala bilər."
+    },
+    "large": {
+      "file": {
+        "message": "Fayllardan biri və ya ikisi də işləmək üçün çox böyükdür."
+      }
+    },
+    "no": {
+      "text": {
+        "message": "Fayllardan birində və ya ikisində də mətn məzmunu yoxdur. Zəhmət olmasa, müqayisə üçün mətn məzmunlu PDF seçin."
+      }
+    }
+  },
+  "certSign": {
+    "tags": "Doğrula,PEM,P12,rəsmi,şifrlə",
+    "title": "Sertifikatla İmzala",
+    "header": "PDF-i Sertifikatınızla İmzalayın (İşlənilir)",
+    "selectPDF": "İmzalamaq üçün PDF Faylı seçin:",
+    "jksNote": "Note: Əgər sertifikatınızın tipi aşağıda göstərilməyibsə, zəhmət olmasa \"Keytool command line tool\" istifadə edərək onu \"Java Keystroke\" (.jks) faylına çevirin. Sonra, aşağıdan .jks faylını seçin.",
+    "selectKey": "Şəxsi Açar faylınızı seçin (PKCS#8 format, .pem və ya .der ola bilər):",
+    "selectCert": "Sertifikat faylınızı seçin (X.509 format, .pem və ya .der ola bilər):",
+    "selectP12": "PKCS#12 Keystore Faylınızı seçin (.p12 və ya .pfx) (İstəyə bağlı, əgər təmin olunarsa, şəxsi açar və sertifikatınızı ehtiva etməlidir):",
+    "selectJKS": "Java Keystore Faylınızı seçin (.jks və ya .keystore):",
+    "certType": "Sertifikat Tipi",
+    "password": "Keystore və ya Şəxsi Açar daxil edin (Əgər varsa):",
+    "showSig": "İmzanı Göstər",
+    "reason": "Səbəb",
+    "location": "Məkan",
+    "name": "Ad",
+    "showLogo": "Loqonu Göstər",
+    "submit": "PDF-i İmzala"
+  },
+  "removeCertSign": {
+    "tags": "Doğrula,PEM,P12,rəsmi,deşifr",
+    "title": "Sertifikat İmzasını Sil",
+    "header": "Rəqəmsal sertifikatı PDF-dən çıxarın",
+    "selectPDF": "PDF faylı seçin:",
+    "submit": "İmzanı silin"
+  },
+  "pageLayout": {
+    "tags": "birləşdir,sintez,tək-baxış,nizamla",
+    "title": "Çoxsəhifəli Tərtibat",
+    "header": "Çoxsəhifəli Tərtibat",
+    "pagesPerSheet": "Vərəqdəki Səhifə Sayı:",
+    "addBorder": "Çərçivə Əlavə Et",
+    "submit": "Təsdiq et"
+  },
+  "scalePages": {
+    "tags": "ölçüsünü dəyiş,modifikasiya et,ölçülər,uyğunlaş",
+    "title": "Səhifə miqyasını tənzimləyin",
+    "header": "Səhifə miqyasını tənzimləyin",
+    "pageSize": "Sənədin bir səhifəsinin ölçüsü.",
+    "keepPageSize": "Orijinal Ölçü",
+    "scaleFactor": "Səhifənin böyütmə səviyyəsi (kəsmə).",
+    "submit": "Təsdiq edin"
+  },
+  "add-page-numbers": {
+    "tags": "nömrələ,taq,səliqələ,indeks"
+  },
+  "auto-rename": {
+    "tags": "avtodetektə,başlıq-əsaslı,səliqələ,yenidən adlandır",
+    "title": "Avtomatik Yenidən Adlandır",
+    "header": "Pdf-in Adını Avtomatik Yenidən Adlandır",
+    "submit": "Avtomatik Yenidən Adlandır"
+  },
+  "adjust-contrast": {
+    "tags": "rəng-tənzimləmə,köklə,modifikasiya et,yaxşılaşdır"
+  },
+  "crop": {
+    "tags": "kəs,kiçilt,redaktə et,forma",
+    "title": "Kəs",
+    "header": "Pdf-ləri Kəs",
+    "submit": "Təsdiq Et"
+  },
+  "autoSplitPDF": {
+    "tags": "QR-əsaslı,ayrı,skan-seqment,nizamla",
+    "title": "PDF-i avtomatik bölmə",
+    "header": "PDF-i avtomatik bölmə",
+    "description": "Sənədlərinizi çap edin, daxil edin, skan edin, yükləyin və bizə icazə verin. Əl işinin çeşidlənməsinə ehtiyac yoxdur.",
+    "selectText": {
+      "1": "Aşağıdan bəzi ayırıcı vərəqləri çap edin (qara və ağ yaxşıdır).",
+      "2": "Aralarına ayırıcı vərəq daxil edərək bütün sənədlərinizi bir anda skan edin.",
+      "3": "Tək böyük skan edilmiş PDF faylını yükləyin və Stirling PDF-in qalanını idarə etməsinə icazə verin.",
+      "4": "Ayırıcı səhifələr avtomatik aşkarlanır və silinir, səliqəli yekun sənədə zəmanət verir."
+    },
+    "formPrompt": "Stirling-PDF ə Səhifə bölücüləri olan PDF-i təqdim edin:",
+    "duplexMode": "Dupleks rejimi (Ön və arxa skanlama)",
+    "dividerDownload2": "'Auto Splitter Divider (with instructions).pdf'-ı yükləyin",
+    "submit": "Təsdiq edin"
+  },
+  "sanitizePdf": {
+    "tags": "təmiz,təhlükəsiz,güvənli,sil"
+  },
+  "URLToPDF": {
+    "tags": "veb,səhifəni-saxla,webdən-sənədə,arxiv",
+    "title": "URL-i PDF-ə",
+    "header": "URL-i PDF-ə",
+    "submit": "Çevir",
+    "credit": "WeasyPrint İstifadə Edir"
+  },
+  "HTMLToPDF": {
+    "tags": "işarələmə,veb-məzmun,çevirmə,dəyişmə",
+    "title": "HTML-dən PDF-ə",
+    "header": "HTML-dən PDF-ə",
+    "help": "HTML fayllarını və tərkibində mütləq html/css/images və s. olan ZIP fayllarını qəbul edir",
+    "submit": "Çevir",
+    "credit": "WeasyPrint İstifadə Edir",
+    "zoom": "Vebsaytı göstərmək üçün yaxınlaşdırma dərəcəsi.",
+    "pageWidth": "Səhifənin eninin santimetrlərlə ölçüsü. (Standart üçün boş buraxın)",
+    "pageHeight": "Səhifənin hündürlüyünün santimetrlərlə ölçüsü. (Standart üçün boş buraxın)",
+    "marginTop": "Səhifənin yuxarı kənarının millimetrlə ölçüsü. (Standart üçün boş buraxın)",
+    "marginBottom": "Səhifənin alt kənarının millimetrlə ölçüsü. (Standart üçün boş buraxın)",
+    "marginLeft": "Səhifənin sol kənarının millimetrlə ölçüsü. (Standart üçün boş buraxın)",
+    "marginRight": "Səhifənin sağ kənarının millimetrlə ölçüsü. (Standart üçün boş buraxın)",
+    "printBackground": "Vebsaytların arxa fonunu renderlə.",
+    "defaultHeader": "Standart Başlığı Aktivləşdir (Ad və səhifə nömrəsi)",
+    "cssMediaType": "Səhifənin CSS media növünü dəyişdir.",
+    "none": "Heç biri",
+    "print": "Çap et",
+    "screen": "Ekran"
+  },
+  "MarkdownToPDF": {
+    "tags": "işarələmə,web-məzmun,dəyişmə,çevirmə",
+    "title": "Markdown-dan PDF-ə",
+    "header": "Markdown-dan PDF-ə",
+    "submit": "Çevir",
+    "help": "İş davam edir",
+    "credit": "WeasyPrint İstifadə Edir"
+  },
+  "PDFToMarkdown": {
+    "tags": "markup,web-content,transformation,convert,md",
+    "title": "PDF To Markdown",
+    "header": "PDF To Markdown",
+    "submit": "Convert"
+  },
+  "getPdfInfo": {
+    "tags": "informasiy,data,məlumatlar,statistika",
+    "title": "PDF Barəsində Məlumat Əldə Et",
+    "header": "PDF Barəsində Məlumat Əldə Et",
+    "submit": "Məlumat Əldə Et",
+    "downloadJson": "JSON yüklə"
+  },
+  "extractPage": {
+    "tags": "çıxar"
+  },
+  "PdfToSinglePage": {
+    "tags": "tək səhifə"
+  },
+  "showJS": {
+    "tags": "JS",
+    "title": "Javascripti Göstər",
+    "header": "Javascripti Göstər",
+    "downloadJS": "Javascripti Endir",
+    "submit": "Göstər"
+  },
+  "autoRedact": {
+    "tags": "Qarala,gizlət,sil,qara,marker,gizli",
+    "title": "Avtomatik Gizlətmə",
+    "header": "Avtomatik Gizlətmə",
+    "colorLabel": "Rəng",
+    "textsToRedactLabel": "Gizlədiləcək Mətn (Yeni sətirlə ayrılmış)",
+    "textsToRedactPlaceholder": "e.g. \\nKonfidensial \\nTam-Məxfi",
+    "useRegexLabel": "Regex İstifadə Et",
+    "wholeWordSearchLabel": "Bütöv Söz Axtar",
+    "customPaddingLabel": "Fərdi Əlavə Başlıq",
+    "convertPDFToImageLabel": "PDF-i PDF-Şəkil-ə çevir (Qutunun arxasındakı yazını silmək üçün istifadə edilir)",
+    "submitButton": "Təsdiqlə"
+  },
+  "redact": {
+    "tags": "Redact,Hide,black out,black,marker,hidden,manual",
+    "title": "Manual Redaction",
+    "header": "Manual Redaction",
+    "submit": "Redact",
+    "textBasedRedaction": "Text based Redaction",
+    "pageBasedRedaction": "Page-based Redaction",
+    "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
+    "pageRedactionNumbers": {
+      "title": "Pages",
+      "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
+    },
+    "redactionColor": {
+      "title": "Redaction Color"
+    },
+    "export": "Export",
+    "upload": "Upload",
+    "boxRedaction": "Box draw redaction",
+    "zoom": "Zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "nextPage": "Next Page",
+    "previousPage": "Previous Page",
+    "toggleSidebar": "Toggle Sidebar",
+    "showThumbnails": "Show Thumbnails",
+    "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
+    "showAttatchments": "Show Attachments",
+    "showLayers": "Show Layers (double-click to reset all layers to the default state)",
+    "colourPicker": "Colour Picker",
+    "findCurrentOutlineItem": "Find current outline item",
+    "applyChanges": "Apply Changes"
+  },
+  "tableExtraxt": {
+    "tags": "CSV,Cədvəl xaricetmə,xaric et,çevir"
+  },
+  "autoSizeSplitPDF": {
+    "tags": "pdf,ayır,sənəd,nizamla"
+  },
+  "overlay-pdfs": {
+    "tags": "üst-üstə",
+    "header": "Overlay PDF faylları",
+    "baseFile": {
+      "label": "Əsas PDF faylını seçin"
+    },
+    "overlayFiles": {
+      "label": "Overlay PDF fayllarını seçin"
+    },
+    "mode": {
+      "label": "Overlay Modu seçin",
+      "sequential": "Sequential Overlay",
+      "interleaved": "Interleaved Overlay",
+      "fixedRepeat": "Sabit Təkrar Yerləşdirmə"
+    },
+    "counts": {
+      "label": "Overlay Sayları (Sabit Təkrar Rejimi üçün)",
+      "placeholder": "Sayları vergüllə ayrılmış şəkildə daxil edin (məsələn, 2,3,1)"
+    },
+    "position": {
+      "label": "Overlay Position seçin",
+      "foreground": "Ön plan",
+      "background": "Arxa plan"
+    },
+    "submit": "Təsdiq et"
+  },
+  "split-by-sections": {
+    "tags": "Hissə Bölgüsü, Ayır, Fərdiləşdir",
+    "title": "PDF-i hissələrə bölün",
+    "header": "PDF-i hissələrə bölün",
+    "horizontal": {
+      "label": "Üfüqi bölmələr",
+      "placeholder": "Üfüqi bölmələrin sayını daxil edin"
+    },
+    "vertical": {
+      "label": "Şaquli bölmələr",
+      "placeholder": "Şaquli bölmələrin sayını daxil edin"
+    },
+    "submit": "Pdf-i bölmək",
+    "merge": "Bir PDF-ə birləşdirin"
+  },
+  "AddStampRequest": {
+    "tags": "Möhür, Şəkil əlavə et, şəkli ortala, Watermark, PDF, Embed, Fərdiləşdir",
+    "header": "PDF-i Möhürlə",
+    "title": "PDF-i Möhürlə",
+    "stampType": "Möhür Tipi",
+    "stampText": "Möhür Yazısı",
+    "stampImage": "Möhür Fotosu",
+    "alphabet": "Əlifba",
+    "fontSize": "Font/Şəkil Ölçüsü",
+    "rotation": "İstiqamət",
+    "opacity": "Şəffaflıq",
+    "position": "Yerləşmə",
+    "overrideX": "X Koordinatının Üstünə Yaz",
+    "overrideY": "Y Koordinatının Üstünə Yaz",
+    "customMargin": "Fərdi Boşluq Ölçüsü",
+    "customColor": "Fərdi Mətn Rəngi",
+    "submit": "Təsdiqlə"
+  },
+  "removeImagePdf": {
+    "tags": "Şəkil Sil,Səhifə Əməliyyatları,Back end,server-tərəf"
+  },
+  "splitPdfByChapters": {
+    "tags": "böl,fəsillər,əlfəcinlər,nizamla"
+  },
+  "validateSignature": {
+    "tags": "signature,verify,validate,pdf,certificate,digital signature,Validate Signature,Validate certificate",
+    "title": "Validate PDF Signatures",
+    "header": "Validate Digital Signatures",
+    "selectPDF": "Select signed PDF file",
+    "submit": "Validate Signatures",
+    "results": "Validation Results",
+    "status": {
+      "_value": "Status",
+      "valid": "Valid",
+      "invalid": "Invalid"
+    },
+    "signer": "Signer",
+    "date": "Date",
+    "reason": "Reason",
+    "location": "Location",
+    "noSignatures": "No digital signatures found in this document",
+    "chain": {
+      "invalid": "Certificate chain validation failed - cannot verify signer's identity"
+    },
+    "trust": {
+      "invalid": "Certificate not in trust store - source cannot be verified"
+    },
+    "cert": {
+      "expired": "Certificate has expired",
+      "revoked": "Certificate has been revoked",
+      "info": "Certificate Details",
+      "issuer": "Issuer",
+      "subject": "Subject",
+      "serialNumber": "Serial Number",
+      "validFrom": "Valid From",
+      "validUntil": "Valid Until",
+      "algorithm": "Algorithm",
+      "keySize": "Key Size",
+      "version": "Version",
+      "keyUsage": "Key Usage",
+      "selfSigned": "Self-Signed",
+      "bits": "bits"
+    },
+    "signature": {
+      "info": "Signature Information",
+      "_value": "Signature",
+      "mathValid": "Signature is mathematically valid BUT:"
+    },
+    "selectCustomCert": "Custom Certificate File X.509 (Optional)"
+  },
+  "replace-color": {
+    "title": "Qabaqcıl Rəng Seçimləri",
+    "header": "PDF-də Rəngləri Dəyiş-Tərsinə Çevir",
+    "selectText": {
+      "1": "Rəngi dəyişmə və tərsinə çevirmə seçimləri",
+      "2": "Defolt(Defolt yüksək kontrastlı rənglər)",
+      "3": "Fərdi(Fərdiləşdirilmiş rənglər)",
+      "4": "Bütöv Tərsinə Çevir(Bütün rəngləri tərsinə çevir)",
+      "5": "Yüksək kontrastlı rəng seçimləri",
+      "6": "Qara arxaplanda ağ mətn",
+      "7": "Ağ arxaplanda qara mətn",
+      "8": "Qara arxaplanda sarı mətn",
+      "9": "Qara arxaplanda yaşıl mətn",
+      "10": "Mətn rəngi seç",
+      "11": "Arxaplan rəngi seç"
+    },
+    "submit": "Əvəzlə"
+  },
+  "replaceColorPdf": {
+    "tags": "Rəngləri Dəyiş,Səhifə əməliyyatları,Back end,server-tərəf"
+  },
+  "login": {
+    "title": "Daxil olun",
+    "header": "Daxil olun",
+    "signin": "Daxil olun",
+    "rememberme": "Məni xatırla",
+    "invalid": "Etibarsız istifadəçi adı və ya şifr.",
+    "locked": "Sizin hesabınız kilidlənmişdir.",
+    "signinTitle": "Zəhmət olmasa, daxil olun",
+    "ssoSignIn": "Single Sign-on vasitəsilə daxil olun",
+    "oAuth2AutoCreateDisabled": "OAUTH2 Auto-Create İstifadəçisi Deaktivləşdirilmişdir",
+    "oAuth2AdminBlockedUser": "Qeydiyyatdan keçməmiş istifadəçilərin qeydiyyatı və daxil olması hal-hazırda bloklanmışdır. Zəhmət olmasa, administratorla əlaqə saxlayın.",
+    "oauth2RequestNotFound": "Təsdiqlənmə sorğusu tapılmadı",
+    "oauth2InvalidUserInfoResponse": "Yanlış İstifadəçi Məlumatı Cavabı",
+    "oauth2invalidRequest": "Etibarsız Sorğu",
+    "oauth2AccessDenied": "Giriş rədd edildi",
+    "oauth2InvalidTokenResponse": "Etibarsız Token Cavabı",
+    "oauth2InvalidIdToken": "Etibarsız Id Token",
+    "relyingPartyRegistrationNotFound": "No relying party registration found",
+    "userIsDisabled": "İstifadəçi deaktivləşdirilmişdir, bu istifadəçi adı ilə giriş hal-hazırda bloklanmışdır. Zəhmət olmasa, administratorla əlaqə saxlayın.",
+    "alreadyLoggedIn": "Siz artıq daxil olmusunuz",
+    "alreadyLoggedIn2": "cihazlar. Zəhmət olmasa, cihazlardan çıxış edin və yenidən cəhd edin.",
+    "toManySessions": "Həddindən artıq aktiv sessiyanız var",
+    "logoutMessage": "You have been logged out."
+  },
+  "pdfToSinglePage": {
+    "title": "PDF-dən Tək Səhifəyə",
+    "header": "PDF-dən Tək Səhifəyə",
+    "submit": "Tək Səhifəyə Çevir"
+  },
+  "pageExtracter": {
+    "title": "Səhifələri çıxar",
+    "header": "Səhifələri çıxar",
+    "submit": "Çıxar",
+    "placeholder": "(məsələn, 1,2,8 və ya 4,7,12-16 və ya 2n-1)"
+  },
+  "sanitizePDF": {
+    "title": "PDF-i Təmizlə",
+    "header": "PDF Faylını Təmizlə",
+    "selectText": {
+      "1": "JavaScript Fəaliyyətlərini Sil",
+      "2": "Daxil Edilmiş Faylları Sil",
+      "3": "Remove XMP metadata",
+      "4": "Linkləri Sil",
+      "5": "Şriftləri Sil",
+      "6": "Remove Document Info Metadata"
+    },
+    "submit": "PDF-i Təmizlə"
+  },
+  "adjustContrast": {
+    "title": "Kontrastı tənzimləyin",
+    "header": "Kontrastı tənzimləyin",
+    "contrast": "Kontrast:",
+    "brightness": "Parlaqlıq:",
+    "saturation": "Doyma:",
+    "download": "Yüklə"
+  },
+  "compress": {
+    "title": "Sıxışdır",
+    "header": "PDF-i Sıxışdır",
+    "credit": "Bu servis PDF sıxışdırılması/Optimizasiyası üçün Ghostscript istifadə edir.",
+    "grayscale": {
+      "label": "Sıxma üçün Boz Rəng Tətbiq Edin"
+    },
+    "selectText": {
+      "1": {
+        "_value": "Compression Settings",
+        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+      },
+      "2": "Optimizasiya səviyyəsi:",
+      "4": "Avto mod - PDF-in dəqiq ölçüsünü əldə etmək üçün keyfiyyəti avtomatik tənzimləyir",
+      "5": "Gözlənilən PDF Ölçüsü (məsələn, 25MB, 10.8MB, 25KB)"
+    },
+    "submit": "Sıxışdır"
+  },
+  "decrypt": {
+    "passwordPrompt": "This file is password-protected. Please enter the password:",
+    "cancelled": "Operation cancelled for PDF: {0}",
+    "noPassword": "No password provided for encrypted PDF: {0}",
+    "invalidPassword": "Please try again with the correct password.",
+    "invalidPasswordHeader": "Incorrect password or unsupported encryption for PDF: {0}",
+    "unexpectedError": "There was an error processing the file. Please try again.",
+    "serverError": "Server error while decrypting: {0}",
+    "success": "File decrypted successfully."
+  },
+  "multiTool-advert": {
+    "message": "Bu xüsusiyyət bizim <a href=\"{0}\">multi-alət səhifə</a>mizdə də mövcuddur. Əlavə xüsusiyyətlər və səhifə-səhifə interfeys üçün sınaqdan keçirin!"
+  },
+  "pageRemover": {
+    "title": "Səhifə Silici",
+    "header": "PDF səhifə silici",
+    "pagesToDelete": "Silinəcək səhifələr (Səhifə nömrələrinin vergüllə ayrılmış siyahısını daxil edin):",
+    "submit": "Səhifələri Sil",
+    "placeholder": "(məsələn, 1,2,6 və ya 1-10,15-30)"
+  },
+  "imageToPDF": {
+    "title": "Şəkli PDF-ə",
+    "header": "Şəkli PDF-ə",
+    "submit": "Çevir",
+    "selectLabel": "Şəkil Uyğunluğu Seçimləri",
+    "fillPage": "Səhifəni Doldur",
+    "fitDocumentToImage": "Şəklə Uyğun Səhifə",
+    "maintainAspectRatio": "Aspekt Nisbətlərini Qoruyun",
+    "selectText": {
+      "2": "PDF-i Avtomatik Fırlat",
+      "3": "Çoxsaylı Fayl Məntiqi (Yalnız Birdən Çox Şəkil İlə İşləyərkən Aktivdir)",
+      "4": "Tək Bir PDF-ə Birləşdir",
+      "5": "Ayrı PDF-lərə Çevirin"
+    }
+  },
+  "PDFToCSV": {
+    "title": "PDF-i CSV-ə",
+    "header": "PDF-i CSV-ə",
+    "prompt": "Çıxartmaq Üçün Səhifə Seç",
+    "submit": "Çıxart"
+  },
+  "split-by-size-or-count": {
+    "title": "PDF-i Ölçü və ya Sayına görə bölün",
+    "header": "PDF-i Ölçü və ya Sayına görə bölün",
+    "type": {
+      "label": "Bölmə növünü seçin",
+      "size": "Ölçüyə görə",
+      "pageCount": "Səhifə sayına görə",
+      "docCount": "Sənədlərin sayına görə"
+    },
+    "value": {
+      "label": "Dəyəri daxil edin",
+      "placeholder": "Ölçü daxil edin (məsələn, 2MB və ya 3 KB) və ya sayın daxil edin (məsələn, 5)"
+    },
+    "submit": "Təsdiq et"
+  },
+  "printFile": {
+    "title": "Faylı çap edin",
+    "header": "Faylı printerdə çap edin",
+    "selectText": {
+      "1": "Çap etmək üçün Fayl seçin",
+      "2": "Printer adını daxil edin"
+    },
+    "submit": "Çap et"
+  },
+  "licenses": {
+    "nav": "Lisenziya",
+    "title": "3-cü Tərəf Lisenziyalar",
+    "header": "3-cü Tərəf Lisenziyalar",
+    "module": "Modul",
+    "version": "Versiya",
+    "license": "Lisenziya"
+  },
+  "survey": {
+    "nav": "Sorğu",
+    "title": "Stirling-PDF sorğusu",
+    "description": "Stirling-PDF-də izləmə yoxdur, ona görə də Stirling-PDF-ni təkmilləşdirmək üçün istifadəçilərimizi eşitmək istəyirik!",
+    "changes": "Stirling-PDF son sorğudan bəri dəyişdi! Daha çox məlumat əldə etmək üçün lütfən, buradakı blog yazımızı yoxlayın:",
+    "changes2": "Bu dəyişikliklərlə biz ödənişli biznes dəstəyi və maliyyə alırıq",
+    "please": "Lütfən, Stirling-PDF-nin gələcəyi ilə bağlı məlumat əldə etmək üçün sorğumuzda iştirak edin!",
+    "disabled": "(Sorğu pop-up növbəti yeniləmələrdə deaktiv ediləcək, lakin səhifənin altında mövcuddur)",
+    "button": "Sorğuda iştirak edin",
+    "dontShowAgain": "Bir daha göstərmə",
+    "meeting": {
+      "1": "If you're using Stirling PDF at work, we'd love to speak to you. We're offering technical support sessions in exchange for a 15 minute user discovery session.",
+      "2": "This is a chance to:",
+      "3": "Get help with deployment, integrations, or troubleshooting",
+      "4": "Provide direct feedback on performance, edge cases, and feature gaps",
+      "5": "Help us refine Stirling PDF for real-world enterprise use",
+      "6": "If you're interested, you can book time with our team directly. (English speaking only)",
+      "7": "Looking forward to digging into your use cases and making Stirling PDF even better!",
+      "notInterested": "Not a business and/or interested in a meeting?",
+      "button": "Book meeting"
+    }
+  },
+  "removeImage": {
+    "title": "Şəkli silin",
+    "header": "Şəkli silin",
+    "removeImage": "Şəkli silin",
+    "submit": "Şəkli silin"
+  },
+  "splitByChapters": {
+    "title": "PDF-i hissələrə bölün",
+    "header": "PDF-i hissələrə bölün",
+    "bookmarkLevel": "Bookmark Səviyyəsi",
+    "includeMetadata": "Metadata daxil edin",
+    "allowDuplicates": "Dublikatlara icazə verin",
+    "desc": {
+      "1": "Bu alət fəsil strukturuna əsasən bir PDF faylını çoxlu PDF-lərə bölür.",
+      "2": "Bookmark Səviyyəsi: Bölmə üçün istifadə ediləcək Bookmark səviyyəsini seçin (üst səviyyə üçün 0, ikinci səviyyə üçün 1 və s.).",
+      "3": "Metadatanı daxil edin: Əgər yoxlanılıbsa, orijinal PDF-in metadatası hər bir bölünmüş PDF-ə daxil ediləcək.",
+      "4": "Allow Duplicates: Dublikatlara icazə verin: Əgər işarələnərsə, eyni səhifədə birdən çox bookmarka ayrı-ayrı PDF sənədləri yaratmağa icazə verin."
+    },
+    "submit": "PDF-i Ayır"
+  },
+  "fileChooser": {
+    "click": "Click",
+    "or": "or",
+    "dragAndDrop": "Drag & Drop",
+    "dragAndDropPDF": "Drag & Drop PDF file",
+    "dragAndDropImage": "Drag & Drop Image file",
+    "hoveredDragAndDrop": "Drag & Drop file(s) here",
+    "extractPDF": "Extracting..."
+  },
+  "releases": {
+    "footer": "Buraxılışlar",
+    "title": "Buraxılış Qeydləri",
+    "header": "Buraxılış Qeydləri",
+    "current": {
+      "version": "Hazırki Buraxılış"
+    },
+    "note": "Buraxılış Qeydləri yalnız ingiliscə mövcuddur"
+  },
+  "cookieBanner": {
+    "popUp": {
+      "title": "How we use Cookies",
+      "description": {
+        "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
+        "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+      },
+      "acceptAllBtn": "Okay",
+      "acceptNecessaryBtn": "No Thanks",
+      "showPreferencesBtn": "Manage preferences"
+    },
+    "preferencesModal": {
+      "title": "Consent Preferences Center",
+      "acceptAllBtn": "Accept all",
+      "acceptNecessaryBtn": "Reject all",
+      "savePreferencesBtn": "Save preferences",
+      "closeIconLabel": "Close modal",
+      "serviceCounterLabel": "Service|Services",
+      "subtitle": "Cookie Usage",
+      "description": {
+        "1": "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.",
+        "2": "Stirling PDF cannot—and will never—track or access the content of the documents you use.",
+        "3": "Your privacy and trust are at the core of what we do."
+      },
+      "necessary": {
+        "title": {
+          "1": "Strictly Necessary Cookies",
+          "2": "Always Enabled"
+        },
+        "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  }
+}

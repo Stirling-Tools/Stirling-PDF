@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +40,7 @@ public class RearrangePagesPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-pages")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-pages")
     @Operation(
             summary = "Remove pages from a PDF file",
             description =
@@ -237,7 +239,7 @@ public class RearrangePagesPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/rearrange-pages")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/rearrange-pages")
     @Operation(
             summary = "Rearrange pages in a PDF file",
             description =

@@ -212,9 +212,17 @@ subprojects {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-    dependsOn "spotlessApply"
+    if (!project.hasProperty("noSpotless")) {
+        dependsOn "spotlessApply"
+    }
 }
-
+gradle.taskGraph.whenReady { graph ->
+    if (project.hasProperty("noSpotless")) {
+        tasks.matching { it.name.startsWith("spotless") }.configureEach {
+            enabled = false
+        }
+    }
+}
 licenseReport {
     projects = [project]
     renderers = [new JsonReportRenderer()]

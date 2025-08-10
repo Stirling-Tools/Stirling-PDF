@@ -1,0 +1,63 @@
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: docker/backend/Dockerfile
+    container_name: Stirling-PDF-Security-with-login
+    restart: on-failure:5
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 16
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../../stirling/latest/data:/usr/share/tessdata:rw
+      - ../../stirling/latest/config:/configs:rw
+      - ../../stirling/latest/logs:/logs:rw
+    environment:
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      DOCKER_ENABLE_SECURITY: "true"
+      SECURITY_ENABLELOGIN: "true"
+      SECURITY_INITIALLOGIN_USERNAME: "admin"
+      SECURITY_INITIALLOGIN_PASSWORD: "stirling"
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest with Security and Login
+      UI_APPNAMENAVBAR: Stirling-PDF Latest
+      SYSTEM_MAXFILESIZE: "100"
+      METRICS_ENABLED: "true"
+      SYSTEM_GOOGLEVISIBILITY: "true"
+      SECURITY_CUSTOMGLOBALAPIKEY: "123456789"
+      SHOW_SURVEY: "true"
+    networks:
+      - stirling-network
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: docker/frontend/Dockerfile
+    container_name: stirling-pdf-frontend-security-login
+    restart: on-failure:5
+    ports:
+      - "3000:80"
+    environment:
+      BACKEND_URL: http://backend:8080
+    depends_on:
+      - backend
+    networks:
+      - stirling-network
+
+networks:
+  stirling-network:
+    driver: bridge
+
+volumes:
+  stirling-data:
+  stirling-config:
+  stirling-logs:

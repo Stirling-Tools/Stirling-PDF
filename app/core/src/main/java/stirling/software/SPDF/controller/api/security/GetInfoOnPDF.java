@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -188,7 +190,7 @@ public class GetInfoOnPDF {
         return false;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/get-info-on-pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/get-info-on-pdf")
     @Operation(summary = "Summary here", description = "desc. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();

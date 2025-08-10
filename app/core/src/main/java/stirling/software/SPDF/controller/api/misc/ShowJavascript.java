@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -32,7 +34,7 @@ public class ShowJavascript {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/show-javascript")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/show-javascript")
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
             description = "desc. Input:PDF Output:JS Type:SISO")
