@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -36,7 +38,7 @@ public class MultiPageLayoutController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/multi-page-layout", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/multi-page-layout", consumes = "multipart/form-data")
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
             description =

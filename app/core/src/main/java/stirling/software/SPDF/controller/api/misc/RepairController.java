@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +48,7 @@ public class RepairController {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/repair")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/repair")
     @Operation(
             summary = "Repair a PDF file",
             description =

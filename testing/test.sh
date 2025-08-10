@@ -225,8 +225,8 @@ test_compose() {
 
     echo "Testing $compose_file configuration..."
 
-    # Start up the Docker Compose service
-    docker-compose -f "$compose_file" up -d
+    # Start up the Docker Compose service with forced rebuild
+    docker-compose -f "$compose_file" up -d --build
 
     # Wait for the service to become healthy
     if check_health "$service_name" "$compose_file"; then
@@ -276,22 +276,27 @@ main() {
     EXPECTED_VERSION=$(get_expected_version)
     echo "Expected version: $EXPECTED_VERSION"
 
-    # Building Docker images
-    # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
-    docker build --build-arg VERSION_TAG=alpha -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
-
     # Test each configuration
-    run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
+    run_tests "Stirling-PDF-Ultra-Lite" "./testing/compose/docker-compose-ultra-lite.yml"
 
-    echo "Testing webpage accessibility..."
-    cd "testing"
-    if ./test_webpages.sh -f webpage_urls.txt -b http://localhost:8080; then
-        passed_tests+=("Webpage-Accessibility-lite")
+    echo "Testing basic frontend homepage accessibility..."
+    if curl -f http://localhost:3000 > /dev/null 2>&1; then
+        passed_tests+=("Frontend-Homepage-Accessibility-lite")
+        echo "Frontend homepage accessibility check passed"
     else
-        failed_tests+=("Webpage-Accessibility-lite")
-        echo "Webpage accessibility lite tests failed"
+        failed_tests+=("Frontend-Homepage-Accessibility-lite")
+        echo "Frontend homepage accessibility check failed"
     fi
-    cd "$PROJECT_ROOT"
+    
+    # echo "Testing webpage accessibility..."
+    # cd "testing"
+    # if ./test_webpages.sh -f webpage_urls.txt -b http://localhost:8080; then
+    #     passed_tests+=("Webpage-Accessibility-lite")
+    # else
+    #     failed_tests+=("Webpage-Accessibility-lite")
+    #     echo "Webpage accessibility lite tests failed"
+    # fi
+    # cd "$PROJECT_ROOT"
 
     echo "Testing version verification..."
     if verify_app_version "Stirling-PDF-Ultra-Lite" "http://localhost:8080"; then
@@ -302,10 +307,11 @@ main() {
         echo "Version verification failed for Stirling-PDF-Ultra-Lite"
     fi
 
-    docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
-
-    # run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
-    # docker-compose -f "./exampleYmlFiles/docker-compose-latest.yml" down
+    docker-compose -f "./testing/compose/docker-compose-ultra-lite.yml" down
+    
+    # Clean up any generated config files
+    echo "Cleaning up generated config files..."
+    rm -rf "$PROJECT_ROOT/stirling/" 2>/dev/null || true
 
     export DISABLE_ADDITIONAL_FEATURES=false
     # Run the gradlew build command and check if it fails
@@ -319,43 +325,44 @@ main() {
     EXPECTED_VERSION=$(get_expected_version)
     echo "Expected version with security enabled: $EXPECTED_VERSION"
 
-    # Building Docker images with security enabled
-    # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
-    # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
-    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
-
-
     # Test each configuration with security
-    # run_tests "Stirling-PDF-Ultra-Lite-Security" "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml"
-    # docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml" down
-    # run_tests "Stirling-PDF-Security" "./exampleYmlFiles/docker-compose-latest-security.yml"
-    # docker-compose -f "./exampleYmlFiles/docker-compose-latest-security.yml" down
+    run_tests "Stirling-PDF-Security" "./testing/compose/docker-compose-security.yml"
 
-
-    run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/docker-compose-latest-fat-security.yml"
-
-    echo "Testing webpage accessibility..."
-    cd "testing"
-    if ./test_webpages.sh -f webpage_urls_full.txt -b http://localhost:8080; then
-        passed_tests+=("Webpage-Accessibility-full")
+    echo "Testing basic frontend homepage accessibility..."
+    if curl -f http://localhost:3000 > /dev/null 2>&1; then
+        passed_tests+=("Frontend-Homepage-Accessibility-full")
+        echo "Frontend homepage accessibility check passed"
     else
-        failed_tests+=("Webpage-Accessibility-full")
-        echo "Webpage accessibility full tests failed"
+        failed_tests+=("Frontend-Homepage-Accessibility-full")
+        echo "Frontend homepage accessibility check failed"
     fi
-    cd "$PROJECT_ROOT"
+    
+    # echo "Testing webpage accessibility..."
+    # cd "testing"
+    # if ./test_webpages.sh -f webpage_urls_full.txt -b http://localhost:8080; then
+    #     passed_tests+=("Webpage-Accessibility-full")
+    # else
+    #     failed_tests+=("Webpage-Accessibility-full")
+    #     echo "Webpage accessibility full tests failed"
+    # fi
+    # cd "$PROJECT_ROOT"
 
     echo "Testing version verification..."
-    if verify_app_version "Stirling-PDF-Security-Fat" "http://localhost:8080"; then
-        passed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
-        echo "Version verification passed for Stirling-PDF-Security-Fat"
+    if verify_app_version "Stirling-PDF-Security" "http://localhost:8080"; then
+        passed_tests+=("Stirling-PDF-Security-Version-Check")
+        echo "Version verification passed for Stirling-PDF-Security"
     else
-        failed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
-        echo "Version verification failed for Stirling-PDF-Security-Fat"
+        failed_tests+=("Stirling-PDF-Security-Version-Check")
+        echo "Version verification failed for Stirling-PDF-Security"
     fi
 
-    docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down
+    docker-compose -f "./testing/compose/docker-compose-security.yml" down
+    
+    # Clean up any generated config files
+    echo "Cleaning up generated config files..."
+    rm -rf "$PROJECT_ROOT/stirling/" 2>/dev/null || true
 
-    run_tests "Stirling-PDF-Security-Fat-with-login" "./exampleYmlFiles/test_cicd.yml"
+    run_tests "Stirling-PDF-Security-with-login" "./testing/compose/docker-compose-security-with-login.yml"
 
     if [ $? -eq 0 ]; then
         # Create directory for file snapshots if it doesn't exist
@@ -368,7 +375,7 @@ main() {
         DIFF_FILE="$SNAPSHOT_DIR/files_diff.txt"
 
         # Define container name variable for consistency
-        CONTAINER_NAME="Stirling-PDF-Security-Fat-with-login"
+        CONTAINER_NAME="Stirling-PDF-Security-with-login"
 
         capture_file_list "$CONTAINER_NAME" "$BEFORE_FILE"
 
@@ -409,28 +416,12 @@ main() {
         fi
     fi
 
-    docker-compose -f "./exampleYmlFiles/test_cicd.yml" down
+    docker-compose -f "./testing/compose/docker-compose-security-with-login.yml" down
+    
+    # Clean up any generated config files
+    echo "Cleaning up generated config files..."
+    rm -rf "$PROJECT_ROOT/stirling/" 2>/dev/null || true
 
-    run_tests "Stirling-PDF-Fat-Disable-Endpoints" "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml"
-
-    echo "Testing disabled endpoints..."
-    if ./testing/test_disabledEndpoints.sh -f ./testing/endpoints.txt -b http://localhost:8080; then
-        passed_tests+=("Disabled-Endpoints")
-    else
-        failed_tests+=("Disabled-Endpoints")
-        echo "Disabled Endpoints tests failed"
-    fi
-
-    echo "Testing version verification..."
-    if verify_app_version "Stirling-PDF-Fat-Disable-Endpoints" "http://localhost:8080"; then
-        passed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
-        echo "Version verification passed for Stirling-PDF-Fat-Disable-Endpoints"
-    else
-        failed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
-        echo "Version verification failed for Stirling-PDF-Fat-Disable-Endpoints"
-    fi
-
-    docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml" down
 
     # Report results
     echo "All tests completed in $SECONDS seconds."

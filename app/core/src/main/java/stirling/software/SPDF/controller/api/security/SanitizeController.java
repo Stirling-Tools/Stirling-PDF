@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 
 import org.apache.pdfbox.cos.COSDictionary;
@@ -46,7 +48,7 @@ public class SanitizeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/sanitize-pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/sanitize-pdf")
     @Operation(
             summary = "Sanitize a PDF file",
             description =

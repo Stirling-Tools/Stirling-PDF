@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -38,7 +40,7 @@ public class DecompressPdfController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/decompress-pdf", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/decompress-pdf", consumes = "multipart/form-data")
     @Operation(
             summary = "Decompress PDF streams",
             description = "Fully decompresses all PDF streams including text content")

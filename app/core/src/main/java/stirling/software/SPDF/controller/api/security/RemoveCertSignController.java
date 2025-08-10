@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -32,7 +34,7 @@ public class RemoveCertSignController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-cert-sign")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-cert-sign")
     @Operation(
             summary = "Remove digital signature from PDF",
             description =

@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -154,7 +156,7 @@ public class MergeController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/merge-pdfs")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/merge-pdfs")
     @Operation(
             summary = "Merge multiple PDF files into one",
             description =

@@ -29,6 +29,7 @@ jobs:
         github.event.comment.user.login == 'reecebrowne' ||
         github.event.comment.user.login == 'DarioGii' ||
         github.event.comment.user.login == 'EthanHealy01' ||
+        github.event.comment.user.login == 'jbrunton96' ||
         github.event.comment.user.login == 'ConnorYoh'
       )
     outputs:

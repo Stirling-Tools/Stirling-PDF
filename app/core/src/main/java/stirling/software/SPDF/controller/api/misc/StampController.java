@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -52,7 +54,7 @@ public class StampController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-stamp")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-stamp")
     @Operation(
             summary = "Add stamp to a PDF file",
             description =

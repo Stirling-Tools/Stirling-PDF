@@ -51,28 +51,32 @@ build_and_test() {
     local dockerfile_name="./Dockerfile"
     local image_base="stirlingtools/stirling-pdf"
     local security_suffix=""
-    local docker_compose_base="./exampleYmlFiles/docker-compose-latest"
+    local docker_compose_base="./testing/compose/docker-compose"
     local compose_suffix=".yml"
     local service_name_base="Stirling-PDF"
 
-    if [ "$enable_security" == "true" ]; then
-        security_suffix="-Security"
-        docker_compose_base+="-security"  # Append to base name for Docker Compose files with security
-    fi
-
     case "$build_type" in
         full)
-            dockerfile_name="./Dockerfile"
+            dockerfile_name="./docker/backend/Dockerfile"
+            if [ "$enable_security" == "true" ]; then
+                compose_file="${docker_compose_base}-fat-security${compose_suffix}"
+                service_name="Stirling-PDF-Security-Fat"
+            else
+                compose_file="${docker_compose_base}-fat${compose_suffix}"
+                service_name="stirling-pdf-backend-fat"
+            fi
             ;;
         ultra-lite)
-            dockerfile_name="./Dockerfile.ultra-lite"
+            dockerfile_name="./docker/backend/Dockerfile.ultra-lite"
+            if [ "$enable_security" == "true" ]; then
+                compose_file="${docker_compose_base}-ultra-lite-security${compose_suffix}"
+                service_name="stirling-pdf-backend-ultra-lite-security"
+            else
+                compose_file="${docker_compose_base}-ultra-lite${compose_suffix}"
+                service_name="Stirling-PDF-Ultra-Lite"
+            fi
             ;;
     esac
-
-    # Dynamic image tag and service name based on build type and security
-    local image_tag="${image_base}:latest${build_type}${security_suffix}"
-    local service_name="${service_name_base}${build_type^}${security_suffix}"
-    local compose_file="${docker_compose_base}${build_type}${compose_suffix}"
 
     # Gradle build with or without security
     echo "Running ./gradlew clean build with security=$enable_security..."
@@ -82,10 +86,6 @@ build_and_test() {
         echo "Gradle build failed, exiting script."
         exit 1
     fi
-
-    # Building Docker image
-    echo "Building Docker image $image_tag with Dockerfile $dockerfile_name..."
-    docker build --build-arg VERSION_TAG=$version_tag -t $image_tag -f $dockerfile_name .
 
     if [ "$run_compose" == "true" ]; then
         echo "Running Docker Compose for $build_type with security=$enable_security..."

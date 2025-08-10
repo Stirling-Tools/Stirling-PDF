@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
@@ -102,7 +104,7 @@ public class AutoSplitPdfController {
         }
     }
 
-    @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
     @Operation(
             summary = "Auto split PDF pages into separate documents",
             description =
