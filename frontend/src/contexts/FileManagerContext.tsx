@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { FileWithUrl } from '../types/file';
 import { StoredFile } from '../services/fileStorage';
 
@@ -168,7 +168,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [isOpen]);
 
-  const contextValue: FileManagerContextValue = {
+  const contextValue: FileManagerContextValue = useMemo(() => ({
     // State
     activeSource,
     selectedFileIds,
@@ -191,7 +191,25 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     recentFiles,
     isFileSupported,
     modalHeight,
-  };
+  }), [
+    activeSource,
+    selectedFileIds,
+    searchTerm,
+    selectedFiles,
+    filteredFiles,
+    fileInputRef,
+    handleSourceChange,
+    handleLocalFileClick,
+    handleFileSelect,
+    handleFileRemove,
+    handleFileDoubleClick,
+    handleOpenFiles,
+    handleSearchChange,
+    handleFileInputChange,
+    recentFiles,
+    isFileSupported,
+    modalHeight,
+  ]);
 
   return (
     <FileManagerContext.Provider value={contextValue}>

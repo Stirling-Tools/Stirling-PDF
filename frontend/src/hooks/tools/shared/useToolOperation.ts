@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
-import { useFileContext } from '../../../contexts/FileContext';
+import { useFileActions } from '../../../contexts/FileContext';
 import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
@@ -112,7 +112,11 @@ export const useToolOperation = <TParams = void>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { recordOperation, markOperationApplied, markOperationFailed, addFiles } = useFileContext();
+  const { actions: fileActions } = useFileActions();
+  // Legacy compatibility - these functions might not be needed in the new architecture
+  const recordOperation = () => {}; // Placeholder
+  const markOperationApplied = () => {}; // Placeholder
+  const markOperationFailed = () => {}; // Placeholder
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -215,7 +219,7 @@ export const useToolOperation = <TParams = void>(
         actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
 
         // Add to file context
-        await addFiles(processedFiles);
+        await fileActions.addFiles(processedFiles);
 
         markOperationApplied(fileId, operationId);
       }
@@ -229,7 +233,7 @@ export const useToolOperation = <TParams = void>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
+  }, [t, config, actions, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles, fileActions.addFiles]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useFileHandler } from '../hooks/useFileHandler';
 
 interface FilesModalContextType {
@@ -41,7 +41,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setOnModalClose(() => callback);
   }, []);
 
-  const contextValue: FilesModalContextType = {
+  const contextValue: FilesModalContextType = useMemo(() => ({
     isFilesModalOpen,
     openFilesModal,
     closeFilesModal,
@@ -49,7 +49,15 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     onFilesSelect: handleFilesSelect,
     onModalClose,
     setOnModalClose: setModalCloseCallback,
-  };
+  }), [
+    isFilesModalOpen,
+    openFilesModal,
+    closeFilesModal,
+    handleFileSelect,
+    handleFilesSelect,
+    onModalClose,
+    setModalCloseCallback,
+  ]);
 
   return (
     <FilesModalContext.Provider value={contextValue}>

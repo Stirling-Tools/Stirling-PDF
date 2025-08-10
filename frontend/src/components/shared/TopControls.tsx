@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Button, SegmentedControl, Loader } from "@mantine/core";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import LanguageSelector from "./LanguageSelector";
@@ -10,50 +10,18 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import { Group } from "@mantine/core";
+import { ModeType } from '../../types/fileContext';
 
-// This will be created inside the component to access switchingTo
-const createViewOptions = (switchingTo: string | null) => [
-  {
-    label: (
-      <Group gap={5}>
-        {switchingTo === "viewer" ? (
-          <Loader size="xs" />
-        ) : (
-          <VisibilityIcon fontSize="small" />
-        )}
-      </Group>
-    ),
-    value: "viewer",
-  },
-  {
-    label: (
-      <Group gap={4}>
-        {switchingTo === "pageEditor" ? (
-          <Loader size="xs" />
-        ) : (
-          <EditNoteIcon fontSize="small" />
-        )}
-      </Group>
-    ),
-    value: "pageEditor",
-  },
-  {
-    label: (
-      <Group gap={4}>
-        {switchingTo === "fileEditor" ? (
-          <Loader size="xs" />
-        ) : (
-          <FolderIcon fontSize="small" />
-        )}
-      </Group>
-    ),
-    value: "fileEditor",
-  },
-];
+// Stable view option objects that don't recreate on every render
+const VIEW_OPTIONS_BASE = [
+  { value: "viewer", icon: VisibilityIcon },
+  { value: "pageEditor", icon: EditNoteIcon },
+  { value: "fileEditor", icon: FolderIcon },
+] as const;
 
 interface TopControlsProps {
-  currentView: string;
-  setCurrentView: (view: string) => void;
+  currentView: ModeType;
+  setCurrentView: (view: ModeType) => void;
   selectedToolKey?: string | null;
 }
 
@@ -68,6 +36,9 @@ const TopControls = ({
   const isToolSelected = selectedToolKey !== null;
 
   const handleViewChange = useCallback((view: string) => {
+    // Guard against redundant changes
+    if (view === currentView) return;
+    
     // Show immediate feedback
     setSwitchingTo(view);
     
@@ -75,13 +46,28 @@ const TopControls = ({
     requestAnimationFrame(() => {
       // Give the spinner one more frame to show
       requestAnimationFrame(() => {
-        setCurrentView(view);
+        setCurrentView(view as ModeType);
         
         // Clear the loading state after view change completes
         setTimeout(() => setSwitchingTo(null), 300);
       });
     });
-  }, [setCurrentView]);
+  }, [setCurrentView, currentView]);
+
+  // Memoize the SegmentedControl data with stable references
+  const viewOptions = useMemo(() => 
+    VIEW_OPTIONS_BASE.map(option => ({
+      value: option.value,
+      label: (
+        <Group gap={option.value === "viewer" ? 5 : 4}>
+          {switchingTo === option.value ? (
+            <Loader size="xs" />
+          ) : (
+            <option.icon fontSize="small" />
+          )}
+        </Group>
+      )
+    })), [switchingTo]);
 
   const getThemeIcon = () => {
     if (isRainbowMode) return <AutoAwesomeIcon className={rainbowStyles.rainbowText} />;
@@ -117,7 +103,7 @@ const TopControls = ({
       {!isToolSelected && (
         <div className="flex justify-center items-center h-full pointer-events-auto">
             <SegmentedControl
-              data={createViewOptions(switchingTo)}
+              data={viewOptions}
               value={currentView}
               onChange={handleViewChange}
               color="blue"

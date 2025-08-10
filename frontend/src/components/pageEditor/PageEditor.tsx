@@ -5,8 +5,8 @@ import {
   Stack, Group
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useFileContext, useCurrentFile } from "../../contexts/FileContext";
-import { ViewType, ToolType } from "../../types/fileContext";
+import { useFileState, useFileActions, useCurrentFile, useProcessedFiles, useFileManagement, useFileSelection } from "../../contexts/FileContext";
+import { ModeType } from "../../types/fileContext";
 import { PDFDocument, PDFPage } from "../../types/pageEditor";
 import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
@@ -53,23 +53,22 @@ const PageEditor = ({
 }: PageEditorProps) => {
   const { t } = useTranslation();
 
-  // Get file context
-  const fileContext = useFileContext();
+  // Use optimized FileContext hooks (no infinite loops)
+  const { state } = useFileState();
+  const { actions, dispatch } = useFileActions();
+  const { addFiles, clearAllFiles } = useFileManagement();
+  const { selectedFileIds, selectedPageNumbers, setSelectedFiles, setSelectedPages } = useFileSelection();
   const { file: currentFile, processedFile: currentProcessedFile } = useCurrentFile();
+  const processedFiles = useProcessedFiles();
   
-  // Use file context state
-  const {
-    activeFiles,
-    processedFiles,
-    selectedPageNumbers,
-    setSelectedPages,
-    updateProcessedFile,
-    setHasUnsavedChanges,
-    hasUnsavedChanges,
-    isProcessing: globalProcessing,
-    processingProgress,
-    clearAllFiles
-  } = fileContext;
+  // Extract needed state values (use stable memo)
+  const activeFiles = useMemo(() => 
+    state.files.ids.map(id => state.files.byId[id]?.file).filter(Boolean),
+    [state.files.ids, state.files.byId]
+  );
+  const globalProcessing = state.ui.isProcessing;
+  const processingProgress = state.ui.processingProgress;
+  const hasUnsavedChanges = state.ui.hasUnsavedChanges;
 
   // Edit state management
   const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(null);
@@ -78,25 +77,53 @@ const PageEditor = ({
   const [foundDraft, setFoundDraft] = useState<any>(null);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Simple computed document from processed files (no caching needed)
+  /**
+   * Create stable files signature to prevent infinite re-computation.
+   * This signature only changes when files are actually added/removed or processing state changes.
+   * Using this instead of direct file arrays prevents unnecessary re-renders.
+   */
+  const filesSignature = useMemo(() => {
+    const fileIds = state.files.ids.sort(); // Stable order
+    return fileIds
+      .map(id => {
+        const record = state.files.byId[id];
+        if (!record) return `${id}:missing`;
+        const hasProcessed = record.processedFile ? 'processed' : 'pending';
+        return `${id}:${record.name}:${record.size}:${record.lastModified}:${hasProcessed}`;
+      })
+      .join('|');
+  }, [state.files.ids, state.files.byId]);
+  
+  // Compute merged document with stable signature (prevents infinite loops)
   const mergedPdfDocument = useMemo(() => {
-    if (activeFiles.length === 0) return null;
+    const currentFiles = state.files.ids.map(id => state.files.byId[id]?.file).filter(Boolean);
     
-    if (activeFiles.length === 1) {
+    if (currentFiles.length === 0) {
+      return null;
+    } else if (currentFiles.length === 1) {
       // Single file
-      const processedFile = processedFiles.get(activeFiles[0]);
-      if (!processedFile) return null;
+      const file = currentFiles[0];
+      const record = state.files.ids
+        .map(id => state.files.byId[id])
+        .find(r => r?.file === file);
+      
+      const processedFile = record?.processedFile;
+      if (!processedFile) {
+        return null;
+      }
+      
+      const pages = processedFile.pages.map(page => ({
+        ...page,
+        rotation: page.rotation || 0,
+        splitBefore: page.splitBefore || false
+      }));
       
       return {
         id: processedFile.id,
-        name: activeFiles[0].name,
-        file: activeFiles[0],
-        pages: processedFile.pages.map(page => ({
-          ...page,
-          rotation: page.rotation || 0,
-          splitBefore: page.splitBefore || false
-        })),
-        totalPages: processedFile.totalPages
+        name: file.name,
+        file: file,
+        pages: pages,
+        totalPages: pages.length // Always use actual pages array length
       };
     } else {
       // Multiple files - merge them
@@ -104,8 +131,12 @@ const PageEditor = ({
       let totalPages = 0;
       const filenames: string[] = [];
 
-      activeFiles.forEach((file, i) => {
-        const processedFile = processedFiles.get(file);
+      currentFiles.forEach((file, i) => {
+        const record = state.files.ids
+          .map(id => state.files.byId[id])
+          .find(r => r?.file === file);
+        
+        const processedFile = record?.processedFile;
         if (processedFile) {
           filenames.push(file.name.replace(/\.pdf$/i, ''));
           
@@ -124,17 +155,19 @@ const PageEditor = ({
         }
       });
 
-      if (allPages.length === 0) return null;
-
+      if (allPages.length === 0) {
+        return null;
+      }
+      
       return {
         id: `merged-${Date.now()}`,
         name: filenames.join(' + '),
-        file: activeFiles[0], // Use first file as reference
+        file: currentFiles[0], // Use first file as reference
         pages: allPages,
-        totalPages: totalPages
+        totalPages: allPages.length // Always use actual pages array length
       };
     }
-  }, [activeFiles, processedFiles]);
+  }, [filesSignature, state.files.ids, state.files.byId]); // Stable dependency
 
   // Display document: Use edited version if exists, otherwise original
   const displayDocument = editedDocument || mergedPdfDocument;
@@ -144,6 +177,7 @@ const PageEditor = ({
 
   // Page editor state (use context for selectedPages)
   const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [csvInput, setCsvInput] = useState<string>("");
   const [selectionMode, setSelectionMode] = useState(false);
 
@@ -188,16 +222,20 @@ const PageEditor = ({
     }
 
     // Add files to context
-    await fileContext.addFiles(uploadedFiles);
+    await addFiles(uploadedFiles);
     setStatus(`Added ${uploadedFiles.length} file(s) for processing`);
-  }, [fileContext]);
+  }, [addFiles]);
 
 
   // PageEditor no longer handles cleanup - it's centralized in FileContext
 
-  // Shared PDF instance for thumbnail generation
+  // PDF thumbnail generation state
   const [sharedPdfInstance, setSharedPdfInstance] = useState<any>(null);
-  const [thumbnailGenerationStarted, setThumbnailGenerationStarted] = useState(false);
+  /** 
+   * Using ref instead of state prevents infinite loops.
+   * State changes would trigger re-renders and effect re-runs.
+   */
+  const thumbnailGenerationStarted = useRef(false);
 
   // Thumbnail generation (opt-in for visual tools)
   const { 
@@ -208,21 +246,16 @@ const PageEditor = ({
     destroyThumbnails 
   } = useThumbnailGeneration();
 
-  // Start thumbnail generation process (separate from document loading)
+  // Start thumbnail generation process (guards against re-entry)
   const startThumbnailGeneration = useCallback(() => {
-    console.log('🎬 PageEditor: startThumbnailGeneration called');
-    console.log('🎬 Conditions - mergedPdfDocument:', !!mergedPdfDocument, 'activeFiles:', activeFiles.length, 'started:', thumbnailGenerationStarted);
-    
-    if (!mergedPdfDocument || activeFiles.length !== 1 || thumbnailGenerationStarted) {
-      console.log('🎬 PageEditor: Skipping thumbnail generation due to conditions');
+    if (!mergedPdfDocument || activeFiles.length !== 1 || thumbnailGenerationStarted.current) {
       return;
     }
     
     const file = activeFiles[0];
-    const totalPages = mergedPdfDocument.totalPages;
+    const totalPages = mergedPdfDocument.pages.length;
     
-    console.log('🎬 PageEditor: Starting thumbnail generation for', totalPages, 'pages');
-    setThumbnailGenerationStarted(true);
+    thumbnailGenerationStarted.current = true;
     
     // Run everything asynchronously to avoid blocking the main thread
     setTimeout(async () => {
@@ -237,11 +270,8 @@ const PageEditor = ({
             return !page?.thumbnail; // Only generate for pages without thumbnails
           });
         
-        console.log(`🎬 PageEditor: Generating thumbnails for ${pageNumbers.length} pages (out of ${totalPages} total):`, pageNumbers.slice(0, 10), pageNumbers.length > 10 ? '...' : '');
-        
         // If no pages need thumbnails, we're done
         if (pageNumbers.length === 0) {
-          console.log('🎬 PageEditor: All pages already have thumbnails, no generation needed');
           return;
         }
         
@@ -258,78 +288,59 @@ const PageEditor = ({
             batchSize: 15, // Smaller batches per worker for smoother UI
             parallelBatches: 3 // Use 3 Web Workers in parallel
           },
-          // Progress callback (throttled for better performance)
+          // Progress callback for thumbnail updates
           (progress) => {
-            console.log(`🎬 PageEditor: Progress - ${progress.completed}/${progress.total} pages, ${progress.thumbnails.length} new thumbnails`);
             // Batch process thumbnails to reduce main thread work
             requestAnimationFrame(() => {
               progress.thumbnails.forEach(({ pageNumber, thumbnail }) => {
-                // Check cache first, then send thumbnail
                 const pageId = `${file.name}-page-${pageNumber}`;
                 const cached = getThumbnailFromCache(pageId);
                 
                 if (!cached) {
-                  // Cache and send to component
                   addThumbnailToCache(pageId, thumbnail);
-                  
                   window.dispatchEvent(new CustomEvent('thumbnailReady', {
                     detail: { pageNumber, thumbnail, pageId }
                   }));
-                  console.log(`✓ PageEditor: Dispatched thumbnail for page ${pageNumber}`);
                 }
               });
             });
           }
         );
 
-        // Handle completion properly
+        // Handle completion
         generationPromise
-          .then((allThumbnails) => {
-            console.log(`✅ PageEditor: Thumbnail generation completed! Generated ${allThumbnails.length} thumbnails`);
-            // Don't reset thumbnailGenerationStarted here - let it stay true to prevent restarts
+          .then(() => {
+            // Keep thumbnailGenerationStarted as true to prevent restarts
           })
           .catch(error => {
-            console.error('✗ PageEditor: Web Worker thumbnail generation failed:', error);
-            setThumbnailGenerationStarted(false);
+            console.error('PageEditor: Thumbnail generation failed:', error);
+            thumbnailGenerationStarted.current = false;
           });
         
       } catch (error) {
         console.error('Failed to start Web Worker thumbnail generation:', error);
-        setThumbnailGenerationStarted(false);
+        thumbnailGenerationStarted.current = false;
       }
     }, 0); // setTimeout with 0ms to defer to next tick
-  }, [mergedPdfDocument, activeFiles, thumbnailGenerationStarted, getThumbnailFromCache, addThumbnailToCache]);
+  }, [mergedPdfDocument, activeFiles, getThumbnailFromCache, addThumbnailToCache]);
 
-  // Start thumbnail generation after document loads
+  // Start thumbnail generation when files change (stable signature prevents loops)
   useEffect(() => {
-    console.log('🎬 PageEditor: Thumbnail generation effect triggered');
-    console.log('🎬 Conditions - mergedPdfDocument:', !!mergedPdfDocument, 'started:', thumbnailGenerationStarted);
-    
-    if (mergedPdfDocument && !thumbnailGenerationStarted) {
-      // Check if ALL pages already have thumbnails from processed files
+    if (mergedPdfDocument && !thumbnailGenerationStarted.current) {
+      // Check if ALL pages already have thumbnails
       const totalPages = mergedPdfDocument.pages.length;
       const pagesWithThumbnails = mergedPdfDocument.pages.filter(page => page.thumbnail).length;
       const hasAllThumbnails = pagesWithThumbnails === totalPages;
       
-      console.log('🎬 PageEditor: Thumbnail status:', {
-        totalPages,
-        pagesWithThumbnails,
-        hasAllThumbnails,
-        missingThumbnails: totalPages - pagesWithThumbnails
-      });
-      
       if (hasAllThumbnails) {
-        console.log('🎬 PageEditor: Skipping generation - all thumbnails already exist');
-        return; // Skip generation if ALL thumbnails already exist
+        return; // Skip generation if thumbnails exist
       }
       
-      console.log('🎬 PageEditor: Some thumbnails missing, proceeding with generation');
-      // Small delay to let document render, then start thumbnail generation
-      console.log('🎬 PageEditor: Scheduling thumbnail generation in 500ms');
+      // Small delay to let document render
       const timer = setTimeout(startThumbnailGeneration, 500);
       return () => clearTimeout(timer);
     }
-  }, [mergedPdfDocument, startThumbnailGeneration, thumbnailGenerationStarted]);
+  }, [filesSignature, startThumbnailGeneration]);
 
   // Cleanup shared PDF instance when component unmounts (but preserve cache)
   useEffect(() => {
@@ -338,11 +349,9 @@ const PageEditor = ({
         sharedPdfInstance.destroy();
         setSharedPdfInstance(null);
       }
-      setThumbnailGenerationStarted(false);
-      // DON'T stop generation on file changes - preserve cache for view switching
-      // stopGeneration();
+      thumbnailGenerationStarted.current = false;
     };
-  }, [sharedPdfInstance]); // Only depend on PDF instance, not activeFiles
+  }, [sharedPdfInstance]);
 
   // Clear selections when files change
   useEffect(() => {
@@ -432,14 +441,14 @@ const PageEditor = ({
     ranges.forEach(range => {
       if (range.includes('-')) {
         const [start, end] = range.split('-').map(n => parseInt(n.trim()));
-        for (let i = start; i <= end && i <= mergedPdfDocument.totalPages; i++) {
+        for (let i = start; i <= end && i <= mergedPdfDocument.pages.length; i++) {
           if (i > 0) {
             pageNumbers.push(i);
           }
         }
       } else {
         const pageNum = parseInt(range);
-        if (pageNum > 0 && pageNum <= mergedPdfDocument.totalPages) {
+        if (pageNum > 0 && pageNum <= mergedPdfDocument.pages.length) {
           pageNumbers.push(pageNum);
         }
       }
@@ -527,25 +536,31 @@ const PageEditor = ({
     
     // Update local edit state for immediate visual feedback
     setEditedDocument(updatedDoc);
-    setHasUnsavedChanges(true); // Use global state
+    actions.setHasUnsavedChanges(true); // Use actions from context
     setHasUnsavedDraft(true); // Mark that we have unsaved draft changes
     
-    // Auto-save to drafts (debounced) - only if we have new changes
+    // Enhanced auto-save to drafts with proper error handling
     if (autoSaveTimer.current) {
       clearTimeout(autoSaveTimer.current);
     }
     
-    autoSaveTimer.current = setTimeout(() => {
+    autoSaveTimer.current = setTimeout(async () => {
       if (hasUnsavedDraft) {
-        saveDraftToIndexedDB(updatedDoc);
-        setHasUnsavedDraft(false); // Mark draft as saved
+        try {
+          await saveDraftToIndexedDB(updatedDoc);
+          setHasUnsavedDraft(false); // Mark draft as saved
+          console.log('Auto-save completed successfully');
+        } catch (error) {
+          console.warn('Auto-save failed, will retry on next change:', error);
+          // Don't set hasUnsavedDraft to false so it will retry
+        }
       }
     }, 30000); // Auto-save after 30 seconds of inactivity
     
     return updatedDoc;
-  }, [setHasUnsavedChanges, hasUnsavedDraft]);
+  }, [actions, hasUnsavedDraft]);
 
-  // Save draft to separate IndexedDB location
+  // Enhanced draft save with proper IndexedDB handling
   const saveDraftToIndexedDB = useCallback(async (doc: PDFDocument) => {
     try {
       const draftKey = `draft-${doc.id || 'merged'}`;
@@ -555,41 +570,124 @@ const PageEditor = ({
         originalFiles: activeFiles.map(f => f.name)
       };
       
-      // Save to 'pdf-drafts' store in IndexedDB
-      const request = indexedDB.open('stirling-pdf-drafts', 1);
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains('drafts')) {
-          db.createObjectStore('drafts');
-        }
-      };
+      // Robust IndexedDB initialization with proper error handling
+      const dbRequest = indexedDB.open('stirling-pdf-drafts', 1);
       
-      request.onsuccess = () => {
-        const db = request.result;
-        const transaction = db.transaction('drafts', 'readwrite');
-        const store = transaction.objectStore('drafts');
-        store.put(draftData, draftKey);
-        console.log('Draft auto-saved to IndexedDB');
-      };
+      return new Promise<void>((resolve, reject) => {
+        dbRequest.onerror = () => {
+          console.warn('Failed to open draft database:', dbRequest.error);
+          reject(dbRequest.error);
+        };
+        
+        dbRequest.onupgradeneeded = (event) => {
+          const db = (event.target as IDBOpenDBRequest).result;
+          
+          // Create object store if it doesn't exist
+          if (!db.objectStoreNames.contains('drafts')) {
+            const store = db.createObjectStore('drafts');
+            console.log('Created drafts object store');
+          }
+        };
+        
+        dbRequest.onsuccess = () => {
+          const db = dbRequest.result;
+          
+          // Verify object store exists before attempting transaction
+          if (!db.objectStoreNames.contains('drafts')) {
+            console.warn('Drafts object store not found, skipping save');
+            resolve();
+            return;
+          }
+          
+          try {
+            const transaction = db.transaction('drafts', 'readwrite');
+            const store = transaction.objectStore('drafts');
+            
+            transaction.onerror = () => {
+              console.warn('Draft save transaction failed:', transaction.error);
+              reject(transaction.error);
+            };
+            
+            transaction.oncomplete = () => {
+              console.log('Draft auto-saved successfully');
+              resolve();
+            };
+            
+            const putRequest = store.put(draftData, draftKey);
+            putRequest.onerror = () => {
+              console.warn('Failed to put draft data:', putRequest.error);
+              reject(putRequest.error);
+            };
+            
+          } catch (error) {
+            console.warn('Transaction creation failed:', error);
+            reject(error);
+          } finally {
+            db.close();
+          }
+        };
+      });
+      
     } catch (error) {
-      console.warn('Failed to auto-save draft:', error);
+      console.warn('Draft save failed:', error);
+      throw error;
     }
   }, [activeFiles]);
 
-  // Clean up draft from IndexedDB
+  // Enhanced draft cleanup with proper IndexedDB handling
   const cleanupDraft = useCallback(async () => {
     try {
       const draftKey = `draft-${mergedPdfDocument?.id || 'merged'}`;
-      const request = indexedDB.open('stirling-pdf-drafts', 1);
+      const dbRequest = indexedDB.open('stirling-pdf-drafts', 1);
       
-      request.onsuccess = () => {
-        const db = request.result;
-        const transaction = db.transaction('drafts', 'readwrite');
-        const store = transaction.objectStore('drafts');
-        store.delete(draftKey);
-      };
+      return new Promise<void>((resolve, reject) => {
+        dbRequest.onerror = () => {
+          console.warn('Failed to open draft database for cleanup:', dbRequest.error);
+          resolve(); // Don't fail the whole operation if cleanup fails
+        };
+        
+        dbRequest.onsuccess = () => {
+          const db = dbRequest.result;
+          
+          // Check if object store exists before attempting cleanup
+          if (!db.objectStoreNames.contains('drafts')) {
+            console.log('No drafts object store found, nothing to cleanup');
+            resolve();
+            return;
+          }
+          
+          try {
+            const transaction = db.transaction('drafts', 'readwrite');
+            const store = transaction.objectStore('drafts');
+            
+            transaction.onerror = () => {
+              console.warn('Draft cleanup transaction failed:', transaction.error);
+              resolve(); // Don't fail if cleanup fails
+            };
+            
+            transaction.oncomplete = () => {
+              console.log('Draft cleaned up successfully');
+              resolve();
+            };
+            
+            const deleteRequest = store.delete(draftKey);
+            deleteRequest.onerror = () => {
+              console.warn('Failed to delete draft:', deleteRequest.error);
+              resolve(); // Don't fail if delete fails
+            };
+            
+          } catch (error) {
+            console.warn('Draft cleanup transaction creation failed:', error);
+            resolve(); // Don't fail if cleanup fails
+          } finally {
+            db.close();
+          }
+        };
+      });
+      
     } catch (error) {
-      console.warn('Failed to cleanup draft:', error);
+      console.warn('Draft cleanup failed:', error);
+      // Don't throw - cleanup failure shouldn't break the app
     }
   }, [mergedPdfDocument]);
 
@@ -615,7 +713,17 @@ const PageEditor = ({
             lastModified: Date.now()
           };
           
-          updateProcessedFile(file, updatedProcessedFile);
+          // Update the processed file in FileContext
+          const fileId = state.files.ids.find(id => state.files.byId[id]?.file === file);
+          if (fileId) {
+            dispatch({
+              type: 'UPDATE_FILE_RECORD',
+              payload: {
+                id: fileId,
+                updates: { processedFile: updatedProcessedFile }
+              }
+            });
+          }
         }
       } else if (activeFiles.length > 1) {
         setStatus('Apply changes for multiple files not yet supported');
@@ -625,7 +733,7 @@ const PageEditor = ({
       // Wait for the processed file update to complete before clearing edit state
       setTimeout(() => {
         setEditedDocument(null);
-        setHasUnsavedChanges(false);
+        actions.setHasUnsavedChanges(false);
         setHasUnsavedDraft(false);
         cleanupDraft();
         setStatus('Changes applied successfully');
@@ -635,7 +743,7 @@ const PageEditor = ({
       console.error('Failed to apply changes:', error);
       setStatus('Failed to apply changes');
     }
-  }, [editedDocument, mergedPdfDocument, processedFiles, activeFiles, updateProcessedFile, setHasUnsavedChanges, setStatus, cleanupDraft]);
+  }, [editedDocument, mergedPdfDocument, processedFiles, activeFiles, state.files.ids, state.files.byId, actions, dispatch, cleanupDraft]);
 
   const animateReorder = useCallback((pageNumber: number, targetIndex: number) => {
     if (!displayDocument || isAnimating) return;
@@ -941,53 +1049,60 @@ const PageEditor = ({
 
   const closePdf = useCallback(() => {
     // Use global navigation guard system
-    fileContext.requestNavigation(() => {
+    actions.requestNavigation(() => {
       clearAllFiles(); // This now handles all cleanup centrally (including merged docs)
       setSelectedPages([]);
     });
-  }, [fileContext, clearAllFiles, setSelectedPages]);
+  }, [actions, clearAllFiles, setSelectedPages]);
 
   // PageEditorControls needs onExportSelected and onExportAll
   const onExportSelected = useCallback(() => showExportPreview(true), [showExportPreview]);
   const onExportAll = useCallback(() => showExportPreview(false), [showExportPreview]);
 
-  // Expose functions to parent component for PageEditorControls
+  /**
+   * Stable function proxy pattern to prevent infinite loops.
+   * 
+   * Problem: If we include selectedPages in useEffect dependencies, every page selection
+   * change triggers onFunctionsReady → parent re-renders → PageEditor unmounts/remounts → infinite loop
+   * 
+   * Solution: Create a stable proxy object that uses getters to access current values
+   * without triggering parent re-renders when values change.
+   */
+  const pageEditorFunctionsRef = useRef({
+    handleUndo, handleRedo, canUndo, canRedo, handleRotate, handleDelete, handleSplit,
+    showExportPreview, onExportSelected, onExportAll, exportLoading, selectionMode,
+    selectedPages: selectedPageNumbers, closePdf,
+  });
+
+  // Update ref with current values (no parent notification)
+  pageEditorFunctionsRef.current = {
+    handleUndo, handleRedo, canUndo, canRedo, handleRotate, handleDelete, handleSplit,
+    showExportPreview, onExportSelected, onExportAll, exportLoading, selectionMode,
+    selectedPages: selectedPageNumbers, closePdf,
+  };
+
+  // Only call onFunctionsReady once - use stable proxy for live updates
   useEffect(() => {
     if (onFunctionsReady) {
-      onFunctionsReady({
-        handleUndo,
-        handleRedo,
-        canUndo,
-        canRedo,
-        handleRotate,
-        handleDelete,
-        handleSplit,
-        showExportPreview,
-        onExportSelected,
-        onExportAll,
-        exportLoading,
-        selectionMode,
-        selectedPages: selectedPageNumbers,
-        closePdf,
-      });
+      const stableFunctions = {
+        get handleUndo() { return pageEditorFunctionsRef.current.handleUndo; },
+        get handleRedo() { return pageEditorFunctionsRef.current.handleRedo; },
+        get canUndo() { return pageEditorFunctionsRef.current.canUndo; },
+        get canRedo() { return pageEditorFunctionsRef.current.canRedo; },
+        get handleRotate() { return pageEditorFunctionsRef.current.handleRotate; },
+        get handleDelete() { return pageEditorFunctionsRef.current.handleDelete; },
+        get handleSplit() { return pageEditorFunctionsRef.current.handleSplit; },
+        get showExportPreview() { return pageEditorFunctionsRef.current.showExportPreview; },
+        get onExportSelected() { return pageEditorFunctionsRef.current.onExportSelected; },
+        get onExportAll() { return pageEditorFunctionsRef.current.onExportAll; },
+        get exportLoading() { return pageEditorFunctionsRef.current.exportLoading; },
+        get selectionMode() { return pageEditorFunctionsRef.current.selectionMode; },
+        get selectedPages() { return pageEditorFunctionsRef.current.selectedPages; },
+        get closePdf() { return pageEditorFunctionsRef.current.closePdf; },
+      };
+      onFunctionsReady(stableFunctions);
     }
-  }, [
-    onFunctionsReady,
-    handleUndo,
-    handleRedo,
-    canUndo,
-    canRedo,
-    handleRotate,
-    handleDelete,
-    handleSplit,
-    showExportPreview,
-    onExportSelected,
-    onExportAll,
-    exportLoading,
-    selectionMode,
-    selectedPageNumbers,
-    closePdf
-  ]);
+  }, [onFunctionsReady]);
 
   // Show loading or empty state instead of blocking
   const showLoading = !mergedPdfDocument && (globalProcessing || activeFiles.length > 0);
@@ -1006,38 +1121,96 @@ const PageEditor = ({
     }
   }, [editedDocument, applyChanges, handleExport]);
 
-  // Check for existing drafts
+  // Enhanced draft checking with proper IndexedDB handling
   const checkForDrafts = useCallback(async () => {
     if (!mergedPdfDocument) return;
     
     try {
       const draftKey = `draft-${mergedPdfDocument.id || 'merged'}`;
-      const request = indexedDB.open('stirling-pdf-drafts', 1);
+      const dbRequest = indexedDB.open('stirling-pdf-drafts', 1);
       
-      request.onsuccess = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains('drafts')) return;
+      return new Promise<void>((resolve, reject) => {
+        dbRequest.onerror = () => {
+          console.warn('Failed to open draft database for checking:', dbRequest.error);
+          resolve(); // Don't fail if draft checking fails
+        };
         
-        const transaction = db.transaction('drafts', 'readonly');
-        const store = transaction.objectStore('drafts');
-        const getRequest = store.get(draftKey);
-        
-        getRequest.onsuccess = () => {
-          const draft = getRequest.result;
-          if (draft && draft.timestamp) {
-            // Check if draft is recent (within last 24 hours)
-            const draftAge = Date.now() - draft.timestamp;
-            const twentyFourHours = 24 * 60 * 60 * 1000;
-            
-            if (draftAge < twentyFourHours) {
-              setFoundDraft(draft);
-              setShowResumeModal(true);
-            }
+        dbRequest.onupgradeneeded = (event) => {
+          const db = (event.target as IDBOpenDBRequest).result;
+          
+          // Create object store if it doesn't exist
+          if (!db.objectStoreNames.contains('drafts')) {
+            const store = db.createObjectStore('drafts');
+            console.log('Created drafts object store during check');
           }
         };
-      };
+        
+        dbRequest.onsuccess = () => {
+          const db = dbRequest.result;
+          
+          // Check if object store exists
+          if (!db.objectStoreNames.contains('drafts')) {
+            console.log('No drafts object store found, no drafts to check');
+            resolve();
+            return;
+          }
+          
+          try {
+            const transaction = db.transaction('drafts', 'readonly');
+            const store = transaction.objectStore('drafts');
+            
+            transaction.onerror = () => {
+              console.warn('Draft check transaction failed:', transaction.error);
+              resolve(); // Don't fail if checking fails
+            };
+            
+            const getRequest = store.get(draftKey);
+            
+            getRequest.onerror = () => {
+              console.warn('Failed to get draft:', getRequest.error);
+              resolve(); // Don't fail if get fails
+            };
+            
+            getRequest.onsuccess = () => {
+              const draft = getRequest.result;
+              if (draft && draft.timestamp) {
+                // Check if draft is recent (within last 24 hours)
+                const draftAge = Date.now() - draft.timestamp;
+                const twentyFourHours = 24 * 60 * 60 * 1000;
+                
+                if (draftAge < twentyFourHours) {
+                  console.log('Found recent draft, showing resume modal');
+                  setFoundDraft(draft);
+                  setShowResumeModal(true);
+                } else {
+                  console.log('Draft found but too old, cleaning up');
+                  // Clean up old draft
+                  try {
+                    const cleanupTransaction = db.transaction('drafts', 'readwrite');
+                    const cleanupStore = cleanupTransaction.objectStore('drafts');
+                    cleanupStore.delete(draftKey);
+                  } catch (cleanupError) {
+                    console.warn('Failed to cleanup old draft:', cleanupError);
+                  }
+                }
+              } else {
+                console.log('No draft found');
+              }
+              resolve();
+            };
+            
+          } catch (error) {
+            console.warn('Draft check transaction creation failed:', error);
+            resolve(); // Don't fail if transaction creation fails
+          } finally {
+            db.close();
+          }
+        };
+      });
+      
     } catch (error) {
-      console.warn('Failed to check for drafts:', error);
+      console.warn('Draft check failed:', error);
+      // Don't throw - draft checking failure shouldn't break the app
     }
   }, [mergedPdfDocument]);
 
@@ -1045,12 +1218,12 @@ const PageEditor = ({
   const resumeWork = useCallback(() => {
     if (foundDraft && foundDraft.document) {
       setEditedDocument(foundDraft.document);
-      setHasUnsavedChanges(true);
+      actions.setHasUnsavedChanges(true); // Use context action
       setFoundDraft(null);
       setShowResumeModal(false);
       setStatus('Resumed previous work');
     }
-  }, [foundDraft]);
+  }, [foundDraft, actions]);
 
   // Start fresh (ignore draft)
   const startFresh = useCallback(() => {
@@ -1065,8 +1238,6 @@ const PageEditor = ({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      console.log('PageEditor unmounting - cleaning up resources');
-      
       // Clear auto-save timer
       if (autoSaveTimer.current) {
         clearTimeout(autoSaveTimer.current);
@@ -1342,7 +1513,7 @@ const PageEditor = ({
                   loading={exportLoading}
                   onClick={() => {
                     setShowExportModal(false);
-                    const selectedOnly = exportPreview.pageCount < (mergedPdfDocument?.totalPages || 0);
+                    const selectedOnly = exportPreview.pageCount < (mergedPdfDocument?.pages.length || 0);
                     handleExport(selectedOnly);
                   }}
                 >
@@ -1406,6 +1577,17 @@ const PageEditor = ({
           style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}
         >
           {status}
+        </Notification>
+      )}
+      
+      {error && (
+        <Notification
+          color="red"
+          mt="md"
+          onClose={() => setError(null)}
+          style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}
+        >
+          {error}
         </Notification>
       )}
     </Box>

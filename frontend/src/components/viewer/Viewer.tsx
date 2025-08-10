@@ -176,6 +176,10 @@ const Viewer = ({
   const [zoom, setZoom] = useState(1); // 1 = 100%
   const pageRefs = useRef<(HTMLImageElement | null)[]>([]);
 
+  // Memoize setPageRef to prevent infinite re-renders
+  const setPageRef = useCallback((index: number, ref: HTMLImageElement | null) => {
+    pageRefs.current[index] = ref;
+  }, []);
 
   // Get files with URLs for tabs - we'll need to create these individually
   const file0WithUrl = useFileWithUrl(activeFiles[0]);
@@ -499,7 +503,7 @@ const Viewer = ({
                       isFirst={i === 0}
                       renderPage={renderPage}
                       pageImages={pageImages}
-                      setPageRef={(index, ref) => { pageRefs.current[index] = ref; }}
+                      setPageRef={setPageRef}
                     />
                     {i * 2 + 1 < numPages && (
                       <LazyPageImage
@@ -509,7 +513,7 @@ const Viewer = ({
                         isFirst={i === 0}
                         renderPage={renderPage}
                         pageImages={pageImages}
-                        setPageRef={(index, ref) => { pageRefs.current[index] = ref; }}
+                        setPageRef={setPageRef}
                       />
                     )}
                   </Group>
@@ -523,7 +527,7 @@ const Viewer = ({
                     isFirst={idx === 0}
                     renderPage={renderPage}
                     pageImages={pageImages}
-                    setPageRef={(index, ref) => { pageRefs.current[index] = ref; }}
+                    setPageRef={setPageRef}
                   />
                 ))}
           </Stack>

@@ -4,8 +4,8 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import { isImageFormat, isWebFormat } from "../../../utils/convertUtils";
-import { useFileSelectionActions } from "../../../contexts/FileSelectionContext";
-import { useFileContext } from "../../../contexts/FileContext";
+import { useToolFileSelection } from "../../../contexts/FileContext";
+import { useFileState } from "../../../contexts/FileContext";
 import { detectFileExtension } from "../../../utils/fileUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
@@ -40,8 +40,9 @@ const ConvertSettings = ({
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
-  const { setSelectedFiles } = useFileSelectionActions();
-  const { activeFiles, setSelectedFiles: setContextSelectedFiles } = useFileContext();
+  const { setSelectedFiles } = useToolFileSelection();
+  const { state } = useFileState();
+  const activeFiles = state.files.ids;
 
   const allEndpoints = useMemo(() => {
     const endpoints = new Set<string>();
@@ -92,9 +93,9 @@ const ConvertSettings = ({
     }
     
     return baseOptions;
-  }, [getAvailableToExtensions, endpointStatus, parameters.fromExtension]);
+  }, [parameters.fromExtension, endpointStatus]);
 
-  // Enhanced TO options with endpoint availability
+  // Enhanced TO options with endpoint availability  
   const enhancedToOptions = useMemo(() => {
     if (!parameters.fromExtension) return [];
     
@@ -103,7 +104,7 @@ const ConvertSettings = ({
       ...option,
       enabled: isConversionAvailable(parameters.fromExtension, option.value)
     }));
-  }, [parameters.fromExtension, getAvailableToExtensions, endpointStatus]);
+  }, [parameters.fromExtension, endpointStatus]);
 
   const resetParametersToDefaults = () => {
     onParameterChange('imageOptions', {
@@ -134,7 +135,8 @@ const ConvertSettings = ({
   };
 
   const filterFilesByExtension = (extension: string) => {
-    return activeFiles.filter(file => {
+    const files = activeFiles.map(fileId => state.files.byId[fileId]?.file).filter(Boolean);
+    return files.filter(file => {
       const fileExtension = detectFileExtension(file.name);
       
       if (extension === 'any') {
@@ -149,8 +151,6 @@ const ConvertSettings = ({
 
   const updateFileSelection = (files: File[]) => {
     setSelectedFiles(files);
-    const fileIds = files.map(file => (file as any).id || file.name);
-    setContextSelectedFiles(fileIds);
   };
 
   const handleFromExtensionChange = (value: string) => {

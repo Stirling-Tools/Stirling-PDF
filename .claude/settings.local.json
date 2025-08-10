@@ -9,7 +9,8 @@
       "Bash(find:*)",
       "Bash(npm test)",
       "Bash(npm test:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": []
   }

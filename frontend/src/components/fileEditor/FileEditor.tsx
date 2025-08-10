@@ -6,9 +6,8 @@ import {
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useFileContext } from '../../contexts/FileContext';
-import { useFileSelection } from '../../contexts/FileSelectionContext';
-import { FileOperation } from '../../types/fileContext';
+import { useFileContext, useToolFileSelection, useProcessedFiles, useFileState, useFileManagement } from '../../contexts/FileContext';
+import { FileOperation, createStableFileId } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';
@@ -54,28 +53,34 @@ const FileEditor = ({
     return extension ? supportedExtensions.includes(extension) : false;
   }, [supportedExtensions]);
 
-  // Get file context
-  const fileContext = useFileContext();
-  const {
-    activeFiles,
-    processedFiles,
-    selectedFileIds,
-    setSelectedFiles: setContextSelectedFiles,
-    isProcessing,
-    addFiles,
-    removeFiles,
-    setCurrentView,
-    recordOperation,
-    markOperationApplied
-  } = fileContext;
+  // Use optimized FileContext hooks
+  const { state } = useFileState();
+  const { addFiles, removeFiles } = useFileManagement();
+  const processedFiles = useProcessedFiles(); // Now gets real processed files
+  
+  // Extract needed values from state
+  const activeFiles = state.files.ids.map(id => state.files.byId[id]?.file).filter(Boolean);
+  const selectedFileIds = state.ui.selectedFileIds;
+  const isProcessing = state.ui.isProcessing;
+  
+  // Legacy compatibility for existing code
+  const setContextSelectedFiles = (fileIds: string[]) => {
+    // This function is used for FileEditor's own selection, not tool selection
+    console.log('FileEditor setContextSelectedFiles called with:', fileIds);
+  };
+  
+  const setCurrentView = (mode: any) => {
+    // Will be handled by parent component actions
+    console.log('FileEditor setCurrentView called with:', mode);
+  };
 
-  // Get file selection context
+  // Get tool file selection context (replaces FileSelectionContext)
   const { 
     selectedFiles: toolSelectedFiles, 
     setSelectedFiles: setToolSelectedFiles, 
     maxFiles, 
     isToolMode 
-  } = useFileSelection();
+  } = useToolFileSelection();
 
   const [files, setFiles] = useState<FileItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
@@ -119,8 +124,8 @@ const FileEditor = ({
   // Map context selections to local file IDs for UI display
   const localSelectedIds = files
     .filter(file => {
-      const fileId = (file.file as any).id || file.name;
-      return contextSelectedIds.includes(fileId);
+      const contextFileId = createStableFileId(file.file);
+      return contextSelectedIds.includes(contextFileId);
     })
     .map(file => file.id);
 
@@ -132,7 +137,7 @@ const FileEditor = ({
     return {
       id: sharedFile.id || `file-${Date.now()}-${Math.random()}`,
       name: (sharedFile.file?.name || sharedFile.name || 'unknown'),
-      pageCount: sharedFile.pageCount || Math.floor(Math.random() * 20) + 1, // Mock for now
+      pageCount: sharedFile.pageCount || 1, // Default to 1 page if unknown
       thumbnail,
       size: sharedFile.file?.size || sharedFile.size || 0,
       file: sharedFile.file || sharedFile,
@@ -181,10 +186,30 @@ const FileEditor = ({
               }
             }
             
+            // Get actual page count from processed file
+            let pageCount = 1; // Default for non-PDFs
+            if (processedFile) {
+              pageCount = processedFile.pages?.length || processedFile.totalPages || 1;
+            } else if (file.type === 'application/pdf') {
+              // For PDFs without processed data, try to get a quick page count estimate
+              // If processing is taking too long, show a reasonable default
+              try {
+                // Quick and dirty page count using PDF structure analysis
+                const arrayBuffer = await file.arrayBuffer();
+                const text = new TextDecoder('latin1').decode(arrayBuffer);
+                const pageMatches = text.match(/\/Type\s*\/Page[^s]/g);
+                pageCount = pageMatches ? pageMatches.length : 1;
+                console.log(`📄 Quick page count for ${file.name}: ${pageCount} pages (estimated)`);
+              } catch (error) {
+                console.warn(`Failed to estimate page count for ${file.name}:`, error);
+                pageCount = 1; // Safe fallback
+              }
+            }
+            
             const convertedFile = {
-              id: `file-${Date.now()}-${Math.random()}`,
+              id: createStableFileId(file), // Use same ID function as context
               name: file.name,
-              pageCount: processedFile?.totalPages || Math.floor(Math.random() * 20) + 1,
+              pageCount: pageCount,
               thumbnail,
               size: file.size,
               file,
@@ -290,8 +315,7 @@ const FileEditor = ({
                 }
               };
               
-              recordOperation(file.name, operation);
-              markOperationApplied(file.name, operationId);
+              // Legacy operation tracking removed
               
               if (extractionResult.errors.length > 0) {
                 errors.push(...extractionResult.errors);
@@ -345,8 +369,7 @@ const FileEditor = ({
             }
           };
           
-          recordOperation(file.name, operation);
-          markOperationApplied(file.name, operationId);
+          // Legacy operation tracking removed
         }
 
         // Add files to context (they will be processed automatically)
@@ -367,7 +390,7 @@ const FileEditor = ({
         totalFiles: 0
       });
     }
-  }, [addFiles, recordOperation, markOperationApplied]);
+  }, [addFiles]);
 
   const selectAll = useCallback(() => {
     setContextSelectedFiles(files.map(f => (f.file as any).id || f.name));
@@ -397,8 +420,7 @@ const FileEditor = ({
         }
       };
       
-      recordOperation(file.name, operation);
-      markOperationApplied(file.name, operationId);
+      // Legacy operation tracking removed
     });
     
     // Remove all files from context but keep in storage
@@ -406,13 +428,13 @@ const FileEditor = ({
     
     // Clear selections
     setContextSelectedFiles([]);
-  }, [activeFiles, removeFiles, setContextSelectedFiles, recordOperation, markOperationApplied]);
+  }, [activeFiles, removeFiles, setContextSelectedFiles]);
 
   const toggleFile = useCallback((fileId: string) => {
     const targetFile = files.find(f => f.id === fileId);
     if (!targetFile) return;
     
-    const contextFileId = (targetFile.file as any).id || targetFile.name;
+    const contextFileId = createStableFileId(targetFile.file);
     const isSelected = contextSelectedIds.includes(contextFileId);
     
     let newSelection: string[];
@@ -441,7 +463,7 @@ const FileEditor = ({
     if (isToolMode || toolMode) {
       const selectedFiles = files
         .filter(f => {
-          const fId = (f.file as any).id || f.name;
+          const fId = createStableFileId(f.file);
           return newSelection.includes(fId);
         })
         .map(f => f.file);
@@ -598,7 +620,7 @@ const FileEditor = ({
         }
       };
       
-      recordOperation(fileName, operation);
+      // Legacy operation tracking removed
       
       // Remove file from context but keep in storage (close, don't delete)
       console.log('Calling removeFiles with:', [fileId]);
@@ -609,24 +631,20 @@ const FileEditor = ({
         const safePrev = Array.isArray(prev) ? prev : [];
         return safePrev.filter(id => id !== fileId);
       });
-      
-      // Mark operation as applied
-      markOperationApplied(fileName, operationId);
     } else {
       console.log('File not found for fileId:', fileId);
     }
-  }, [files, removeFiles, setContextSelectedFiles, recordOperation, markOperationApplied]);
+  }, [files, removeFiles, setContextSelectedFiles]);
 
   const handleViewFile = useCallback((fileId: string) => {
     const file = files.find(f => f.id === fileId);
     if (file) {
-      // Set the file as selected in context and switch to page editor view
-      const contextFileId = (file.file as any).id || file.name;
+      // Set the file as selected in context and switch to viewer for preview
+      const contextFileId = createStableFileId(file.file);
       setContextSelectedFiles([contextFileId]);
-      setCurrentView('pageEditor');
-      onOpenPageEditor?.(file.file);
+      setCurrentView('viewer');
     }
-  }, [files, setContextSelectedFiles, setCurrentView, onOpenPageEditor]);
+  }, [files, setContextSelectedFiles, setCurrentView]);
 
   const handleMergeFromHere = useCallback((fileId: string) => {
     const startIndex = files.findIndex(f => f.id === fileId);

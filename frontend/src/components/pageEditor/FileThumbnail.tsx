@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { Text, Checkbox, Tooltip, ActionIcon, Badge, Modal } from '@mantine/core';
+import React, { useState, useCallback } from 'react';
+import { Text, Checkbox, Tooltip, ActionIcon, Badge } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import HistoryIcon from '@mui/icons-material/History';
+import PreviewIcon from '@mui/icons-material/Preview';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import styles from './PageEditor.module.css';
-import FileOperationHistory from '../history/FileOperationHistory';
 
 interface FileItem {
   id: string;
@@ -65,7 +64,6 @@ const FileThumbnail = ({
   isSupported = true,
 }: FileThumbnailProps) => {
   const { t } = useTranslation();
-  const [showHistory, setShowHistory] = useState(false);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -75,15 +73,18 @@ const FileThumbnail = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  // Memoize ref callback to prevent infinite loop
+  const refCallback = useCallback((el: HTMLDivElement | null) => {
+    if (el) {
+      fileRefs.current.set(file.id, el);
+    } else {
+      fileRefs.current.delete(file.id);
+    }
+  }, [file.id, fileRefs]);
+
   return (
     <div
-      ref={(el) => {
-        if (el) {
-          fileRefs.current.set(file.id, el);
-        } else {
-          fileRefs.current.delete(file.id);
-        }
-      }}
+      ref={refCallback}
       data-file-id={file.id}
       data-testid="file-thumbnail"
       className={`
@@ -201,7 +202,7 @@ const FileThumbnail = ({
             zIndex: 3,
           }}
         >
-          {file.pageCount} pages
+          {file.pageCount} {file.pageCount === 1 ? 'page' : 'pages'}
         </Badge>
 
         {/* Unsupported badge */}
@@ -286,18 +287,18 @@ const FileThumbnail = ({
             </>
           )}
 
-          <Tooltip label="View History">
+          <Tooltip label="Preview File">
             <ActionIcon
               size="md"
               variant="subtle"
               c="white"
               onClick={(e) => {
                 e.stopPropagation();
-                setShowHistory(true);
-                onSetStatus(`Viewing history for ${file.name}`);
+                onViewFile(file.id);
+                onSetStatus(`Opening preview for ${file.name}`);
               }}
             >
-              <HistoryIcon style={{ fontSize: 20 }} />
+              <PreviewIcon style={{ fontSize: 20 }} />
             </ActionIcon>
           </Tooltip>
 
@@ -339,20 +340,6 @@ const FileThumbnail = ({
         </Text>
       </div>
 
-      {/* History Modal */}
-      <Modal
-        opened={showHistory}
-        onClose={() => setShowHistory(false)}
-        title={`Operation History - ${file.name}`}
-        size="lg"
-        scrollAreaComponent="div"
-      >
-        <FileOperationHistory 
-          fileId={file.name} 
-          showOnlyApplied={true}
-          maxHeight={500}
-        />
-      </Modal>
     </div>
   );
 };

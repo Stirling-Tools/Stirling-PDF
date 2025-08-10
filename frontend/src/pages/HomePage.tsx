@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
-import { useFileContext } from "../contexts/FileContext";
-import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
+import { useFileActions, useToolFileSelection } from "../contexts/FileContext";
 import { ToolWorkflowProvider, useToolSelection } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
@@ -18,7 +17,7 @@ function HomePageContent() {
   
   const { quickAccessRef } = sidebarRefs;
 
-  const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
+  const { setMaxFiles, setIsToolMode, setSelectedFiles } = useToolFileSelection();
 
   const { selectedTool } = useToolSelection();
 
@@ -32,7 +31,7 @@ function HomePageContent() {
       setIsToolMode(false);
       setSelectedFiles([]);
     }
-  }, [selectedTool, setMaxFiles, setIsToolMode, setSelectedFiles]);
+  }, [selectedTool]); // Remove action dependencies to prevent loops
 
   return (
     <Group
@@ -50,14 +49,12 @@ function HomePageContent() {
 }
 
 export default function HomePage() {
-  const { setCurrentView } = useFileContext();
+  const { actions } = useFileActions();
   return (
-    <FileSelectionProvider>
-      <ToolWorkflowProvider onViewChange={setCurrentView}>
-        <SidebarProvider>
-          <HomePageContent />
-        </SidebarProvider>
-      </ToolWorkflowProvider>
-    </FileSelectionProvider>
+    <ToolWorkflowProvider onViewChange={actions.setMode}>
+      <SidebarProvider>
+        <HomePageContent />
+      </SidebarProvider>
+    </ToolWorkflowProvider>
   );
 }
