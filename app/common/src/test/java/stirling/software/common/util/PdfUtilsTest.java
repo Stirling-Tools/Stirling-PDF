@@ -3,17 +3,26 @@ package stirling.software.common.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
 import java.awt.image.RenderedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -22,11 +31,18 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.rendering.ImageType;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -109,16 +125,6 @@ public class PdfUtilsTest {
                 "All expected images must be present.");
     }
 
-    // Helper method to draw a tiny image on a PDF page
-    private static void drawTinyImage(PDDocument doc, PDPage page) throws IOException {
-        BufferedImage bi = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
-        PDImageXObject ximg = LosslessFactory.createFromImage(doc, bi);
-        try (PDPageContentStream cs =
-                new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
-            cs.drawImage(ximg, 10, 10, 10, 10);
-        }
-    }
-
     @Test
     void testPageCountComparators() throws Exception {
         PDDocument doc1 = new PDDocument();
@@ -169,7 +175,7 @@ public class PdfUtilsTest {
         g.fillRect(0, 0, 10, 10);
         g.dispose();
         ByteArrayOutputStream imgOut = new ByteArrayOutputStream();
-        javax.imageio.ImageIO.write(image, "png", imgOut);
+        ImageIO.write(image, "png", imgOut);
 
         PdfMetadataService meta =
                 new PdfMetadataService(new ApplicationProperties(), "label", false, null);
@@ -181,5 +187,565 @@ public class PdfUtilsTest {
         try (PDDocument resultDoc = factory.load(result)) {
             assertEquals(1, resultDoc.getNumberOfPages());
         }
+    }
+
+    // ===============================================================
+    // Zusätzliche Tests (ergänzt, ohne bestehende Tests zu ändern)
+    // ===============================================================
+
+    /* Helper: erzeugt ein farbiges Testbild */
+    private static BufferedImage createImage(int w, int h, Color color) {
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        g.setColor(color);
+        g.fillRect(0, 0, w, h);
+        g.dispose();
+        return img;
+    }
+
+    /* Helper: erstellt eine Factory wie in bestehenden Tests genutzt */
+    private static CustomPDFDocumentFactory factory() {
+        PdfMetadataService meta =
+                new PdfMetadataService(new ApplicationProperties(), "label", false, null);
+        return new CustomPDFDocumentFactory(meta);
+    }
+
+    @Test
+    @DisplayName("convertPdfToPdfImage: erzeugt Bild-PDF mit gleicher Seitenanzahl")
+    void convertPdfToPdfImage_shouldCreateImagePdfWithSamePageCount() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p1 = new PDPage(PDRectangle.A4);
+            doc.addPage(p1);
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p1, AppendMode.APPEND, true, true)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(50, 750);
+                cs.showText("Hello PDF");
+                cs.endText();
+            }
+            PDPage p2 = new PDPage(PDRectangle.A4);
+            doc.addPage(p2);
+
+            PDDocument out = PdfUtils.convertPdfToPdfImage(doc);
+            Assertions.assertNotNull(out);
+            assertEquals(2, out.getNumberOfPages(), "Seitenanzahl sollte erhalten bleiben");
+            out.close();
+        }
+    }
+
+    @Test
+    @DisplayName("imageToPdf: PNG -> einseitiges PDF (statische ImageProcessingUtils gemockt)")
+    void imageToPdf_shouldCreatePdfFromPng() throws Exception {
+        BufferedImage img = createImage(320, 200, Color.RED);
+        ByteArrayOutputStream pngOut = new ByteArrayOutputStream();
+        ImageIO.write(img, "png", pngOut);
+
+        MockMultipartFile file =
+                new MockMultipartFile("files", "test.png", "image/png", pngOut.toByteArray());
+
+        try (MockedStatic<ImageProcessingUtils> mocked = mockStatic(ImageProcessingUtils.class)) {
+            // Annahme: loadImageWithExifOrientation/convertColorType vorhanden – statisch mocken
+            mocked.when(() -> ImageProcessingUtils.loadImageWithExifOrientation(any()))
+                    .thenReturn(img);
+            mocked.when(
+                            () ->
+                                    ImageProcessingUtils.convertColorType(
+                                            any(BufferedImage.class), anyString()))
+                    .thenAnswer(inv -> inv.getArgument(0, BufferedImage.class));
+
+            byte[] pdfBytes =
+                    PdfUtils.imageToPdf(
+                            new MockMultipartFile[] {file},
+                            "maintainAspectRatio",
+                            true,
+                            "RGB",
+                            factory());
+
+            try (PDDocument result = factory().load(pdfBytes)) {
+                assertEquals(1, result.getNumberOfPages());
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("imageToPdf: JPEG -> einseitiges PDF (JPEGFactory-Pfad)")
+    void imageToPdf_shouldCreatePdfFromJpeg_UsingJpegFactory() throws Exception {
+        BufferedImage img = createImage(640, 360, Color.BLUE);
+        ByteArrayOutputStream jpgOut = new ByteArrayOutputStream();
+        ImageIO.write(img, "jpg", jpgOut);
+
+        MockMultipartFile file =
+                new MockMultipartFile("files", "photo.jpg", "image/jpeg", jpgOut.toByteArray());
+
+        try (MockedStatic<ImageProcessingUtils> mocked = mockStatic(ImageProcessingUtils.class)) {
+            mocked.when(() -> ImageProcessingUtils.loadImageWithExifOrientation(any()))
+                    .thenReturn(img);
+            mocked.when(
+                            () ->
+                                    ImageProcessingUtils.convertColorType(
+                                            any(BufferedImage.class), anyString()))
+                    .thenAnswer(inv -> inv.getArgument(0, BufferedImage.class));
+
+            byte[] pdfBytes =
+                    PdfUtils.imageToPdf(
+                            new MockMultipartFile[] {file}, "fillPage", false, "RGB", factory());
+
+            try (PDDocument result = factory().load(pdfBytes)) {
+                assertEquals(1, result.getNumberOfPages());
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("addImageToDocument: fitDocumentToImage -> Seitengröße = Bildgröße")
+    void addImageToDocument_shouldUseImageSizeForPage_whenFitDocumentToImage() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            BufferedImage img = createImage(300, 500, Color.GREEN);
+            PDImageXObject ximg = LosslessFactory.createFromImage(doc, img);
+
+            PdfUtils.addImageToDocument(doc, ximg, "fitDocumentToImage", false);
+
+            Assertions.assertEquals(1, doc.getNumberOfPages());
+            PDRectangle box = doc.getPage(0).getMediaBox();
+            assertEquals(300, (int) box.getWidth());
+            assertEquals(500, (int) box.getHeight());
+        }
+    }
+
+    @Test
+    @DisplayName("addImageToDocument: autoRotate dreht A4 bei Landscape-Bild")
+    void addImageToDocument_shouldRotateA4_whenAutoRotateAndLandscape() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            BufferedImage img = createImage(800, 400, Color.ORANGE); // Landscape
+            PDImageXObject ximg = LosslessFactory.createFromImage(doc, img);
+
+            PdfUtils.addImageToDocument(doc, ximg, "maintainAspectRatio", true);
+
+            Assertions.assertEquals(1, doc.getNumberOfPages());
+            PDRectangle box = doc.getPage(0).getMediaBox();
+            Assertions.assertTrue(
+                    box.getWidth() > box.getHeight(),
+                    "A4 sollte quer sein bei Auto-Rotate + Landscape");
+        }
+    }
+
+    @Test
+    @DisplayName("addImageToDocument: fillPage führt ohne Fehler aus")
+    void addImageToDocument_fillPage_executes() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            BufferedImage img = createImage(200, 200, Color.MAGENTA);
+            PDImageXObject ximg = LosslessFactory.createFromImage(doc, img);
+
+            PdfUtils.addImageToDocument(doc, ximg, "fillPage", false);
+
+            Assertions.assertEquals(1, doc.getNumberOfPages());
+        }
+    }
+
+    @Test
+    @DisplayName("overlayImage: everyPage=true überlagert alle Seiten")
+    void overlayImage_shouldOverlayAllPages_whenEveryPageTrue() throws IOException {
+        CustomPDFDocumentFactory factory = factory();
+
+        // PDF mit 2 Seiten erstellen
+        byte[] basePdf;
+        try (PDDocument doc = factory.createNewDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            doc.addPage(new PDPage(PDRectangle.A4));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            basePdf = baos.toByteArray();
+        }
+
+        // Bildbytes erstellen
+        BufferedImage img = createImage(50, 50, Color.BLACK);
+        ByteArrayOutputStream pngOut = new ByteArrayOutputStream();
+        ImageIO.write(img, "png", pngOut);
+
+        byte[] result = PdfUtils.overlayImage(factory, basePdf, pngOut.toByteArray(), 10, 10, true);
+
+        try (PDDocument out = factory.load(result)) {
+            assertEquals(2, out.getNumberOfPages(), "Seitenanzahl bleibt identisch");
+        }
+    }
+
+    /* Hilfsfunktion: Dokument mit Text auf Seite1/Seite2 */
+    private static PDDocument createDocWithText(String p1, String p2) throws IOException {
+        PDDocument doc = new PDDocument();
+
+        PDPage page1 = new PDPage(PDRectangle.A4);
+        doc.addPage(page1);
+        try (PDPageContentStream cs =
+                new PDPageContentStream(doc, page1, AppendMode.APPEND, true, true)) {
+            cs.beginText();
+            cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+            cs.newLineAtOffset(50, 750);
+            cs.showText(p1);
+            cs.endText();
+        }
+
+        PDPage page2 = new PDPage(PDRectangle.A4);
+        doc.addPage(page2);
+        try (PDPageContentStream cs =
+                new PDPageContentStream(doc, page2, AppendMode.APPEND, true, true)) {
+            cs.beginText();
+            cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+            cs.newLineAtOffset(50, 750);
+            cs.showText(p2);
+            cs.endText();
+        }
+
+        return doc;
+    }
+
+    @Test
+    @DisplayName("containsTextInFile: pagesToCheck='all' findet Text")
+    void containsTextInFile_allPages_true() throws IOException {
+        PdfUtils util = new PdfUtils();
+        try (PDDocument doc = createDocWithText("alpha", "beta")) {
+            Assertions.assertTrue(util.containsTextInFile(doc, "beta", "all"));
+        }
+    }
+
+    @Test
+    @DisplayName("containsTextInFile: Einzelne Seite '2' findet Text")
+    void containsTextInFile_singlePage_two_true() throws IOException {
+        PdfUtils util = new PdfUtils();
+        try (PDDocument doc = createDocWithText("alpha", "beta")) {
+            Assertions.assertTrue(util.containsTextInFile(doc, "beta", "2"));
+        }
+    }
+
+    @Test
+    @DisplayName("containsTextInFile: Bereich '1-1' findet Text auf Seite 1")
+    void containsTextInFile_range_oneToOne_true() throws IOException {
+        PdfUtils util = new PdfUtils();
+        try (PDDocument doc = createDocWithText("findme", "other")) {
+            Assertions.assertTrue(util.containsTextInFile(doc, "findme", "1-1"));
+        }
+    }
+
+    @Test
+    @DisplayName("containsTextInFile: Liste '1,2' findet Text (Whitespace robust)")
+    void containsTextInFile_list_pages_true() throws IOException {
+        PdfUtils util = new PdfUtils();
+        try (PDDocument doc = createDocWithText("foo", "bar")) {
+            Assertions.assertTrue(util.containsTextInFile(doc, "bar", " 1 , 2 "));
+        }
+    }
+
+    @Test
+    @DisplayName("containsTextInFile: Text nicht vorhanden -> false")
+    void containsTextInFile_textNotPresent_false() throws IOException {
+        PdfUtils util = new PdfUtils();
+        try (PDDocument doc = createDocWithText("xxx", "yyy")) {
+            Assertions.assertFalse(util.containsTextInFile(doc, "zzz", "all"));
+        }
+    }
+
+    @Test
+    @DisplayName("pageSize: abweichende Größe ergibt false")
+    void pageSize_shouldReturnFalse_whenSizeDoesNotMatch() throws IOException {
+        PdfUtils util = new PdfUtils();
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            Assertions.assertFalse(util.pageSize(doc, "600x842"));
+        }
+    }
+
+    // ===================== Neu: convertFromPdf – Abdeckung =====================
+
+    @Test
+    @DisplayName("convertFromPdf: singleImage=true erzeugt kombinierte PNG-Datei (lesbar)")
+    void convertFromPdf_singleImagePng_combinedReadable() throws Exception {
+        // Zwei-Seiten-PDF erstellen
+        byte[] pdfBytes;
+        PdfMetadataService meta =
+                new PdfMetadataService(new ApplicationProperties(), "label", false, null);
+        CustomPDFDocumentFactory factory = new CustomPDFDocumentFactory(meta);
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            doc.addPage(new PDPage(PDRectangle.A4));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            pdfBytes = baos.toByteArray();
+        }
+
+        byte[] imageBytes =
+                PdfUtils.convertFromPdf(
+                        factory, pdfBytes, "png", ImageType.RGB, true, 72, "test.pdf");
+
+        // Sollte als einzelnes PNG-Image lesbar sein (kombiniert)
+        BufferedImage img = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
+        Assertions.assertNotNull(img, "PNG sollte lesbar sein");
+        Assertions.assertTrue(img.getWidth() > 0 && img.getHeight() > 0, "Bilddimensionen > 0");
+    }
+
+    @Test
+    @DisplayName(
+            "convertFromPdf: singleImage=false liefert ZIP mit PNG-Einträgen (erstes Bild lesbar)")
+    void convertFromPdf_multiImagePng_firstReadable() throws Exception {
+        // Zwei-Seiten-PDF erstellen
+        byte[] pdfBytes;
+        PdfMetadataService meta =
+                new PdfMetadataService(new ApplicationProperties(), "label", false, null);
+        CustomPDFDocumentFactory factory = new CustomPDFDocumentFactory(meta);
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            doc.addPage(new PDPage(PDRectangle.A4));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            pdfBytes = baos.toByteArray();
+        }
+
+        // Act: singleImage=false -> ZIP mit einzelnen Bildern
+        byte[] zipBytes =
+                PdfUtils.convertFromPdf(
+                        factory, pdfBytes, "png", ImageType.RGB, false, 72, "test.pdf");
+
+        // Assert: ZIP öffnen, erstes Entry als PNG lesen
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+            ZipEntry entry = zis.getNextEntry();
+            Assertions.assertNotNull(entry, "ZIP sollte mindestens einen Eintrag enthalten");
+
+            ByteArrayOutputStream imgOut = new ByteArrayOutputStream();
+            zis.transferTo(imgOut);
+            BufferedImage first = ImageIO.read(new ByteArrayInputStream(imgOut.toByteArray()));
+
+            Assertions.assertNotNull(first, "Erster PNG-Eintrag sollte lesbar sein");
+            Assertions.assertTrue(
+                    first.getWidth() > 0 && first.getHeight() > 0, "Bilddimensionen > 0");
+        }
+    }
+
+    @Test
+    @DisplayName("hasText: findet Phrase auf ausgewählten Seiten ('1', '2', 'all')")
+    void hasText_shouldDetectPhrase_onSelectedPages() throws Exception {
+        // Arrange: PDF mit 2 Seiten und Text
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p1 = new PDPage(PDRectangle.A4);
+            PDPage p2 = new PDPage(PDRectangle.A4);
+            doc.addPage(p1);
+            doc.addPage(p2);
+
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p1, AppendMode.APPEND, true, true)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(50, 750);
+                cs.showText("alpha on page 1");
+                cs.endText();
+            }
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p2, AppendMode.APPEND, true, true)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(50, 750);
+                cs.showText("beta on page 2");
+                cs.endText();
+            }
+
+            // Act + Assert
+            assertTrue(PdfUtils.hasText(doc, "1", "alpha"), "Seite 1 sollte 'alpha' enthalten");
+            // Achtung: hasText() schließt das Dokument intern → neu laden für weitere Checks
+        }
+
+        // Für weitere Checks neues Doc mit identischem Inhalt bauen
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p1 = new PDPage(PDRectangle.A4);
+            PDPage p2 = new PDPage(PDRectangle.A4);
+            doc.addPage(p1);
+            doc.addPage(p2);
+
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p1, AppendMode.APPEND, true, true)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(50, 750);
+                cs.showText("alpha on page 1");
+                cs.endText();
+            }
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p2, AppendMode.APPEND, true, true)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(50, 750);
+                cs.showText("beta on page 2");
+                cs.endText();
+            }
+
+            assertTrue(PdfUtils.hasText(doc, "2", "beta"), "Seite 2 sollte 'beta' enthalten");
+        }
+
+        // drittes Doc für 'all'
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p1 = new PDPage(PDRectangle.A4);
+            PDPage p2 = new PDPage(PDRectangle.A4);
+            doc.addPage(p1);
+            doc.addPage(p2);
+
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p1, AppendMode.APPEND, true, true)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(50, 750);
+                cs.showText("gamma");
+                cs.endText();
+            }
+            assertTrue(
+                    PdfUtils.hasText(doc, "all", "gamma"), "'all' sollte Text auf Seite 1 finden");
+        }
+    }
+
+    @Test
+    @DisplayName("hasTextOnPage: true wenn Seite Phrase enthält, sonst false")
+    void hasTextOnPage_shouldReturnTrueOnlyForPagesWithPhrase() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p1 = new PDPage(PDRectangle.A4);
+            PDPage p2 = new PDPage(PDRectangle.A4);
+            doc.addPage(p1);
+            doc.addPage(p2);
+
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p1, AppendMode.APPEND, true, true)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(50, 750);
+                cs.showText("needle");
+                cs.endText();
+            }
+
+            assertTrue(PdfUtils.hasTextOnPage(p1, "needle"));
+            assertTrue(!PdfUtils.hasTextOnPage(p2, "needle"));
+        }
+    }
+
+    @Test
+    @DisplayName("hasImages: erkennt Bilder auf ausgewählten Seiten und 'all'")
+    void hasImages_shouldDetectImages_onSelectedPages() throws Exception {
+        // Fall 1: Seite 1 ohne Bild (aber Ressourcen gesetzt) -> false
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p1 = new PDPage(PDRectangle.A4);
+            PDPage p2 = new PDPage(PDRectangle.A4);
+            p1.setResources(new PDResources()); // <-- wichtig
+            p2.setResources(new PDResources()); // <-- wichtig
+            doc.addPage(p1);
+            doc.addPage(p2);
+
+            // Bild nur auf Seite 2
+            BufferedImage bi = new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = bi.createGraphics();
+            g.setColor(Color.GREEN);
+            g.fillRect(0, 0, 20, 20);
+            g.dispose();
+
+            PDImageXObject ximg = LosslessFactory.createFromImage(doc, bi);
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p2, AppendMode.APPEND, true, true)) {
+                cs.drawImage(ximg, 50, 700, 20, 20);
+            }
+
+            assertTrue(!PdfUtils.hasImages(doc, "1"), "Seite 1 sollte kein Bild haben");
+        }
+
+        // Fall 2: Seite 2 mit Bild -> true
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p1 = new PDPage(PDRectangle.A4);
+            PDPage p2 = new PDPage(PDRectangle.A4);
+            p1.setResources(new PDResources()); // <-- wichtig
+            p2.setResources(new PDResources()); // <-- wichtig
+            doc.addPage(p1);
+            doc.addPage(p2);
+
+            BufferedImage bi = new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = bi.createGraphics();
+            g.setColor(Color.BLUE);
+            g.fillRect(0, 0, 20, 20);
+            g.dispose();
+
+            PDImageXObject ximg = LosslessFactory.createFromImage(doc, bi);
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p2, AppendMode.APPEND, true, true)) {
+                cs.drawImage(ximg, 50, 700, 20, 20);
+            }
+
+            assertTrue(PdfUtils.hasImages(doc, "2"), "Seite 2 sollte ein Bild haben");
+        }
+
+        // Fall 3: 'all' erkennt Bild
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p = new PDPage(PDRectangle.A4);
+            p.setResources(new PDResources()); // <-- wichtig
+            doc.addPage(p);
+
+            BufferedImage bi = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+            PDImageXObject ximg = LosslessFactory.createFromImage(doc, bi);
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p, AppendMode.APPEND, true, true)) {
+                cs.drawImage(ximg, 20, 730, 10, 10);
+            }
+
+            assertTrue(PdfUtils.hasImages(doc, "all"), "'all' sollte das Bild erkennen");
+        }
+    }
+
+    @Test
+    @DisplayName("hasImagesOnPage: true wenn Seite ein Bild enthält, sonst false")
+    void hasImagesOnPage_shouldReturnTrueOnlyForPagesWithImage() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p1 = new PDPage(PDRectangle.A4);
+            PDPage p2 = new PDPage(PDRectangle.A4);
+            p1.setResources(new PDResources()); // <-- wichtig
+            p2.setResources(new PDResources()); // <-- wichtig
+            doc.addPage(p1);
+            doc.addPage(p2);
+
+            BufferedImage bi = new BufferedImage(12, 12, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = bi.createGraphics();
+            g.setColor(Color.RED);
+            g.fillRect(0, 0, 12, 12);
+            g.dispose();
+
+            PDImageXObject ximg = LosslessFactory.createFromImage(doc, bi);
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(doc, p1, AppendMode.APPEND, true, true)) {
+                cs.drawImage(ximg, 40, 720, 12, 12);
+            }
+
+            assertTrue(PdfUtils.hasImagesOnPage(p1));
+            assertTrue(!PdfUtils.hasImagesOnPage(p2));
+        }
+    }
+
+    @Test
+    @DisplayName("convertFromPdf: singleImage=true mit JPG → kein Alpha, weißer Hintergrund")
+    void convertFromPdf_singleImageJpg_noAlphaWhiteBackground() throws Exception {
+        // kleines 1‑seitiges PDF
+        byte[] pdfBytes;
+        PdfMetadataService meta =
+                new PdfMetadataService(new ApplicationProperties(), "label", false, null);
+        CustomPDFDocumentFactory factory = new CustomPDFDocumentFactory(meta);
+        try (PDDocument doc = new PDDocument()) {
+            PDPage p = new PDPage(PDRectangle.A4);
+            doc.addPage(p);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            pdfBytes = baos.toByteArray();
+        }
+
+        byte[] jpgBytes =
+                PdfUtils.convertFromPdf(
+                        factory, pdfBytes, "jpg", ImageType.RGB, true, 72, "sample.pdf");
+
+        BufferedImage img = ImageIO.read(new ByteArrayInputStream(jpgBytes));
+        Assertions.assertNotNull(img, "JPG sollte lesbar sein");
+
+        ColorModel cm = img.getColorModel();
+        Assertions.assertFalse(cm.hasAlpha(), "JPG-Ausgabe sollte keinen Alpha-Kanal haben");
+
+        // JPG-Hintergrund sollte weiß sein (näherungsweise prüfen)
+        int rgb = img.getRGB(img.getWidth() / 2, img.getHeight() / 2) & 0x00FFFFFF;
+        Assertions.assertEquals(0xFFFFFF, rgb, "Hintergrundpixel sollte weiß sein");
     }
 }
