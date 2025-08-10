@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
@@ -102,7 +103,7 @@ class CustomColorReplaceStrategyTest {
 
         } catch (Exception e) {
             // If we get here, the test failed
-            org.junit.jupiter.api.Assertions.fail("Exception occurred: " + e.getMessage());
+            Assertions.fail("Exception occurred: " + e.getMessage());
         }
     }
 }
