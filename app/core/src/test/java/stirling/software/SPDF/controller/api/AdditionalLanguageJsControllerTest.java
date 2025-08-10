@@ -19,9 +19,9 @@ import stirling.software.SPDF.service.LanguageService;
 class AdditionalLanguageJsControllerTest {
 
     @Test
-    void returns_js_with_supported_languages_and_function() throws Exception {
+    void returnsJsWithSupportedLanguagesAndFunction() throws Exception {
         LanguageService lang = mock(LanguageService.class);
-        // LinkedHashSet für deterministische Reihenfolge im Array
+        // LinkedHashSet for deterministic order in the array
         when(lang.getSupportedLanguages())
                 .thenReturn(new LinkedHashSet<>(List.of("de_DE", "en_GB")));
 
@@ -44,7 +44,7 @@ class AdditionalLanguageJsControllerTest {
     }
 
     @Test
-    void empty_supported_languages_yields_empty_array() throws Exception {
+    void emptySupportedLanguagesYieldsEmptyArray() throws Exception {
         LanguageService lang = mock(LanguageService.class);
         when(lang.getSupportedLanguages()).thenReturn(Set.of());
 
