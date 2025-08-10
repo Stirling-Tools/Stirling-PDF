@@ -203,7 +203,7 @@ class JobControllerTest {
         when(result.isComplete()).thenReturn(true);
         when(result.getError()).thenReturn(null);
         when(result.hasMultipleFiles()).thenReturn(false);
-        when(result.hasFiles()).thenReturn(false); // -> triggert den Fallback
+        when(result.hasFiles()).thenReturn(false); // -> triggers the fallback
         when(result.getResult()).thenReturn("SIMPLE-RESULT");
 
         when(taskManager.getJobResult("job11")).thenReturn(result);
@@ -281,22 +281,22 @@ class JobControllerTest {
 
     @Test
     void cancelJob_unknown_failure_returns500() throws Exception {
-        // User besitzt den Job
+        // User owns the job
         when(session.getAttribute("userJobIds")).thenReturn(java.util.Set.of("J6"));
-        // Nicht in Queue
+        // Not in queue
         when(jobQueue.isJobQueued("J6")).thenReturn(false);
 
-        // 1. Aufruf im Mittelteil: completed -> kein setError -> cancelled bleibt false
+        // 1st call in the middle section: completed -> no setError -> cancelled remains false
         JobResult completed = mock(JobResult.class);
         when(completed.isComplete()).thenReturn(true);
 
-        // 2. Aufruf im finalen else: nicht complete -> 500 "unknown reason"
+        // 2nd call in the final else: not complete -> 500 "unknown reason"
         JobResult notComplete = mock(JobResult.class);
         when(notComplete.isComplete()).thenReturn(false);
 
         when(taskManager.getJobResult("J6"))
-                .thenReturn(completed) // erster Aufruf (inside if (!cancelled))
-                .thenReturn(notComplete); // zweiter Aufruf (final else)
+                .thenReturn(completed) // first call (inside if (!cancelled))
+                .thenReturn(notComplete); // second call (final else)
 
         mvc.perform(delete("/api/v1/general/job/{jobId}", "J6"))
                 .andExpect(status().isInternalServerError())
@@ -305,7 +305,7 @@ class JobControllerTest {
 
     @Test
     void cancelJob_unauthorized_wrong_attribute_type_returns403() throws Exception {
-        when(session.getAttribute("userJobIds")).thenReturn(java.util.List.of("JX")); // kein Set
+        when(session.getAttribute("userJobIds")).thenReturn(java.util.List.of("JX")); // not a Set
         mvc.perform(delete("/api/v1/general/job/{jobId}", "JX"))
                 .andExpect(status().isForbidden())
                 .andExpect(
@@ -317,7 +317,7 @@ class JobControllerTest {
         when(session.getAttribute("userJobIds")).thenReturn(java.util.Set.of("JQ"));
         when(jobQueue.isJobQueued("JQ")).thenReturn(true);
         when(jobQueue.getJobPosition("JQ")).thenReturn(2);
-        when(jobQueue.cancelJob("JQ")).thenReturn(false); // zwingt den zweiten Pfad
+        when(jobQueue.cancelJob("JQ")).thenReturn(false); // forces the second path
 
         JobResult notComplete = mock(JobResult.class);
         when(notComplete.isComplete()).thenReturn(false);
@@ -478,7 +478,7 @@ class JobControllerTest {
         when(fileStorage.retrieveBytes("FENC"))
                 .thenReturn("X".getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
-        // ResultFile mit NULL-Dateiname -> URLEncoder.encode(...) wirft NPE -> Catch-Fallback
+        // ResultFile with NULL filename -> URLEncoder.encode(...) throws NPE -> catch fallback
         ResultFile rf = mock(ResultFile.class);
         when(rf.getFileName()).thenReturn(null);
         when(rf.getContentType()).thenReturn("text/plain");
@@ -487,7 +487,7 @@ class JobControllerTest {
         mvc.perform(get("/api/v1/general/files/{fileId}", "FENC"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "text/plain"))
-                // Fallback-Header: nur filename=..., kein filename*=
+                // Fallback header: only filename=..., no filename*=
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"null\""))
                 .andExpect(content().bytes("X".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
     }
@@ -497,7 +497,7 @@ class JobControllerTest {
         when(fileStorage.fileExists("FD")).thenReturn(true);
         when(fileStorage.retrieveBytes("FD"))
                 .thenReturn("D".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        // keine Metadata
+        // no metadata
         when(taskManager.findResultFileByFileId("FD")).thenReturn(null);
 
         mvc.perform(get("/api/v1/general/files/{fileId}", "FD"))
