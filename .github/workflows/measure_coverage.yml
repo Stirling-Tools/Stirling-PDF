@@ -56,7 +56,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Run Coverage
-        run: ./gradlew jacocoTestReport jacocoTestCoverageVerification
+        run: ./gradlew jacocoTestCoverageVerification
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
 
