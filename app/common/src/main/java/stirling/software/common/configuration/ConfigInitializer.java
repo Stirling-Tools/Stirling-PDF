@@ -26,7 +26,25 @@ public class ConfigInitializer {
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // 1) If settings file doesn't exist, create from template
         Path destPath = Paths.get(InstallationPathConfig.getSettingsPath());
-        if (Files.notExists(destPath)) {
+
+        boolean settingsFileExists = Files.exists(destPath);
+
+        long lineCount = settingsFileExists ? Files.lines(destPath).count() : 0;
+
+        log.info("Current settings file line count: {}", lineCount);
+
+        if (!settingsFileExists || lineCount < 31) {
+            if (settingsFileExists) {
+                // move settings.yml to settings.yml.{timestamp}.bak
+                Path backupPath =
+                        Paths.get(
+                                InstallationPathConfig.getSettingsPath()
+                                        + "."
+                                        + System.currentTimeMillis()
+                                        + ".bak");
+                Files.move(destPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+                log.info("Moved existing settings file to backup: {}", backupPath);
+            }
             Files.createDirectories(destPath.getParent());
             try (InputStream in =
                     getClass().getClassLoader().getResourceAsStream("settings.yml.template")) {
