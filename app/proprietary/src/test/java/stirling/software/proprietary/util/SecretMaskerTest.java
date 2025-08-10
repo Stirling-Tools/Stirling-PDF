@@ -13,12 +13,10 @@ import org.junit.jupiter.api.Test;
 /**
  * Unit tests for {@link SecretMasker}.
  *
- * <p>Assumptions:
- * - Key matching is case-insensitive via the pattern in SENSITIVE.
- * - If the key matches a sensitive pattern, the value is replaced with "***REDACTED***".
- * - Nested maps and lists are searched recursively.
- * - Null maps and null values are ignored or returned as null.
- * - Non-sensitive keys/values remain unchanged.
+ * <p>Assumptions: - Key matching is case-insensitive via the pattern in SENSITIVE. - If the key
+ * matches a sensitive pattern, the value is replaced with "***REDACTED***". - Nested maps and lists
+ * are searched recursively. - Null maps and null values are ignored or returned as null. -
+ * Non-sensitive keys/values remain unchanged.
  */
 class SecretMaskerTest {
 
