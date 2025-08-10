@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
@@ -39,7 +40,7 @@ class ConvertPDFToMarkdownTest {
     }
 
     @Test
-    void pdf_to_markdown_returns_markdown_bytes() throws Exception {
+    void pdfToMarkdownReturnsMarkdownBytes() throws Exception {
         byte[] md = "# heading\n\ncontent\n".getBytes(StandardCharsets.UTF_8);
 
         try (MockedConstruction<PDFToFile> construction =
@@ -58,7 +59,7 @@ class ConvertPDFToMarkdownTest {
 
             MockMultipartFile file =
                     new MockMultipartFile(
-                            "fileInput", // muss zum Feldnamen in PDFFile passen
+                            "fileInput", // must match the field name in PDFFile
                             "input.pdf",
                             "application/pdf",
                             new byte[] {1, 2, 3});
@@ -68,24 +69,23 @@ class ConvertPDFToMarkdownTest {
                     .andExpect(header().string("Content-Type", "text/markdown"))
                     .andExpect(content().bytes(md));
 
-            // Verifizieren, dass genau eine Instanz erzeugt wurde
+            // Verify that exactly one instance was created
             assert construction.constructed().size() == 1;
 
-            // und dass das hochgeladene File an processPdfToMarkdown() durchgereicht wurde
+            // And that the uploaded file was passed to processPdfToMarkdown()
             PDFToFile created = construction.constructed().get(0);
             ArgumentCaptor<MultipartFile> captor = ArgumentCaptor.forClass(MultipartFile.class);
             verify(created, times(1)).processPdfToMarkdown(captor.capture());
             MultipartFile passed = captor.getValue();
-            // minimal plausi
-            org.junit.jupiter.api.Assertions.assertEquals(
-                    "input.pdf", passed.getOriginalFilename());
-            org.junit.jupiter.api.Assertions.assertEquals(
-                    "application/pdf", passed.getContentType());
+
+            // Minimal plausibility checks
+            Assertions.assertEquals("input.pdf", passed.getOriginalFilename());
+            Assertions.assertEquals("application/pdf", passed.getContentType());
         }
     }
 
     @Test
-    void pdf_to_markdown_when_service_throws_returns_500() throws Exception {
+    void pdfToMarkdownWhenServiceThrowsReturns500() throws Exception {
         try (MockedConstruction<PDFToFile> ignored =
                 Mockito.mockConstruction(
                         PDFToFile.class,
