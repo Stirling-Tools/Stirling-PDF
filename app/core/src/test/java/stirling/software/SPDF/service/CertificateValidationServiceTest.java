@@ -155,19 +155,19 @@ class CertificateValidationServiceTest {
     void testValidateTrustStore_found_returnsTrue() throws Exception {
         KeyStore ks = mock(KeyStore.class);
 
-        // Ein Zertifikat-Mock, der sowohl im Keystore liegt als auch geprüft wird:
+        // A certificate mock that is both in the keystore and being checked:
         X509Certificate same = mock(X509Certificate.class);
 
         when(ks.aliases())
                 .thenReturn(java.util.Collections.enumeration(java.util.List.of("alias1")));
         when(ks.getCertificate("alias1")).thenReturn(same);
 
-        // trustStore per Reflection setzen
+        // Set trustStore via reflection
         var f = CertificateValidationService.class.getDeclaredField("trustStore");
         f.setAccessible(true);
         f.set(validationService, ks);
 
-        // same-Instanz -> equals() true ohne Stubbing
+        // same instance -> equals() true without stubbing
         assertTrue(validationService.validateTrustStore(same));
     }
 
