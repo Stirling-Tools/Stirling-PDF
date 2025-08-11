@@ -1,6 +1,6 @@
 /**
  * Integration tests for Convert Tool - Tests actual conversion functionality
- * 
+ *
  * These tests verify the integration between frontend components and backend:
  * 1. useConvertOperation hook makes correct API calls
  * 2. File upload/download flow functions properly
@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useConvertOperation } from '../../hooks/tools/convert/useConvertOperation';
 import { ConvertParameters } from '../../hooks/tools/convert/useConvertParameters';
@@ -23,13 +23,31 @@ import axios from 'axios';
 vi.mock('axios');
 const mockedAxios = vi.mocked(axios);
 
-// Mock utility modules
-vi.mock('../../utils/thumbnailUtils', () => ({
-  generateThumbnailForFile: vi.fn().mockResolvedValue('data:image/png;base64,fake-thumbnail')
+// Mock only essential services that are actually called by the tests
+vi.mock('../../services/fileStorage', () => ({
+  fileStorage: {
+    init: vi.fn().mockResolvedValue(undefined),
+    storeFile: vi.fn().mockImplementation((file, thumbnail) => {
+      return Promise.resolve({
+        id: `mock-id-${file.name}`,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+        thumbnail: thumbnail
+      });
+    }),
+    getAllFileMetadata: vi.fn().mockResolvedValue([]),
+    cleanup: vi.fn().mockResolvedValue(undefined)
+  }
 }));
 
-vi.mock('../../utils/api', () => ({
-  makeApiUrl: vi.fn((path: string) => `/api/v1${path}`)
+vi.mock('../../services/thumbnailGenerationService', () => ({
+  thumbnailGenerationService: {
+    generateThumbnail: vi.fn().mockResolvedValue('data:image/png;base64,fake-thumbnail'),
+    cleanup: vi.fn(),
+    destroy: vi.fn()
+  }
 }));
 
 // Create realistic test files
@@ -52,7 +70,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 describe('Convert Tool Integration Tests', () => {
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup default axios mock
@@ -64,10 +82,10 @@ describe('Convert Tool Integration Tests', () => {
   });
 
   describe('useConvertOperation Integration', () => {
-    
+
     test('should make correct API call for PDF to PNG conversion', async () => {
       const mockBlob = new Blob(['fake-image-data'], { type: 'image/png' });
-      mockedAxios.post.mockResolvedValueOnce({
+      (mockedAxios.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         statusText: 'OK'
@@ -90,7 +108,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -105,7 +135,7 @@ describe('Convert Tool Integration Tests', () => {
       );
 
       // Verify FormData contains correct parameters
-      const formDataCall = mockedAxios.post.mock.calls[0][1] as FormData;
+      const formDataCall = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
       expect(formDataCall.get('imageFormat')).toBe('png');
       expect(formDataCall.get('colorType')).toBe('color');
       expect(formDataCall.get('dpi')).toBe('300');
@@ -120,7 +150,7 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should handle API error responses correctly', async () => {
       const errorMessage = 'Invalid file format';
-      mockedAxios.post.mockRejectedValueOnce({
+      (mockedAxios.post as Mock).mockRejectedValueOnce({
         response: {
           status: 400,
           data: errorMessage
@@ -145,7 +175,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -159,7 +201,7 @@ describe('Convert Tool Integration Tests', () => {
     });
 
     test('should handle network errors gracefully', async () => {
-      mockedAxios.post.mockRejectedValueOnce(new Error('Network error'));
+      (mockedAxios.post as Mock).mockRejectedValueOnce(new Error('Network error'));
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -178,7 +220,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -191,10 +245,17 @@ describe('Convert Tool Integration Tests', () => {
   });
 
   describe('API and Hook Integration', () => {
-    
+
     test('should correctly map image conversion parameters to API call', async () => {
       const mockBlob = new Blob(['fake-data'], { type: 'image/jpeg' });
-      mockedAxios.post.mockResolvedValueOnce({ data: mockBlob });
+      (mockedAxios.post as Mock).mockResolvedValueOnce({
+        data: mockBlob,
+        status: 200,
+        headers: {
+          'content-type': 'image/jpeg',
+          'content-disposition': 'attachment; filename="test_converted.jpg"'
+        }
+      });
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -204,7 +265,6 @@ describe('Convert Tool Integration Tests', () => {
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'jpg',
-        pageNumbers: 'all',
         imageOptions: {
           colorType: 'grayscale',
           dpi: 150,
@@ -214,7 +274,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -222,12 +294,12 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       // Verify integration: hook parameters → FormData → axios call → hook state
-      const formDataCall = mockedAxios.post.mock.calls[0][1] as FormData;
+      const formDataCall = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
       expect(formDataCall.get('imageFormat')).toBe('jpg');
       expect(formDataCall.get('colorType')).toBe('grayscale');
       expect(formDataCall.get('dpi')).toBe('150');
       expect(formDataCall.get('singleOrMultiple')).toBe('single');
-      
+
       // Verify complete workflow: API response → hook state → FileContext integration
       expect(result.current.downloadUrl).toBeTruthy();
       expect(result.current.files).toHaveLength(1);
@@ -237,7 +309,7 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should make correct API call for PDF to CSV conversion with simplified workflow', async () => {
       const mockBlob = new Blob(['fake-csv-data'], { type: 'text/csv' });
-      mockedAxios.post.mockResolvedValueOnce({
+      (mockedAxios.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         statusText: 'OK'
@@ -260,7 +332,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -275,7 +359,7 @@ describe('Convert Tool Integration Tests', () => {
       );
 
       // Verify FormData contains correct parameters for simplified CSV conversion
-      const formDataCall = mockedAxios.post.mock.calls[0][1] as FormData;
+      const formDataCall = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
       expect(formDataCall.get('pageNumbers')).toBe('all'); // Always "all" for simplified workflow
       expect(formDataCall.get('fileInput')).toBe(testFile);
 
@@ -304,7 +388,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -320,10 +416,10 @@ describe('Convert Tool Integration Tests', () => {
   });
 
   describe('File Upload Integration', () => {
-    
+
     test('should handle multiple file uploads correctly', async () => {
       const mockBlob = new Blob(['zip-content'], { type: 'application/zip' });
-      mockedAxios.post.mockResolvedValueOnce({ data: mockBlob });
+      (mockedAxios.post as Mock).mockResolvedValueOnce({ data: mockBlob });
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -344,7 +440,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -352,14 +460,14 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       // Verify both files were uploaded
-      const calls = mockedAxios.post.mock.calls;
+      const calls = (mockedAxios.post as Mock).mock.calls;
 
       for (let i = 0; i < calls.length; i++) {
         const formData = calls[i][1] as FormData;
         const fileInputs = formData.getAll('fileInput');
         expect(fileInputs).toHaveLength(1);
         expect(fileInputs[0]).toBeInstanceOf(File);
-        expect(fileInputs[0].name).toBe(files[i].name);
+        expect((fileInputs[0] as File).name).toBe(files[i].name);
       }
 
     });
@@ -381,7 +489,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -389,14 +509,14 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       expect(mockedAxios.post).not.toHaveBeenCalled();
-      expect(result.current.status).toContain('noFileSelected');
+      expect(result.current.errorMessage).toContain('noFileSelected');
     });
   });
 
   describe('Error Boundary Integration', () => {
-    
+
     test('should handle corrupted file gracefully', async () => {
-      mockedAxios.post.mockRejectedValueOnce({
+      (mockedAxios.post as Mock).mockRejectedValueOnce({
         response: {
           status: 422,
           data: 'Processing failed'
@@ -420,7 +540,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -432,7 +564,7 @@ describe('Convert Tool Integration Tests', () => {
     });
 
     test('should handle backend service unavailable', async () => {
-      mockedAxios.post.mockRejectedValueOnce({
+      (mockedAxios.post as Mock).mockRejectedValueOnce({
         response: {
           status: 503,
           data: 'Service unavailable'
@@ -456,7 +588,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -469,10 +613,17 @@ describe('Convert Tool Integration Tests', () => {
   });
 
   describe('FileContext Integration', () => {
-    
+
     test('should record operation in FileContext', async () => {
       const mockBlob = new Blob(['fake-data'], { type: 'image/png' });
-      mockedAxios.post.mockResolvedValueOnce({ data: mockBlob });
+      (mockedAxios.post as Mock).mockResolvedValueOnce({
+        data: mockBlob,
+        status: 200,
+        headers: {
+          'content-type': 'image/png',
+          'content-disposition': 'attachment; filename="test_converted.png"'
+        }
+      });
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -491,7 +642,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -506,7 +669,14 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should clean up blob URLs on reset', async () => {
       const mockBlob = new Blob(['fake-data'], { type: 'image/png' });
-      mockedAxios.post.mockResolvedValueOnce({ data: mockBlob });
+      (mockedAxios.post as Mock).mockResolvedValueOnce({
+        data: mockBlob,
+        status: 200,
+        headers: {
+          'content-type': 'image/png',
+          'content-disposition': 'attachment; filename="test_converted.png"'
+        }
+      });
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -525,7 +695,19 @@ describe('Convert Tool Integration Tests', () => {
           combineImages: true
         },
         isSmartDetection: false,
-        smartDetectionType: 'none'
+        smartDetectionType: 'none',
+        htmlOptions: {
+          zoomLevel: 0
+        },
+        emailOptions: {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 0,
+          downloadHtml: false,
+          includeAllRecipients: false
+        },
+        pdfaOptions: {
+          outputFormat: ''
+        }
       };
 
       await act(async () => {
@@ -547,33 +729,33 @@ describe('Convert Tool Integration Tests', () => {
 
 /**
  * Additional Integration Tests That Require Real Backend
- * 
+ *
  * These tests would require a running backend server and are better suited
  * for E2E testing with tools like Playwright or Cypress:
- * 
+ *
  * 1. **Real File Conversion Tests**
  *    - Upload actual PDF files and verify conversion quality
  *    - Test image format outputs are valid and viewable
  *    - Test CSV/TXT outputs contain expected content
  *    - Test file size limits and memory constraints
- * 
+ *
  * 2. **Performance Integration Tests**
  *    - Test conversion time for various file sizes
  *    - Test memory usage during large file conversions
  *    - Test concurrent conversion requests
  *    - Test timeout handling for long-running conversions
- * 
+ *
  * 3. **Authentication Integration**
  *    - Test conversions with and without authentication
  *    - Test rate limiting and user quotas
  *    - Test permission-based endpoint access
- * 
+ *
  * 4. **File Preview Integration**
  *    - Test that converted files integrate correctly with viewer
  *    - Test thumbnail generation for converted files
  *    - Test file download functionality
  *    - Test FileContext persistence across tool switches
- * 
+ *
  * 5. **Endpoint Availability Tests**
  *    - Test real endpoint availability checking
  *    - Test graceful degradation when endpoints are disabled

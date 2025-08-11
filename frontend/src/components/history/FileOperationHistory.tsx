@@ -27,9 +27,10 @@ const FileOperationHistory: React.FC<FileOperationHistoryProps> = ({
   maxHeight = 400
 }) => {
   const { getFileHistory, getAppliedOperations } = useFileContext();
-  
+
   const history = getFileHistory(fileId);
-  const operations = showOnlyApplied ? getAppliedOperations(fileId) : history?.operations || [];
+  const allOperations = showOnlyApplied ? getAppliedOperations(fileId) : history?.operations || [];
+  const operations = allOperations.filter(op => 'fileIds' in op) as FileOperation[];
 
   const formatTimestamp = (timestamp: number) => {
     return new Date(timestamp).toLocaleString();
@@ -62,7 +63,7 @@ const FileOperationHistory: React.FC<FileOperationHistoryProps> = ({
     }
   };
 
-  const renderOperationDetails = (operation: FileOperation | PageOperation) => {
+  const renderOperationDetails = (operation: FileOperation) => {
     if ('metadata' in operation && operation.metadata) {
       const { metadata } = operation;
       return (
@@ -142,7 +143,7 @@ const FileOperationHistory: React.FC<FileOperationHistoryProps> = ({
                     </Text>
                   </Box>
                 </Group>
-                
+
                 <Badge
                   variant="filled"
                   color={getStatusColor(operation.status)}

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, forwardRef } from "react";
 import { ActionIcon, Stack, Tooltip, Divider } from "@mantine/core";
 import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
 import AppsIcon from "@mui/icons-material/AppsRounded";
@@ -8,43 +8,21 @@ import FolderIcon from "@mui/icons-material/FolderRounded";
 import PersonIcon from "@mui/icons-material/PersonRounded";
 import NotificationsIcon from "@mui/icons-material/NotificationsRounded";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
-import rainbowStyles from '../../styles/rainbow.module.css';
 import AppConfigModal from './AppConfigModal';
 import { useIsOverflowing } from '../../hooks/useIsOverflowing';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
+import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
+import { ButtonConfig } from '../../types/sidebar';
 import './QuickAccessBar.css';
-
-interface QuickAccessBarProps {
-  onToolsClick: () => void;
-  onReaderToggle: () => void;
-  selectedToolKey?: string;
-  toolRegistry: any;
-  leftPanelView: 'toolPicker' | 'toolContent';
-  readerMode: boolean;
-}
-
-interface ButtonConfig {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  tooltip: string;
-  isRound?: boolean;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  onClick: () => void;
-  type?: 'navigation' | 'modal' | 'action'; // navigation = main nav, modal = triggers modal, action = other actions
-}
 
 function NavHeader({ 
   activeButton, 
-  setActiveButton, 
-  onReaderToggle, 
-  onToolsClick 
+  setActiveButton
 }: {
   activeButton: string;
   setActiveButton: (id: string) => void;
-  onReaderToggle: () => void;
-  onToolsClick: () => void;
 }) {
+  const { handleReaderToggle, handleBackToTools } = useToolWorkflow();
   return (
     <>
       <div className="nav-header">
@@ -80,8 +58,8 @@ function NavHeader({
             variant="subtle"
             onClick={() => {
               setActiveButton('tools');
-              onReaderToggle();
-              onToolsClick();
+              handleReaderToggle();
+              handleBackToTools();
             }}
             style={{
               backgroundColor: activeButton === 'tools' ? 'var(--icon-tools-bg)' : 'var(--icon-inactive-bg)',
@@ -104,16 +82,11 @@ function NavHeader({
   );
 }
 
-const QuickAccessBar = ({
-  onToolsClick,
-  onReaderToggle,
-  selectedToolKey,
-  toolRegistry,
-  leftPanelView,
-  readerMode,
-}: QuickAccessBarProps) => {
+const QuickAccessBar = forwardRef<HTMLDivElement>(({
+}, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
+  const { handleReaderToggle } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -134,7 +107,7 @@ const QuickAccessBar = ({
       type: 'navigation',
       onClick: () => {
         setActiveButton('read');
-        onReaderToggle();
+        handleReaderToggle();
       }
     },
     {
@@ -234,15 +207,15 @@ const QuickAccessBar = ({
 
   return (
     <div
+      ref={ref}
+      data-sidebar="quick-access"
       className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">
         <NavHeader 
           activeButton={activeButton} 
-          setActiveButton={setActiveButton} 
-          onReaderToggle={onReaderToggle} 
-          onToolsClick={onToolsClick} 
+          setActiveButton={setActiveButton}
         />
       </div>
 
@@ -335,6 +308,6 @@ const QuickAccessBar = ({
       />
     </div>
   );
-};
+});
 
 export default QuickAccessBar;

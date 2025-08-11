@@ -22,20 +22,20 @@ export class PDFProcessingService {
 
   async getProcessedFile(file: File): Promise<ProcessedFile | null> {
     const fileKey = this.generateFileKey(file);
-    
+
     // Check cache first
     const cached = this.cache.get(fileKey);
     if (cached) {
       console.log('Cache hit for:', file.name);
       return cached;
     }
-    
+
     // Check if already processing
     if (this.processing.has(fileKey)) {
       console.log('Already processing:', file.name);
       return null; // Will be available when processing completes
     }
-    
+
     // Start processing
     this.startProcessing(file, fileKey);
     return null;
@@ -48,9 +48,10 @@ export class PDFProcessingService {
       fileName: file.name,
       status: 'processing',
       progress: 0,
-      startedAt: Date.now()
+      startedAt: Date.now(),
+      strategy: 'immediate_full'
     };
-    
+
     this.processing.set(fileKey, state);
     this.notifyListeners();
 
@@ -63,13 +64,13 @@ export class PDFProcessingService {
 
       // Cache the result
       this.cache.set(fileKey, processedFile);
-      
+
       // Update state to completed
       state.status = 'completed';
       state.progress = 100;
       state.completedAt = Date.now();
       this.notifyListeners();
-      
+
       // Remove from processing map after brief delay
       setTimeout(() => {
         this.processing.delete(fileKey);
@@ -79,9 +80,9 @@ export class PDFProcessingService {
     } catch (error) {
       console.error('Processing failed for', file.name, ':', error);
       state.status = 'error';
-      state.error = error instanceof Error ? error.message : 'Unknown error';
+      state.error = (error instanceof Error ? error.message : 'Unknown error') as any;
       this.notifyListeners();
-      
+
       // Remove failed processing after delay
       setTimeout(() => {
         this.processing.delete(fileKey);
@@ -91,29 +92,29 @@ export class PDFProcessingService {
   }
 
   private async processFileWithProgress(
-    file: File, 
+    file: File,
     onProgress: (progress: number) => void
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await getDocument({ data: arrayBuffer }).promise;
     const totalPages = pdf.numPages;
-    
+
     onProgress(10); // PDF loaded
-    
+
     const pages: PDFPage[] = [];
-    
+
     for (let i = 1; i <= totalPages; i++) {
       const page = await pdf.getPage(i);
       const viewport = page.getViewport({ scale: 0.5 });
       const canvas = document.createElement('canvas');
       canvas.width = viewport.width;
       canvas.height = viewport.height;
-      
+
       const context = canvas.getContext('2d');
       if (context) {
         await page.render({ canvasContext: context, viewport }).promise;
         const thumbnail = canvas.toDataURL();
-        
+
         pages.push({
           id: `${file.name}-page-${i}`,
           pageNumber: i,
@@ -122,15 +123,15 @@ export class PDFProcessingService {
           selected: false
         });
       }
-      
+
       // Update progress
       const progress = 10 + (i / totalPages) * 85; // 10-95%
       onProgress(progress);
     }
-    
+
     pdf.destroy();
     onProgress(100);
-    
+
     return {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       pages,

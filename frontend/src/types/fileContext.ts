@@ -5,7 +5,11 @@
 import { ProcessedFile } from './processing';
 import { PDFDocument, PDFPage, PageOperation } from './pageEditor';
 
-export type ModeType = 'viewer' | 'pageEditor' | 'fileEditor' | 'merge' | 'split' | 'compress' | 'ocr';
+export type ModeType = 'viewer' | 'pageEditor' | 'fileEditor' | 'merge' | 'split' | 'compress' | 'ocr' | 'convert' | 'sanitize';
+
+export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
+
+export type ToolType = 'merge' | 'split' | 'compress' | 'ocr' | 'convert' | 'sanitize';
 
 export type OperationType = 'merge' | 'split' | 'compress' | 'add' | 'remove' | 'replace' | 'convert' | 'upload' | 'ocr' | 'sanitize';
 
@@ -54,6 +58,8 @@ export interface FileContextState {
 
   // Current navigation state
   currentMode: ModeType;
+  currentView: ViewType;
+  currentTool: ToolType | null;
 
   // Edit history and state
   fileEditHistory: Map<string, FileEditHistory>;
@@ -85,13 +91,15 @@ export interface FileContextState {
 
 export interface FileContextActions {
   // File management
-  addFiles: (files: File[]) => Promise<void>;
+  addFiles: (files: File[]) => Promise<File[]>;
   removeFiles: (fileIds: string[], deleteFromStorage?: boolean) => void;
   replaceFile: (oldFileId: string, newFile: File) => Promise<void>;
   clearAllFiles: () => void;
 
   // Navigation
   setCurrentMode: (mode: ModeType) => void;
+  setCurrentView: (view: ViewType) => void;
+  setCurrentTool: (tool: ToolType) => void;
   // Selection management
   setSelectedFiles: (fileIds: string[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
