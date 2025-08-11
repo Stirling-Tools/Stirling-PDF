@@ -215,8 +215,10 @@ tasks.withType(JavaCompile).configureEach {
     dependsOn "spotlessApply"
 }
 
+def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
+
 licenseReport {
-    projects = [project]
+    projects = allProjects
     renderers = [new JsonReportRenderer()]
     allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
