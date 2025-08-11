@@ -1620,18 +1620,20 @@
     "pdfaDigitalSignatureWarning": "The PDF contains a digital signature. This will be removed in the next step.",
     "sanitize": {
       "submit": "Sanitize PDF",
-      "processing": "Sanitizing PDF...",
       "completed": "Sanitization completed successfully",
-      "error": "Sanitization failed: {{error}}",
       "error.generic": "Sanitization failed",
+      "error.failed": "An error occurred while sanitizing the PDF.",
       "filenamePrefix": "sanitized",
+      "sanitizationResults": "Sanitization Results",
+      "validation": {
+        "atLeastOne": "At least one sanitization option must be selected"
+      },
       "steps": {
         "files": "Files",
         "settings": "Settings", 
         "results": "Results"
       },
       "files": {
-        "selected": "Selected: {{filename}}",
         "placeholder": "Select a PDF file in the main view to get started"
       },
       "options": {

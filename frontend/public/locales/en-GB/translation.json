@@ -509,7 +509,7 @@
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
     "sanitizePdf": {
-      "title": "Sanitize",
+      "title": "Sanitise",
       "desc": "Remove scripts and other elements from PDF files"
     },
     "URLToPDF": {
@@ -1430,8 +1430,8 @@
     "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
   },
   "sanitizePDF": {
-    "title": "Sanitize PDF",
-    "header": "Sanitize a PDF file",
+    "title": "Sanitise PDF",
+    "header": "Sanitise a PDF file",
     "selectText": {
       "1": "Remove JavaScript actions",
       "2": "Remove embedded files",
@@ -1769,18 +1769,20 @@
   },
   "sanitize": {
     "submit": "Sanitise PDF",
-    "processing": "Sanitising PDF...",
     "completed": "Sanitisation completed successfully",
-    "error": "Sanitisation failed: {{error}}",
     "error.generic": "Sanitisation failed",
+    "error.failed": "An error occurred while sanitising the PDF.",
     "filenamePrefix": "sanitised",
+    "sanitizationResults": "Sanitisation Results",
+    "validation": {
+      "atLeastOne": "At least one sanitisation option must be selected"
+    },
     "steps": {
       "files": "Files",
       "settings": "Settings", 
       "results": "Results"
     },
     "files": {
-      "selected": "Selected: {{filename}}",
       "placeholder": "Select a PDF file in the main view to get started"
     },
     "options": {
