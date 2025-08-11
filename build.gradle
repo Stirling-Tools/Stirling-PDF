@@ -69,7 +69,7 @@ allprojects {
 tasks.register('writeVersion', WriteProperties) {
     outputFile = layout.projectDirectory.file('app/common/src/main/resources/version.properties')
     println "Writing version.properties to ${outputFile.path}"
-    comment "${new Date()}"
+    comment = "${new Date()}"
     property 'version', project.provider { project.version.toString() }
 }
 
@@ -128,6 +128,9 @@ subprojects {
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
         testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
+
+        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.1.0")
+        testImplementation "com.squareup.okhttp3:mockwebserver"
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -150,6 +153,17 @@ subprojects {
             xml.required.set(true)
             csv.required.set(false)
             html.required.set(true)
+        }
+    }
+
+    jacocoTestCoverageVerification {
+        dependsOn jacocoTestReport
+        violationRules {
+            rule {
+                limit {
+                    minimum = 0.0
+                }
+            }
         }
     }
 
@@ -569,6 +583,9 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
+
+    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.1.0")
+    testImplementation "com.squareup.okhttp3:mockwebserver"
 }
 
 tasks.named("test") {

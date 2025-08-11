@@ -13,6 +13,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -35,10 +36,12 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
 import stirling.software.proprietary.security.CustomAuthenticationSuccessHandler;
 import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
+import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.database.repository.JPATokenRepositoryImpl;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.filter.FirstLoginFilter;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
+import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
@@ -48,6 +51,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuc
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
 import stirling.software.proprietary.security.service.CustomOAuth2UserService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -64,9 +68,11 @@ public class SecurityConfiguration {
     private final boolean loginEnabledValue;
     private final boolean runningProOrHigher;
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security securityProperties;
     private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
+    private final JwtServiceInterface jwtService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final LoginAttemptService loginAttemptService;
     private final FirstLoginFilter firstLoginFilter;
     private final SessionPersistentRegistry sessionRegistry;
@@ -82,8 +88,10 @@ public class SecurityConfiguration {
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             AppConfig appConfig,
-            ApplicationProperties applicationProperties,
+            ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
+            JwtServiceInterface jwtService,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
             LoginAttemptService loginAttemptService,
             FirstLoginFilter firstLoginFilter,
             SessionPersistentRegistry sessionRegistry,
@@ -97,8 +105,10 @@ public class SecurityConfiguration {
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
         this.appConfig = appConfig;
-        this.applicationProperties = applicationProperties;
+        this.securityProperties = securityProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
+        this.jwtService = jwtService;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.loginAttemptService = loginAttemptService;
         this.firstLoginFilter = firstLoginFilter;
         this.sessionRegistry = sessionRegistry;
@@ -115,14 +125,28 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        if (applicationProperties.getSecurity().isCsrfDisabled() || !loginEnabledValue) {
-            http.csrf(csrf -> csrf.disable());
+        if (securityProperties.isCsrfDisabled() || !loginEnabledValue) {
+            http.csrf(CsrfConfigurer::disable);
         }
 
         if (loginEnabledValue) {
+            boolean v2Enabled = appConfig.v2Enabled();
+
+            if (v2Enabled) {
+                http.addFilterBefore(
+                                jwtAuthenticationFilter(),
+                                UsernamePasswordAuthenticationFilter.class)
+                        .exceptionHandling(
+                                exceptionHandling ->
+                                        exceptionHandling.authenticationEntryPoint(
+                                                jwtAuthenticationEntryPoint));
+            }
             http.addFilterBefore(
-                    userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            if (!applicationProperties.getSecurity().isCsrfDisabled()) {
+                            userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterAfter(rateLimitingFilter(), UserAuthenticationFilter.class)
+                    .addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
+
+            if (!securityProperties.isCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
                 CsrfTokenRequestAttributeHandler requestHandler =
@@ -156,16 +180,21 @@ public class SecurityConfiguration {
                                         .csrfTokenRepository(cookieRepo)
                                         .csrfTokenRequestHandler(requestHandler));
             }
-            http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
-            http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
+
             http.sessionManagement(
-                    sessionManagement ->
+                    sessionManagement -> {
+                        if (v2Enabled) {
+                            sessionManagement.sessionCreationPolicy(
+                                    SessionCreationPolicy.STATELESS);
+                        } else {
                             sessionManagement
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                                     .maximumSessions(10)
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
-                                    .expiredUrl("/login?logout=true"));
+                                    .expiredUrl("/login?logout=true");
+                        }
+                    });
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
@@ -175,10 +204,10 @@ public class SecurityConfiguration {
                                                     .matcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
-                                                    applicationProperties, appConfig))
+                                                    securityProperties, appConfig, jwtService))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
-                                    .deleteCookies("JSESSIONID", "remember-me"));
+                                    .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
             http.rememberMe(
                     rememberMeConfigurer -> // Use the configurator directly
                     rememberMeConfigurer
@@ -200,6 +229,7 @@ public class SecurityConfiguration {
                                             req -> {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();
+
                                                 // Remove the context path from the URI
                                                 String trimmedUri =
                                                         uri.startsWith(contextPath)
@@ -217,29 +247,35 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/css/")
                                                         || trimmedUri.startsWith("/fonts/")
                                                         || trimmedUri.startsWith("/js/")
+                                                        || trimmedUri.startsWith("/pdfjs/")
+                                                        || trimmedUri.startsWith("/pdfjs-legacy/")
+                                                        || trimmedUri.startsWith("/favicon")
                                                         || trimmedUri.startsWith(
-                                                                "/api/v1/info/status");
+                                                                "/api/v1/info/status")
+                                                        || trimmedUri.startsWith("/v1/api-docs")
+                                                        || uri.contains("/v1/api-docs");
                                             })
                                     .permitAll()
                                     .anyRequest()
                                     .authenticated());
             // Handle User/Password Logins
-            if (applicationProperties.getSecurity().isUserPass()) {
+            if (securityProperties.isUserPass()) {
                 http.formLogin(
                         formLogin ->
                                 formLogin
                                         .loginPage("/login")
                                         .successHandler(
                                                 new CustomAuthenticationSuccessHandler(
-                                                        loginAttemptService, userService))
+                                                        loginAttemptService,
+                                                        userService,
+                                                        jwtService))
                                         .failureHandler(
                                                 new CustomAuthenticationFailureHandler(
                                                         loginAttemptService, userService))
-                                        .defaultSuccessUrl("/")
                                         .permitAll());
             }
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().isOauth2Active()) {
+            if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
                         oauth2 ->
                                 oauth2.loginPage("/oauth2")
@@ -251,17 +287,18 @@ public class SecurityConfiguration {
                                         .successHandler(
                                                 new CustomOAuth2AuthenticationSuccessHandler(
                                                         loginAttemptService,
-                                                        applicationProperties,
-                                                        userService))
+                                                        securityProperties.getOauth2(),
+                                                        userService,
+                                                        jwtService))
                                         .failureHandler(
                                                 new CustomOAuth2AuthenticationFailureHandler())
-                                        . // Add existing Authorities from the database
-                                        userInfoEndpoint(
+                                        // Add existing Authorities from the database
+                                        .userInfoEndpoint(
                                                 userInfoEndpoint ->
                                                         userInfoEndpoint
                                                                 .oidcUserService(
                                                                         new CustomOAuth2UserService(
-                                                                                applicationProperties,
+                                                                                securityProperties,
                                                                                 userService,
                                                                                 loginAttemptService))
                                                                 .userAuthoritiesMapper(
@@ -269,8 +306,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Active() && runningProOrHigher) {
-                // Configure the authentication provider
+            if (securityProperties.isSaml2Active() && runningProOrHigher) {
                 OpenSaml4AuthenticationProvider authenticationProvider =
                         new OpenSaml4AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(
@@ -287,8 +323,9 @@ public class SecurityConfiguration {
                                                 .successHandler(
                                                         new CustomSaml2AuthenticationSuccessHandler(
                                                                 loginAttemptService,
-                                                                applicationProperties,
-                                                                userService))
+                                                                securityProperties.getSaml2(),
+                                                                userService,
+                                                                jwtService))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
                                                 .authenticationRequestResolver(
@@ -322,5 +359,15 @@ public class SecurityConfiguration {
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {
         return new JPATokenRepositoryImpl(persistentLoginRepository);
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(
+                jwtService,
+                userService,
+                userDetailsService,
+                jwtAuthenticationEntryPoint,
+                securityProperties);
     }
 }
