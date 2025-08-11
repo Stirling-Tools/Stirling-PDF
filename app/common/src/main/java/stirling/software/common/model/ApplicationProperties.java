@@ -119,6 +119,7 @@ public class ApplicationProperties {
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
+        private Jwt jwt = new Jwt();
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -297,6 +298,15 @@ public class ApplicationProperties {
                     };
                 }
             }
+        }
+
+        @Data
+        public static class Jwt {
+            private boolean enableKeystore = true;
+            private boolean enableKeyRotation = false;
+            private boolean enableKeyCleanup = true;
+            private int keyRetentionDays = 7;
+            private boolean secureCookie;
         }
     }
 

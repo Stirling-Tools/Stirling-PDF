@@ -2,6 +2,8 @@ package stirling.software.proprietary.security.model;
 
 import java.io.Serializable;
 
+import org.springframework.security.core.GrantedAuthority;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +20,7 @@ import lombok.Setter;
 @Table(name = "authorities")
 @Getter
 @Setter
-public class Authority implements Serializable {
+public class Authority implements GrantedAuthority, Serializable {
 
     private static final long serialVersionUID = 1L;
 
