@@ -20,7 +20,7 @@
     function initializeJWT() {
         // Clean up any JWT tokens from URL (OAuth flow)
         cleanupTokenFromUrl();
-        
+
         // Authentication is handled server-side
         // If user is not authenticated, server will redirect to login
         console.log('JWT initialization complete - authentication handled server-side');

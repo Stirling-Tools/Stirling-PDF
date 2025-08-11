@@ -1,12 +1,12 @@
 // Authentication utility for cookie-based JWT
 window.JWTManager = {
-    
+
     // Logout - clear cookies and redirect to login
     logout: function() {
-        
+
         // Clear JWT cookie manually (fallback)
         document.cookie = 'stirling_jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure';
-        
+
         // Perform logout request to clear server-side session
         fetch('/logout', {
             method: 'POST',
@@ -55,14 +55,13 @@ window.fetchWithCsrf = async function(url, options = {}) {
 
     // Make the request
     const response = await fetch(url, fetchOptions);
-    
+
     // Handle 401 responses (unauthorized)
     if (response.status === 401) {
         console.warn('Authentication failed, redirecting to login');
         window.JWTManager.logout();
         return response;
     }
-    
+
     return response;
 }
-
