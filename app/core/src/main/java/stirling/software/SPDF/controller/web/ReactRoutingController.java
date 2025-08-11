@@ -1,9 +1,8 @@
 package stirling.software.SPDF.controller.web;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 public class ReactRoutingController {
 
     @GetMapping("/{path:^(?!api|static|robots\\.txt|favicon\\.ico)[^\\.]*$}")
