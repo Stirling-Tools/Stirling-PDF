@@ -173,10 +173,13 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: check the licenses for compatibility
+      - name: Check licenses for compatibility
         run: ./gradlew clean checkLicense
+        env:
+          DISABLE_ADDITIONAL_FEATURES: false
+          STIRLING_PDF_DESKTOP_UI: true
 
-      - name: FAILED - check the licenses for compatibility
+      - name: FAILED - Check licenses for compatibility
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
