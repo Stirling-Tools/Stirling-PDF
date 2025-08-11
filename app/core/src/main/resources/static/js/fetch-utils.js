@@ -65,4 +65,3 @@ window.fetchWithCsrf = async function(url, options = {}) {
 
     return response;
 }
-
