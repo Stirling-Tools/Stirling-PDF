@@ -6,7 +6,6 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.AddAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -34,7 +34,7 @@ public class AttachmentController {
 
     private final AttachmentServiceInterface pdfAttachmentService;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-attachments")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-attachments")
     @Operation(
             summary = "Add attachments to PDF",
             description =

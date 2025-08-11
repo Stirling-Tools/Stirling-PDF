@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -17,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
@@ -31,7 +31,7 @@ public class SettingsController {
     private final ApplicationProperties applicationProperties;
     private final EndpointConfiguration endpointConfiguration;
 
-    @PostMapping("/update-enable-analytics")
+    @AutoJobPostMapping("/update-enable-analytics")
     @Hidden
     public ResponseEntity<String> updateApiKey(@RequestBody Boolean enabled) throws IOException {
         if (applicationProperties.getSystem().getEnableAnalytics() != null) {

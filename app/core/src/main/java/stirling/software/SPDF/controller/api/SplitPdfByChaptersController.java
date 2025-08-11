@@ -15,7 +15,6 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.PdfMetadata;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
@@ -117,7 +117,7 @@ public class SplitPdfByChaptersController {
         return bookmarks;
     }
 
-    @PostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
     @Operation(
             summary = "Split PDFs by Chapters",
             description = "Splits a PDF into chapters and returns a ZIP file.")

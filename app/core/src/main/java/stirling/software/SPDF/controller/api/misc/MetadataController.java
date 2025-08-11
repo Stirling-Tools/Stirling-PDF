@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
@@ -51,7 +52,7 @@ public class MetadataController {
         binder.registerCustomEditor(Map.class, "allRequestParams", new StringToMapPropertyEditor());
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/update-metadata")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/update-metadata")
     @Operation(
             summary = "Update metadata of a PDF file",
             description =

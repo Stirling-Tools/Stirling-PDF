@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -25,7 +23,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @RequestMapping("/teams")
 @RequiredArgsConstructor
 @Slf4j
@@ -35,8 +33,10 @@ public class TeamWebController {
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
 
-    @GetMapping
-    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
+    @Deprecated
+    // @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+
     public String listTeams(HttpServletRequest request, Model model) {
         // Get teams with user counts using a DTO projection
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
@@ -86,8 +86,9 @@ public class TeamWebController {
         return "accounts/teams";
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
+    @Deprecated
+    // @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public String viewTeamDetails(
             HttpServletRequest request, @PathVariable("id") Long id, Model model) {
         // Get the team

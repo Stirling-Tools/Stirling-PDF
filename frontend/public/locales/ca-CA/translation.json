@@ -1,0 +1,1561 @@
+{
+  "language": {
+    "direction": "ltr"
+  },
+  "addPageNumbers": {
+    "fontSize": "Mida del tipus de lletra",
+    "fontName": "Nom del tipus de lletra",
+    "title": "Afegir Números de Pàgina",
+    "header": "Afegir Números de Pàgina",
+    "selectText": {
+      "1": "Selecciona PDF:",
+      "2": "Mida del Marge",
+      "3": "Posició",
+      "4": "Número Inicial",
+      "5": "Pàgines a Enumerar",
+      "6": "Text Personalitzat"
+    },
+    "customTextDesc": "Text Personalitzat",
+    "numberPagesDesc": "Pàgines a enumerar, per defecte 'totes', accepta 1-5 o 2,5,9, etc.",
+    "customNumberDesc": "Per defecte {n}, accepta 'Pàgina {n} de {total}', 'Text-{n}', '{filename}-{n}'",
+    "submit": "Afegir Números de Pàgina"
+  },
+  "pdfPrompt": "Selecciona PDF(s)",
+  "multiPdfPrompt": "Selecciona PDFs (2+)",
+  "multiPdfDropPrompt": "Selecciona (o arrossega) els documents PDF",
+  "imgPrompt": "Selecciona Imatge(s)",
+  "genericSubmit": "Envia",
+  "uploadLimit": "Maximum file size:",
+  "uploadLimitExceededSingular": "is too large. Maximum allowed size is",
+  "uploadLimitExceededPlural": "are too large. Maximum allowed size is",
+  "processTimeWarning": "Alerta: Aquest procés pot tardar 1 minut depenent de la mida de l'arxiu",
+  "pageOrderPrompt": "Ordre de Pàgines (Llista separada per comes) :",
+  "pageSelectionPrompt": "Selecció de pàgines personalitzada (Introdueix una llista separada per comes de números de pàgina, 1,5,6 o funcions com 2n+1):",
+  "goToPage": "Anar",
+  "true": "Verdader",
+  "false": "Fals",
+  "unknown": "Desconegut",
+  "save": "Desa",
+  "saveToBrowser": "Desa al navegador",
+  "close": "Tanca",
+  "filesSelected": "fitxers seleccionats",
+  "noFavourites": "No s'ha afegit cap favorit",
+  "downloadComplete": "Descarrega completa",
+  "bored": "Avorrit esperant?",
+  "alphabet": "Alfabet",
+  "downloadPdf": "Descarregueu PDF",
+  "text": "Text",
+  "font": "Tipus de lletra",
+  "selectFillter": "-- Selecciona --",
+  "pageNum": "Número de pàgina",
+  "sizes": {
+    "small": "Petit",
+    "medium": "Mitjà",
+    "large": "Llarg",
+    "x-large": "X-Large"
+  },
+  "error": {
+    "pdfPassword": "El PDF està protegit o bé el password és incorrecte",
+    "_value": "Error",
+    "sorry": "Ho sentim pel problema!",
+    "needHelp": "Necessites ajuda / Has trobat un problema?",
+    "contactTip": "Si encara tens problemes, no dubtis a contactar-nos per a ajuda. Pots enviar una sol·licitud a la nostra pàgina de GitHub o contactar-nos a través de Discord:",
+    "404": {
+      "head": "404 - Pàgina No Trovada | Ooops, hem fet un error en el codi!",
+      "1": "Semblem no poder trobar la pàgina que estàs buscant.",
+      "2": "Alguna cosa ha anat malament"
+    },
+    "github": "Envia una sol·licitud a GitHub",
+    "showStack": "Mostra la Pila d'Errors",
+    "copyStack": "Copia la Pila d'Errors",
+    "githubSubmit": "GitHub - Envia una sol·licitud",
+    "discordSubmit": "Discord - Envia una sol·licitud d'ajuda"
+  },
+  "delete": "Esborra",
+  "username": "Usuari",
+  "password": "Contrasenya",
+  "welcome": "Benvingut",
+  "property": "Propietat",
+  "black": "Negre",
+  "white": "Blanc",
+  "red": "Vermell",
+  "green": "Verd",
+  "blue": "Blau",
+  "custom": "Personalitzat...",
+  "WorkInProgess": "En desenvolupament, pot no funcionar o contenir errors. Si us plau, informa de qualsevol problema!",
+  "poweredBy": "Impulsat per",
+  "yes": "Si",
+  "no": "No",
+  "changedCredsMessage": "Credencials canviades!",
+  "notAuthenticatedMessage": "Usuari no autenticat.",
+  "userNotFoundMessage": "Usuari no trobat.",
+  "incorrectPasswordMessage": "La contrasenya actual és incorrecta.",
+  "usernameExistsMessage": "El nou nom d’usuari ja existeix.",
+  "invalidUsernameMessage": "Nom d’usuari no vàlid, només pot contenir lletres, números i els següents caràcters especials @._+- o ha de ser una adreça de correu electrònic vàlida.",
+  "invalidPasswordMessage": "La contrasenya no pot estar buida ni tenir espais al principi o al final.",
+  "confirmPasswordErrorMessage": "La contrasenya no pot estar buida ni tenir espais al principi o al final.",
+  "deleteCurrentUserMessage": "No es pot eliminar l’usuari actualment connectat.",
+  "deleteUsernameExistsMessage": "El nom d’usuari no existeix i no es pot eliminar.",
+  "downgradeCurrentUserMessage": "No es pot reduir la funció de l'usuari actual",
+  "disabledCurrentUserMessage": "L’usuari actual no pot ser deshabilitat",
+  "downgradeCurrentUserLongMessage": "No es pot baixar la funció de l'usuari actual. Per tant, no es mostrarà l'usuari actual.",
+  "userAlreadyExistsOAuthMessage": "L’usuari ja existeix com a usuari OAuth2.",
+  "userAlreadyExistsWebMessage": "L’usuari ja existeix com a usuari web.",
+  "oops": "Oops!",
+  "help": "Ajuda",
+  "goHomepage": "Vés a la pàgina principal",
+  "joinDiscord": "Uneix-te al nostre servidor de Discord",
+  "seeDockerHub": "Veure Docker Hub",
+  "visitGithub": "Visita el repositori de GitHub",
+  "donate": "Fes una donació",
+  "color": "Color",
+  "sponsor": "Patrocinador",
+  "info": "Informació",
+  "pro": "Pro",
+  "page": "Pàgina",
+  "pages": "Pàgines",
+  "loading": "Carregant...",
+  "addToDoc": "Afegeix al document",
+  "reset": "Reset",
+  "apply": "Apply",
+  "noFileSelected": "No file selected. Please upload one.",
+  "legal": {
+    "privacy": "Política de Privacitat",
+    "terms": "Termes i condicions",
+    "accessibility": "Accessibilitat",
+    "cookie": "Política de galetes",
+    "impressum": "Avís Legal",
+    "showCookieBanner": "Cookie Preferences"
+  },
+  "pipeline": {
+    "header": "Menú de Processos (Beta)",
+    "uploadButton": "Càrrega personalitzada",
+    "configureButton": "Configura",
+    "defaultOption": "Personalitzat",
+    "submitButton": "Envia-ho",
+    "help": "Ajuda de Processos",
+    "scanHelp": "Ajuda per a l’Escaneig de Carpetes",
+    "deletePrompt": "Estàs segur que vols eliminar els processos?",
+    "tags": "automatitzar,seqüència,scriptat,procés per lots",
+    "title": "Procés"
+  },
+  "pipelineOptions": {
+    "header": "Configuració del Procés",
+    "pipelineNameLabel": "Nom del Procés",
+    "saveSettings": "Desa la configuració de l'operació",
+    "pipelineNamePrompt": "Introdueix el nom del procés aquí",
+    "selectOperation": "Selecciona Operació",
+    "addOperationButton": "Afegeix operació",
+    "pipelineHeader": "Procés:",
+    "saveButton": "Descarrega",
+    "validateButton": "Valida"
+  },
+  "enterpriseEdition": {
+    "button": "Actualitza a Pro",
+    "warning": "Aquesta funció només està disponible per a usuaris Pro.",
+    "yamlAdvert": "Stirling PDF Pro admet fitxers de configuració YAML i altres funcions d'SSO.",
+    "ssoAdvert": "Busques més funcions de gestió d'usuaris? Consulta Stirling PDF Pro"
+  },
+  "analytics": {
+    "title": "Vols ajudar a millorar Stirling PDF?",
+    "paragraph1": "Stirling PDF té analítiques opcionals per ajudar-nos a millorar el producte. No recopilem cap informació personal ni el contingut dels fitxers.",
+    "paragraph2": "Si us plau, considera habilitar les analítiques per ajudar Stirling PDF a créixer i permetre'ns entendre millor els nostres usuaris.",
+    "enable": "Habilita analítiques",
+    "disable": "Desactiva analítiques",
+    "settings": "Pots canviar la configuració de les analítiques al fitxer config/settings.yml"
+  },
+  "navbar": {
+    "favorite": "Favorits",
+    "recent": "Nou i recentment actualitzat",
+    "darkmode": "Mode Fosc",
+    "language": "Idiomes",
+    "settings": "Opcions",
+    "allTools": "Eines",
+    "multiTool": "Multi Tool",
+    "search": "Search",
+    "sections": {
+      "organize": "Organitzar",
+      "convertTo": "Convertir a PDF",
+      "convertFrom": "Convertir des de PDF",
+      "security": "Signatura i Seguretat",
+      "advance": "Avançat",
+      "edit": "Visualitzar i Editar",
+      "popular": "Popular"
+    }
+  },
+  "settings": {
+    "title": "Opcions",
+    "update": "Actualització Disponible",
+    "updateAvailable": "La versió actual instal·lada és {0}. Una nova versió ({1}) està disponible.",
+    "appVersion": "Versió de l'App:",
+    "downloadOption": {
+      "title": "Trieu l'opció de descàrrega (per a descàrregues d'un sol fitxer no comprimit):",
+      "1": "Obre en la mateixa finestra",
+      "2": "Obre en una finestra nova",
+      "3": "Descarrega fitxer"
+    },
+    "zipThreshold": "Comprimiu els fitxers quan el nombre de fitxers baixats superi",
+    "signOut": "Sortir",
+    "accountSettings": "Configuració del Compte",
+    "bored": {
+      "help": "Activa un joc ocult"
+    },
+    "cacheInputs": {
+      "name": "Desa els valors del formulari",
+      "help": "Habilita per guardar els valors utilitzats prèviament per a futures execucions"
+    }
+  },
+  "changeCreds": {
+    "title": "Canvia les Credencials",
+    "header": "Actualitza les Dades del Compte",
+    "changePassword": "Estàs utilitzant les credencials d'inici de sessió per defecte. Si us plau, introdueix una nova contrasenya",
+    "newUsername": "Nou Nom d'Usuari",
+    "oldPassword": "Contrasenya Actual",
+    "newPassword": "Nova Contrasenya",
+    "confirmNewPassword": "Confirma la Nova Contrasenya",
+    "submit": "Envia els Canvis"
+  },
+  "account": {
+    "title": "Opcions del compte",
+    "accountSettings": "Opcions del compte",
+    "adminSettings": "Opcions d'Administrador - Veure i afegir usuaris",
+    "userControlSettings": "Opcions de Control d'Usuari",
+    "changeUsername": "Canvia el nom d'usuari",
+    "newUsername": "Nom d'usuari nou",
+    "password": "Confirma contrasenya",
+    "oldPassword": "Contrasenya Antiga",
+    "newPassword": "Nova Contrasenya",
+    "changePassword": "Canvia la contrasenya",
+    "confirmNewPassword": "Confirma la Nova Contrasenya",
+    "signOut": "Sortir",
+    "yourApiKey": "Clau API",
+    "syncTitle": "Sincronitza les opcions del navegador amb el compte",
+    "settingsCompare": "Comparador d'Opcions:",
+    "property": "Propietat:",
+    "webBrowserSettings": "Opcions del Navegador",
+    "syncToBrowser": "Sincronitza Compte -> Navegador",
+    "syncToAccount": "Sincronitza Compte <- Navegador"
+  },
+  "adminUserSettings": {
+    "title": "Opcions de Control d'Usuari",
+    "header": "Opcions de Control d'Usuari Admin",
+    "admin": "Admin",
+    "user": "Usuari",
+    "addUser": "Afegir Usuari",
+    "deleteUser": "Elimina Usuari",
+    "confirmDeleteUser": "Vols eliminar aquest usuari?",
+    "confirmChangeUserStatus": "Vols deshabilitar/habilitar aquest usuari?",
+    "usernameInfo": "El nom d'usuari només pot contenir lletres, números i els següents caràcters especials: @._+- o ha de ser una adreça de correu electrònic vàlida.",
+    "roles": "Rols",
+    "role": "Rol",
+    "actions": "Accions",
+    "apiUser": "Usuari amb API limitada",
+    "extraApiUser": "Usuari Addicional amb API limitada",
+    "webOnlyUser": "Usuari només WEB",
+    "demoUser": "Usuari de Demo (Sense configuracions personalitzades)",
+    "internalApiUser": "Usuari d'API Interna",
+    "forceChange": "Força l'usuari a canviar la contrasenya en iniciar sessió",
+    "submit": "Desa Usuari",
+    "changeUserRole": "Canvia el rol de l'usuari",
+    "authenticated": "Autenticat",
+    "editOwnProfil": "Edita el propi perfil",
+    "enabledUser": "usuari habilitat",
+    "disabledUser": "usuari deshabilitat",
+    "activeUsers": "Usuaris Actius:",
+    "disabledUsers": "Usuaris Deshabilitats:",
+    "totalUsers": "Total d'Usuaris:",
+    "lastRequest": "Darrera Sol·licitud",
+    "usage": "View Usage"
+  },
+  "endpointStatistics": {
+    "title": "Endpoint Statistics",
+    "header": "Endpoint Statistics",
+    "top10": "Top 10",
+    "top20": "Top 20",
+    "all": "All",
+    "refresh": "Refresh",
+    "includeHomepage": "Include Homepage ('/')",
+    "includeLoginPage": "Include Login Page ('/login')",
+    "totalEndpoints": "Total Endpoints",
+    "totalVisits": "Total Visits",
+    "showing": "Showing",
+    "selectedVisits": "Selected Visits",
+    "endpoint": "Endpoint",
+    "visits": "Visits",
+    "percentage": "Percentage",
+    "loading": "Loading...",
+    "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
+    "home": "Home",
+    "login": "Login",
+    "top": "Top",
+    "numberOfVisits": "Number of Visits",
+    "visitsTooltip": "Visits: {0} ({1}% of total)",
+    "retry": "Retry"
+  },
+  "database": {
+    "title": "Importació/Exportació de Base de Dades",
+    "header": "Importació/Exportació de Base de Dades",
+    "fileName": "Nom del Fitxer",
+    "creationDate": "Data de Creació",
+    "fileSize": "Mida del Fitxer",
+    "deleteBackupFile": "Elimina el Fitxer de Còpia de Seguretat",
+    "importBackupFile": "Importa el Fitxer de Còpia de Seguretat",
+    "createBackupFile": "Create Backup File",
+    "downloadBackupFile": "Descarrega el Fitxer de Còpia de Seguretat",
+    "info_1": "Quan importis dades, és crucial assegurar-se que l'estructura sigui correcta. Si no estàs segur del que fas, busca l'assessorament d'un professional. Un error en l'estructura pot causar malfuncionaments de l'aplicació, fins i tot impossibilitar-ne l'execució.",
+    "info_2": "El nom del fitxer no importa quan es puja. Es renombrarà després per seguir el format backup_user_yyyyMMddHHmm.sql, assegurant una convenció de nomenclatura consistent.",
+    "submit": "Importa la Còpia de Seguretat",
+    "importIntoDatabaseSuccessed": "Importació a la base de dades completada amb èxit",
+    "backupCreated": "Database backup successful",
+    "fileNotFound": "Fitxer no trobat",
+    "fileNullOrEmpty": "El fitxer no ha de ser nul o buit",
+    "failedImportFile": "Error en la importació del fitxer",
+    "notSupported": "This function is not available for your database connection."
+  },
+  "session": {
+    "expired": "La teva sessió ha expirat. Si us plau, actualitza la pàgina i torna a intentar-ho.",
+    "refreshPage": "Actualitza la pàgina"
+  },
+  "home": {
+    "desc": "L'eina allotjada localment per a necessitats de PDF.",
+    "searchBar": "Cerca funcions...",
+    "viewPdf": {
+      "title": "View/Edit PDF",
+      "desc": "Visualitza, anota, afegeix text o imatges"
+    },
+    "setFavorites": "Configura els favorits",
+    "hideFavorites": "Amaga els favorits",
+    "showFavorites": "Mostra els favorits",
+    "legacyHomepage": "Pàgina d'inici antiga",
+    "newHomePage": "Prova la nostra nova pàgina d'inici!",
+    "alphabetical": "Alfabètic",
+    "globalPopularity": "Popularitat global",
+    "sortBy": "Ordena per:",
+    "multiTool": {
+      "title": "Eina Multifunció de PDF",
+      "desc": "Fusiona, Rota, Reorganitza i Esborra pàgines"
+    },
+    "merge": {
+      "title": "Fusiona",
+      "desc": "Fusiona fàcilment pàgines en una sola."
+    },
+    "split": {
+      "title": "Divideix",
+      "desc": "Divideix PDFs en múltiples documents"
+    },
+    "rotate": {
+      "title": "Rota",
+      "desc": "Rota els PDFs."
+    },
+    "imageToPdf": {
+      "title": "Imatge a PDF",
+      "desc": "Converteix imatge (PNG, JPEG, GIF) a PDF."
+    },
+    "pdfToImage": {
+      "title": "PDF a Imatge",
+      "desc": "Converteix PDF a imatge (PNG, JPEG, GIF)"
+    },
+    "pdfOrganiser": {
+      "title": "Organitza",
+      "desc": "Elimina/reorganitza pàgines en qualsevol ordre"
+    },
+    "addImage": {
+      "title": "Afegir imatge a PDF",
+      "desc": "Afegeix una imatge en un PDF (en progrés)"
+    },
+    "watermark": {
+      "title": "Afegir Marca d'aigua",
+      "desc": "Afegir una marca d'aigua personalitzada en un PDF"
+    },
+    "permissions": {
+      "title": "Canvia permisos",
+      "desc": "Canvia els permisos del document PDF"
+    },
+    "removePages": {
+      "title": "Elimina",
+      "desc": "Elimina pàgines del document PDF."
+    },
+    "addPassword": {
+      "title": "Afegir Contrasenya",
+      "desc": "Xifra el document PDF amb contrasenya."
+    },
+    "removePassword": {
+      "title": "Elimina Contrasenya",
+      "desc": "Elimina la contrasenya del document PDF."
+    },
+    "compressPdfs": {
+      "title": "Comprimeix",
+      "desc": "Comprimeix PDFs per reduir-ne la mida."
+    },
+    "unlockPDFForms": {
+      "title": "Unlock PDF Forms",
+      "desc": "Remove read-only property of form fields in a PDF document."
+    },
+    "changeMetadata": {
+      "title": "Canvia Metadades",
+      "desc": "Canvia/Treu/Afegeix metadades al document PDF."
+    },
+    "fileToPDF": {
+      "title": "Converteix arxiu a PDF",
+      "desc": "Converteix qualsevol arxiu a PDF (DOCX, PNG, XLS, PPT, TXT i més)"
+    },
+    "ocr": {
+      "title": "Executa OCR i neteja escaneigs",
+      "desc": "Neteja escanejats i detecta text d'imatges dins d'un PDF, tornant-lo a afegir com a text."
+    },
+    "extractImages": {
+      "title": "Extreu Imatges",
+      "desc": "Extreu les imatges del PDF i desa-les en un arxiu zip"
+    },
+    "pdfToPDFA": {
+      "title": "PDF a PDF/A",
+      "desc": "Converteix PDF a PDF/A per a l'emmagatzematge a llarg termini."
+    },
+    "PDFToWord": {
+      "title": "PDF a Word",
+      "desc": "Converteix PDF a formats de Word (DOC, DOCX i ODT)"
+    },
+    "PDFToPresentation": {
+      "title": "PDF a Presentació",
+      "desc": "Converteix PDF a formats de presentació (PPT, PPTX i ODP)"
+    },
+    "PDFToText": {
+      "title": "PDF a Text/RTF",
+      "desc": "Converteix PDF a text o format RTF"
+    },
+    "PDFToHTML": {
+      "title": "PDF a HTML",
+      "desc": "Converteix PDF a format HTML"
+    },
+    "PDFToXML": {
+      "title": "PDF a XML",
+      "desc": "Converteix PDF a format XML"
+    },
+    "ScannerImageSplit": {
+      "title": "Detecta/Divideix fotos escanejades",
+      "desc": "Divideix múltiples fotos dins del PDF/foto"
+    },
+    "sign": {
+      "title": "Signa",
+      "desc": "Afegeix signatura al PDF mitjançant dibuix, text o imatge"
+    },
+    "flatten": {
+      "title": "Aplanar",
+      "desc": "Elimina tots els elements i formularis interactius d'un PDF"
+    },
+    "repair": {
+      "title": "Reparar",
+      "desc": "Intenta reparar un PDF danyat o trencat"
+    },
+    "removeBlanks": {
+      "title": "Elimina les pàgines en blanc",
+      "desc": "Detecta i elimina les pàgines en blanc d'un document"
+    },
+    "removeAnnotations": {
+      "title": "Elimina Anotacions",
+      "desc": "Elimina tots els comentaris/anotacions d'un PDF"
+    },
+    "compare": {
+      "title": "Compara",
+      "desc": "Compara i mostra les diferències entre 2 documents PDF"
+    },
+    "certSign": {
+      "title": "Signa amb Certificat",
+      "desc": "Signa un PDF amb Certificat/Clau (PEM/P12)"
+    },
+    "removeCertSign": {
+      "title": "Elimina Signatura de Certificat",
+      "desc": "Elimina la signatura de certificat d'un PDF"
+    },
+    "pageLayout": {
+      "title": "Disposició Multi-Pàgina",
+      "desc": "Fusiona diverses pàgines d'un document PDF en una sola pàgina"
+    },
+    "scalePages": {
+      "title": "Ajusta la mida/escala de la pàgina",
+      "desc": "Canvia la mida/escala de la pàgina i/o del seu contingut."
+    },
+    "pipeline": {
+      "title": "Procés",
+      "desc": "Executa múltiples accions en PDFs definint scripts de procés"
+    },
+    "add-page-numbers": {
+      "title": "Afegir Números de Pàgina",
+      "desc": "Afegir números de pàgina en una localització"
+    },
+    "auto-rename": {
+      "title": "Canvia Automàticament el Nom del Fitxer PDF",
+      "desc": "Canvia automàticament el nom d'un fitxer PDF en funció de la capçalera detectada"
+    },
+    "adjust-contrast": {
+      "title": "Ajusta Colors/Contrast",
+      "desc": "Ajusta colors/contrast, saturació i brillantor"
+    },
+    "crop": {
+      "title": "Talla PDF",
+      "desc": "Talla PDF per reduir la mida (manté el text!)"
+    },
+    "autoSplitPDF": {
+      "title": "Divisió Automàtica de Pàgines",
+      "desc": "Divideix automàticament un PDF escanejat amb un codi QR de separació de pàgines escanejades"
+    },
+    "sanitizePdf": {
+      "title": "Neteja",
+      "desc": "Elimina scripts i altres elements dels fitxers PDF"
+    },
+    "URLToPDF": {
+      "title": "URL/Lloc Web a PDF",
+      "desc": "Converteix qualsevol URL http(s) a PDF"
+    },
+    "HTMLToPDF": {
+      "title": "HTML a PDF",
+      "desc": "Converteix qualsevol fitxer HTML o arxiu comprimit a PDF"
+    },
+    "MarkdownToPDF": {
+      "title": "Markdown a PDF",
+      "desc": "Converteix qualsevol fitxer Markdown a PDF"
+    },
+    "PDFToMarkdown": {
+      "title": "PDF to Markdown",
+      "desc": "Converts any PDF to Markdown"
+    },
+    "getPdfInfo": {
+      "title": "Obteniu Tota la Informació sobre el PDF",
+      "desc": "Recupera tota la informació possible sobre els PDFs"
+    },
+    "extractPage": {
+      "title": "Extreu pàgina(es)",
+      "desc": "Extreu pàgines seleccionades d'un PDF"
+    },
+    "PdfToSinglePage": {
+      "title": "PDF a Una Sola Pàgina Gran",
+      "desc": "Fusiona totes les pàgines d'un PDF en una sola pàgina gran"
+    },
+    "showJS": {
+      "title": "Mostra Javascript",
+      "desc": "Cerca i mostra qualsevol JS injectat en un PDF"
+    },
+    "autoRedact": {
+      "title": "Redacció Automàtica",
+      "desc": "Redacta automàticament (enfosqueix) text en un PDF basat en el text introduït"
+    },
+    "redact": {
+      "title": "Redacció manual",
+      "desc": "Redacta un PDF segons el text seleccionat, les formes dibuixades i/o les pàgines seleccionades"
+    },
+    "tableExtraxt": {
+      "title": "PDF a CSV",
+      "desc": "Extreu taules d'un PDF convertint-les a CSV"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Divisió Automàtica per Mida/Quantitat",
+      "desc": "Divideix un únic PDF en múltiples documents basant-se en la mida, el nombre de pàgines o el nombre de documents"
+    },
+    "overlay-pdfs": {
+      "title": "Superposar PDFs",
+      "desc": "Superposa PDFs sobre un altre PDF"
+    },
+    "split-by-sections": {
+      "title": "Divideix PDF per Seccions",
+      "desc": "Divideix cada pàgina d'un PDF en seccions horitzontals i verticals més petites"
+    },
+    "AddStampRequest": {
+      "title": "Afegeix segell al PDF",
+      "desc": "Afegeix segells de text o imatge en ubicacions establertes"
+    },
+    "removeImagePdf": {
+      "title": "Elimina imatge",
+      "desc": "Elimina imatges d'un PDF per reduir la mida del fitxer"
+    },
+    "splitPdfByChapters": {
+      "title": "Divideix PDF per Capítols",
+      "desc": "Divideix un PDF en múltiples fitxers segons la seva estructura de capítols."
+    },
+    "validateSignature": {
+      "title": "Validar Signatura PDF",
+      "desc": "Verifica les signatures digitals i els certificats en documents PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Reemplaça i Inverteix Color",
+      "desc": "Reemplaça el color del text i el fons en un PDF i inverteix tot el color del PDF per reduir la mida del fitxer"
+    }
+  },
+  "viewPdf": {
+    "tags": "veure,llegir,anotar,text,imatge",
+    "title": "View/Edit PDF",
+    "header": "Visualitza PDF"
+  },
+  "multiTool": {
+    "tags": "Eina Multifunció,operacions múltiples,UI,clic i arrossega,costat frontal,client",
+    "title": "Eina multifunció de PDF",
+    "header": "Eina multifunció de PDF",
+    "uploadPrompts": "Nom del fitxer",
+    "selectAll": "Selecciona-ho tot",
+    "deselectAll": "Desselecciona-ho tot",
+    "selectPages": "Selecció de pàgines",
+    "selectedPages": "Pàgines seleccionades",
+    "page": "Pàgina",
+    "deleteSelected": "Suprimeix seleccionades",
+    "downloadAll": "Exporta",
+    "downloadSelected": "Exporta seleccionades",
+    "insertPageBreak": "Insereix un salt de pàgina",
+    "addFile": "Afegeix fitxer",
+    "rotateLeft": "Gira a l'esquerra",
+    "rotateRight": "Gira a la dreta",
+    "split": "Divideix",
+    "moveLeft": "Mou a l'esquerra",
+    "moveRight": "Mou a la dreta",
+    "delete": "Suprimeix",
+    "dragDropMessage": "Pàgina(es) seleccionada(es)",
+    "undo": "Desfés",
+    "redo": "Refés"
+  },
+  "merge": {
+    "tags": "fusió,operacions de pàgina,backend,servidor",
+    "title": "Fusiona",
+    "header": "Fusiona múltiples PDFs (2+)",
+    "sortByName": "Ordena per nom",
+    "sortByDate": "Ordena per data",
+    "removeCertSign": "Eliminar la signatura digital en el fitxer fusionat?",
+    "submit": "Fusiona"
+  },
+  "split": {
+    "tags": "operacions de pàgina,divideix,Multi-Pàgina,talla,servidor",
+    "title": "Divideix PDF",
+    "header": "Divideix PDF",
+    "desc": {
+      "1": "Els números seleccionats indiquen les pàgines on vols realitzar la divisió",
+      "2": "Per exemple, seleccionant 1,3,7-9 dividiries un document de 10 pàgines en 6 PDFs separats amb:",
+      "3": "Document #1: Pàgina 1",
+      "4": "Document #2: Pàgina 2 i 3",
+      "5": "Document #3: Pàgina 4, 5, 6 i 7",
+      "6": "Document #4: Pàgina 8",
+      "7": "Document #5: Pàgina 9",
+      "8": "Document #6: Pàgina 10"
+    },
+    "splitPages": "Introdueix les pàgines per dividir-les:",
+    "submit": "Divideix"
+  },
+  "rotate": {
+    "tags": "servidor",
+    "title": "Rota PDF",
+    "header": "Rota PDF",
+    "selectAngle": "Selecciona l'angle de gir (en múltiples de 90 graus):",
+    "submit": "Rota"
+  },
+  "imageToPdf": {
+    "tags": "conversió,img,jpg,imatge,foto"
+  },
+  "pdfToImage": {
+    "tags": "conversió,img,jpg,imatge,foto",
+    "title": "PDF a Imatge",
+    "header": "PDF a Imatge",
+    "selectText": "Format d'Imatge",
+    "singleOrMultiple": "Tipus d'Imatge Resultant",
+    "single": "Única Imatge Gran",
+    "multi": "Múltiples Imatges",
+    "colorType": "Tipus de Color",
+    "color": "Color",
+    "grey": "Escala de Grisos",
+    "blackwhite": "Blanc i Negre (Pot perdre dades!)",
+    "submit": "Converteix",
+    "info": "Python no està instal·lat. És necessari per a la conversió a WebP.",
+    "placeholder": "(p. ex. 1,2,8 o 4,7,12-16 o 2n-1)"
+  },
+  "pdfOrganiser": {
+    "tags": "duplex,parells,senars,ordenar,moure",
+    "title": "Organitzador de Pàgines",
+    "header": "Organitzador de Pàgines PDF",
+    "submit": "Reorganitza Pàgines",
+    "mode": {
+      "_value": "Mode",
+      "1": "Ordre Personalitzat de Pàgines",
+      "2": "Ordre Invertit",
+      "3": "Classificació Dúplex",
+      "4": "Classificació en Llibret",
+      "5": "Classificació en Llibret de Puntada Lateral",
+      "6": "Divisió Parells-Senars",
+      "7": "Eliminar Primer",
+      "8": "Eliminar Últim",
+      "9": "Eliminar Primer i Últim",
+      "10": "Fusionar Parells-Senars",
+      "11": "Duplicate all pages"
+    },
+    "placeholder": "(p. ex. 1,3,2 o 4-8,2,10-12 o 2n-1)"
+  },
+  "addImage": {
+    "tags": "img,jpg,imatge,foto",
+    "title": "Afegir Imatge",
+    "header": "Afegir Imatge a PDF (en construcció)",
+    "everyPage": "Totes les pàgines?",
+    "upload": "Afegir Imatge",
+    "submit": "Afegir Imatge"
+  },
+  "watermark": {
+    "tags": "text,repetició,etiqueta,propia,copyright,marca registrada,img,jpg,imatge,foto",
+    "title": "Afegir Marca d'Aigua",
+    "header": "Afegir Marca d'Aigua",
+    "customColor": "Color de Text Personalitzat",
+    "selectText": {
+      "1": "Selecciona el PDF per afegir la Marca d'Aigua:",
+      "2": "Text de la Marca d'Aigua",
+      "3": "Mida de la Font:",
+      "4": "Rotació (0-360):",
+      "5": "Separació d'amplada (Espai horitzontal entre cada Marca d'Aigua):",
+      "6": "Separació d'alçada (Espai vertical entre cada Marca d'Aigua):",
+      "7": "Opacitat (0% - 100%):",
+      "8": "Tipus de Marca d'Aigua:",
+      "9": "Imatge de la Marca d'Aigua:",
+      "10": "Converteix PDF a PDF-Image"
+    },
+    "submit": "Afegir Marca d'Aigua",
+    "type": {
+      "1": "Text",
+      "2": "Imatge"
+    }
+  },
+  "permissions": {
+    "tags": "lectura,escriptura,editar,imprimir",
+    "title": "Canviar Permissos",
+    "header": "Canviar Permissos",
+    "warning": "Advertència: per fer que aquests permisos siguin inalterables, es recomana establir-los amb una contrasenya a través de la pàgina d'afegir contrasenya",
+    "selectText": {
+      "1": "Selecciona el PDF per Canviar Permissos",
+      "2": "Permissos a canviar",
+      "3": "Evita el muntatge del document",
+      "4": "Evita l'extracció de contingut",
+      "5": "Evita l'extracció de contingut per accessibilitat",
+      "6": "Evita emplenar formularis",
+      "7": "Evita modificacions",
+      "8": "Evita modificacions d'annotacions",
+      "9": "Evita impressió",
+      "10": "Evita impressió en diferents formats"
+    },
+    "submit": "Canviar Permissos"
+  },
+  "removePages": {
+    "tags": "eliminar pàgines,suprimir pàgines"
+  },
+  "addPassword": {
+    "tags": "segur,seguretat",
+    "title": "Afegir Contrasenya",
+    "header": "Afegir contrasenya (Encriptat)",
+    "selectText": {
+      "1": "PDF a encriptar",
+      "2": "Contrasenya",
+      "3": "Longitud de la clau de xifratge",
+      "4": "Valors més alts són més forts, però els valors més baixos tenen una millor compatibilitat.",
+      "5": "Permissos a Establir",
+      "6": "Evita el muntatge del document",
+      "7": "Evita l'extracció de contingut",
+      "8": "Evita l'extracció per accessibilitat",
+      "9": "Evita emplenar formularis",
+      "10": "Evita modificacions",
+      "11": "Evita modificacions d'annotacions",
+      "12": "Evita impressió",
+      "13": "Evita impressió en diferents formats",
+      "14": "Contrasenya d'Administrador",
+      "15": "Restringeix el que es pot fer amb el document un cop obert (No compatible amb tots els lectors)",
+      "16": "Restringeix l'obertura del document"
+    },
+    "submit": "Encripta"
+  },
+  "removePassword": {
+    "tags": "segur,desencripta,seguretat,eliminar contrasenya,suprimir contrasenya",
+    "title": "Eliminar Contrasenya",
+    "header": "Eliminar Contrasenya (Desxifrar)",
+    "selectText": {
+      "1": "Selecciona el PDF a Desxifrar",
+      "2": "Contrasenya"
+    },
+    "submit": "Eliminar Contrasenya"
+  },
+  "compressPdfs": {
+    "tags": "estrènyer,petit,minúscul"
+  },
+  "unlockPDFForms": {
+    "tags": "remove,delete,form,field,readonly",
+    "title": "Remove Read-Only from Form Fields",
+    "header": "Unlock PDF Forms",
+    "submit": "Remove"
+  },
+  "changeMetadata": {
+    "tags": "Títol,autor,data,creació,hora,editor,productor,estadístiques",
+    "title": "Títol:",
+    "header": "Canvia Metadades",
+    "selectText": {
+      "1": "Edita les variables a canviar",
+      "2": "Neteja totes les metadades",
+      "3": "Mostra Metadades Personalitzades:",
+      "4": "Altres Metadades:",
+      "5": "Afegir entrada personalitzada"
+    },
+    "author": "Autor:",
+    "creationDate": "Data de Creació (yyyy/MM/dd HH:mm:ss):",
+    "creator": "Creador:",
+    "keywords": "Paraules clau:",
+    "modDate": "Data de Modificació (yyyy/MM/dd HH:mm:ss):",
+    "producer": "Productor:",
+    "subject": "Assumpte:",
+    "trapped": "Atrapat:",
+    "submit": "Canvia"
+  },
+  "fileToPDF": {
+    "tags": "transformació,format,document,imatge,diapositiva,text,conversió,oficina,docs,word,excel,powerpoint",
+    "title": "Arxiu a PDF",
+    "header": "Converteix arxiu a PDF",
+    "credit": "Utilitza LibreOffice i Unoconv per a la conversió.",
+    "supportedFileTypesInfo": "Tipus de fitxers admesos",
+    "supportedFileTypes": "Els tipus de fitxers admesos haurien d'incloure els següents, però per obtenir una llista completa actualitzada dels formats compatibles, consulteu la documentació de LibreOffice",
+    "submit": "Converteix a PDF"
+  },
+  "ocr": {
+    "tags": "reconeixement,text,imatge,escaneig,lectura,identificació,detecció,editable",
+    "title": "OCR / Neteja Escanejats",
+    "header": "Neteja Escanejats / OCR (Reconeixement Òptic de Caràcters)",
+    "selectText": {
+      "1": "Selecciona els idiomes que s'han de detectar dins del PDF (els que s'indiquen són els detectats):",
+      "2": "Genera un fitxer de text que contingui el text OCR juntament amb el PDF editat per OCR",
+      "3": "Corregeix pàgines escanejades amb un angle esbiaixat girant-les a la seva posició correcta",
+      "4": "Neteja la pàgina, de manera que és menys probable que l'OCR trobi soroll de text de fons. (Sense canvis en la sortida)",
+      "5": "Neteja la pàgina, de manera que és menys probable que l'OCR trobi text en el soroll de fons, mantenint la neteja en la sortida.",
+      "6": "Ignora les pàgines que tenen text interactiu, només les pàgines OCR que són imatges",
+      "7": "Força OCR, l'OCR de cada pàgina elimina tots els elements de text originals",
+      "8": "Normal (error si el PDF conté text)",
+      "9": "Opcions Addicionals",
+      "10": "Mode OCR",
+      "11": "Elimina Imatges després de l'OCR (Elimina TOTES les imatges, útil si forma part d'un procés de conversió)",
+      "12": "Tipus de Renderització (Avançat)"
+    },
+    "help": "Llegeix aquesta documentació sobre com utilitzar-la per a altres idiomes i/o no utilitzar-la a Docker",
+    "credit": "Aquest servei fa servir qpdf i Tesseract per a OCR.",
+    "submit": "Processa PDF amb OCR"
+  },
+  "extractImages": {
+    "tags": "imatge,foto,desa,arxiva,zip,captura,agafa",
+    "title": "Extreu Imatges",
+    "header": "Extreu Imatges",
+    "selectText": "Selecciona el format d'imatge al qual convertir les imatges extretes",
+    "allowDuplicates": "Desa imatges duplicades",
+    "submit": "Extreu"
+  },
+  "pdfToPDFA": {
+    "tags": "arxiu,llarg termini,estàndard,conversió,emmagatzematge,preservació",
+    "title": "PDF a PDF/A",
+    "header": "PDF a PDF/A",
+    "credit": "Utilitza libreoffice per a la conversió a PDF/A",
+    "submit": "Converteix",
+    "tip": "Actualment no funciona per a múltiples entrades al mateix temps",
+    "outputFormat": "Format de sortida",
+    "pdfWithDigitalSignature": "El PDF conté una signatura digital. Aquesta serà eliminada en el següent pas."
+  },
+  "PDFToWord": {
+    "tags": "doc,docx,odt,word,transformació,format,conversió,oficina,microsoft,fitxer doc",
+    "title": "PDF a Word",
+    "header": "PDF a Word",
+    "selectText": {
+      "1": "Format d'Arxiu de Sortida"
+    },
+    "credit": "Utilitza LibreOffice per a la conversió d'Arxius.",
+    "submit": "Converteix"
+  },
+  "PDFToPresentation": {
+    "tags": "diapositives,presentació,oficina,microsoft",
+    "title": "PDF a Presentació",
+    "header": "PDF a Presentació",
+    "selectText": {
+      "1": "Format d'Arxiu de Sortida"
+    },
+    "credit": "Utilitza LibreOffice per a la conversió d'Arxius.",
+    "submit": "Converteix"
+  },
+  "PDFToText": {
+    "tags": "format ric,format de text ric,format de text enriquit",
+    "title": "PDF a Text/RTF",
+    "header": "PDF a Text/RTF",
+    "selectText": {
+      "1": "Format d'Arxiu de Sortida"
+    },
+    "credit": "Utilitza LibreOffice per a la conversió d'Arxius.",
+    "submit": "Converteix"
+  },
+  "PDFToHTML": {
+    "tags": "contingut web,compatible amb navegadors",
+    "title": "PDF a HTML",
+    "header": "PDF a HTML",
+    "credit": "Utilitza pdftohtml per a la conversió d'Arxius.",
+    "submit": "Converteix"
+  },
+  "PDFToXML": {
+    "tags": "extracció de dades,contingut estructurat,interop,transformació,convertir",
+    "title": "PDF a XML",
+    "header": "PDF a XML",
+    "credit": "Utilitza LibreOffice per a la conversió d'Arxius.",
+    "submit": "Converteix"
+  },
+  "ScannerImageSplit": {
+    "tags": "separa,detecció automàtica,escaneigs,multifoto,organitzar",
+    "selectText": {
+      "1": "Llindar d'angle:",
+      "2": "Estableix l'angle mínim absolut necessari perquè la imatge es giri (per defecte: 10).",
+      "3": "Tolerància:",
+      "4": "Determina l'interval de variació de color al voltant del color de fons estimat (per defecte: 30).",
+      "5": "Àrea Mínima:",
+      "6": "Estableix el llindar d'àrea mínima per a una foto (per defecte: 10000).",
+      "7": "Àrea de contorn mínima:",
+      "8": "Estableix el llindar mínim de l'àrea de contorn per a una foto",
+      "9": "Mida de Vora:",
+      "10": "Estableix la mida de la vora afegida i eliminada per evitar vores blanques a la sortida (per defecte: 1)."
+    },
+    "info": "Python no està instal·lat. És necessari per executar-ho."
+  },
+  "sign": {
+    "tags": "autoritza,inicis,signatura dibuixada,signatura de text,signatura amb imatge",
+    "title": "Signa",
+    "header": "Signa els PDF",
+    "upload": "Penja la imatge",
+    "draw": "Dibuixa la signatura",
+    "text": "Entrada de text",
+    "clear": "Esborra",
+    "add": "Afegeix",
+    "saved": "Signatures Desades",
+    "save": "Desa Signatura",
+    "personalSigs": "Signatures Personals",
+    "sharedSigs": "Signatures Compartides",
+    "noSavedSigs": "No s'han trobat signatures desades",
+    "addToAll": "Add to all pages",
+    "delete": "Delete",
+    "first": "First page",
+    "last": "Last page",
+    "next": "Next page",
+    "previous": "Previous page",
+    "maintainRatio": "Toggle maintain aspect ratio",
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "flatten": {
+    "tags": "estàtic,desactivar,no interactiu,simplifica",
+    "title": "Aplanar",
+    "header": "Aplana els PDF",
+    "flattenOnlyForms": "Aplana només els formularis",
+    "submit": "Aplanar"
+  },
+  "repair": {
+    "tags": "repara,restaura,correcció,recupera",
+    "title": "Reparar",
+    "header": "Repara els PDF",
+    "submit": "Reparar"
+  },
+  "removeBlanks": {
+    "tags": "neteja,simplifica,sense contingut,organitza",
+    "title": "Elimina els espais en blanc",
+    "header": "Elimina les pàgines en blanc",
+    "threshold": "Llindar:",
+    "thresholdDesc": "Llindar per determinar el nivell de blanc que ha de tenir un píxel per considerar-lo blanc",
+    "whitePercent": "Percentatge de blanc (%):",
+    "whitePercentDesc": "Percentatge de la pàgina que ha de ser blanca per eliminar-la",
+    "submit": "Elimina els espais en blanc"
+  },
+  "removeAnnotations": {
+    "tags": "comentaris,ressalta,notes,marcatge,elimina",
+    "title": "Elimina Anotacions",
+    "header": "Elimina Anotacions",
+    "submit": "Elimina"
+  },
+  "compare": {
+    "tags": "diferencia,contrasta,canvis,anàlisi",
+    "title": "Comparar",
+    "header": "Compara PDF",
+    "highlightColor": {
+      "1": "Color de Ressaltat 1:",
+      "2": "Color de Ressaltat 2:"
+    },
+    "document": {
+      "1": "Document 1",
+      "2": "Document 2"
+    },
+    "submit": "Comparar",
+    "complex": {
+      "message": "Un o tots dos documents proporcionats són fitxers grans; la precisió de la comparació pot veure's reduïda."
+    },
+    "large": {
+      "file": {
+        "message": "Un o tots dos documents proporcionats són massa grans per ser processats."
+      }
+    },
+    "no": {
+      "text": {
+        "message": "Un o tots dos dels PDFs seleccionats no tenen contingut de text. Si us plau, trieu PDFs amb text per a la comparació."
+      }
+    }
+  },
+  "certSign": {
+    "tags": "autentica,PEM,P12,oficial,encripta",
+    "title": "Signatura amb Certificat",
+    "header": "Signa un PDF amb el teu certificat (Treball en curs)",
+    "selectPDF": "Seleccioneu un fitxer PDF per signar:",
+    "jksNote": "Nota: Si el vostre tipus de certificat no es troba a la llista, convertiu-lo a un fitxer de Java Keystore (.jks) utilitzant l'eina de línia de comandes keytool. A continuació, trieu l'opció de fitxer .jks més avall.",
+    "selectKey": "Seleccioneu el vostre fitxer de clau privada (format PKCS#8, podria ser .pem o .der):",
+    "selectCert": "Seleccioneu el vostre fitxer de certificat (format X.509, podria ser .pem o .der):",
+    "selectP12": "Seleccioneu el vostre fitxer de magatzem de claus PKCS#12 (.p12 o .pfx) (Opcional, si es proporciona, hauria de contenir la vostra clau privada i certificat):",
+    "selectJKS": "Seleccioneu el vostre fitxer de Java Keystore (.jks o .keystore):",
+    "certType": "Tipus de certificat",
+    "password": "Introduïu la contrasenya del vostre magatzem de claus o clau privada (si n'hi ha):",
+    "showSig": "Mostra la signatura",
+    "reason": "Motiu",
+    "location": "Ubicació",
+    "name": "Nom",
+    "showLogo": "Mostra el logotip",
+    "submit": "Signa PDF"
+  },
+  "removeCertSign": {
+    "tags": "autentica,PEM,P12,oficial,desencripta",
+    "title": "Elimina la Signatura del Certificat",
+    "header": "Elimina el certificat digital del PDF",
+    "selectPDF": "Seleccioneu un fitxer PDF:",
+    "submit": "Elimina Signatura"
+  },
+  "pageLayout": {
+    "tags": "fusió,composició,vista única,organitzar",
+    "title": "Disposició de Múltiples Pàgines",
+    "header": "Disposició de Múltiples Pàgines",
+    "pagesPerSheet": "Pàgines per full:",
+    "addBorder": "Afegeix Marcs",
+    "submit": "Envia"
+  },
+  "scalePages": {
+    "tags": "redimensionar,modificar,dimensió,adaptar",
+    "title": "Ajusta l'escala de la pàgina",
+    "header": "Ajusta l'escala de la pàgina",
+    "pageSize": "Mida d'una pàgina del document.",
+    "keepPageSize": "Mida Original",
+    "scaleFactor": "Nivell de zoom (retall) d'una pàgina.",
+    "submit": "Envia"
+  },
+  "add-page-numbers": {
+    "tags": "pàgina,etiqueta,organitza,indexa"
+  },
+  "auto-rename": {
+    "tags": "autodetect,basat en capçalera,organitzar,reetiquetar",
+    "title": "Canvi de Nom Automàtic",
+    "header": "Canvi de Nom Automàtic de PDF",
+    "submit": "Canvi de Nom Automàtic"
+  },
+  "adjust-contrast": {
+    "tags": "correcció de color,ajustar,modificar,millorar"
+  },
+  "crop": {
+    "tags": "retallar,reduir,editar,donar forma",
+    "title": "Talla",
+    "header": "Talla PDF",
+    "submit": "Envia"
+  },
+  "autoSplitPDF": {
+    "tags": "basat en QR,separar,segmentació d'escaneig,organitzar",
+    "title": "Divisió Automàtica de PDF",
+    "header": "Divisió Automàtica de PDF",
+    "description": "Imprimeix, insereix, escaneja, puja i deixa que el sistema separi automàticament els teus documents. No cal ordenar manualment.",
+    "selectText": {
+      "1": "Imprimeix algunes fulles divisòries de les opcions següents (en blanc i negre està bé).",
+      "2": "Escaneja tots els teus documents alhora inserint una fulla divisòria entre cada document.",
+      "3": "Puja el fitxer PDF escanejat gran i deixa que Stirling PDF faci la resta.",
+      "4": "Les pàgines divisòries es detecten i eliminen automàticament, garantint un document final ordenat."
+    },
+    "formPrompt": "Envia un PDF que contingui les pàgines divisòries de Stirling-PDF:",
+    "duplexMode": "Mode Dúplex (Escaneig de davant i darrere)",
+    "dividerDownload2": "Descarrega 'Divisor Automàtic (amb instruccions).pdf'",
+    "submit": "Envia"
+  },
+  "sanitizePdf": {
+    "tags": "netejar,segur,sense riscos,eliminar amenaces"
+  },
+  "URLToPDF": {
+    "tags": "captura web,desa pàgina,web a document,arxiu",
+    "title": "URL a PDF",
+    "header": "URL a PDF",
+    "submit": "Converteix",
+    "credit": "Utilitza WeasyPrint"
+  },
+  "HTMLToPDF": {
+    "tags": "marcatge,contingut web,transformació,convertir",
+    "title": "HTML a PDF",
+    "header": "HTML a PDF",
+    "help": "Accepta fitxers HTML i arxius ZIP que contenen html/css/imatges, etc. necessaris",
+    "submit": "Converteix",
+    "credit": "Utilitza WeasyPrint",
+    "zoom": "Nivell de zoom per mostrar el lloc web.",
+    "pageWidth": "Amplada de la pàgina en centímetres. (En blanc per defecte)",
+    "pageHeight": "Alçada de la pàgina en centímetres. (En blanc per defecte)",
+    "marginTop": "Margen superior de la pàgina en mil·límetres. (En blanc per defecte)",
+    "marginBottom": "Marge inferior de la pàgina en mil·límetres. (En blanc per defecte)",
+    "marginLeft": "Marge esquerre de la pàgina en mil·límetres. (En blanc per defecte)",
+    "marginRight": "Marge dret de la pàgina en mil·límetres. (En blanc per defecte)",
+    "printBackground": "Renderitza el fons dels llocs web.",
+    "defaultHeader": "Habilita la Capçalera per Defecte (Nom i número de pàgina)",
+    "cssMediaType": "Canvia el tipus de mitjà CSS de la pàgina.",
+    "none": "Cap",
+    "print": "Imprimir",
+    "screen": "Pantalla"
+  },
+  "MarkdownToPDF": {
+    "tags": "marcatge,contingut web,transformació,convertir",
+    "title": "Markdown To PDF",
+    "header": "Markdown To PDF",
+    "submit": "Converteix",
+    "help": "Treball en curs",
+    "credit": "Utilitza WeasyPrint"
+  },
+  "PDFToMarkdown": {
+    "tags": "marcatge,contingut web,transformació,convertir,md",
+    "title": "PDF To Markdown",
+    "header": "PDF To Markdown",
+    "submit": "Convert"
+  },
+  "getPdfInfo": {
+    "tags": "informació,dades,estadístiques,estadístiques",
+    "title": "Obteniu Informació del PDF",
+    "header": "Obteniu Informació del PDF",
+    "submit": "Obteniu Informació",
+    "downloadJson": "Descarrega JSON"
+  },
+  "extractPage": {
+    "tags": "extreure"
+  },
+  "PdfToSinglePage": {
+    "tags": "pàgina única"
+  },
+  "showJS": {
+    "tags": "JS",
+    "title": "Mostra Javascript",
+    "header": "Mostra Javascript",
+    "downloadJS": "Descarrega Javascript",
+    "submit": "Mostra"
+  },
+  "autoRedact": {
+    "tags": "Redactar,Amagar,ressaltar en negre,negre,marcador,ocult",
+    "title": "Redacció Automàtica",
+    "header": "Redacció Automàtica",
+    "colorLabel": "Color",
+    "textsToRedactLabel": "Text a Redactar (separat per línies)",
+    "textsToRedactPlaceholder": "p. ex. \\nConfidencial \\nMolt Secret",
+    "useRegexLabel": "Utilitza Regex",
+    "wholeWordSearchLabel": "Cerca de Paraula Completa",
+    "customPaddingLabel": "Espai Extra Personalitzat",
+    "convertPDFToImageLabel": "Converteix PDF a Imatge PDF (S'utilitza per eliminar text darrere del quadre)",
+    "submitButton": "Envia"
+  },
+  "redact": {
+    "tags": "Redactar,Amagar,ressaltar en negre,negre,marcador,ocult,manual",
+    "title": "Redacció manual",
+    "header": "Redacció manual",
+    "submit": "Redacta",
+    "textBasedRedaction": "Redacció basada en text",
+    "pageBasedRedaction": "Redacció basada en pàgines",
+    "convertPDFToImageLabel": "Converteix PDF a PDF-imatge (utilitzat per eliminar text darrere del quadre)",
+    "pageRedactionNumbers": {
+      "title": "Pàgines",
+      "placeholder": "(p. ex. 1,2,8 o 4,7,12-16 o 2n-1)"
+    },
+    "redactionColor": {
+      "title": "Color de redacció"
+    },
+    "export": "Exporta",
+    "upload": "Puja",
+    "boxRedaction": "Redacció amb dibuix de quadre",
+    "zoom": "Zoom",
+    "zoomIn": "Apropa",
+    "zoomOut": "Allunya",
+    "nextPage": "Pàgina següent",
+    "previousPage": "Pàgina anterior",
+    "toggleSidebar": "Commuta la barra lateral",
+    "showThumbnails": "Mostra miniatures",
+    "showDocumentOutline": "Mostra l'esquema del document (doble clic per expandir/contraure tots els elements)",
+    "showAttatchments": "Mostra els adjunts",
+    "showLayers": "Mostra les capes (doble clic per restablir totes les capes a l'estat per defecte)",
+    "colourPicker": "Selector de colors",
+    "findCurrentOutlineItem": "Troba l'element actual de l'esquema",
+    "applyChanges": "Aplica els canvis"
+  },
+  "tableExtraxt": {
+    "tags": "CSV,Extracció de taules,extreure,convertir"
+  },
+  "autoSizeSplitPDF": {
+    "tags": "pdf,dividir,document,organització"
+  },
+  "overlay-pdfs": {
+    "tags": "Superposició",
+    "header": "Superposar Fitxers PDF",
+    "baseFile": {
+      "label": "Selecciona el Fitxer PDF Base"
+    },
+    "overlayFiles": {
+      "label": "Selecciona els Fitxers PDF a Superposar"
+    },
+    "mode": {
+      "label": "Selecciona el Mode de Superposició",
+      "sequential": "Superposició Seqüencial",
+      "interleaved": "Superposició Intercalada",
+      "fixedRepeat": "Superposició de Repte Fix"
+    },
+    "counts": {
+      "label": "Nombre de Superposicions (per al Mode de Repte Fix)",
+      "placeholder": "Introdueix els nombres separats per comes (p. ex., 2,3,1)"
+    },
+    "position": {
+      "label": "Selecciona la Posició de la Superposició",
+      "foreground": "Primer pla",
+      "background": "Fons"
+    },
+    "submit": "Envia"
+  },
+  "split-by-sections": {
+    "tags": "Divisió per seccions,Divideix,Personalitza",
+    "title": "Divideix PDF per Seccions",
+    "header": "Divideix el PDF en Seccions",
+    "horizontal": {
+      "label": "Divisions Horitzontals",
+      "placeholder": "Introdueix el nombre de divisions horitzontals"
+    },
+    "vertical": {
+      "label": "Divisions Verticals",
+      "placeholder": "Introdueix el nombre de divisions verticals"
+    },
+    "submit": "Divideix PDF",
+    "merge": "Fusiona en un sol PDF"
+  },
+  "AddStampRequest": {
+    "tags": "Segell, Afegeix imatge, Centra imatge, Marca d'aigua, PDF, Insereix, Personalitza",
+    "header": "Segella PDF",
+    "title": "Segella PDF",
+    "stampType": "Tipus de Segell",
+    "stampText": "Text del Segell",
+    "stampImage": "Imatge del Segell",
+    "alphabet": "Alfabet",
+    "fontSize": "Mida de la Font/Imatge",
+    "rotation": "Rotació",
+    "opacity": "Opacitat",
+    "position": "Posició",
+    "overrideX": "Modifica la Coordenada X",
+    "overrideY": "Modifica la Coordenada Y",
+    "customMargin": "Marge Personalitzat",
+    "customColor": "Color de Text Personalitzat",
+    "submit": "Envia"
+  },
+  "removeImagePdf": {
+    "tags": "Elimina imatge,Operacions de pàgina,Back-end,Servidor"
+  },
+  "splitPdfByChapters": {
+    "tags": "dividir,capítols,marcadors,organitza"
+  },
+  "validateSignature": {
+    "tags": "signatura,verifica,valida,pdf,certificat,signatura digital,Validar signatura,Validar certificat",
+    "title": "Validar Signatures PDF",
+    "header": "Validar Signatures Digitals",
+    "selectPDF": "Selecciona fitxer PDF signat",
+    "submit": "Validar Signatures",
+    "results": "Resultats de Validació",
+    "status": {
+      "_value": "Estat",
+      "valid": "Vàlid",
+      "invalid": "Invàlid"
+    },
+    "signer": "Signant",
+    "date": "Data",
+    "reason": "Motiu",
+    "location": "Ubicació",
+    "noSignatures": "No s'han trobat signatures digitals en aquest document",
+    "chain": {
+      "invalid": "La validació de la cadena de certificats ha fallat - no es pot verificar la identitat del signant"
+    },
+    "trust": {
+      "invalid": "El certificat no es troba en el magatzem de confiança - no es pot verificar la font"
+    },
+    "cert": {
+      "expired": "El certificat ha expirat",
+      "revoked": "El certificat ha estat revocat",
+      "info": "Detalls del Certificat",
+      "issuer": "Emissor",
+      "subject": "Assumpte",
+      "serialNumber": "Número de sèrie",
+      "validFrom": "Vàlid des de",
+      "validUntil": "Vàlid fins a",
+      "algorithm": "Algorisme",
+      "keySize": "Mida de la clau",
+      "version": "Versió",
+      "keyUsage": "Ús de la clau",
+      "selfSigned": "Autofirmat",
+      "bits": "bits"
+    },
+    "signature": {
+      "info": "Informació de la Signatura",
+      "_value": "Signatura",
+      "mathValid": "La signatura és matemàticament vàlida, PERÒ:"
+    },
+    "selectCustomCert": "Fitxer de Certificat Personalitzat X.509 (Opcional)"
+  },
+  "replace-color": {
+    "title": "Reemplaça-Inverteix-Color",
+    "header": "Reemplaça-Inverteix Color en PDF",
+    "selectText": {
+      "1": "Opcions per Reemplaçar o Invertir color",
+      "2": "Per defecte (Colors d'alt contrast per defecte)",
+      "3": "Personalitzat (Colors personalitzats)",
+      "4": "Inversió completa (Inverteix tots els colors)",
+      "5": "Opcions de color d'alt contrast",
+      "6": "Text blanc sobre fons negre",
+      "7": "Text negre sobre fons blanc",
+      "8": "Text groc sobre fons negre",
+      "9": "Text verd sobre fons negre",
+      "10": "Tria el color del text",
+      "11": "Tria el color del fons"
+    },
+    "submit": "Reemplaça"
+  },
+  "replaceColorPdf": {
+    "tags": "Reemplaça Color,Operacions de pàgina,Back end,Costat servidor"
+  },
+  "login": {
+    "title": "Accedir",
+    "header": "Accedir",
+    "signin": "Accedir",
+    "rememberme": "Recordar",
+    "invalid": "Nom d'usuari/contrasenya no vàlid",
+    "locked": "Compte bloquejat",
+    "signinTitle": "Autenticat",
+    "ssoSignIn": "Inicia sessió mitjançant inici de sessió únic",
+    "oAuth2AutoCreateDisabled": "La creació automàtica d'usuaris OAUTH2 està desactivada",
+    "oAuth2AdminBlockedUser": "El registre o inici de sessió d'usuaris no registrats està actualment bloquejat. Si us plau, contacta amb l'administrador.",
+    "oauth2RequestNotFound": "Sol·licitud d'autorització no trobada",
+    "oauth2InvalidUserInfoResponse": "Resposta d'informació d'usuari no vàlida",
+    "oauth2invalidRequest": "Sol·licitud no vàlida",
+    "oauth2AccessDenied": "Accés denegat",
+    "oauth2InvalidTokenResponse": "Resposta de token no vàlida",
+    "oauth2InvalidIdToken": "ID Token no vàlid",
+    "relyingPartyRegistrationNotFound": "No relying party registration found",
+    "userIsDisabled": "L'usuari està desactivat, l'inici de sessió està actualment bloquejat amb aquest nom d'usuari. Si us plau, contacta amb l'administrador.",
+    "alreadyLoggedIn": "Ja has iniciat sessió a",
+    "alreadyLoggedIn2": "dispositius. Si us plau, tanca la sessió en els dispositius i torna-ho a intentar.",
+    "toManySessions": "Tens massa sessions actives",
+    "logoutMessage": "You have been logged out."
+  },
+  "pdfToSinglePage": {
+    "title": "PDF a Pàgina Única",
+    "header": "PDF a Pàgina Única",
+    "submit": "Converteix a Pàgina Única"
+  },
+  "pageExtracter": {
+    "title": "Extreu Pàgines",
+    "header": "Extreu Pàgines",
+    "submit": "Extreu",
+    "placeholder": "(p. ex. 1,2,8 o 4,7,12-16 o 2n-1)"
+  },
+  "sanitizePDF": {
+    "title": "Neteja PDF",
+    "header": "Neteja un fitxer PDF",
+    "selectText": {
+      "1": "Elimina accions JavaScript",
+      "2": "Elimina fitxers incrustats",
+      "3": "Remove XMP metadata",
+      "4": "Elimina enllaços",
+      "5": "Elimina fonts",
+      "6": "Remove Document Info Metadata"
+    },
+    "submit": "Neteja PDF"
+  },
+  "adjustContrast": {
+    "title": "Ajusta el Contrast",
+    "header": "Ajusta el Contrast",
+    "contrast": "Contrast:",
+    "brightness": "Brillantor:",
+    "saturation": "Saturació:",
+    "download": "Descarrega"
+  },
+  "compress": {
+    "title": "Comprimir",
+    "header": "Comprimir PDF",
+    "credit": "Aquest servei utilitza qpdf per a la compressió/optimització de PDF.",
+    "grayscale": {
+      "label": "Aplicar escala de grisos per a la compressió"
+    },
+    "selectText": {
+      "1": {
+        "_value": "Compression Settings",
+        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+      },
+      "2": "Nivell d'optimització:",
+      "4": "Mode automàtic: ajusta automàticament la qualitat perquè el PDF tingui la mida exacta",
+      "5": "Mida esperada del PDF (p. ex. 25 MB, 10,8 MB, 25 KB)"
+    },
+    "submit": "Comprimir"
+  },
+  "decrypt": {
+    "passwordPrompt": "Aquest fitxer està protegit amb contrasenya. Si us plau, introdueix la contrasenya:",
+    "cancelled": "Operació cancel·lada per al PDF: {0}",
+    "noPassword": "No s'ha proporcionat cap contrasenya per al PDF xifrat: {0}",
+    "invalidPassword": "Si us plau, torna-ho a intentar amb la contrasenya correcta.",
+    "invalidPasswordHeader": "Contrasenya incorrecta o xifratge no compatible per al PDF: {0}",
+    "unexpectedError": "S'ha produït un error en processar el fitxer. Si us plau, torna-ho a intentar.",
+    "serverError": "Error del servidor en desxifrar: {0}",
+    "success": "Fitxer desxifrat correctament."
+  },
+  "multiTool-advert": {
+    "message": "Aquesta funcionalitat també està disponible a la nostra <a href=\"{0}\">pàgina d'eines múltiples</a>. Fes-hi una ullada per obtenir una interfície millorada per pàgina i funcions addicionals!"
+  },
+  "pageRemover": {
+    "title": "Eliminació de Pàgines",
+    "header": "Eliminació de Pàgines PDF",
+    "pagesToDelete": "Pàgines a eliminar (Números de pàgines):",
+    "submit": "Esborra Pàgines",
+    "placeholder": "(p. ex. 1,2,6 o 1-10,15-30)"
+  },
+  "imageToPDF": {
+    "title": "Imatge a PDF",
+    "header": "Imatge a PDF",
+    "submit": "Converteix",
+    "selectLabel": "Opcions d'Ajust de la Imatge",
+    "fillPage": "Omple la Pàgina",
+    "fitDocumentToImage": "Ajusta la Pàgina a la Imatge",
+    "maintainAspectRatio": "Manté la Proporció de la Imatge",
+    "selectText": {
+      "2": "Rota automàticament el PDF",
+      "3": "Lògica de diversos fitxers (només està activada si es treballa amb diverses imatges)",
+      "4": "Combina en un únic PDF",
+      "5": "Converteix per separar els PDFs"
+    }
+  },
+  "PDFToCSV": {
+    "title": "PDF a CSV",
+    "header": "PDF a CSV",
+    "prompt": "Selecciona la pàgina per extreure la taula",
+    "submit": "Extreu"
+  },
+  "split-by-size-or-count": {
+    "title": "Divideix PDF per Mida o Nombre",
+    "header": "Divideix PDF per Mida o Nombre",
+    "type": {
+      "label": "Selecciona el Tipus de Divisió",
+      "size": "Per Mida",
+      "pageCount": "Per Nombre de Pàgines",
+      "docCount": "Per Nombre de Documents"
+    },
+    "value": {
+      "label": "Introdueix el Valor",
+      "placeholder": "Introdueix la mida (p. ex., 2MB o 3KB) o el nombre (p. ex., 5)"
+    },
+    "submit": "Envia"
+  },
+  "printFile": {
+    "title": "Imprimir Fitxer",
+    "header": "Imprimir Fitxer a la Impresora",
+    "selectText": {
+      "1": "Selecciona el Fitxer per Imprimir",
+      "2": "Introdueix el Nom de la Impresora"
+    },
+    "submit": "Imprimir"
+  },
+  "licenses": {
+    "nav": "Llicències",
+    "title": "Llicències de Tercers",
+    "header": "Llicències de Tercers",
+    "module": "Mòdul",
+    "version": "Versió",
+    "license": "Llicència"
+  },
+  "survey": {
+    "nav": "Enquesta",
+    "title": "Enquesta Stirling-PDF",
+    "description": "Stirling-PDF no fa seguiment, així que volem escoltar els nostres usuaris per millorar Stirling-PDF!",
+    "changes": "Stirling-PDF ha canviat des de l'última enquesta! Per saber-ne més, consulta la nostra publicació al blog aquí:",
+    "changes2": "Amb aquests canvis, estem rebent suport empresarial i finançament",
+    "please": "Si us plau, considera fer la nostra enquesta!",
+    "disabled": "(El popup de l'enquesta es desactivarà en les següents actualitzacions, però estarà disponible al peu de la pàgina)",
+    "button": "Fes l'Enquesta",
+    "dontShowAgain": "No mostrar més",
+    "meeting": {
+      "1": "If you're using Stirling PDF at work, we'd love to speak to you. We're offering technical support sessions in exchange for a 15 minute user discovery session.",
+      "2": "This is a chance to:",
+      "3": "Get help with deployment, integrations, or troubleshooting",
+      "4": "Provide direct feedback on performance, edge cases, and feature gaps",
+      "5": "Help us refine Stirling PDF for real-world enterprise use",
+      "6": "If you're interested, you can book time with our team directly. (English speaking only)",
+      "7": "Looking forward to digging into your use cases and making Stirling PDF even better!",
+      "notInterested": "Not a business and/or interested in a meeting?",
+      "button": "Book meeting"
+    }
+  },
+  "removeImage": {
+    "title": "Eliminar imatge",
+    "header": "Eliminar imatge",
+    "removeImage": "Eliminar imatge",
+    "submit": "Eliminar imatge"
+  },
+  "splitByChapters": {
+    "title": "Divideix PDF per Capítols",
+    "header": "Divideix PDF per Capítols",
+    "bookmarkLevel": "Nivell de Marcadors",
+    "includeMetadata": "Incloure Metadades",
+    "allowDuplicates": "Permetre Duplicats",
+    "desc": {
+      "1": "Aquesta eina divideix un fitxer PDF en diversos PDFs segons l'estructura dels seus capítols.",
+      "2": "Nivell de Marcadors: Tria el nivell de marcadors que s'utilitzarà per dividir (0 per al nivell superior, 1 per al segon nivell, etc.).",
+      "3": "Incloure Metadades: Si està marcat, les metadades del PDF original s'inclouran en cada PDF dividit.",
+      "4": "Permetre Duplicats: Si està marcat, permet diversos marcadors a la mateixa pàgina per crear PDFs separats."
+    },
+    "submit": "Divideix PDF"
+  },
+  "fileChooser": {
+    "click": "Clica",
+    "or": "o",
+    "dragAndDrop": "Arrossega i deixa anar",
+    "dragAndDropPDF": "Arrossega i deixa anar un fitxer PDF",
+    "dragAndDropImage": "Arrossega i deixa anar un fitxer d'imatge",
+    "hoveredDragAndDrop": "Arrossega i deixa anar fitxer(s) aquí",
+    "extractPDF": "Extracting..."
+  },
+  "releases": {
+    "footer": "Llançaments",
+    "title": "Notes de Llançament",
+    "header": "Notes de Llançament",
+    "current": {
+      "version": "Llançament Actual"
+    },
+    "note": "Les notes de llançament només estan disponibles en anglès"
+  },
+  "cookieBanner": {
+    "popUp": {
+      "title": "How we use Cookies",
+      "description": {
+        "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
+        "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+      },
+      "acceptAllBtn": "Okay",
+      "acceptNecessaryBtn": "No Thanks",
+      "showPreferencesBtn": "Manage preferences"
+    },
+    "preferencesModal": {
+      "title": "Consent Preferences Center",
+      "acceptAllBtn": "Accept all",
+      "acceptNecessaryBtn": "Reject all",
+      "savePreferencesBtn": "Save preferences",
+      "closeIconLabel": "Close modal",
+      "serviceCounterLabel": "Service|Services",
+      "subtitle": "Cookie Usage",
+      "description": {
+        "1": "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.",
+        "2": "Stirling PDF cannot—and will never—track or access the content of the documents you use.",
+        "3": "Your privacy and trust are at the core of what we do."
+      },
+      "necessary": {
+        "title": {
+          "1": "Strictly Necessary Cookies",
+          "2": "Always Enabled"
+        },
+        "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  }
+}
