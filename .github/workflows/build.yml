@@ -285,7 +285,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./${{ matrix.docker-rev }}
+          file: ./docker/backend/${{ matrix.docker-rev }}
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
