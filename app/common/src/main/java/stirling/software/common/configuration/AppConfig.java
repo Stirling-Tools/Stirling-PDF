@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -49,6 +50,14 @@ public class AppConfig {
     private String serverPort;
 
     /* Commented out Thymeleaf template engine bean - to be removed when frontend migration is complete
+    @Value("${v2}")
+    public boolean v2Enabled;
+
+    @Bean
+    public boolean v2Enabled() {
+        return v2Enabled;
+    }
+
     @Bean
     @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")
     public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {
@@ -119,7 +128,7 @@ public class AppConfig {
     public boolean rateLimit() {
         String rateLimit = System.getProperty("rateLimit");
         if (rateLimit == null) rateLimit = System.getenv("rateLimit");
-        return (rateLimit != null) ? Boolean.valueOf(rateLimit) : false;
+        return Boolean.parseBoolean(rateLimit);
     }
 
     @Bean(name = "RunningInDocker")
@@ -139,8 +148,8 @@ public class AppConfig {
         if (!Files.exists(mountInfo)) {
             return true;
         }
-        try {
-            return Files.lines(mountInfo).anyMatch(line -> line.contains(" /configs "));
+        try (Stream<String> lines = Files.lines(mountInfo)) {
+            return lines.anyMatch(line -> line.contains(" /configs "));
         } catch (IOException e) {
             return false;
         }

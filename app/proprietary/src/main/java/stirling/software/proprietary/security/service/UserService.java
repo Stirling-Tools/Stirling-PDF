@@ -15,7 +15,6 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -61,19 +60,9 @@ public class UserService implements UserServiceInterface {
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
-    @Transactional
-    public void migrateOauth2ToSSO() {
-        userRepository
-                .findByAuthenticationTypeIgnoreCase("OAUTH2")
-                .forEach(
-                        user -> {
-                            user.setAuthenticationType(AuthenticationType.SSO);
-                            userRepository.save(user);
-                        });
-    }
-
     // Handle OAUTH2 login and user auto creation.
-    public void processSSOPostLogin(String username, boolean autoCreateUser)
+    public void processSSOPostLogin(
+            String username, boolean autoCreateUser, AuthenticationType type)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             return;
@@ -83,7 +72,7 @@ public class UserService implements UserServiceInterface {
             return;
         }
         if (autoCreateUser) {
-            saveUser(username, AuthenticationType.SSO);
+            saveUser(username, type);
         }
     }
 
@@ -100,10 +89,7 @@ public class UserService implements UserServiceInterface {
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        // Convert each Authority object into a SimpleGrantedAuthority object.
-        return user.getAuthorities().stream()
-                .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
-                .toList();
+        return user.getAuthorities();
     }
 
     private String generateApiKey() {

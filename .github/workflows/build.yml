@@ -118,7 +118,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4.4.1
       - name: Generate OpenAPI documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
-
+        env:
+          DISABLE_ADDITIONAL_FEATURES: true
+      
       - name: Upload OpenAPI Documentation
         uses: actions/upload-artifact@v4.6.2
         with:
