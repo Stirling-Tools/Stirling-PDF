@@ -99,7 +99,7 @@ export const useOCROperation = () => {
   const ocrConfig: ToolOperationConfig<OCRParameters> = {
     operationType: 'ocr',
     endpoint: '/api/v1/misc/ocr-pdf',
-    buildFormData,
+    buildFormData: buildFormData as any /* FIX ME */,
     filePrefix: 'ocr_',
     multiFileEndpoint: false, // Process files individually
     responseHandler, // use shared flow
