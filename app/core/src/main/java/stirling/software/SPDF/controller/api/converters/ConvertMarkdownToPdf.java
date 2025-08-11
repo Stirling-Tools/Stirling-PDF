@@ -26,9 +26,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.configuration.RuntimePathConfig;
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.TempFileManager;
@@ -41,13 +41,14 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertMarkdownToPdf {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    private final ApplicationProperties applicationProperties;
     private final RuntimePathConfig runtimePathConfig;
 
     private final TempFileManager tempFileManager;
 
+    private final CustomHtmlSanitizer customHtmlSanitizer;
+
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
+
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =
@@ -81,17 +82,14 @@ public class ConvertMarkdownToPdf {
 
         String htmlContent = renderer.render(document);
 
-        boolean disableSanitize =
-                Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
-
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
                         runtimePathConfig.getWeasyPrintPath(),
                         null,
                         htmlContent.getBytes(),
                         "converted.html",
-                        disableSanitize,
-                        tempFileManager);
+                        tempFileManager,
+                        customHtmlSanitizer);
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")
