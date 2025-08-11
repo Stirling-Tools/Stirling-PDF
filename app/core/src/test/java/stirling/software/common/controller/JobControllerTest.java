@@ -12,36 +12,28 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
+
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 
 import stirling.software.common.model.job.JobResult;
-import stirling.software.common.model.job.JobStats;
-import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
 
 class JobControllerTest {
 
-    @Mock
-    private TaskManager taskManager;
+    @Mock private TaskManager taskManager;
 
-    @Mock
-    private FileStorage fileStorage;
+    @Mock private FileStorage fileStorage;
 
-    @Mock
-    private JobQueue jobQueue;
+    @Mock private JobQueue jobQueue;
 
-    @Mock
-    private HttpServletRequest request;
+    @Mock private HttpServletRequest request;
 
     private MockHttpSession session;
 
-    @InjectMocks
-    private JobController controller;
+    @InjectMocks private JobController controller;
 
     @BeforeEach
     void setUp() {
@@ -139,7 +131,8 @@ class JobControllerTest {
 
         JobResult mockResult = new JobResult();
         mockResult.setJobId(jobId);
-        mockResult.completeWithSingleFile(fileId, originalFileName, contentType, fileContent.length);
+        mockResult.completeWithSingleFile(
+                fileId, originalFileName, contentType, fileContent.length);
 
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
         when(fileStorage.retrieveBytes(fileId)).thenReturn(fileContent);
@@ -150,7 +143,8 @@ class JobControllerTest {
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(contentType, response.getHeaders().getFirst("Content-Type"));
-        assertTrue(response.getHeaders().getFirst("Content-Disposition").contains(originalFileName));
+        assertTrue(
+                response.getHeaders().getFirst("Content-Disposition").contains(originalFileName));
         assertEquals(fileContent, response.getBody());
     }
 
@@ -229,45 +223,45 @@ class JobControllerTest {
         assertTrue(response.getBody().toString().contains("Error retrieving file"));
     }
 
-	/*
-	 * @Test void testGetJobStats() { // Arrange JobStats mockStats =
-	 * JobStats.builder() .totalJobs(10) .activeJobs(3) .completedJobs(7) .build();
-	 *
-	 * when(taskManager.getJobStats()).thenReturn(mockStats);
-	 *
-	 * // Act ResponseEntity<?> response = controller.getJobStats();
-	 *
-	 * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
-	 * assertEquals(mockStats, response.getBody()); }
-	 *
-	 * @Test void testCleanupOldJobs() { // Arrange when(taskManager.getJobStats())
-	 * .thenReturn(JobStats.builder().totalJobs(10).build())
-	 * .thenReturn(JobStats.builder().totalJobs(7).build());
-	 *
-	 * // Act ResponseEntity<?> response = controller.cleanupOldJobs();
-	 *
-	 * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
-	 *
-	 * @SuppressWarnings("unchecked") Map<String, Object> responseBody =
-	 * (Map<String, Object>) response.getBody(); assertEquals("Cleanup complete",
-	 * responseBody.get("message")); assertEquals(3,
-	 * responseBody.get("removedJobs")); assertEquals(7,
-	 * responseBody.get("remainingJobs"));
-	 *
-	 * verify(taskManager).cleanupOldJobs(); }
-	 *
-	 * @Test void testGetQueueStats() { // Arrange Map<String, Object>
-	 * mockQueueStats = Map.of( "queuedJobs", 5, "queueCapacity", 10,
-	 * "resourceStatus", "OK" );
-	 *
-	 * when(jobQueue.getQueueStats()).thenReturn(mockQueueStats);
-	 *
-	 * // Act ResponseEntity<?> response = controller.getQueueStats();
-	 *
-	 * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
-	 * assertEquals(mockQueueStats, response.getBody());
-	 * verify(jobQueue).getQueueStats(); }
-	 */
+    /*
+     * @Test void testGetJobStats() { // Arrange JobStats mockStats =
+     * JobStats.builder() .totalJobs(10) .activeJobs(3) .completedJobs(7) .build();
+     *
+     * when(taskManager.getJobStats()).thenReturn(mockStats);
+     *
+     * // Act ResponseEntity<?> response = controller.getJobStats();
+     *
+     * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
+     * assertEquals(mockStats, response.getBody()); }
+     *
+     * @Test void testCleanupOldJobs() { // Arrange when(taskManager.getJobStats())
+     * .thenReturn(JobStats.builder().totalJobs(10).build())
+     * .thenReturn(JobStats.builder().totalJobs(7).build());
+     *
+     * // Act ResponseEntity<?> response = controller.cleanupOldJobs();
+     *
+     * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
+     *
+     * @SuppressWarnings("unchecked") Map<String, Object> responseBody =
+     * (Map<String, Object>) response.getBody(); assertEquals("Cleanup complete",
+     * responseBody.get("message")); assertEquals(3,
+     * responseBody.get("removedJobs")); assertEquals(7,
+     * responseBody.get("remainingJobs"));
+     *
+     * verify(taskManager).cleanupOldJobs(); }
+     *
+     * @Test void testGetQueueStats() { // Arrange Map<String, Object>
+     * mockQueueStats = Map.of( "queuedJobs", 5, "queueCapacity", 10,
+     * "resourceStatus", "OK" );
+     *
+     * when(jobQueue.getQueueStats()).thenReturn(mockQueueStats);
+     *
+     * // Act ResponseEntity<?> response = controller.getQueueStats();
+     *
+     * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
+     * assertEquals(mockQueueStats, response.getBody());
+     * verify(jobQueue).getQueueStats(); }
+     */
     @Test
     void testCancelJob_InQueue() {
         // Arrange

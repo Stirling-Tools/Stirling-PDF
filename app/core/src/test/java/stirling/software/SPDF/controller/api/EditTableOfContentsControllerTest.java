@@ -36,14 +36,11 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @ExtendWith(MockitoExtension.class)
 class EditTableOfContentsControllerTest {
 
-    @Mock
-    private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @Mock
-    private ObjectMapper objectMapper;
+    @Mock private ObjectMapper objectMapper;
 
-    @InjectMocks
-    private EditTableOfContentsController editTableOfContentsController;
+    @InjectMocks private EditTableOfContentsController editTableOfContentsController;
 
     private MockMultipartFile mockFile;
     private PDDocument mockDocument;
@@ -56,7 +53,9 @@ class EditTableOfContentsControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockFile = new MockMultipartFile("file", "test.pdf", "application/pdf", "PDF content".getBytes());
+        mockFile =
+                new MockMultipartFile(
+                        "file", "test.pdf", "application/pdf", "PDF content".getBytes());
         mockDocument = mock(PDDocument.class);
         mockCatalog = mock(PDDocumentCatalog.class);
         mockPages = mock(PDPageTree.class);
@@ -149,7 +148,8 @@ class EditTableOfContentsControllerTest {
         assertEquals(1, parentBookmark.get("pageNumber"));
 
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> children = (List<Map<String, Object>>) parentBookmark.get("children");
+        List<Map<String, Object>> children =
+                (List<Map<String, Object>>) parentBookmark.get("children");
         assertEquals(1, children.size());
 
         Map<String, Object> childBookmark = children.get(0);
@@ -202,17 +202,21 @@ class EditTableOfContentsControllerTest {
         bookmarks.add(bookmark);
 
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
-        when(objectMapper.readValue(eq(request.getBookmarkData()), any(TypeReference.class))).thenReturn(bookmarks);
+        when(objectMapper.readValue(eq(request.getBookmarkData()), any(TypeReference.class)))
+                .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockDocument.getNumberOfPages()).thenReturn(5);
         when(mockDocument.getPage(0)).thenReturn(mockPage1);
 
         // Mock saving behavior
-        doAnswer(invocation -> {
-            ByteArrayOutputStream baos = invocation.getArgument(0);
-            baos.write("mocked pdf content".getBytes());
-            return null;
-        }).when(mockDocument).save(any(ByteArrayOutputStream.class));
+        doAnswer(
+                        invocation -> {
+                            ByteArrayOutputStream baos = invocation.getArgument(0);
+                            baos.write("mocked pdf content".getBytes());
+                            return null;
+                        })
+                .when(mockDocument)
+                .save(any(ByteArrayOutputStream.class));
 
         // When
         ResponseEntity<byte[]> result = editTableOfContentsController.editTableOfContents(request);
@@ -221,7 +225,8 @@ class EditTableOfContentsControllerTest {
         assertNotNull(result);
         assertNotNull(result.getBody());
 
-        ArgumentCaptor<PDDocumentOutline> outlineCaptor = ArgumentCaptor.forClass(PDDocumentOutline.class);
+        ArgumentCaptor<PDDocumentOutline> outlineCaptor =
+                ArgumentCaptor.forClass(PDDocumentOutline.class);
         verify(mockCatalog).setDocumentOutline(outlineCaptor.capture());
 
         PDDocumentOutline capturedOutline = outlineCaptor.getValue();
@@ -236,7 +241,8 @@ class EditTableOfContentsControllerTest {
         EditTableOfContentsRequest request = new EditTableOfContentsRequest();
         request.setFileInput(mockFile);
 
-        String bookmarkJson = "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[{\"title\":\"Section 1.1\",\"pageNumber\":2,\"children\":[]}]}]";
+        String bookmarkJson =
+                "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[{\"title\":\"Section 1.1\",\"pageNumber\":2,\"children\":[]}]}]";
         request.setBookmarkData(bookmarkJson);
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
@@ -255,17 +261,21 @@ class EditTableOfContentsControllerTest {
         bookmarks.add(parentBookmark);
 
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
-        when(objectMapper.readValue(eq(bookmarkJson), any(TypeReference.class))).thenReturn(bookmarks);
+        when(objectMapper.readValue(eq(bookmarkJson), any(TypeReference.class)))
+                .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockDocument.getNumberOfPages()).thenReturn(5);
         when(mockDocument.getPage(0)).thenReturn(mockPage1);
         when(mockDocument.getPage(1)).thenReturn(mockPage2);
 
-        doAnswer(invocation -> {
-            ByteArrayOutputStream baos = invocation.getArgument(0);
-            baos.write("mocked pdf content".getBytes());
-            return null;
-        }).when(mockDocument).save(any(ByteArrayOutputStream.class));
+        doAnswer(
+                        invocation -> {
+                            ByteArrayOutputStream baos = invocation.getArgument(0);
+                            baos.write("mocked pdf content".getBytes());
+                            return null;
+                        })
+                .when(mockDocument)
+                .save(any(ByteArrayOutputStream.class));
 
         // When
         ResponseEntity<byte[]> result = editTableOfContentsController.editTableOfContents(request);
@@ -281,7 +291,8 @@ class EditTableOfContentsControllerTest {
         // Given
         EditTableOfContentsRequest request = new EditTableOfContentsRequest();
         request.setFileInput(mockFile);
-        request.setBookmarkData("[{\"title\":\"Chapter 1\",\"pageNumber\":-5,\"children\":[]},{\"title\":\"Chapter 2\",\"pageNumber\":100,\"children\":[]}]");
+        request.setBookmarkData(
+                "[{\"title\":\"Chapter 1\",\"pageNumber\":-5,\"children\":[]},{\"title\":\"Chapter 2\",\"pageNumber\":100,\"children\":[]}]");
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
 
@@ -299,17 +310,21 @@ class EditTableOfContentsControllerTest {
         bookmarks.add(bookmark2);
 
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
-        when(objectMapper.readValue(eq(request.getBookmarkData()), any(TypeReference.class))).thenReturn(bookmarks);
+        when(objectMapper.readValue(eq(request.getBookmarkData()), any(TypeReference.class)))
+                .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockDocument.getNumberOfPages()).thenReturn(5);
         when(mockDocument.getPage(0)).thenReturn(mockPage1); // For negative page number
         when(mockDocument.getPage(4)).thenReturn(mockPage2); // For page number exceeding bounds
 
-        doAnswer(invocation -> {
-            ByteArrayOutputStream baos = invocation.getArgument(0);
-            baos.write("mocked pdf content".getBytes());
-            return null;
-        }).when(mockDocument).save(any(ByteArrayOutputStream.class));
+        doAnswer(
+                        invocation -> {
+                            ByteArrayOutputStream baos = invocation.getArgument(0);
+                            baos.write("mocked pdf content".getBytes());
+                            return null;
+                        })
+                .when(mockDocument)
+                .save(any(ByteArrayOutputStream.class));
 
         // When
         ResponseEntity<byte[]> result = editTableOfContentsController.editTableOfContents(request);
@@ -332,15 +347,19 @@ class EditTableOfContentsControllerTest {
         when(mockDocument.getPage(2)).thenReturn(mockPage1); // 0-indexed
 
         // When
-        Method createOutlineItemMethod = EditTableOfContentsController.class.getDeclaredMethod("createOutlineItem", PDDocument.class, BookmarkItem.class);
+        Method createOutlineItemMethod =
+                EditTableOfContentsController.class.getDeclaredMethod(
+                        "createOutlineItem", PDDocument.class, BookmarkItem.class);
         createOutlineItemMethod.setAccessible(true);
-        PDOutlineItem result = (PDOutlineItem) createOutlineItemMethod.invoke(editTableOfContentsController, mockDocument, bookmark);
+        PDOutlineItem result =
+                (PDOutlineItem)
+                        createOutlineItemMethod.invoke(
+                                editTableOfContentsController, mockDocument, bookmark);
 
         // Then
         assertNotNull(result);
         verify(mockDocument).getPage(2);
     }
-
 
     @Test
     void testBookmarkItem_GettersAndSetters() {
@@ -365,18 +384,24 @@ class EditTableOfContentsControllerTest {
         EditTableOfContentsRequest request = new EditTableOfContentsRequest();
         request.setFileInput(mockFile);
 
-        when(pdfDocumentFactory.load(mockFile)).thenThrow(new RuntimeException("Failed to load PDF"));
+        when(pdfDocumentFactory.load(mockFile))
+                .thenThrow(new RuntimeException("Failed to load PDF"));
 
         // When & Then
-        assertThrows(RuntimeException.class, () -> editTableOfContentsController.editTableOfContents(request));
+        assertThrows(
+                RuntimeException.class,
+                () -> editTableOfContentsController.editTableOfContents(request));
     }
 
     @Test
     void testExtractBookmarks_IOExceptionDuringLoad_ThrowsException() throws Exception {
         // Given
-        when(pdfDocumentFactory.load(mockFile)).thenThrow(new RuntimeException("Failed to load PDF"));
+        when(pdfDocumentFactory.load(mockFile))
+                .thenThrow(new RuntimeException("Failed to load PDF"));
 
         // When & Then
-        assertThrows(RuntimeException.class, () -> editTableOfContentsController.extractBookmarks(mockFile));
+        assertThrows(
+                RuntimeException.class,
+                () -> editTableOfContentsController.extractBookmarks(mockFile));
     }
 }

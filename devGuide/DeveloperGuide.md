@@ -295,6 +295,7 @@ Stirling-PDF can be customized through environment variables or a `settings.yml`
 - Security settings
 - UI customization
 - Endpoint management
+- Maximum DPI for PDF to image conversion (`system.maxDPI`)
 
 When using Docker, pass environment variables using the `-e` flag or in your `docker-compose.yml` file.
 

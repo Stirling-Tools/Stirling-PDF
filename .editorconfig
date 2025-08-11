@@ -31,14 +31,8 @@ indent_size = 2
 # CSS files typically use an indent size of 2 spaces for better readability and alignment with community standards.
 indent_size = 2
 
-[*.yaml]
+[*.{yml,yaml}]
 # YAML files use an indent size of 2 spaces to maintain consistency with common YAML formatting practices.
-indent_size = 2
-insert_final_newline = false
-trim_trailing_whitespace = false
-
-[*.yml]
-# YML files follow the same conventions as YAML files, using an indent size of 2 spaces.
 indent_size = 2
 insert_final_newline = false
 trim_trailing_whitespace = false

@@ -2,8 +2,10 @@ package stirling.software.proprietary.security.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,9 +19,6 @@ import jakarta.mail.internet.MimeMessage;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.api.Email;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceTest {
