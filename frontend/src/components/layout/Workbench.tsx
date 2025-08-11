@@ -18,7 +18,7 @@ import LandingPage from '../shared/LandingPage';
 export default function Workbench() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
-  
+
   // Use context-based hooks to eliminate all prop drilling
   const { state } = useFileState();
   const { actions } = useFileActions();
@@ -28,11 +28,11 @@ export default function Workbench() {
     previewFile, 
     pageEditorFunctions, 
     sidebarsVisible,
-    setPreviewFile, 
+    setPreviewFile,
     setPageEditorFunctions,
     setSidebarsVisible
   } = useWorkbenchState();
-  
+
   const { selectedToolKey, selectedTool, handleToolSelect } = useToolSelection();
   const { addToActiveFiles } = useFileHandler();
 
@@ -148,7 +148,7 @@ export default function Workbench() {
         setCurrentView={actions.setMode}
         selectedToolKey={selectedToolKey}
       />
-      
+
       {/* Main content area */}
       <Box
         className="flex-1 min-h-0 relative z-10"

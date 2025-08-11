@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react';
 import axios, { CancelTokenSource } from 'axios';
-import { processResponse } from '../../../utils/toolResponseProcessor';
-import type { ResponseHandler, ProcessingProgress } from './useToolState';
+import { processResponse, ResponseHandler } from '../../../utils/toolResponseProcessor';
+import type { ProcessingProgress } from './useToolState';
 
 export interface ApiCallsConfig<TParams = void> {
   endpoint: string | ((params: TParams) => string);

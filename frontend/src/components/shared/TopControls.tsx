@@ -32,7 +32,7 @@ const TopControls = ({
 }: TopControlsProps) => {
   const { themeMode, isRainbowMode, isToggleDisabled, toggleTheme } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
-  
+
   const isToolSelected = selectedToolKey !== null;
 
   const handleViewChange = useCallback((view: string) => {
@@ -41,7 +41,7 @@ const TopControls = ({
     
     // Show immediate feedback
     setSwitchingTo(view);
-    
+
     // Defer the heavy view change to next frame so spinner can render
     requestAnimationFrame(() => {
       // Give the spinner one more frame to show

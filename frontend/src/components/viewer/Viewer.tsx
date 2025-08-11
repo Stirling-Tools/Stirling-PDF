@@ -137,7 +137,7 @@ export interface ViewerProps {
   sidebarsVisible: boolean;
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
-  previewFile?: File; // For preview mode - bypasses context
+  previewFile: File | null; // For preview mode - bypasses context
 }
 
 const Viewer = ({
@@ -148,18 +148,13 @@ const Viewer = ({
 }: ViewerProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  
+
   // Get current file from FileContext
   const { getCurrentFile, getCurrentProcessedFile, clearAllFiles, addFiles, activeFiles } = useFileContext();
-  const currentFile = getCurrentFile();
-  const processedFile = getCurrentProcessedFile();
-  
-  // Convert File to FileWithUrl format for viewer
-  const pdfFile = useFileWithUrl(currentFile);
-  
+
   // Tab management for multiple files
   const [activeTab, setActiveTab] = useState<string>("0");
-  
+
   // Reset PDF state when switching tabs
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
@@ -187,7 +182,7 @@ const Viewer = ({
   const file2WithUrl = useFileWithUrl(activeFiles[2]);
   const file3WithUrl = useFileWithUrl(activeFiles[3]);
   const file4WithUrl = useFileWithUrl(activeFiles[4]);
-  
+
   const filesWithUrls = React.useMemo(() => {
     return [file0WithUrl, file1WithUrl, file2WithUrl, file3WithUrl, file4WithUrl]
       .slice(0, activeFiles.length)
@@ -201,11 +196,11 @@ const Viewer = ({
       if (!(previewFile instanceof File)) {
         return null;
       }
-      
+
       if (previewFile.size === 0) {
         return null;
       }
-      
+
       return { file: previewFile, url: null };
     } else {
       // Use the file from the active tab
@@ -266,12 +261,12 @@ const Viewer = ({
   // Progressive preloading function
   const startProgressivePreload = async () => {
     if (!pdfDocRef.current || preloadingRef.current || numPages === 0) return;
-    
+
     preloadingRef.current = true;
-    
+
     // Start with first few pages for immediate viewing
     const priorityPages = [0, 1, 2, 3, 4]; // First 5 pages
-    
+
     // Render priority pages first
     for (const pageIndex of priorityPages) {
       if (pageIndex < numPages && !pageImages[pageIndex]) {
@@ -280,7 +275,7 @@ const Viewer = ({
         await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
-    
+
     // Then render remaining pages in background
     for (let pageIndex = 5; pageIndex < numPages; pageIndex++) {
       if (!pageImages[pageIndex]) {
@@ -289,7 +284,7 @@ const Viewer = ({
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
-    
+
     preloadingRef.current = false;
   };
 
@@ -304,15 +299,15 @@ const Viewer = ({
   const scrollToPage = (pageNumber: number) => {
     const el = pageRefs.current[pageNumber - 1];
     const scrollArea = scrollAreaRef.current;
-    
+
     if (el && scrollArea) {
       const scrollAreaRect = scrollArea.getBoundingClientRect();
       const elRect = el.getBoundingClientRect();
       const currentScrollTop = scrollArea.scrollTop;
-      
+
       // Position page near top of viewport with some padding
       const targetScrollTop = currentScrollTop + (elRect.top - scrollAreaRect.top) - 20;
-      
+
       scrollArea.scrollTo({
         top: targetScrollTop,
         behavior: "smooth"
@@ -368,7 +363,7 @@ const Viewer = ({
       setLoading(true);
       try {
         let pdfData;
-        
+
         // For preview files, use ArrayBuffer directly to avoid blob URL issues
         if (previewFile && effectiveFile.file === previewFile) {
           const arrayBuffer = await previewFile.arrayBuffer();
@@ -450,7 +445,7 @@ const Viewer = ({
           <CloseIcon />
         </ActionIcon>
       )}
-      
+
       {!effectiveFile ? (
         <Center style={{ flex: 1 }}>
           <Text c="red">Error: No file provided to viewer</Text>
@@ -459,8 +454,8 @@ const Viewer = ({
         <>
           {/* Tabs for multiple files */}
           {activeFiles.length > 1 && !previewFile && (
-            <Box 
-              style={{ 
+            <Box
+              style={{
                 borderBottom: '1px solid var(--mantine-color-gray-3)',
                 backgroundColor: 'var(--mantine-color-body)',
                 position: 'relative',
@@ -479,7 +474,7 @@ const Viewer = ({
               </Tabs>
             </Box>
           )}
-          
+
           {loading ? (
             <div style={{ flex: 1, padding: '1rem' }}>
               <SkeletonLoader type="viewer" />

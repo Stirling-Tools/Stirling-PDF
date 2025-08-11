@@ -64,14 +64,6 @@ export const mantineTheme = createTheme({
     xl: 'var(--shadow-xl)',
   },
 
-  // Font weights
-  fontWeights: {
-    normal: 'var(--font-weight-normal)',
-    medium: 'var(--font-weight-medium)',
-    semibold: 'var(--font-weight-semibold)',
-    bold: 'var(--font-weight-bold)',
-  },
-
   // Component customizations
   components: {
     Button: {
@@ -83,7 +75,7 @@ export const mantineTheme = createTheme({
       },
       variants: {
         // Custom button variant for PDF tools
-        pdfTool: (theme) => ({
+        pdfTool: (theme: any) => ({
           root: {
             backgroundColor: 'var(--bg-surface)',
             border: '1px solid var(--border-default)',
@@ -95,7 +87,7 @@ export const mantineTheme = createTheme({
           },
         }),
       },
-    },
+    } as any,
 
     Paper: {
       styles: {
@@ -287,28 +279,4 @@ export const mantineTheme = createTheme({
       },
     },
   },
-
-  // Global styles
-  globalStyles: () => ({
-    // Ensure smooth color transitions
-    '*': {
-      transition: 'background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease',
-    },
-
-    // Custom scrollbar styling
-    '*::-webkit-scrollbar': {
-      width: '8px',
-      height: '8px',
-    },
-    '*::-webkit-scrollbar-track': {
-      backgroundColor: 'var(--bg-muted)',
-    },
-    '*::-webkit-scrollbar-thumb': {
-      backgroundColor: 'var(--border-strong)',
-      borderRadius: 'var(--radius-md)',
-    },
-    '*::-webkit-scrollbar-thumb:hover': {
-      backgroundColor: 'var(--color-primary-500)',
-    },
-  }),
 });

@@ -10,7 +10,10 @@
       "Bash(npm test)",
       "Bash(npm test:*)",
       "Bash(ls:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(sed:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }

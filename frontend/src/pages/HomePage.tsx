@@ -11,10 +11,10 @@ import FileManager from "../components/FileManager";
 
 
 function HomePageContent() {
-  const { 
-    sidebarRefs, 
+  const {
+    sidebarRefs,
   } = useSidebarContext();
-  
+
   const { quickAccessRef } = sidebarRefs;
 
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useToolFileSelection();
@@ -43,7 +43,7 @@ function HomePageContent() {
         ref={quickAccessRef} />
       <ToolPanel />
       <Workbench />
-      <FileManager selectedTool={selectedTool} />
+      <FileManager selectedTool={selectedTool as any /* FIX ME */} />
     </Group>
   );
 }
@@ -51,7 +51,7 @@ function HomePageContent() {
 export default function HomePage() {
   const { actions } = useFileActions();
   return (
-    <ToolWorkflowProvider onViewChange={actions.setMode}>
+    <ToolWorkflowProvider onViewChange={actions.setMode as any /* FIX ME */}>
       <SidebarProvider>
         <HomePageContent />
       </SidebarProvider>

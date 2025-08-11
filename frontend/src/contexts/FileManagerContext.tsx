@@ -10,8 +10,8 @@ interface FileManagerContextValue {
   searchTerm: string;
   selectedFiles: FileWithUrl[];
   filteredFiles: FileWithUrl[];
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
   onLocalFileClick: () => void;
@@ -21,7 +21,7 @@ interface FileManagerContextValue {
   onOpenFiles: () => void;
   onSearchChange: (value: string) => void;
   onFileInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  
+
   // External props
   recentFiles: FileWithUrl[];
   isFileSupported: (fileName: string) => boolean;
@@ -61,7 +61,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
 
@@ -85,10 +85,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
   const handleFileSelect = useCallback((file: FileWithUrl) => {
     setSelectedFileIds(prev => {
-      if (prev.includes(file.id)) {
-        return prev.filter(id => id !== file.id);
+      if (file.id) {
+        if (prev.includes(file.id)) {
+          return prev.filter(id => id !== file.id);
+        } else {
+          return [...prev, file.id];
+        }
       } else {
-        return [...prev, file.id];
+        return prev;
       }
     });
   }, []);
@@ -127,7 +131,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         const fileWithUrls = files.map(file => {
           const url = URL.createObjectURL(file);
           createdBlobUrls.current.add(url);
-          
+
           return {
             // No ID assigned here - FileContext will handle storage and ID assignment
             name: file.name,
@@ -137,8 +141,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             lastModified: file.lastModified,
           };
         });
-        
-        onFilesSelected(fileWithUrls);
+
+        onFilesSelected(fileWithUrls as any /* FIX ME */);
         await refreshRecentFiles();
         onClose();
       } catch (error) {
@@ -176,7 +180,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     selectedFiles,
     filteredFiles,
     fileInputRef,
-    
+
     // Handlers
     onSourceChange: handleSourceChange,
     onLocalFileClick: handleLocalFileClick,
@@ -186,7 +190,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onOpenFiles: handleOpenFiles,
     onSearchChange: handleSearchChange,
     onFileInputChange: handleFileInputChange,
-    
+
     // External props
     recentFiles,
     isFileSupported,
@@ -221,14 +225,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 // Custom hook to use the context
 export const useFileManagerContext = (): FileManagerContextValue => {
   const context = useContext(FileManagerContext);
-  
+
   if (!context) {
     throw new Error(
       'useFileManagerContext must be used within a FileManagerProvider. ' +
       'Make sure you wrap your component with <FileManagerProvider>.'
     );
   }
-  
+
   return context;
 };
 

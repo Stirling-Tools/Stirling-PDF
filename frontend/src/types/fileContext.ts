@@ -192,10 +192,11 @@ export type FileContextAction =
 export interface FileContextActions {
   // File management
   addFiles: (files: File[]) => Promise<File[]>;
+  addFiles: (files: File[]) => Promise<File[]>;
   removeFiles: (fileIds: string[], deleteFromStorage?: boolean) => void;
   replaceFile: (oldFileId: string, newFile: File) => Promise<void>;
   clearAllFiles: () => void;
-  
+
   // Navigation
   setMode: (mode: ModeType) => void;
   
