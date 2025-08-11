@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useLayoutEffect, useState } from "react";
 import { Box, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { baseToolRegistry, type ToolRegistryEntry } from "../../data/toolRegistry";
+import { type ToolRegistryEntry, SUBCATEGORY_ORDER } from "../../data/toolRegistry";
 import ToolButton from "./toolPicker/ToolButton";
 import "./toolPicker/ToolPicker.css";
 
@@ -9,6 +9,7 @@ interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
   filteredTools: [string, ToolRegistryEntry][];
+  isSearching?: boolean;
 }
 
 interface GroupedTools {
@@ -17,7 +18,7 @@ interface GroupedTools {
   };
 }
 
-const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProps) => {
+const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = false }: ToolPickerProps) => {
   const { t } = useTranslation();
   const [quickHeaderHeight, setQuickHeaderHeight] = useState(0);
   const [allHeaderHeight, setAllHeaderHeight] = useState(0);
@@ -45,9 +46,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProp
   const groupedTools = useMemo(() => {
     const grouped: GroupedTools = {};
     filteredTools.forEach(([id, tool]) => {
-      const baseTool = baseToolRegistry[id as keyof typeof baseToolRegistry];
-      const category = baseTool?.category || "OTHER";
-      const subcategory = baseTool?.subcategory || "General";
+      const category = tool?.category || "OTHER";
+      const subcategory = tool?.subcategory || "General";
       if (!grouped[category]) grouped[category] = {};
       if (!grouped[category][subcategory]) grouped[category][subcategory] = [];
       grouped[category][subcategory].push({ id, tool });
@@ -56,34 +56,54 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProp
   }, [filteredTools]);
 
   const sections = useMemo(() => {
-    const mapping: Record<string, "QUICK ACCESS" | "ALL TOOLS"> = {
-      "RECOMMENDED TOOLS": "QUICK ACCESS",
-      "STANDARD TOOLS": "ALL TOOLS",
-      "ADVANCED TOOLS": "ALL TOOLS"
+
+    const getOrderIndex = (name: string) => {
+      const idx = SUBCATEGORY_ORDER.indexOf(name);
+      return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
     };
+    // Build two buckets: Quick includes only Recommended; All includes all categories (including Recommended)
     const quick: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
     const all: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
+
     Object.entries(groupedTools).forEach(([origCat, subs]) => {
-      const bucket = mapping[origCat.toUpperCase()] || "ALL TOOLS";
-      const target = bucket === "QUICK ACCESS" ? quick : all;
+      const upperCat = origCat.toUpperCase();
+
+      // Always add to ALL
       Object.entries(subs).forEach(([sub, tools]) => {
-        if (!target[sub]) target[sub] = [];
-        target[sub].push(...tools);
+        if (!all[sub]) all[sub] = [];
+        all[sub].push(...tools);
       });
+
+      // Add Recommended to QUICK ACCESS
+      if (upperCat === 'RECOMMENDED TOOLS') {
+        Object.entries(subs).forEach(([sub, tools]) => {
+          if (!quick[sub]) quick[sub] = [];
+          quick[sub].push(...tools);
+        });
+      }
     });
 
     const sortSubs = (obj: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>>) =>
       Object.entries(obj)
-        .sort(([a], [b]) => a.localeCompare(b))
+        .sort(([a], [b]) => {
+          const ai = getOrderIndex(a);
+          const bi = getOrderIndex(b);
+          if (ai !== bi) return ai - bi;
+          return a.localeCompare(b);
+        })
         .map(([subcategory, tools]) => ({
           subcategory,
-          tools: tools.sort((a, b) => a.tool.name.localeCompare(b.tool.name))
+          // preserve original insertion order coming from filteredTools
+          tools
         }));
 
-    return [
+    // Build sections and filter out any with no tools (avoids empty headers during search)
+    const built = [
       { title: "QUICK ACCESS", ref: quickAccessRef, subcategories: sortSubs(quick) },
       { title: "ALL TOOLS", ref: allToolsRef, subcategories: sortSubs(all) }
     ];
+
+    return built.filter(section => section.subcategories.some(sc => sc.tools.length > 0));
   }, [groupedTools]);
 
   const visibleSections = sections;
@@ -112,6 +132,27 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProp
     }
   };
 
+  // Build flat list by subcategory for search mode
+  const searchGroups = useMemo(() => {
+    if (!isSearching) return [] as Array<{ subcategory: string; tools: Array<{ id: string; tool: ToolRegistryEntry }> }>;
+    const subMap: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
+    const seen = new Set<string>();
+    filteredTools.forEach(([id, tool]) => {
+      if (seen.has(id)) return;
+      seen.add(id);
+      const sub = tool?.subcategory || 'General';
+      if (!subMap[sub]) subMap[sub] = [];
+      subMap[sub].push({ id, tool });
+    });
+    return Object.entries(subMap)
+      .sort(([a],[b]) => a.localeCompare(b))
+      .map(([subcategory, tools]) => ({
+        subcategory,
+        // preserve insertion order
+        tools
+      }));
+  }, [isSearching, filteredTools]);
+
   return (
     <Box
       h="100vh"
@@ -132,6 +173,35 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProp
         }}
         className="tool-picker-scrollable"
       >
+        {isSearching ? (
+          <Stack p="sm" gap="xs">
+            {searchGroups.length === 0 ? (
+              <Text c="dimmed" size="sm" p="sm">
+                {t("toolPicker.noToolsFound", "No tools found")}
+              </Text>
+            ) : (
+              searchGroups.map(group => (
+                <Box key={group.subcategory} w="100%">
+                  <Text size="sm" fw={500} mb="0.25rem" mt="1rem" className="tool-subcategory-title">
+                    {group.subcategory}
+                  </Text>
+                  <Stack gap="xs">
+                    {group.tools.map(({ id, tool }) => (
+                      <ToolButton
+                        key={id}
+                        id={id}
+                        tool={tool}
+                        isSelected={selectedToolKey === id}
+                        onSelect={onSelect}
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+              ))
+            )}
+          </Stack>
+        ) : (
+          <>
         {quickSection && (
           <>
             <div
@@ -165,15 +235,15 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProp
                   fontWeight: 700
                 }}
               >
-                {quickSection.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
+                {quickSection?.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
               </span>
             </div>
 
             <Box ref={quickAccessRef} w="100%">
               <Stack p="sm" gap="xs">
-                {quickSection.subcategories.map(sc => (
+                {quickSection?.subcategories.map(sc => (
                   <Box key={sc.subcategory} w="100%">
-                    {quickSection.subcategories.length > 1 && (
+                    {quickSection?.subcategories.length > 1 && (
                       <Text
                         size="sm"
                         fw={500}
@@ -234,15 +304,15 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProp
                   fontWeight: 700
                 }}
               >
-                {allSection.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
+                {allSection?.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
               </span>
             </div>
 
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
-                {allSection.subcategories.map(sc => (
+                {allSection?.subcategories.map(sc => (
                   <Box key={sc.subcategory} w="100%">
-                    {allSection.subcategories.length > 1 && (
+                    {allSection?.subcategories.length > 1 && (
                       <Text
                         size="sm"
                         fw={500}
@@ -275,6 +345,11 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProp
           <Text c="dimmed" size="sm" p="sm">
             {t("toolPicker.noToolsFound", "No tools found")}
           </Text>
+        )}
+
+        {/* bottom spacer to allow scrolling past the last row */}
+        <div aria-hidden style={{ height: 200 }} />
+          </>
         )}
       </Box>
     </Box>

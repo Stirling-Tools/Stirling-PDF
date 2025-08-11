@@ -5,7 +5,7 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
-import { ToolConfiguration } from '../types/tool';
+import { type ToolRegistryEntry } from '../data/toolRegistry';
 import { PageEditorFunctions } from '../types/pageEditor';
 
 // State interface
@@ -69,8 +69,8 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: string | null;
-  selectedTool: ToolConfiguration | null;
-  toolRegistry: any; // From useToolManagement
+  selectedTool: ToolRegistryEntry | null;
+  toolRegistry: Record<string, ToolRegistryEntry>; // From useToolManagement
   
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
@@ -90,7 +90,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
   
   // Computed values
-  filteredTools: [string, any][]; // Filtered by search
+  filteredTools: [string, ToolRegistryEntry][]; // Filtered by search
   isPanelVisible: boolean;
 }
 
@@ -146,7 +146,9 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     onViewChange?.('fileEditor');
     setLeftPanelView('toolContent');
     setReaderMode(false);
-  }, [selectTool, onViewChange, setLeftPanelView, setReaderMode]);
+    // Clear search so the tool content becomes visible immediately
+    setSearchQuery('');
+  }, [selectTool, onViewChange, setLeftPanelView, setReaderMode, setSearchQuery]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');

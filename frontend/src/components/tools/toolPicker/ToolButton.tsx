@@ -1,5 +1,6 @@
 import React from "react";
-import { Button, Tooltip } from "@mantine/core";
+import { Button } from "@mantine/core";
+import { Tooltip } from "../../shared/Tooltip";
 import { type ToolRegistryEntry } from "../../../data/toolRegistry";
 
 interface ToolButtonProps {
@@ -11,7 +12,7 @@ interface ToolButtonProps {
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect }) => {
   return (
-    <Tooltip key={id} label={tool.description} withArrow openDelay={500}>
+    <Tooltip content={tool.description} position="right" arrow={true} delay={500}>
       <Button
         variant={isSelected ? "filled" : "subtle"}
         onClick={() => onSelect(id)}

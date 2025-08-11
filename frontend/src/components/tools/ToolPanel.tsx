@@ -1,9 +1,10 @@
 import React from 'react';
-import { TextInput } from '@mantine/core';
+import { TextInput, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolPanelState, useToolSelection, useWorkbenchState } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
+import SearchResults from './SearchResults';
 import ToolRenderer from './ToolRenderer';
 import { useSidebarContext } from "../../contexts/SidebarContext";
 import rainbowStyles from '../../styles/rainbow.module.css';
@@ -13,6 +14,7 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 export default function ToolPanel() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
+  const { colorScheme } = useMantineColorScheme();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef } = sidebarRefs;
 
@@ -37,10 +39,7 @@ export default function ToolPanel() {
       className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       }`}
-      style={{
-        width: isPanelVisible ? '20rem' : '0',
-        padding: isPanelVisible ? '0.5rem' : '0'
-      }}
+      style={{width: isPanelVisible ? '20rem' : '0'}}
     >
       <div
         style={{
@@ -52,23 +51,57 @@ export default function ToolPanel() {
         }}
       >
         {/* Search Bar - Always visible at the top */}
-        <div className="mb-4">
+        <div
+          style={{
+            backgroundColor: colorScheme === 'dark' ? '#1F2329' : '#EFF1F4',
+            padding: '0.75rem 1rem',
+            marginBottom: (leftPanelView === 'toolContent') ? '1rem' : 0,
+          }}
+        >
           <TextInput
             placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.currentTarget.value)}
             autoComplete="off"
             size="sm"
+            styles={{
+              root: {
+                marginTop: '0.5rem',
+                marginBottom: '0.5rem',
+              },
+              input: {
+                backgroundColor: colorScheme === 'dark' ? '#4B525A' : '#FFFFFF',
+                color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382',
+                border: 'none',
+                boxShadow: 'none',
+                borderBottom: leftPanelView === 'toolContent' ? `1px solid ${colorScheme === 'dark' ? '#3A4047' : '#E0E0E0'}` : 'none',
+              },
+              section: {
+                color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382',
+              }
+            }}
+            leftSection={<span className="material-symbols-rounded" style={{ fontSize: 16, color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382' }}>search</span>}
           />
         </div>
 
-        {leftPanelView === 'toolPicker' ? (
+        {searchQuery.trim().length > 0 ? (
+          // Searching view (replaces both picker and content)
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 min-h-0">
+              <SearchResults
+                filteredTools={filteredTools}
+                onSelect={handleToolSelect}
+              />
+            </div>
+          </div>
+        ) : leftPanelView === 'toolPicker' ? (
           // Tool Picker View
           <div className="flex-1 flex flex-col">
             <ToolPicker
               selectedToolKey={selectedToolKey}
               onSelect={handleToolSelect}
               filteredTools={filteredTools}
+              isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
             />
           </div>
         ) : (

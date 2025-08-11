@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { baseToolRegistry, toolEndpoints, type ToolRegistryEntry } from "../data/toolRegistry";
+import { getFlatToolRegistry, toolEndpoints, type ToolRegistryEntry } from "../data/toolRegistry";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 
 interface ToolManagementResult {
@@ -32,9 +32,10 @@ export const useToolManagement = (): ToolManagementResult => {
 
   const toolRegistry: Record<string, ToolRegistryEntry> = useMemo(() => {
     const availableToolRegistry: Record<string, ToolRegistryEntry> = {};
-    Object.keys(baseToolRegistry).forEach(toolKey => {
+    const base = getFlatToolRegistry();
+    Object.keys(base).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
-        const baseTool = baseToolRegistry[toolKey as keyof typeof baseToolRegistry];
+        const baseTool = base[toolKey as keyof typeof base];
         availableToolRegistry[toolKey] = {
           ...baseTool,
           name: t(baseTool.name),

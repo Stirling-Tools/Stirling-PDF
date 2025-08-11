@@ -19,7 +19,32 @@ export type ToolRegistry = {
     [key: string]: ToolRegistryEntry;
 };
 
-export const baseToolRegistry: ToolRegistry = {
+/**
+ * Shape overview:
+ * - flatToolRegistryMap: { [toolId]: ToolRegistryEntry }
+ * - buildStructuredRegistry(): {
+ *     QUICK_ACCESS: Array<ToolRegistryEntry & { id: string }>,
+ *     ALL_TOOLS: { [category]: { [subcategory]: Array<ToolRegistryEntry & { id: string }> } }
+ *   }
+ * - baseToolRegistry: [ { QUICK_ACCESS }, { ALL_TOOLS } ]
+ *   Quick reference helpers are provided below for convenience.
+ */
+// Ordered list used elsewhere for display ordering
+export const SUBCATEGORY_ORDER: string[] = [
+    'Signing',
+    'Document Security',
+    'Verification',
+    'Document Review',
+    'Page Formatting',
+    'Extraction',
+    'Removal',
+    'Automation',
+    'General', // for now, this is the same as quick access, until we add suggested tools & favorites & whatnot
+    'Advanced Formatting',
+    'Developer Tools',
+];
+
+export const flatToolRegistryMap: ToolRegistry = {
     "add-attachments": {
         icon: <span className="material-symbols-rounded">attachment</span>,
         name: "home.attachments.title",
@@ -434,6 +459,43 @@ export const baseToolRegistry: ToolRegistry = {
         category: "Advanced Tools",
         subcategory: "Developer Tools"
     },
+    // External Developer Resources (open in new tab)
+    "dev-api": {
+        icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
+        name: "API",
+        component: null,
+        view: "external",
+        description: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html",
+        category: "Advanced Tools",
+        subcategory: "Developer Tools"
+    },
+    "dev-folder-scanning": {
+        icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
+        name: "Automated Folder Scanning",
+        component: null,
+        view: "external",
+        description: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/",
+        category: "Advanced Tools",
+        subcategory: "Developer Tools"
+    },
+    "dev-sso-guide": {
+        icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
+        name: "SSO Guide",
+        component: null,
+        view: "external",
+        description: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
+        category: "Advanced Tools",
+        subcategory: "Developer Tools"
+    },
+    "dev-airgapped": {
+        icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
+        name: "Air-gapped Setup",
+        component: null,
+        view: "external",
+        description: "https://docs.stirlingpdf.com/Pro/#activation",
+        category: "Advanced Tools",
+        subcategory: "Developer Tools"
+    },
     "sign": {
         icon: <span className="material-symbols-rounded">signature</span>,
         name: "home.sign.title",
@@ -517,8 +579,66 @@ export const baseToolRegistry: ToolRegistry = {
     }
 };
 
-export const toolEndpoints: Record<string,
-    string[]> = {
+// Build structured registry that preserves order for sections
+export type ToolConfig = ToolRegistryEntry & { id: string };
+export type ToolRegistryStructured = {
+    QUICK_ACCESS: ToolConfig[];
+    ALL_TOOLS: Record<string, Record<string, ToolConfig[]>>;
+};
+
+function buildStructuredRegistry(): ToolRegistryStructured {
+    const entries: Array<[string, ToolRegistryEntry]> = Object.entries(flatToolRegistryMap);
+    const quick: ToolConfig[] = [];
+    const all: Record<string, Record<string, ToolConfig[]>> = {};
+
+    for (const [id, tool] of entries) {
+        const sub = tool.subcategory ?? 'General';
+        const cat = tool.category ?? 'OTHER';
+        // Quick access: use the existing "Recommended Tools" category
+        if (tool.category === 'Recommended Tools') {
+            quick.push({ id, ...tool });
+        }
+        if (!all[cat]) all[cat] = {};
+        if (!all[cat][sub]) all[cat][sub] = [];
+        all[cat][sub].push({ id, ...tool });
+    }
+
+    // Preserve subcategory ordering within each category
+    for (const cat of Object.keys(all)) {
+        const subcats = all[cat];
+        const ordered: Record<string, ToolConfig[]> = {};
+        SUBCATEGORY_ORDER.forEach(orderName => {
+            if (subcats[orderName]) ordered[orderName] = subcats[orderName];
+        });
+        // Append any remaining subcategories not in the predefined order
+        Object.keys(subcats)
+            .filter(name => !(name in ordered))
+            .sort((a, b) => a.localeCompare(b))
+            .forEach(name => (ordered[name] = subcats[name]));
+        all[cat] = ordered;
+    }
+
+    return { QUICK_ACCESS: quick, ALL_TOOLS: all };
+}
+
+export const baseToolRegistry: [
+    { QUICK_ACCESS: ToolConfig[] },
+    { ALL_TOOLS: Record<string, Record<string, ToolConfig[]>> }
+] = [
+    { QUICK_ACCESS: buildStructuredRegistry().QUICK_ACCESS },
+    { ALL_TOOLS: buildStructuredRegistry().ALL_TOOLS }
+];
+
+// Convenience accessors for the structured shape
+export const getQuickAccessTools = (): ToolConfig[] => baseToolRegistry[0].QUICK_ACCESS;
+export const getAllToolsStructured = (): Record<string, Record<string, ToolConfig[]>> => baseToolRegistry[1].ALL_TOOLS;
+
+// Compatibility: provide a flat registry for existing hooks/components
+export function getFlatToolRegistry(): ToolRegistry {
+    return flatToolRegistryMap;
+}
+
+export const toolEndpoints: Record<string, string[]> = {
     split: ["split-pages",
         "split-pdf-by-sections",
         "split-by-size-or-count",
