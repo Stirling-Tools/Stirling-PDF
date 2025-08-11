@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
         with:
           egress-policy: audit
 
@@ -114,7 +114,7 @@ jobs:
       - name: AI PR Title Analysis
         if: ${{ steps.actor.outputs.is_repo_dev == 'true' && steps.check_diff.outputs.is_empty == 'false' }}
         id: ai-title-analysis
-        uses: actions/ai-inference@d645f067d89ee1d5d736a5990e327e504d1c5a4a # v1.1.0
+        uses: actions/ai-inference@0cbed4a10641c75090de5968e66d70eb4660f751 # v1.2.7
         with:
           system-prompt-file: ".github/config/system-prompt.txt"
           prompt: |

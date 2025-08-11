@@ -46,6 +46,9 @@ labels:
   - label: 'API'
     title: '.*openapi.*|.*swagger.*|.*api.*'
 
+  - label: 'v2'
+    base-branch: 'V2'
+
   - label: 'Translation'
     files:
       - 'app/core/src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}.properties'
@@ -62,6 +65,7 @@ labels:
       - 'app/core/src/main/java/stirling/software/SPDF/controller/web/.*'
       - 'app/core/src/main/java/stirling/software/SPDF/UI/.*'
       - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/web/.*'
+      - 'frontend/**'
 
   - label: 'Java'
     files:
@@ -76,8 +80,9 @@ labels:
       - 'app/core/src/main/resources/settings.yml.template'
       - 'app/core/src/main/resources/application.properties'
       - 'app/core/src/main/resources/banner.txt'
-      - 'scripts/png_to_webp.py'
-      - 'split_photos.py'
+      - 'app/core/src/main/resources/static/python/png_to_webp.py'
+      - 'app/core/src/main/resources/static/python/split_photos.py'
+      - 'app/core/src/main/resources/static/pipeline/defaultWebUIConfigs/**'
       - 'application.properties'
 
   - label: 'Security'
@@ -95,8 +100,8 @@ labels:
       - 'app/core/src/main/java/stirling/software/SPDF/model/api/.*'
       - 'app/core/src/main/java/stirling/software/SPDF/service/ApiDocService.java'
       - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/api/.*'
-      - 'scripts/png_to_webp.py'
-      - 'split_photos.py'
+      - 'app/core/src/main/resources/static/python/png_to_webp.py'
+      - 'app/core/src/main/resources/static/python/split_photos.py'
       - '.github/workflows/swagger.yml'
 
   - label: 'Documentation'
@@ -119,6 +124,7 @@ labels:
       - 'scripts/installFonts.sh'
       - 'test.sh'
       - 'test2.sh'
+      - 'docker/**'
 
   - label: 'Devtools'
     files:
@@ -129,7 +135,6 @@ labels:
       - '.pre-commit-config'
       - '.github/workflows/pre_commit.yml'
       - 'devGuide/.*'
-      - 'devTools/.*'
       - 'devTools/.*'
 
   - label: 'Test'

@@ -1,5 +1,5 @@
 # use alpine
-FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715
+FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
 
 ARG VERSION_TAG
 
@@ -21,7 +21,6 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
 COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
 COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
-COPY pipeline /pipeline
 COPY app/core/build/libs/*.jar app.jar
 
 # Set up necessary directories and permissions
@@ -39,10 +38,10 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         su-exec \
         openjdk21-jre && \
     # User permissions
-    mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf && \
+    mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
     chmod +x /scripts/*.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline /tmp/stirling-pdf && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /configs /customFiles /tmp/stirling-pdf && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 # Set environment variables

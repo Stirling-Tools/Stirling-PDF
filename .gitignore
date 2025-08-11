@@ -124,10 +124,10 @@ SwaggerDoc.json
 *.tar.gz
 *.rar
 *.db
-/build
-/app/core/build
-/app/common/build
-/app/proprietary/build
+build
+app/core/build
+app/common/build
+app/proprietary/build
 common/build
 proprietary/build
 stirling-pdf/build

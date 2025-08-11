@@ -1,6 +1,6 @@
 <footer th:fragment="footer" id="footer" class="text-center">
   
-  <script type="module" th:src="@{'/js/thirdParty/cookieconsent-config.js'}"></script>
+  <script type="module" th:src="@{'/js/thirdParty/cookieconsent-config.js'}" th:if="${@analyticsEnabled}"></script>
   <div class="footer-center">
     <!-- Links section -->
     <div class="d-flex justify-content-center">
@@ -13,7 +13,7 @@
         <li th:if="${@accessibilityStatement != ''}"><a class="footer-link px-2" target="_blank" th:href="${@accessibilityStatement}" th:text="#{legal.accessibility}">accessibilityStatement</a></li>
         <li th:if="${@cookiePolicy != ''}"><a class="footer-link px-2" target="_blank" th:href="${@cookiePolicy}" th:text="#{legal.cookie}">cookiePolicy</a></li>
         <li th:if="${@impressum != ''}"><a class="footer-link px-2" target="_blank" th:href="${@impressum}" th:text="#{legal.impressum}">impressum</a></li>
-        <li><a class="footer-link px-2" id="cookieBanner" target="_blank"  th:text="#{legal.showCookieBanner}" onClick="CookieConsent.show(true)">Cookie Preferences</a></li>
+        <li th:if="${@analyticsEnabled}"><a class="footer-link px-2" id="cookieBanner" target="_blank"  th:text="#{legal.showCookieBanner}" onClick="CookieConsent.show(true)">Cookie Preferences</a></li>
       </ul>
     </div>
 

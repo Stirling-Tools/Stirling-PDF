@@ -14,6 +14,8 @@ public class InstallationPathConfig {
     private static final String CONFIG_PATH;
     private static final String CUSTOM_FILES_PATH;
     private static final String CLIENT_WEBUI_PATH;
+    private static final String SCRIPTS_PATH;
+    private static final String PIPELINE_PATH;
 
     // Config paths
     private static final String SETTINGS_PATH;
@@ -23,6 +25,7 @@ public class InstallationPathConfig {
     private static final String STATIC_PATH;
     private static final String TEMPLATES_PATH;
     private static final String SIGNATURES_PATH;
+    private static final String PRIVATE_KEY_PATH;
 
     static {
         BASE_PATH = initializeBasePath();
@@ -32,15 +35,18 @@ public class InstallationPathConfig {
         CONFIG_PATH = BASE_PATH + "configs" + File.separator;
         CUSTOM_FILES_PATH = BASE_PATH + "customFiles" + File.separator;
         CLIENT_WEBUI_PATH = BASE_PATH + "clientWebUI" + File.separator;
+        PIPELINE_PATH = BASE_PATH + "pipeline" + File.separator;
 
         // Initialize config paths
         SETTINGS_PATH = CONFIG_PATH + "settings.yml";
         CUSTOM_SETTINGS_PATH = CONFIG_PATH + "custom_settings.yml";
+        SCRIPTS_PATH = CONFIG_PATH + "scripts" + File.separator;
 
         // Initialize custom file paths
         STATIC_PATH = CUSTOM_FILES_PATH + "static" + File.separator;
         TEMPLATES_PATH = CUSTOM_FILES_PATH + "templates" + File.separator;
         SIGNATURES_PATH = CUSTOM_FILES_PATH + "signatures" + File.separator;
+        PRIVATE_KEY_PATH = CONFIG_PATH + "db" + File.separator + "keys" + File.separator;
     }
 
     private static String initializeBasePath() {
@@ -89,6 +95,14 @@ public class InstallationPathConfig {
         return CLIENT_WEBUI_PATH;
     }
 
+    public static String getScriptsPath() {
+        return SCRIPTS_PATH;
+    }
+
+    public static String getPipelinePath() {
+        return PIPELINE_PATH;
+    }
+
     public static String getSettingsPath() {
         return SETTINGS_PATH;
     }
@@ -107,5 +121,9 @@ public class InstallationPathConfig {
 
     public static String getSignaturesPath() {
         return SIGNATURES_PATH;
+    }
+
+    public static String getPrivateKeyPath() {
+        return PRIVATE_KEY_PATH;
     }
 }
