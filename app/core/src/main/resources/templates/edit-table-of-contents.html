@@ -64,12 +64,28 @@
                       id="addBookmarkBtn"
                       class="btn btn-outline-primary"
                       th:text="#{editTableOfContents.addBookmark}"></button>
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                      <button type="button"
+                        id="undoBtn"
+                        class="btn btn-outline-primary"
+                        th:title="#{editTableOfContents.undo}"
+                        disabled>
+                        <span class="material-symbols-rounded">undo</span>
+                      </button>
+                      <button type="button"
+                        id="clearAllBtn"
+                        class="btn btn-outline-danger"
+                        th:title="#{editTableOfContents.clearAll}"
+                        disabled>
+                        <span class="material-symbols-rounded">delete</span>
+                      </button>
+                    </div>
+
 
                     <div class="d-flex flex-wrap justify-content-end gap-2">
                       <!-- Import Split Button -->
                       <div class="btn-group">
-                        <label
-                          id="importDefaultBtn"
+                        <label id="importDefaultBtn"
                           for="importUploadJsonFileInput"
                           class="btn btn-outline-primary"
                           style="border-top-left-radius: 1.25rem !important; border-bottom-left-radius: 1.25rem !important;"
