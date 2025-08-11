@@ -46,6 +46,9 @@ labels:
   - label: 'API'
     title: '.*openapi.*|.*swagger.*|.*api.*'
 
+  - label: 'v2'
+    base-branch: 'V2'
+
   - label: 'Translation'
     files:
       - 'app/core/src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}.properties'
@@ -62,6 +65,7 @@ labels:
       - 'app/core/src/main/java/stirling/software/SPDF/controller/web/.*'
       - 'app/core/src/main/java/stirling/software/SPDF/UI/.*'
       - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/web/.*'
+      - 'frontend/**'
 
   - label: 'Java'
     files:
@@ -120,6 +124,7 @@ labels:
       - 'scripts/installFonts.sh'
       - 'test.sh'
       - 'test2.sh'
+      - 'docker/**'
 
   - label: 'Devtools'
     files:
@@ -130,7 +135,6 @@ labels:
       - '.pre-commit-config'
       - '.github/workflows/pre_commit.yml'
       - 'devGuide/.*'
-      - 'devTools/.*'
       - 'devTools/.*'
 
   - label: 'Test'
