@@ -71,12 +71,12 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const isLoginPage = window.location.pathname.includes('/login');
   const hasJwt = !!localStorage.getItem('stirling_jwt');
 
-  if (isLoginPage && !hasJwt) {
-    console.debug('[AppConfigContext] On login page without JWT - using default config');
-    setConfig({ enableLogin: true });
-    setLoading(false);
-    return;
-  }
+    if (isLoginPage && !hasJwt) {
+      console.debug('[AppConfig] On login page without JWT - using default config');
+      setConfig({ enableLogin: true });
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);

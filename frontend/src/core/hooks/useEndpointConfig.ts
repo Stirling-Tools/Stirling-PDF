@@ -9,6 +9,7 @@ function getAuthHeaders(): HeadersInit {
 
 /**
  * Hook to check if a specific endpoint is enabled
+ * This wraps the context for single endpoint checks
  */
 export function useEndpointEnabled(endpoint: string): {
   enabled: boolean | null;
