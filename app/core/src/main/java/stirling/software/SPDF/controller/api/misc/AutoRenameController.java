@@ -93,14 +93,14 @@ public class AutoRenameController {
                         // Merge lines with same font size
                         List<LineInfo> mergedLineInfos = new ArrayList<>();
                         for (int i = 0; i < lineInfos.size(); i++) {
-                            String mergedText = lineInfos.get(i).text;
+                            StringBuilder mergedText = new StringBuilder(lineInfos.get(i).text);
                             float fontSize = lineInfos.get(i).fontSize;
                             while (i + 1 < lineInfos.size()
                                     && lineInfos.get(i + 1).fontSize == fontSize) {
-                                mergedText += " " + lineInfos.get(i + 1).text;
+                                mergedText.append(" ").append(lineInfos.get(i + 1).text);
                                 i++;
                             }
-                            mergedLineInfos.add(new LineInfo(mergedText, fontSize));
+                            mergedLineInfos.add(new LineInfo(mergedText.toString(), fontSize));
                         }
 
                         // Sort lines by font size in descending order and get the first one
