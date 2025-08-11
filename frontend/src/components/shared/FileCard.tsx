@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, Stack, Text, Group, Badge, Button, Box, Image, ThemeIcon, ActionIcon, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -9,7 +9,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import { FileWithUrl } from "../../types/file";
 import { getFileSize, getFileDate } from "../../utils/fileUtils";
 import { useIndexedDBThumbnail } from "../../hooks/useIndexedDBThumbnail";
-import { fileStorage } from "../../services/fileStorage";
 
 interface FileCardProps {
   file: FileWithUrl;

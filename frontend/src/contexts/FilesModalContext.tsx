@@ -7,7 +7,7 @@ interface FilesModalContextType {
   closeFilesModal: () => void;
   onFileSelect: (file: File) => void;
   onFilesSelect: (files: File[]) => void;
-  onModalClose: () => void;
+  onModalClose?: () => void;
   setOnModalClose: (callback: () => void) => void;
 }
 

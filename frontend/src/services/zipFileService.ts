@@ -1,4 +1,17 @@
-import JSZip from 'jszip';
+import JSZip, { JSZipObject } from 'jszip';
+
+// Undocumented interface in JSZip for JSZipObject._data
+interface CompressedObject {
+    compressedSize: number;
+    uncompressedSize: number;
+    crc32: number;
+    compression: object;
+    compressedContent: string|ArrayBuffer|Uint8Array|Buffer;
+}
+
+const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
+  return (zipEntry as any)._data as CompressedObject;
+}
 
 export interface ZipExtractionResult {
   success: boolean;
@@ -68,7 +81,7 @@ export class ZipFileService {
         }
 
         fileCount++;
-        const uncompressedSize = zipEntry._data?.uncompressedSize || 0;
+        const uncompressedSize = getData(zipEntry)?.uncompressedSize || 0;
         totalSize += uncompressedSize;
 
         // Check if file is a PDF
@@ -109,25 +122,25 @@ export class ZipFileService {
   async createZipFromFiles(files: File[], zipFilename: string): Promise<{ zipFile: File; size: number }> {
     try {
       const zip = new JSZip();
-      
+
       // Add each file to the ZIP
       for (const file of files) {
         const content = await file.arrayBuffer();
         zip.file(file.name, content);
       }
-      
+
       // Generate ZIP blob
-      const zipBlob = await zip.generateAsync({ 
+      const zipBlob = await zip.generateAsync({
         type: 'blob',
         compression: 'DEFLATE',
         compressionOptions: { level: 6 }
       });
-      
-      const zipFile = new File([zipBlob], zipFilename, { 
+
+      const zipFile = new File([zipBlob], zipFilename, {
         type: 'application/zip',
         lastModified: Date.now()
       });
-      
+
       return { zipFile, size: zipFile.size };
     } catch (error) {
       throw new Error(`Failed to create ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -162,7 +175,7 @@ export class ZipFileService {
       const zipContents = await zip.loadAsync(file);
 
       // Get all PDF files
-      const pdfFiles = Object.entries(zipContents.files).filter(([filename, zipEntry]) => 
+      const pdfFiles = Object.entries(zipContents.files).filter(([filename, zipEntry]) =>
         !zipEntry.dir && this.isPdfFile(filename)
       );
 
@@ -171,7 +184,7 @@ export class ZipFileService {
       // Extract each PDF file
       for (let i = 0; i < pdfFiles.length; i++) {
         const [filename, zipEntry] = pdfFiles[i];
-        
+
         try {
           // Report progress
           if (onProgress) {
@@ -185,9 +198,9 @@ export class ZipFileService {
 
           // Extract file content
           const content = await zipEntry.async('uint8array');
-          
+
           // Create File object
-          const extractedFile = new File([content], this.sanitizeFilename(filename), {
+          const extractedFile = new File([content as any], this.sanitizeFilename(filename), {
             type: 'application/pdf',
             lastModified: zipEntry.date?.getTime() || Date.now()
           });
@@ -235,7 +248,7 @@ export class ZipFileService {
 
     const validExtensions = ['.zip'];
     const hasValidType = validTypes.includes(file.type);
-    const hasValidExtension = validExtensions.some(ext => 
+    const hasValidExtension = validExtensions.some(ext =>
       file.name.toLowerCase().endsWith(ext)
     );
 
@@ -257,7 +270,7 @@ export class ZipFileService {
       // Read first few bytes to check PDF header
       const buffer = await file.slice(0, 8).arrayBuffer();
       const bytes = new Uint8Array(buffer);
-      
+
       // Check for PDF header: %PDF-
       return bytes[0] === 0x25 && // %
              bytes[1] === 0x50 && // P
@@ -275,7 +288,7 @@ export class ZipFileService {
   private sanitizeFilename(filename: string): string {
     // Remove directory path and get just the filename
     const basename = filename.split('/').pop() || filename;
-    
+
     // Remove or replace unsafe characters
     return basename
       .replace(/[<>:"/\\|?*]/g, '_') // Replace unsafe chars with underscore
@@ -309,15 +322,15 @@ export class ZipFileService {
     try {
       const zip = new JSZip();
       await zip.loadAsync(file);
-      
+
       // Check if any files are encrypted
       for (const [filename, zipEntry] of Object.entries(zip.files)) {
-        if (zipEntry.options?.compression === 'STORE' && zipEntry._data?.compressedSize === 0) {
+        if (zipEntry.options?.compression === 'STORE' && getData(zipEntry)?.compressedSize === 0) {
           // This might indicate encryption, but JSZip doesn't provide direct encryption detection
           // We'll handle this in the extraction phase
         }
       }
-      
+
       return false; // JSZip will throw an error if password is required
     } catch (error) {
       // If we can't load the ZIP, it might be password protected

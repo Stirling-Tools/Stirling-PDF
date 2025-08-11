@@ -43,7 +43,7 @@ export interface PageEditorProps {
     onExportAll: () => void;
     exportLoading: boolean;
     selectionMode: boolean;
-    selectedPages: string[];
+    selectedPages: number[];
     closePdf: () => void;
   }) => void;
 }
@@ -56,7 +56,7 @@ const PageEditor = ({
   // Get file context
   const fileContext = useFileContext();
   const { file: currentFile, processedFile: currentProcessedFile } = useCurrentFile();
-  
+
   // Use file context state
   const {
     activeFiles,
@@ -81,12 +81,12 @@ const PageEditor = ({
   // Simple computed document from processed files (no caching needed)
   const mergedPdfDocument = useMemo(() => {
     if (activeFiles.length === 0) return null;
-    
+
     if (activeFiles.length === 1) {
       // Single file
       const processedFile = processedFiles.get(activeFiles[0]);
       if (!processedFile) return null;
-      
+
       return {
         id: processedFile.id,
         name: activeFiles[0].name,
@@ -108,7 +108,7 @@ const PageEditor = ({
         const processedFile = processedFiles.get(file);
         if (processedFile) {
           filenames.push(file.name.replace(/\.pdf$/i, ''));
-          
+
           processedFile.pages.forEach((page, pageIndex) => {
             const newPage: PDFPage = {
               ...page,
@@ -119,7 +119,7 @@ const PageEditor = ({
             };
             allPages.push(newPage);
           });
-          
+
           totalPages += processedFile.pages.length;
         }
       });
@@ -140,7 +140,7 @@ const PageEditor = ({
   const displayDocument = editedDocument || mergedPdfDocument;
 
   const [filename, setFilename] = useState<string>("");
-  
+
 
   // Page editor state (use context for selectedPages)
   const [status, setStatus] = useState<string | null>(null);
@@ -149,7 +149,7 @@ const PageEditor = ({
 
   // Drag and drop state
   const [draggedPage, setDraggedPage] = useState<number | null>(null);
-  const [dropTarget, setDropTarget] = useState<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | 'end' | null>(null);
   const [multiPageDrag, setMultiPageDrag] = useState<{pageNumbers: number[], count: number} | null>(null);
   const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
 
@@ -200,54 +200,54 @@ const PageEditor = ({
   const [thumbnailGenerationStarted, setThumbnailGenerationStarted] = useState(false);
 
   // Thumbnail generation (opt-in for visual tools)
-  const { 
+  const {
     generateThumbnails,
-    addThumbnailToCache, 
-    getThumbnailFromCache, 
+    addThumbnailToCache,
+    getThumbnailFromCache,
     stopGeneration,
-    destroyThumbnails 
+    destroyThumbnails
   } = useThumbnailGeneration();
 
   // Start thumbnail generation process (separate from document loading)
   const startThumbnailGeneration = useCallback(() => {
     console.log('🎬 PageEditor: startThumbnailGeneration called');
     console.log('🎬 Conditions - mergedPdfDocument:', !!mergedPdfDocument, 'activeFiles:', activeFiles.length, 'started:', thumbnailGenerationStarted);
-    
+
     if (!mergedPdfDocument || activeFiles.length !== 1 || thumbnailGenerationStarted) {
       console.log('🎬 PageEditor: Skipping thumbnail generation due to conditions');
       return;
     }
-    
+
     const file = activeFiles[0];
     const totalPages = mergedPdfDocument.totalPages;
-    
+
     console.log('🎬 PageEditor: Starting thumbnail generation for', totalPages, 'pages');
     setThumbnailGenerationStarted(true);
-    
+
     // Run everything asynchronously to avoid blocking the main thread
     setTimeout(async () => {
       try {
         // Load PDF array buffer for Web Workers
         const arrayBuffer = await file.arrayBuffer();
-        
+
         // Generate page numbers for pages that don't have thumbnails yet
         const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1)
           .filter(pageNum => {
             const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
             return !page?.thumbnail; // Only generate for pages without thumbnails
           });
-        
+
         console.log(`🎬 PageEditor: Generating thumbnails for ${pageNumbers.length} pages (out of ${totalPages} total):`, pageNumbers.slice(0, 10), pageNumbers.length > 10 ? '...' : '');
-        
+
         // If no pages need thumbnails, we're done
         if (pageNumbers.length === 0) {
           console.log('🎬 PageEditor: All pages already have thumbnails, no generation needed');
           return;
         }
-        
+
         // Calculate quality scale based on file size
         const scale = activeFiles.length === 1 ? calculateScaleFromFileSize(activeFiles[0].size) : 0.2;
-        
+
         // Start parallel thumbnail generation WITHOUT blocking the main thread
         const generationPromise = generateThumbnails(
           arrayBuffer,
@@ -267,11 +267,11 @@ const PageEditor = ({
                 // Check cache first, then send thumbnail
                 const pageId = `${file.name}-page-${pageNumber}`;
                 const cached = getThumbnailFromCache(pageId);
-                
+
                 if (!cached) {
                   // Cache and send to component
                   addThumbnailToCache(pageId, thumbnail);
-                  
+
                   window.dispatchEvent(new CustomEvent('thumbnailReady', {
                     detail: { pageNumber, thumbnail, pageId }
                   }));
@@ -292,7 +292,7 @@ const PageEditor = ({
             console.error('✗ PageEditor: Web Worker thumbnail generation failed:', error);
             setThumbnailGenerationStarted(false);
           });
-        
+
       } catch (error) {
         console.error('Failed to start Web Worker thumbnail generation:', error);
         setThumbnailGenerationStarted(false);
@@ -304,25 +304,25 @@ const PageEditor = ({
   useEffect(() => {
     console.log('🎬 PageEditor: Thumbnail generation effect triggered');
     console.log('🎬 Conditions - mergedPdfDocument:', !!mergedPdfDocument, 'started:', thumbnailGenerationStarted);
-    
+
     if (mergedPdfDocument && !thumbnailGenerationStarted) {
       // Check if ALL pages already have thumbnails from processed files
       const totalPages = mergedPdfDocument.pages.length;
       const pagesWithThumbnails = mergedPdfDocument.pages.filter(page => page.thumbnail).length;
       const hasAllThumbnails = pagesWithThumbnails === totalPages;
-      
+
       console.log('🎬 PageEditor: Thumbnail status:', {
         totalPages,
         pagesWithThumbnails,
         hasAllThumbnails,
         missingThumbnails: totalPages - pagesWithThumbnails
       });
-      
+
       if (hasAllThumbnails) {
         console.log('🎬 PageEditor: Skipping generation - all thumbnails already exist');
         return; // Skip generation if ALL thumbnails already exist
       }
-      
+
       console.log('🎬 PageEditor: Some thumbnails missing, proceeding with generation');
       // Small delay to let document render, then start thumbnail generation
       console.log('🎬 PageEditor: Scheduling thumbnail generation in 500ms');
@@ -394,10 +394,10 @@ const PageEditor = ({
 
   const togglePage = useCallback((pageNumber: number) => {
     console.log('🔄 Toggling page', pageNumber);
-    
+
     // Check if currently selected and update accordingly
     const isCurrentlySelected = selectedPageNumbers.includes(pageNumber);
-    
+
     if (isCurrentlySelected) {
       // Remove from selection
       console.log('🔄 Removing page', pageNumber);
@@ -524,24 +524,24 @@ const PageEditor = ({
   // Update PDF document state with edit tracking
   const setPdfDocument = useCallback((updatedDoc: PDFDocument) => {
     console.log('setPdfDocument called - setting edited state');
-    
+
     // Update local edit state for immediate visual feedback
     setEditedDocument(updatedDoc);
     setHasUnsavedChanges(true); // Use global state
     setHasUnsavedDraft(true); // Mark that we have unsaved draft changes
-    
+
     // Auto-save to drafts (debounced) - only if we have new changes
     if (autoSaveTimer.current) {
       clearTimeout(autoSaveTimer.current);
     }
-    
+
     autoSaveTimer.current = setTimeout(() => {
       if (hasUnsavedDraft) {
         saveDraftToIndexedDB(updatedDoc);
         setHasUnsavedDraft(false); // Mark draft as saved
       }
     }, 30000); // Auto-save after 30 seconds of inactivity
-    
+
     return updatedDoc;
   }, [setHasUnsavedChanges, hasUnsavedDraft]);
 
@@ -554,7 +554,7 @@ const PageEditor = ({
         timestamp: Date.now(),
         originalFiles: activeFiles.map(f => f.name)
       };
-      
+
       // Save to 'pdf-drafts' store in IndexedDB
       const request = indexedDB.open('stirling-pdf-drafts', 1);
       request.onupgradeneeded = () => {
@@ -563,7 +563,7 @@ const PageEditor = ({
           db.createObjectStore('drafts');
         }
       };
-      
+
       request.onsuccess = () => {
         const db = request.result;
         const transaction = db.transaction('drafts', 'readwrite');
@@ -581,7 +581,7 @@ const PageEditor = ({
     try {
       const draftKey = `draft-${mergedPdfDocument?.id || 'merged'}`;
       const request = indexedDB.open('stirling-pdf-drafts', 1);
-      
+
       request.onsuccess = () => {
         const db = request.result;
         const transaction = db.transaction('drafts', 'readwrite');
@@ -596,12 +596,12 @@ const PageEditor = ({
   // Apply changes to create new processed file
   const applyChanges = useCallback(async () => {
     if (!editedDocument || !mergedPdfDocument) return;
-    
+
     try {
       if (activeFiles.length === 1) {
         const file = activeFiles[0];
         const currentProcessedFile = processedFiles.get(file);
-        
+
         if (currentProcessedFile) {
           const updatedProcessedFile = {
             ...currentProcessedFile,
@@ -614,14 +614,14 @@ const PageEditor = ({
             totalPages: editedDocument.pages.length,
             lastModified: Date.now()
           };
-          
+
           updateProcessedFile(file, updatedProcessedFile);
         }
       } else if (activeFiles.length > 1) {
         setStatus('Apply changes for multiple files not yet supported');
         return;
       }
-      
+
       // Wait for the processed file update to complete before clearing edit state
       setTimeout(() => {
         setEditedDocument(null);
@@ -630,7 +630,7 @@ const PageEditor = ({
         cleanupDraft();
         setStatus('Changes applied successfully');
       }, 100);
-      
+
     } catch (error) {
       console.error('Failed to apply changes:', error);
       setStatus('Failed to apply changes');
@@ -653,7 +653,7 @@ const PageEditor = ({
 
     // Skip animation for large documents (500+ pages) to improve performance
     const isLargeDocument = displayDocument.pages.length > 500;
-    
+
     if (isLargeDocument) {
       // For large documents, just execute the command without animation
       if (pagesToMove.length > 1) {
@@ -678,7 +678,7 @@ const PageEditor = ({
 
     // Only capture positions for potentially affected pages
     const currentPositions = new Map<string, { x: number; y: number }>();
-    
+
     affectedPageIds.forEach(pageId => {
       const element = document.querySelector(`[data-page-number="${pageId}"]`);
       if (element) {
@@ -728,14 +728,14 @@ const PageEditor = ({
 
               if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
                 elementsToAnimate.push(element);
-                
+
                 // Apply initial transform
                 element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
                 element.style.transition = 'none';
-                
+
                 // Force reflow
                 element.offsetHeight;
-                
+
                 // Animate to final position
                 element.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 element.style.transform = 'translate(0px, 0px)';
@@ -863,13 +863,13 @@ const PageEditor = ({
     if (!mergedPdfDocument) return;
 
     // Convert page numbers to page IDs for export service
-    const exportPageIds = selectedOnly 
+    const exportPageIds = selectedOnly
       ? selectedPageNumbers.map(pageNum => {
           const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
           return page?.id || '';
         }).filter(id => id)
       : [];
-    
+
     const preview = pdfExportService.getExportInfo(mergedPdfDocument, exportPageIds, selectedOnly);
     setExportPreview(preview);
     setShowExportModal(true);
@@ -881,16 +881,16 @@ const PageEditor = ({
     setExportLoading(true);
     try {
       // Convert page numbers to page IDs for export service
-      const exportPageIds = selectedOnly 
+      const exportPageIds = selectedOnly
         ? selectedPageNumbers.map(pageNum => {
             const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
             return page?.id || '';
           }).filter(id => id)
         : [];
-        
+
       const errors = pdfExportService.validateExport(mergedPdfDocument, exportPageIds, selectedOnly);
       if (errors.length > 0) {
-        setError(errors.join(', '));
+        setStatus(errors.join(', '));
         return;
       }
 
@@ -921,7 +921,7 @@ const PageEditor = ({
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Export failed';
-      setError(errorMessage);
+      setStatus(errorMessage);
     } finally {
       setExportLoading(false);
     }
@@ -1009,26 +1009,26 @@ const PageEditor = ({
   // Check for existing drafts
   const checkForDrafts = useCallback(async () => {
     if (!mergedPdfDocument) return;
-    
+
     try {
       const draftKey = `draft-${mergedPdfDocument.id || 'merged'}`;
       const request = indexedDB.open('stirling-pdf-drafts', 1);
-      
+
       request.onsuccess = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains('drafts')) return;
-        
+
         const transaction = db.transaction('drafts', 'readonly');
         const store = transaction.objectStore('drafts');
         const getRequest = store.get(draftKey);
-        
+
         getRequest.onsuccess = () => {
           const draft = getRequest.result;
           if (draft && draft.timestamp) {
             // Check if draft is recent (within last 24 hours)
             const draftAge = Date.now() - draft.timestamp;
             const twentyFourHours = 24 * 60 * 60 * 1000;
-            
+
             if (draftAge < twentyFourHours) {
               setFoundDraft(draft);
               setShowResumeModal(true);
@@ -1066,12 +1066,12 @@ const PageEditor = ({
   useEffect(() => {
     return () => {
       console.log('PageEditor unmounting - cleaning up resources');
-      
+
       // Clear auto-save timer
       if (autoSaveTimer.current) {
         clearTimeout(autoSaveTimer.current);
       }
-      
+
       // Clean up draft if component unmounts with unsaved changes
       if (hasUnsavedChanges) {
         cleanupDraft();
@@ -1125,7 +1125,7 @@ const PageEditor = ({
       {showLoading && (
         <Box p="md" pt="xl">
           <SkeletonLoader type="controls" />
-          
+
           {/* Progress indicator */}
           <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
             <Group justify="space-between" mb="xs">
@@ -1136,10 +1136,10 @@ const PageEditor = ({
                 {Math.round(processingProgress || 0)}%
               </Text>
             </Group>
-            <div style={{ 
-              width: '100%', 
-              height: '4px', 
-              backgroundColor: 'var(--mantine-color-gray-2)', 
+            <div style={{
+              width: '100%',
+              height: '4px',
+              backgroundColor: 'var(--mantine-color-gray-2)',
               borderRadius: '2px',
               overflow: 'hidden'
             }}>
@@ -1151,7 +1151,7 @@ const PageEditor = ({
               }} />
             </div>
           </Box>
-          
+
           <SkeletonLoader type="pageGrid" count={8} />
         </Box>
       )}
@@ -1165,10 +1165,10 @@ const PageEditor = ({
                 <Text size="sm" fw={500}>Processing thumbnails...</Text>
                 <Text size="sm" c="dimmed">{Math.round(processingProgress || 0)}%</Text>
               </Group>
-              <div style={{ 
-                width: '100%', 
-                height: '4px', 
-                backgroundColor: 'var(--mantine-color-gray-2)', 
+              <div style={{
+                width: '100%',
+                height: '4px',
+                backgroundColor: 'var(--mantine-color-gray-2)',
                 borderRadius: '2px',
                 overflow: 'hidden'
               }}>
@@ -1210,7 +1210,7 @@ const PageEditor = ({
                 <Button onClick={deselectAll} variant="light">Deselect All</Button>
               </>
             )}
-            
+
             {/* Apply Changes Button */}
             {hasUnsavedChanges && (
               <Button
@@ -1233,7 +1233,7 @@ const PageEditor = ({
             />
           )}
 
-        
+
         <DragDropGrid
           items={displayedPages}
           selectedItems={selectedPageNumbers}
@@ -1259,7 +1259,7 @@ const PageEditor = ({
               selectedPages={selectedPageNumbers}
               selectionMode={selectionMode}
               draggedPage={draggedPage}
-              dropTarget={dropTarget}
+              dropTarget={dropTarget === 'end' ? null : dropTarget}
               movingPage={movingPage}
               isAnimating={isAnimating}
               pageRefs={refs}
@@ -1372,13 +1372,13 @@ const PageEditor = ({
             <Text>
               We found unsaved changes from a previous session. Would you like to resume where you left off?
             </Text>
-            
+
             {foundDraft && (
               <Text size="sm" c="dimmed">
                 Last saved: {new Date(foundDraft.timestamp).toLocaleString()}
               </Text>
             )}
-            
+
             <Group justify="flex-end" gap="sm">
               <Button
                 variant="light"
@@ -1387,7 +1387,7 @@ const PageEditor = ({
               >
                 Start Fresh
               </Button>
-              
+
               <Button
                 color="blue"
                 onClick={resumeWork}

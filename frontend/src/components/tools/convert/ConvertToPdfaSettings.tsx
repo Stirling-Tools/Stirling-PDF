@@ -30,7 +30,7 @@ const ConvertToPdfaSettings = ({
       <Text size="sm" fw={500}>{t("convert.pdfaOptions", "PDF/A Options")}:</Text>
       
       {hasDigitalSignatures && (
-        <Alert color="yellow" size="sm">
+        <Alert color="yellow">
           <Text size="sm">
             {t("convert.pdfaDigitalSignatureWarning", "The PDF contains a digital signature. This will be removed in the next step.")}
           </Text>

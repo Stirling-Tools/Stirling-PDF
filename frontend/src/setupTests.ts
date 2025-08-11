@@ -75,7 +75,7 @@ Object.defineProperty(globalThis, 'crypto', {
       }
       return array;
     }),
-  } as Crypto,
+  } as unknown as Crypto,
   writable: true,
   configurable: true,
 });

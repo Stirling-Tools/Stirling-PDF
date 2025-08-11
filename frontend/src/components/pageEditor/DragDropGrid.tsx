@@ -22,7 +22,7 @@ interface DragDropGridProps<T extends DragDropItem> {
   renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>) => React.ReactNode;
   renderSplitMarker?: (item: T, index: number) => React.ReactNode;
   draggedItem: number | null;
-  dropTarget: number | null;
+  dropTarget: number | 'end' | null;
   multiItemDrag: {pageNumbers: number[], count: number} | null;
   dragPosition: {x: number, y: number} | null;
 }

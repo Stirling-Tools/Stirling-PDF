@@ -31,7 +31,7 @@ const ConvertToImageSettings = ({
           })}
           data={[
             { value: COLOR_TYPES.COLOR, label: t("convert.color", "Color") },
-            { value: COLOR_TYPES.GREYSCALE, label: t("convert.greyscale", "Greyscale") },
+            { value: COLOR_TYPES.GRAYSCALE, label: t("convert.grayscale", "Grayscale") },
             { value: COLOR_TYPES.BLACK_WHITE, label: t("convert.blackwhite", "Black & White") },
           ]}
           disabled={disabled}
