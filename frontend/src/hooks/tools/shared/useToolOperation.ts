@@ -7,7 +7,7 @@ import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { createOperation } from '../../../utils/toolOperationTracker';
-import { type ResponseHandler, processResponse } from '../../../utils/toolResponseProcessor';
+import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 
 export interface ValidationResult {
   valid: boolean;
@@ -176,7 +176,7 @@ export const useToolOperation = <TParams = void>(
           } else {
             // Default: assume ZIP response for multi-file endpoints
             processedFiles = await extractZipFiles(response.data);
-            
+
             if (processedFiles.length === 0) {
               // Try the generic extraction as fallback
               processedFiles = await extractAllZipFiles(response.data);
@@ -186,7 +186,7 @@ export const useToolOperation = <TParams = void>(
           // Individual file processing - separate API call per file
           const apiCallsConfig: ApiCallsConfig<TParams> = {
             endpoint: config.endpoint,
-            buildFormData: (file: File, params: TParams) => (config.buildFormData as (file: File, params: TParams) => FormData)(file, params),
+            buildFormData: (file: File, params: TParams) => (config.buildFormData as any /* FIX ME */)(file, params),
             filePrefix: config.filePrefix,
             responseHandler: config.responseHandler
           };

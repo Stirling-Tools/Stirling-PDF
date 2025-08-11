@@ -36,6 +36,13 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
+        String requestURI = request.getRequestURI();
+
+        // Skip URL cleaning for API endpoints - they need their own parameter handling
+        if (requestURI.contains("/api/")) {
+            return true;
+        }
+
         String queryString = request.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {
             String requestURI = request.getRequestURI();
@@ -43,6 +50,7 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
             if (requestURI.contains("/api/")) {
                 return true;
             }
+
 
             Map<String, String> allowedParameters = new HashMap<>();
 

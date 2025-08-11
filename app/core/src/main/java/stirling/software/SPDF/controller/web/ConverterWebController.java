@@ -6,6 +6,8 @@ import org.springframework.web.servlet.ModelAndView;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.CheckProgramInstall;
 
 // @Controller // Disabled - Backend-only mode, no Thymeleaf UI
@@ -67,6 +69,13 @@ public class ConverterWebController {
     @Hidden
     public String pdfToimgForm(Model model) {
         boolean isPython = CheckProgramInstall.isPythonAvailable();
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        if (properties != null && properties.getSystem() != null) {
+            model.addAttribute("maxDPI", properties.getSystem().getMaxDPI());
+        } else {
+            model.addAttribute("maxDPI", 500); // Default value if not set
+        }
         model.addAttribute("isPython", isPython);
         model.addAttribute("currentPage", "pdf-to-img");
         return "convert/pdf-to-img";
