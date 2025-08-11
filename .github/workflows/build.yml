@@ -52,11 +52,7 @@ jobs:
         spring-security: [true, false]
     steps:
       - name: Harden Runner
-<<<<<<< HEAD
         uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
-=======
-        uses: step-security/harden-runner@v2.12.2
->>>>>>> refs/remotes/origin/V2
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -110,11 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-<<<<<<< HEAD
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
-=======
         uses: step-security/harden-runner@v2.12.2
->>>>>>> refs/remotes/origin/V2
         with:
           egress-policy: audit
       - uses: actions/checkout@v4.2.2
@@ -126,10 +118,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4.4.1
       - name: Generate OpenAPI documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
-<<<<<<< HEAD
 
-=======
->>>>>>> refs/remotes/origin/V2
       - name: Upload OpenAPI Documentation
         uses: actions/upload-artifact@v4.6.2
         with:
@@ -170,11 +159,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-<<<<<<< HEAD
         uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
-=======
-        uses: step-security/harden-runner@v2.12.2
->>>>>>> refs/remotes/origin/V2
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -253,7 +238,6 @@ jobs:
           chmod +x ./testing/test.sh
           chmod +x ./testing/test_disabledEndpoints.sh
           ./testing/test.sh
-<<<<<<< HEAD
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
@@ -320,5 +304,3 @@ jobs:
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
-=======
->>>>>>> refs/remotes/origin/V2
