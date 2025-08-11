@@ -1,15 +1,14 @@
-import React, { useState, useMemo, useRef, useLayoutEffect } from "react";
+import React, { useMemo, useRef, useLayoutEffect, useState } from "react";
 import { Box, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { baseToolRegistry, type ToolRegistryEntry } from "../../data/toolRegistry";
-import ToolSearch from "./toolPicker/ToolSearch";
 import ToolButton from "./toolPicker/ToolButton";
 import "./toolPicker/ToolPicker.css";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
-  toolRegistry: Readonly<Record<string, ToolRegistryEntry>>;
+  filteredTools: [string, ToolRegistryEntry][];
 }
 
 interface GroupedTools {
@@ -18,10 +17,8 @@ interface GroupedTools {
   };
 }
 
-const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps) => {
+const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProps) => {
   const { t } = useTranslation();
-
-  const [search, setSearch] = useState("");
   const [quickHeaderHeight, setQuickHeaderHeight] = useState(0);
   const [allHeaderHeight, setAllHeaderHeight] = useState(0);
 
@@ -47,7 +44,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
 
   const groupedTools = useMemo(() => {
     const grouped: GroupedTools = {};
-    Object.entries(toolRegistry).forEach(([id, tool]) => {
+    filteredTools.forEach(([id, tool]) => {
       const baseTool = baseToolRegistry[id as keyof typeof baseToolRegistry];
       const category = baseTool?.category || "OTHER";
       const subcategory = baseTool?.subcategory || "General";
@@ -56,7 +53,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
       grouped[category][subcategory].push({ id, tool });
     });
     return grouped;
-  }, [toolRegistry]);
+  }, [filteredTools]);
 
   const sections = useMemo(() => {
     const mapping: Record<string, "QUICK ACCESS" | "ALL TOOLS"> = {
@@ -89,24 +86,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
     ];
   }, [groupedTools]);
 
-  const visibleSections = useMemo(() => {
-    if (!search.trim()) return sections;
-    const term = search.toLowerCase();
-    return sections
-      .map(s => ({
-        ...s,
-        subcategories: s.subcategories
-          .map(sc => ({
-            ...sc,
-            tools: sc.tools.filter(({ tool }) =>
-              tool.name.toLowerCase().includes(term) ||
-              tool.description.toLowerCase().includes(term)
-            )
-          }))
-          .filter(sc => sc.tools.length)
-      }))
-      .filter(s => s.subcategories.length);
-  }, [sections, search]);
+  const visibleSections = sections;
 
   const quickSection = useMemo(
     () => visibleSections.find(s => s.title === "QUICK ACCESS"),
@@ -141,7 +121,6 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
         background: "var(--bg-toolbar)"
       }}
     >
-      <ToolSearch value={search} onChange={setSearch} toolRegistry={toolRegistry} mode="filter" />
       <Box
         ref={scrollableRef}
         style={{
@@ -149,7 +128,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
           overflowY: "auto",
           overflowX: "hidden",
           minHeight: 0,
-          height: "calc(100vh - 120px)"
+          height: "100%"
         }}
         className="tool-picker-scrollable"
       >
