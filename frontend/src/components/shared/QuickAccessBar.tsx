@@ -11,20 +11,18 @@ import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import AppConfigModal from './AppConfigModal';
 import { useIsOverflowing } from '../../hooks/useIsOverflowing';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
-import { QuickAccessBarProps, ButtonConfig } from '../../types/sidebar';
+import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
+import { ButtonConfig } from '../../types/sidebar';
 import './QuickAccessBar.css';
 
 function NavHeader({ 
   activeButton, 
-  setActiveButton, 
-  onReaderToggle, 
-  onToolsClick 
+  setActiveButton
 }: {
   activeButton: string;
   setActiveButton: (id: string) => void;
-  onReaderToggle: () => void;
-  onToolsClick: () => void;
 }) {
+  const { handleReaderToggle, handleBackToTools } = useToolWorkflow();
   return (
     <>
       {/* All Tools button below divider */}
@@ -35,8 +33,8 @@ function NavHeader({
             variant="subtle"
             onClick={() => {
               setActiveButton('tools');
-              onReaderToggle();
-              onToolsClick();
+              handleReaderToggle();
+              handleBackToTools();
             }}
             style={{
               backgroundColor: activeButton === 'tools' ? 'var(--icon-tools-bg)' : 'var(--icon-inactive-bg)',
@@ -59,12 +57,11 @@ function NavHeader({
   );
 }
 
-const QuickAccessBar = forwardRef<HTMLDivElement, QuickAccessBarProps>(({
-  onToolsClick,
-  onReaderToggle,
+const QuickAccessBar = forwardRef<HTMLDivElement>(({
 }, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
+  const { handleReaderToggle } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -85,7 +82,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement, QuickAccessBarProps>(({
       type: 'navigation',
       onClick: () => {
         setActiveButton('read');
-        onReaderToggle();
+        handleReaderToggle();
       }
     },
     {
@@ -199,9 +196,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement, QuickAccessBarProps>(({
       <div className="quick-access-header">
         <NavHeader 
           activeButton={activeButton} 
-          setActiveButton={setActiveButton} 
-          onReaderToggle={onReaderToggle} 
-          onToolsClick={onToolsClick} 
+          setActiveButton={setActiveButton}
         />
       </div>
 
