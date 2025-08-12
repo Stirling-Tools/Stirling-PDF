@@ -482,6 +482,11 @@
     }
     progressBar.css('width', '100%');
     progressBar.attr('aria-valuenow', Array.from(files).length);
+    setTimeout(() => {
+      $('.progressBarContainer').hide();
+      progressBar.css('width', '0%');
+      progressBar.attr('aria-valuenow', 0);
+    }, 1000);
   }
 
   function updateProgressBar(progressBar, files) {
