@@ -22,7 +22,7 @@ export interface AddPasswordParametersHook {
   getEndpointName: () => string;
 }
 
-const initialParameters: AddPasswordParameters = {
+export const defaultParameters: AddPasswordParameters = {
   password: '',
   ownerPassword: '',
   keyLength: 128,
@@ -37,7 +37,7 @@ const initialParameters: AddPasswordParameters = {
 };
 
 export const useAddPasswordParameters = (): AddPasswordParametersHook => {
-  const [parameters, setParameters] = useState<AddPasswordParameters>(initialParameters);
+  const [parameters, setParameters] = useState<AddPasswordParameters>(defaultParameters);
 
   const updateParameter = <K extends keyof AddPasswordParameters>(parameter: K, value: AddPasswordParameters[K]) => {
     setParameters(prev => ({
@@ -48,12 +48,12 @@ export const useAddPasswordParameters = (): AddPasswordParametersHook => {
   };
 
   const resetParameters = () => {
-    setParameters(initialParameters);
+    setParameters(defaultParameters);
   };
 
   const validateParameters = () => {
     // At least one password should be provided, or if no passwords, at least one permission should be restricted
-    const hasPassword = parameters.password.trim().length > 0 || parameters.ownerPassword.trim().length > 0;
+    const hasPassword = parameters.password.length > 0 || parameters.ownerPassword.length > 0;
     const hasPermissionRestriction = (
       parameters.preventAssembly
       || parameters.preventExtractContent
