@@ -38,7 +38,8 @@
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "close": "Close",
-  "filesSelected": "files selected",
+  "fileSelected": "Selected: {{filename}}",
+  "filesSelected": "{{count}} files selected",
   "noFavourites": "No favourites added",
   "downloadComplete": "Download Complete",
   "bored": "Bored Waiting?",
@@ -391,6 +392,10 @@
       "title": "Compress",
       "desc": "Compress PDFs to reduce their file size."
     },
+    "sanitize": {
+      "title": "Sanitise",
+      "desc": "Remove potentially harmful elements from PDF files."
+    },
     "unlockPDFForms": {
       "title": "Unlock PDF Forms",
       "desc": "Remove read-only property of form fields in a PDF document."
@@ -504,7 +509,7 @@
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
     "sanitizePdf": {
-      "title": "Sanitize",
+      "title": "Sanitise",
       "desc": "Remove scripts and other elements from PDF files"
     },
     "URLToPDF": {
@@ -1425,8 +1430,8 @@
     "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
   },
   "sanitizePDF": {
-    "title": "Sanitize PDF",
-    "header": "Sanitize a PDF file",
+    "title": "Sanitise PDF",
+    "header": "Sanitise a PDF file",
     "selectText": {
       "1": "Remove JavaScript actions",
       "2": "Remove embedded files",
@@ -1761,5 +1766,37 @@
     "fileTooLarge": "File too large. Maximum size per file is",
     "storageQuotaExceeded": "Storage quota exceeded. Please remove some files before uploading more.",
     "approximateSize": "Approximate size"
+  },
+  "sanitize": {
+    "submit": "Sanitise PDF",
+    "completed": "Sanitisation completed successfully",
+    "error.generic": "Sanitisation failed",
+    "error.failed": "An error occurred while sanitising the PDF.",
+    "filenamePrefix": "sanitised",
+    "sanitizationResults": "Sanitisation Results",
+    "steps": {
+      "files": "Files",
+      "settings": "Settings",
+      "results": "Results"
+    },
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "options": {
+      "title": "Sanitisation Options",
+      "note": "Select the elements you want to remove from the PDF. At least one option must be selected.",
+      "removeJavaScript": "Remove JavaScript",
+      "removeJavaScript.desc": "Remove JavaScript actions and scripts from the PDF",
+      "removeEmbeddedFiles": "Remove Embedded Files",
+      "removeEmbeddedFiles.desc": "Remove any files embedded within the PDF",
+      "removeXMPMetadata": "Remove XMP Metadata",
+      "removeXMPMetadata.desc": "Remove XMP metadata from the PDF",
+      "removeMetadata": "Remove Document Metadata",
+      "removeMetadata.desc": "Remove document information metadata (title, author, etc.)",
+      "removeLinks": "Remove Links",
+      "removeLinks.desc": "Remove external links and launch actions from the PDF",
+      "removeFonts": "Remove Fonts",
+      "removeFonts.desc": "Remove embedded fonts from the PDF"
+    }
   }
 }
