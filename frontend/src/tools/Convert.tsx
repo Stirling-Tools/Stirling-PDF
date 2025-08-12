@@ -1,16 +1,12 @@
-import React, { useEffect, useMemo, useRef } from "react";
-import { Button, Stack, Text } from "@mantine/core";
+import React, { useEffect, useRef } from "react";
+import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
-import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
+import { createToolSteps, ToolStepProvider } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";
-import ErrorNotification from "../components/tools/shared/ErrorNotification";
-import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator";
-import ResultsPreview from "../components/tools/shared/ResultsPreview";
 
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 
@@ -105,101 +101,55 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     setCurrentMode('convert');
   };
 
-  const previewResults = useMemo(() =>
-    convertOperation.files?.map((file, index) => ({
-      file,
-      thumbnail: convertOperation.thumbnails[index]
-    })) || [],
-    [convertOperation.files, convertOperation.thumbnails]
-  );
+  const steps = createToolSteps();
 
   return (
     <div className="h-full max-h-screen overflow-y-auto" ref={scrollContainerRef}>
-      <ToolStepContainer>
-        <Stack gap="sm" p="sm">
-        <ToolStep
-          title={t("convert.files", "Files")}
-          isVisible={true}
-          isCollapsed={filesCollapsed}
-          isCompleted={filesCollapsed}
-          completedMessage={hasFiles ? `${selectedFiles.length} ${t("filesSelected", "files selected")}` : undefined}
-        >
-          <FileStatusIndicator
-            selectedFiles={selectedFiles}
-            placeholder={t("convert.selectFilesPlaceholder", "Select files in the main view to get started")}
-          />
-        </ToolStep>
+      <Stack gap="sm" p="sm">
+        <ToolStepProvider>
+          {/* Files Step */}
+          {steps.createFilesStep({
+            selectedFiles,
+            isCollapsed: filesCollapsed,
+            placeholder: t("convert.selectFilesPlaceholder", "Select files in the main view to get started")
+          })}
 
-        <ToolStep
-          title={t("convert.settings", "Settings")}
-          isVisible={true}
-          isCollapsed={settingsCollapsed}
-          isCompleted={settingsCollapsed}
-          onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
-          completedMessage={settingsCollapsed ? t("convert.conversionCompleted", "Conversion completed") : undefined}
-        >
-          <Stack gap="sm">
-            <ConvertSettings
-              parameters={convertParams.parameters}
-              onParameterChange={convertParams.updateParameter}
-              getAvailableToExtensions={convertParams.getAvailableToExtensions}
-              selectedFiles={selectedFiles}
-              disabled={endpointLoading}
-            />
-
-            {hasFiles && convertParams.parameters.fromExtension && convertParams.parameters.toExtension && (
-              <OperationButton
-                onClick={handleConvert}
-                isLoading={convertOperation.isLoading}
-                disabled={!convertParams.validateParameters() || !hasFiles || !endpointEnabled}
-                loadingText={t("convert.converting", "Converting...")}
-                submitText={t("convert.convertFiles", "Convert Files")}
-                data-testid="convert-button"
+          {/* Settings Step */}
+          {steps.create(t("convert.settings", "Settings"), {
+            isCollapsed: settingsCollapsed,
+            isCompleted: settingsCollapsed,
+            onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
+          }, (
+            <Stack gap="sm">
+              <ConvertSettings
+                parameters={convertParams.parameters}
+                onParameterChange={convertParams.updateParameter}
+                getAvailableToExtensions={convertParams.getAvailableToExtensions}
+                selectedFiles={selectedFiles}
+                disabled={endpointLoading}
               />
-            )}
-          </Stack>
-        </ToolStep>
+            </Stack>
+          ))}
+           {!hasResults && (
+                <OperationButton
+                  onClick={handleConvert}
+                  isLoading={convertOperation.isLoading}
+                  disabled={!convertParams.validateParameters() || !hasFiles || !endpointEnabled}
+                  loadingText={t("convert.converting", "Converting...")}
+                  submitText={t("convert.convertFiles", "Convert Files")}
+                  data-testid="convert-button"
+                />
+              )}
 
-        <ToolStep
-          title={t("convert.results", "Results")}
-          isVisible={hasResults}
-          data-testid="conversion-results"
-        >
-          <Stack gap="sm">
-            {convertOperation.status && (
-              <Text size="sm" c="dimmed">{convertOperation.status}</Text>
-            )}
-
-            <ErrorNotification
-              error={convertOperation.errorMessage}
-              onClose={convertOperation.clearError}
-            />
-
-            {convertOperation.downloadUrl && (
-              <Button
-                component="a"
-                href={convertOperation.downloadUrl}
-                download={convertOperation.downloadFilename || t("convert.defaultFilename", "converted_file")}
-                leftSection={<DownloadIcon />}
-                color="green"
-                fullWidth
-                mb="md"
-                data-testid="download-button"
-              >
-                {t("convert.downloadConverted", "Download Converted File")}
-              </Button>
-            )}
-
-            <ResultsPreview
-              files={previewResults}
-              onFileClick={handleThumbnailClick}
-              isGeneratingThumbnails={convertOperation.isGeneratingThumbnails}
-              title={t("convert.conversionResults", "Conversion Results")}
-            />
-          </Stack>
-        </ToolStep>
-        </Stack>
-      </ToolStepContainer>
+          {/* Results Step */}
+          {steps.createResultsStep({
+            isVisible: hasResults,
+            operation: convertOperation,
+            title: t("convert.conversionResults", "Conversion Results"),
+            onFileClick: handleThumbnailClick
+          })}
+        </ToolStepProvider>
+      </Stack>
     </div>
   );
 };

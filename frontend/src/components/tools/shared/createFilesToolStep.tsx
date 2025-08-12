@@ -1,0 +1,31 @@
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import FileStatusIndicator from './FileStatusIndicator';
+
+export interface FilesToolStepProps {
+  selectedFiles: File[];
+  isCollapsed?: boolean;
+  onCollapsedClick?: () => void;
+  placeholder?: string;
+}
+
+export function createFilesToolStep(
+  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
+  props: FilesToolStepProps
+): React.ReactElement {
+  const { t } = useTranslation();
+  const hasFiles = props.selectedFiles.length > 0;
+  
+  return createStep("Files", {
+    isVisible: true,
+    isCollapsed: props.isCollapsed,
+    isCompleted: hasFiles,
+    onCollapsedClick: props.onCollapsedClick,
+    completedMessage: undefined
+  }, (
+    <FileStatusIndicator
+      selectedFiles={props.selectedFiles}
+      placeholder={props.placeholder || t("files.placeholder", "Select a PDF file in the main view to get started")}
+    />
+  ));
+}

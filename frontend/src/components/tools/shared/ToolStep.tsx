@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useMemo, useRef } from 'react';
-import { Paper, Text, Stack, Box, Flex } from '@mantine/core';
+import { Text, Stack, Box, Flex, Divider } from '@mantine/core';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Tooltip } from '../../shared/Tooltip';
 import { TooltipTip } from '../../shared/tooltip/TooltipContent';
+import { createFilesToolStep, FilesToolStepProps } from './createFilesToolStep';
+import { createResultsToolStep, ResultsToolStepProps } from './createResultsToolStep';
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -56,7 +58,7 @@ const renderTooltipTitle = (
       </Tooltip>
     );
   }
-  
+
   return (
     <Text fw={500} size="lg">
       {title}
@@ -80,28 +82,29 @@ const ToolStep = ({
   if (!isVisible) return null;
 
   const parent = useContext(ToolStepContext);
-  
+
   // Auto-detect if we should show numbers based on sibling count
   const shouldShowNumber = useMemo(() => {
     if (showNumber !== undefined) return showNumber;
     return parent ? parent.visibleStepCount >= 3 : false;
   }, [showNumber, parent]);
 
-  const stepNumber = _stepNumber || 1;
+  const stepNumber = _stepNumber;
 
   return (
-    <Paper
-      p="md"
-      withBorder
-      style={{
-        opacity: isCollapsed ? 0.8 : 1,
-        transition: 'opacity 0.2s ease'
-      }}
-    >
+    <div>
+      <div
+        style={{
+          padding: '1rem',
+          opacity: isCollapsed ? 0.8 : 1,
+          color: isCollapsed ? 'var(--mantine-color-dimmed)' : 'inherit',
+          transition: 'opacity 0.2s ease, color 0.2s ease'
+        }}
+      >
       {/* Chevron icon to collapse/expand the step */}
-      <Flex 
-        align="center" 
-        justify="space-between" 
+      <Flex
+        align="center"
+        justify="space-between"
         mb="sm"
         style={{
           cursor: onCollapsedClick ? 'pointer' : 'default'
@@ -116,16 +119,16 @@ const ToolStep = ({
           )}
           {renderTooltipTitle(title, tooltip, isCollapsed)}
         </Flex>
-        
+
         {isCollapsed ? (
-          <ChevronRightIcon style={{ 
-            fontSize: '1.2rem', 
+          <ChevronRightIcon style={{
+            fontSize: '1.2rem',
             color: 'var(--mantine-color-dimmed)',
             opacity: onCollapsedClick ? 1 : 0.5
           }} />
         ) : (
-          <ExpandMoreIcon style={{ 
-            fontSize: '1.2rem', 
+          <ExpandMoreIcon style={{
+            fontSize: '1.2rem',
             color: 'var(--mantine-color-dimmed)',
             opacity: onCollapsedClick ? 1 : 0.5
           }} />
@@ -133,7 +136,7 @@ const ToolStep = ({
       </Flex>
 
       {isCollapsed ? (
-        <Box>
+        <div>
           {isCompleted && completedMessage && (
             <Text size="sm" c="green">
               ✓ {completedMessage}
@@ -144,9 +147,9 @@ const ToolStep = ({
               )}
             </Text>
           )}
-        </Box>
+        </div>
       ) : (
-        <Stack gap="md">
+        <Stack gap="md" pl="md">
           {helpText && (
             <Text size="sm" c="dimmed">
               {helpText}
@@ -155,33 +158,57 @@ const ToolStep = ({
           {children}
         </Stack>
       )}
-    </Paper>
+      </div>
+      <Divider style={{ marginLeft: '1rem', marginRight: '-1rem' }} />
+    </div>
   );
 }
 
-export interface ToolStepContainerProps {
-  children: React.ReactNode;
+// ToolStepFactory for creating numbered steps
+export function createToolSteps() {
+  let stepNumber = 1;
+  const steps: React.ReactElement[] = [];
+
+  const create = (
+    title: string,
+    props: Omit<ToolStepProps, 'title' | '_stepNumber'> = {},
+    children?: React.ReactNode
+  ): React.ReactElement => {
+    const isVisible = props.isVisible !== false;
+    const currentStepNumber = isVisible ? stepNumber++ : undefined;
+
+    const step = React.createElement(ToolStep, {
+      ...props,
+      title,
+      _stepNumber: currentStepNumber,
+      children,
+      key: `step-${title.toLowerCase().replace(/\s+/g, '-')}`
+    });
+
+    steps.push(step);
+    return step;
+  };
+
+  const createFilesStep = (props: FilesToolStepProps): React.ReactElement => {
+    return createFilesToolStep(create, props);
+  };
+
+  const createResultsStep = <TParams = any>(props: ResultsToolStepProps<TParams>): React.ReactElement => {
+    return createResultsToolStep(create, props);
+  };
+
+  const getVisibleCount = () => {
+    return steps.filter(step =>
+      (step.props as ToolStepProps).isVisible !== false
+    ).length;
+  };
+
+  return { create, createFilesStep, createResultsStep, getVisibleCount, steps };
 }
 
-export const ToolStepContainer = ({ children }: ToolStepContainerProps) => {
-  // Process children and inject step numbers for visible ToolSteps
-  const processedChildren = useMemo(() => {
-    let visibleStepNumber = 1;
-    
-    return React.Children.map(children, (child) => {
-      if (React.isValidElement(child) && child.type === ToolStep) {
-        const isVisible = (child.props as ToolStepProps).isVisible !== false;
-        if (isVisible) {
-          return React.cloneElement(child, {
-            ...child.props,
-            _stepNumber: visibleStepNumber++
-          } as ToolStepProps);
-        }
-      }
-      return child;
-    });
-  }, [children]);
-
+// Context provider wrapper for tools using the factory
+export function ToolStepProvider({ children }: { children: React.ReactNode }) {
+  // Count visible steps from children that are ToolStep elements
   const visibleStepCount = useMemo(() => {
     let count = 0;
     React.Children.forEach(children, (child) => {
@@ -199,9 +226,11 @@ export const ToolStepContainer = ({ children }: ToolStepContainerProps) => {
 
   return (
     <ToolStepContext.Provider value={contextValue}>
-      {processedChildren}
+      {children}
     </ToolStepContext.Provider>
   );
 }
 
+export type { FilesToolStepProps } from './createFilesToolStep';
+export type { ResultsToolStepProps } from './createResultsToolStep';
 export default ToolStep;

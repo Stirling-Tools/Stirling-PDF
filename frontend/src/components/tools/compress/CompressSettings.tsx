@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Stack, Text, NumberInput, Select } from "@mantine/core";
+import { Button, Stack, Text, NumberInput, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 interface CompressParameters {
@@ -22,6 +22,8 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
 
   return (
     <Stack gap="md">
+
+      <Divider ml='-md'></Divider>
       {/* Compression Method */}
       <Stack gap="sm">
         <Text size="sm" fw={500}>Compression Method</Text>
@@ -54,6 +56,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
       {/* Quality Adjustment */}
       {parameters.compressionMethod === 'quality' && (
         <Stack gap="sm">
+          <Divider />
           <Text size="sm" fw={500}>Compression Level</Text>
           <div style={{ position: 'relative' }}>
             <input
@@ -68,7 +71,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
               onTouchStart={() => setIsSliding(true)}
               onTouchEnd={() => setIsSliding(false)}
               disabled={disabled}
-              style={{ 
+              style={{
                 width: '100%',
                 height: '6px',
                 borderRadius: '3px',
@@ -107,6 +110,8 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
         </Stack>
       )}
 
+      <Divider/>
+
       {/* File Size Input */}
       {parameters.compressionMethod === 'filesize' && (
         <Stack gap="sm">
@@ -141,7 +146,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
 
       {/* Compression Options */}
       <Stack gap="sm">
-        <label 
+        <label
           style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           title="Converts all images in the PDF to grayscale, which can significantly reduce file size while maintaining readability"
         >

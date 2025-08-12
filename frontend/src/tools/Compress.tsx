@@ -1,16 +1,12 @@
 import React, { useEffect, useMemo } from "react";
-import { Button, Stack, Text } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
-import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
+import { createToolSteps, ToolStepProvider } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";
-import ErrorNotification from "../components/tools/shared/ErrorNotification";
-import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator";
-import ResultsPreview from "../components/tools/shared/ResultsPreview";
 
 import CompressSettings from "../components/tools/compress/CompressSettings";
 
@@ -67,103 +63,52 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const hasFiles = selectedFiles.length > 0;
   const hasResults = compressOperation.files.length > 0 || compressOperation.downloadUrl !== null;
   const filesCollapsed = hasFiles;
-  const settingsCollapsed = hasResults;
+  const settingsCollapsed = !hasFiles || hasResults;
 
-  const previewResults = useMemo(() =>
-    compressOperation.files?.map((file, index) => ({
-      file,
-      thumbnail: compressOperation.thumbnails[index]
-    })) || [],
-    [compressOperation.files, compressOperation.thumbnails]
-  );
+
+  const steps = createToolSteps();
 
   return (
-    <ToolStepContainer>
-      <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
+    <Stack gap="md" h="100%" p="sm" style={{ overflow: 'auto' }}>
+      <ToolStepProvider>
         {/* Files Step */}
-        <ToolStep
-          title="Files"
-          isVisible={true}
-          isCollapsed={filesCollapsed}
-          isCompleted={filesCollapsed}
-          completedMessage={hasFiles ?
-            selectedFiles.length === 1
-              ? `Selected: ${selectedFiles[0].name}`
-              : `Selected: ${selectedFiles.length} files`
-            : undefined}
-        >
-          <FileStatusIndicator
-            selectedFiles={selectedFiles}
-            placeholder="Select a PDF file in the main view to get started"
-          />
-        </ToolStep>
+        {steps.createFilesStep({
+          selectedFiles,
+          isCollapsed: filesCollapsed
+        })}
 
         {/* Settings Step */}
-        <ToolStep
-          title="Settings"
-          isVisible={hasFiles}
-          isCollapsed={settingsCollapsed}
-          isCompleted={settingsCollapsed}
-          onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
-          completedMessage={settingsCollapsed ? "Compression completed" : undefined}
-          tooltip={compressTips}
-        >
-          <Stack gap="sm">
+        {steps.create("Settings", {
+          isCollapsed: settingsCollapsed,
+          isCompleted: hasResults,
+          onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
+          completedMessage: t("compress.header", "Compression completed"),
+          tooltip: compressTips
+        }, (
+          <Stack gap="md">
             <CompressSettings
               parameters={compressParams.parameters}
               onParameterChange={compressParams.updateParameter}
               disabled={endpointLoading}
             />
-
-            <OperationButton
+          </Stack>
+        ))}
+        <OperationButton
               onClick={handleCompress}
               isLoading={compressOperation.isLoading}
               disabled={!compressParams.validateParameters() || !hasFiles || !endpointEnabled}
               loadingText={t("loading")}
-              submitText="Compress and Review"
+              submitText={t("compress.submit", "Compress")}
             />
-          </Stack>
-        </ToolStep>
-
         {/* Results Step */}
-        <ToolStep
-          title="Results"
-          isVisible={hasResults}
-        >
-          <Stack gap="sm">
-            {compressOperation.status && (
-              <Text size="sm" c="dimmed">{compressOperation.status}</Text>
-            )}
-
-            <ErrorNotification
-              error={compressOperation.errorMessage}
-              onClose={compressOperation.clearError}
-            />
-
-            {compressOperation.downloadUrl && (
-              <Button
-                component="a"
-                href={compressOperation.downloadUrl}
-                download={compressOperation.downloadFilename}
-                leftSection={<DownloadIcon />}
-                color="green"
-                fullWidth
-                mb="md"
-              >
-                {t("download", "Download")}
-              </Button>
-            )}
-
-            <ResultsPreview
-              files={previewResults}
-              onFileClick={handleThumbnailClick}
-              isGeneratingThumbnails={compressOperation.isGeneratingThumbnails}
-              title="Compression Results"
-            />
-          </Stack>
-        </ToolStep>
-      </Stack>
-    </ToolStepContainer>
+        {steps.createResultsStep({
+          isVisible: hasResults,
+          operation: compressOperation,
+          title: t("compress.title", "Compression Results"),
+          onFileClick: handleThumbnailClick
+        })}
+      </ToolStepProvider>
+    </Stack>
   );
 }
 
