@@ -5,7 +5,7 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
-import { Tool } from '../types/tool';
+import { ToolConfiguration } from '../types/tool';
 import { PageEditorFunctions } from '../types/pageEditor';
 
 // State interface
@@ -69,7 +69,7 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: string | null;
-  selectedTool: Tool | null;
+  selectedTool: ToolConfiguration | null;
   toolRegistry: any; // From useToolManagement
   
   // UI Actions
@@ -159,60 +159,47 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
   }, [setReaderMode]);
 
   // URL routing functionality
+  const urlMap = useMemo(() => new Map([
+    ['compress', 'compress-pdf'],
+    ['split', 'split-pdf'], 
+    ['convert', 'convert-pdf'],
+    ['ocr', 'ocr-pdf'],
+    ['merge', 'merge-pdf'],
+    ['rotate', 'rotate-pdf']
+  ]), []);
+
   const getToolUrlSlug = useCallback((toolKey: string) => {
-    const slugMap: Record<string, string> = {
-      'compress': 'compress-pdf',
-      'split': 'split-pdf', 
-      'convert': 'convert-pdf',
-      'ocr': 'ocr-pdf',
-      'swagger': 'api-docs'
-    };
-    return slugMap[toolKey] || `${toolKey}-pdf`;
-  }, []);
+    return urlMap.get(toolKey) || toolKey;
+  }, [urlMap]);
 
   const getToolKeyFromSlug = useCallback((slug: string) => {
-    const keyMap: Record<string, string> = {
-      'compress-pdf': 'compress',
-      'split-pdf': 'split',
-      'convert-pdf': 'convert', 
-      'ocr-pdf': 'ocr',
-      'api-docs': 'swagger'
-    };
-    return keyMap[slug] || slug.replace('-pdf', '');
-  }, []);
+    for (const [key, value] of urlMap) {
+      if (value === slug) return key;
+    }
+    return slug;
+  }, [urlMap]);
 
   // Update URL when tool changes (but not on initial load)
   const [hasInitialized, setHasInitialized] = React.useState(false);
   
   useEffect(() => {
-    console.log('URL Update Effect:', { selectedToolKey, currentUrl: window.location.pathname, hasInitialized });
     if (selectedToolKey) {
       const slug = getToolUrlSlug(selectedToolKey);
-      console.log('Setting URL to:', `/${slug}`);
       window.history.replaceState({}, '', `/${slug}`);
       setHasInitialized(true);
     } else if (hasInitialized) {
       // Only clear URL if we've already initialized (prevents clearing on mount)
-      console.log('Clearing URL to: /');
       window.history.replaceState({}, '', '/');
     }
   }, [selectedToolKey, getToolUrlSlug, hasInitialized]);
 
   // Initialize from URL when toolRegistry is ready
   useEffect(() => {
-    console.log('URL Init Effect:', { 
-      toolRegistry: Object.keys(toolRegistry || {}), 
-      selectedToolKey, 
-      currentPath: window.location.pathname 
-    });
-    
     if (toolRegistry && Object.keys(toolRegistry).length > 0 && !selectedToolKey) {
       const currentPath = window.location.pathname.slice(1);
       if (currentPath && currentPath !== '') {
         const toolKey = getToolKeyFromSlug(currentPath);
-        console.log('Trying to select tool:', { currentPath, toolKey, available: !!toolRegistry[toolKey] });
         if (toolRegistry[toolKey]) {
-          console.log('Tool found, calling handleToolSelect');
           handleToolSelect(toolKey); // This handles both tool selection AND UI changes
         }
       }
