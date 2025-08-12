@@ -102,7 +102,6 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         <ToolStep
           title="Settings"
           isVisible={hasFiles}
-          enableInitialSkeleton={false}
           isCollapsed={settingsCollapsed}
           isCompleted={settingsCollapsed}
           onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
@@ -130,7 +129,6 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         <ToolStep
           title="Results"
           isVisible={hasResults}
-          enableInitialSkeleton={false}
         >
           <Stack gap="sm">
             {compressOperation.status && (

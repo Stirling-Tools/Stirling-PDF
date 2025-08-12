@@ -163,7 +163,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         <ToolStep
           title={t("convert.results", "Results")}
           isVisible={hasResults}
-          enableInitialSkeleton={false}
           data-testid="conversion-results"
         >
           <Stack gap="sm">

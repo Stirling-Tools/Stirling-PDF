@@ -1,7 +1,6 @@
 import React from 'react';
 import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
-import MergePdfPanel from "../tools/Merge";
 import OCRPanel from '../tools/OCR';
 import ConvertPanel from '../tools/Convert';
 
@@ -282,7 +281,7 @@ export const flatToolRegistryMap: ToolRegistry = {
     "mergePdfs": {
         icon: <span className="material-symbols-rounded">library_add</span>,
         name: "home.merge.title",
-        component: MergePdfPanel,
+        component: null,
         view: "merge",
         description: "home.merge.desc",
         category: "Recommended Tools",

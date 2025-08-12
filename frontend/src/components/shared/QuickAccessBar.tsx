@@ -1,12 +1,8 @@
 import React, { useState, useRef, forwardRef } from "react";
 import { ActionIcon, Stack, Tooltip, Divider } from "@mantine/core";
 import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
-import AppsIcon from "@mui/icons-material/AppsRounded";
 import SettingsIcon from "@mui/icons-material/SettingsRounded";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesomeRounded";
 import FolderIcon from "@mui/icons-material/FolderRounded";
-import PersonIcon from "@mui/icons-material/PersonRounded";
-import NotificationsIcon from "@mui/icons-material/NotificationsRounded";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import AppConfigModal from './AppConfigModal';
 import { useIsOverflowing } from '../../hooks/useIsOverflowing';
@@ -14,48 +10,7 @@ import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { ButtonConfig } from '../../types/sidebar';
 import './QuickAccessBar.css';
-
-function NavHeader({ 
-  activeButton, 
-  setActiveButton
-}: {
-  activeButton: string;
-  setActiveButton: (id: string) => void;
-}) {
-  const { handleReaderToggle, handleBackToTools } = useToolWorkflow();
-  return (
-    <>
-      {/* All Tools button below divider */}
-      <Tooltip label="View all available tools" position="right">
-        <div className="flex flex-col items-center gap-1 mt-4 mb-2">
-          <ActionIcon
-            size="lg"
-            variant="subtle"
-            onClick={() => {
-              setActiveButton('tools');
-              handleReaderToggle();
-              handleBackToTools();
-            }}
-            style={{
-              backgroundColor: activeButton === 'tools' ? 'var(--icon-tools-bg)' : 'var(--icon-inactive-bg)',
-              color: activeButton === 'tools' ? 'var(--icon-tools-color)' : 'var(--icon-inactive-color)',
-              border: 'none',
-              borderRadius: '8px',
-            }}
-            className={activeButton === 'tools' ? 'activeIconScale' : ''}
-          >
-            <span className="iconContainer">
-              <AppsIcon sx={{ fontSize: "1.75rem" }} />
-            </span>
-          </ActionIcon>
-          <span className={`all-tools-text ${activeButton === 'tools' ? 'active' : 'inactive'}`}>
-            All Tools
-          </span>
-        </div>
-      </Tooltip>
-    </>
-  );
-}
+import AllToolsNavButton from './AllToolsNavButton';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>(({
 }, ref) => {
@@ -88,10 +43,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'sign',
       name: 'Sign',
-      icon: 
-      <span className="material-symbols-rounded font-size-20">
-        signature
-      </span>,
+      icon:
+        <span className="material-symbols-rounded font-size-20">
+          signature
+        </span>,
       tooltip: 'Sign your document',
       size: 'lg',
       isRound: false,
@@ -101,10 +56,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'automate',
       name: 'Automate',
-      icon: 
-      <span className="material-symbols-rounded font-size-20">
-        automation
-      </span>,
+      icon:
+        <span className="material-symbols-rounded font-size-20">
+          automation
+        </span>,
       tooltip: 'Automate workflows',
       size: 'lg',
       isRound: false,
@@ -124,10 +79,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'activity',
       name: 'Activity',
-      icon: 
-      <span className="material-symbols-rounded font-size-20">
-      vital_signs
-      </span>,
+      icon:
+        <span className="material-symbols-rounded font-size-20">
+          vital_signs
+        </span>,
       tooltip: 'View activity and analytics',
       isRound: true,
       size: 'lg',
@@ -164,7 +119,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
 
   const getButtonStyle = (config: ButtonConfig) => {
     const isActive = isButtonActive(config);
-    
+
     if (isActive) {
       return {
         backgroundColor: `var(--icon-${config.id}-bg)`,
@@ -173,7 +128,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
         borderRadius: getBorderRadius(config),
       };
     }
-    
+
     // Inactive state for all buttons
     return {
       backgroundColor: 'var(--icon-inactive-bg)',
@@ -194,16 +149,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">
-        <NavHeader 
-          activeButton={activeButton} 
-          setActiveButton={setActiveButton}
-        />
+        <AllToolsNavButton activeButton={activeButton} setActiveButton={setActiveButton} />
+
       </div>
 
       {/* Conditional divider when overflowing */}
       {isOverflow && (
-        <Divider 
-          size="xs" 
+        <Divider
+          size="xs"
           className="overflow-divider"
         />
       )}
@@ -241,21 +194,21 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
                     </span>
                   </div>
                 </Tooltip>
-                
+
                 {/* Add divider after Automate button (index 2) */}
                 {index === 2 && (
-                    <Divider 
-                      size="xs" 
-                      className="content-divider"
-                    />
+                  <Divider
+                    size="xs"
+                    className="content-divider"
+                  />
                 )}
               </React.Fragment>
             ))}
           </Stack>
-          
+
           {/* Spacer to push Config button to bottom */}
           <div className="spacer" />
-          
+
           {/* Config button at the bottom */}
           {buttonConfigs
             .filter(config => config.id === 'config')
