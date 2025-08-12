@@ -1774,12 +1774,9 @@
     "error.failed": "An error occurred while sanitising the PDF.",
     "filenamePrefix": "sanitised",
     "sanitizationResults": "Sanitisation Results",
-    "validation": {
-      "atLeastOne": "At least one sanitisation option must be selected"
-    },
     "steps": {
       "files": "Files",
-      "settings": "Settings", 
+      "settings": "Settings",
       "results": "Results"
     },
     "files": {

@@ -1625,12 +1625,9 @@
       "error.failed": "An error occurred while sanitizing the PDF.",
       "filenamePrefix": "sanitized",
       "sanitizationResults": "Sanitization Results",
-      "validation": {
-        "atLeastOne": "At least one sanitization option must be selected"
-      },
       "steps": {
         "files": "Files",
-        "settings": "Settings", 
+        "settings": "Settings",
         "results": "Results"
       },
       "files": {
