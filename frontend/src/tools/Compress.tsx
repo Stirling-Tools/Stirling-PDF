@@ -74,9 +74,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         steps: [{
           title: "Settings",
           isCollapsed: settingsCollapsed,
-          isCompleted: hasResults,
           onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
-          completedMessage: t("compress.header", "Compression completed"),
           tooltip: compressTips,
           content: (
             <CompressSettings

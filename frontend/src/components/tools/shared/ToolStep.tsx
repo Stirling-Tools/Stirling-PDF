@@ -17,10 +17,8 @@ export interface ToolStepProps {
   title: string;
   isVisible?: boolean;
   isCollapsed?: boolean;
-  isCompleted?: boolean;
   onCollapsedClick?: () => void;
   children?: React.ReactNode;
-  completedMessage?: string;
   helpText?: string;
   showNumber?: boolean;
   _stepNumber?: number; // Internal prop set by ToolStepContainer
@@ -70,10 +68,8 @@ const ToolStep = ({
   title,
   isVisible = true,
   isCollapsed = false,
-  isCompleted = false,
   onCollapsedClick,
   children,
-  completedMessage,
   helpText,
   showNumber,
   _stepNumber,
@@ -135,20 +131,7 @@ const ToolStep = ({
         )}
       </Flex>
 
-      {isCollapsed ? (
-        <div>
-          {isCompleted && completedMessage && (
-            <Text size="sm" c="green">
-              ✓ {completedMessage}
-              {onCollapsedClick && (
-                <Text span c="dimmed" size="xs" ml="sm">
-                  (click to change)
-                </Text>
-              )}
-            </Text>
-          )}
-        </div>
-      ) : (
+      {!isCollapsed && (
         <Stack gap="md" pl="md">
           {helpText && (
             <Text size="sm" c="dimmed">

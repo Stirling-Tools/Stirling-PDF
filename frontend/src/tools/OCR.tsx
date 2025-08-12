@@ -94,7 +94,6 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           {
             title: "Settings",
             isCollapsed: !hasFiles || settingsCollapsed,
-            isCompleted: hasFiles && hasValidSettings,
             onCollapsedClick: hasResults ? handleSettingsReset : () => {
               if (!hasFiles) return; // Only allow if files are selected
               setExpandedStep(expandedStep === 'settings' ? null : 'settings');
@@ -111,7 +110,6 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           {
             title: "Advanced",
             isCollapsed: expandedStep !== 'advanced',
-            isCompleted: hasFiles && hasResults,
             onCollapsedClick: hasResults ? handleSettingsReset : () => {
               if (!hasFiles) return; // Only allow if files are selected
               setExpandedStep(expandedStep === 'advanced' ? null : 'advanced');

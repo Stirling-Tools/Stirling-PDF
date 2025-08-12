@@ -15,9 +15,7 @@ export interface MiddleStepConfig {
   title: string;
   isVisible?: boolean;
   isCollapsed?: boolean;
-  isCompleted?: boolean;
   onCollapsedClick?: () => void;
-  completedMessage?: string;
   content: React.ReactNode;
   tooltip?: {
     content?: React.ReactNode;
@@ -75,9 +73,7 @@ export function createToolFlow(config: ToolFlowConfig) {
         steps.create(stepConfig.title, {
           isVisible: stepConfig.isVisible,
           isCollapsed: stepConfig.isCollapsed,
-          isCompleted: stepConfig.isCompleted,
           onCollapsedClick: stepConfig.onCollapsedClick,
-          completedMessage: stepConfig.completedMessage,
           tooltip: stepConfig.tooltip
         }, stepConfig.content)
       )}

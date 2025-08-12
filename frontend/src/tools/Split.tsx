@@ -74,7 +74,6 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         steps: [{
           title: "Settings",
           isCollapsed: settingsCollapsed,
-          isCompleted: hasResults,
           onCollapsedClick: hasResults ? handleSettingsReset : undefined,
           content: (
             <SplitSettings

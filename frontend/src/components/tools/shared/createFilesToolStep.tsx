@@ -19,9 +19,7 @@ export function createFilesToolStep(
   return createStep("Files", {
     isVisible: true,
     isCollapsed: props.isCollapsed,
-    isCompleted: hasFiles,
-    onCollapsedClick: props.onCollapsedClick,
-    completedMessage: undefined
+    onCollapsedClick: props.onCollapsedClick
   }, (
     <FileStatusIndicator
       selectedFiles={props.selectedFiles}

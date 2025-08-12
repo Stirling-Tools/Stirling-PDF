@@ -170,7 +170,7 @@ export const useToolOperation = <TParams = void>(
           // Individual file processing - separate API call per file
           const apiCallsConfig: ApiCallsConfig<TParams> = {
             endpoint: config.endpoint,
-            buildFormData: (file: File, params: TParams) => (config.buildFormData as (params: TParams, file: File) => FormData /* FIX ME */)(params, file),
+            buildFormData: config.buildFormData as (file: File, params: TParams) => FormData,
             filePrefix: config.filePrefix,
             responseHandler: config.responseHandler
           };

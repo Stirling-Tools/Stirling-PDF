@@ -37,7 +37,7 @@ function stripExt(name: string): string {
   return i > 0 ? name.slice(0, i) : name;
 }
 
-// Signature must be (file, params)
+// Signature must be (file, params) to match useToolApiCalls interface
 const buildFormData = (file: File, parameters: OCRParameters): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
@@ -99,7 +99,7 @@ export const useOCROperation = () => {
   const ocrConfig: ToolOperationConfig<OCRParameters> = {
     operationType: 'ocr',
     endpoint: '/api/v1/misc/ocr-pdf',
-    buildFormData: buildFormData as any /* FIX ME */,
+    buildFormData,
     filePrefix: 'ocr_',
     multiFileEndpoint: false, // Process files individually
     responseHandler, // use shared flow

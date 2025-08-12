@@ -112,7 +112,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           steps: [{
             title: t("convert.settings", "Settings"),
             isCollapsed: settingsCollapsed,
-            isCompleted: settingsCollapsed,
             onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
             content: (
               <ConvertSettings
