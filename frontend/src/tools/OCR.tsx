@@ -73,6 +73,12 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     setCurrentMode('viewer');
   };
 
+  const handleSettingsReset = () => {
+    ocrOperation.resetResults();
+    onPreviewFile?.(null);
+    setCurrentMode('ocr');
+  };
+
 
   const filesCollapsed = expandedStep !== 'files';
   const settingsCollapsed = expandedStep !== 'settings';
@@ -89,7 +95,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             title: "Settings",
             isCollapsed: !hasFiles || settingsCollapsed,
             isCompleted: hasFiles && hasValidSettings,
-            onCollapsedClick: () => {
+            onCollapsedClick: hasResults ? handleSettingsReset : () => {
               if (!hasFiles) return; // Only allow if files are selected
               setExpandedStep(expandedStep === 'settings' ? null : 'settings');
             },
@@ -106,7 +112,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             title: "Advanced",
             isCollapsed: expandedStep !== 'advanced',
             isCompleted: hasFiles && hasResults,
-            onCollapsedClick: () => {
+            onCollapsedClick: hasResults ? handleSettingsReset : () => {
               if (!hasFiles) return; // Only allow if files are selected
               setExpandedStep(expandedStep === 'advanced' ? null : 'advanced');
             },
