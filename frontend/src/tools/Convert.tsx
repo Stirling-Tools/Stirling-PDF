@@ -5,8 +5,7 @@ import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
-import { createToolSteps, ToolStepProvider } from "../components/tools/shared/ToolStep";
-import OperationButton from "../components/tools/shared/OperationButton";
+import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 
@@ -101,26 +100,21 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     setCurrentMode('convert');
   };
 
-  const steps = createToolSteps();
-
   return (
     <div className="h-full max-h-screen overflow-y-auto" ref={scrollContainerRef}>
       <Stack gap="sm" p="sm">
-        <ToolStepProvider>
-          {/* Files Step */}
-          {steps.createFilesStep({
+        {createToolFlow({
+          files: {
             selectedFiles,
             isCollapsed: filesCollapsed,
             placeholder: t("convert.selectFilesPlaceholder", "Select files in the main view to get started")
-          })}
-
-          {/* Settings Step */}
-          {steps.create(t("convert.settings", "Settings"), {
+          },
+          steps: [{
+            title: t("convert.settings", "Settings"),
             isCollapsed: settingsCollapsed,
             isCompleted: settingsCollapsed,
             onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
-          }, (
-            <Stack gap="sm">
+            content: (
               <ConvertSettings
                 parameters={convertParams.parameters}
                 onParameterChange={convertParams.updateParameter}
@@ -128,27 +122,24 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 selectedFiles={selectedFiles}
                 disabled={endpointLoading}
               />
-            </Stack>
-          ))}
-           {!hasResults && (
-                <OperationButton
-                  onClick={handleConvert}
-                  isLoading={convertOperation.isLoading}
-                  disabled={!convertParams.validateParameters() || !hasFiles || !endpointEnabled}
-                  loadingText={t("convert.converting", "Converting...")}
-                  submitText={t("convert.convertFiles", "Convert Files")}
-                  data-testid="convert-button"
-                />
-              )}
-
-          {/* Results Step */}
-          {steps.createResultsStep({
+            )
+          }],
+          executeButton: {
+            text: t("convert.convertFiles", "Convert Files"),
+            loadingText: t("convert.converting", "Converting..."),
+            onClick: handleConvert,
+            isVisible: !hasResults,
+            disabled: !convertParams.validateParameters() || !hasFiles || !endpointEnabled,
+            testId: "convert-button"
+          },
+          results: {
             isVisible: hasResults,
             operation: convertOperation,
             title: t("convert.conversionResults", "Conversion Results"),
-            onFileClick: handleThumbnailClick
-          })}
-        </ToolStepProvider>
+            onFileClick: handleThumbnailClick,
+            testId: "conversion-results"
+          }
+        })}
       </Stack>
     </div>
   );

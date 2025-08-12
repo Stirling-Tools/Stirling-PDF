@@ -1,12 +1,11 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
-import { createToolSteps, ToolStepProvider } from "../components/tools/shared/ToolStep";
-import OperationButton from "../components/tools/shared/OperationButton";
+import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import CompressSettings from "../components/tools/compress/CompressSettings";
 
@@ -65,49 +64,41 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const filesCollapsed = hasFiles;
   const settingsCollapsed = !hasFiles || hasResults;
 
-
-  const steps = createToolSteps();
-
   return (
     <Stack gap="md" h="100%" p="sm" style={{ overflow: 'auto' }}>
-      <ToolStepProvider>
-        {/* Files Step */}
-        {steps.createFilesStep({
+      {createToolFlow({
+        files: {
           selectedFiles,
           isCollapsed: filesCollapsed
-        })}
-
-        {/* Settings Step */}
-        {steps.create("Settings", {
+        },
+        steps: [{
+          title: "Settings",
           isCollapsed: settingsCollapsed,
           isCompleted: hasResults,
           onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
           completedMessage: t("compress.header", "Compression completed"),
-          tooltip: compressTips
-        }, (
-          <Stack gap="md">
+          tooltip: compressTips,
+          content: (
             <CompressSettings
               parameters={compressParams.parameters}
               onParameterChange={compressParams.updateParameter}
               disabled={endpointLoading}
             />
-          </Stack>
-        ))}
-        <OperationButton
-              onClick={handleCompress}
-              isLoading={compressOperation.isLoading}
-              disabled={!compressParams.validateParameters() || !hasFiles || !endpointEnabled}
-              loadingText={t("loading")}
-              submitText={t("compress.submit", "Compress")}
-            />
-        {/* Results Step */}
-        {steps.createResultsStep({
+          )
+        }],
+        executeButton: {
+          text: t("compress.submit", "Compress"),
+          loadingText: t("loading"),
+          onClick: handleCompress,
+          disabled: !compressParams.validateParameters() || !hasFiles || !endpointEnabled
+        },
+        results: {
           isVisible: hasResults,
           operation: compressOperation,
           title: t("compress.title", "Compression Results"),
           onFileClick: handleThumbnailClick
-        })}
-      </ToolStepProvider>
+        }
+      })}
     </Stack>
   );
 }

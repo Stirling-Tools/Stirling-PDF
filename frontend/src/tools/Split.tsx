@@ -1,12 +1,11 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
-import { createToolSteps, ToolStepProvider } from "../components/tools/shared/ToolStep";
-import OperationButton from "../components/tools/shared/OperationButton";
+import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import SplitSettings from "../components/tools/split/SplitSettings";
 
 import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
@@ -64,52 +63,41 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const filesCollapsed = hasFiles;
   const settingsCollapsed = !hasFiles || hasResults;
 
-  const steps = createToolSteps();
-
   return (
     <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
-      <ToolStepProvider>
-        {/* Files Step */}
-        {steps.createFilesStep({
+      {createToolFlow({
+        files: {
           selectedFiles,
           isCollapsed: filesCollapsed,
           placeholder: "Select a PDF file in the main view to get started"
-        })}
-
-        {/* Settings Step */}
-        {steps.create("Settings", {
+        },
+        steps: [{
+          title: "Settings",
           isCollapsed: settingsCollapsed,
           isCompleted: hasResults,
           onCollapsedClick: hasResults ? handleSettingsReset : undefined,
-        }, (
-          <Stack gap="sm">
+          content: (
             <SplitSettings
               parameters={splitParams.parameters}
               onParameterChange={splitParams.updateParameter}
               disabled={endpointLoading}
             />
-
-          </Stack>
-        ))}
-
-        {!hasResults && (
-        <OperationButton
-          onClick={handleSplit}
-          isLoading={splitOperation.isLoading}
-          disabled={!splitParams.validateParameters() || !hasFiles || !endpointEnabled}
-          loadingText={t("loading")}
-          submitText={t("split.submit", "Split PDF")}
-        />
-        )}
-
-        {/* Results Step */}
-        {steps.createResultsStep({
+          )
+        }],
+        executeButton: {
+          text: t("split.submit", "Split PDF"),
+          loadingText: t("loading"),
+          onClick: handleSplit,
+          isVisible: !hasResults,
+          disabled: !splitParams.validateParameters() || !hasFiles || !endpointEnabled
+        },
+        results: {
           isVisible: hasResults,
           operation: splitOperation,
           title: "Split Results",
           onFileClick: handleThumbnailClick
-        })}
-      </ToolStepProvider>
+        }
+      })}
     </Stack>
   );
 }
