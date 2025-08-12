@@ -45,6 +45,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
   const SubcategoryHeader: React.FC<{ label: string; mt?: string | number; mb?: string | number }> = ({ label, mt = "1rem", mb = "0.25rem" }) => (
     <div className="tool-subcategory-row" style={{ marginLeft: "1rem", marginRight: "1rem", marginTop: mt, marginBottom: mb }}>
+      <div className="tool-subcategory-row-rule" />
       <span className="tool-subcategory-row-title">{label}</span>
       <div className="tool-subcategory-row-rule" />
     </div>

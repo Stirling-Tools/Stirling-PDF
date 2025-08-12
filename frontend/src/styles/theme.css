@@ -128,7 +128,8 @@
   --tool-header-badge-text: #004E99;
 
   /* Subcategory title styling (light mode) */
-  --tool-subcategory-text-color: #6B7280;
+  --tool-subcategory-text-color: #9CA3AF; /* lighter text */
+  --tool-subcategory-rule-color: #E5E7EB; /* doubly lighter rule line */
   --accent-interactive: #4A90E2;
   --text-instruction: #4A90E2;
   --text-brand: var(--color-gray-700);
@@ -274,7 +275,8 @@
   --tool-header-badge-text: #FFFFFF;
 
   /* Subcategory title styling (dark mode) */
-  --tool-subcategory-text-color: #6B7280;
+  --tool-subcategory-text-color: #9CA3AF; /* lighter text in dark mode as well */
+  --tool-subcategory-rule-color: #3A4047; /* doubly lighter (relative) line in dark */
 }
 
 /* Dropzone drop state styling */

@@ -45,14 +45,14 @@
 .tool-subcategory-row-title {
   text-transform: uppercase;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   color: var(--tool-subcategory-text-color);
   white-space: nowrap;
 }
 
 .tool-subcategory-row-rule {
   height: 1px;
-  background-color: var(--tool-subcategory-text-color);
+  background-color: var(--tool-subcategory-rule-color);
   flex: 1 1 auto;
 }
 
