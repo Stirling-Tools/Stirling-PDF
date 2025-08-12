@@ -35,6 +35,27 @@
   padding-left: 1rem;
 }
 
+/* New row-style subcategory header with rule */
+.tool-subcategory-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tool-subcategory-row-title {
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--tool-subcategory-text-color);
+  white-space: nowrap;
+}
+
+.tool-subcategory-row-rule {
+  height: 1px;
+  background-color: var(--tool-subcategory-text-color);
+  flex: 1 1 auto;
+}
+
 /* Compact tool buttons */
 .tool-button {
   font-size: 0.875rem; /* default 1rem - 0.125rem? We'll apply exact -0.25rem via calc below */

@@ -43,6 +43,13 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  const SubcategoryHeader: React.FC<{ label: string; mt?: string | number; mb?: string | number }> = ({ label, mt = "1rem", mb = "0.25rem" }) => (
+    <div className="tool-subcategory-row" style={{ marginLeft: "1rem", marginRight: "1rem", marginTop: mt, marginBottom: mb }}>
+      <span className="tool-subcategory-row-title">{label}</span>
+      <div className="tool-subcategory-row-rule" />
+    </div>
+  );
+
   const groupedTools = useMemo(() => {
     const grouped: GroupedTools = {};
     filteredTools.forEach(([id, tool]) => {
@@ -182,9 +189,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             ) : (
               searchGroups.map(group => (
                 <Box key={group.subcategory} w="100%">
-                  <Text size="sm" fw={500} mb="0.25rem" mt="1rem" className="tool-subcategory-title">
-                    {group.subcategory}
-                  </Text>
+                  <SubcategoryHeader label={group.subcategory} />
                   <Stack gap="xs">
                     {group.tools.map(({ id, tool }) => (
                       <ToolButton
@@ -244,15 +249,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 {quickSection?.subcategories.map(sc => (
                   <Box key={sc.subcategory} w="100%">
                     {quickSection?.subcategories.length > 1 && (
-                      <Text
-                        size="sm"
-                        fw={500}
-                        mb="0.25rem"
-                        mt="1rem"
-                        className="tool-subcategory-title"
-                      >
-                        {sc.subcategory}
-                      </Text>
+                      <SubcategoryHeader label={sc.subcategory} />
                     )}
                     <Stack gap="xs">
                       {sc.tools.map(({ id, tool }) => (
@@ -313,15 +310,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 {allSection?.subcategories.map(sc => (
                   <Box key={sc.subcategory} w="100%">
                     {allSection?.subcategories.length > 1 && (
-                      <Text
-                        size="sm"
-                        fw={500}
-                        mb="0.25rem"
-                        mt="1rem"
-                        className="tool-subcategory-title"
-                      >
-                        {sc.subcategory}
-                      </Text>
+                      <SubcategoryHeader label={sc.subcategory} />
                     )}
                     <Stack gap="xs">
                       {sc.tools.map(({ id, tool }) => (
