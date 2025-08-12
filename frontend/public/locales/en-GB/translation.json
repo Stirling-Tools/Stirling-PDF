@@ -816,30 +816,6 @@
   "removePages": {
     "tags": "Remove pages,delete pages"
   },
-  "addPassword": {
-    "tags": "secure,security",
-    "title": "Add Password",
-    "header": "Add password (Encrypt)",
-    "selectText": {
-      "1": "Select PDF to encrypt",
-      "2": "User Password",
-      "3": "Encryption Key Length",
-      "4": "Higher values are stronger, but lower values have better compatibility.",
-      "5": "Permissions to set (Recommended to be used along with Owner password)",
-      "6": "Prevent assembly of document",
-      "7": "Prevent content extraction",
-      "8": "Prevent extraction for accessibility",
-      "9": "Prevent filling in form",
-      "10": "Prevent modification",
-      "11": "Prevent annotation modification",
-      "12": "Prevent printing",
-      "13": "Prevent printing different formats",
-      "14": "Owner Password",
-      "15": "Restricts what can be done with the document once it is opened (Not supported by all readers)",
-      "16": "Restricts the opening of the document itself"
-    },
-    "submit": "Encrypt"
-  },
   "removePassword": {
     "tags": "secure,Decrypt,security,unpassword,delete password",
     "title": "Remove password",
@@ -1797,6 +1773,75 @@
       "removeLinks.desc": "Remove external links and launch actions from the PDF",
       "removeFonts": "Remove Fonts",
       "removeFonts.desc": "Remove embedded fonts from the PDF"
+    }
+  },
+  "addPassword": {
+    "completed": "Password protection applied",
+    "submit": "Add Password Protection",
+    "error": {
+      "failed": "An error occurred while adding password to the PDF."
+    },
+    "passwords": {
+      "title": "Passwords",
+      "user": {
+        "label": "User Password",
+        "description": "Password required to open the document",
+        "placeholder": "Enter user password"
+      },
+      "owner": {
+        "label": "Owner Password", 
+        "description": "Password required to modify document permissions",
+        "placeholder": "Enter owner password"
+      }
+    },
+    "encryption": {
+      "title": "Encryption",
+      "keyLength": {
+        "label": "Key Length",
+        "description": "Higher values provide better security",
+        "40bit": "40-bit (Low)",
+        "128bit": "128-bit (Standard)",
+        "256bit": "256-bit (High)"
+      }
+    },
+    "restrictions": {
+      "title": "Document Restrictions",
+      "description": "Select which actions should be prevented on the document",
+      "assembly": {
+        "label": "Prevent document assembly",
+        "description": "Prevent inserting, rotating, or deleting pages and creating bookmarks or thumbnail images"
+      },
+      "extractContent": {
+        "label": "Prevent content extraction",
+        "description": "Prevent text and graphic extraction"
+      },
+      "extractForAccessibility": {
+        "label": "Prevent accessibility extraction",
+        "description": "Prevent content extraction for accessibility purposes"
+      },
+      "fillInForm": {
+        "label": "Prevent form filling",
+        "description": "Prevent filling in existing interactive form fields"
+      },
+      "modify": {
+        "label": "Prevent document modification",
+        "description": "Prevent changing the document content"
+      },
+      "modifyAnnotations": {
+        "label": "Prevent annotation modification",
+        "description": "Prevent creation and modification of annotations and form fields"
+      },
+      "printing": {
+        "label": "Prevent printing",
+        "description": "Prevent printing the document"
+      },
+      "printingFaithful": {
+        "label": "Prevent high-quality printing",
+        "description": "Prevent high-resolution printing"
+      }
+    },
+    "results": {
+      "title": "Password Protected PDFs"
     }
   }
 }
