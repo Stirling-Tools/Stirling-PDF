@@ -11,7 +11,7 @@ export interface CompressParameters {
   fileSizeUnit: 'KB' | 'MB';
 }
 
-const buildFormData = (parameters: CompressParameters, file: File): FormData => {
+const buildFormData = (file: File, parameters: CompressParameters): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 

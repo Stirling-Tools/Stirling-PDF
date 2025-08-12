@@ -1,19 +1,25 @@
 import React from 'react';
-import { Text } from '@mantine/core';
+import { Text, Box, Flex, ActionIcon, Tooltip } from '@mantine/core';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import { useFileContext } from '../../../contexts/FileContext';
 
 export interface FileStatusIndicatorProps {
   selectedFiles?: File[];
   isCompleted?: boolean;
   placeholder?: string;
   showFileName?: boolean;
+  showPinControls?: boolean;
 }
 
 const FileStatusIndicator = ({
   selectedFiles = [],
   isCompleted = false,
   placeholder = "Select a PDF file in the main view to get started",
-  showFileName = true
+  showFileName = true,
+  showPinControls = true
 }: FileStatusIndicatorProps) => {
+  const { pinFile, unpinFile, isFilePinned } = useFileContext();
   if (selectedFiles.length === 0) {
     return (
       <Text size="sm" c="dimmed">

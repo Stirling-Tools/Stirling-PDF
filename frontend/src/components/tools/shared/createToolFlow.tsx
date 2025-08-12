@@ -1,5 +1,4 @@
 import React from 'react';
-import { Stack } from '@mantine/core';
 import { createToolSteps, ToolStepProvider } from './ToolStep';
 import OperationButton from './OperationButton';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
@@ -57,7 +56,7 @@ export interface ToolFlowConfig {
  */
 export function createToolFlow(config: ToolFlowConfig) {
   const steps = createToolSteps();
-  
+
   return (
     <ToolStepProvider>
       {/* Files Step */}
@@ -69,7 +68,7 @@ export function createToolFlow(config: ToolFlowConfig) {
       })}
 
       {/* Middle Steps */}
-      {config.steps.map((stepConfig, index) => 
+      {config.steps.map((stepConfig, index) =>
         steps.create(stepConfig.title, {
           isVisible: stepConfig.isVisible,
           isCollapsed: stepConfig.isCollapsed,

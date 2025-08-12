@@ -104,7 +104,7 @@ export const useToolOperation = <TParams = void>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { recordOperation, markOperationApplied, markOperationFailed, addFiles } = useFileContext();
+  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -198,8 +198,8 @@ export const useToolOperation = <TParams = void>(
         actions.setThumbnails(thumbnails);
         actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
 
-        // Add to file context
-        await addFiles(processedFiles);
+        // Consume input files and add output files (will replace unpinned inputs)
+        await consumeFiles(validFiles, processedFiles);
 
         markOperationApplied(fileId, operationId);
       }

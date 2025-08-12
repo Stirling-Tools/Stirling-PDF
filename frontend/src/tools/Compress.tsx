@@ -29,7 +29,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     compressOperation.resetResults();
     onPreviewFile?.(null);
-  }, [compressParams.parameters, selectedFiles]);
+  }, [compressParams.parameters]);
 
   const handleCompress = async () => {
     try {
@@ -61,7 +61,6 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = compressOperation.files.length > 0 || compressOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles;
   const settingsCollapsed = !hasFiles || hasResults;
 
   return (
@@ -69,7 +68,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       {createToolFlow({
         files: {
           selectedFiles,
-          isCollapsed: filesCollapsed
+          isCollapsed: hasFiles
         },
         steps: [{
           title: "Settings",
@@ -86,6 +85,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         }],
         executeButton: {
           text: t("compress.submit", "Compress"),
+          isVisible: !hasResults,
           loadingText: t("loading"),
           onClick: handleCompress,
           disabled: !compressParams.validateParameters() || !hasFiles || !endpointEnabled

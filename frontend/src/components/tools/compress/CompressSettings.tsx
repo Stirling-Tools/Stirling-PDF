@@ -1,14 +1,7 @@
 import React, { useState } from "react";
 import { Button, Stack, Text, NumberInput, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-
-interface CompressParameters {
-  compressionMethod: 'quality' | 'filesize';
-  compressionLevel: number;
-  fileSizeValue: string;
-  fileSizeUnit: 'KB' | 'MB';
-  grayscale: boolean;
-}
+import { CompressParameters } from "../../../hooks/tools/compress/useCompressOperation";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;

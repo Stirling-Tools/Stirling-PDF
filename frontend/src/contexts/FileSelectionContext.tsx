@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import {
   MaxFiles,
   FileSelectionContextValue
 } from '../types/tool';
+import { useFileContext } from './FileContext';
 
 interface FileSelectionProviderProps {
   children: ReactNode;
@@ -11,9 +12,22 @@ interface FileSelectionProviderProps {
 const FileSelectionContext = createContext<FileSelectionContextValue | undefined>(undefined);
 
 export function FileSelectionProvider({ children }: FileSelectionProviderProps) {
+  const { activeFiles } = useFileContext();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [maxFiles, setMaxFiles] = useState<MaxFiles>(-1);
   const [isToolMode, setIsToolMode] = useState<boolean>(false);
+
+  // Sync selected files with active files - remove any selected files that are no longer active
+  useEffect(() => {
+    if (selectedFiles.length > 0) {
+      const activeFileSet = new Set(activeFiles);
+      const validSelectedFiles = selectedFiles.filter(file => activeFileSet.has(file));
+      
+      if (validSelectedFiles.length !== selectedFiles.length) {
+        setSelectedFiles(validSelectedFiles);
+      }
+    }
+  }, [activeFiles, selectedFiles]);
 
   const clearSelection = useCallback(() => {
     setSelectedFiles([]);
