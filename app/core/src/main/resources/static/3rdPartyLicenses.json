@@ -133,6 +133,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "com.github.ben-manes.caffeine:caffeine",
+            "moduleUrl": "https://github.com/ben-manes/caffeine",
+            "moduleVersion": "3.2.2",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "com.github.jai-imageio:jai-imageio-core",
             "moduleUrl": "https://github.com/jai-imageio/jai-imageio-core",
             "moduleVersion": "1.4.0",
@@ -168,7 +175,7 @@
         {
             "moduleName": "com.google.errorprone:error_prone_annotations",
             "moduleUrl": "https://errorprone.info/error_prone_annotations",
-            "moduleVersion": "2.38.0",
+            "moduleVersion": "2.40.0",
             "moduleLicense": "Apache 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -548,6 +555,27 @@
             "moduleVersion": "1.2.2",
             "moduleLicense": "MIT License",
             "moduleLicenseUrl": "http://www.opensource.org/licenses/mit-license.php"
+        },
+        {
+            "moduleName": "io.jsonwebtoken:jjwt-api",
+            "moduleUrl": "https://github.com/jwtk/jjwt",
+            "moduleVersion": "0.12.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.jsonwebtoken:jjwt-impl",
+            "moduleUrl": "https://github.com/jwtk/jjwt",
+            "moduleVersion": "0.12.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.jsonwebtoken:jjwt-jackson",
+            "moduleUrl": "https://github.com/jwtk/jjwt",
+            "moduleVersion": "0.12.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.micrometer:micrometer-commons",
@@ -1502,6 +1530,13 @@
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-aop",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "3.5.4",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.boot:spring-boot-starter-cache",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "3.5.4",
             "moduleLicense": "Apache License, Version 2.0",
