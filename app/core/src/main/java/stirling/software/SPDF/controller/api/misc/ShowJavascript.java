@@ -68,8 +68,7 @@ public class ShowJavascript {
             }
 
             if (!foundScript) {
-                script.setLength(0);
-                script.append("PDF '")
+                new StringBuilder("PDF '")
                     .append(Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
                     .append("' does not contain Javascript");
             }
