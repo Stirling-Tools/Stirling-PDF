@@ -421,7 +421,6 @@ public class EndpointConfiguration {
 
         // file-to-pdf has multiple implementations
         addEndpointAlternative("file-to-pdf", "LibreOffice");
-        addEndpointAlternative("file-to-pdf", "Python");
         addEndpointAlternative("file-to-pdf", "Unoconvert");
 
         // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml

@@ -110,7 +110,8 @@ public class ConfigController {
     }
 
     @GetMapping("/endpoint-enabled")
-    public ResponseEntity<Boolean> isEndpointEnabled(@RequestParam(name = "endpoint") String endpoint) {
+    public ResponseEntity<Boolean> isEndpointEnabled(
+            @RequestParam(name = "endpoint") String endpoint) {
         boolean enabled = endpointConfiguration.isEndpointEnabled(endpoint);
         return ResponseEntity.ok(enabled);
     }
