@@ -53,14 +53,14 @@ public class OpenApiConfig {
                         .description(DEFAULT_DESCRIPTION);
 
         OpenAPI openAPI = new OpenAPI().info(info);
-        
+
         // Add server configuration from environment variable
         String swaggerServerUrl = System.getenv("SWAGGER_SERVER_URL");
         if (swaggerServerUrl != null && !swaggerServerUrl.trim().isEmpty()) {
             Server server = new Server().url(swaggerServerUrl).description("API Server");
             openAPI.addServersItem(server);
         }
-        
+
         if (!applicationProperties.getSecurity().getEnableLogin()) {
             return openAPI.components(new Components());
         } else {
@@ -69,8 +69,7 @@ public class OpenApiConfig {
                             .type(SecurityScheme.Type.APIKEY)
                             .in(SecurityScheme.In.HEADER)
                             .name("X-API-KEY");
-            return openAPI
-                    .components(new Components().addSecuritySchemes("apiKey", apiKeyScheme))
+            return openAPI.components(new Components().addSecuritySchemes("apiKey", apiKeyScheme))
                     .addSecurityItem(new SecurityRequirement().addList("apiKey"));
         }
     }

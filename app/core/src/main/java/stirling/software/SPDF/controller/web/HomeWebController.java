@@ -9,7 +9,6 @@ import java.util.Map;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -26,20 +25,22 @@ import stirling.software.SPDF.model.Dependency;
 import stirling.software.common.model.ApplicationProperties;
 
 @Slf4j
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @RequiredArgsConstructor
 public class HomeWebController {
 
     private final ApplicationProperties applicationProperties;
 
-    @GetMapping("/about")
+    @Deprecated
+    // @GetMapping("/about")
     @Hidden
     public String gameForm(Model model) {
         model.addAttribute("currentPage", "about");
         return "about";
     }
 
-    @GetMapping("/licenses")
+    @Deprecated
+    // @GetMapping("/licenses")
     @Hidden
     public String licensesForm(Model model) {
         model.addAttribute("currentPage", "licenses");
@@ -56,12 +57,14 @@ public class HomeWebController {
         return "licenses";
     }
 
-    @GetMapping("/releases")
+    @Deprecated
+    // @GetMapping("/releases")
     public String getReleaseNotes(Model model) {
         return "releases";
     }
 
-    @GetMapping("/")
+    @Deprecated
+    // @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("currentPage", "home");
         String showSurvey = System.getenv("SHOW_SURVEY");
@@ -70,12 +73,14 @@ public class HomeWebController {
         return "home";
     }
 
-    @GetMapping("/home")
+    @Deprecated
+    // @GetMapping("/home")
     public String root(Model model) {
         return "redirect:/";
     }
 
-    @GetMapping("/home-legacy")
+    @Deprecated
+    // @GetMapping("/home-legacy")
     public String redirectHomeLegacy() {
         return "redirect:/";
     }

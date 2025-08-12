@@ -1,25 +1,26 @@
 package stirling.software.proprietary.security.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.repository.TeamRepository;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
 
-    @Mock
-    private TeamRepository teamRepository;
+    @Mock private TeamRepository teamRepository;
 
-    @InjectMocks
-    private TeamService teamService;
+    @InjectMocks private TeamService teamService;
 
     @Test
     void getDefaultTeam() {
@@ -41,8 +42,7 @@ class TeamServiceTest {
         defaultTeam.setId(1L);
         defaultTeam.setName(teamName);
 
-        when(teamRepository.findByName(teamName))
-                .thenReturn(Optional.empty());
+        when(teamRepository.findByName(teamName)).thenReturn(Optional.empty());
         when(teamRepository.save(any(Team.class))).thenReturn(defaultTeam);
 
         Team result = teamService.getOrCreateDefaultTeam();
@@ -56,7 +56,7 @@ class TeamServiceTest {
         team.setName("Eldians");
 
         when(teamRepository.findByName(TeamService.INTERNAL_TEAM_NAME))
-            .thenReturn(Optional.of(team));
+                .thenReturn(Optional.of(team));
 
         Team result = teamService.getOrCreateInternalTeam();
 
@@ -70,11 +70,10 @@ class TeamServiceTest {
         internalTeam.setId(2L);
         internalTeam.setName(teamName);
 
-        when(teamRepository.findByName(teamName))
-            .thenReturn(Optional.empty());
+        when(teamRepository.findByName(teamName)).thenReturn(Optional.empty());
         when(teamRepository.save(any(Team.class))).thenReturn(internalTeam);
         when(teamRepository.findByName(TeamService.INTERNAL_TEAM_NAME))
-            .thenReturn(Optional.empty());
+                .thenReturn(Optional.empty());
 
         Team result = teamService.getOrCreateInternalTeam();
 
