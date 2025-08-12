@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SPLIT_MODES, SPLIT_TYPES, ENDPOINTS, type SplitMode, type SplitType } from '../../../constants/splitConstants';
+import { SPLIT_MODES, SPLIT_TYPES, ENDPOINTS, type SplitMode } from '../../../constants/splitConstants';
 import { SplitParameters } from '../../../components/tools/split/SplitSettings';
 
 export interface SplitParametersHook {

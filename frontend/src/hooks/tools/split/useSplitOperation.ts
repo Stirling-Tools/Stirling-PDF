@@ -1,7 +1,5 @@
-import { useCallback } from 'react';
-import axios from 'axios';
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
+import { useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SplitParameters } from '../../../components/tools/split/SplitSettings';
 import { SPLIT_MODES } from '../../../constants/splitConstants';
@@ -66,17 +64,6 @@ export const useSplitOperation = () => {
     buildFormData: buildFormData, // Multi-file signature: (params, selectedFiles) => FormData
     filePrefix: 'split_',
     multiFileEndpoint: true, // Single API call with all files
-    validateParams: (params) => {
-      if (!params.mode) {
-        return { valid: false, errors: [t('split.validation.modeRequired', 'Split mode is required')] };
-      }
-
-      if (params.mode === SPLIT_MODES.BY_PAGES && !params.pages) {
-        return { valid: false, errors: [t('split.validation.pagesRequired', 'Page numbers are required for split by pages')] };
-      }
-
-      return { valid: true };
-    },
     getErrorMessage: createStandardErrorHandler(t('split.error.failed', 'An error occurred while splitting the PDF.'))
   });
 };

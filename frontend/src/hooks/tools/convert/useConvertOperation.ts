@@ -134,9 +134,6 @@ export const useConvertOperation = () => {
     buildFormData, // Not used with customProcessor but required
     filePrefix: 'converted_',
     customProcessor: customConvertProcessor, // Convert handles its own routing
-    validateParams: (params) => {
-      return { valid: true };
-    },
     getErrorMessage: (error) => {
       if (error.response?.data && typeof error.response.data === 'string') {
         return error.response.data;
