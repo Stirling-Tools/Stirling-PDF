@@ -36,7 +36,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     ocrOperation.resetResults();
     onPreviewFile?.(null);
-  }, [ocrParams.parameters, selectedFiles]);
+  }, [ocrParams.parameters]);
 
   useEffect(() => {
     if (selectedFiles.length > 0 && expandedStep === 'files') {

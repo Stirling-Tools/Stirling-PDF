@@ -28,7 +28,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     splitOperation.resetResults();
     onPreviewFile?.(null);
-  }, [splitParams.parameters, selectedFiles]);
+  }, [splitParams.parameters]);
 
   const handleSplit = async () => {
     try {

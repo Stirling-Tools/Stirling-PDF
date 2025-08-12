@@ -29,7 +29,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     sanitizeOperation.resetResults();
     onPreviewFile?.(null);
-  }, [sanitizeParams.parameters, selectedFiles]);
+  }, [sanitizeParams.parameters]);
 
   const handleSanitize = async () => {
     try {
