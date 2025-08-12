@@ -113,7 +113,9 @@ export const useToolManagement = (): ToolManagementResult => {
         const toolDef = toolDefinitions[toolKey];
         availableTools[toolKey] = {
           ...toolDef,
-          name: t(`home.${toolKey}.title`, toolKey.charAt(0).toUpperCase() + toolKey.slice(1))
+          name: t(`home.${toolKey}.title`, toolKey.charAt(0).toUpperCase() + toolKey.slice(1)),
+          title: t(`home.${toolKey}.title`, toolDef.description || toolKey),
+          description: t(`home.${toolKey}.desc`, toolDef.description || `${toolKey} tool`)
         };
       }
     });

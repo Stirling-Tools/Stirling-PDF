@@ -1,9 +1,11 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useFileContext } from "../contexts/FileContext";
 import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
 import { ToolWorkflowProvider, useToolSelection } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
@@ -12,6 +14,7 @@ import FileManager from "../components/FileManager";
 
 
 function HomePageContent() {
+  const { t } = useTranslation();
   const {
     sidebarRefs,
   } = useSidebarContext();
@@ -21,6 +24,16 @@ function HomePageContent() {
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
 
   const { selectedTool } = useToolSelection();
+
+  // Update document meta when tool changes
+  useDocumentMeta({
+    title: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
+    ogTitle: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
+    ogImage: selectedTool ? `/og_images/${selectedTool.id}.png` : '/og_images/default.png',
+    ogUrl: window.location.href
+  });
 
   // Update file selection context when tool changes
   useEffect(() => {
