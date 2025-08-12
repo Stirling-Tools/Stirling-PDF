@@ -9,11 +9,6 @@ import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { createOperation } from '../../../utils/toolOperationTracker';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 
-export interface ValidationResult {
-  valid: boolean;
-  errors?: string[];
-}
-
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
 
@@ -63,9 +58,6 @@ export interface ToolOperationConfig<TParams = void> {
    * Use for tools with complex routing logic or non-standard processing requirements.
    */
   customProcessor?: (params: TParams, files: File[]) => Promise<File[]>;
-
-  /** Validate parameters before execution. Return validation errors if invalid. */
-  validateParams?: (params: TParams) => ValidationResult;
 
   /** Extract user-friendly error messages from API errors */
   getErrorMessage?: (error: any) => string;
@@ -127,14 +119,6 @@ export const useToolOperation = <TParams = void>(
     if (selectedFiles.length === 0) {
       actions.setError(t('noFileSelected', 'No files selected'));
       return;
-    }
-
-    if (config.validateParams) {
-      const validation = config.validateParams(params);
-      if (!validation.valid) {
-        actions.setError(validation.errors?.join(', ') || 'Invalid parameters');
-        return;
-      }
     }
 
     const validFiles = selectedFiles.filter(file => file.size > 0);

@@ -38,12 +38,6 @@ export const useCompressOperation = () => {
     buildFormData,
     filePrefix: 'compressed_',
     multiFileEndpoint: false, // Individual API calls per file
-    validateParams: (params) => {
-      if (params.compressionMethod === 'filesize' && !params.fileSizeValue) {
-        return { valid: false, errors: [t('compress.validation.fileSizeRequired', 'File size value is required when using filesize method')] };
-      }
-      return { valid: true };
-    },
     getErrorMessage: createStandardErrorHandler(t('compress.error.failed', 'An error occurred while compressing the PDF.'))
   });
 };

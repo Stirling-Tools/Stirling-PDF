@@ -27,14 +27,6 @@ export const useSanitizeOperation = () => {
     buildFormData,
     filePrefix: t('sanitize.filenamePrefix', 'sanitized') + '_',
     multiFileEndpoint: false, // Individual API calls per file
-    validateParams: (params) => {
-      // At least one sanitization option must be selected
-      const hasAnyOption = Object.values(params).some(value => value === true);
-      if (!hasAnyOption) {
-        return { valid: false, errors: [t('sanitize.validation.atLeastOne', 'At least one sanitization option must be selected')] };
-      }
-      return { valid: true };
-    },
-    getErrorMessage: createStandardErrorHandler(t('sanitize.error.failed', 'An error occurred while sanitizing the PDF.'))
+    getErrorMessage: createStandardErrorHandler(t('sanitize.error.failed', 'An error occurred while sanitising the PDF.'))
   });
 };

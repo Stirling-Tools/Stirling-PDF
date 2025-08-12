@@ -35,20 +35,19 @@ export const useSanitizeParameters = () => {
     setParameters(defaultParameters);
   }, []);
 
+  const validateParameters = useCallback(() => {
+    return Object.values(parameters).some(value => value === true);
+  }, [parameters]);
+
   const getEndpointName = () => {
     return 'sanitize-pdf'
   };
-
-  const validateParameters = useCallback(() => {
-    // At least one sanitization option must be selected
-    return Object.values(parameters).some(value => value === true);
-  }, [parameters]);
 
   return {
     parameters,
     updateParameter,
     resetParameters,
-    getEndpointName,
     validateParameters,
+    getEndpointName,
   };
 };
