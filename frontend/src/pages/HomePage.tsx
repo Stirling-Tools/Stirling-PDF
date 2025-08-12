@@ -31,8 +31,8 @@ function HomePageContent() {
     description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
     ogTitle: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
     ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogImage: selectedTool ? `/og_images/${selectedTool.id}.png` : '/og_images/default.png',
-    ogUrl: window.location.href
+    ogImage: selectedTool ? `https://demo.stirlingpdf.com/og_images/${selectedTool.id}.png` : 'https://demo.stirlingpdf.com/og_images/default.png',
+    ogUrl: selectedTool ? `https://demo.stirlingpdf.com${window.location.pathname}` : 'https://demo.stirlingpdf.com'
   });
 
   // Update file selection context when tool changes

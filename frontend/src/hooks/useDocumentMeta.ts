@@ -18,7 +18,7 @@ export const useDocumentMeta = (meta: MetaOptions) => {
     const originalDescription = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
     
     // Store original OpenGraph values for cleanup
-    const ogProperties = ['og:site_name', 'og:locale', 'og:title', 'og:description', 'og:image', 'og:image:width', 'og:image:height', 'og:url'];
+    const ogProperties = ['og:site_name', 'og:locale', 'og:title', 'og:description', 'og:image', 'og:image:width', 'og:image:height', 'og:url', 'og:type'];
     const originalOgValues = new Map<string, string | null>();
     
     ogProperties.forEach(property => {
@@ -75,6 +75,8 @@ export const useDocumentMeta = (meta: MetaOptions) => {
     if (meta.ogUrl) {
       updateOrCreateProperty('og:url', meta.ogUrl);
     }
+    // Always set og:type to website
+    updateOrCreateProperty('og:type', 'website');
 
     // Cleanup function to restore original values
     return () => {
