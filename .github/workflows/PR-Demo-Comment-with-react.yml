@@ -46,7 +46,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout PR
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Setup GitHub App Bot
         if: github.actor != 'dependabot[bot]'
@@ -157,7 +157,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout PR
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Setup GitHub App Bot
         if: github.actor != 'dependabot[bot]'
@@ -169,7 +169,7 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Checkout PR
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ needs.check-comment.outputs.pr_repository }}
           ref: ${{ needs.check-comment.outputs.pr_ref }}
