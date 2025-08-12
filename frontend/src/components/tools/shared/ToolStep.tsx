@@ -7,7 +7,6 @@ import { TooltipTip } from '../../shared/tooltip/TooltipContent';
 
 interface ToolStepContextType {
   visibleStepCount: number;
-  getStepNumber: () => number;
 }
 
 const ToolStepContext = createContext<ToolStepContextType | null>(null);
@@ -22,6 +21,7 @@ export interface ToolStepProps {
   completedMessage?: string;
   helpText?: string;
   showNumber?: boolean;
+  _stepNumber?: number; // Internal prop set by ToolStepContainer
   tooltip?: {
     content?: React.ReactNode;
     tips?: TooltipTip[];
@@ -74,6 +74,7 @@ const ToolStep = ({
   completedMessage,
   helpText,
   showNumber,
+  _stepNumber,
   tooltip
 }: ToolStepProps) => {
   if (!isVisible) return null;
@@ -86,7 +87,7 @@ const ToolStep = ({
     return parent ? parent.visibleStepCount >= 3 : false;
   }, [showNumber, parent]);
 
-  const stepNumber = parent?.getStepNumber?.() || 1;
+  const stepNumber = _stepNumber || 1;
 
   return (
     <Paper
@@ -163,9 +164,24 @@ export interface ToolStepContainerProps {
 }
 
 export const ToolStepContainer = ({ children }: ToolStepContainerProps) => {
-  const stepCounterRef = useRef(0);
+  // Process children and inject step numbers for visible ToolSteps
+  const processedChildren = useMemo(() => {
+    let visibleStepNumber = 1;
+    
+    return React.Children.map(children, (child) => {
+      if (React.isValidElement(child) && child.type === ToolStep) {
+        const isVisible = (child.props as ToolStepProps).isVisible !== false;
+        if (isVisible) {
+          return React.cloneElement(child, {
+            ...child.props,
+            _stepNumber: visibleStepNumber++
+          } as ToolStepProps);
+        }
+      }
+      return child;
+    });
+  }, [children]);
 
-  // Count visible ToolStep children
   const visibleStepCount = useMemo(() => {
     let count = 0;
     React.Children.forEach(children, (child) => {
@@ -178,15 +194,12 @@ export const ToolStepContainer = ({ children }: ToolStepContainerProps) => {
   }, [children]);
 
   const contextValue = useMemo(() => ({
-    visibleStepCount,
-    getStepNumber: () => ++stepCounterRef.current
+    visibleStepCount
   }), [visibleStepCount]);
-
-  stepCounterRef.current = 0;
 
   return (
     <ToolStepContext.Provider value={contextValue}>
-      {children}
+      {processedChildren}
     </ToolStepContext.Provider>
   );
 }

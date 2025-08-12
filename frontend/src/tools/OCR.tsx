@@ -96,8 +96,8 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   );
 
   return (
-    <ToolStepContainer>
-      <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
+    <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
+      <ToolStepContainer>
         {/* Files Step */}
         <ToolStep
           title="Files"
@@ -210,8 +210,8 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             />
           </Stack>
         </ToolStep>
-      </Stack>
-    </ToolStepContainer>
+      </ToolStepContainer>
+    </Stack>
   );
 }
 
