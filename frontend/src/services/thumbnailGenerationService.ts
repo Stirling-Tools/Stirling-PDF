@@ -34,6 +34,12 @@ export class ThumbnailGenerationService {
   private currentCacheSize = 0;
 
   constructor(private maxWorkers: number = 3) {
+    /**
+     * NOTE: PDF rendering requires DOM access (document, canvas, etc.) which isn't 
+     * available in Web Workers. This service attempts Web Worker setup but will
+     * gracefully fallback to optimized main thread processing when Workers fail.
+     * This is expected behavior, not an error.
+     */
     this.initializeWorkers();
   }
 
@@ -43,7 +49,6 @@ export class ThumbnailGenerationService {
     for (let i = 0; i < this.maxWorkers; i++) {
       const workerPromise = new Promise<Worker | null>((resolve) => {
         try {
-          console.log(`Attempting to create worker ${i}...`);
           const worker = new Worker('/thumbnailWorker.js');
           let workerReady = false;
           let pingTimeout: NodeJS.Timeout;
@@ -55,7 +60,6 @@ export class ThumbnailGenerationService {
             if (type === 'PONG') {
               workerReady = true;
               clearTimeout(pingTimeout);
-              console.log(`✓ Worker ${i} is ready and responsive`);
               resolve(worker);
               return;
             }
@@ -83,7 +87,6 @@ export class ThumbnailGenerationService {
           };
           
           worker.onerror = (error) => {
-            console.error(`✗ Worker ${i} failed with error:`, error);
             clearTimeout(pingTimeout);
             worker.terminate();
             resolve(null);
@@ -92,24 +95,21 @@ export class ThumbnailGenerationService {
           // Test worker with timeout
           pingTimeout = setTimeout(() => {
             if (!workerReady) {
-              console.warn(`✗ Worker ${i} timed out (no PONG response)`);
               worker.terminate();
               resolve(null);
             }
-          }, 3000); // Reduced timeout for faster feedback
+          }, 1000); // Quick timeout since we expect failure
           
           // Send PING to test worker
           try {
             worker.postMessage({ type: 'PING' });
           } catch (pingError) {
-            console.error(`✗ Failed to send PING to worker ${i}:`, pingError);
             clearTimeout(pingTimeout);
             worker.terminate();
             resolve(null);
           }
           
         } catch (error) {
-          console.error(`✗ Failed to create worker ${i}:`, error);
           resolve(null);
         }
       });
@@ -120,18 +120,7 @@ export class ThumbnailGenerationService {
     // Wait for all workers to initialize or fail
     Promise.all(workerPromises).then((workers) => {
       this.workers = workers.filter((w): w is Worker => w !== null);
-      const successCount = this.workers.length;
-      const failCount = this.maxWorkers - successCount;
-      
-      console.log(`🔧 Worker initialization complete: ${successCount}/${this.maxWorkers} workers ready`);
-      
-      if (failCount > 0) {
-        console.warn(`⚠️  ${failCount} workers failed to initialize - will use main thread fallback`);
-      }
-      
-      if (successCount === 0) {
-        console.warn('🚨 No Web Workers available - all thumbnail generation will use main thread');
-      }
+      // Workers expected to fail due to PDF.js DOM requirements - no logging needed
     });
   }
 
@@ -145,11 +134,9 @@ export class ThumbnailGenerationService {
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
     if (this.isGenerating) {
-      console.warn('🚨 ThumbnailService: Thumbnail generation already in progress, rejecting new request');
       throw new Error('Thumbnail generation already in progress');
     }
 
-    console.log(`🎬 ThumbnailService: Starting thumbnail generation for ${pageNumbers.length} pages`);
     this.isGenerating = true;
     
     const {
@@ -162,13 +149,11 @@ export class ThumbnailGenerationService {
     try {
       // Check if workers are available, fallback to main thread if not
       if (this.workers.length === 0) {
-        console.warn('No Web Workers available, falling back to main thread processing');
         return await this.generateThumbnailsMainThread(pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
       }
 
       // Split pages across workers
       const workerBatches = this.distributeWork(pageNumbers, this.workers.length);
-      console.log(`🔧 ThumbnailService: Distributing ${pageNumbers.length} pages across ${this.workers.length} workers:`, workerBatches.map(batch => batch.length));
       const jobPromises: Promise<ThumbnailResult[]>[] = [];
 
       for (let i = 0; i < workerBatches.length; i++) {
@@ -177,12 +162,9 @@ export class ThumbnailGenerationService {
 
         const worker = this.workers[i % this.workers.length];
         const jobId = `job-${++this.jobCounter}`;
-        console.log(`🔧 ThumbnailService: Sending job ${jobId} with ${batch.length} pages to worker ${i}:`, batch);
 
         const promise = new Promise<ThumbnailResult[]>((resolve, reject) => {
-          // Add timeout for worker jobs
           const timeout = setTimeout(() => {
-            console.error(`⏰ ThumbnailService: Worker job ${jobId} timed out`);
             this.activeJobs.delete(jobId);
             reject(new Error(`Worker job ${jobId} timed out`));
           }, 60000); // 1 minute timeout
@@ -190,19 +172,14 @@ export class ThumbnailGenerationService {
           // Create job with timeout handling
           this.activeJobs.set(jobId, { 
             resolve: (result: any) => { 
-              console.log(`✅ ThumbnailService: Job ${jobId} completed with ${result.length} thumbnails`);
               clearTimeout(timeout); 
               resolve(result); 
             },
             reject: (error: any) => { 
-              console.error(`❌ ThumbnailService: Job ${jobId} failed:`, error);
               clearTimeout(timeout); 
               reject(error); 
             },
-            onProgress: onProgress ? (progressData: any) => {
-              console.log(`📊 ThumbnailService: Job ${jobId} progress - ${progressData.completed}/${progressData.total} (${progressData.thumbnails.length} new)`);
-              onProgress(progressData);
-            } : undefined
+            onProgress: onProgress
           });
           
           worker.postMessage({
@@ -225,15 +202,11 @@ export class ThumbnailGenerationService {
       
       // Flatten and sort results by page number
       const allThumbnails = results.flat().sort((a, b) => a.pageNumber - b.pageNumber);
-      console.log(`🎯 ThumbnailService: All workers completed, returning ${allThumbnails.length} thumbnails`);
-      
       return allThumbnails;
       
     } catch (error) {
-      console.error('Web Worker thumbnail generation failed, falling back to main thread:', error);
       return await this.generateThumbnailsMainThread(pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
     } finally {
-      console.log('🔄 ThumbnailService: Resetting isGenerating flag');
       this.isGenerating = false;
     }
   }
@@ -248,14 +221,11 @@ export class ThumbnailGenerationService {
     quality: number,
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
-    console.log(`🔧 ThumbnailService: Fallback to main thread for ${pageNumbers.length} pages`);
-    
     // Import PDF.js dynamically for main thread
     const { getDocument } = await import('pdfjs-dist');
     
     // Load PDF once
     const pdf = await getDocument({ data: pdfArrayBuffer }).promise;
-    console.log(`✓ ThumbnailService: PDF loaded on main thread`);
     
     
     const allResults: ThumbnailResult[] = [];

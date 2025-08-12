@@ -94,25 +94,19 @@ const PageThumbnail = React.memo(({
   // Listen for ready thumbnails from Web Workers (only if no existing thumbnail)
   useEffect(() => {
     if (thumbnailUrl) {
-      console.log(`📸 PageThumbnail: Page ${page.pageNumber} already has thumbnail, skipping worker listener`);
       return; // Skip if we already have a thumbnail
     }
 
-    console.log(`📸 PageThumbnail: Setting up worker listener for page ${page.pageNumber} (${page.id})`);
-
     const handleThumbnailReady = (event: CustomEvent) => {
       const { pageNumber, thumbnail, pageId } = event.detail;
-      console.log(`📸 PageThumbnail: Received worker thumbnail for page ${pageNumber}, looking for page ${page.pageNumber} (${page.id})`);
 
       if (pageNumber === page.pageNumber && pageId === page.id) {
-        console.log(`✓ PageThumbnail: Thumbnail matched for page ${page.pageNumber}, setting URL`);
         setThumbnailUrl(thumbnail);
       }
     };
 
     window.addEventListener('thumbnailReady', handleThumbnailReady as EventListener);
     return () => {
-      console.log(`📸 PageThumbnail: Cleaning up worker listener for page ${page.pageNumber}`);
       window.removeEventListener('thumbnailReady', handleThumbnailReady as EventListener);
     };
   }, [page.pageNumber, page.id, thumbnailUrl]);

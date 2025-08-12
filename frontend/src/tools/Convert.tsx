@@ -3,7 +3,7 @@ import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
+import { useFileActions, useFileState } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
@@ -20,7 +20,10 @@ import { BaseToolProps } from "../types/tool";
 
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode, activeFiles } = useFileContext();
+  const { actions } = useFileActions();
+  const { selectors } = useFileState();
+  const setCurrentMode = actions.setCurrentMode;
+  const activeFiles = selectors.getFiles();
   const { selectedFiles } = useToolFileSelection();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 

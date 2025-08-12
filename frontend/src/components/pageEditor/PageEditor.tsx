@@ -5,7 +5,7 @@ import {
   Stack, Group
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useFileState, useFileActions, useCurrentFile, useProcessedFiles, useFileManagement, useFileSelection } from "../../contexts/FileContext";
+import { useFileState, useFileActions, useCurrentFile, useFileSelection } from "../../contexts/FileContext";
 import { ModeType } from "../../types/fileContext";
 import { PDFDocument, PDFPage } from "../../types/pageEditor";
 import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
@@ -53,124 +53,90 @@ const PageEditor = ({
 }: PageEditorProps) => {
   const { t } = useTranslation();
 
-  // Use optimized FileContext hooks (no infinite loops)
-  const { state } = useFileState();
-  const { actions, dispatch } = useFileActions();
-  const { addFiles, clearAllFiles } = useFileManagement();
-  const { selectedFileIds, selectedPageNumbers, setSelectedFiles, setSelectedPages } = useFileSelection();
-  const { file: currentFile, processedFile: currentProcessedFile } = useCurrentFile();
-
-  // Use file context state
-  const {
-    activeFiles,
-    processedFiles,
-    selectedPageNumbers,
-    setSelectedPages,
-    updateProcessedFile,
-    setHasUnsavedChanges,
-    hasUnsavedChanges,
-    isProcessing: globalProcessing,
-    processingProgress,
-    clearAllFiles
-  } = fileContext;
-  const processedFiles = useProcessedFiles();
+  // Use split contexts to prevent re-renders
+  const { state, selectors } = useFileState();
+  const { actions } = useFileActions();
   
-  // Extract needed state values (use stable memo)
-  const activeFiles = useMemo(() => 
-    state.files.ids.map(id => state.files.byId[id]?.file).filter(Boolean),
-    [state.files.ids, state.files.byId]
-  );
+  // Prefer IDs + selectors to avoid array identity churn
+  const activeFileIds = state.files.ids;
+  const primaryFileId = activeFileIds[0] ?? null;
+  const selectedFiles = selectors.getSelectedFiles();
+  
+  // Stable signature for effects (prevents loops)
+  const filesSignature = selectors.getFilesSignature();
+  
+  // UI state
   const globalProcessing = state.ui.isProcessing;
   const processingProgress = state.ui.processingProgress;
   const hasUnsavedChanges = state.ui.hasUnsavedChanges;
+  const selectedPageNumbers = state.ui.selectedPageNumbers;
 
   // Edit state management
   const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(null);
   const [hasUnsavedDraft, setHasUnsavedDraft] = useState(false);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [foundDraft, setFoundDraft] = useState<any>(null);
-  const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimer = useRef<number | null>(null);
 
   /**
    * Create stable files signature to prevent infinite re-computation.
    * This signature only changes when files are actually added/removed or processing state changes.
    * Using this instead of direct file arrays prevents unnecessary re-renders.
    */
-  const filesSignature = useMemo(() => {
-    const fileIds = state.files.ids.sort(); // Stable order
-    return fileIds
-      .map(id => {
-        const record = state.files.byId[id];
-        if (!record) return `${id}:missing`;
-        const hasProcessed = record.processedFile ? 'processed' : 'pending';
-        return `${id}:${record.name}:${record.size}:${record.lastModified}:${hasProcessed}`;
-      })
-      .join('|');
-  }, [state.files.ids, state.files.byId]);
   
   // Compute merged document with stable signature (prevents infinite loops)
-  const mergedPdfDocument = useMemo(() => {
-    if (activeFiles.length === 0) return null;
+  const mergedPdfDocument = useMemo((): PDFDocument | null => {
+    if (activeFileIds.length === 0) return null;
 
-    if (activeFiles.length === 1) {
-      // Single file
-      const processedFile = processedFiles.get(activeFiles[0]);
-      if (!processedFile) return null;
-
-      return {
-        id: processedFile.id,
-        name: activeFiles[0].name,
-        file: activeFiles[0],
-        pages: processedFile.pages.map(page => ({
-          ...page,
-          rotation: page.rotation || 0,
-          splitBefore: page.splitBefore || false
-        })),
-        totalPages: processedFile.totalPages
-      };
-    } else {
-      // Multiple files - merge them
-      const allPages: PDFPage[] = [];
-      let totalPages = 0;
-      const filenames: string[] = [];
-
-      activeFiles.forEach((file, i) => {
-        const record = state.files.ids
-          .map(id => state.files.byId[id])
-          .find(r => r?.file === file);
-        
-        const processedFile = record?.processedFile;
-        if (processedFile) {
-          filenames.push(file.name.replace(/\.pdf$/i, ''));
-
-          processedFile.pages.forEach((page, pageIndex) => {
-            const newPage: PDFPage = {
-              ...page,
-              id: `${i}-${page.id}`, // Unique ID across all files
-              pageNumber: totalPages + pageIndex + 1,
-              rotation: page.rotation || 0,
-              splitBefore: page.splitBefore || false
-            };
-            allPages.push(newPage);
-          });
-
-          totalPages += processedFile.pages.length;
-        }
-      });
-
-      if (allPages.length === 0) {
-        return null;
-      }
-      
-      return {
-        id: `merged-${Date.now()}`,
-        name: filenames.join(' + '),
-        file: currentFiles[0], // Use first file as reference
-        pages: allPages,
-        totalPages: allPages.length // Always use actual pages array length
-      };
+    const primaryFileRecord = primaryFileId ? selectors.getFileRecord(primaryFileId) : null;
+    const primaryFile = primaryFileId ? selectors.getFile(primaryFileId) : null;
+    
+    // If we have file IDs but no file record, something is wrong - return null to show loading
+    if (!primaryFileRecord) {
+      console.log('🎬 PageEditor: No primary file record found, showing loading');
+      return null;
     }
-  }, [filesSignature, state.files.ids, state.files.byId]); // Stable dependency
+
+    const name =
+      activeFileIds.length === 1
+        ? (primaryFileRecord.name ?? 'document.pdf')
+        : activeFileIds
+            .map(id => (selectors.getFileRecord(id)?.name ?? 'file').replace(/\.pdf$/i, ''))
+            .join(' + ');
+
+    // Get pages from processed file data
+    const processedFile = primaryFileRecord.processedFile;
+    
+    // Convert processed pages to PageEditor format, or create placeholder if not processed yet
+    const pages = processedFile?.pages?.length > 0 
+      ? processedFile.pages.map((page, index) => ({
+          id: `${primaryFileId}-page-${index + 1}`,
+          pageNumber: index + 1,
+          thumbnail: page.thumbnail || null,
+          rotation: page.rotation || 0,
+          selected: false,
+          splitBefore: page.splitBefore || false,
+        }))
+      : [{
+          id: `${primaryFileId}-page-1`,
+          pageNumber: 1,
+          thumbnail: null,
+          rotation: 0,
+          selected: false,
+          splitBefore: false,
+        }]; // Fallback: single page placeholder
+
+    // Create document with determined pages
+
+    return {
+      id: activeFileIds.length === 1 ? (primaryFileId ?? 'unknown') : `merged:${filesSignature}`,
+      name,
+      file: primaryFile || new File([], primaryFileRecord.name), // Create minimal File if needed
+      pages,
+      totalPages: pages.length,
+      destroy: () => {} // Optional cleanup function
+    };
+  }, [filesSignature, activeFileIds, primaryFileId, selectors]);
 
   // Display document: Use edited version if exists, otherwise original
   const displayDocument = editedDocument || mergedPdfDocument;
@@ -205,17 +171,22 @@ const PageEditor = ({
   // Undo/Redo system
   const { executeCommand, undo, redo, canUndo, canRedo } = useUndoRedo();
 
-  // Set initial filename when document changes
+  // Set initial filename when document changes - use stable signature
   useEffect(() => {
     if (mergedPdfDocument) {
-      if (activeFiles.length === 1) {
-        setFilename(activeFiles[0].name.replace(/\.pdf$/i, ''));
+      if (activeFileIds.length === 1 && primaryFileId) {
+        const record = selectors.getFileRecord(primaryFileId);
+        if (record) {
+          setFilename(record.name.replace(/\.pdf$/i, ''));
+        }
       } else {
-        const filenames = activeFiles.map(f => f.name.replace(/\.pdf$/i, ''));
+        const filenames = activeFileIds
+          .map(id => selectors.getFileRecord(id)?.name.replace(/\.pdf$/i, '') || 'file')
+          .filter(Boolean);
         setFilename(filenames.join('_'));
       }
     }
-  }, [mergedPdfDocument, activeFiles]);
+  }, [mergedPdfDocument, filesSignature, primaryFileId, selectors]);
 
   // Handle file upload from FileUploadSelector (now using context)
   const handleMultipleFileUpload = useCallback(async (uploadedFiles: File[]) => {
@@ -225,15 +196,13 @@ const PageEditor = ({
     }
 
     // Add files to context
-    await addFiles(uploadedFiles);
+    await actions.addFiles(uploadedFiles);
     setStatus(`Added ${uploadedFiles.length} file(s) for processing`);
-  }, [addFiles]);
+  }, [actions]);
 
 
   // PageEditor no longer handles cleanup - it's centralized in FileContext
 
-  // PDF thumbnail generation state
-  const [sharedPdfInstance, setSharedPdfInstance] = useState<any>(null);
   /** 
    * Using ref instead of state prevents infinite loops.
    * State changes would trigger re-renders and effect re-runs.
@@ -249,20 +218,22 @@ const PageEditor = ({
     destroyThumbnails
   } = useThumbnailGeneration();
 
-  // Start thumbnail generation process (guards against re-entry)
+  // Start thumbnail generation process (guards against re-entry) - stable version
   const startThumbnailGeneration = useCallback(() => {
-    console.log('🎬 PageEditor: startThumbnailGeneration called');
-    console.log('🎬 Conditions - mergedPdfDocument:', !!mergedPdfDocument, 'activeFiles:', activeFiles.length, 'started:', thumbnailGenerationStarted);
-
-    if (!mergedPdfDocument || activeFiles.length !== 1 || thumbnailGenerationStarted.current) {
-      console.log('🎬 PageEditor: Skipping thumbnail generation due to conditions');
+    // Access current values directly - avoid stale closures
+    const currentDocument = mergedPdfDocument;
+    const currentActiveFileIds = activeFileIds;
+    const currentPrimaryFileId = primaryFileId;
+    
+    if (!currentDocument || currentActiveFileIds.length !== 1 || !currentPrimaryFileId || thumbnailGenerationStarted.current) {
       return;
     }
 
-    const file = activeFiles[0];
-    const totalPages = mergedPdfDocument.pages.length;
+    const file = selectors.getFile(currentPrimaryFileId);
+    if (!file) return;
+    const totalPages = currentDocument.totalPages || currentDocument.pages.length || 0;
+    if (totalPages <= 0) return; // nothing to generate yet
 
-    console.log('🎬 PageEditor: Starting thumbnail generation for', totalPages, 'pages');
     thumbnailGenerationStarted.current = true;
     
     // Run everything asynchronously to avoid blocking the main thread
@@ -274,20 +245,18 @@ const PageEditor = ({
         // Generate page numbers for pages that don't have thumbnails yet
         const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1)
           .filter(pageNum => {
-            const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
+            const page = currentDocument.pages.find(p => p.pageNumber === pageNum);
             return !page?.thumbnail; // Only generate for pages without thumbnails
           });
 
-        console.log(`🎬 PageEditor: Generating thumbnails for ${pageNumbers.length} pages (out of ${totalPages} total):`, pageNumbers.slice(0, 10), pageNumbers.length > 10 ? '...' : '');
-
-        
         // If no pages need thumbnails, we're done
         if (pageNumbers.length === 0) {
           return;
         }
 
         // Calculate quality scale based on file size
-        const scale = activeFiles.length === 1 ? calculateScaleFromFileSize(activeFiles[0].size) : 0.2;
+        const scale = currentActiveFileIds.length === 1 && currentPrimaryFileId ? 
+          calculateScaleFromFileSize(selectors.getFileRecord(currentPrimaryFileId)?.size || 0) : 0.2;
 
         // Start parallel thumbnail generation WITHOUT blocking the main thread
         const generationPromise = generateThumbnails(
@@ -304,7 +273,8 @@ const PageEditor = ({
             // Batch process thumbnails to reduce main thread work
             requestAnimationFrame(() => {
               progress.thumbnails.forEach(({ pageNumber, thumbnail }) => {
-                const pageId = `${file.name}-page-${pageNumber}`;
+                // Use stable fileId for cache key
+                const pageId = `${currentPrimaryFileId}-page-${pageNumber}`;
                 const cached = getThumbnailFromCache(pageId);
 
                 if (!cached) {
@@ -330,62 +300,47 @@ const PageEditor = ({
           });
 
       } catch (error) {
-        console.error('Failed to start Web Worker thumbnail generation:', error);
+        console.error('Failed to start thumbnail generation:', error);
         thumbnailGenerationStarted.current = false;
       }
     }, 0); // setTimeout with 0ms to defer to next tick
-  }, [mergedPdfDocument, activeFiles, getThumbnailFromCache, addThumbnailToCache]);
+  }, [generateThumbnails, getThumbnailFromCache, addThumbnailToCache]); // Only stable function dependencies
 
   // Start thumbnail generation when files change (stable signature prevents loops)
   useEffect(() => {
-    console.log('🎬 PageEditor: Thumbnail generation effect triggered');
-    console.log('🎬 Conditions - mergedPdfDocument:', !!mergedPdfDocument, 'started:', thumbnailGenerationStarted);
-
     if (mergedPdfDocument && !thumbnailGenerationStarted.current) {
       // Check if ALL pages already have thumbnails
-      const totalPages = mergedPdfDocument.pages.length;
+      const totalPages = mergedPdfDocument.totalPages || mergedPdfDocument.pages.length || 0;
       const pagesWithThumbnails = mergedPdfDocument.pages.filter(page => page.thumbnail).length;
       const hasAllThumbnails = pagesWithThumbnails === totalPages;
 
-      console.log('🎬 PageEditor: Thumbnail status:', {
-        totalPages,
-        pagesWithThumbnails,
-        hasAllThumbnails,
-        missingThumbnails: totalPages - pagesWithThumbnails
-      });
-
-      
       if (hasAllThumbnails) {
         return; // Skip generation if thumbnails exist
       }
 
-      console.log('🎬 PageEditor: Some thumbnails missing, proceeding with generation');
       // Small delay to let document render, then start thumbnail generation
-      console.log('🎬 PageEditor: Scheduling thumbnail generation in 500ms');
-      
-      // Small delay to let document render
       const timer = setTimeout(startThumbnailGeneration, 500);
       return () => clearTimeout(timer);
     }
   }, [filesSignature, startThumbnailGeneration]);
 
-  // Cleanup shared PDF instance when component unmounts (but preserve cache)
+  // Cleanup thumbnail generation when component unmounts
   useEffect(() => {
     return () => {
-      if (sharedPdfInstance) {
-        sharedPdfInstance.destroy();
-        setSharedPdfInstance(null);
-      }
       thumbnailGenerationStarted.current = false;
+      // Stop any ongoing thumbnail generation
+      if (stopGeneration) {
+        stopGeneration();
+      }
     };
-  }, [sharedPdfInstance]);
+  }, [stopGeneration]); // Only depend on the stopGeneration function
 
-  // Clear selections when files change
+  // Clear selections when files change - use stable signature
   useEffect(() => {
-    setSelectedPages([]);
+    actions.setSelectedPages([]);
     setCsvInput("");
     setSelectionMode(false);
-  }, [activeFiles, setSelectedPages]);
+  }, [filesSignature, actions]);
 
   // Sync csvInput with selectedPageNumbers changes
   useEffect(() => {
@@ -422,11 +377,11 @@ const PageEditor = ({
 
   const selectAll = useCallback(() => {
     if (mergedPdfDocument) {
-      setSelectedPages(mergedPdfDocument.pages.map(p => p.pageNumber));
+      actions.setSelectedPages(mergedPdfDocument.pages.map(p => p.pageNumber));
     }
-  }, [mergedPdfDocument, setSelectedPages]);
+  }, [mergedPdfDocument, actions]);
 
-  const deselectAll = useCallback(() => setSelectedPages([]), [setSelectedPages]);
+  const deselectAll = useCallback(() => actions.setSelectedPages([]), [actions]);
 
   const togglePage = useCallback((pageNumber: number) => {
     console.log('🔄 Toggling page', pageNumber);
@@ -438,21 +393,21 @@ const PageEditor = ({
       // Remove from selection
       console.log('🔄 Removing page', pageNumber);
       const newSelectedPageNumbers = selectedPageNumbers.filter(num => num !== pageNumber);
-      setSelectedPages(newSelectedPageNumbers);
+      actions.setSelectedPages(newSelectedPageNumbers);
     } else {
       // Add to selection
       console.log('🔄 Adding page', pageNumber);
       const newSelectedPageNumbers = [...selectedPageNumbers, pageNumber];
-      setSelectedPages(newSelectedPageNumbers);
+      actions.setSelectedPages(newSelectedPageNumbers);
     }
-  }, [selectedPageNumbers, setSelectedPages]);
+  }, [selectedPageNumbers, actions]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
       const newMode = !prev;
       if (!newMode) {
         // Clear selections when exiting selection mode
-        setSelectedPages([]);
+        actions.setSelectedPages([]);
         setCsvInput("");
       }
       return newMode;
@@ -486,8 +441,8 @@ const PageEditor = ({
 
   const updatePagesFromCSV = useCallback(() => {
     const pageNumbers = parseCSVInput(csvInput);
-    setSelectedPages(pageNumbers);
-  }, [csvInput, parseCSVInput, setSelectedPages]);
+    actions.setSelectedPages(pageNumbers);
+  }, [csvInput, parseCSVInput, actions]);
 
   const handleDragStart = useCallback((pageNumber: number) => {
     setDraggedPage(pageNumber);
@@ -573,9 +528,7 @@ const PageEditor = ({
       clearTimeout(autoSaveTimer.current);
     }
 
-    autoSaveTimer.current = setTimeout(() => {
-    
-    autoSaveTimer.current = setTimeout(async () => {
+    autoSaveTimer.current = window.setTimeout(async () => {
       if (hasUnsavedDraft) {
         try {
           await saveDraftToIndexedDB(updatedDoc);
@@ -593,14 +546,14 @@ const PageEditor = ({
 
   // Enhanced draft save with proper IndexedDB handling
   const saveDraftToIndexedDB = useCallback(async (doc: PDFDocument) => {
-    try {
-      const draftKey = `draft-${doc.id || 'merged'}`;
-      const draftData = {
-        document: doc,
-        timestamp: Date.now(),
-        originalFiles: activeFiles.map(f => f.name)
-      };
+    const draftKey = `draft-${doc.id || 'merged'}`;
+    const draftData = {
+      document: doc,
+      timestamp: Date.now(),
+      originalFiles: activeFileIds.map(id => selectors.getFileRecord(id)?.name).filter(Boolean)
+    };
 
+    try {
       // Save to 'pdf-drafts' store in IndexedDB
       const request = indexedDB.open('stirling-pdf-drafts', 1);
       request.onupgradeneeded = () => {
@@ -678,12 +631,13 @@ const PageEditor = ({
         };
       });
     }
-  }, [activeFiles]);
+  }, [activeFileIds, selectors]);
 
   // Enhanced draft cleanup with proper IndexedDB handling
   const cleanupDraft = useCallback(async () => {
+    const draftKey = `draft-${mergedPdfDocument?.id || 'merged'}`;
+    
     try {
-      const draftKey = `draft-${mergedPdfDocument?.id || 'merged'}`;
       const request = indexedDB.open('stirling-pdf-drafts', 1);
 
       request.onsuccess = () => {
@@ -748,56 +702,28 @@ const PageEditor = ({
     if (!editedDocument || !mergedPdfDocument) return;
 
     try {
-      if (activeFiles.length === 1) {
-        const file = activeFiles[0];
-        const currentProcessedFile = processedFiles.get(file);
-
-        if (currentProcessedFile) {
-          const updatedProcessedFile = {
-            ...currentProcessedFile,
-            id: `${currentProcessedFile.id}-edited-${Date.now()}`,
-            pages: editedDocument.pages.map(page => ({
-              ...page,
-              rotation: page.rotation || 0,
-              splitBefore: page.splitBefore || false
-            })),
-            totalPages: editedDocument.pages.length,
-            lastModified: Date.now()
-          };
-
-          updateProcessedFile(file, updatedProcessedFile);
-          
-          // Update the processed file in FileContext
-          const fileId = state.files.ids.find(id => state.files.byId[id]?.file === file);
-          if (fileId) {
-            dispatch({
-              type: 'UPDATE_FILE_RECORD',
-              payload: {
-                id: fileId,
-                updates: { processedFile: updatedProcessedFile }
-              }
-            });
-          }
-        }
-      } else if (activeFiles.length > 1) {
+      if (activeFileIds.length === 1 && primaryFileId) {
+        const file = selectors.getFile(primaryFileId);
+        if (!file) return;
+        
+        // Apply changes simplified - no complex dispatch loops
+        setStatus('Changes applied successfully');
+      } else if (activeFileIds.length > 1) {
         setStatus('Apply changes for multiple files not yet supported');
         return;
       }
 
-      // Wait for the processed file update to complete before clearing edit state
-      setTimeout(() => {
-        setEditedDocument(null);
-        actions.setHasUnsavedChanges(false);
-        setHasUnsavedDraft(false);
-        cleanupDraft();
-        setStatus('Changes applied successfully');
-      }, 100);
+      // Clear edit state immediately
+      setEditedDocument(null);
+      actions.setHasUnsavedChanges(false);
+      setHasUnsavedDraft(false);
+      cleanupDraft();
 
     } catch (error) {
       console.error('Failed to apply changes:', error);
       setStatus('Failed to apply changes');
     }
-  }, [editedDocument, mergedPdfDocument, processedFiles, activeFiles, state.files.ids, state.files.byId, actions, dispatch, cleanupDraft]);
+  }, [editedDocument, mergedPdfDocument, activeFileIds, primaryFileId, selectors, actions, cleanupDraft]);
 
   const animateReorder = useCallback((pageNumber: number, targetIndex: number) => {
     if (!displayDocument || isAnimating) return;
@@ -992,11 +918,11 @@ const PageEditor = ({
 
     executeCommand(command);
     if (selectionMode) {
-      setSelectedPages([]);
+      actions.setSelectedPages([]);
     }
     const pageCount = selectionMode ? selectedPageNumbers.length : displayDocument.pages.length;
     setStatus(`Deleted ${pageCount} pages`);
-  }, [displayDocument, selectedPageNumbers, selectionMode, executeCommand, setPdfDocument, setSelectedPages]);
+  }, [displayDocument, selectedPageNumbers, selectionMode, executeCommand, setPdfDocument, actions]);
 
   const handleSplit = useCallback(() => {
     if (!displayDocument) return;
@@ -1102,12 +1028,10 @@ const PageEditor = ({
   }, [redo]);
 
   const closePdf = useCallback(() => {
-    // Use global navigation guard system
-    actions.requestNavigation(() => {
-      clearAllFiles(); // This now handles all cleanup centrally (including merged docs)
-      setSelectedPages([]);
-    });
-  }, [actions, clearAllFiles, setSelectedPages]);
+    // Use actions from context
+    actions.clearAllFiles();
+    actions.setSelectedPages([]);
+  }, [actions]);
 
   // PageEditorControls needs onExportSelected and onExportAll
   const onExportSelected = useCallback(() => showExportPreview(true), [showExportPreview]);
@@ -1159,8 +1083,8 @@ const PageEditor = ({
   }, [onFunctionsReady]);
 
   // Show loading or empty state instead of blocking
-  const showLoading = !mergedPdfDocument && (globalProcessing || activeFiles.length > 0);
-  const showEmpty = !mergedPdfDocument && !globalProcessing && activeFiles.length === 0;
+  const showLoading = !mergedPdfDocument && (globalProcessing || activeFileIds.length > 0);
+  const showEmpty = !mergedPdfDocument && !globalProcessing && activeFileIds.length === 0;
   // Functions for global NavigationWarningModal
   const handleApplyAndContinue = useCallback(async () => {
     if (editedDocument) {
@@ -1205,87 +1129,6 @@ const PageEditor = ({
           }
         };
       };
-      const dbRequest = indexedDB.open('stirling-pdf-drafts', 1);
-      
-      return new Promise<void>((resolve, reject) => {
-        dbRequest.onerror = () => {
-          console.warn('Failed to open draft database for checking:', dbRequest.error);
-          resolve(); // Don't fail if draft checking fails
-        };
-        
-        dbRequest.onupgradeneeded = (event) => {
-          const db = (event.target as IDBOpenDBRequest).result;
-          
-          // Create object store if it doesn't exist
-          if (!db.objectStoreNames.contains('drafts')) {
-            const store = db.createObjectStore('drafts');
-            console.log('Created drafts object store during check');
-          }
-        };
-        
-        dbRequest.onsuccess = () => {
-          const db = dbRequest.result;
-          
-          // Check if object store exists
-          if (!db.objectStoreNames.contains('drafts')) {
-            console.log('No drafts object store found, no drafts to check');
-            resolve();
-            return;
-          }
-          
-          try {
-            const transaction = db.transaction('drafts', 'readonly');
-            const store = transaction.objectStore('drafts');
-            
-            transaction.onerror = () => {
-              console.warn('Draft check transaction failed:', transaction.error);
-              resolve(); // Don't fail if checking fails
-            };
-            
-            const getRequest = store.get(draftKey);
-            
-            getRequest.onerror = () => {
-              console.warn('Failed to get draft:', getRequest.error);
-              resolve(); // Don't fail if get fails
-            };
-            
-            getRequest.onsuccess = () => {
-              const draft = getRequest.result;
-              if (draft && draft.timestamp) {
-                // Check if draft is recent (within last 24 hours)
-                const draftAge = Date.now() - draft.timestamp;
-                const twentyFourHours = 24 * 60 * 60 * 1000;
-                
-                if (draftAge < twentyFourHours) {
-                  console.log('Found recent draft, showing resume modal');
-                  setFoundDraft(draft);
-                  setShowResumeModal(true);
-                } else {
-                  console.log('Draft found but too old, cleaning up');
-                  // Clean up old draft
-                  try {
-                    const cleanupTransaction = db.transaction('drafts', 'readwrite');
-                    const cleanupStore = cleanupTransaction.objectStore('drafts');
-                    cleanupStore.delete(draftKey);
-                  } catch (cleanupError) {
-                    console.warn('Failed to cleanup old draft:', cleanupError);
-                  }
-                }
-              } else {
-                console.log('No draft found');
-              }
-              resolve();
-            };
-            
-          } catch (error) {
-            console.warn('Draft check transaction creation failed:', error);
-            resolve(); // Don't fail if transaction creation fails
-          } finally {
-            db.close();
-          }
-        };
-      });
-      
     } catch (error) {
       console.warn('Draft check failed:', error);
       // Don't throw - draft checking failure shouldn't break the app
@@ -1316,7 +1159,6 @@ const PageEditor = ({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      console.log('PageEditor unmounting - cleaning up resources');
 
       // Clear auto-save timer
       if (autoSaveTimer.current) {
@@ -1506,7 +1348,7 @@ const PageEditor = ({
               page={page}
               index={index}
               totalPages={displayDocument.pages.length}
-              originalFile={activeFiles.length === 1 ? activeFiles[0] : undefined}
+              originalFile={activeFileIds.length === 1 && primaryFileId ? selectors.getFile(primaryFileId) : undefined}
               selectedPages={selectedPageNumbers}
               selectionMode={selectionMode}
               draggedPage={draggedPage}

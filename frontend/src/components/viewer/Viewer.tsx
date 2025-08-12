@@ -13,7 +13,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useLocalStorage } from "@mantine/hooks";
 import { fileStorage } from "../../services/fileStorage";
 import SkeletonLoader from '../shared/SkeletonLoader';
-import { useFileContext } from "../../contexts/FileContext";
+import { useFileState, useFileActions, useCurrentFile, useProcessedFiles } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
@@ -150,7 +150,17 @@ const Viewer = ({
   const theme = useMantineTheme();
 
   // Get current file from FileContext
-  const { getCurrentFile, getCurrentProcessedFile, clearAllFiles, addFiles, activeFiles } = useFileContext();
+  const { selectors } = useFileState();
+  const { actions } = useFileActions();
+  const currentFile = useCurrentFile();
+  const processedFiles = useProcessedFiles();
+  
+  // Map legacy functions
+  const getCurrentFile = () => currentFile.file;
+  const getCurrentProcessedFile = () => currentFile.file ? processedFiles.getProcessedFile(currentFile.file) : undefined;
+  const clearAllFiles = actions.clearAllFiles;
+  const addFiles = actions.addFiles;
+  const activeFiles = selectors.getFiles();
 
   // Tab management for multiple files
   const [activeTab, setActiveTab] = useState<string>("0");
@@ -465,7 +475,7 @@ const Viewer = ({
             >
               <Tabs value={activeTab} onChange={(value) => handleTabChange(value || "0")}>
                 <Tabs.List>
-                  {activeFiles.map((file, index) => (
+                  {activeFiles.map((file: any, index: number) => (
                     <Tabs.Tab key={index} value={index.toString()}>
                       {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name}
                     </Tabs.Tab>

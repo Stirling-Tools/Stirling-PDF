@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Button, Text, Center, Box, Notification, TextInput, LoadingOverlay, Modal, Alert, Container,
   Stack, Group
@@ -6,7 +6,7 @@ import {
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useFileContext, useToolFileSelection, useProcessedFiles, useFileState, useFileManagement } from '../../contexts/FileContext';
+import { useToolFileSelection, useProcessedFiles, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
 import { FileOperation, createStableFileId } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
@@ -54,33 +54,41 @@ const FileEditor = ({
   }, [supportedExtensions]);
 
   // Use optimized FileContext hooks
-  const { state } = useFileState();
+  const { state, selectors } = useFileState();
   const { addFiles, removeFiles } = useFileManagement();
   const processedFiles = useProcessedFiles(); // Now gets real processed files
   
-  // Extract needed values from state
-  const activeFiles = state.files.ids.map(id => state.files.byId[id]?.file).filter(Boolean);
+  // Extract needed values from state (memoized to prevent infinite loops)
+  const activeFiles = useMemo(() => selectors.getFiles(), [selectors.getFilesSignature()]);
   const selectedFileIds = state.ui.selectedFileIds;
   const isProcessing = state.ui.isProcessing;
   
-  // Legacy compatibility for existing code
-  const setContextSelectedFiles = (fileIds: string[]) => {
-    // This function is used for FileEditor's own selection, not tool selection
-    console.log('FileEditor setContextSelectedFiles called with:', fileIds);
-  };
+  // Get the real context actions
+  const { actions } = useFileActions();
+  
+  // Create a stable ref to access current selected files and actions without dependency
+  const selectedFileIdsRef = useRef<string[]>([]);
+  const actionsRef = useRef(actions);
+  selectedFileIdsRef.current = selectedFileIds;
+  actionsRef.current = actions;
+  
+  // Legacy compatibility for existing code - now actually updates context (completely stable)
+  const setContextSelectedFiles = useCallback((fileIds: string[] | ((prev: string[]) => string[])) => {
+    if (typeof fileIds === 'function') {
+      // Handle callback pattern - get current state from ref
+      const result = fileIds(selectedFileIdsRef.current);
+      actionsRef.current.setSelectedFiles(result);
+    } else {
+      // Handle direct array pattern
+      actionsRef.current.setSelectedFiles(fileIds);
+    }
+  }, []); // No dependencies at all - completely stable
   
   const setCurrentView = (mode: any) => {
     // Will be handled by parent component actions
     console.log('FileEditor setCurrentView called with:', mode);
   };
 
-  // Get file selection context
-  const {
-    selectedFiles: toolSelectedFiles,
-    setSelectedFiles: setToolSelectedFiles,
-    maxFiles,
-    isToolMode
-  } = useFileSelection();
   // Get tool file selection context (replaces FileSelectionContext)
   const { 
     selectedFiles: toolSelectedFiles, 
@@ -127,6 +135,12 @@ const FileEditor = ({
 
   // Get selected file IDs from context (defensive programming)
   const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
+  
+  // Create refs for frequently changing values to stabilize callbacks
+  const contextSelectedIdsRef = useRef<string[]>([]);
+  const filesDataRef = useRef<any[]>([]);
+  contextSelectedIdsRef.current = contextSelectedIds;
+  filesDataRef.current = files;
 
   // Map context selections to local file IDs for UI display
   const localSelectedIds = files
@@ -155,7 +169,7 @@ const FileEditor = ({
   useEffect(() => {
     // Check if the actual content has changed, not just references
     const currentActiveFileNames = activeFiles.map(f => f.name);
-    const currentProcessedFilesSize = processedFiles.size;
+    const currentProcessedFilesSize = processedFiles.processedFiles.size;
 
     const activeFilesChanged = JSON.stringify(currentActiveFileNames) !== JSON.stringify(lastActiveFilesRef.current);
     const processedFilesChanged = currentProcessedFilesSize !== lastProcessedFilesRef.current;
@@ -180,7 +194,7 @@ const FileEditor = ({
             const file = activeFiles[i];
 
             // Try to get thumbnail from processed file first
-            const processedFile = processedFiles.get(file);
+            const processedFile = processedFiles.processedFiles.get(file);
             let thumbnail = processedFile?.pages?.[0]?.thumbnail;
 
             // If no thumbnail from processed file, try to generate one
@@ -217,10 +231,8 @@ const FileEditor = ({
             const convertedFile = {
               id: createStableFileId(file), // Use same ID function as context
               name: file.name,
-              pageCount: processedFile?.totalPages || Math.floor(Math.random() * 20) + 1,
-              thumbnail: thumbnail || '',
               pageCount: pageCount,
-              thumbnail,
+              thumbnail: thumbnail || '',
               size: file.size,
               file,
             };
@@ -325,8 +337,8 @@ const FileEditor = ({
                 }
               };
 
-              recordOperation(file.name, operation);
-              markOperationApplied(file.name, operationId);
+              // Legacy operation tracking - now handled by FileContext
+              console.log('ZIP extraction operation recorded:', operation);
 
               
               // Legacy operation tracking removed
@@ -383,8 +395,8 @@ const FileEditor = ({
             }
           };
 
-          recordOperation(file.name, operation);
-          markOperationApplied(file.name, operationId);
+          // Legacy operation tracking - now handled by FileContext
+          console.log('Upload operation recorded:', operation);
           
           // Legacy operation tracking removed
         }
@@ -419,62 +431,43 @@ const FileEditor = ({
     if (activeFiles.length === 0) return;
 
     // Record close all operation for each file
-    activeFiles.forEach(file => {
-      const operationId = `close-all-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const operation: FileOperation = {
-        id: operationId,
-        type: 'remove',
-        timestamp: Date.now(),
-        fileIds: [file.name],
-        status: 'pending',
-        metadata: {
-          originalFileName: file.name,
-          fileSize: file.size,
-          parameters: {
-            action: 'close_all',
-            reason: 'user_request'
-          }
-        }
-      };
-
-      recordOperation(file.name, operation);
-      markOperationApplied(file.name, operationId);
-      
-      // Legacy operation tracking removed
-    });
+    // Legacy operation tracking - now handled by FileContext
+    console.log('Close all operation for', activeFiles.length, 'files');
 
     // Remove all files from context but keep in storage
-    removeFiles(activeFiles.map(f => (f as any).id || f.name), false);
+    const fileIds = activeFiles.map(f => createStableFileId(f));
+    removeFiles(fileIds, false);
 
     // Clear selections
     setContextSelectedFiles([]);
   }, [activeFiles, removeFiles, setContextSelectedFiles]);
 
   const toggleFile = useCallback((fileId: string) => {
-    const targetFile = files.find(f => f.id === fileId);
+    const currentFiles = filesDataRef.current;
+    const currentSelectedIds = contextSelectedIdsRef.current;
+    
+    const targetFile = currentFiles.find(f => f.id === fileId);
     if (!targetFile) return;
 
-    const contextFileId = (targetFile.file as any).id || targetFile.name;
-    
     const contextFileId = createStableFileId(targetFile.file);
-    const isSelected = contextSelectedIds.includes(contextFileId);
+    const isSelected = currentSelectedIds.includes(contextFileId);
 
     let newSelection: string[];
 
     if (isSelected) {
       // Remove file from selection
-      newSelection = contextSelectedIds.filter(id => id !== contextFileId);
+      newSelection = currentSelectedIds.filter(id => id !== contextFileId);
     } else {
       // Add file to selection
       if (maxFiles === 1) {
         newSelection = [contextFileId];
       } else {
         // Check if we've hit the selection limit
-        if (maxFiles > 1 && contextSelectedIds.length >= maxFiles) {
+        if (maxFiles > 1 && currentSelectedIds.length >= maxFiles) {
           setStatus(`Maximum ${maxFiles} files can be selected`);
           return;
         }
-        newSelection = [...contextSelectedIds, contextFileId];
+        newSelection = [...currentSelectedIds, contextFileId];
       }
     }
 
@@ -483,15 +476,9 @@ const FileEditor = ({
 
     // Update tool selection context if in tool mode
     if (isToolMode || toolMode) {
-      const selectedFiles = files
-        .filter(f => {
-          const fId = createStableFileId(f.file);
-          return newSelection.includes(fId);
-        })
-        .map(f => f.file);
-      setToolSelectedFiles(selectedFiles);
+      setToolSelectedFiles(newSelection);
     }
-  }, [files, setContextSelectedFiles, maxFiles, contextSelectedIds, setStatus, isToolMode, toolMode, setToolSelectedFiles]);
+  }, [setContextSelectedFiles, maxFiles, setStatus, isToolMode, toolMode, setToolSelectedFiles]); // Removed changing dependencies
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
@@ -642,21 +629,15 @@ const FileEditor = ({
         }
       };
 
-      recordOperation(fileName, operation);
-
-      
-      // Legacy operation tracking removed
+      // Legacy operation tracking - now handled by FileContext
+      console.log('Close operation recorded:', operation);
       
       // Remove file from context but keep in storage (close, don't delete)
       console.log('Calling removeFiles with:', [fileId]);
       removeFiles([fileId], false);
 
       // Remove from context selections
-      const newSelection = contextSelectedIds.filter(id => id !== fileId);
-      setContextSelectedFiles(newSelection);
-      // Mark operation as applied
-      markOperationApplied(fileName, operationId);
-      setContextSelectedFiles(prev => {
+      setContextSelectedFiles((prev: string[]) => {
         const safePrev = Array.isArray(prev) ? prev : [];
         return safePrev.filter(id => id !== fileId);
       });

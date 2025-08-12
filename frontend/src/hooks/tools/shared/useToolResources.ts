@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { generateThumbnailForFile } from '../../../utils/thumbnailUtils';
 import { zipFileService } from '../../../services/zipFileService';
 
@@ -11,20 +11,28 @@ export const useToolResources = () => {
   }, []);
 
   const cleanupBlobUrls = useCallback(() => {
-    blobUrls.forEach(url => {
-      try {
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.warn('Failed to revoke blob URL:', error);
-      }
+    setBlobUrls(prev => {
+      prev.forEach(url => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.warn('Failed to revoke blob URL:', error);
+        }
+      });
+      return [];
     });
-    setBlobUrls([]);
-  }, [blobUrls]);
+  }, []); // No dependencies - use functional update pattern
 
-  // Cleanup on unmount
+  // Cleanup on unmount - use ref to avoid dependency on blobUrls state
+  const blobUrlsRef = useRef<string[]>([]);
+  
+  useEffect(() => {
+    blobUrlsRef.current = blobUrls;
+  }, [blobUrls]);
+  
   useEffect(() => {
     return () => {
-      blobUrls.forEach(url => {
+      blobUrlsRef.current.forEach(url => {
         try {
           URL.revokeObjectURL(url);
         } catch (error) {
@@ -32,7 +40,7 @@ export const useToolResources = () => {
         }
       });
     };
-  }, [blobUrls]);
+  }, []); // No dependencies - use ref to access current URLs
 
   const generateThumbnails = useCallback(async (files: File[]): Promise<string[]> => {
     const thumbnails: string[] = [];

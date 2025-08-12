@@ -6,6 +6,7 @@ import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import { isImageFormat, isWebFormat } from "../../../utils/convertUtils";
 import { useToolFileSelection } from "../../../contexts/FileContext";
 import { useFileState } from "../../../contexts/FileContext";
+import { createStableFileId } from "../../../types/fileContext";
 import { detectFileExtension } from "../../../utils/fileUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
@@ -41,7 +42,7 @@ const ConvertSettings = ({
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const { setSelectedFiles } = useToolFileSelection();
-  const { state } = useFileState();
+  const { state, selectors } = useFileState();
   const activeFiles = state.files.ids;
 
   const allEndpoints = useMemo(() => {
@@ -135,7 +136,7 @@ const ConvertSettings = ({
   };
 
   const filterFilesByExtension = (extension: string) => {
-    const files = activeFiles.map(fileId => state.files.byId[fileId]?.file).filter(Boolean);
+    const files = activeFiles.map(fileId => selectors.getFile(fileId)).filter(Boolean) as File[];
     return files.filter(file => {
       const fileExtension = detectFileExtension(file.name);
       
@@ -150,7 +151,7 @@ const ConvertSettings = ({
   };
 
   const updateFileSelection = (files: File[]) => {
-    setSelectedFiles(files);
+    setSelectedFiles(files.map(f => createStableFileId(f)));
   };
 
   const handleFromExtensionChange = (value: string) => {

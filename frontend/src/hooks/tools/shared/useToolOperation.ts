@@ -114,9 +114,9 @@ export const useToolOperation = <TParams = void>(
   const { t } = useTranslation();
   const { actions: fileActions } = useFileActions();
   // Legacy compatibility - these functions might not be needed in the new architecture
-  const recordOperation = () => {}; // Placeholder
-  const markOperationApplied = () => {}; // Placeholder
-  const markOperationFailed = () => {}; // Placeholder
+  const recordOperation = (_fileId?: string, _operation?: any) => {}; // Placeholder
+  const markOperationApplied = (_fileId?: string, _operationId?: string) => {}; // Placeholder
+  const markOperationFailed = (_fileId?: string, _operationId?: string, _errorMessage?: string) => {}; // Placeholder
 
   // Composed hooks
   const { state, actions } = useToolState();

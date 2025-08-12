@@ -3,7 +3,7 @@ import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
+import { useFileActions } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
@@ -19,7 +19,8 @@ import { BaseToolProps } from "../types/tool";
 
 const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
+  const { actions } = useFileActions();
+  const setCurrentMode = actions.setCurrentMode;
   const { selectedFiles } = useToolFileSelection();
 
   const splitParams = useSplitParameters();
@@ -33,7 +34,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     splitOperation.resetResults();
     onPreviewFile?.(null);
-  }, [splitParams.parameters, selectedFiles]);
+  }, [splitParams.parameters, selectedFiles]); // Keep dependencies minimal - functions should be stable
 
   const handleSplit = async () => {
     try {
