@@ -197,6 +197,7 @@ public class SsrfProtectionService {
             }
 
             int firstByte = bytes[0] & 0xff;
+            // Check for IPv6 unique local addresses (fc00::/7)
             if ((firstByte & 0xfe) == 0xfc) {
                 return true;
             }
