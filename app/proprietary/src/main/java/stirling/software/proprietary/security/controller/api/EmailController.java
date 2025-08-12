@@ -1,13 +1,10 @@
 package stirling.software.proprietary.security.controller.api;
 
-import stirling.software.common.annotations.AutoJobPostMapping;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSendException;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.proprietary.security.model.api.Email;
 import stirling.software.proprietary.security.service.EmailService;
 

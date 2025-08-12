@@ -345,7 +345,7 @@ const FileThumbnail = ({
         onClose={() => setShowHistory(false)}
         title={`Operation History - ${file.name}`}
         size="lg"
-        scrollAreaComponent="div"
+        scrollAreaComponent={'div' as any}
       >
         <FileOperationHistory 
           fileId={file.name} 

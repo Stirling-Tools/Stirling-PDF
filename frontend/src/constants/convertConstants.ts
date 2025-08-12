@@ -1,7 +1,7 @@
 
 export const COLOR_TYPES = {
   COLOR: 'color',
-  GREYSCALE: 'greyscale',
+  GRAYSCALE: 'grayscale',
   BLACK_WHITE: 'blackwhite'
 } as const;
 
@@ -135,7 +135,7 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
   'docx': { 'pdf': 'file-to-pdf' }, 'doc': { 'pdf': 'file-to-pdf' }, 'odt': { 'pdf': 'file-to-pdf' },
   'xlsx': { 'pdf': 'file-to-pdf' }, 'xls': { 'pdf': 'file-to-pdf' }, 'ods': { 'pdf': 'file-to-pdf' },
   'pptx': { 'pdf': 'file-to-pdf' }, 'ppt': { 'pdf': 'file-to-pdf' }, 'odp': { 'pdf': 'file-to-pdf' },
-  'jpg': { 'pdf': 'img-to-pdf' }, 'jpeg': { 'pdf': 'img-to-pdf' }, 'png': { 'pdf': 'img-to-pdf' }, 
+  'jpg': { 'pdf': 'img-to-pdf' }, 'jpeg': { 'pdf': 'img-to-pdf' }, 'png': { 'pdf': 'img-to-pdf' },
   'gif': { 'pdf': 'img-to-pdf' }, 'bmp': { 'pdf': 'img-to-pdf' }, 'tiff': { 'pdf': 'img-to-pdf' }, 'webp': { 'pdf': 'img-to-pdf' }, 'svg': { 'pdf': 'img-to-pdf' },
   'html': { 'pdf': 'html-to-pdf' },
   'zip': { 'pdf': 'html-to-pdf' },

@@ -49,11 +49,15 @@ export function createEnhancedFileFromStored(storedFile: StoredFile, thumbnail?:
     size: storedFile.size,
     type: storedFile.type,
     lastModified: storedFile.lastModified,
+    webkitRelativePath: '',
     // Lazy-loading File interface methods
     arrayBuffer: async () => {
       const data = await fileStorage.getFileData(storedFile.id);
       if (!data) throw new Error(`File ${storedFile.name} not found in IndexedDB - may have been purged`);
       return data;
+    },
+    bytes: async () => {
+      return new Uint8Array();
     },
     slice: (start?: number, end?: number, contentType?: string) => {
       // Return a promise-based slice that loads from IndexedDB
@@ -66,9 +70,9 @@ export function createEnhancedFileFromStored(storedFile: StoredFile, thumbnail?:
       const data = await fileStorage.getFileData(storedFile.id);
       if (!data) throw new Error(`File ${storedFile.name} not found in IndexedDB - may have been purged`);
       return new TextDecoder().decode(data);
-    }
+    },
   } as FileWithUrl;
-  
+
   return enhancedFile;
 }
 
@@ -79,28 +83,28 @@ export async function loadFilesFromIndexedDB(): Promise<FileWithUrl[]> {
   try {
     await fileStorage.init();
     const storedFiles = await fileStorage.getAllFileMetadata();
-    
+
     if (storedFiles.length === 0) {
       return [];
     }
-    
+
     const restoredFiles: FileWithUrl[] = storedFiles
       .filter(storedFile => {
         // Filter out corrupted entries
-        return storedFile && 
-               storedFile.name && 
+        return storedFile &&
+               storedFile.name &&
                typeof storedFile.size === 'number';
       })
       .map(storedFile => {
         try {
-          return createEnhancedFileFromStored(storedFile);
+          return createEnhancedFileFromStored(storedFile as any);
         } catch (error) {
           console.error('Failed to restore file:', storedFile?.name || 'unknown', error);
           return null;
         }
       })
       .filter((file): file is FileWithUrl => file !== null);
-      
+
     return restoredFiles;
   } catch (error) {
     console.error('Failed to load files from IndexedDB:', error);
@@ -134,17 +138,17 @@ export function shouldUseDirectIndexedDBAccess(file: FileWithUrl): boolean {
  */
 export function detectFileExtension(filename: string): string {
   if (!filename || typeof filename !== 'string') return '';
-  
+
   const parts = filename.split('.');
   // If there's no extension (no dots or only one part), return empty string
   if (parts.length <= 1) return '';
-  
+
   // Get the last part (extension) in lowercase
   let extension = parts[parts.length - 1].toLowerCase();
-  
+
   // Normalize common extension variants
   if (extension === 'jpeg') extension = 'jpg';
-  
+
   return extension;
 }
 
@@ -155,10 +159,10 @@ export function detectFileExtension(filename: string): string {
  */
 export function getFilenameWithoutExtension(filename: string): string {
   if (!filename || typeof filename !== 'string') return '';
-  
+
   const parts = filename.split('.');
   if (parts.length <= 1) return filename;
-  
+
   // Return all parts except the last one (extension)
   return parts.slice(0, -1).join('.');
 }
