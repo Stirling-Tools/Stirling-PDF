@@ -96,7 +96,8 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         {/* Settings Step */}
         <ToolStep
           title="Settings"
-          isVisible={hasFiles}
+          isVisible={true}
+          enableInitialSkeleton={true}
           isCollapsed={settingsCollapsed}
           isCompleted={settingsCollapsed}
           onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
@@ -125,6 +126,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         <ToolStep
           title="Results"
           isVisible={hasResults}
+          enableInitialSkeleton={false}
         >
           <Stack gap="sm">
             {splitOperation.status && (

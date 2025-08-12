@@ -514,33 +514,6 @@ export const flatToolRegistryMap: ToolRegistry = {
         category: "Standard Tools",
         subcategory: "Page Formatting"
     },
-    "split": {
-        icon: <span className="material-symbols-rounded">content_cut</span>,
-        name: "home.split.title",
-        component: null,
-        view: "format",
-        description: "home.split.desc",
-        category: "Standard Tools",
-        subcategory: "Page Formatting"
-    },
-    "split-by-chapters": {
-        icon: <span className="material-symbols-rounded">collections_bookmark</span>,
-        name: "home.splitPdfByChapters.title",
-        component: null,
-        view: "format",
-        description: "home.splitPdfByChapters.desc",
-        category: "Advanced Tools",
-        subcategory: "Advanced Formatting"
-    },
-    "split-by-sections": {
-        icon: <span className="material-symbols-rounded">grid_on</span>,
-        name: "home.split-by-sections.title",
-        component: null,
-        view: "format",
-        description: "home.split-by-sections.desc",
-        category: "Advanced Tools",
-        subcategory: "Advanced Formatting"
-    },
     "splitPdf": {
         icon: <span className="material-symbols-rounded">content_cut</span>,
         name: "home.split.title",
@@ -594,7 +567,7 @@ function buildStructuredRegistry(): ToolRegistryStructured {
     for (const [id, tool] of entries) {
         const sub = tool.subcategory ?? 'General';
         const cat = tool.category ?? 'OTHER';
-        // Quick access: use the existing "Recommended Tools" category
+        // Quick access: use the existing "Recommended Tools" category, this will change in future
         if (tool.category === 'Recommended Tools') {
             quick.push({ id, ...tool });
         }

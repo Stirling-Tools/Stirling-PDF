@@ -109,10 +109,12 @@ export default function ToolPanel() {
           <div className="flex-1 flex flex-col">
             {/* Tool content */}
             <div className="flex-1 min-h-0">
-              <ToolRenderer
-                selectedToolKey={selectedToolKey}
-                onPreviewFile={setPreviewFile}
-              />
+              {selectedToolKey && (
+                <ToolRenderer
+                  selectedToolKey={selectedToolKey}
+                  onPreviewFile={setPreviewFile}
+                />
+              )}
             </div>
           </div>
         )}
