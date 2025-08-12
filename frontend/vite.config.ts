@@ -11,7 +11,5 @@ export default defineConfig({
         secure: false,
       },
     },
-    // Handle SPA routing - serve index.html for all routes
-    historyApiFallback: true,
   },
 });

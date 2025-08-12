@@ -17,6 +17,15 @@ export const useDocumentMeta = (meta: MetaOptions) => {
     const originalTitle = document.title;
     const originalDescription = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
     
+    // Store original OpenGraph values for cleanup
+    const ogProperties = ['og:site_name', 'og:locale', 'og:title', 'og:description', 'og:image', 'og:image:width', 'og:image:height', 'og:url'];
+    const originalOgValues = new Map<string, string | null>();
+    
+    ogProperties.forEach(property => {
+      const element = document.querySelector(`meta[property="${property}"]`);
+      originalOgValues.set(property, element?.getAttribute('content') || null);
+    });
+    
     // Update title
     if (meta.title) {
       document.title = meta.title;
@@ -73,6 +82,18 @@ export const useDocumentMeta = (meta: MetaOptions) => {
       if (originalDescription) {
         updateOrCreateMeta('description', originalDescription);
       }
+      
+      // Restore or remove OpenGraph tags
+      originalOgValues.forEach((originalValue, property) => {
+        const element = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+        if (element) {
+          if (originalValue !== null) {
+            element.content = originalValue;
+          } else {
+            element.remove();
+          }
+        }
+      });
     };
   }, [meta.title, meta.description, meta.ogTitle, meta.ogDescription, meta.ogImage, meta.ogUrl, i18n.language]);
 };
