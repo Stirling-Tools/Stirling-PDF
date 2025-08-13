@@ -25,7 +25,7 @@ function HomePageContent() {
   // Update file selection context when tool changes
   useEffect(() => {
     if (selectedTool) {
-      setMaxFiles(selectedTool.maxFiles);
+      setMaxFiles(selectedTool.maxFiles ?? -1);
       setIsToolMode(true);
     } else {
       setMaxFiles(-1);
