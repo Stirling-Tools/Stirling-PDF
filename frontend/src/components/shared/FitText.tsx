@@ -59,8 +59,9 @@ const FitText: React.FC<FitTextProps> = ({
     WebkitBoxOrient: lines > 1 ? ('vertical' as any) : undefined,
     WebkitLineClamp: lines > 1 ? (lines as any) : undefined,
     lineClamp: lines > 1 ? (lines as any) : undefined,
-    wordBreak: 'normal',
-    overflowWrap: lines === 1 ? ('normal' as any) : ('break-word' as any),
+    // Favor shrinking over breaking words; only break at natural spaces or softBreakChars
+    wordBreak: lines > 1 ? ('keep-all' as any) : ('normal' as any),
+    overflowWrap: 'normal',
     fontSize: fontSize ? `${fontSize}px` : undefined,
   };
 
