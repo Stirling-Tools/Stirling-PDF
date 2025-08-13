@@ -1,5 +1,6 @@
 import React from 'react';
-import { ActionIcon, Tooltip } from '@mantine/core';
+import { ActionIcon } from '@mantine/core';
+import { Tooltip } from './Tooltip';
 import AppsIcon from '@mui/icons-material/AppsRounded';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 
@@ -9,7 +10,7 @@ interface AllToolsNavButtonProps {
 }
 
 const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, setActiveButton }) => {
-  const { handleReaderToggle, handleBackToTools } = useToolWorkflow();
+  const { handleReaderToggle, handleBackToTools, selectedToolKey, leftPanelView } = useToolWorkflow();
 
   const handleClick = () => {
     setActiveButton('tools');
@@ -18,19 +19,20 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
     handleBackToTools();
   };
 
-  const isActive = activeButton === 'tools';
+  // Do not highlight All Tools when a specific tool is open (indicator is shown)
+  const isActive = activeButton === 'tools' && !selectedToolKey && leftPanelView === 'toolPicker';
 
   const iconNode = (
     <span className="iconContainer">
-      <AppsIcon sx={{ fontSize: '1.75rem' }} />
+      <AppsIcon sx={{ fontSize: '1.5rem' }} />
     </span>
   );
 
   return (
-    <Tooltip label={'All tools'} position="right">
+    <Tooltip content={'All tools'} sidebarTooltip>
       <div className="flex flex-col items-center gap-1 mt-4 mb-2">
         <ActionIcon
-          size="lg"
+          size={'lg'}
           variant="subtle"
           onClick={handleClick}
           style={{
@@ -39,6 +41,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
             border: 'none',
             borderRadius: '8px',
           }}
+          className={isActive ? 'activeIconScale' : ''}
         >
           {iconNode}
         </ActionIcon>

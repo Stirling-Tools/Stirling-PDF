@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef } from "react";
-import { ActionIcon, Stack, Tooltip, Divider } from "@mantine/core";
+import { ActionIcon, Stack, Divider } from "@mantine/core";
 import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
 import SettingsIcon from "@mui/icons-material/SettingsRounded";
 import FolderIcon from "@mui/icons-material/FolderRounded";
@@ -9,8 +9,10 @@ import { useIsOverflowing } from '../../hooks/useIsOverflowing';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { ButtonConfig } from '../../types/sidebar';
-import './QuickAccessBar.css';
+import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
+import { Tooltip } from './Tooltip';
+import TopToolIndicator from './quickAccessBar/TopToolIndicator';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>(({
 }, ref) => {
@@ -149,6 +151,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">
+        <TopToolIndicator activeButton={activeButton} setActiveButton={setActiveButton} />
         <AllToolsNavButton activeButton={activeButton} setActiveButton={setActiveButton} />
 
       </div>
@@ -175,12 +178,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
           <Stack gap="lg" align="center">
             {buttonConfigs.slice(0, -1).map((config, index) => (
               <React.Fragment key={config.id}>
-                <Tooltip label={config.tooltip} position="right">
+                <Tooltip content={config.tooltip} sidebarTooltip>
                   <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
                     <ActionIcon
-                      size={config.size || 'xl'}
+                      size={isButtonActive(config) ? (config.size || 'xl') : 'lg'}
                       variant="subtle"
-                      onClick={config.onClick}
+                       onClick={() => {
+                         config.onClick();
+                       }}
                       style={getButtonStyle(config)}
                       className={isButtonActive(config) ? 'activeIconScale' : ''}
                       data-testid={`${config.id}-button`}
@@ -213,7 +218,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
           {buttonConfigs
             .filter(config => config.id === 'config')
             .map(config => (
-              <Tooltip key={config.id} label={config.tooltip} position="right">
+              <Tooltip key={config.id} content={config.tooltip} sidebarTooltip>
                 <div className="flex flex-col items-center gap-1">
                   <ActionIcon
                     size={config.size || 'lg'}
