@@ -34,7 +34,11 @@ export function adjustFontSizeToFit(
   if (singleLine) {
     element.style.whiteSpace = 'nowrap';
   }
-  element.style.wordBreak = 'break-word';
+  // Never split within words; only allow natural breaks (spaces) or explicit soft breaks
+  element.style.wordBreak = 'keep-all';
+  element.style.overflowWrap = 'normal';
+  // Disable automatic hyphenation to avoid mid-word breaks; use only manual opportunities
+  element.style.setProperty('hyphens', 'manual');
   element.style.overflow = 'hidden';
 
   const minFontPx = baseFontPx * minScale;

@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef } from "react";
+import React, { useState, useRef, forwardRef, useEffect } from "react";
 import { ActionIcon, Stack, Divider } from "@mantine/core";
 import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
 import SettingsIcon from "@mui/icons-material/SettingsRounded";
@@ -18,11 +18,32 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
 }, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle } = useToolWorkflow();
+  const { handleReaderToggle, selectedTool, leftPanelView } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
+
+  // Sync left nav highlight with selected tool when appropriate
+  useEffect(() => {
+    if (leftPanelView === 'toolContent' && selectedTool) {
+      let target: string | null = null;
+      // Map tool.view to nav button ids
+      if (selectedTool.view === 'sign') target = 'sign';
+      if (selectedTool.view === 'view') target = 'read';
+      // Use subcategory to infer Automate group
+      if (!target && selectedTool.subcategory === 'Automation') target = 'automate';
+
+      if (target && activeButton !== target) {
+        setActiveButton(target);
+        return;
+      }
+    }
+    // Revert highlight when no specific mapping applies
+    if (leftPanelView !== 'toolContent') {
+      setActiveButton('tools');
+    }
+  }, [leftPanelView, selectedTool?.view, selectedTool?.subcategory]);
 
   const handleFilesButtonClick = () => {
     openFilesModal();

@@ -24,7 +24,7 @@ const FitText: React.FC<FitTextProps> = ({
   className,
   style,
   as = 'span',
-  softBreakChars = '/',
+  softBreakChars = ['-','_','/'],
 }) => {
   const ref = useRef<HTMLElement | null>(null);
 
@@ -62,6 +62,7 @@ const FitText: React.FC<FitTextProps> = ({
     // Favor shrinking over breaking words; only break at natural spaces or softBreakChars
     wordBreak: lines > 1 ? ('keep-all' as any) : ('normal' as any),
     overflowWrap: 'normal',
+    hyphens: 'manual',
     fontSize: fontSize ? `${fontSize}px` : undefined,
   };
 

@@ -126,8 +126,9 @@
   -webkit-line-clamp: 2; /* show up to two lines */
   line-clamp: 2;
   -webkit-box-orient: vertical;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: manual;
 }
 
 .button-text.active {
