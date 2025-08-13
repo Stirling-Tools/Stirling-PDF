@@ -1,7 +1,5 @@
-// useToolUrlRouting.ts
-// A focused hook that encapsulates URL <-> tool-key mapping and browser history sync.
-// - Keeps ToolWorkflowContext concerned with state/workflow, not routing concerns.
-// - Testable: mapping helpers are pure; effects depend only on provided callbacks/inputs.
+// src/hooks/useToolUrlRouting.ts
+// Focused hook for URL <-> tool-key mapping and browser history sync.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -10,9 +8,9 @@ export interface UseToolUrlRoutingOpts {
   selectedToolKey: string | null;
   /** Registry of available tools (key -> tool metadata). */
   toolRegistry: Record<string, any> | null | undefined;
-  /** Called when a tool should be selected without side-effects beyond selection (e.g., popstate). */
+  /** Select a tool (no extra side-effects). */
   selectTool: (toolKey: string) => void;
-  /** Called when the selection should be cleared. */
+  /** Clear selection. */
   clearToolSelection: () => void;
   /** Called once during initialization if URL contains a tool; may trigger UI changes. */
   onInitSelect?: (toolKey: string) => void;
@@ -48,7 +46,7 @@ export function useToolUrlRouting(opts: UseToolUrlRoutingOpts) {
   );
 
   const getToolUrlSlug = useCallback(
-    (toolKey: string) => urlMap.get(toolKey) || toolKey,
+    (toolKey: string) => urlMap.get(toolKey) ?? toolKey,
     [urlMap]
   );
 
@@ -105,8 +103,9 @@ export function useToolUrlRouting(opts: UseToolUrlRoutingOpts) {
     }
   }, [toolRegistry, selectedToolKey, getToolKeyFromSlug, selectTool, onInitSelect, normalizePath]);
 
-  // Handle browser back/forward.
-  const popHandlerRef = useRef<(this: Window, ev: PopStateEvent) => any>();
+  // Handle browser back/forward. NOTE: useRef needs an initial value in TS.
+  const popHandlerRef = useRef<((this: Window, ev: PopStateEvent) => any) | null>(null);
+
   useEffect(() => {
     popHandlerRef.current = () => {
       const path = normalizePath(window.location.pathname);
@@ -125,5 +124,6 @@ export function useToolUrlRouting(opts: UseToolUrlRoutingOpts) {
     return () => window.removeEventListener('popstate', handler);
   }, [toolRegistry, selectTool, clearToolSelection, getToolKeyFromSlug, onPopStateSelect, normalizePath]);
 
+  // Expose pure helpers if you want them elsewhere (optional).
   return { getToolUrlSlug, getToolKeyFromSlug };
 }
