@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Stack, Button } from '@mantine/core';
+import { Stack, Button, Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useIndexedDBThumbnail } from '../../hooks/useIndexedDBThumbnail';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
-import FilePreview from './FilePreview';
+import FilePreview from '../shared/FilePreview';
 import FileInfoCard from './FileInfoCard';
 import CompactFileDetails from './CompactFileDetails';
 
@@ -76,15 +76,18 @@ const FileDetails: React.FC<FileDetailsProps> = ({
   return (
     <Stack gap="lg" h={`calc(${modalHeight} - 2rem)`}>
       {/* Section 1: Thumbnail Preview */}
-      <FilePreview
-        currentFile={currentFile}
-        thumbnail={getCurrentThumbnail()}
-        numberOfFiles={selectedFiles.length}
-        isAnimating={isAnimating}
-        modalHeight={modalHeight}
-        onPrevious={handlePrevious}
-        onNext={handleNext}
-      />
+      <Box style={{ width: '100%', height: `calc(${modalHeight} * 0.5 - 2rem)`, textAlign: 'center', padding: 'xs' }}>
+        <FilePreview
+          file={currentFile}
+          thumbnail={getCurrentThumbnail()}
+          showStacking={true}
+          showNavigation={true}
+          totalFiles={selectedFiles.length}
+          isAnimating={isAnimating}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+        />
+      </Box>
       
       {/* Section 2: File Details */}
       <FileInfoCard
