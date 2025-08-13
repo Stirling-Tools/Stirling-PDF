@@ -7,9 +7,11 @@
       "Bash(grep:*)",
       "Bash(cat:*)",
       "Bash(find:*)",
-      "Bash(npm test)",
-      "Bash(npm test:*)",
-      "Bash(ls:*)"
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(strings:*)",
+      "Bash(pkill:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

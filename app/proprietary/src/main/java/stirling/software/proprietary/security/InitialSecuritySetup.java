@@ -43,7 +43,6 @@ public class InitialSecuritySetup {
                 }
             }
 
-            userService.migrateOauth2ToSSO();
             assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
