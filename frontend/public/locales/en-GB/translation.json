@@ -1777,9 +1777,10 @@
   },
   "addPassword": {
     "completed": "Password protection applied",
-    "submit": "Add Password Protection",
+    "submit": "Encrypt",
+    "filenamePrefix": "encrypted",
     "error": {
-      "failed": "An error occurred while adding password to the PDF."
+      "failed": "An error occurred while encrypting the PDF."
     },
     "passwords": {
       "title": "Passwords",
@@ -1789,8 +1790,8 @@
         "placeholder": "Enter user password"
       },
       "owner": {
-        "label": "Owner Password", 
-        "description": "Password required to modify document permissions",
+        "label": "Owner Password",
+        "description": "Restricts what can be done with the document once it is opened (not supported by all readers)",
         "placeholder": "Enter owner password"
       }
     },
@@ -1806,7 +1807,7 @@
     },
     "restrictions": {
       "title": "Document Restrictions",
-      "description": "Select which actions should be prevented on the document",
+      "description": "Select which actions should be prevented on the document (recommended to be used along with an owner password)",
       "assembly": {
         "label": "Prevent document assembly",
         "description": "Prevent inserting, rotating, or deleting pages and creating bookmarks or thumbnail images"
@@ -1841,7 +1842,7 @@
       }
     },
     "results": {
-      "title": "Password Protected PDFs"
+      "title": "Encrypted PDFs"
     }
   }
 }

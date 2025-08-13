@@ -77,7 +77,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   return (
     <ToolStepContainer>
-      <Stack gap="sm" h="100vh" p="sm" style={{ overflow: 'auto' }}>
+      <Stack gap="sm" h="94vh" p="sm" style={{ overflow: 'auto' }}>
         {/* Files Step */}
         <ToolStep
           title={t('files.title', 'Files')}
@@ -103,7 +103,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isCollapsed={settingsCollapsed}
           isCompleted={settingsCollapsed}
           onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
-          completedMessage={settingsCollapsed ? t('addPassword.completed', 'Password protection applied') : undefined}
+          completedMessage={settingsCollapsed ? t('addPassword.completed', 'Encrypted') : undefined}
         >
           <Stack gap="sm">
             <AddPasswordSettings
@@ -116,8 +116,8 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               onClick={handleAddPassword}
               isLoading={addPasswordOperation.isLoading}
               disabled={!addPasswordParams.validateParameters() || !hasFiles || !endpointEnabled}
-              loadingText={t("loading")}
-              submitText={t('addPassword.submit', 'Add Password Protection')}
+              loadingText={t('loading')}
+              submitText={t('addPassword.submit', 'Encrypt')}
             />
           </Stack>
         </ToolStep>
@@ -155,7 +155,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               files={previewResults}
               onFileClick={handleThumbnailClick}
               isGeneratingThumbnails={addPasswordOperation.isGeneratingThumbnails}
-              title={t('addPassword.results.title', 'Password Protected PDFs')}
+              title={t('addPassword.results.title', 'Encrypted PDFs')}
             />
           </Stack>
         </ToolStep>
