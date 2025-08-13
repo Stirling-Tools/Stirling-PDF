@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OCRParameters } from '../../../components/tools/ocr/OCRSettings';
 import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
+import { createDockerToolErrorHandler } from '../../../utils/toolErrorHandler';
 import { useToolResources } from '../shared/useToolResources';
 
 // Helper: get MIME type based on file extension
@@ -14,21 +14,6 @@ function getMimeType(filename: string): string {
     case 'zip': return 'application/zip';
     default: return 'application/octet-stream';
   }
-}
-
-// Lightweight ZIP extractor (keep or replace with a shared util if you have one)
-async function extractZipFile(zipBlob: Blob): Promise<File[]> {
-  const JSZip = await import('jszip');
-  const zip = new JSZip.default();
-  const zipContent = await zip.loadAsync(await zipBlob.arrayBuffer());
-  const out: File[] = [];
-  for (const [filename, file] of Object.entries(zipContent.files)) {
-    if (!file.dir) {
-      const content = await file.async('blob');
-      out.push(new File([content], filename, { type: getMimeType(filename) }));
-    }
-  }
-  return out;
 }
 
 // Helper: strip extension
@@ -64,14 +49,16 @@ export const useOCROperation = () => {
     // ZIP: sidecar or multi-asset output
     if (head.startsWith('PK')) {
       const base = stripExt(originalFiles[0].name);
+      
       try {
         const extracted = await extractZipFiles(blob);
         if (extracted.length > 0) return extracted;
-      } catch { /* ignore and try local extractor */ }
-      try {
-        const local = await extractZipFile(blob); // local fallback
-        if (local.length > 0) return local;
-      } catch { /* fall through */ }
+      } catch (error) {
+        // Log extraction failure but don't throw - fall back to raw ZIP
+        console.warn(`OCR ZIP extraction failed for ${base}, returning as ZIP file:`, error);
+      }
+      
+      // Fallback: return as ZIP file (this prevents "does nothing" behavior)
       return [new File([blob], `ocr_${base}.zip`, { type: 'application/zip' })];
     }
 
@@ -107,10 +94,12 @@ export const useOCROperation = () => {
       params.languages.length === 0
         ? { valid: false, errors: [t('ocr.validation.languageRequired', 'Please select at least one language for OCR processing.')] }
         : { valid: true },
-    getErrorMessage: (error) =>
-      error.message?.includes('OCR tools') && error.message?.includes('not installed')
-        ? 'OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.'
-        : createStandardErrorHandler(t('ocr.error.failed', 'OCR operation failed'))(error),
+    getErrorMessage: createDockerToolErrorHandler(
+      'OCR',
+      'standard or fat',
+      t('ocr.error.failed', 'OCR operation failed'),
+      ['OCRmyPDF', 'Tesseract']
+    ),
   };
 
   return useToolOperation(ocrConfig);

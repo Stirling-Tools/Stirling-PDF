@@ -99,6 +99,8 @@ export const useConvertOperation = () => {
     // Convert-specific routing logic: decide batch vs individual processing
     if (shouldProcessFilesSeparately(selectedFiles, parameters)) {
       // Individual processing for complex cases (PDF→image, smart detection, etc.)
+      const failedFiles: { file: string; error: string }[] = [];
+      
       for (const file of selectedFiles) {
         try {
           const formData = buildFormData(parameters, [file]);
@@ -108,7 +110,21 @@ export const useConvertOperation = () => {
           
           processedFiles.push(convertedFile);
         } catch (error) {
-          console.warn(`Failed to convert file ${file.name}:`, error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          failedFiles.push({ file: file.name, error: errorMessage });
+        }
+      }
+      
+      // If some files failed but others succeeded, throw detailed error
+      if (failedFiles.length > 0) {
+        if (processedFiles.length === 0) {
+          // All files failed
+          const errorDetails = failedFiles.map(f => `${f.file}: ${f.error}`).join(', ');
+          throw new Error(`All files failed to convert: ${errorDetails}`);
+        } else {
+          // Partial failure - log warning but continue with successful files
+          const failedNames = failedFiles.map(f => `${f.file} (${f.error})`).join(', ');
+          console.warn(`Some files failed to convert: ${failedNames}. Successfully converted ${processedFiles.length} files.`);
         }
       }
     } else {

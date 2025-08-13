@@ -21,7 +21,7 @@ export const useToolApiCalls = <TParams = void>() => {
     onStatus: (status: string) => void
   ): Promise<File[]> => {
     const processedFiles: File[] = [];
-    const failedFiles: string[] = [];
+    const failedFiles: { file: string; error: string }[] = [];
     const total = validFiles.length;
 
     // Create cancel token for this operation
@@ -54,17 +54,22 @@ export const useToolApiCalls = <TParams = void>() => {
         if (axios.isCancel(error)) {
           throw new Error('Operation was cancelled');
         }
-        console.error(`Failed to process ${file.name}:`, error);
-        failedFiles.push(file.name);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`Failed to process ${file.name}:`, errorMessage);
+        failedFiles.push({ file: file.name, error: errorMessage });
       }
     }
 
     if (failedFiles.length > 0 && processedFiles.length === 0) {
-      throw new Error(`Failed to process all files: ${failedFiles.join(', ')}`);
+      // All files failed - provide detailed error information
+      const errorDetails = failedFiles.map(f => `${f.file}: ${f.error}`).join('; ');
+      throw new Error(`Failed to process all files: ${errorDetails}`);
     }
 
     if (failedFiles.length > 0) {
-      onStatus(`Processed ${processedFiles.length}/${total} files. Failed: ${failedFiles.join(', ')}`);
+      // Some files failed - provide detailed status with errors
+      const failedNames = failedFiles.map(f => `${f.file} (${f.error})`).join(', ');
+      onStatus(`Processed ${processedFiles.length}/${total} files. Failed: ${failedNames}`);
     } else {
       onStatus(`Successfully processed ${processedFiles.length} file${processedFiles.length === 1 ? '' : 's'}`);
     }

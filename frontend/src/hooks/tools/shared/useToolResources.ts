@@ -54,10 +54,15 @@ export const useToolResources = () => {
     try {
       const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
       const extractionResult = await zipFileService.extractPdfFiles(zipFile);
-      return extractionResult.success ? extractionResult.extractedFiles : [];
+      
+      if (!extractionResult.success) {
+        throw new Error(`ZIP extraction failed: ${extractionResult.error || 'Unknown error'}`);
+      }
+      
+      return extractionResult.extractedFiles;
     } catch (error) {
-      console.error('useToolResources.extractZipFiles - Error:', error);
-      return [];
+      const errorMessage = error instanceof Error ? error.message : `ZIP extraction error: ${error}`;
+      throw new Error(errorMessage);
     }
   }, []);
 
@@ -74,17 +79,51 @@ export const useToolResources = () => {
       for (const [filename, file] of Object.entries(zipContent.files)) {
         if (!file.dir) {
           const content = await file.async('blob');
-          const extractedFile = new File([content], filename, { type: 'application/pdf' });
+          // Determine MIME type based on file extension
+          const mimeType = getMimeTypeFromFilename(filename);
+          const extractedFile = new File([content], filename, { type: mimeType });
           extractedFiles.push(extractedFile);
         }
       }
       
+      if (extractedFiles.length === 0) {
+        throw new Error('ZIP file contains no extractable files');
+      }
+      
       return extractedFiles;
     } catch (error) {
-      console.error('Error in extractAllZipFiles:', error);
-      return [];
+      const errorMessage = error instanceof Error ? error.message : `ZIP extraction error: ${error}`;
+      throw new Error(errorMessage);
     }
   }, []);
+
+  // Helper function to determine MIME type from filename
+  const getMimeTypeFromFilename = (filename: string): string => {
+    const ext = filename.toLowerCase().split('.').pop();
+    switch (ext) {
+      case 'pdf': return 'application/pdf';
+      case 'txt': return 'text/plain';
+      case 'jpg': 
+      case 'jpeg': return 'image/jpeg';
+      case 'png': return 'image/png';
+      case 'gif': return 'image/gif';
+      case 'svg': return 'image/svg+xml';
+      case 'html': 
+      case 'htm': return 'text/html';
+      case 'css': return 'text/css';
+      case 'js': return 'application/javascript';
+      case 'json': return 'application/json';
+      case 'xml': return 'application/xml';
+      case 'zip': return 'application/zip';
+      case 'doc': return 'application/msword';
+      case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'xls': return 'application/vnd.ms-excel';
+      case 'xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'ppt': return 'application/vnd.ms-powerpoint';
+      case 'pptx': return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      default: return 'application/octet-stream';
+    }
+  };
 
   const createDownloadInfo = useCallback(async (
     files: File[], 
