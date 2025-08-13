@@ -36,7 +36,7 @@ export interface ToolOperationConfig<TParams = void> {
    * - (params, files: File[]) => FormData: Multi-file processing
    * Not used when customProcessor is provided.
    */
-  buildFormData: ((params: TParams, file: File) => FormData) | ((params: TParams, files: File[]) => FormData);
+  buildFormData: ((params: TParams, file: File) => FormData) | ((params: TParams, files: File[]) => FormData); /* FIX ME */
 
   /** Prefix added to processed filenames (e.g., 'compressed_', 'split_') */
   filePrefix: string;
