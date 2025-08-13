@@ -25,7 +25,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { setCurrentMode } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
 
-  const [expandedPermissions, setExpandedPermissions] = useState(false);
+  const [collapsedPermissions, setCollapsedPermissions] = useState(true);
 
   const addPasswordParams = useAddPasswordParameters();
   const addPasswordOperation = useAddPasswordOperation();
@@ -71,7 +71,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const hasResults = addPasswordOperation.files.length > 0 || addPasswordOperation.downloadUrl !== null;
   const filesCollapsed = hasFiles;
   const passwordsCollapsed = hasResults;
-  const permissionsCollapsed = expandedPermissions || hasResults;
+  const permissionsCollapsed = collapsedPermissions || hasResults;
 
   const previewResults = useMemo(() =>
     addPasswordOperation.files?.map((file, index) => ({
@@ -125,7 +125,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isVisible={hasFiles}
           isCollapsed={permissionsCollapsed}
           isCompleted={permissionsCollapsed}
-          onCollapsedClick={hasResults ? handleSettingsReset : () => setExpandedPermissions(!expandedPermissions)}
+          onCollapsedClick={hasResults ? handleSettingsReset : () => setCollapsedPermissions(!collapsedPermissions)}
         >
           <ChangePermissionsSettings
             parameters={addPasswordParams.permissions.parameters}

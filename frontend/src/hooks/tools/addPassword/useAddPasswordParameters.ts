@@ -45,6 +45,7 @@ export const useAddPasswordParameters = (): AddPasswordParametersHook => {
 
   const resetParameters = () => {
     setParameters(defaultParameters);
+    permissions.resetParameters();
   };
 
   const validateParameters = () => {
