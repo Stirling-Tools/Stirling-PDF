@@ -35,7 +35,7 @@ export interface ExecuteButtonConfig {
   testId?: string;
 }
 
-export interface ResultsStepConfig {
+export interface ReviewStepConfig {
   isVisible: boolean;
   operation: ToolOperationHook<any>;
   title: string;
@@ -47,7 +47,7 @@ export interface ToolFlowConfig {
   files: FilesStepConfig;
   steps: MiddleStepConfig[];
   executeButton?: ExecuteButtonConfig;
-  results: ResultsStepConfig;
+  review: ReviewStepConfig;
 }
 
 /**
@@ -81,7 +81,7 @@ export function createToolFlow(config: ToolFlowConfig) {
       {config.executeButton && config.executeButton.isVisible !== false && (
         <OperationButton
           onClick={config.executeButton.onClick}
-          isLoading={config.results.operation.isLoading}
+          isLoading={config.review.operation.isLoading}
           disabled={config.executeButton.disabled}
           loadingText={config.executeButton.loadingText}
           submitText={config.executeButton.text}
@@ -89,12 +89,12 @@ export function createToolFlow(config: ToolFlowConfig) {
         />
       )}
 
-      {/* Results Step */}
-      {steps.createResultsStep({
-        isVisible: config.results.isVisible,
-        operation: config.results.operation,
-        title: config.results.title,
-        onFileClick: config.results.onFileClick
+      {/* Review Step */}
+      {steps.createReviewStep({
+        isVisible: config.review.isVisible,
+        operation: config.review.operation,
+        title: config.review.title,
+        onFileClick: config.review.onFileClick
       })}
     </ToolStepProvider>
   );

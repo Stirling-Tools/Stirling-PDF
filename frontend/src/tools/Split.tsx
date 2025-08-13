@@ -90,7 +90,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isVisible: !hasResults,
           disabled: !splitParams.validateParameters() || !hasFiles || !endpointEnabled
         },
-        results: {
+        review: {
           isVisible: hasResults,
           operation: splitOperation,
           title: "Split Results",

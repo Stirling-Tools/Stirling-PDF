@@ -61,7 +61,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = sanitizeOperation.files.length > 0;
-  const filesCollapsed = hasFiles;
+  const filesCollapsed = hasFiles || hasResults;
   const settingsCollapsed = !hasFiles || hasResults;
 
   return (
@@ -86,11 +86,12 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         }],
         executeButton: {
           text: t("sanitize.submit", "Sanitize PDF"),
+          isVisible: !hasResults,
           loadingText: t("loading"),
           onClick: handleSanitize,
           disabled: !sanitizeParams.validateParameters() || !hasFiles || !endpointEnabled
         },
-        results: {
+        review: {
           isVisible: hasResults,
           operation: sanitizeOperation,
           title: t("sanitize.sanitizationResults", "Sanitization Results"),

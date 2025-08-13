@@ -101,8 +101,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   return (
-    <div className="h-full max-h-screen overflow-y-auto" ref={scrollContainerRef}>
-      <Stack gap="sm" p="sm">
+      <Stack gap="sm" p="sm" style={{ height: '100vh', overflow: 'auto' }}>
         {createToolFlow({
           files: {
             selectedFiles,
@@ -131,7 +130,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             disabled: !convertParams.validateParameters() || !hasFiles || !endpointEnabled,
             testId: "convert-button"
           },
-          results: {
+          review: {
             isVisible: hasResults,
             operation: convertOperation,
             title: t("convert.conversionResults", "Conversion Results"),
@@ -140,7 +139,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           }
         })}
       </Stack>
-    </div>
   );
 };
 

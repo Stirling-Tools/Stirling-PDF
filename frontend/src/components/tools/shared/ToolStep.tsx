@@ -5,7 +5,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Tooltip } from '../../shared/Tooltip';
 import { TooltipTip } from '../../shared/tooltip/TooltipContent';
 import { createFilesToolStep, FilesToolStepProps } from './createFilesToolStep';
-import { createResultsToolStep, ResultsToolStepProps } from './createResultsToolStep';
+import { createReviewToolStep, ReviewToolStepProps } from './createReviewToolStep';
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -22,6 +22,8 @@ export interface ToolStepProps {
   helpText?: string;
   showNumber?: boolean;
   _stepNumber?: number; // Internal prop set by ToolStepContainer
+  _excludeFromCount?: boolean; // Internal prop to exclude from visible count calculation
+  _noPadding?: boolean; // Internal prop to exclude from default left padding
   tooltip?: {
     content?: React.ReactNode;
     tips?: TooltipTip[];
@@ -73,6 +75,7 @@ const ToolStep = ({
   helpText,
   showNumber,
   _stepNumber,
+  _noPadding,
   tooltip
 }: ToolStepProps) => {
   if (!isVisible) return null;
@@ -132,7 +135,7 @@ const ToolStep = ({
       </Flex>
 
       {!isCollapsed && (
-        <Stack gap="md" pl="md">
+        <Stack gap="md" pl={_noPadding ? 0 : "md"}>
           {helpText && (
             <Text size="sm" c="dimmed">
               {helpText}
@@ -176,17 +179,20 @@ export function createToolSteps() {
     return createFilesToolStep(create, props);
   };
 
-  const createResultsStep = <TParams = any>(props: ResultsToolStepProps<TParams>): React.ReactElement => {
-    return createResultsToolStep(create, props);
+  const createReviewStep = <TParams = any>(props: ReviewToolStepProps<TParams>): React.ReactElement => {
+    return createReviewToolStep(create, props);
   };
 
   const getVisibleCount = () => {
-    return steps.filter(step =>
-      (step.props as ToolStepProps).isVisible !== false
-    ).length;
+    return steps.filter(step => {
+      const props = step.props as ToolStepProps;
+      const isVisible = props.isVisible !== false;
+      const excludeFromCount = props._excludeFromCount === true;
+      return isVisible && !excludeFromCount;
+    }).length;
   };
 
-  return { create, createFilesStep, createResultsStep, getVisibleCount, steps };
+  return { create, createFilesStep, createReviewStep, getVisibleCount, steps };
 }
 
 // Context provider wrapper for tools using the factory
@@ -196,8 +202,10 @@ export function ToolStepProvider({ children }: { children: React.ReactNode }) {
     let count = 0;
     React.Children.forEach(children, (child) => {
       if (React.isValidElement(child) && child.type === ToolStep) {
-        const isVisible = (child.props as ToolStepProps).isVisible !== false;
-        if (isVisible) count++;
+        const props = child.props as ToolStepProps;
+        const isVisible = props.isVisible !== false;
+        const excludeFromCount = props._excludeFromCount === true;
+        if (isVisible && !excludeFromCount) count++;
       }
     });
     return count;
@@ -215,5 +223,5 @@ export function ToolStepProvider({ children }: { children: React.ReactNode }) {
 }
 
 export type { FilesToolStepProps } from './createFilesToolStep';
-export type { ResultsToolStepProps } from './createResultsToolStep';
+export type { ReviewToolStepProps } from './createReviewToolStep';
 export default ToolStep;

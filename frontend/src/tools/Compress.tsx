@@ -64,11 +64,11 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const settingsCollapsed = !hasFiles || hasResults;
 
   return (
-    <Stack gap="md" h="100%" p="sm" style={{ overflow: 'auto' }}>
+    <Stack gap="sm" p="sm" style={{ height: '100vh', overflow: 'auto' }}>
       {createToolFlow({
         files: {
           selectedFiles,
-          isCollapsed: hasFiles
+          isCollapsed: hasFiles && !hasResults,
         },
         steps: [{
           title: "Settings",
@@ -90,7 +90,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           onClick: handleCompress,
           disabled: !compressParams.validateParameters() || !hasFiles || !endpointEnabled
         },
-        results: {
+        review: {
           isVisible: hasResults,
           operation: compressOperation,
           title: t("compress.title", "Compression Results"),

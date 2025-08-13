@@ -3,32 +3,34 @@ import { Button, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import DownloadIcon from '@mui/icons-material/Download';
 import ErrorNotification from './ErrorNotification';
-import ResultsPreview from './ResultsPreview';
+import ReviewPanel from './ReviewPanel';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
 
-export interface ResultsToolStepProps<TParams = any> {
+export interface ReviewToolStepProps<TParams = any> {
   isVisible: boolean;
   operation: ToolOperationHook<TParams>;
   title?: string;
   onFileClick?: (file: File) => void;
 }
 
-export function createResultsToolStep<TParams = any>(
+export function createReviewToolStep<TParams = any>(
   createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
-  props: ResultsToolStepProps<TParams>
+  props: ReviewToolStepProps<TParams>
 ): React.ReactElement {
   const { t } = useTranslation();
   const { operation } = props;
-  
+
   const previewFiles = operation.files?.map((file, index) => ({
     file,
     thumbnail: operation.thumbnails[index]
   })) || [];
 
-  return createStep("Results", {
-    isVisible: props.isVisible
+  return createStep("Review", {
+    isVisible: props.isVisible,
+    _excludeFromCount: true,
+    _noPadding: true
   }, (
-    <Stack gap="sm">
+    <Stack gap="sm" >
       {operation.status && (
         <Text size="sm" c="dimmed">{operation.status}</Text>
       )}
@@ -38,27 +40,27 @@ export function createResultsToolStep<TParams = any>(
         onClose={operation.clearError}
       />
 
-      {operation.downloadUrl && (
+      {previewFiles.length > 0 && (
+        <ReviewPanel
+          files={previewFiles}
+          onFileClick={props.onFileClick}
+          isGeneratingThumbnails={operation.isGeneratingThumbnails}
+          title={props.title || "Review"}
+        />
+      )}
+
+       {operation.downloadUrl && (
         <Button
           component="a"
           href={operation.downloadUrl}
           download={operation.downloadFilename}
           leftSection={<DownloadIcon />}
-          color="green"
+          color="blue"
           fullWidth
           mb="md"
         >
           {t("download", "Download")}
         </Button>
-      )}
-
-      {previewFiles.length > 0 && (
-        <ResultsPreview
-          files={previewFiles}
-          onFileClick={props.onFileClick}
-          isGeneratingThumbnails={operation.isGeneratingThumbnails}
-          title={props.title || "Results"}
-        />
       )}
     </Stack>
   ));

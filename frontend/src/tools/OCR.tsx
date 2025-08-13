@@ -84,11 +84,11 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const settingsCollapsed = expandedStep !== 'settings';
 
   return (
-    <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
+    <Stack gap="sm" p="sm" style={{ height: '100vh', overflow: 'auto' }}>
       {createToolFlow({
         files: {
           selectedFiles,
-          isCollapsed: hasFiles && filesCollapsed,
+          isCollapsed: hasFiles && !hasResults && filesCollapsed,
         },
         steps: [
           {
@@ -131,7 +131,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isVisible: hasValidSettings && !hasResults,
           disabled: !ocrParams.validateParameters() || !hasFiles || !endpointEnabled
         },
-        results: {
+        review: {
           isVisible: hasResults,
           operation: ocrOperation,
           title: t("ocr.results.title", "OCR Results"),
