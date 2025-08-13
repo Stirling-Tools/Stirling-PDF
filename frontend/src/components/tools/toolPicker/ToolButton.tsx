@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@mantine/core";
 import { Tooltip } from "../../shared/Tooltip";
 import { type ToolRegistryEntry } from "../../../data/toolRegistry";
+import FitText from "../../shared/FitText";
 
 interface ToolButtonProps {
   id: string;
@@ -24,7 +25,13 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
         className="tool-button"
         styles={{ root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)" } }}
       >
-        {tool.name}
+        <FitText
+          text={tool.name}
+          lines={1}
+          minimumFontScale={0.6}
+          as="span"
+          style={{ display: 'inline-block', maxWidth: '100%' }}
+        />
       </Button>
     </Tooltip>
   );

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActionIcon, Divider } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
-import FitText from '../../../utils/FitText';
+import FitText from '../FitText';
 import { Tooltip } from '../Tooltip';
 
 interface TopToolIndicatorProps {
@@ -99,7 +99,7 @@ const TopToolIndicator: React.FC<TopToolIndicatorProps> = ({ activeButton, setAc
               <FitText
                 as="span"
                 text={indicatorTool.name}
-                lines={2}
+                lines={3}
                 minimumFontScale={0.4}
                 className="button-text active current-tool-label"
               />

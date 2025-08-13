@@ -1,5 +1,5 @@
 import React, { CSSProperties, useMemo, useRef } from 'react';
-import { useAdjustFontSizeToFit } from './textFit';
+import { useAdjustFontSizeToFit } from './fitText/textFit';
 
 type FitTextProps = {
   text: string;
@@ -9,6 +9,11 @@ type FitTextProps = {
   className?: string;
   style?: CSSProperties;
   as?: 'span' | 'div';
+  /**
+   * Insert zero-width soft breaks after these characters to prefer wrapping at them
+   * when multi-line is enabled. Defaults to '/'. Ignored when lines === 1.
+   */
+  softBreakChars?: string | string[];
 };
 
 const FitText: React.FC<FitTextProps> = ({
@@ -19,6 +24,7 @@ const FitText: React.FC<FitTextProps> = ({
   className,
   style,
   as = 'span',
+  softBreakChars = '/',
 }) => {
   const ref = useRef<HTMLElement | null>(null);
 
@@ -34,6 +40,16 @@ const FitText: React.FC<FitTextProps> = ({
   // React doesn't create a new component function on each render.
   const ElementTag: any = useMemo(() => as, [as]);
 
+  // For the / character, insert zero-width soft breaks to prefer wrapping at them
+  const displayText = useMemo(() => {
+    if (!text) return text;
+    if (!lines || lines <= 1) return text;
+    const chars = Array.isArray(softBreakChars) ? softBreakChars : [softBreakChars];
+    const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`(${chars.filter(Boolean).map(esc).join('|')})`, 'g');
+    return text.replace(re, `$1\u200B`);
+  }, [text, lines, softBreakChars]);
+
   const clampStyles: CSSProperties = {
     // Multi-line clamp with ellipsis fallback
     whiteSpace: lines === 1 ? 'nowrap' : 'normal',
@@ -43,14 +59,14 @@ const FitText: React.FC<FitTextProps> = ({
     WebkitBoxOrient: lines > 1 ? ('vertical' as any) : undefined,
     WebkitLineClamp: lines > 1 ? (lines as any) : undefined,
     lineClamp: lines > 1 ? (lines as any) : undefined,
-    wordBreak: 'break-word',
-    overflowWrap: 'anywhere',
+    wordBreak: 'normal',
+    overflowWrap: lines === 1 ? ('normal' as any) : ('break-word' as any),
     fontSize: fontSize ? `${fontSize}px` : undefined,
   };
 
   return (
     <ElementTag ref={ref} className={className} style={{ ...clampStyles, ...style }}>
-      {text}
+      {displayText}
     </ElementTag>
   );
 };

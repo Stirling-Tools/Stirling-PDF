@@ -209,7 +209,7 @@
 }
 
 .current-tool-slot.visible {
-  max-height: 96px; /* icon + label + divider */
+  max-height: 8.25rem; /* icon + up to 3-line label + divider (132px) */
   opacity: 1;
 }
 
@@ -224,7 +224,7 @@
     opacity: 0;
   }
   100% {
-    max-height: 90px; /* enough space for icon + label */
+    max-height: 7.875rem; /* enough space for icon + up to 3-line label (126px) */
     opacity: 1;
   }
 }
