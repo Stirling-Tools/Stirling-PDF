@@ -3,8 +3,9 @@
  * Eliminates prop drilling with a single, simple context
  */
 
-import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
+import { useToolUrlRouting } from '../hooks/useToolUrlRouting';
 import { Tool } from '../types/tool';
 import { PageEditorFunctions } from '../types/pageEditor';
 
@@ -159,70 +160,18 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
   }, [setReaderMode]);
 
   // URL routing functionality
-  const urlMap = useMemo(() => new Map([
-    ['compress', 'compress-pdf'],
-    ['split', 'split-pdf'], 
-    ['convert', 'convert-pdf'],
-    ['ocr', 'ocr-pdf'],
-    ['merge', 'merge-pdf'],
-    ['rotate', 'rotate-pdf']
-  ]), []);
-
-  const getToolUrlSlug = useCallback((toolKey: string) => {
-    return urlMap.get(toolKey) || toolKey;
-  }, [urlMap]);
-
-  const getToolKeyFromSlug = useCallback((slug: string) => {
-    for (const [key, value] of urlMap) {
-      if (value === slug) return key;
-    }
-    return slug;
-  }, [urlMap]);
-
-  // Update URL when tool changes (but not on initial load)
-  const [hasInitialized, setHasInitialized] = React.useState(false);
-  
-  useEffect(() => {
-    if (selectedToolKey) {
-      const slug = getToolUrlSlug(selectedToolKey);
-      window.history.replaceState({}, '', `/${slug}`);
-      setHasInitialized(true);
-    } else if (hasInitialized) {
-      // Only clear URL if we've already initialized (prevents clearing on mount)
-      window.history.replaceState({}, '', '/');
-    }
-  }, [selectedToolKey, getToolUrlSlug, hasInitialized]);
-
-  // Initialize from URL when toolRegistry is ready
-  useEffect(() => {
-    if (toolRegistry && Object.keys(toolRegistry).length > 0 && !selectedToolKey) {
-      const currentPath = window.location.pathname.slice(1);
-      if (currentPath && currentPath !== '') {
-        const toolKey = getToolKeyFromSlug(currentPath);
-        if (toolRegistry[toolKey]) {
-          handleToolSelect(toolKey); // This handles both tool selection AND UI changes
-        }
-      }
-    }
-  }, [toolRegistry, selectedToolKey, selectTool, getToolKeyFromSlug, handleToolSelect]);
-
-  // Handle browser back/forward
-  useEffect(() => {
-    const handlePopState = () => {
-      const path = window.location.pathname.slice(1); // Remove leading /
-      if (path && path !== '') {
-        const toolKey = getToolKeyFromSlug(path);
-        if (toolRegistry[toolKey]) {
-          selectTool(toolKey);
-        }
-      } else {
-        clearToolSelection();
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [toolRegistry, selectTool, clearToolSelection, getToolKeyFromSlug]);
+  const { getToolUrlSlug, getToolKeyFromSlug } = useToolUrlRouting({
+    selectedToolKey,
+    toolRegistry,
+    selectTool,
+    clearToolSelection,
+    // During initial load, we want the full UI side-effects (like before):
+    onInitSelect: handleToolSelect,
+    // For back/forward nav, keep it lightweight like before (selection only):
+    onPopStateSelect: selectTool,
+    // If your app serves under a subpath, provide basePath here (e.g., '/app')
+    // basePath: ''
+  });
 
   // Filter tools based on search query
   const filteredTools = useMemo(() => {

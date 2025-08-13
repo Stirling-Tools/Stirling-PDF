@@ -347,7 +347,7 @@
       "title": "Pivoter",
       "desc": "Faites pivoter facilement vos PDF."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Image en PDF",
       "desc": "Convertissez une image (PNG, JPEG, GIF) en PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Modifier les permissions",
       "desc": "Modifiez les permissions de votre PDF."
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Supprimer",
       "desc": "Supprimez les pages inutiles de votre PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Supprimer le mot de passe",
       "desc": "Supprimez la protection par mot de passe de votre PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Compresser",
       "desc": "Compressez les PDF pour réduire leur tailles."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Exécutez plusieurs actions sur les PDF en définissant des scripts de pipeline."
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Ajouter des numéros de page",
       "desc": "Ajoutez des numéros de page dans un PDF à un emplacement défini."
     },
@@ -487,7 +487,7 @@
       "title": "Renommer automatiquement",
       "desc": "Renommez automatiquement un fichier PDF en fonction de son en-tête détecté."
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Ajuster les couleurs",
       "desc": "Ajustez le contraste, la saturation et la luminosité d'un PDF."
     },
@@ -499,7 +499,7 @@
       "title": "Séparer automatiquement les pages",
       "desc": "Séparez automatiquement le PDF numérisé avec le code QR du diviseur de page numérisé."
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Assainir",
       "desc": "Supprimez les scripts et autres éléments des PDF."
     },
@@ -523,11 +523,11 @@
       "title": "Récupérer les informations",
       "desc": "Récupérez toutes les informations possibles sur un PDF."
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extraire des pages",
       "desc": "Extrayez certaines pages du PDF."
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "Fusionner en une seule page",
       "desc": "Fusionnez toutes les pages PDF en une seule grande page."
     },
@@ -543,11 +543,11 @@
       "title": "Caviardage manuel",
       "desc": "Caviarder un PDF en fonction de texte sélectionné, formes dessinées et/ou des pages sélectionnées."
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF en CSV",
       "desc": "Extrait les tableaux d'un PDF et les transforme en CSV."
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Séparer automatiquement par taille/nombre",
       "desc": "Séparer un PDF unique en plusieurs documents en fonction de la taille, du nombre de pages ou du nombre de documents."
     },
@@ -563,11 +563,11 @@
       "title": "Ajouter un tampon sur un PDF",
       "desc": "Ajouter un texte ou l'image d'un tampon à un emplacement défini."
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Supprimer les images",
       "desc": "Supprimez les images d'un PDF pour réduire sa taille"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Séparer un PDF par chapitres",
       "desc": "Séparez un PDF en fichiers multiples en fonction de sa structure par chapitres."
     },
@@ -575,7 +575,7 @@
       "title": "Valider la signature du fichier PDF",
       "desc": "Vérifier les signatures numériques et les certificats des documents PDF"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Remplacer et Inverser Couleur",
       "desc": "Remplacer la couleur pour le texte et l'arrière-plan dans le PDF et inverser la couleur complète du PDF pour réduire la taille du fichier"
     }
