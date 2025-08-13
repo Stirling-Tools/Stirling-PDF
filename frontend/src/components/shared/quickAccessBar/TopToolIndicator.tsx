@@ -68,7 +68,7 @@ const TopToolIndicator: React.FC<TopToolIndicatorProps> = ({ activeButton, setAc
         {indicatorTool && (
           <div className="current-tool-content">
             <div className="flex flex-col items-center gap-1">
-              <Tooltip content={isBackHover ? 'Back to all tools' : indicatorTool.name} sidebarTooltip>
+              <Tooltip content={isBackHover ? 'Back to all tools' : indicatorTool.name} position="right" arrow width={140}>
                 <ActionIcon
                   size={'xl'}
                   variant="subtle"

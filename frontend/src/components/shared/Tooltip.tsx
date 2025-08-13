@@ -14,6 +14,7 @@ export interface TooltipProps {
   children: React.ReactElement;
   offset?: number;
   maxWidth?: number | string;
+  minWidth?: number | string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   arrow?: boolean;
@@ -23,6 +24,7 @@ export interface TooltipProps {
     logo?: React.ReactNode;
   };
   delay?: number;
+  containerStyle?: React.CSSProperties;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -32,13 +34,15 @@ export const Tooltip: React.FC<TooltipProps> = ({
   tips,
   children,
   offset: gap = 8,
-  maxWidth = 280,
+  maxWidth,
+  minWidth,
   open: controlledOpen,
   onOpenChange,
   arrow = false,
   portalTarget,
   header,
   delay = 0,
+  containerStyle={},
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
@@ -135,8 +139,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
       '';
   };
 
-  // Only show tooltip when position is ready and correct
-  const shouldShowTooltip = open && (sidebarTooltip ? positionReady : true);
+  // Always mount when open so we can measure; hide until positioned to avoid flash
+  const shouldShowTooltip = open;
 
   const tooltipElement = shouldShowTooltip ? (
     <div
@@ -145,11 +149,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
         position: 'fixed',
         top: coords.top,
         left: coords.left,
-        maxWidth,
+        width: (maxWidth !== undefined ? maxWidth : '25rem'),
+        minWidth: minWidth,
         zIndex: 9999,
-        visibility: 'visible',
-        opacity: 1,
+        visibility: positionReady ? 'visible' : 'hidden',
+        opacity: positionReady ? 1 : 0,
         color: 'var(--text-primary)',
+        ...containerStyle,
       }}
       className={`${styles['tooltip-container']} ${isPinned ? styles.pinned : ''}`}
       onClick={handleTooltipClick}

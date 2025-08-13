@@ -178,7 +178,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
           <Stack gap="lg" align="center">
             {buttonConfigs.slice(0, -1).map((config, index) => (
               <React.Fragment key={config.id}>
-                <Tooltip content={config.tooltip} sidebarTooltip>
+                <Tooltip content={config.tooltip} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
                   <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
                     <ActionIcon
                       size={isButtonActive(config) ? (config.size || 'xl') : 'lg'}

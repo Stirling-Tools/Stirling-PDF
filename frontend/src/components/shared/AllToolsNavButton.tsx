@@ -29,7 +29,8 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
   );
 
   return (
-    <Tooltip content={'All tools'} sidebarTooltip>
+    
+    <Tooltip content={'All tools'} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
       <div className="flex flex-col items-center gap-1 mt-4 mb-2">
         <ActionIcon
           size={'lg'}
