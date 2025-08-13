@@ -16,6 +16,7 @@ import ChangePermissionsSettings from "../components/tools/changePermissions/Cha
 
 import { useChangePermissionsParameters } from "../hooks/tools/changePermissions/useChangePermissionsParameters";
 import { useChangePermissionsOperation } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
+import { useChangePermissionsTips } from "../components/tooltips/useChangePermissionsTips";
 import { BaseToolProps } from "../types/tool";
 
 const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -25,6 +26,7 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
 
   const changePermissionsParams = useChangePermissionsParameters();
   const changePermissionsOperation = useChangePermissionsOperation();
+  const changePermissionsTips = useChangePermissionsTips();
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(changePermissionsParams.getEndpointName());
@@ -104,6 +106,7 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
           isCompleted={settingsCollapsed}
           onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
           completedMessage={settingsCollapsed ? t('changePermissions.completed', 'Permissions changed') : undefined}
+          tooltip={changePermissionsTips}
         >
           <Stack gap="sm">
             <ChangePermissionsSettings
