@@ -59,7 +59,7 @@ const AddPasswordSettings = ({ parameters, onParameterChange, disabled = false }
 
         <Stack gap="xs">
           <Checkbox
-            label={t('addPassword.restrictions.assembly.label', 'Prevent document assembly')}
+            label={t('addPassword.restrictions.assembly.label', 'Prevent assembly of document')}
             checked={parameters.preventAssembly}
             onChange={(e) => onParameterChange('preventAssembly', e.target.checked)}
             disabled={disabled}
@@ -73,21 +73,21 @@ const AddPasswordSettings = ({ parameters, onParameterChange, disabled = false }
           />
 
           <Checkbox
-            label={t('addPassword.restrictions.extractForAccessibility.label', 'Prevent accessibility extraction')}
+            label={t('addPassword.restrictions.extractForAccessibility.label', 'Prevent extraction for accessibility')}
             checked={parameters.preventExtractForAccessibility}
             onChange={(e) => onParameterChange('preventExtractForAccessibility', e.target.checked)}
             disabled={disabled}
           />
 
           <Checkbox
-            label={t('addPassword.restrictions.fillInForm.label', 'Prevent form filling')}
+            label={t('addPassword.restrictions.fillInForm.label', 'Prevent filling in form')}
             checked={parameters.preventFillInForm}
             onChange={(e) => onParameterChange('preventFillInForm', e.target.checked)}
             disabled={disabled}
           />
 
           <Checkbox
-            label={t('addPassword.restrictions.modify.label', 'Prevent document modification')}
+            label={t('addPassword.restrictions.modify.label', 'Prevent modification')}
             checked={parameters.preventModify}
             onChange={(e) => onParameterChange('preventModify', e.target.checked)}
             disabled={disabled}
@@ -108,7 +108,7 @@ const AddPasswordSettings = ({ parameters, onParameterChange, disabled = false }
           />
 
           <Checkbox
-            label={t('addPassword.restrictions.printingFaithful.label', 'Prevent high-quality printing')}
+            label={t('addPassword.restrictions.printingFaithful.label', 'Prevent printing different formats')}
             checked={parameters.preventPrintingFaithful}
             onChange={(e) => onParameterChange('preventPrintingFaithful', e.target.checked)}
             disabled={disabled}

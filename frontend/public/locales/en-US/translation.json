@@ -1657,19 +1657,19 @@
     "restrictions": {
       "title": "Document Restrictions",
       "assembly": {
-        "label": "Prevent document assembly"
+        "label": "Prevent assembly of document"
       },
       "extractContent": {
         "label": "Prevent content extraction"
       },
       "extractForAccessibility": {
-        "label": "Prevent accessibility extraction"
+        "label": "Prevent extraction for accessibility"
       },
       "fillInForm": {
-        "label": "Prevent form filling"
+        "label": "Prevent filling in form"
       },
       "modify": {
-        "label": "Prevent document modification"
+        "label": "Prevent modification"
       },
       "modifyAnnotations": {
         "label": "Prevent annotation modification"
@@ -1678,7 +1678,7 @@
         "label": "Prevent printing"
       },
       "printingFaithful": {
-        "label": "Prevent high-quality printing"
+        "label": "Prevent printing different formats"
       }
     },
     "results": {
