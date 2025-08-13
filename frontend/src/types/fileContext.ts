@@ -11,7 +11,7 @@ export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 
 export type ToolType = 'merge' | 'split' | 'compress' | 'ocr' | 'convert' | 'sanitize';
 
-export type OperationType = 'merge' | 'split' | 'compress' | 'add' | 'remove' | 'replace' | 'convert' | 'upload' | 'ocr';
+export type OperationType = 'merge' | 'split' | 'compress' | 'add' | 'remove' | 'replace' | 'convert' | 'upload' | 'ocr' | 'sanitize';
 
 export interface FileOperation {
   id: string;

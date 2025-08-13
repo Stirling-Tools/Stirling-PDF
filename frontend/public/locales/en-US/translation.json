@@ -38,7 +38,8 @@
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "close": "Close",
-  "filesSelected": "files selected",
+  "fileSelected": "Selected: {{filename}}",
+  "filesSelected": "{{count}} files selected",
   "noFavourites": "No favorites added",
   "downloadComplete": "Download Complete",
   "bored": "Bored Waiting?",
@@ -386,6 +387,10 @@
     "compress": {
       "title": "Compress",
       "desc": "Compress PDFs to reduce their file size."
+    },
+    "sanitize": {
+      "title": "Sanitize",
+      "desc": "Remove potentially harmful elements from PDF files."
     },
     "unlockPDFForms": {
       "title": "Unlock PDF Forms",
@@ -1612,6 +1617,38 @@
     "pdfaOptions": "PDF/A Options",
     "outputFormat": "Output Format",
     "pdfaNote": "PDF/A-1b is more compatible, PDF/A-2b supports more features.",
-    "pdfaDigitalSignatureWarning": "The PDF contains a digital signature. This will be removed in the next step."
+    "pdfaDigitalSignatureWarning": "The PDF contains a digital signature. This will be removed in the next step.",
+    "sanitize": {
+      "submit": "Sanitize PDF",
+      "completed": "Sanitization completed successfully",
+      "error.generic": "Sanitization failed",
+      "error.failed": "An error occurred while sanitizing the PDF.",
+      "filenamePrefix": "sanitized",
+      "sanitizationResults": "Sanitization Results",
+      "steps": {
+        "files": "Files",
+        "settings": "Settings",
+        "results": "Results"
+      },
+      "files": {
+        "placeholder": "Select a PDF file in the main view to get started"
+      },
+      "options": {
+        "title": "Sanitization Options",
+        "note": "Select the elements you want to remove from the PDF. At least one option must be selected.",
+        "removeJavaScript": "Remove JavaScript",
+        "removeJavaScript.desc": "Remove JavaScript actions and scripts from the PDF",
+        "removeEmbeddedFiles": "Remove Embedded Files",
+        "removeEmbeddedFiles.desc": "Remove any files embedded within the PDF",
+        "removeXMPMetadata": "Remove XMP Metadata",
+        "removeXMPMetadata.desc": "Remove XMP metadata from the PDF",
+        "removeMetadata": "Remove Document Metadata",
+        "removeMetadata.desc": "Remove document information metadata (title, author, etc.)",
+        "removeLinks": "Remove Links",
+        "removeLinks.desc": "Remove external links and launch actions from the PDF",
+        "removeFonts": "Remove Fonts",
+        "removeFonts.desc": "Remove embedded fonts from the PDF"
+      }
+    }
   }
 }

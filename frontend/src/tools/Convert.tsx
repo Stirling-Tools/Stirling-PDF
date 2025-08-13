@@ -122,7 +122,11 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isVisible={true}
           isCollapsed={filesCollapsed}
           isCompleted={filesCollapsed}
-          completedMessage={hasFiles ? `${selectedFiles.length} ${t("filesSelected", "files selected")}` : undefined}
+          completedMessage={hasFiles ?
+            selectedFiles.length === 1
+              ? t('fileSelected', 'Selected: {{filename}}', { filename: selectedFiles[0].name })
+              : t('filesSelected', '{{count}} files selected', { count: selectedFiles.length })
+            : undefined}
         >
           <FileStatusIndicator
             selectedFiles={selectedFiles}
