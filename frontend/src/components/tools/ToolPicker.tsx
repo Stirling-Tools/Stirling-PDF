@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useLayoutEffect, useState } from "react";
 import { Box, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { type ToolRegistryEntry, SUBCATEGORY_ORDER } from "../../data/toolRegistry";
+import { type ToolRegistryEntry } from "../../data/toolRegistry";
 import ToolButton from "./toolPicker/ToolButton";
 import "./toolPicker/ToolPicker.css";
+import { useToolSections } from "../../hooks/useToolSections";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
@@ -43,6 +44,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  // Lightweight inline component to avoid an extra file
   const SubcategoryHeader: React.FC<{ label: string; mt?: string | number; mb?: string | number }> = ({ label, mt = "1rem", mb = "0.25rem" }) => (
     <div className="tool-subcategory-row" style={{ marginLeft: "1rem", marginRight: "1rem", marginTop: mt, marginBottom: mb }}>
       <div className="tool-subcategory-row-rule" />
@@ -51,68 +53,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
     </div>
   );
 
-  const groupedTools = useMemo(() => {
-    const grouped: GroupedTools = {};
-    filteredTools.forEach(([id, tool]) => {
-      const category = tool?.category || "OTHER";
-      const subcategory = tool?.subcategory || "General";
-      if (!grouped[category]) grouped[category] = {};
-      if (!grouped[category][subcategory]) grouped[category][subcategory] = [];
-      grouped[category][subcategory].push({ id, tool });
-    });
-    return grouped;
-  }, [filteredTools]);
-
-  const sections = useMemo(() => {
-
-    const getOrderIndex = (name: string) => {
-      const idx = SUBCATEGORY_ORDER.indexOf(name);
-      return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
-    };
-    // Build two buckets: Quick includes only Recommended; All includes all categories (including Recommended)
-    const quick: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
-    const all: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
-
-    Object.entries(groupedTools).forEach(([origCat, subs]) => {
-      const upperCat = origCat.toUpperCase();
-
-      // Always add to ALL
-      Object.entries(subs).forEach(([sub, tools]) => {
-        if (!all[sub]) all[sub] = [];
-        all[sub].push(...tools);
-      });
-
-      // Add Recommended to QUICK ACCESS
-      if (upperCat === 'RECOMMENDED TOOLS') {
-        Object.entries(subs).forEach(([sub, tools]) => {
-          if (!quick[sub]) quick[sub] = [];
-          quick[sub].push(...tools);
-        });
-      }
-    });
-
-    const sortSubs = (obj: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>>) =>
-      Object.entries(obj)
-        .sort(([a], [b]) => {
-          const ai = getOrderIndex(a);
-          const bi = getOrderIndex(b);
-          if (ai !== bi) return ai - bi;
-          return a.localeCompare(b);
-        })
-        .map(([subcategory, tools]) => ({
-          subcategory,
-          // preserve original insertion order coming from filteredTools
-          tools
-        }));
-
-    // Build sections and filter out any with no tools (avoids empty headers during search)
-    const built = [
-      { title: "QUICK ACCESS", ref: quickAccessRef, subcategories: sortSubs(quick) },
-      { title: "ALL TOOLS", ref: allToolsRef, subcategories: sortSubs(all) }
-    ];
-
-    return built.filter(section => section.subcategories.some(sc => sc.tools.length > 0));
-  }, [groupedTools]);
+  const { sections } = useToolSections(filteredTools);
 
   const visibleSections = sections;
 
@@ -141,25 +82,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   };
 
   // Build flat list by subcategory for search mode
-  const searchGroups = useMemo(() => {
-    if (!isSearching) return [] as Array<{ subcategory: string; tools: Array<{ id: string; tool: ToolRegistryEntry }> }>;
-    const subMap: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
-    const seen = new Set<string>();
-    filteredTools.forEach(([id, tool]) => {
-      if (seen.has(id)) return;
-      seen.add(id);
-      const sub = tool?.subcategory || 'General';
-      if (!subMap[sub]) subMap[sub] = [];
-      subMap[sub].push({ id, tool });
-    });
-    return Object.entries(subMap)
-      .sort(([a],[b]) => a.localeCompare(b))
-      .map(([subcategory, tools]) => ({
-        subcategory,
-        // preserve insertion order
-        tools
-      }));
-  }, [isSearching, filteredTools]);
+  const { searchGroups } = useToolSections(isSearching ? filteredTools : []);
 
   return (
     <Box
