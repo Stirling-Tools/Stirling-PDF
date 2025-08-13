@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { Button, Stack, Text } from "@mantine/core";
+import { useEffect, useMemo, useState } from "react";
+import { Box, Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
@@ -24,6 +24,8 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { setCurrentMode } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
+
+  const [expandedPermissions, setExpandedPermissions] = useState(false);
 
   const addPasswordParams = useAddPasswordParameters();
   const addPasswordOperation = useAddPasswordOperation();
@@ -69,7 +71,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const hasResults = addPasswordOperation.files.length > 0 || addPasswordOperation.downloadUrl !== null;
   const filesCollapsed = hasFiles;
   const passwordsCollapsed = hasResults;
-  const permissionsCollapsed = hasResults;
+  const permissionsCollapsed = expandedPermissions || hasResults;
 
   const previewResults = useMemo(() =>
     addPasswordOperation.files?.map((file, index) => ({
@@ -123,25 +125,24 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isVisible={hasFiles}
           isCollapsed={permissionsCollapsed}
           isCompleted={permissionsCollapsed}
-          onCollapsedClick={hasResults ? handleSettingsReset : undefined}
-          completedMessage={permissionsCollapsed ? t('addPassword.permissions.completed', 'Permissions configured') : undefined}
+          onCollapsedClick={hasResults ? handleSettingsReset : () => setExpandedPermissions(!expandedPermissions)}
         >
-          <Stack gap="sm">
-            <ChangePermissionsSettings
-              parameters={addPasswordParams.permissions.parameters}
-              onParameterChange={addPasswordParams.permissions.updateParameter}
-              disabled={endpointLoading}
-            />
-
-            <OperationButton
-              onClick={handleAddPassword}
-              isLoading={addPasswordOperation.isLoading}
-              disabled={!addPasswordParams.validateParameters() || !hasFiles || !endpointEnabled}
-              loadingText={t('loading')}
-              submitText={t('addPassword.submit', 'Encrypt')}
-            />
-          </Stack>
+          <ChangePermissionsSettings
+            parameters={addPasswordParams.permissions.parameters}
+            onParameterChange={addPasswordParams.permissions.updateParameter}
+            disabled={endpointLoading}
+          />
         </ToolStep>
+
+        <Box mt="md">
+          <OperationButton
+            onClick={handleAddPassword}
+            isLoading={addPasswordOperation.isLoading}
+            disabled={!addPasswordParams.validateParameters() || !hasFiles || !endpointEnabled}
+            loadingText={t('loading')}
+            submitText={t('addPassword.submit', 'Encrypt')}
+          />
+        </Box>
 
         {/* Results Step */}
         <ToolStep
