@@ -384,6 +384,10 @@
       "title": "Add Password",
       "desc": "Encrypt your PDF document with a password."
     },
+    "changePermissions": {
+      "title": "Change Permissions",
+      "desc": "Change document restrictions and permissions."
+    },
     "removePassword": {
       "title": "Remove Password",
       "desc": "Remove password protection from your PDF document."
@@ -1853,6 +1857,43 @@
         "title": "Document Restrictions",
         "text": "These restrictions control what users can do with the PDF. Most effective when combined with an owner password."
       }
+    }
+  },
+  "changePermissions": {
+    "completed": "Permissions changed",
+    "submit": "Change Permissions",
+    "error": {
+      "failed": "An error occurred while changing PDF permissions."
+    },
+    "restrictions": {
+      "title": "Document Restrictions",
+      "preventAssembly": {
+        "label": "Prevent assembly of document"
+      },
+      "preventExtractContent": {
+        "label": "Prevent content extraction"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Prevent extraction for accessibility"
+      },
+      "preventFillInForm": {
+        "label": "Prevent filling in form"
+      },
+      "preventModify": {
+        "label": "Prevent modification"
+      },
+      "preventModifyAnnotations": {
+        "label": "Prevent annotation modification"
+      },
+      "preventPrinting": {
+        "label": "Prevent printing"
+      },
+      "preventPrintingFaithful": {
+        "label": "Prevent printing different formats"
+      }
+    },
+    "results": {
+      "title": "Modified PDFs"
     }
   }
 }

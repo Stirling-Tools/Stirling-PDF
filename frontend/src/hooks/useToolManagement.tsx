@@ -95,6 +95,15 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     description: "Add password protection and restrictions to PDF files",
     endpoints: ["add-password"]
   },
+  changePermissions: {
+    id: "changePermissions",
+    icon: <LockIcon />,
+    component: React.lazy(() => import("../tools/ChangePermissions")),
+    maxFiles: -1,
+    category: "security",
+    description: "Change document restrictions and permissions",
+    endpoints: ["add-password"]
+  },
 
 };
 

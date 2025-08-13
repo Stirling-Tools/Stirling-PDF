@@ -15,7 +15,8 @@ export type ModeType =
   | 'ocr' 
   | 'convert' 
   | 'sanitize'
-  | 'addPassword';
+  | 'addPassword'
+  | 'changePermissions';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 
