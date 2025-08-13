@@ -1,5 +1,5 @@
 import React from "react";
-import { Stack, Text, PasswordInput, Select, Checkbox } from "@mantine/core";
+import { Stack, Text, PasswordInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "../../../hooks/tools/addPassword/useAddPasswordParameters";
 
@@ -53,68 +53,6 @@ const AddPasswordSettings = ({ parameters, onParameterChange, disabled = false }
         />
       </Stack>
 
-      {/* Document Restrictions */}
-      <Stack gap="sm">
-        <Text size="sm" fw={500}>{t('addPassword.restrictions.title', 'Document Restrictions')}</Text>
-
-        <Stack gap="xs">
-          <Checkbox
-            label={t('addPassword.restrictions.assembly.label', 'Prevent assembly of document')}
-            checked={parameters.preventAssembly}
-            onChange={(e) => onParameterChange('preventAssembly', e.target.checked)}
-            disabled={disabled}
-          />
-
-          <Checkbox
-            label={t('addPassword.restrictions.extractContent.label', 'Prevent content extraction')}
-            checked={parameters.preventExtractContent}
-            onChange={(e) => onParameterChange('preventExtractContent', e.target.checked)}
-            disabled={disabled}
-          />
-
-          <Checkbox
-            label={t('addPassword.restrictions.extractForAccessibility.label', 'Prevent extraction for accessibility')}
-            checked={parameters.preventExtractForAccessibility}
-            onChange={(e) => onParameterChange('preventExtractForAccessibility', e.target.checked)}
-            disabled={disabled}
-          />
-
-          <Checkbox
-            label={t('addPassword.restrictions.fillInForm.label', 'Prevent filling in form')}
-            checked={parameters.preventFillInForm}
-            onChange={(e) => onParameterChange('preventFillInForm', e.target.checked)}
-            disabled={disabled}
-          />
-
-          <Checkbox
-            label={t('addPassword.restrictions.modify.label', 'Prevent modification')}
-            checked={parameters.preventModify}
-            onChange={(e) => onParameterChange('preventModify', e.target.checked)}
-            disabled={disabled}
-          />
-
-          <Checkbox
-            label={t('addPassword.restrictions.modifyAnnotations.label', 'Prevent annotation modification')}
-            checked={parameters.preventModifyAnnotations}
-            onChange={(e) => onParameterChange('preventModifyAnnotations', e.target.checked)}
-            disabled={disabled}
-          />
-
-          <Checkbox
-            label={t('addPassword.restrictions.printing.label', 'Prevent printing')}
-            checked={parameters.preventPrinting}
-            onChange={(e) => onParameterChange('preventPrinting', e.target.checked)}
-            disabled={disabled}
-          />
-
-          <Checkbox
-            label={t('addPassword.restrictions.printingFaithful.label', 'Prevent printing different formats')}
-            checked={parameters.preventPrintingFaithful}
-            onChange={(e) => onParameterChange('preventPrintingFaithful', e.target.checked)}
-            disabled={disabled}
-          />
-        </Stack>
-      </Stack>
     </Stack>
   );
 };

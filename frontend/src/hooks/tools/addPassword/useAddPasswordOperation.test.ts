@@ -76,14 +76,6 @@ describe('useAddPasswordOperation', () => {
       password: 'user-password',
       ownerPassword: 'owner-password',
       keyLength: 256,
-      preventAssembly: true,
-      preventExtractContent: false,
-      preventExtractForAccessibility: true,
-      preventFillInForm: false,
-      preventModify: true,
-      preventModifyAnnotations: false,
-      preventPrinting: true,
-      preventPrintingFaithful: false
     };
 
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
@@ -96,16 +88,6 @@ describe('useAddPasswordOperation', () => {
     expect(formData.get('password')).toBe('user-password');
     expect(formData.get('ownerPassword')).toBe('owner-password');
     expect(formData.get('keyLength')).toBe('256');
-
-    // Verify boolean parameters are converted to strings
-    expect(formData.get('preventAssembly')).toBe('true');
-    expect(formData.get('preventExtractContent')).toBe('false');
-    expect(formData.get('preventExtractForAccessibility')).toBe('true');
-    expect(formData.get('preventFillInForm')).toBe('false');
-    expect(formData.get('preventModify')).toBe('true');
-    expect(formData.get('preventModifyAnnotations')).toBe('false');
-    expect(formData.get('preventPrinting')).toBe('true');
-    expect(formData.get('preventPrintingFaithful')).toBe('false');
   });
 
   test('should handle empty passwords in form data', () => {
@@ -118,14 +100,6 @@ describe('useAddPasswordOperation', () => {
       password: '',
       ownerPassword: '',
       keyLength: 128,
-      preventAssembly: false,
-      preventExtractContent: false,
-      preventExtractForAccessibility: false,
-      preventFillInForm: false,
-      preventModify: false,
-      preventModifyAnnotations: false,
-      preventPrinting: false,
-      preventPrintingFaithful: false
     };
 
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
@@ -149,14 +123,6 @@ describe('useAddPasswordOperation', () => {
       password: 'test',
       ownerPassword: '',
       keyLength: 40,
-      preventAssembly: false,
-      preventExtractContent: false,
-      preventExtractForAccessibility: false,
-      preventFillInForm: false,
-      preventModify: false,
-      preventModifyAnnotations: false,
-      preventPrinting: false,
-      preventPrintingFaithful: false
     };
 
     let formData = buildFormData(params40, testFile as any /* FIX ME */);

@@ -13,6 +13,7 @@ import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator"
 import ResultsPreview from "../components/tools/shared/ResultsPreview";
 
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
+import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 
 import { useAddPasswordParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
 import { useAddPasswordOperation } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -39,7 +40,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleAddPassword = async () => {
     try {
       await addPasswordOperation.executeOperation(
-        addPasswordParams.parameters,
+        addPasswordParams.fullParameters,
         selectedFiles
       );
       if (addPasswordOperation.files && onComplete) {
@@ -67,7 +68,8 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const hasFiles = selectedFiles.length > 0;
   const hasResults = addPasswordOperation.files.length > 0 || addPasswordOperation.downloadUrl !== null;
   const filesCollapsed = hasFiles;
-  const settingsCollapsed = hasResults;
+  const passwordsCollapsed = hasResults;
+  const permissionsCollapsed = hasResults;
 
   const previewResults = useMemo(() =>
     addPasswordOperation.files?.map((file, index) => ({
@@ -98,20 +100,36 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           />
         </ToolStep>
 
-        {/* Settings Step */}
+        {/* Passwords & Encryption Step */}
         <ToolStep
-          title={t('settings.title', 'Settings')}
+          title={t('addPassword.passwords.stepTitle', 'Passwords & Encryption')}
           isVisible={hasFiles}
-          isCollapsed={settingsCollapsed}
-          isCompleted={settingsCollapsed}
-          onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
-          completedMessage={settingsCollapsed ? t('addPassword.completed', 'Encrypted') : undefined}
+          isCollapsed={passwordsCollapsed}
+          isCompleted={passwordsCollapsed}
+          onCollapsedClick={hasResults ? handleSettingsReset : undefined}
+          completedMessage={passwordsCollapsed ? t('addPassword.passwords.completed', 'Passwords configured') : undefined}
           tooltip={addPasswordTips}
         >
+          <AddPasswordSettings
+            parameters={addPasswordParams.parameters}
+            onParameterChange={addPasswordParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        </ToolStep>
+
+        {/* Permissions Step */}
+        <ToolStep
+          title={t('addPassword.permissions.stepTitle', 'Document Permissions')}
+          isVisible={hasFiles}
+          isCollapsed={permissionsCollapsed}
+          isCompleted={permissionsCollapsed}
+          onCollapsedClick={hasResults ? handleSettingsReset : undefined}
+          completedMessage={permissionsCollapsed ? t('addPassword.permissions.completed', 'Permissions configured') : undefined}
+        >
           <Stack gap="sm">
-            <AddPasswordSettings
-              parameters={addPasswordParams.parameters}
-              onParameterChange={addPasswordParams.updateParameter}
+            <ChangePermissionsSettings
+              parameters={addPasswordParams.permissions.parameters}
+              onParameterChange={addPasswordParams.permissions.updateParameter}
               disabled={endpointLoading}
             />
 

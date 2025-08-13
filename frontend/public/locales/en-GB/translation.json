@@ -1788,6 +1788,8 @@
     },
     "passwords": {
       "title": "Passwords",
+      "stepTitle": "Passwords & Encryption",
+      "completed": "Passwords configured",
       "user": {
         "label": "User Password",
         "placeholder": "Enter user password"
@@ -1796,6 +1798,10 @@
         "label": "Owner Password",
         "placeholder": "Enter owner password"
       }
+    },
+    "permissions": {
+      "stepTitle": "Document Permissions",
+      "completed": "Permissions configured"
     },
     "encryption": {
       "title": "Encryption",

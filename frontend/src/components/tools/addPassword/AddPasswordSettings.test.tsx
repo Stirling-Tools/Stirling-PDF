@@ -210,34 +210,6 @@ describe('AddPasswordSettings', () => {
     expect(mockT).toHaveBeenCalledWith('addPassword.passwords.owner.label', 'Owner Password');
   });
 
-  test('should handle all restriction parameters correctly', () => {
-    const allRestrictionsEnabled: AddPasswordParameters = {
-      ...defaultParameters,
-      preventAssembly: true,
-      preventExtractContent: true,
-      preventExtractForAccessibility: true,
-      preventFillInForm: true,
-      preventModify: true,
-      preventModifyAnnotations: true,
-      preventPrinting: true,
-      preventPrintingFaithful: true,
-    };
-
-    render(
-      <TestWrapper>
-        <AddPasswordSettings
-          parameters={allRestrictionsEnabled}
-          onParameterChange={mockOnParameterChange}
-        />
-      </TestWrapper>
-    );
-
-    const checkboxes = screen.getAllByRole('checkbox');
-    checkboxes.forEach(checkbox => {
-      expect(checkbox).toBeChecked();
-    });
-  });
-
   test('should handle key length options correctly', () => {
     const { rerender } = render(
       <TestWrapper>

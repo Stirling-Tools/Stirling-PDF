@@ -3,6 +3,12 @@ import { useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import type { ChangePermissionsParameters } from './useChangePermissionsParameters';
 
+export const getFormData = ((parameters: ChangePermissionsParameters) =>
+  Object.entries(parameters).map(([key, value]) =>
+    [key, value.toString()]
+  ) as string[][]
+);
+
 export const useChangePermissionsOperation = () => {
   const { t } = useTranslation();
 
@@ -11,14 +17,9 @@ export const useChangePermissionsOperation = () => {
     formData.append("fileInput", file);
 
     // Add all permission parameters
-    formData.append("preventAssembly", parameters.preventAssembly.toString());
-    formData.append("preventExtractContent", parameters.preventExtractContent.toString());
-    formData.append("preventExtractForAccessibility", parameters.preventExtractForAccessibility.toString());
-    formData.append("preventFillInForm", parameters.preventFillInForm.toString());
-    formData.append("preventModify", parameters.preventModify.toString());
-    formData.append("preventModifyAnnotations", parameters.preventModifyAnnotations.toString());
-    formData.append("preventPrinting", parameters.preventPrinting.toString());
-    formData.append("preventPrintingFaithful", parameters.preventPrintingFaithful.toString());
+    getFormData(parameters).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
 
     return formData;
   };
