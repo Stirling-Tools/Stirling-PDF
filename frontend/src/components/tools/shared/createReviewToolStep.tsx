@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import DownloadIcon from '@mui/icons-material/Download';
 import ErrorNotification from './ErrorNotification';
 import ReviewPanel from './ReviewPanel';
+import { SuggestedToolsSection } from './SuggestedToolsSection';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
 
 export interface ReviewToolStepProps<TParams = any> {
@@ -31,10 +32,6 @@ export function createReviewToolStep<TParams = any>(
     _noPadding: true
   }, (
     <Stack gap="sm" >
-      {operation.status && (
-        <Text size="sm" c="dimmed">{operation.status}</Text>
-      )}
-
       <ErrorNotification
         error={operation.errorMessage}
         onClose={operation.clearError}
@@ -62,6 +59,8 @@ export function createReviewToolStep<TParams = any>(
           {t("download", "Download")}
         </Button>
       )}
+
+      <SuggestedToolsSection />
     </Stack>
   ));
 }

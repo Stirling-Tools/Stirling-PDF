@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from "react";
-import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
@@ -100,9 +99,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     setCurrentMode('convert');
   };
 
-  return (
-      <Stack gap="sm" p="sm" style={{ height: '100vh', overflow: 'auto' }}>
-        {createToolFlow({
+  return createToolFlow({
           files: {
             selectedFiles,
             isCollapsed: filesCollapsed,
@@ -137,9 +134,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             onFileClick: handleThumbnailClick,
             testId: "conversion-results"
           }
-        })}
-      </Stack>
-  );
+        });
 };
 
 export default Convert;

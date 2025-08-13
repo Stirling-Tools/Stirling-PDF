@@ -1,4 +1,5 @@
 import React from 'react';
+import { Stack } from '@mantine/core';
 import { createToolSteps, ToolStepProvider } from './ToolStep';
 import OperationButton from './OperationButton';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
@@ -58,44 +59,46 @@ export function createToolFlow(config: ToolFlowConfig) {
   const steps = createToolSteps();
 
   return (
-    <ToolStepProvider>
-      {/* Files Step */}
-      {steps.createFilesStep({
-        selectedFiles: config.files.selectedFiles,
-        isCollapsed: config.files.isCollapsed,
-        placeholder: config.files.placeholder,
-        onCollapsedClick: config.files.onCollapsedClick
-      })}
+    <Stack gap="sm" p="sm" style={{ height: '100vh', overflow: 'auto' }}>
+      <ToolStepProvider>
+        {/* Files Step */}
+        {steps.createFilesStep({
+          selectedFiles: config.files.selectedFiles,
+          isCollapsed: config.files.isCollapsed,
+          placeholder: config.files.placeholder,
+          onCollapsedClick: config.files.onCollapsedClick
+        })}
 
-      {/* Middle Steps */}
-      {config.steps.map((stepConfig, index) =>
-        steps.create(stepConfig.title, {
-          isVisible: stepConfig.isVisible,
-          isCollapsed: stepConfig.isCollapsed,
-          onCollapsedClick: stepConfig.onCollapsedClick,
-          tooltip: stepConfig.tooltip
-        }, stepConfig.content)
-      )}
+        {/* Middle Steps */}
+        {config.steps.map((stepConfig, index) =>
+          steps.create(stepConfig.title, {
+            isVisible: stepConfig.isVisible,
+            isCollapsed: stepConfig.isCollapsed,
+            onCollapsedClick: stepConfig.onCollapsedClick,
+            tooltip: stepConfig.tooltip
+          }, stepConfig.content)
+        )}
 
-      {/* Execute Button */}
-      {config.executeButton && config.executeButton.isVisible !== false && (
-        <OperationButton
-          onClick={config.executeButton.onClick}
-          isLoading={config.review.operation.isLoading}
-          disabled={config.executeButton.disabled}
-          loadingText={config.executeButton.loadingText}
-          submitText={config.executeButton.text}
-          data-testid={config.executeButton.testId}
-        />
-      )}
+        {/* Execute Button */}
+        {config.executeButton && config.executeButton.isVisible !== false && (
+          <OperationButton
+            onClick={config.executeButton.onClick}
+            isLoading={config.review.operation.isLoading}
+            disabled={config.executeButton.disabled}
+            loadingText={config.executeButton.loadingText}
+            submitText={config.executeButton.text}
+            data-testid={config.executeButton.testId}
+          />
+        )}
 
-      {/* Review Step */}
-      {steps.createReviewStep({
-        isVisible: config.review.isVisible,
-        operation: config.review.operation,
-        title: config.review.title,
-        onFileClick: config.review.onFileClick
-      })}
-    </ToolStepProvider>
+        {/* Review Step */}
+        {steps.createReviewStep({
+          isVisible: config.review.isVisible,
+          operation: config.review.operation,
+          title: config.review.title,
+          onFileClick: config.review.onFileClick
+        })}
+      </ToolStepProvider>
+    </Stack>
   );
 }

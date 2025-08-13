@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
@@ -63,9 +62,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const filesCollapsed = hasFiles;
   const settingsCollapsed = !hasFiles || hasResults;
 
-  return (
-    <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
-      {createToolFlow({
+  return createToolFlow({
         files: {
           selectedFiles,
           isCollapsed: filesCollapsed,
@@ -96,9 +93,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           title: "Split Results",
           onFileClick: handleThumbnailClick
         }
-      })}
-    </Stack>
-  );
+      });
 }
 
 export default Split;

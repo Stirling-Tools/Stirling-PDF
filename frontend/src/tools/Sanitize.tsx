@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
@@ -64,9 +63,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const filesCollapsed = hasFiles || hasResults;
   const settingsCollapsed = !hasFiles || hasResults;
 
-  return (
-    <Stack gap="sm" p="sm" style={{ height: '100vh', overflow: 'auto' }}>
-      {createToolFlow({
+  return createToolFlow({
         files: {
           selectedFiles,
           isCollapsed: filesCollapsed,
@@ -97,9 +94,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           title: t("sanitize.sanitizationResults", "Sanitization Results"),
           onFileClick: handleThumbnailClick
         }
-      })}
-    </Stack>
-  );
+      });
 }
 
 export default Sanitize;

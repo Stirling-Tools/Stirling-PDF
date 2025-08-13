@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
@@ -80,15 +79,12 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
 
-  const filesCollapsed = expandedStep !== 'files';
   const settingsCollapsed = expandedStep !== 'settings';
 
-  return (
-    <Stack gap="sm" p="sm" style={{ height: '100vh', overflow: 'auto' }}>
-      {createToolFlow({
+  return createToolFlow({
         files: {
           selectedFiles,
-          isCollapsed: hasFiles && !hasResults && filesCollapsed,
+          isCollapsed: hasFiles || hasResults,
         },
         steps: [
           {
@@ -137,9 +133,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           title: t("ocr.results.title", "OCR Results"),
           onFileClick: handleThumbnailClick
         }
-      })}
-    </Stack>
-  );
+      });
 }
 
 export default OCR;

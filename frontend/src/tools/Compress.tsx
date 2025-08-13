@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
@@ -63,9 +62,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const hasResults = compressOperation.files.length > 0 || compressOperation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
 
-  return (
-    <Stack gap="sm" p="sm" style={{ height: '100vh', overflow: 'auto' }}>
-      {createToolFlow({
+  return createToolFlow({
         files: {
           selectedFiles,
           isCollapsed: hasFiles && !hasResults,
@@ -96,9 +93,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           title: t("compress.title", "Compression Results"),
           onFileClick: handleThumbnailClick
         }
-      })}
-    </Stack>
-  );
+      });
 }
 
 
