@@ -273,9 +273,9 @@ pycryptodome==3.23.0 \
     --hash=sha256:e3f2d0aaf8080bda0587d58fc9fe4766e012441e2eed4269a77de6aea981c8be \
     --hash=sha256:eb8f24adb74984aa0e5d07a2368ad95276cf38051fe2dc6605cbcf482e04f2a7
     # via -r testing\cucumber\requirements.in
-pypdf==5.7.0 \
-    --hash=sha256:203379453439f5b68b7a1cd43cdf4c5f7a02b84810cefa7f93a47b350aaaba48 \
-    --hash=sha256:68c92f2e1aae878bab1150e74447f31ab3848b1c0a6f8becae9f0b1904460b6f
+pypdf==6.0.0 \
+    --hash=sha256:282a99d2cc94a84a3a3159f0d9358c0af53f85b4d28d76ea38b96e9e5ac2a08d \
+    --hash=sha256:56ea60100ce9f11fc3eec4f359da15e9aec3821b036c1f06d2b660d35683abb8
     # via -r testing\cucumber\requirements.in
 reportlab==4.4.2 \
     --hash=sha256:58e11be387457928707c12153b7e41e52533a5da3f587b15ba8f8fd0805c6ee2 \
