@@ -1,7 +1,7 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { describe, expect, test, vi, beforeEach, MockedFunction } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useAddPasswordOperation } from './useAddPasswordOperation';
-import type { AddPasswordParameters } from './useAddPasswordParameters';
+import type { AddPasswordFullParameters, AddPasswordParameters } from './useAddPasswordParameters';
 
 // Mock the useToolOperation hook
 vi.mock('../shared/useToolOperation', () => ({
@@ -21,9 +21,14 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 
 // Import the mocked function
 import { ToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
+import { get } from 'http';
+
+
 
 describe('useAddPasswordOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
+
+  const getToolConfig = (): ToolOperationConfig<AddPasswordFullParameters> => mockUseToolOperation.mock.calls[0][0];
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -53,7 +58,7 @@ describe('useAddPasswordOperation', () => {
       operationType: 'addPassword',
       endpoint: '/api/v1/security/add-password',
       buildFormData: expect.any(Function),
-      filePrefix: 'passworded_',
+      filePrefix: 'translated-addPassword.filenamePrefix_',
       multiFileEndpoint: false,
       getErrorMessage: 'error-handler-function'
     });
@@ -69,13 +74,23 @@ describe('useAddPasswordOperation', () => {
     renderHook(() => useAddPasswordOperation());
 
     // Get the buildFormData function that was passed to useToolOperation
-    const callArgs: ToolOperationConfig<AddPasswordParameters> = mockUseToolOperation.mock.calls[0][0];
+    const callArgs = getToolConfig();
     const buildFormData = callArgs.buildFormData;
 
-    const testParameters: AddPasswordParameters = {
+    const testParameters: AddPasswordFullParameters = {
       password: 'user-password',
       ownerPassword: 'owner-password',
       keyLength: 256,
+      permissions: {
+        preventAssembly: false,
+        preventExtractContent: false,
+        preventExtractForAccessibility: false,
+        preventFillInForm: false,
+        preventModify: false,
+        preventModifyAnnotations: false,
+        preventPrinting: false,
+        preventPrintingFaithful: false
+      }
     };
 
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
@@ -93,13 +108,23 @@ describe('useAddPasswordOperation', () => {
   test('should handle empty passwords in form data', () => {
     renderHook(() => useAddPasswordOperation());
 
-    const callArgs: ToolOperationConfig<AddPasswordParameters> = mockUseToolOperation.mock.calls[0][0];
+    const callArgs = getToolConfig();
     const buildFormData = callArgs.buildFormData;
 
-    const testParameters: AddPasswordParameters = {
+    const testParameters: AddPasswordFullParameters = {
       password: '',
       ownerPassword: '',
       keyLength: 128,
+      permissions: {
+        preventAssembly: false,
+        preventExtractContent: false,
+        preventExtractForAccessibility: false,
+        preventFillInForm: false,
+        preventModify: false,
+        preventModifyAnnotations: false,
+        preventPrinting: false,
+        preventPrintingFaithful: false,
+      }
     };
 
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
@@ -113,23 +138,33 @@ describe('useAddPasswordOperation', () => {
   test('should handle different key length values', () => {
     renderHook(() => useAddPasswordOperation());
 
-    const callArgs: ToolOperationConfig<AddPasswordParameters> = mockUseToolOperation.mock.calls[0][0];
+    const callArgs = getToolConfig();
     const buildFormData = callArgs.buildFormData;
 
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
 
     // Test 40-bit encryption
-    const params40: AddPasswordParameters = {
+    const params40: AddPasswordFullParameters = {
       password: 'test',
       ownerPassword: '',
       keyLength: 40,
+      permissions: {
+        preventAssembly: false,
+        preventExtractContent: false,
+        preventExtractForAccessibility: false,
+        preventFillInForm: false,
+        preventModify: false,
+        preventModifyAnnotations: false,
+        preventPrinting: false,
+        preventPrintingFaithful: false
+      }
     };
 
     let formData = buildFormData(params40, testFile as any /* FIX ME */);
     expect(formData.get('keyLength')).toBe('40');
 
     // Test 256-bit encryption
-    const params256: AddPasswordParameters = {
+    const params256: AddPasswordFullParameters = {
       ...params40,
       keyLength: 256
     };
@@ -143,35 +178,35 @@ describe('useAddPasswordOperation', () => {
 
     expect(mockT).toHaveBeenCalledWith(
       'addPassword.error.failed',
-      'An error occurred while adding password to the PDF.'
+      'An error occurred while encrypting the PDF.'
     );
   });
 
   test('should configure single file endpoint', () => {
     renderHook(() => useAddPasswordOperation());
 
-    const callArgs: ToolOperationConfig<AddPasswordParameters> = mockUseToolOperation.mock.calls[0][0];
+    const callArgs = getToolConfig();
     expect(callArgs.multiFileEndpoint).toBe(false);
   });
 
   test('should use correct endpoint URL', () => {
     renderHook(() => useAddPasswordOperation());
 
-    const callArgs: ToolOperationConfig<AddPasswordParameters> = mockUseToolOperation.mock.calls[0][0];
+    const callArgs = getToolConfig();
     expect(callArgs.endpoint).toBe('/api/v1/security/add-password');
   });
 
   test('should use correct file prefix', () => {
     renderHook(() => useAddPasswordOperation());
 
-    const callArgs: ToolOperationConfig<AddPasswordParameters> = mockUseToolOperation.mock.calls[0][0];
-    expect(callArgs.filePrefix).toBe('passworded_');
+    const callArgs = getToolConfig();
+    expect(callArgs.filePrefix).toBe('translated-addPassword.filenamePrefix_');
   });
 
   test('should use correct operation type', () => {
     renderHook(() => useAddPasswordOperation());
 
-    const callArgs: ToolOperationConfig<AddPasswordParameters> = mockUseToolOperation.mock.calls[0][0];
+    const callArgs = getToolConfig();
     expect(callArgs.operationType).toBe('addPassword');
   });
 });

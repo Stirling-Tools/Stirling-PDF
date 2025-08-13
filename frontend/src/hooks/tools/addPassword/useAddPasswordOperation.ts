@@ -23,7 +23,7 @@ export const useAddPasswordOperation = () => {
     operationType: 'addPassword',
     endpoint: '/api/v1/security/add-password',
     buildFormData,
-    filePrefix: t('addPassowrd.filenamePrefix', 'encrypted') + '_',
+    filePrefix: t('addPassword.filenamePrefix', 'encrypted') + '_',
     multiFileEndpoint: false,
     getErrorMessage: createStandardErrorHandler(t('addPassword.error.failed', 'An error occurred while encrypting the PDF.'))
   });

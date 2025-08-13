@@ -52,21 +52,6 @@ describe('AddPasswordSettings', () => {
     expect(screen.getByRole('textbox', { name: /keyLength/i })).toBeInTheDocument();
   });
 
-  test('should render all restriction checkboxes', () => {
-    render(
-      <TestWrapper>
-        <AddPasswordSettings
-          parameters={defaultParameters}
-          onParameterChange={mockOnParameterChange}
-        />
-      </TestWrapper>
-    );
-
-    // Should render 8 restriction checkboxes
-    const checkboxes = screen.getAllByRole('checkbox');
-    expect(checkboxes).toHaveLength(8);
-  });
-
   test('should render main component sections', () => {
     render(
       <TestWrapper>
@@ -80,7 +65,6 @@ describe('AddPasswordSettings', () => {
     // Check that main section titles are rendered
     expect(screen.getByText('mock-addPassword.passwords.title')).toBeInTheDocument();
     expect(screen.getByText('mock-addPassword.encryption.title')).toBeInTheDocument();
-    expect(screen.getByText('mock-addPassword.restrictions.title')).toBeInTheDocument();
   });
 
   test('should call onParameterChange when password fields are modified', () => {
@@ -117,27 +101,6 @@ describe('AddPasswordSettings', () => {
     expect(mockOnParameterChange).toHaveBeenCalledWith('keyLength', 256);
   });
 
-  test('should call onParameterChange when restriction checkboxes are clicked', () => {
-    render(
-      <TestWrapper>
-        <AddPasswordSettings
-          parameters={defaultParameters}
-          onParameterChange={mockOnParameterChange}
-        />
-      </TestWrapper>
-    );
-
-    const checkboxes = screen.getAllByRole('checkbox');
-
-    // Click first checkbox (should be preventAssembly)
-    fireEvent.click(checkboxes[0]);
-    expect(mockOnParameterChange).toHaveBeenCalledWith('preventAssembly', true);
-
-    // Click second checkbox (should be preventExtractContent)
-    fireEvent.click(checkboxes[1]);
-    expect(mockOnParameterChange).toHaveBeenCalledWith('preventExtractContent', true);
-  });
-
   test('should disable all form elements when disabled prop is true', () => {
     render(
       <TestWrapper>
@@ -157,12 +120,6 @@ describe('AddPasswordSettings', () => {
 
     // Check key length select is disabled - simplified test due to Mantine complexity
     expect(screen.getByText('mock-addPassword.encryption.keyLength.128bit')).toBeInTheDocument();
-
-    // Check all checkboxes are disabled
-    const checkboxes = screen.getAllByRole('checkbox');
-    checkboxes.forEach(checkbox => {
-      expect(checkbox).toBeDisabled();
-    });
   });
 
   test('should enable all form elements when disabled prop is false', () => {
@@ -184,12 +141,6 @@ describe('AddPasswordSettings', () => {
 
     // Check key length select is enabled - simplified test due to Mantine complexity
     expect(screen.getByText('mock-addPassword.encryption.keyLength.128bit')).toBeInTheDocument();
-
-    // Check all checkboxes are enabled
-    const checkboxes = screen.getAllByRole('checkbox');
-    checkboxes.forEach(checkbox => {
-      expect(checkbox).not.toBeDisabled();
-    });
   });
 
   test('should call translation function with correct keys', () => {
@@ -205,7 +156,6 @@ describe('AddPasswordSettings', () => {
     // Verify that translation keys are being called
     expect(mockT).toHaveBeenCalledWith('addPassword.passwords.title', 'Passwords');
     expect(mockT).toHaveBeenCalledWith('addPassword.encryption.title', 'Encryption');
-    expect(mockT).toHaveBeenCalledWith('addPassword.restrictions.title', 'Document Restrictions');
     expect(mockT).toHaveBeenCalledWith('addPassword.passwords.user.label', 'User Password');
     expect(mockT).toHaveBeenCalledWith('addPassword.passwords.owner.label', 'Owner Password');
   });
