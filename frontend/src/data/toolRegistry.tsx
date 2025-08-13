@@ -12,6 +12,11 @@ export type ToolRegistryEntry = {
     description: string;
     category: string;
     subcategory: string | null;
+    
+    // Optional custom props for tools
+    maxFiles?: number; 
+    supportedFormats?: string[];
+    endpoints?: string[]; 
 };
 
 export type ToolRegistry = {
@@ -599,7 +604,8 @@ export const flatToolRegistryMap: ToolRegistry = {
         view: "compress",
         description: "home.compressPdfs.desc",
         category: "Recommended Tools",
-        subcategory: null
+        subcategory: null,
+        maxFiles: -1
     },
     "convert": {
         icon: <span className="material-symbols-rounded">sync_alt</span>,
@@ -608,7 +614,42 @@ export const flatToolRegistryMap: ToolRegistry = {
         view: "convert",
         description: "home.fileToPDF.desc",
         category: "Recommended Tools",
-        subcategory: null
+        subcategory: null,
+        maxFiles: -1,
+        endpoints: [
+            "pdf-to-img",
+            "img-to-pdf",
+            "pdf-to-word",
+            "pdf-to-presentation",
+            "pdf-to-text",
+            "pdf-to-html",
+            "pdf-to-xml",
+            "html-to-pdf",
+            "markdown-to-pdf",
+            "file-to-pdf",
+            "pdf-to-csv",
+            "pdf-to-markdown",
+            "pdf-to-pdfa",
+            "eml-to-pdf"
+        ],
+        supportedFormats: [
+            // Microsoft Office
+            "doc", "docx", "dot", "dotx", "csv", "xls", "xlsx", "xlt", "xltx", "slk", "dif", "ppt", "pptx",
+            // OpenDocument
+            "odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg",
+            // Text formats
+            "txt", "text", "xml", "rtf", "html", "lwp", "md",
+            // Images
+            "bmp", "gif", "jpeg", "jpg", "png", "tif", "tiff", "pbm", "pgm", "ppm", "ras", "xbm", "xpm", "svg", "svm", "wmf", "webp",
+            // StarOffice
+            "sda", "sdc", "sdd", "sdw", "stc", "std", "sti", "stw", "sxd", "sxg", "sxi", "sxw",
+            // Email formats
+            "eml",
+            // Archive formats
+            "zip",
+            // Other
+            "dbf", "fods", "vsd", "vor", "vor3", "vor4", "uop", "pct", "ps", "pdf"
+        ]
     },
     "mergePdfs": {
         icon: <span className="material-symbols-rounded">library_add</span>,
@@ -617,7 +658,8 @@ export const flatToolRegistryMap: ToolRegistry = {
         view: "merge",
         description: "home.merge.desc",
         category: "Recommended Tools",
-        subcategory: null
+        subcategory: null,
+        maxFiles: -1
     },
     "multi-tool": {
         icon: <span className="material-symbols-rounded">dashboard_customize</span>,
@@ -626,7 +668,8 @@ export const flatToolRegistryMap: ToolRegistry = {
         view: "pageEditor",
         description: "home.multiTool.desc",
         category: "Recommended Tools",
-        subcategory: null
+        subcategory: null,
+        maxFiles: -1
     },
     "ocr": {
         icon: <span className="material-symbols-rounded">quick_reference_all</span>,
@@ -635,7 +678,8 @@ export const flatToolRegistryMap: ToolRegistry = {
         view: "convert",
         description: "home.ocr.desc",
         category: "Recommended Tools",
-        subcategory: null
+        subcategory: null,
+        maxFiles: -1
     },
     "redact": {
         icon: <span className="material-symbols-rounded">visibility_off</span>,
