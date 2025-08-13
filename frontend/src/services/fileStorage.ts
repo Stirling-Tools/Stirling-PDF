@@ -35,11 +35,11 @@ class FileStorageService {
     if (this.db) {
       return Promise.resolve();
     }
-    
+
     if (this.initPromise) {
       return this.initPromise;
     }
-    
+
     this.initPromise = new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
@@ -47,7 +47,7 @@ class FileStorageService {
         this.initPromise = null;
         reject(request.error);
       };
-      
+
       request.onsuccess = () => {
         this.db = request.result;
         console.log('IndexedDB connection established');
@@ -57,9 +57,9 @@ class FileStorageService {
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
         const oldVersion = (event as any).oldVersion;
-        
+
         console.log('IndexedDB upgrade needed from version', oldVersion, 'to', this.dbVersion);
-        
+
         // Only recreate object store if it doesn't exist or if upgrading from version < 2
         if (!db.objectStoreNames.contains(this.storeName)) {
           const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
@@ -76,7 +76,7 @@ class FileStorageService {
         }
       };
     });
-    
+
     return this.initPromise;
   }
 
@@ -88,7 +88,7 @@ class FileStorageService {
 
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const arrayBuffer = await file.arrayBuffer();
-    
+
     const storedFile: StoredFile = {
       id,
       name: file.name,
@@ -103,16 +103,16 @@ class FileStorageService {
       try {
         const transaction = this.db!.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);
-        
+
         // Debug logging
         console.log('Object store keyPath:', store.keyPath);
-        console.log('Storing file:', { 
-          id: storedFile.id, 
-          name: storedFile.name, 
+        console.log('Storing file:', {
+          id: storedFile.id,
+          name: storedFile.name,
           hasData: !!storedFile.data,
-          dataSize: storedFile.data.byteLength 
+          dataSize: storedFile.data.byteLength
         });
-        
+
         const request = store.add(storedFile);
 
         request.onerror = () => {
@@ -161,10 +161,10 @@ class FileStorageService {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         // Filter out null/corrupted entries
-        const files = request.result.filter(file => 
-          file && 
-          file.data && 
-          file.name && 
+        const files = request.result.filter(file =>
+          file &&
+          file.data &&
+          file.name &&
           typeof file.size === 'number'
         );
         resolve(files);
@@ -277,7 +277,7 @@ class FileStorageService {
     let available = 0;
     let quota: number | undefined;
     let fileCount = 0;
-    
+
     try {
       // Get browser quota for context
       if ('storage' in navigator && 'estimate' in navigator.storage) {
@@ -285,17 +285,17 @@ class FileStorageService {
         quota = estimate.quota;
         available = estimate.quota || 0;
       }
-      
+
       // Calculate our actual IndexedDB usage from file metadata
       const files = await this.getAllFileMetadata();
       used = files.reduce((total, file) => total + (file?.size || 0), 0);
       fileCount = files.length;
-      
+
       // Adjust available space
       if (quota) {
         available = quota - used;
       }
-      
+
     } catch (error) {
       console.warn('Could not get storage stats:', error);
       // If we can't read metadata, database might be purged
@@ -332,12 +332,12 @@ class FileStorageService {
    */
   async debugAllDatabases(): Promise<void> {
     console.log('=== Checking All IndexedDB Databases ===');
-    
+
     if ('databases' in indexedDB) {
       try {
         const databases = await indexedDB.databases();
         console.log('Found databases:', databases);
-        
+
         for (const dbInfo of databases) {
           if (dbInfo.name?.includes('stirling') || dbInfo.name?.includes('pdf')) {
             console.log(`Checking database: ${dbInfo.name} (version: ${dbInfo.version})`);
@@ -347,7 +347,7 @@ class FileStorageService {
                 request.onsuccess = () => resolve(request.result);
                 request.onerror = () => reject(request.error);
               });
-              
+
               console.log(`Database ${dbInfo.name} object stores:`, Array.from(db.objectStoreNames));
               db.close();
             } catch (error) {
@@ -361,7 +361,7 @@ class FileStorageService {
     } else {
       console.log('indexedDB.databases() not supported');
     }
-    
+
     // Also check our specific database with different versions
     for (let version = 1; version <= 3; version++) {
       try {
@@ -375,9 +375,9 @@ class FileStorageService {
             request.transaction?.abort();
           };
         });
-        
+
         console.log(`Version ${version} object stores:`, Array.from(db.objectStoreNames));
-        
+
         if (db.objectStoreNames.contains('files')) {
           const transaction = db.transaction(['files'], 'readonly');
           const store = transaction.objectStore('files');
@@ -386,10 +386,12 @@ class FileStorageService {
             console.log(`Version ${version} files store has ${countRequest.result} entries`);
           };
         }
-        
+
         db.close();
       } catch (error) {
-        console.log(`Version ${version} not accessible:`, error.message);
+        if (error instanceof Error) {
+          console.log(`Version ${version} not accessible:`, error.message);
+        }
       }
     }
   }
@@ -403,7 +405,7 @@ class FileStorageService {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
-      
+
       // First try getAll to see if there's anything
       const getAllRequest = store.getAll();
       getAllRequest.onsuccess = () => {
@@ -422,7 +424,7 @@ class FileStorageService {
           });
         });
       };
-      
+
       // Then try cursor
       const cursorRequest = store.openCursor();
       console.log('=== IndexedDB Cursor Debug ===');
@@ -432,7 +434,7 @@ class FileStorageService {
         console.error('Cursor error:', cursorRequest.error);
         reject(cursorRequest.error);
       };
-      
+
       cursorRequest.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
@@ -464,21 +466,21 @@ class FileStorageService {
     if (!storedFile || !storedFile.data) {
       throw new Error('Invalid stored file: missing data');
     }
-    
+
     if (!storedFile.name || typeof storedFile.size !== 'number') {
       throw new Error('Invalid stored file: missing metadata');
     }
-    
+
     const blob = new Blob([storedFile.data], { type: storedFile.type });
     const file = new File([blob], storedFile.name, {
       type: storedFile.type,
       lastModified: storedFile.lastModified
     });
-    
+
     // Add custom properties for compatibility
     Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
     Object.defineProperty(file, 'thumbnail', { value: storedFile.thumbnail, writable: false });
-    
+
     return file;
   }
 
@@ -509,15 +511,15 @@ class FileStorageService {
   async createTemporaryBlobUrl(id: string): Promise<string | null> {
     const data = await this.getFileData(id);
     if (!data) return null;
-    
+
     const blob = new Blob([data], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
-    
+
     // Auto-revoke after a short delay to free memory
     setTimeout(() => {
       URL.revokeObjectURL(url);
     }, 10000); // 10 seconds
-    
+
     return url;
   }
 
@@ -538,7 +540,7 @@ class FileStorageService {
           if (storedFile) {
             storedFile.thumbnail = thumbnail;
             const updateRequest = store.put(storedFile);
-            
+
             updateRequest.onsuccess = () => {
               console.log('Thumbnail updated for file:', id);
               resolve(true);
@@ -569,7 +571,7 @@ class FileStorageService {
   async isStorageLow(): Promise<boolean> {
     const stats = await this.getStorageStats();
     if (!stats.quota) return false;
-    
+
     const usagePercent = stats.used / stats.quota;
     return usagePercent > 0.8; // Consider low if over 80% used
   }
@@ -579,12 +581,12 @@ class FileStorageService {
    */
   async cleanupOldFiles(maxFiles: number = 50): Promise<void> {
     const files = await this.getAllFileMetadata();
-    
+
     if (files.length <= maxFiles) return;
-    
+
     // Sort by last modified (oldest first)
     files.sort((a, b) => a.lastModified - b.lastModified);
-    
+
     // Delete oldest files
     const filesToDelete = files.slice(0, files.length - maxFiles);
     for (const file of filesToDelete) {

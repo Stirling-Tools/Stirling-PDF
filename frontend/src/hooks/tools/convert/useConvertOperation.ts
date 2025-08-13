@@ -8,19 +8,19 @@ import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperatio
 import { getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
 
 const shouldProcessFilesSeparately = (
-  selectedFiles: File[], 
+  selectedFiles: File[],
   parameters: ConvertParameters
 ): boolean => {
   return selectedFiles.length > 1 && (
     // Image to PDF with combineImages = false
-    ((isImageFormat(parameters.fromExtension) || parameters.fromExtension === 'image') && 
+    ((isImageFormat(parameters.fromExtension) || parameters.fromExtension === 'image') &&
      parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
     // PDF to image conversions (each PDF should generate its own image file)
     (parameters.fromExtension === 'pdf' && isImageFormat(parameters.toExtension)) ||
     // PDF to PDF/A conversions (each PDF should be processed separately)
     (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
     // Web files to PDF conversions (each web file should generate its own PDF)
-    ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') && 
+    ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') &&
      parameters.toExtension === 'pdf') ||
     // Web files smart detection
     (parameters.isSmartDetection && parameters.smartDetectionType === 'web') ||
@@ -31,7 +31,7 @@ const shouldProcessFilesSeparately = (
 
 const buildFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
-  
+
   selectedFiles.forEach(file => {
     formData.append("fileInput", file);
   });
@@ -77,13 +77,13 @@ const createFileFromResponse = (
 ): File => {
   const originalName = originalFileName.split('.')[0];
   const fallbackFilename = `${originalName}_converted.${targetExtension}`;
-  
+
   return createFileFromApiResponse(responseData, headers, fallbackFilename);
 };
 
 export const useConvertOperation = () => {
   const { t } = useTranslation();
-  
+
   const customConvertProcessor = useCallback(async (
     parameters: ConvertParameters,
     selectedFiles: File[]
@@ -91,7 +91,7 @@ export const useConvertOperation = () => {
 
     const processedFiles: File[] = [];
     const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
-    
+
     if (!endpoint) {
       throw new Error(t('errorNotSupported', 'Unsupported conversion format'));
     }
@@ -103,9 +103,9 @@ export const useConvertOperation = () => {
         try {
           const formData = buildFormData(parameters, [file]);
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
-          
+
           const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
-          
+
           processedFiles.push(convertedFile);
         } catch (error) {
           console.warn(`Failed to convert file ${file.name}:`, error);
@@ -115,11 +115,11 @@ export const useConvertOperation = () => {
       // Batch processing for simple cases (image→PDF combine)
       const formData = buildFormData(parameters, selectedFiles);
       const response = await axios.post(endpoint, formData, { responseType: 'blob' });
-      
-      const baseFilename = selectedFiles.length === 1 
+
+      const baseFilename = selectedFiles.length === 1
         ? selectedFiles[0].name
         : 'converted_files';
-      
+
       const convertedFile = createFileFromResponse(response.data, response.headers, baseFilename, parameters.toExtension);
       processedFiles.push(convertedFile);
 
@@ -131,12 +131,9 @@ export const useConvertOperation = () => {
   return useToolOperation<ConvertParameters>({
     operationType: 'convert',
     endpoint: '', // Not used with customProcessor but required
-    buildFormData, // Not used with customProcessor but required  
+    buildFormData, // Not used with customProcessor but required
     filePrefix: 'converted_',
     customProcessor: customConvertProcessor, // Convert handles its own routing
-    validateParams: (params) => {
-      return { valid: true };
-    },
     getErrorMessage: (error) => {
       if (error.response?.data && typeof error.response.data === 'string') {
         return error.response.data;

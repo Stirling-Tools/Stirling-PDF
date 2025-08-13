@@ -99,14 +99,10 @@ export const useOCROperation = () => {
   const ocrConfig: ToolOperationConfig<OCRParameters> = {
     operationType: 'ocr',
     endpoint: '/api/v1/misc/ocr-pdf',
-    buildFormData,
+    buildFormData: buildFormData as any /* FIX ME */,
     filePrefix: 'ocr_',
     multiFileEndpoint: false, // Process files individually
     responseHandler, // use shared flow
-    validateParams: (params) =>
-      params.languages.length === 0
-        ? { valid: false, errors: [t('ocr.validation.languageRequired', 'Please select at least one language for OCR processing.')] }
-        : { valid: true },
     getErrorMessage: (error) =>
       error.message?.includes('OCR tools') && error.message?.includes('not installed')
         ? 'OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.'

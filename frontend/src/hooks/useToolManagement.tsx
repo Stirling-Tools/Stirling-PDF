@@ -19,23 +19,39 @@ export const useToolManagement = (): ToolManagementResult => {
   const [selectedToolKey, setSelectedToolKey] = useState<string | null>(null);
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
 
-  const allEndpoints = Array.from(new Set(
-    Object.values(toolEndpoints).flat() as string[]
-  ));
+  // Build endpoints list from registry entries with fallback to legacy mapping
+  const baseRegistry = useMemo(() => getFlatToolRegistry(), []);
+  const registryDerivedEndpoints = useMemo(() => {
+    const endpointsByTool: Record<string, string[]> = {};
+    Object.entries(baseRegistry).forEach(([key, entry]) => {
+      if (entry.endpoints && entry.endpoints.length > 0) {
+        endpointsByTool[key] = entry.endpoints;
+      }
+    });
+    return endpointsByTool;
+  }, [baseRegistry]);
+
+  const allEndpoints = useMemo(() => {
+    const lists: string[][] = [];
+    Object.values(registryDerivedEndpoints).forEach(list => lists.push(list));
+    Object.entries(toolEndpoints).forEach(([key, list]) => {
+      if (!registryDerivedEndpoints[key]) lists.push(list);
+    });
+    return Array.from(new Set(lists.flat()));
+  }, [registryDerivedEndpoints]);
   const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
     if (endpointsLoading) return true;
-    const endpoints = toolEndpoints[toolKey] || [];
+    const endpoints = baseRegistry[toolKey]?.endpoints || toolEndpoints[toolKey] || [];
     return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
-  }, [endpointsLoading, endpointStatus]);
+  }, [endpointsLoading, endpointStatus, baseRegistry]);
 
   const toolRegistry: Record<string, ToolRegistryEntry> = useMemo(() => {
     const availableToolRegistry: Record<string, ToolRegistryEntry> = {};
-    const base = getFlatToolRegistry();
-    Object.keys(base).forEach(toolKey => {
+    Object.keys(baseRegistry).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
-        const baseTool = base[toolKey as keyof typeof base];
+        const baseTool = baseRegistry[toolKey as keyof typeof baseRegistry];
         availableToolRegistry[toolKey] = {
           ...baseTool,
           name: t(baseTool.name),
@@ -44,7 +60,7 @@ export const useToolManagement = (): ToolManagementResult => {
       }
     });
     return availableToolRegistry;
-  }, [isToolAvailable, t]);
+  }, [isToolAvailable, t, baseRegistry]);
 
   useEffect(() => {
     if (!endpointsLoading && selectedToolKey && !toolRegistry[selectedToolKey]) {
