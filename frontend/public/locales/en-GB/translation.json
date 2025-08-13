@@ -1786,12 +1786,10 @@
       "title": "Passwords",
       "user": {
         "label": "User Password",
-        "description": "Password required to open the document",
         "placeholder": "Enter user password"
       },
       "owner": {
         "label": "Owner Password",
-        "description": "Restricts what can be done with the document once it is opened (not supported by all readers)",
         "placeholder": "Enter owner password"
       }
     },
@@ -1799,7 +1797,6 @@
       "title": "Encryption",
       "keyLength": {
         "label": "Key Length",
-        "description": "Higher values provide better security",
         "40bit": "40-bit (Low)",
         "128bit": "128-bit (Standard)",
         "256bit": "256-bit (High)"
@@ -1807,42 +1804,55 @@
     },
     "restrictions": {
       "title": "Document Restrictions",
-      "description": "Select which actions should be prevented on the document (recommended to be used along with an owner password)",
       "assembly": {
-        "label": "Prevent document assembly",
-        "description": "Prevent inserting, rotating, or deleting pages and creating bookmarks or thumbnail images"
+        "label": "Prevent document assembly"
       },
       "extractContent": {
-        "label": "Prevent content extraction",
-        "description": "Prevent text and graphic extraction"
+        "label": "Prevent content extraction"
       },
       "extractForAccessibility": {
-        "label": "Prevent accessibility extraction",
-        "description": "Prevent content extraction for accessibility purposes"
+        "label": "Prevent accessibility extraction"
       },
       "fillInForm": {
-        "label": "Prevent form filling",
-        "description": "Prevent filling in existing interactive form fields"
+        "label": "Prevent form filling"
       },
       "modify": {
-        "label": "Prevent document modification",
-        "description": "Prevent changing the document content"
+        "label": "Prevent document modification"
       },
       "modifyAnnotations": {
-        "label": "Prevent annotation modification",
-        "description": "Prevent creation and modification of annotations and form fields"
+        "label": "Prevent annotation modification"
       },
       "printing": {
-        "label": "Prevent printing",
-        "description": "Prevent printing the document"
+        "label": "Prevent printing"
       },
       "printingFaithful": {
-        "label": "Prevent high-quality printing",
-        "description": "Prevent high-resolution printing"
+        "label": "Prevent high-quality printing"
       }
     },
     "results": {
       "title": "Encrypted PDFs"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Password Protection Overview"
+      },
+      "passwords": {
+        "title": "Password Types",
+        "text": "User passwords restrict opening the document, while owner passwords control what can be done with the document once opened. You can set both or just one.",
+        "bullet1": "User Password: Required to open the PDF",
+        "bullet2": "Owner Password: Controls document permissions (not supported by all PDF viewers)"
+      },
+      "encryption": {
+        "title": "Encryption Levels",
+        "text": "Higher encryption levels provide better security but may not be supported by older PDF viewers.",
+        "bullet1": "40-bit: Basic security, compatible with older viewers",
+        "bullet2": "128-bit: Standard security, widely supported",
+        "bullet3": "256-bit: Maximum security, requires modern viewers"
+      },
+      "restrictions": {
+        "title": "Document Restrictions",
+        "text": "These restrictions control what users can do with the PDF. Most effective when combined with an owner password."
+      }
     }
   }
 }

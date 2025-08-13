@@ -16,6 +16,7 @@ import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSett
 
 import { useAddPasswordParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
 import { useAddPasswordOperation } from "../hooks/tools/addPassword/useAddPasswordOperation";
+import { useAddPasswordTips } from "../components/tooltips/useAddPasswordTips";
 import { BaseToolProps } from "../types/tool";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -25,6 +26,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const addPasswordParams = useAddPasswordParameters();
   const addPasswordOperation = useAddPasswordOperation();
+  const addPasswordTips = useAddPasswordTips();
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(addPasswordParams.getEndpointName());
@@ -104,6 +106,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isCompleted={settingsCollapsed}
           onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
           completedMessage={settingsCollapsed ? t('addPassword.completed', 'Encrypted') : undefined}
+          tooltip={addPasswordTips}
         >
           <Stack gap="sm">
             <AddPasswordSettings
