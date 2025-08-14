@@ -62,56 +62,50 @@ public class MergeController {
 
     // Returns a comparator for sorting MultipartFile arrays based on the given sort type
     private Comparator<MultipartFile> getSortComparator(String sortType) {
-        switch (sortType) {
-            case "byFileName":
-                return Comparator.comparing(MultipartFile::getOriginalFilename);
-            case "byDateModified":
-                return (file1, file2) -> {
-                    try {
-                        BasicFileAttributes attr1 =
-                                Files.readAttributes(
-                                        Paths.get(file1.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        BasicFileAttributes attr2 =
-                                Files.readAttributes(
-                                        Paths.get(file2.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        return attr1.lastModifiedTime().compareTo(attr2.lastModifiedTime());
-                    } catch (IOException e) {
-                        return 0; // If there's an error, treat them as equal
-                    }
-                };
-            case "byDateCreated":
-                return (file1, file2) -> {
-                    try {
-                        BasicFileAttributes attr1 =
-                                Files.readAttributes(
-                                        Paths.get(file1.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        BasicFileAttributes attr2 =
-                                Files.readAttributes(
-                                        Paths.get(file2.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        return attr1.creationTime().compareTo(attr2.creationTime());
-                    } catch (IOException e) {
-                        return 0; // If there's an error, treat them as equal
-                    }
-                };
-            case "byPDFTitle":
-                return (file1, file2) -> {
-                    try (PDDocument doc1 = pdfDocumentFactory.load(file1);
-                            PDDocument doc2 = pdfDocumentFactory.load(file2)) {
-                        String title1 = doc1.getDocumentInformation().getTitle();
-                        String title2 = doc2.getDocumentInformation().getTitle();
-                        return title1.compareTo(title2);
-                    } catch (IOException e) {
-                        return 0;
-                    }
-                };
-            case "orderProvided":
-            default:
-                return (file1, file2) -> 0; // Default is the order provided
-        }
+        return switch (sortType) {
+            case "byFileName" -> Comparator.comparing(MultipartFile::getOriginalFilename);
+            case "byDateModified" -> (file1, file2) -> {
+                try {
+                    BasicFileAttributes attr1 =
+                        Files.readAttributes(
+                            Paths.get(file1.getOriginalFilename()),
+                            BasicFileAttributes.class);
+                    BasicFileAttributes attr2 =
+                        Files.readAttributes(
+                            Paths.get(file2.getOriginalFilename()),
+                            BasicFileAttributes.class);
+                    return attr1.lastModifiedTime().compareTo(attr2.lastModifiedTime());
+                } catch (IOException e) {
+                    return 0; // If there's an error, treat them as equal
+                }
+            };
+            case "byDateCreated" -> (file1, file2) -> {
+                try {
+                    BasicFileAttributes attr1 =
+                        Files.readAttributes(
+                            Paths.get(file1.getOriginalFilename()),
+                            BasicFileAttributes.class);
+                    BasicFileAttributes attr2 =
+                        Files.readAttributes(
+                            Paths.get(file2.getOriginalFilename()),
+                            BasicFileAttributes.class);
+                    return attr1.creationTime().compareTo(attr2.creationTime());
+                } catch (IOException e) {
+                    return 0; // If there's an error, treat them as equal
+                }
+            };
+            case "byPDFTitle" -> (file1, file2) -> {
+                try (PDDocument doc1 = pdfDocumentFactory.load(file1);
+                     PDDocument doc2 = pdfDocumentFactory.load(file2)) {
+                    String title1 = doc1.getDocumentInformation().getTitle();
+                    String title2 = doc2.getDocumentInformation().getTitle();
+                    return title1.compareTo(title2);
+                } catch (IOException e) {
+                    return 0;
+                }
+            };
+            default -> (file1, file2) -> 0; // Default is the order provided
+        };
     }
 
     // Adds a table of contents to the merged document using filenames as chapter titles
