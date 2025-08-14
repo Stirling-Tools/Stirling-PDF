@@ -34,10 +34,10 @@ ENV SETUPTOOLS_USE_DISTUTILS=local \
     TMP=/tmp/stirling-pdf
 
 # Installation der benötigten Python-Pakete
+COPY .github/scripts/requirements_dev.txt /tmp/requirements_dev.txt
 RUN python3 -m venv --system-site-packages /opt/venv \
   && . /opt/venv/bin/activate \
-  && pip install --no-cache-dir --upgrade pip setuptools \
-  && pip install --no-cache-dir WeasyPrint pdf2image pillow unoserver opencv-python-headless pre-commit
+  && pip install --no-cache-dir --require-hashes -r /tmp/requirements_dev.txt
 
 # Füge den venv-Pfad zur globalen PATH-Variable hinzu, damit die Tools verfügbar sind
 ENV PATH="/opt/venv/bin:$PATH"
