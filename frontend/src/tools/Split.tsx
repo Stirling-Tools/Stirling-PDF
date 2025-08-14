@@ -69,13 +69,17 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const filesCollapsed = hasFiles;
   const settingsCollapsed = hasResults;
 
-  const previewResults = useMemo(() =>
-    splitOperation.files?.map((file, index) => ({
+  const previewResults = useMemo(() => {
+    const results = splitOperation.files?.map((file, index) => ({
       file,
       thumbnail: splitOperation.thumbnails[index]
-    })) || [],
-    [splitOperation.files, splitOperation.thumbnails]
-  );
+    })) || [];
+    
+    console.log(`🔧 Split tool preview: ${results.length} files, thumbnails:`, 
+      splitOperation.thumbnails.map((t, i) => `[${i}]: ${t ? 'PRESENT' : 'MISSING'}`));
+    
+    return results;
+  }, [splitOperation.files, splitOperation.thumbnails]);
 
   return (
     <ToolStepContainer>

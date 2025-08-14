@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { generateThumbnailForFile } from '../../../utils/thumbnailUtils';
+import { generateThumbnailForFile, generateThumbnailWithMetadata, ThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
 import { zipFileService } from '../../../services/zipFileService';
 
 
@@ -43,21 +43,50 @@ export const useToolResources = () => {
   }, []); // No dependencies - use ref to access current URLs
 
   const generateThumbnails = useCallback(async (files: File[]): Promise<string[]> => {
+    console.log(`🖼️ useToolResources.generateThumbnails: Starting for ${files.length} files`);
     const thumbnails: string[] = [];
 
     for (const file of files) {
       try {
+        console.log(`🖼️ Generating thumbnail for: ${file.name} (${file.type}, ${file.size} bytes)`);
         const thumbnail = await generateThumbnailForFile(file);
+        console.log(`🖼️ Generated thumbnail for ${file.name}:`, thumbnail ? 'SUCCESS' : 'FAILED (no thumbnail returned)');
         if (thumbnail) {
           thumbnails.push(thumbnail);
+        } else {
+          console.warn(`🖼️ No thumbnail returned for ${file.name}`);
+          thumbnails.push('');
         }
       } catch (error) {
-        console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
+        console.warn(`🖼️ Failed to generate thumbnail for ${file.name}:`, error);
         thumbnails.push('');
       }
     }
 
+    console.log(`🖼️ useToolResources.generateThumbnails: Complete. Generated ${thumbnails.filter(t => t).length}/${files.length} thumbnails`);
     return thumbnails;
+  }, []);
+
+  const generateThumbnailsWithMetadata = useCallback(async (files: File[]): Promise<ThumbnailWithMetadata[]> => {
+    console.log(`🖼️ useToolResources.generateThumbnailsWithMetadata: Starting for ${files.length} files`);
+    const results: ThumbnailWithMetadata[] = [];
+
+    for (const file of files) {
+      try {
+        console.log(`🖼️ Generating thumbnail with metadata for: ${file.name} (${file.type}, ${file.size} bytes)`);
+        const result = await generateThumbnailWithMetadata(file);
+        console.log(`🖼️ Generated thumbnail with metadata for ${file.name}:`, 
+          result.thumbnail ? 'SUCCESS' : 'FAILED (no thumbnail)', 
+          `${result.pageCount} pages`);
+        results.push(result);
+      } catch (error) {
+        console.warn(`🖼️ Failed to generate thumbnail with metadata for ${file.name}:`, error);
+        results.push({ thumbnail: '', pageCount: 1 });
+      }
+    }
+
+    console.log(`🖼️ useToolResources.generateThumbnailsWithMetadata: Complete. Generated ${results.filter(r => r.thumbnail).length}/${files.length} thumbnails with metadata`);
+    return results;
   }, []);
 
   const extractZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
@@ -116,6 +145,7 @@ export const useToolResources = () => {
 
   return {
     generateThumbnails,
+    generateThumbnailsWithMetadata,
     createDownloadInfo,
     extractZipFiles,
     extractAllZipFiles,

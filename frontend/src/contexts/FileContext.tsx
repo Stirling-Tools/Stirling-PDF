@@ -46,6 +46,7 @@ import { EnhancedPDFProcessingService } from '../services/enhancedPDFProcessingS
 import { thumbnailGenerationService } from '../services/thumbnailGenerationService';
 import { fileStorage } from '../services/fileStorage';
 import { fileProcessingService } from '../services/fileProcessingService';
+import { generateThumbnailWithMetadata } from '../utils/thumbnailUtils';
 
 // Get service instances
 const enhancedPDFProcessingService = EnhancedPDFProcessingService.getInstance();
@@ -419,7 +420,7 @@ export function FileContextProvider({
 
   // Action implementations
   const addFiles = useCallback(async (files: File[]): Promise<File[]> => {
-    // Three-tier deduplication: UUID (primary key) + quickKey (soft dedupe) + contentHash (hard dedupe)
+    console.log(`📄 addFiles: Adding ${files.length} files with immediate thumbnail generation`);
     const fileRecords: FileRecord[] = [];
     const addedFiles: File[] = [];
     
@@ -443,8 +444,41 @@ export function FileContextProvider({
       // Store File in ref map
       filesRef.current.set(fileId, file);
       
-      // Create record
+      // Generate thumbnail and page count immediately
+      let thumbnail: string | undefined;
+      let pageCount: number = 1;
+      try {
+        console.log(`📄 Generating immediate thumbnail and metadata for ${file.name}`);
+        const result = await generateThumbnailWithMetadata(file);
+        thumbnail = result.thumbnail;
+        pageCount = result.pageCount;
+        console.log(`📄 Generated immediate metadata for ${file.name}: ${pageCount} pages, thumbnail: ${!!thumbnail}`);
+      } catch (error) {
+        console.warn(`📄 Failed to generate immediate metadata for ${file.name}:`, error);
+        // Continue with defaults
+      }
+      
+      // Create record with immediate thumbnail and page metadata
       const record = toFileRecord(file, fileId);
+      if (thumbnail) {
+        record.thumbnailUrl = thumbnail;
+      }
+      
+      // Create initial processedFile metadata with page count
+      if (pageCount > 0) {
+        record.processedFile = {
+          totalPages: pageCount,
+          pages: Array.from({ length: pageCount }, (_, index) => ({
+            pageNumber: index + 1,
+            thumbnail: index === 0 ? thumbnail : undefined, // Only first page gets thumbnail initially
+            rotation: 0,
+            splitBefore: false
+          })),
+          thumbnailUrl: thumbnail,
+          lastProcessed: Date.now()
+        };
+        console.log(`📄 addFiles: Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
+      }
       
       // Add to deduplication tracking
       existingQuickKeys.add(quickKey);
@@ -452,29 +486,40 @@ export function FileContextProvider({
       fileRecords.push(record);
       addedFiles.push(file);
       
-      // Start centralized file processing (async, non-blocking) - SINGLE CALL
+      // Start background processing for validation only (we already have thumbnail and page count)
       fileProcessingService.processFile(file, fileId).then(result => {
         // Only update if file still exists in context
         if (filesRef.current.has(fileId)) {
           if (result.success && result.metadata) {
-            // Update with processed metadata using dispatch directly
-            dispatch({ 
-              type: 'UPDATE_FILE_RECORD', 
-              payload: { 
-                id: fileId, 
-                updates: {
-                  processedFile: result.metadata,
-                  thumbnailUrl: result.metadata.thumbnailUrl
+            // Only log if page count differs from our immediate calculation
+            const initialPageCount = pageCount;
+            if (result.metadata.totalPages !== initialPageCount) {
+              console.log(`📄 Page count validation: ${file.name} initial=${initialPageCount} → final=${result.metadata.totalPages} pages`);
+              // Update with the validated page count, but preserve existing thumbnail
+              dispatch({ 
+                type: 'UPDATE_FILE_RECORD', 
+                payload: { 
+                  id: fileId, 
+                  updates: {
+                    processedFile: {
+                      ...result.metadata,
+                      // Preserve our immediate thumbnail if we have one
+                      thumbnailUrl: thumbnail || result.metadata.thumbnailUrl
+                    },
+                    // Keep existing thumbnailUrl if we have one
+                    thumbnailUrl: thumbnail || result.metadata.thumbnailUrl
+                  }
                 }
-              }
-            });
-            console.log(`✅ File processing complete for ${file.name}: ${result.metadata.totalPages} pages`);
+              });
+            } else {
+              console.log(`✅ Page count validation passed for ${file.name}: ${result.metadata.totalPages} pages (immediate generation was correct)`);
+            }
 
-            // Optional: Persist to IndexedDB if enabled (reuse the same result)
+            // Optional: Persist to IndexedDB if enabled
             if (enablePersistence) {
               try {
-                const thumbnail = result.metadata.thumbnailUrl;
-                fileStorage.storeFile(file, fileId, thumbnail).then(() => {
+                const finalThumbnail = thumbnail || result.metadata.thumbnailUrl;
+                fileStorage.storeFile(file, fileId, finalThumbnail).then(() => {
                   console.log('File persisted to IndexedDB:', fileId);
                 }).catch(error => {
                   console.warn('Failed to persist file to IndexedDB:', error);
@@ -484,11 +529,11 @@ export function FileContextProvider({
               }
             }
           } else {
-            console.warn(`❌ File processing failed for ${file.name}:`, result.error);
+            console.warn(`❌ Background file processing failed for ${file.name}:`, result.error);
           }
         }
       }).catch(error => {
-        console.error(`❌ File processing error for ${file.name}:`, error);
+        console.error(`❌ Background file processing error for ${file.name}:`, error);
       });
       
     }
@@ -502,7 +547,118 @@ export function FileContextProvider({
     return addedFiles;
   }, [enablePersistence]); // Remove updateFileRecord dependency
 
+  // NEW: Add processed files with pre-existing thumbnails and metadata (for tool outputs)
+  const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<File[]> => {
+    console.log(`📄 addProcessedFiles: Adding ${filesWithThumbnails.length} processed files with pre-existing thumbnails`);
+    const fileRecords: FileRecord[] = [];
+    const addedFiles: File[] = [];
+    
+    // Build quickKey lookup from existing files for deduplication
+    const existingQuickKeys = new Set<string>();
+    Object.values(stateRef.current.files.byId).forEach(record => {
+      existingQuickKeys.add(record.quickKey);
+    });
+    
+    for (const { file, thumbnail, pageCount } of filesWithThumbnails) {
+      const quickKey = createQuickKey(file);
+      
+      // Soft deduplication: Check if file already exists by metadata
+      if (existingQuickKeys.has(quickKey)) {
+        console.log(`📄 Skipping duplicate processed file: ${file.name} (already exists)`);
+        continue; // Skip duplicate file
+      }
+      
+      const fileId = createFileId(); // UUID-based, zero collisions
+      
+      // Store File in ref map
+      filesRef.current.set(fileId, file);
+      
+      // Create record with pre-existing thumbnail and page metadata
+      const record = toFileRecord(file, fileId);
+      if (thumbnail) {
+        record.thumbnailUrl = thumbnail;
+      }
+      
+      // If we have page count, create initial processedFile metadata
+      if (pageCount && pageCount > 0) {
+        record.processedFile = {
+          totalPages: pageCount,
+          pages: Array.from({ length: pageCount }, (_, index) => ({
+            pageNumber: index + 1,
+            thumbnail: index === 0 ? thumbnail : undefined, // Only first page gets thumbnail initially
+            rotation: 0,
+            splitBefore: false
+          })),
+          thumbnailUrl: thumbnail,
+          lastProcessed: Date.now()
+        };
+        console.log(`📄 addProcessedFiles: Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
+      }
+      
+      // Add to deduplication tracking
+      existingQuickKeys.add(quickKey);
+      
+      fileRecords.push(record);
+      addedFiles.push(file);
+      
+      // Start background processing for page metadata only (thumbnail already provided)
+      fileProcessingService.processFile(file, fileId).then(result => {
+        // Only update if file still exists in context
+        if (filesRef.current.has(fileId)) {
+          if (result.success && result.metadata) {
+            // Update with processed metadata but preserve existing thumbnail
+            dispatch({ 
+              type: 'UPDATE_FILE_RECORD', 
+              payload: { 
+                id: fileId, 
+                updates: {
+                  processedFile: result.metadata,
+                  // Keep existing thumbnail if we already have one, otherwise use processed one
+                  thumbnailUrl: thumbnail || result.metadata.thumbnailUrl
+                }
+              }
+            });
+            // Only log if page count changed (meaning our initial guess was wrong)
+            const initialPageCount = pageCount || 1;
+            if (result.metadata.totalPages !== initialPageCount) {
+              console.log(`📄 Page count updated for ${file.name}: ${initialPageCount} → ${result.metadata.totalPages} pages`);
+            } else {
+              console.log(`✅ Processed file metadata complete for ${file.name}: ${result.metadata.totalPages} pages (thumbnail: ${thumbnail ? 'PRE-EXISTING' : 'GENERATED'})`);
+            }
+
+            // Optional: Persist to IndexedDB if enabled
+            if (enablePersistence) {
+              try {
+                const finalThumbnail = thumbnail || result.metadata.thumbnailUrl;
+                fileStorage.storeFile(file, fileId, finalThumbnail).then(() => {
+                  console.log('Processed file persisted to IndexedDB:', fileId);
+                }).catch(error => {
+                  console.warn('Failed to persist processed file to IndexedDB:', error);
+                });
+              } catch (error) {
+                console.warn('Failed to initiate processed file persistence:', error);
+              }
+            }
+          } else {
+            console.warn(`❌ Processed file background processing failed for ${file.name}:`, result.error);
+          }
+        }
+      }).catch(error => {
+        console.error(`❌ Processed file background processing error for ${file.name}:`, error);
+      });
+    }
+    
+    // Only dispatch if we have new files
+    if (fileRecords.length > 0) {
+      dispatch({ type: 'ADD_FILES', payload: { fileRecords } });
+    }
+
+    console.log(`📄 Added ${fileRecords.length} processed files with pre-existing thumbnails`);
+    return addedFiles;
+  }, [enablePersistence]);
+
   // NEW: Add stored files with preserved IDs to prevent duplicates across sessions
+  // This is the CORRECT way to handle files from IndexedDB storage - no File object mutation
   const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>): Promise<File[]> => {
     const fileRecords: FileRecord[] = [];
     const addedFiles: File[] = [];
@@ -635,6 +791,7 @@ export function FileContextProvider({
   // Memoized actions to prevent re-renders
   const actions = useMemo<FileContextActions>(() => ({
     addFiles,
+    addProcessedFiles,
     addStoredFiles,
     removeFiles,
     updateFileRecord,
@@ -658,7 +815,7 @@ export function FileContextProvider({
     setMode: (mode: ModeType) => dispatch({ type: 'SET_CURRENT_MODE', payload: mode }),
     confirmNavigation,
     cancelNavigation
-  }), [addFiles, addStoredFiles, removeFiles, cleanupAllFiles, setHasUnsavedChanges, confirmNavigation, cancelNavigation]);
+  }), [addFiles, addProcessedFiles, addStoredFiles, removeFiles, cleanupAllFiles, setHasUnsavedChanges, confirmNavigation, cancelNavigation]);
 
   // Split context values to minimize re-renders
   const stateValue = useMemo<FileContextStateValue>(() => ({
@@ -677,6 +834,7 @@ export function FileContextProvider({
     ...state.ui,
     // Action compatibility layer
     addFiles,
+    addProcessedFiles,
     addStoredFiles,
     removeFiles,
     updateFileRecord,
@@ -701,7 +859,7 @@ export function FileContextProvider({
     get activeFiles() { return selectors.getFiles(); }, // Getter to avoid creating new arrays on every render
     // Selectors
     ...selectors
-  }), [state, actions, addFiles, addStoredFiles, removeFiles, updateFileRecord, setHasUnsavedChanges, requestNavigation, confirmNavigation, cancelNavigation, trackBlobUrl, trackPdfDocument, cleanupFile, scheduleCleanup]); // Removed selectors dependency
+  }), [state, actions, addFiles, addProcessedFiles, addStoredFiles, removeFiles, updateFileRecord, setHasUnsavedChanges, requestNavigation, confirmNavigation, cancelNavigation, trackBlobUrl, trackPdfDocument, cleanupFile, scheduleCleanup]); // Removed selectors dependency
 
   // Cleanup on unmount
   useEffect(() => {

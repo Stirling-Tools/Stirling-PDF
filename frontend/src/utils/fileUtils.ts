@@ -1,8 +1,34 @@
 import { FileWithUrl } from "../types/file";
 import { StoredFile, fileStorage } from "../services/fileStorage";
 
+/**
+ * @deprecated File objects no longer have mutated ID properties.
+ * The new system maintains pure File objects and tracks IDs separately in FileContext.
+ * Use FileContext selectors to get file IDs instead.
+ */
 export function getFileId(file: File): string | null {
-  return (file as File & { id?: string }).id || null;
+  const legacyId = (file as File & { id?: string }).id;
+  if (legacyId) {
+    console.warn('DEPRECATED: getFileId() found legacy mutated File object. Use FileContext selectors instead.');
+  }
+  return legacyId || null;
+}
+
+/**
+ * Get file ID for a File object using FileContext state (new system)
+ * @param file File object to find ID for
+ * @param fileState Current FileContext state
+ * @returns File ID or null if not found
+ */
+export function getFileIdFromContext(file: File, fileIds: string[], getFile: (id: string) => File | undefined): string | null {
+  // Find the file ID by comparing File objects
+  for (const id of fileIds) {
+    const contextFile = getFile(id);
+    if (contextFile === file) {
+      return id;
+    }
+  }
+  return null;
 }
 
 /**
@@ -81,7 +107,7 @@ export function createEnhancedFileFromStored(storedFile: StoredFile, thumbnail?:
  */
 export async function loadFilesFromIndexedDB(): Promise<FileWithUrl[]> {
   try {
-    await fileStorage.init();
+    // fileStorage.init() no longer needed - using centralized IndexedDB manager
     const storedFiles = await fileStorage.getAllFileMetadata();
 
     if (storedFiles.length === 0) {

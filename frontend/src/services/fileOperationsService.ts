@@ -47,7 +47,7 @@ export const fileOperationsService = {
     }
     
     try {
-      await fileStorage.init();
+      // fileStorage.init() no longer needed - using centralized IndexedDB manager
       const storedFiles = await fileStorage.getAllFileMetadata();
       
       // Detect if IndexedDB was purged by comparing with current UI state
@@ -189,7 +189,7 @@ export const fileOperationsService = {
     if (currentFiles.length === 0) return false;
     
     try {
-      await fileStorage.init();
+      // fileStorage.init() no longer needed - using centralized IndexedDB manager
       const storedFiles = await fileStorage.getAllFileMetadata();
       return storedFiles.length === 0; // Purge detected if no files in storage but UI shows files
     } catch (error) {

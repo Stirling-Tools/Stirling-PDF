@@ -412,7 +412,8 @@ class FileStorageService {
   }
 
   /**
-   * Convert StoredFile back to File object for compatibility
+   * Convert StoredFile back to pure File object without mutations
+   * Returns a clean File object - use FileContext.addStoredFiles() for proper metadata handling
    */
   createFileFromStored(storedFile: StoredFile): File {
     if (!storedFile || !storedFile.data) {
@@ -429,11 +430,25 @@ class FileStorageService {
       lastModified: storedFile.lastModified
     });
 
-    // Add custom properties for compatibility
-    Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
-    Object.defineProperty(file, 'thumbnail', { value: storedFile.thumbnail, writable: false });
-
+    // Returns pure File object - no mutations
+    // Use FileContext.addStoredFiles() to properly associate with metadata
     return file;
+  }
+
+  /**
+   * Convert StoredFile to the format expected by FileContext.addStoredFiles()
+   * This is the recommended way to load stored files into FileContext
+   */
+  createFileWithMetadata(storedFile: StoredFile): { file: File; originalId: string; metadata: { thumbnail?: string } } {
+    const file = this.createFileFromStored(storedFile);
+    
+    return {
+      file,
+      originalId: storedFile.id,
+      metadata: {
+        thumbnail: storedFile.thumbnail
+      }
+    };
   }
 
   /**

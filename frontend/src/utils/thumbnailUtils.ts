@@ -1,5 +1,10 @@
 import { getDocument } from "pdfjs-dist";
 
+export interface ThumbnailWithMetadata {
+  thumbnail: string | undefined;
+  pageCount: number;
+}
+
 /**
  * Calculate thumbnail scale based on file size
  * Smaller files get higher quality, larger files get lower quality
@@ -166,27 +171,36 @@ function formatFileSize(bytes: number): string {
  * Returns base64 data URL or undefined if generation fails
  */
 export async function generateThumbnailForFile(file: File): Promise<string | undefined> {
+  console.log(`🎯 generateThumbnailForFile: Starting for ${file.name} (${file.type}, ${file.size} bytes)`);
+  
   // Skip thumbnail generation for very large files to avoid memory issues
   if (file.size >= 100 * 1024 * 1024) { // 100MB limit
-    console.log('Skipping thumbnail generation for large file:', file.name);
-    return generatePlaceholderThumbnail(file);
+    console.log('🎯 Skipping thumbnail generation for large file:', file.name);
+    const placeholder = generatePlaceholderThumbnail(file);
+    console.log('🎯 Generated placeholder thumbnail for large file:', file.name);
+    return placeholder;
   }
 
   // Handle image files - use original file directly
   if (file.type.startsWith('image/')) {
-    return URL.createObjectURL(file);
+    console.log('🎯 Creating blob URL for image file:', file.name);
+    const url = URL.createObjectURL(file);
+    console.log('🎯 Created image blob URL:', url);
+    return url;
   }
 
   // Handle PDF files
   if (!file.type.startsWith('application/pdf')) {
-    console.log('File is not a PDF or image, generating placeholder:', file.name);
-    return generatePlaceholderThumbnail(file);
+    console.log('🎯 File is not a PDF or image, generating placeholder:', file.name);
+    const placeholder = generatePlaceholderThumbnail(file);
+    console.log('🎯 Generated placeholder thumbnail for non-PDF file:', file.name);
+    return placeholder;
   }
 
   // Calculate quality scale based on file size
-  console.log('Generating thumbnail for', file.name);
+  console.log('🎯 Generating PDF thumbnail for', file.name);
   const scale = calculateScaleFromFileSize(file.size);
-  console.log(`Using scale ${scale} for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+  console.log(`🎯 Using scale ${scale} for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
   try {
     // Only read first 2MB for thumbnail generation to save memory
     const chunkSize = 2 * 1024 * 1024; // 2MB
@@ -215,13 +229,14 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
 
     // Immediately clean up memory after thumbnail generation
     pdf.destroy();
-    console.log('Thumbnail generated and PDF destroyed for', file.name);
+    console.log('🎯 PDF thumbnail successfully generated for', file.name, 'size:', thumbnail.length);
 
     return thumbnail;
   } catch (error) {
+    console.warn('🎯 Error generating PDF thumbnail for', file.name, ':', error);
     if (error instanceof Error) {
       if (error.name === 'InvalidPDFException') {
-        console.warn(`PDF structure issue for ${file.name} - using fallback thumbnail`);
+        console.warn(`🎯 PDF structure issue for ${file.name} - trying fallback with full file`);
         // Return a placeholder or try with full file instead of chunk
         try {
           const fullArrayBuffer = await file.arrayBuffer();
@@ -247,17 +262,132 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
           const thumbnail = canvas.toDataURL();
 
           pdf.destroy();
+          console.log('🎯 Fallback PDF thumbnail generation succeeded for', file.name);
           return thumbnail;
         } catch (fallbackError) {
-          console.warn('Fallback thumbnail generation also failed for', file.name, fallbackError);
-          return undefined;
+          console.warn('🎯 Fallback thumbnail generation also failed for', file.name, fallbackError);
+          console.log('🎯 Using placeholder thumbnail for', file.name);
+          return generatePlaceholderThumbnail(file);
         }
       } else {
-        console.warn('Failed to generate thumbnail for', file.name, error);
-        return undefined;
+        console.warn('🎯 Non-PDF error generating thumbnail for', file.name, error);
+        console.log('🎯 Using placeholder thumbnail for', file.name);
+        return generatePlaceholderThumbnail(file);
       }
     }
-    console.warn('Unknown error generating thumbnail for', file.name, error);
-    return undefined;
+    console.warn('🎯 Unknown error generating thumbnail for', file.name, error);
+    console.log('🎯 Using placeholder thumbnail for', file.name);
+    return generatePlaceholderThumbnail(file);
+  }
+}
+
+/**
+ * Generate thumbnail and extract page count for a PDF file
+ * Returns both thumbnail and metadata in a single pass
+ */
+export async function generateThumbnailWithMetadata(file: File): Promise<ThumbnailWithMetadata> {
+  console.log(`🎯 generateThumbnailWithMetadata: Starting for ${file.name} (${file.type}, ${file.size} bytes)`);
+  
+  // Non-PDF files default to 1 page
+  if (!file.type.startsWith('application/pdf')) {
+    console.log('🎯 File is not a PDF, generating placeholder with pageCount=1:', file.name);
+    const thumbnail = await generateThumbnailForFile(file);
+    return { thumbnail, pageCount: 1 };
+  }
+
+  // Skip thumbnail generation for very large files to avoid memory issues
+  if (file.size >= 100 * 1024 * 1024) { // 100MB limit
+    console.log('🎯 Skipping processing for large PDF file:', file.name);
+    const thumbnail = generatePlaceholderThumbnail(file);
+    return { thumbnail, pageCount: 1 }; // Default to 1 for large files
+  }
+
+  // Calculate quality scale based on file size
+  const scale = calculateScaleFromFileSize(file.size);
+  console.log(`🎯 Using scale ${scale} for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+
+  try {
+    // Read file chunk for processing
+    const chunkSize = 2 * 1024 * 1024; // 2MB
+    const chunk = file.slice(0, Math.min(chunkSize, file.size));
+    const arrayBuffer = await chunk.arrayBuffer();
+    
+    const pdf = await getDocument({
+      data: arrayBuffer,
+      disableAutoFetch: true,
+      disableStream: true,
+      verbosity: 0
+    }).promise;
+
+    const pageCount = pdf.numPages;
+    console.log(`🎯 PDF ${file.name} has ${pageCount} pages`);
+
+    // Generate thumbnail for first page
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      pdf.destroy();
+      throw new Error('Could not get canvas context');
+    }
+
+    await page.render({ canvasContext: context, viewport }).promise;
+    const thumbnail = canvas.toDataURL();
+
+    // Clean up
+    pdf.destroy();
+    
+    console.log('🎯 Successfully generated thumbnail with metadata for', file.name, `${pageCount} pages, thumbnail size:`, thumbnail.length);
+    return { thumbnail, pageCount };
+
+  } catch (error) {
+    console.warn('🎯 Error generating PDF thumbnail with metadata for', file.name, ':', error);
+    
+    // Try fallback with full file if chunk approach failed
+    if (error instanceof Error && error.name === 'InvalidPDFException') {
+      try {
+        console.warn(`🎯 Trying fallback with full file for ${file.name}`);
+        const fullArrayBuffer = await file.arrayBuffer();
+        const pdf = await getDocument({
+          data: fullArrayBuffer,
+          disableAutoFetch: true,
+          disableStream: true,
+          verbosity: 0
+        }).promise;
+
+        const pageCount = pdf.numPages;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          pdf.destroy();
+          throw new Error('Could not get canvas context');
+        }
+
+        await page.render({ canvasContext: context, viewport }).promise;
+        const thumbnail = canvas.toDataURL();
+
+        pdf.destroy();
+        
+        console.log('🎯 Fallback successful for', file.name, `${pageCount} pages`);
+        return { thumbnail, pageCount };
+
+      } catch (fallbackError) {
+        console.warn('🎯 Fallback also failed for', file.name, fallbackError);
+      }
+    }
+
+    // Final fallback: placeholder thumbnail with default page count
+    console.log('🎯 Using placeholder thumbnail with default pageCount=1 for', file.name);
+    const thumbnail = generatePlaceholderThumbnail(file);
+    return { thumbnail, pageCount: 1 };
   }
 }
