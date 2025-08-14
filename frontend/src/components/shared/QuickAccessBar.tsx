@@ -22,7 +22,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
 }, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, selectedTool, leftPanelView } = useToolWorkflow();
+  const { handleReaderToggle, selectedTool, selectedToolKey, leftPanelView } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -31,7 +31,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
   // Sync left nav highlight with selected tool when appropriate
   useEffect(() => {
     if (leftPanelView === 'toolContent' && selectedTool) {
-      const target = getTargetNavButton(selectedTool);
+      const target = getTargetNavButton(selectedTool, selectedToolKey);
 
       if (target && activeButton !== target) {
         setActiveButton(target);
@@ -46,7 +46,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     if (leftPanelView !== 'toolContent') {
       setActiveButton('tools');
     }
-  }, [leftPanelView, selectedTool?.view, selectedTool?.subcategory]);
+  }, [leftPanelView, selectedTool, selectedToolKey]);
 
   const handleFilesButtonClick = () => {
     openFilesModal();

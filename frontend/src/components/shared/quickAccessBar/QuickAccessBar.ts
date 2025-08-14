@@ -58,13 +58,15 @@ export const getNavButtonStyle = (
 /**
  * Determine which nav button should be highlighted based on selected tool
  */
-export const getTargetNavButton = (selectedTool: any): string | null => {
-  if (!selectedTool) return null;
+export const getTargetNavButton = (selectedTool: any, selectedToolKey: string | null): string | null => {
+  if (!selectedTool || !selectedToolKey) return null;
   
-  // Map tool.view to nav button ids
-  if (selectedTool.view === 'sign') return 'sign';
-  if (selectedTool.view === 'view') return 'read';
-  // Use subcategory to infer Automate group
+  // Map specific tool keys to nav button ids
+  if (selectedToolKey === 'sign') return 'sign';
+  if (selectedToolKey === 'read') return 'read';
+  if (selectedToolKey === 'automate') return 'automate';
+  
+  // Fallback: use subcategory for automation tools
   if (selectedTool.subcategory === 'Automation') return 'automate';
   
   return null;
