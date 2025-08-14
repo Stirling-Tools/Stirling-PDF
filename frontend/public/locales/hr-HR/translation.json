@@ -347,7 +347,7 @@
       "title": "Rotacija",
       "desc": "Jednostavno rotirajte vaše PDF-ove."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Slika u PDF",
       "desc": "Pretvorite sliku (PNG, JPEG, GIF) u PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Promjena dopuštenja",
       "desc": "Promijenite dopuštenja svog PDF dokumenta"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Ukloniti",
       "desc": "Izbrišite neželjene stranice iz svog PDF dokumenta."
     },
@@ -383,7 +383,7 @@
       "title": "Ukloni lozinku",
       "desc": "Uklonite zaštitu lozinkom sa svog PDF dokumenta.."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Komprimiraj",
       "desc": "Komprimirajte PDF-ove kako biste smanjili njihovu veličinu."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Izvršite više radnji na PDF-ovima definiranjem skripti u pipeline-u"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Dodaj brojeve stranica",
       "desc": "Dodajte brojeve stranica kroz dokument na određeno mjesto"
     },
@@ -487,7 +487,7 @@
       "title": "Automatsko preimenovanje PDF datoteka",
       "desc": "Automatski preimenuje PDF datoteku na temelju otkrivenog zaglavlja"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Podesi boje/kontrast",
       "desc": "Podesite kontrast, zasićenost i svjetlinu PDF-a"
     },
@@ -499,7 +499,7 @@
       "title": "Automatsko dijeljenje stranica",
       "desc": "Automatsko dijeljenje skeniranog PDF-a s fizičkim QR kodom za dijeljenje stranica"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Dezinficirati (Sanitize)",
       "desc": "Uklonite skripte i druge elemente iz PDF datoteka"
     },
@@ -523,11 +523,11 @@
       "title": "Dohvati SVE informacije o PDF-u",
       "desc": "Dohvaća sve moguće informacije o PDF-ovima"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Izdvoji stranicu(e)",
       "desc": "Izdvaja odabrane stranice iz PDF-a"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF u Jednu Veliku Stranicu",
       "desc": "Spaja sve PDF stranice u jednu veliku stranicu"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF u CSV",
       "desc": "Izdvaja tablice iz PDF-a pretvarajući ga u CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Automatska podjela po veličini/broju",
       "desc": "Podijelite jedan PDF na više dokumenata na temelju veličine, broja stranica ili broja dokumenata"
     },
@@ -563,11 +563,11 @@
       "title": "Dodaj pečat u PDF",
       "desc": "Dodajte tekst ili dodajte slikovne oznake na postavljenim mjestima"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Ukloni sliku",
       "desc": "Ukloni sliku iz PDF-a kako bi se smanjio veličina datoteke"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Podijeli PDF prema glavama",
       "desc": "Podijeli PDF na više datoteka prema njegovom strukturnom obliku glava."
     },
@@ -575,7 +575,7 @@
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Zamenite boju teksta i pozadine u PDF-u te inverzirajte cijeli PDF kako bi se smanjila veličina datoteke."
     }

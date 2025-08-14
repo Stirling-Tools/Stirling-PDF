@@ -347,7 +347,7 @@
       "title": "Zavrti",
       "desc": "Preprosto zavrtite svoje PDF-je."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Slika v PDF",
       "desc": "Pretvori sliko (PNG, JPEG, GIF) v PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Spremeni dovoljenja",
       "desc": "Spremenite dovoljenja vašega dokumenta PDF"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Odstrani",
       "desc": "Izbrišite neželene strani iz dokumenta PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Odstrani geslo",
       "desc": "Odstranite zaščito z geslom iz vašega dokumenta PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Stisni",
       "desc": "Stisnite PDF-je, da zmanjšate njihovo velikost."
     },
@@ -479,7 +479,7 @@
       "title": "Cevovod",
       "desc": "Zaženi več dejanj na PDF-jih z definiranjem cevovodnih skriptov"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Dodaj številke strani",
       "desc": "Dodaj številke strani skozi dokument na določeno mesto"
     },
@@ -487,7 +487,7 @@
       "title": "Samodejno preimenuj datoteko PDF",
       "desc": "Samodejno preimenuje datoteko PDF glede na zaznano glavo"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Prilagodi barve/kontrast",
       "desc": "Prilagodi kontrast, nasičenost in svetlost PDF-ja"
     },
@@ -499,7 +499,7 @@
       "title": "Samodejno razdeli strani",
       "desc": "Samodejno razdeli optično prebrane PDF-je s fizično QR kodo razdelilnika optično prebranih strani"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Razkuži",
       "desc": "Odstrani skripte in druge elemente iz datotek PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Pridobite VSE informacije o PDF-ju",
       "desc": "Zgrabi vse možne informacije o PDF-jih"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Izvleček strani(e)",
       "desc": "Izvleče izbrane strani iz PDF-ja"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF na eno veliko stran",
       "desc": "Združi vse strani PDF v eno samo veliko stran"
     },
@@ -543,11 +543,11 @@
       "title": "Ročna redakcija",
       "desc": "Preredi PDF na podlagi izbranega besedila, narisanih oblik in/ali izbranih strani(-e)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF v CSV",
       "desc": "Izvleče tabele iz PDF in jih pretvori v CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Samodejna razdelitev po velikosti/številu",
       "desc": "Razdeli en PDF na več dokumentov glede na velikost, število strani ali število dokumentov"
     },
@@ -563,11 +563,11 @@
       "title": "Dodaj žig v PDF",
       "desc": "Dodaj besedilo ali slikovne žige na nastavljenih lokacijah"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Odstrani sliko",
       "desc": "Odstranite sliko iz PDF-ja, da zmanjšate velikost datoteke"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Razdeli PDF po poglavjih",
       "desc": "Razdeli PDF na več datotek glede na strukturo poglavij."
     },
@@ -575,7 +575,7 @@
       "title": "Preveri podpis PDF",
       "desc": "Preveri digitalne podpise in potrdila v dokumentih PDF"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Napredne barvne možnosti",
       "desc": "Zamenjaj barvo besedila in ozadja v PDF-ju in obrni celotno barvo PDF-ja, da zmanjšaš velikost datoteke"
     }

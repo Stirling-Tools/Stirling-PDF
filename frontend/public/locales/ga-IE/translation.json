@@ -347,7 +347,7 @@
       "title": "Rothlaigh",
       "desc": "Rothlaigh do PDFanna go héasca."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Íomhá go PDF",
       "desc": "Tiontaigh íomhá (PNG, JPEG, GIF) go PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Athrú Ceadanna",
       "desc": "Athraigh ceadanna do dhoiciméad PDF"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Bain",
       "desc": "Scrios leathanaigh nach dteastaíonn ó do dhoiciméad PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Bain Pasfhocal",
       "desc": "Bain cosaint phasfhocal ó do dhoiciméad PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Comhbhrúigh",
       "desc": "Comhbhrúigh PDFanna chun a méid comhaid a laghdú."
     },
@@ -479,7 +479,7 @@
       "title": "Píblíne (Ardleibhéal)",
       "desc": "Rith gníomhartha iolracha ar PDFanna trí scripteanna píblíne a shainiú"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Cuir Uimhreacha Leathanaigh leis",
       "desc": "Cuir uimhreacha Leathanach leis an doiciméad i suíomh socraithe"
     },
@@ -487,7 +487,7 @@
       "title": "Comhad PDF a athainmniú go huathoibríoch",
       "desc": "Athainmníonn Auto comhad PDF bunaithe ar a cheanntásc braite"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Coigeartaigh Dathanna/Codarsnacht",
       "desc": "Coigeartaigh Codarsnacht, Sáithiú agus Gile PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Leathanaigh Scoilte Uathoibríoch",
       "desc": "Auto Scoilt PDF Scanta le Cód QR scoilteoir leathanach scanadh fisiciúil"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sláintíocht",
       "desc": "Bain scripteanna agus gnéithe eile ó chomhaid PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Faigh GACH Eolas ar PDF",
       "desc": "Grab aon fhaisnéis agus is féidir ar PDFs"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Sliocht leathanach(eacha)",
       "desc": "Sleachta roghnaigh leathanaigh ó PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF go leathanach mór amháin",
       "desc": "Cumasc gach leathanach PDF isteach i leathanach mór amháin"
     },
@@ -543,11 +543,11 @@
       "title": "Athchóiriú de Láimh",
       "desc": "Réiteann sé PDF bunaithe ar théacs roghnaithe, cruthanna tarraingthe agus/nó leathanaigh roghnaithe"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "Ó CSV go PDF",
       "desc": "Sleachta Táblaí ó PDF agus é a thiontú go CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Auto Scoilte de réir Méid/Comhaireamh",
       "desc": "Scoilt PDF amháin i ndoiciméid iolracha bunaithe ar mhéid, líon na leathanach, nó comhaireamh doiciméad"
     },
@@ -563,11 +563,11 @@
       "title": "Cuir Stampa go PDF",
       "desc": "Cuir téacs leis nó cuir stampaí íomhá leis ag láithreacha socraithe"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Bain íomhá",
       "desc": "Bain íomhá de PDF chun méid comhaid a laghdú"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Scoil PDF ar Chaibidlí",
       "desc": "Scoilt PDF ina chomhaid iolracha bunaithe ar a struchtúr caibidle."
     },
@@ -575,7 +575,7 @@
       "title": "Bailíochtaigh Síniú PDF",
       "desc": "Fíoraigh sínithe digiteacha agus teastais i gcáipéisí PDF"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Athchuir agus Inbhéartaigh Dath",
       "desc": "Athchuir dath an téacs agus an chúlra i bhformáid PDF agus inbhéartaigh dath iomlán pdf chun méid comhaid a laghdú"
     }

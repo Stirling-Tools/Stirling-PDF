@@ -355,7 +355,7 @@
       "title": "Convert",
       "desc": "Convert files between different formats"
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Image to PDF",
       "desc": "Convert a image (PNG, JPEG, GIF) to PDF."
     },
@@ -379,7 +379,7 @@
       "title": "Change Permissions",
       "desc": "Change the permissions of your PDF document"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Remove",
       "desc": "Delete unwanted pages from your PDF document."
     },
@@ -395,7 +395,7 @@
       "title": "Remove Password",
       "desc": "Remove password protection from your PDF document."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Compress",
       "desc": "Compress PDFs to reduce their file size."
     },
@@ -495,7 +495,7 @@
       "title": "Pipeline",
       "desc": "Run multiple actions on PDFs by defining pipeline scripts"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Add Page Numbers",
       "desc": "Add Page numbers throughout a document in a set location"
     },
@@ -503,7 +503,7 @@
       "title": "Auto Rename PDF File",
       "desc": "Auto renames a PDF file based on its detected header"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Adjust Colours/Contrast",
       "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
     },
@@ -539,11 +539,11 @@
       "title": "Get ALL Info on PDF",
       "desc": "Grabs any and all information possible on PDFs"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extract page(s)",
       "desc": "Extracts select pages from PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF to Single Large Page",
       "desc": "Merges all PDF pages into one large single page"
     },
@@ -559,11 +559,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF to CSV",
       "desc": "Extracts Tables from a PDF converting it to CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Auto Split by Size/Count",
       "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
     },
@@ -579,11 +579,11 @@
       "title": "Add Stamp to PDF",
       "desc": "Add text or add image stamps at set locations"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Remove image",
       "desc": "Remove image from PDF to reduce file size"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
@@ -595,7 +595,7 @@
       "title": "API Documentation",
       "desc": "View API documentation and test endpoints"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Advanced Colour options",
       "desc": "Replace colour for text and background in PDF and invert full colour of pdf to reduce file size"
     }

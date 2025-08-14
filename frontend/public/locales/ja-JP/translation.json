@@ -347,7 +347,7 @@
       "title": "回転",
       "desc": "PDFを回転します。"
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "画像をPDFに変換",
       "desc": "画像 (PNG, JPEG, GIF) をPDFに変換します。"
     },
@@ -371,7 +371,7 @@
       "title": "権限の変更",
       "desc": "PDFの権限を変更します。"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "削除",
       "desc": "PDFから不要なページを削除します。"
     },
@@ -383,7 +383,7 @@
       "title": "パスワードの削除",
       "desc": "PDFからパスワードの削除します。"
     },
-    "compressPdfs": {
+    "compress": {
       "title": "圧縮",
       "desc": "PDFを圧縮してファイルサイズを小さくします。"
     },
@@ -479,7 +479,7 @@
       "title": "パイプライン",
       "desc": "パイプラインスクリプトを定義してPDF上で複数のアクションを実行します。"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "ページ番号の追加",
       "desc": "ドキュメント全体の設定された場所にページ番号を追加します。"
     },
@@ -487,7 +487,7 @@
       "title": "PDFファイル名の自動変更",
       "desc": "検出されたヘッダーに基づいてPDFファイルの名前を自動的に変更します。"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "色/コントラストの調整",
       "desc": "PDFのコントラスト、彩度、明るさを調整します。"
     },
@@ -499,7 +499,7 @@
       "title": "ページの自動分割",
       "desc": "ページ分割用QRコードを使用したスキャンしたPDFを自動分割します。"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "サニタイズ",
       "desc": "PDFファイルからスクリプトやその他の要素を削除します。"
     },
@@ -523,11 +523,11 @@
       "title": "PDFのすべての情報を入手",
       "desc": "PDFのあらゆる情報を取得します。"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "ページの抽出",
       "desc": "PDFから選択したページを抽出します。"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDFを単一の大きなページに変換",
       "desc": "PDFのすべてのページを1つの大きな単一ページに結合します"
     },
@@ -543,11 +543,11 @@
       "title": "手動墨消し",
       "desc": "選択したテキスト、描画した図形、選択したページに基づいてPDFを墨消します。"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDFをCSVに変換",
       "desc": "PDFから表を抽出しCSVに変換します。"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "サイズ・数による自動分割",
       "desc": "サイズ・ページ数またはドキュメント数に基づいて、1つのPDFを複数のドキュメントに分割します。"
     },
@@ -563,11 +563,11 @@
       "title": "PDFにスタンプを追加",
       "desc": "設定した位置にテキストや画像のスタンプを追加できます"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "画像の削除",
       "desc": "PDFから画像を削除してファイルサイズを小さくします"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "PDFをチャプターごとに分割",
       "desc": "チャプターの構造に基づいてPDFを複数のファイルに分割します"
     },
@@ -575,7 +575,7 @@
       "title": "PDF署名の検証",
       "desc": "PDF文書のデジタル署名と証明書を検証します"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "色の置換と反転",
       "desc": "PDF内のテキストと背景の色を置き換え、PDFのフルカラーを反転してファイルサイズを縮小します。"
     }

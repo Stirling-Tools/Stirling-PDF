@@ -347,7 +347,7 @@
       "title": "Döndür",
       "desc": "PDF'lerinizi kolayca döndürün."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Resimden PDF'e",
       "desc": "Bir resmi (PNG, JPEG, GIF) PDF'e dönüştürün."
     },
@@ -371,7 +371,7 @@
       "title": "İzinleri Değiştir",
       "desc": "PDF belgenizin izinlerini değiştirin"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Kaldır",
       "desc": "PDF belgenizden istenmeyen sayfaları silin."
     },
@@ -383,7 +383,7 @@
       "title": "Parolayı Kaldır",
       "desc": "PDF belgenizden parola korumasını kaldırın."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Sıkıştır",
       "desc": "PDF'lerin dosya boyutunu azaltmak için sıkıştırın."
     },
@@ -479,7 +479,7 @@
       "title": "Çoklu İşlemler",
       "desc": "Çoklu İşlemler tanımlayarak PDF'lere birden fazla işlemi çalıştır"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Sayfa Numaraları Ekle",
       "desc": "Bir belgeye belirli bir konuma sayfa numaraları ekler"
     },
@@ -487,7 +487,7 @@
       "title": "PDF Dosyasını Otomatik Yeniden Adlandır",
       "desc": "Tespit edilen başlığa dayanarak bir PDF dosyasını otomatik olarak yeniden adlandırır"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Renkleri/Kontrastı Ayarla",
       "desc": "Bir PDF'in Kontrastını, Doygunluğunu ve Parlaklığını ayarlar"
     },
@@ -499,7 +499,7 @@
       "title": "Sayfaları Otomatik Böl",
       "desc": "Fiziksel taranmış sayfa bölücü QR Kod ile Taranmış PDF'i Otomatik Böl"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Temizle",
       "desc": "PDF dosyalarından betikleri ve diğer öğeleri kaldırır"
     },
@@ -523,11 +523,11 @@
       "title": "PDF Hakkında TÜM Bilgiyi Al",
       "desc": "PDF'ler hakkında mümkün olan her türlü bilgiyi toplar"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Sayfa(ları) Çıkar",
       "desc": "PDF'ten seçili sayfaları çıkarır"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF'i Tek Büyük Sayfaya",
       "desc": "Tüm PDF sayfalarını tek büyük bir sayfada birleştirir"
     },
@@ -543,11 +543,11 @@
       "title": "Manuel Sansürleme",
       "desc": "Seçilen metinler, çizilen şekiller ve/veya belirli sayfalar üzerinden PDF'yi sansürler"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF'den CSV'ye",
       "desc": "PDF'den Tabloları çıkarır ve CSV'ye dönüştürür"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Boyut/Sayıya Göre Otomatik Bölme",
       "desc": "Tek bir PDF'yi boyut, sayfa sayısı veya belge sayısına göre birden fazla belgeye bölün"
     },
@@ -563,11 +563,11 @@
       "title": "PDF'ye Damga Ekleme",
       "desc": "Belirlenen konumlara metin veya resim damgaları ekleyin"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Resmi kaldır",
       "desc": "Dosya boyutunu küçültmek için PDF'den resmi kaldırın"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "PDF'yi Bölümlere Göre Böl",
       "desc": "PDF'yi bölüm yapısına göre birden fazla dosyaya ayırın."
     },
@@ -575,7 +575,7 @@
       "title": "PDF İmzasını Doğrula",
       "desc": "PDF belgelerindeki dijital imzaları ve sertifikaları doğrulayın"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Renkleri Değiştir ve Tersine Çevir",
       "desc": "PDF'deki metin ve arka plan renklerini değiştirin ve PDF'nin tüm renklerini tersine çevirerek dosya boyutunu azaltın"
     }

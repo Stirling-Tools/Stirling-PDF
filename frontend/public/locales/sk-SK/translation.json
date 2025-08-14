@@ -347,7 +347,7 @@
       "title": "Otočiť",
       "desc": "Jednoducho otáčajte svoje PDF súbory."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Obrázok na PDF",
       "desc": "Konvertujte obrázok (PNG, JPEG, GIF) na PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Zmeniť povolenia",
       "desc": "Zmena povolení vášho PDF dokumentu"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Odstrániť",
       "desc": "Odstrániť nechcené stránky z vášho PDF dokumentu."
     },
@@ -383,7 +383,7 @@
       "title": "Odstrániť heslo",
       "desc": "Odstrániť ochranu heslom z vášho PDF dokumentu."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Komprimovať",
       "desc": "Komprimujte PDF na zmenšenie jeho veľkosti."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Spustiť viacero akcií na PDF definovaním pipeline skriptov"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Pridať čísla stránok",
       "desc": "Pridať čísla stránok po celom dokumente na určenom mieste"
     },
@@ -487,7 +487,7 @@
       "title": "Automatické premenovanie PDF súboru",
       "desc": "Automaticky premenuje PDF súbor na základe zisteného záhlavia"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Upraviť farby/kontrast",
       "desc": "Upravte kontrast, sýtosť a jas PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Automatické rozdelenie stránok",
       "desc": "Automatické rozdelenie skenovaného PDF pomocou fyzického skenovaného rozdeľovača stránok QR kódom"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Vyčistiť",
       "desc": "Odstrániť skripty a ďalšie prvky z PDF súborov"
     },
@@ -523,11 +523,11 @@
       "title": "Získať všetky informácie o PDF",
       "desc": "Získava všetky dostupné informácie o PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extrahovať stránku(y)",
       "desc": "Extrahuje vybrané stránky z PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF na jednu veľkú stránku",
       "desc": "Zlúči všetky stránky PDF do jednej veľkej stránky"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF do CSV",
       "desc": "Extrahuje tabuľky z PDF a konvertuje ich do CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Automatické rozdelenie podľa veľkosti/počtu",
       "desc": "Rozdelí jeden PDF na viacero dokumentov na základe veľkosti, počtu stránok alebo počtu dokumentov"
     },
@@ -563,11 +563,11 @@
       "title": "Pridať pečiatku do PDF",
       "desc": "Pridať text alebo obrázkové pečiatky na určené miesta"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Remove image",
       "desc": "Remove image from PDF to reduce file size"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
@@ -575,7 +575,7 @@
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }

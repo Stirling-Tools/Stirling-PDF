@@ -347,7 +347,7 @@
       "title": "چرخش",
       "desc": "چرخش آسان فایل‌های PDF."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "تصویر به PDF",
       "desc": "تبدیل یک تصویر (PNG، JPEG، GIF) به PDF."
     },
@@ -371,7 +371,7 @@
       "title": "تغییر مجوزها",
       "desc": "تغییر مجوزهای سند PDF شما"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "حذف",
       "desc": "حذف صفحات ناخواسته از سند PDF شما."
     },
@@ -383,7 +383,7 @@
       "title": "حذف رمز عبور",
       "desc": "حذف حفاظت رمز عبور از سند PDF شما."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "فشرده‌سازی",
       "desc": "فشرده‌سازی فایل‌های PDF برای کاهش اندازه آن‌ها."
     },
@@ -479,7 +479,7 @@
       "title": "خط لوله",
       "desc": "اجرای چندین عملیات بر روی PDFها با تعریف اسکریپت‌های خط لوله"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "افزودن شماره صفحات",
       "desc": "افزودن شماره صفحات به تمام سند در یک مکان مشخص"
     },
@@ -487,7 +487,7 @@
       "title": "تغییر نام خودکار فایل PDF",
       "desc": "تغییر نام خودکار یک فایل PDF بر اساس سربرگ تشخیص داده‌شده آن"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "تنظیم رنگ‌ها/کنتراست",
       "desc": "تنظیم کنتراست، اشباع و روشنایی یک PDF"
     },
@@ -499,7 +499,7 @@
       "title": "تقسیم خودکار صفحات",
       "desc": "تقسیم خودکار فایل اسکن‌شده PDF با استفاده از کد QR تقسیم‌کننده فیزیکی"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "پاکسازی",
       "desc": "حذف اسکریپت‌ها و سایر عناصر از فایل‌های PDF"
     },
@@ -523,11 +523,11 @@
       "title": "دریافت تمام اطلاعات در مورد PDF",
       "desc": "گرفتن هر اطلاعات ممکن در مورد PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "استخراج صفحه(ها)",
       "desc": "استخراج صفحات انتخابی از PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "صفحه بزرگ واحد",
       "desc": "ادغام تمام صفحات PDF در یک صفحه بزرگ واحد"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF به CSV",
       "desc": "جداول را از PDF استخراج کرده و به CSV تبدیل می‌کند"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "تقسیم خودکار بر اساس اندازه/تعداد",
       "desc": "تقسیم یک PDF به چند سند بر اساس اندازه، تعداد صفحات، یا تعداد اسناد"
     },
@@ -563,11 +563,11 @@
       "title": "افزودن مهر به PDF",
       "desc": "افزودن مهر متنی یا تصویری در مکان‌های مشخص"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "حذف تصویر",
       "desc": "حذف تصاویر از PDF برای کاهش حجم فایل"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "تقسیم PDF بر اساس فصل‌ها",
       "desc": "تقسیم PDF به چند فایل بر اساس ساختار فصل‌ها"
     },
@@ -575,7 +575,7 @@
       "title": "اعتبارسنجی امضای PDF",
       "desc": "تأیید امضاها و گواهی‌های دیجیتال در اسناد PDF"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "جایگزینی و معکوس کردن رنگ",
       "desc": "جایگزینی رنگ متن و پس‌زمینه در PDF و معکوس کردن کل رنگ‌ها برای کاهش حجم فایل"
     }

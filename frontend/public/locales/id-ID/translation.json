@@ -347,7 +347,7 @@
       "title": "Putar",
       "desc": "Memutar PDF Anda dengan mudah."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Gambar ke PDF",
       "desc": "Mengonversi gambar (PNG, JPEG, GIF) ke PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Izin Perubahan",
       "desc": "Mengubah izin dokumen PDF Anda"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Menghapus",
       "desc": "Menghapus halaman yang tidak diinginkan dari dokumen PDF Anda."
     },
@@ -383,7 +383,7 @@
       "title": "Hapus Kata Sandi",
       "desc": "Menghapus perlindungan kata sandi dari dokumen PDF Anda."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Kompres",
       "desc": "Kompres PDF untuk mengurangi ukuran berkas."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Menjalankan beberapa tindakan pada PDF dengan mendefinisikan skrip pipeline"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Tambahkan Nomor Halaman",
       "desc": "Menambahkan nomor Halaman di seluruh dokumen di lokasi yang ditetapkan"
     },
@@ -487,7 +487,7 @@
       "title": "Ubah Nama Berkas PDF Secara Otomatis",
       "desc": "Mengganti nama berkas PDF secara otomatis berdasarkan tajuk yang terdeteksi"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Menyesuaikan Warna/Kontras",
       "desc": "Sesuaikan Kontras, Saturasi, dan Kecerahan PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Membagi Halaman Secara Otomatis",
       "desc": "Membagi PDF yang dipindai secara otomatis dengan Kode QR pembagi halaman yang dipindai secara fisik"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sanitasi",
       "desc": "Menghapus skrip dan elemen lain dari file PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Dapatkan Semua Info tentang PDF",
       "desc": "Mengambil setiap dan semua informasi yang mungkin ada pada PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Ekstrak halaman",
       "desc": "Mengekstrak halaman tertentu dari PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF ke Satu Halaman Besar",
       "desc": "Menggabungkan semua halaman PDF menjadi satu halaman besar"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF ke CSV",
       "desc": "Mengekstrak Tabel dari PDF yang mengonversinya menjadi CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Pemisahan Otomatis berdasarkan Ukuran/Hitungan",
       "desc": "Membagi satu PDF menjadi beberapa dokumen berdasarkan ukuran, jumlah halaman, atau jumlah dokumen"
     },
@@ -563,11 +563,11 @@
       "title": "Tambahkan Tanda Tangan ke PDF",
       "desc": "Tambahkan teks atau gambar tanda tangan di lokasi yang ditentukan"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Hapus Gambar",
       "desc": "Hapus gambar dari PDF untuk mengurangi ukuran file"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Pisahkan PDF berdasarkan Bab",
       "desc": "Memisahkan PDF menjadi beberapa file berdasarkan struktur babnya."
     },
@@ -575,7 +575,7 @@
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Ganti dan Inversi Warna",
       "desc": "Ganti warna untuk teks dan latar belakang dalam PDF dan inversi seluruh warna PDF untuk mengurangi ukuran file"
     }

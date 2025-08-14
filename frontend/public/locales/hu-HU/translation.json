@@ -347,7 +347,7 @@
       "title": "Forgatás",
       "desc": "PDF-ek egyszerű forgatása."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Kép PDF-be",
       "desc": "Kép (PNG, JPEG, GIF) konvertálása PDF-fé."
     },
@@ -371,7 +371,7 @@
       "title": "Jogosultságok módosítása",
       "desc": "PDF dokumentum jogosultságainak módosítása"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Eltávolítás",
       "desc": "Felesleges oldalak törlése a PDF dokumentumból."
     },
@@ -383,7 +383,7 @@
       "title": "Jelszó eltávolítása",
       "desc": "Jelszavas védelem eltávolítása a PDF dokumentumból"
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Tömörítés",
       "desc": "PDF-ek tömörítése a fájlméret csökkentése érdekében"
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Több művelet végrehajtása PDF-eken pipeline szkriptek definiálásával"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Oldalszámozás hozzáadása",
       "desc": "Oldalszámok hozzáadása a dokumentumhoz meghatározott helyen"
     },
@@ -487,7 +487,7 @@
       "title": "PDF automatikus átnevezése",
       "desc": "PDF fájl automatikus átnevezése a felismert fejléc alapján"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Színek/kontraszt beállítása",
       "desc": "PDF kontraszt, telítettség és fényerő beállítása"
     },
@@ -499,7 +499,7 @@
       "title": "Automatikus oldalfelosztás",
       "desc": "Szkennelt PDF automatikus felosztása QR-kód alapú oldalelválasztóval"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Tisztítás",
       "desc": "Szkriptek és egyéb elemek eltávolítása PDF fájlokból"
     },
@@ -523,11 +523,11 @@
       "title": "PDF összes információjának lekérése",
       "desc": "Minden elérhető információ lekérése PDF-ekről"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Oldalak kinyerése",
       "desc": "Kiválasztott oldalak kinyerése PDF-ből"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "Egyoldalas nagy PDF",
       "desc": "Minden PDF oldal egyesítése egyetlen nagy oldalba"
     },
@@ -543,11 +543,11 @@
       "title": "Kézi kitakarás",
       "desc": "PDF kitakarása kiválasztott szöveg, rajzolt alakzatok és/vagy kiválasztott oldalak alapján"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF konvertálása CSV-be",
       "desc": "Táblázatok kinyerése PDF-ből és konvertálása CSV formátumba"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Automatikus felosztás méret/darabszám szerint",
       "desc": "Egyetlen PDF felosztása több dokumentumra méret, oldalszám vagy dokumentumszám alapján"
     },
@@ -563,11 +563,11 @@
       "title": "Pecsét hozzáadása PDF-hez",
       "desc": "Szöveges vagy képes pecsét hozzáadása megadott helyekre"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Képek eltávolítása",
       "desc": "Képek eltávolítása PDF-ből a fájlméret csökkentése érdekében"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "PDF felosztása fejezetek szerint",
       "desc": "PDF felosztása több fájlra a fejezetstruktúra alapján"
     },
@@ -575,7 +575,7 @@
       "title": "PDF aláírás ellenőrzése",
       "desc": "Digitális aláírások és tanúsítványok ellenőrzése PDF dokumentumokban"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Színek cseréje és invertálása",
       "desc": "PDF szöveg és háttérszíneinek cseréje és teljes színinvertálás a fájlméret csökkentése érdekében"
     }

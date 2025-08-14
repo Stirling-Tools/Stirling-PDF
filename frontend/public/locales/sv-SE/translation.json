@@ -347,7 +347,7 @@
       "title": "Rotera",
       "desc": "Rotera enkelt dina PDF-filer."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Bild till PDF",
       "desc": "Konvertera en bild (PNG, JPEG, GIF) till PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Ändra behörigheter",
       "desc": "Ändra behörigheterna för ditt PDF-dokument"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Ta bort",
       "desc": "Ta bort oönskade sidor från ditt PDF-dokument."
     },
@@ -383,7 +383,7 @@
       "title": "Ta bort lösenord",
       "desc": "Ta bort lösenordsskydd från ditt PDF-dokument."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Komprimera",
       "desc": "Komprimera PDF-filer för att minska deras filstorlek."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline (Avancerat)",
       "desc": "Kör flera åtgärder på PDF:er genom att definiera pipeline-skript"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Lägg till sidnummer",
       "desc": "Lägg till sidnummer genom hela dokumentet på en angiven plats"
     },
@@ -487,7 +487,7 @@
       "title": "Automatiskt byt namn på PDF-fil",
       "desc": "Byter automatiskt namn på en PDF-fil baserat på dess detekterade rubrik"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Justera färger/kontrast",
       "desc": "Justera kontrast, mättnad och ljusstyrka i en PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Auto-dela sidor",
       "desc": "Auto-dela skannad PDF med fysisk skannad sidseparator QR-kod"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sanera",
       "desc": "Ta bort skript och andra element från PDF-filer"
     },
@@ -523,11 +523,11 @@
       "title": "Hämta ALL information om PDF",
       "desc": "Hämtar all möjlig information om PDF:er"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extrahera sida(or)",
       "desc": "Extraherar valda sidor från PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF till en enda stor sida",
       "desc": "Slår samman alla PDF-sidor till en enda stor sida"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF till CSV",
       "desc": "Extraherar tabeller från en PDF och konverterar dem till CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Auto-dela efter storlek/antal",
       "desc": "Dela en enda PDF till flera dokument baserat på storlek, sidantal eller dokumentantal"
     },
@@ -563,11 +563,11 @@
       "title": "Lägg till stämpel på PDF",
       "desc": "Lägg till text eller bildstämplar på angivna platser"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Ta bort bild",
       "desc": "Ta bort bild från PDF för att minska filstorlek"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Dela upp PDF efter kapitel",
       "desc": "Dela upp en PDF till flera filer baserat på dess kapitelstruktur."
     },
@@ -575,7 +575,7 @@
       "title": "Validera PDF signature",
       "desc": "Verifiera digitala signaturer och certifiakt i PDF dokument"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Ersätt och Invertera färg",
       "desc": "Ersätt färg för text och bakgrund i PDF och invertera hela färgen på PDF för att minska filstorlek"
     }

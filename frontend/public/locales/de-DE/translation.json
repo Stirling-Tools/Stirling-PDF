@@ -347,7 +347,7 @@
       "title": "Drehen",
       "desc": "Drehen Sie Ihre PDFs ganz einfach"
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Bild zu PDF",
       "desc": "Konvertieren Sie ein Bild (PNG, JPEG, GIF) in ein PDF"
     },
@@ -371,7 +371,7 @@
       "title": "Berechtigungen ändern",
       "desc": "Die Berechtigungen für Ihr PDF-Dokument verändern"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Entfernen",
       "desc": "Ungewollte Seiten aus dem PDF entfernen"
     },
@@ -383,7 +383,7 @@
       "title": "Passwort entfernen",
       "desc": "Den Passwortschutz eines PDFs entfernen"
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Komprimieren",
       "desc": "PDF komprimieren um die Dateigröße zu reduzieren"
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Mehrere Aktionen auf ein PDF anwenden, definiert durch ein Pipeline Skript"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Seitenzahlen hinzufügen",
       "desc": "Hinzufügen von Seitenzahlen an einer bestimmten Stelle"
     },
@@ -487,7 +487,7 @@
       "title": "PDF automatisch umbenennen",
       "desc": "PDF-Datei anhand von erkannten Kopfzeilen umbenennen"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Farben/Kontrast anpassen",
       "desc": "Kontrast, Sättigung und Helligkeit einer PDF anpassen"
     },
@@ -499,7 +499,7 @@
       "title": "PDF automatisch teilen",
       "desc": "Physisch gescannte PDF anhand von Splitter-Seiten und QR-Codes aufteilen"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "PDF Bereinigen",
       "desc": "Entfernen von Skripten und anderen Elementen aus PDF-Dateien"
     },
@@ -523,11 +523,11 @@
       "title": "Alle Informationen anzeigen",
       "desc": "Erfasst alle möglichen Informationen in einer PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Seite(n) extrahieren",
       "desc": "Extrahiert ausgewählte Seiten aus einer PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF zu einer Seite zusammenfassen",
       "desc": "Fügt alle PDF-Seiten zu einer einzigen großen Seite zusammen"
     },
@@ -543,11 +543,11 @@
       "title": "Manuell zensieren/schwärzen",
       "desc": "Zensiere (Schwärze) eine PDF-Datei durch Auswählen von Text, gezeichneten Formen und/oder ausgewählten Seite(n)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "Tabelle extrahieren",
       "desc": "Tabelle aus PDF in CSV extrahieren"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Teilen nach Größe/Anzahl",
       "desc": "Teilen Sie ein einzelnes PDF basierend auf Größe, Seitenanzahl oder Dokumentanzahl in mehrere Dokumente auf"
     },
@@ -563,11 +563,11 @@
       "title": "Stempel zu PDF hinzufügen",
       "desc": "Fügen Sie an festgelegten Stellen Text oder Bildstempel hinzu"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Bild entfernen",
       "desc": "Bild aus PDF entfernen, um die Dateigröße zu verringern"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "PDF-Datei nach Kapiteln aufteilen",
       "desc": "Aufteilung einer PDF-Datei in mehrere Dateien auf Basis der Kapitelstruktur."
     },
@@ -575,7 +575,7 @@
       "title": "PDF-Signatur überprüfen",
       "desc": "Digitale Signaturen und Zertifikate in PDF-Dokumenten überprüfen"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Farbe ersetzen und invertieren",
       "desc": "Ersetzen Sie die Farbe des Texts und Hintergrund der PDF-Datei und invertieren Sie die komplette Farbe der PDF-Datei, um die Dateigröße zu reduzieren"
     }
