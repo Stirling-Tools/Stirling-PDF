@@ -58,6 +58,9 @@ jobs:
 
       - name: Check licenses for compatibility
         run: ./gradlew clean checkLicense
+        env:
+          DISABLE_ADDITIONAL_FEATURES: false
+          STIRLING_PDF_DESKTOP_UI: true
 
       - name: Upload artifact on failure
         if: failure()
