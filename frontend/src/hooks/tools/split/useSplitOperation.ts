@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { SplitParameters } from '../../../components/tools/split/SplitSettings';
+import { SplitParameters } from './useSplitParameters';
 import { SPLIT_MODES } from '../../../constants/splitConstants';
 
 

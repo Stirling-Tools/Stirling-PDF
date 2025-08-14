@@ -5,7 +5,18 @@
 import { ProcessedFile } from './processing';
 import { PDFDocument, PDFPage, PageOperation } from './pageEditor';
 
-export type ModeType = 'viewer' | 'pageEditor' | 'fileEditor' | 'merge' | 'split' | 'compress' | 'ocr' | 'convert' | 'sanitize';
+export type ModeType = 
+  | 'viewer' 
+  | 'pageEditor' 
+  | 'fileEditor' 
+  | 'merge' 
+  | 'split' 
+  | 'compress' 
+  | 'ocr' 
+  | 'convert' 
+  | 'sanitize'
+  | 'addPassword'
+  | 'changePermissions';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 
