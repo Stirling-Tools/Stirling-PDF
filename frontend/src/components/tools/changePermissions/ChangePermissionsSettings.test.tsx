@@ -23,19 +23,6 @@ describe('ChangePermissionsSettings', () => {
     vi.clearAllMocks();
   });
 
-  test('should render section title', () => {
-    render(
-      <TestWrapper>
-        <ChangePermissionsSettings
-          parameters={defaultParameters}
-          onParameterChange={mockOnParameterChange}
-        />
-      </TestWrapper>
-    );
-
-    expect(screen.getByText('mock-changePermissions.restrictions.title')).toBeInTheDocument();
-  });
-
   test('should render all permission checkboxes', () => {
     render(
       <TestWrapper>
@@ -52,10 +39,10 @@ describe('ChangePermissionsSettings', () => {
     expect(checkboxes).toHaveLength(permissionKeys.length);
 
     // Verify specific permission labels are rendered
-    expect(screen.getByText('mock-changePermissions.restrictions.preventAssembly.label')).toBeInTheDocument();
-    expect(screen.getByText('mock-changePermissions.restrictions.preventPrinting.label')).toBeInTheDocument();
-    expect(screen.getByText('mock-changePermissions.restrictions.preventModify.label')).toBeInTheDocument();
-    expect(screen.getByText('mock-changePermissions.restrictions.preventExtractContent.label')).toBeInTheDocument();
+    expect(screen.getByText('mock-changePermissions.permissions.preventAssembly.label')).toBeInTheDocument();
+    expect(screen.getByText('mock-changePermissions.permissions.preventPrinting.label')).toBeInTheDocument();
+    expect(screen.getByText('mock-changePermissions.permissions.preventModify.label')).toBeInTheDocument();
+    expect(screen.getByText('mock-changePermissions.permissions.preventExtractContent.label')).toBeInTheDocument();
   });
 
   test('should render all permission types with correct labels', () => {
@@ -71,7 +58,7 @@ describe('ChangePermissionsSettings', () => {
     const permissionKeys = Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>;
 
     permissionKeys.forEach(permission => {
-      expect(screen.getByText(`mock-changePermissions.restrictions.${permission}.label`)).toBeInTheDocument();
+      expect(screen.getByText(`mock-changePermissions.permissions.${permission}.label`)).toBeInTheDocument();
     });
   });
 
@@ -109,10 +96,10 @@ describe('ChangePermissionsSettings', () => {
     );
 
     // Find specific checkboxes by their labels and verify they are checked
-    const assemblyCheckbox = screen.getByLabelText('mock-changePermissions.restrictions.preventAssembly.label') as HTMLInputElement;
-    const printingCheckbox = screen.getByLabelText('mock-changePermissions.restrictions.preventPrinting.label') as HTMLInputElement;
-    const modifyCheckbox = screen.getByLabelText('mock-changePermissions.restrictions.preventModify.label') as HTMLInputElement;
-    const formCheckbox = screen.getByLabelText('mock-changePermissions.restrictions.preventFillInForm.label') as HTMLInputElement;
+    const assemblyCheckbox = screen.getByLabelText('mock-changePermissions.permissions.preventAssembly.label') as HTMLInputElement;
+    const printingCheckbox = screen.getByLabelText('mock-changePermissions.permissions.preventPrinting.label') as HTMLInputElement;
+    const modifyCheckbox = screen.getByLabelText('mock-changePermissions.permissions.preventModify.label') as HTMLInputElement;
+    const formCheckbox = screen.getByLabelText('mock-changePermissions.permissions.preventFillInForm.label') as HTMLInputElement;
 
     expect(assemblyCheckbox.checked).toBe(true);
     expect(printingCheckbox.checked).toBe(true);
@@ -138,7 +125,7 @@ describe('ChangePermissionsSettings', () => {
       </TestWrapper>
     );
 
-    const assemblyCheckbox = screen.getByLabelText('mock-changePermissions.restrictions.preventAssembly.label');
+    const assemblyCheckbox = screen.getByLabelText('mock-changePermissions.permissions.preventAssembly.label');
     fireEvent.click(assemblyCheckbox);
 
     expect(mockOnParameterChange).toHaveBeenCalledWith('preventAssembly', expectedValue);
@@ -155,8 +142,8 @@ describe('ChangePermissionsSettings', () => {
     );
 
     // Click multiple checkboxes
-    const assemblyCheckbox = screen.getByLabelText('mock-changePermissions.restrictions.preventAssembly.label');
-    const printingCheckbox = screen.getByLabelText('mock-changePermissions.restrictions.preventPrinting.label');
+    const assemblyCheckbox = screen.getByLabelText('mock-changePermissions.permissions.preventAssembly.label');
+    const printingCheckbox = screen.getByLabelText('mock-changePermissions.permissions.preventPrinting.label');
 
     fireEvent.click(assemblyCheckbox);
     fireEvent.click(printingCheckbox);
@@ -196,12 +183,9 @@ describe('ChangePermissionsSettings', () => {
       </TestWrapper>
     );
 
-    // Verify that translation keys are being called
-    expect(mockT).toHaveBeenCalledWith('changePermissions.restrictions.title', 'Document Restrictions');
-
     const permissionKeys = Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>;
     permissionKeys.forEach(permission => {
-      expect(mockT).toHaveBeenCalledWith(`changePermissions.restrictions.${permission}.label`, permission);
+      expect(mockT).toHaveBeenCalledWith(`changePermissions.permissions.${permission}.label`, permission);
     });
   });
 
@@ -220,7 +204,7 @@ describe('ChangePermissionsSettings', () => {
       </TestWrapper>
     );
 
-    const checkbox = screen.getByLabelText(`mock-changePermissions.restrictions.${permission}.label`) as HTMLInputElement;
+    const checkbox = screen.getByLabelText(`mock-changePermissions.permissions.${permission}.label`) as HTMLInputElement;
     expect(checkbox.checked).toBe(true);
   });
 });

@@ -13,13 +13,11 @@ const ChangePermissionsSettings = ({ parameters, onParameterChange, disabled = f
 
   return (
     <Stack gap="sm">
-      <Text size="sm" fw={500}>{t('changePermissions.restrictions.title', 'Document Restrictions')}</Text>
-
       <Stack gap="xs">
         {(Object.keys(parameters) as Array<keyof ChangePermissionsParameters>).map((key) => (
           <Checkbox
             key={key}
-            label={t(`changePermissions.restrictions.${key}.label`, key)}
+            label={t(`changePermissions.permissions.${key}.label`, key)}
             checked={parameters[key]}
             onChange={(e) => onParameterChange(key, e.target.checked)}
             disabled={disabled}

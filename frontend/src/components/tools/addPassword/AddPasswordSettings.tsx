@@ -16,7 +16,6 @@ const AddPasswordSettings = ({ parameters, onParameterChange, disabled = false }
     <Stack gap="md">
       {/* Password Settings */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>{t('addPassword.passwords.title', 'Passwords')}</Text>
         <PasswordInput
           label={t('addPassword.passwords.user.label', 'User Password')}
           placeholder={t('addPassword.passwords.user.placeholder', 'Enter user password')}
@@ -35,9 +34,8 @@ const AddPasswordSettings = ({ parameters, onParameterChange, disabled = false }
 
       {/* Encryption Settings */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>{t('addPassword.encryption.title', 'Encryption')}</Text>
         <Select
-          label={t('addPassword.encryption.keyLength.label', 'Key Length')}
+          label={t('addPassword.encryption.keyLength.label', 'Encryption Key Length')}
           value={parameters.keyLength.toString()}
           onChange={(value) => {
             if (value) {
