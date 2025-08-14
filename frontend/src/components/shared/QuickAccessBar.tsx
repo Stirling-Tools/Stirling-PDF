@@ -11,7 +11,6 @@ import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
-import { Tooltip } from './Tooltip';
 import TopToolIndicator from './quickAccessBar/TopToolIndicator';
 import { 
   isNavButtonActive, 
@@ -58,7 +57,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       id: 'read',
       name: 'Read',
       icon: <MenuBookIcon sx={{ fontSize: "1.5rem" }} />,
-      tooltip: 'Read documents',
       size: 'lg',
       isRound: false,
       type: 'navigation',
@@ -74,7 +72,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
         <span className="material-symbols-rounded font-size-20">
           signature
         </span>,
-      tooltip: 'Sign your document',
       size: 'lg',
       isRound: false,
       type: 'navigation',
@@ -87,7 +84,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
         <span className="material-symbols-rounded font-size-20">
           automation
         </span>,
-      tooltip: 'Automate workflows',
       size: 'lg',
       isRound: false,
       type: 'navigation',
@@ -97,7 +93,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       id: 'files',
       name: 'Files',
       icon: <FolderIcon sx={{ fontSize: "1.25rem" }} />,
-      tooltip: 'Manage files',
       isRound: true,
       size: 'lg',
       type: 'modal',
@@ -110,7 +105,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
         <span className="material-symbols-rounded font-size-20">
           vital_signs
         </span>,
-      tooltip: 'View activity and analytics',
       isRound: true,
       size: 'lg',
       type: 'navigation',
@@ -120,7 +114,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       id: 'config',
       name: 'Config',
       icon: <SettingsIcon sx={{ fontSize: "1rem" }} />,
-      tooltip: 'Configure settings',
       size: 'lg',
       type: 'modal',
       onClick: () => {
@@ -169,7 +162,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
           <Stack gap="lg" align="center">
             {buttonConfigs.slice(0, -1).map((config, index) => (
               <React.Fragment key={config.id}>
-                <Tooltip content={config.tooltip} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
+
                   <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
                     <ActionIcon
                       size={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? (config.size || 'xl') : 'lg'}
@@ -189,7 +182,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
                       {config.name}
                     </span>
                   </div>
-                </Tooltip>
+
 
                 {/* Add divider after Automate button (index 2) */}
                 {index === 2 && (
@@ -209,7 +202,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
           {buttonConfigs
             .filter(config => config.id === 'config')
             .map(config => (
-              <Tooltip key={config.id} content={config.tooltip} sidebarTooltip>
                 <div className="flex flex-col items-center gap-1">
                   <ActionIcon
                     size={config.size || 'lg'}
@@ -227,7 +219,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
                     {config.name}
                   </span>
                 </div>
-              </Tooltip>
             ))}
         </div>
       </div>

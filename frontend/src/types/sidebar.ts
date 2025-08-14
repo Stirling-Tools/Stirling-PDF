@@ -32,7 +32,6 @@ export interface ButtonConfig {
   id: string;
   name: string;
   icon: React.ReactNode;
-  tooltip: string;
   isRound?: boolean;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   onClick: () => void;
