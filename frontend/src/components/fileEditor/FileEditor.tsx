@@ -10,7 +10,6 @@ import { useToolFileSelection, useProcessedFiles, useFileState, useFileManagemen
 import { FileOperation, createStableFileId } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
-import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
 import styles from '../pageEditor/PageEditor.module.css';
@@ -47,9 +46,6 @@ const FileEditor = ({
   supportedExtensions = ["pdf"]
 }: FileEditorProps) => {
   const { t } = useTranslation();
-
-  // Thumbnail cache for sharing with PageEditor
-  const { getThumbnailFromCache, addThumbnailToCache } = useThumbnailGeneration();
 
   // Utility function to check if a file extension is supported
   const isFileSupported = useCallback((fileName: string): boolean => {
@@ -157,33 +153,19 @@ const FileEditor = ({
 
   // Convert shared files to FileEditor format
   const convertToFileItem = useCallback(async (sharedFile: any): Promise<FileItem> => {
-    let thumbnail = sharedFile.thumbnail;
-    
-    if (!thumbnail) {
-      // Check cache first using the file ID
-      const fileId = sharedFile.id || `file-${Date.now()}-${Math.random()}`;
-      const page1CacheKey = `${fileId}-page-1`;
-      thumbnail = getThumbnailFromCache(page1CacheKey);
-      
-      if (!thumbnail) {
-        // Generate and cache thumbnail
-        thumbnail = await generateThumbnailForFile(sharedFile.file || sharedFile);
-        if (thumbnail) {
-          addThumbnailToCache(page1CacheKey, thumbnail);
-          console.log(`📸 FileEditor: Cached page-1 thumbnail for legacy file (key: ${page1CacheKey})`);
-        }
-      }
-    }
+    // Use processed data if available, otherwise fallback to legacy approach
+    const thumbnail = sharedFile.thumbnail || sharedFile.thumbnailUrl || 
+      (await generateThumbnailForFile(sharedFile.file || sharedFile));
 
     return {
       id: sharedFile.id || `file-${Date.now()}-${Math.random()}`,
       name: (sharedFile.file?.name || sharedFile.name || 'unknown'),
-      pageCount: sharedFile.pageCount || 1, // Default to 1 page if unknown
+      pageCount: sharedFile.processedFile?.totalPages || sharedFile.pageCount || 1,
       thumbnail: thumbnail || '',
       size: sharedFile.file?.size || sharedFile.size || 0,
       file: sharedFile.file || sharedFile,
     };
-  }, [getThumbnailFromCache, addThumbnailToCache]);
+  }, []);
 
   // Convert activeFiles to FileItem format using context (async to avoid blocking)
   useEffect(() => {
@@ -216,47 +198,11 @@ const FileEditor = ({
 
             if (!file) continue; // Skip if file not found
             
-            // Use record's thumbnail if available, otherwise check cache, then generate
-            let thumbnail: string | undefined = record.thumbnailUrl;
-            if (!thumbnail) {
-              // Check if PageEditor has already cached a page-1 thumbnail for this file
-              const page1CacheKey = `${record.id}-page-1`;
-              thumbnail = getThumbnailFromCache(page1CacheKey) || undefined;
-              
-              if (!thumbnail) {
-                try {
-                  thumbnail = await generateThumbnailForFile(file);
-                  // Store in cache for PageEditor to reuse
-                  if (thumbnail) {
-                    addThumbnailToCache(page1CacheKey, thumbnail);
-                    console.log(`📸 FileEditor: Cached page-1 thumbnail for ${file.name} (key: ${page1CacheKey})`);
-                  }
-                } catch (error) {
-                  console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
-                  thumbnail = undefined; // Use placeholder
-                }
-              } else {
-                console.log(`📸 FileEditor: Reused cached page-1 thumbnail for ${file.name} (key: ${page1CacheKey})`);
-              }
-            }
-
-            // Page count estimation for display purposes only
-            let pageCount = 1; // Default for non-PDFs and display in FileEditor
+            // Use processed data from centralized file processing service
+            const thumbnail = record.thumbnailUrl; // Already processed by FileProcessingService
+            const pageCount = record.processedFile?.totalPages || 1; // Use processed page count
             
-            if (file.type === 'application/pdf') {
-              // Quick page count estimation for FileEditor display only
-              // PageEditor will do its own more thorough page detection
-              try {
-                const arrayBuffer = await file.arrayBuffer();
-                const text = new TextDecoder('latin1').decode(arrayBuffer);
-                const pageMatches = text.match(/\/Type\s*\/Page[^s]/g);
-                pageCount = pageMatches ? pageMatches.length : 1;
-                console.log(`📄 FileEditor estimated page count for ${file.name}: ${pageCount} pages (display only)`);
-              } catch (error) {
-                console.warn(`Failed to estimate page count for ${file.name}:`, error);
-                pageCount = 1; // Safe fallback
-              }
-            }
+            console.log(`📄 FileEditor: Using processed data for ${file.name}: ${pageCount} pages, thumbnail: ${!!thumbnail}`);
             
             const convertedFile = {
               id: record.id, // Use the record's UUID from FileContext

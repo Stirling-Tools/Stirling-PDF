@@ -44,6 +44,7 @@ import {
 import { EnhancedPDFProcessingService } from '../services/enhancedPDFProcessingService';
 import { thumbnailGenerationService } from '../services/thumbnailGenerationService';
 import { fileStorage } from '../services/fileStorage';
+import { fileProcessingService } from '../services/fileProcessingService';
 
 // Get service instances
 const enhancedPDFProcessingService = EnhancedPDFProcessingService.getInstance();
@@ -430,13 +431,37 @@ export function FileContextProvider({
       fileRecords.push(record);
       addedFiles.push(file);
       
+      // Start centralized file processing (async, non-blocking)
+      fileProcessingService.processFile(file, fileId).then(result => {
+        // Only update if file still exists in context
+        if (filesRef.current.has(fileId)) {
+          if (result.success && result.metadata) {
+            // Update with processed metadata using dispatch directly
+            dispatch({ 
+              type: 'UPDATE_FILE_RECORD', 
+              payload: { 
+                id: fileId, 
+                updates: {
+                  processedFile: result.metadata,
+                  thumbnailUrl: result.metadata.thumbnailUrl
+                }
+              }
+            });
+            console.log(`✅ File processing complete for ${file.name}: ${result.metadata.totalPages} pages`);
+          } else {
+            console.warn(`❌ File processing failed for ${file.name}:`, result.error);
+          }
+        }
+      }).catch(error => {
+        console.error(`❌ File processing error for ${file.name}:`, error);
+      });
+      
       // Optional: Persist to IndexedDB if enabled
       if (enablePersistence) {
         try {
-          // Generate thumbnail and store in IndexedDB with our UUID
-          import('../utils/thumbnailUtils').then(({ generateThumbnailForFile }) => {
-            return generateThumbnailForFile(file);
-          }).then(thumbnail => {
+          // Use the thumbnail from processing service if available
+          fileProcessingService.processFile(file, fileId).then(result => {
+            const thumbnail = result.metadata?.thumbnailUrl;
             return fileStorage.storeFile(file, fileId, thumbnail);
           }).then(() => {
             console.log('File persisted to IndexedDB:', fileId);
@@ -472,7 +497,7 @@ export function FileContextProvider({
 
     // Return only the newly added files
     return addedFiles;
-  }, [enablePersistence]); // Include enablePersistence for persistence logic
+  }, [enablePersistence]); // Remove updateFileRecord dependency
 
   const removeFiles = useCallback((fileIds: FileId[], deleteFromStorage: boolean = true) => {
     // Clean up Files from ref map first
