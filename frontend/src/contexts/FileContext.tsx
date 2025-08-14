@@ -501,9 +501,7 @@ export function FileContextProvider({
       thumbnailGenerationService.destroy();
 
       // Force garbage collection hint
-      if (typeof window !== 'undefined') {
-        setTimeout(() => window.gc && window.gc(), 100);
-      }
+      setTimeout(() => window?.gc?.(), 100);
 
     } catch (error) {
       console.warn('Error during cleanup all files:', error);
@@ -677,9 +675,9 @@ export function FileContextProvider({
       dispatch({ type: 'SET_CURRENT_MODE', payload: mode });
 
       if (state.currentMode !== mode && state.activeFiles.length > 0) {
-        if (window.requestIdleCallback && typeof window !== 'undefined') {
+        if (window.requestIdleCallback) {
           window.requestIdleCallback(() => {
-            window.gc && window.gc();
+            window.gc?.();
           }, { timeout: 5000 });
         }
       }
@@ -691,9 +689,9 @@ export function FileContextProvider({
       dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
 
       if (state.currentView !== view && state.activeFiles.length > 0) {
-        if (window.requestIdleCallback && typeof window !== 'undefined') {
+        if (window.requestIdleCallback) {
           window.requestIdleCallback(() => {
-            window.gc && window.gc();
+            window.gc?.();
           }, { timeout: 5000 });
         }
       }
