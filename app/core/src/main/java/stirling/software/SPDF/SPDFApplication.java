@@ -200,7 +200,7 @@ public class SPDFApplication {
         log.info("Navigate to {}", url);
     }
 
-    private static String[] getActiveProfile(String[] args) {
+    protected static String[] getActiveProfile(String[] args) {
         // 1. Check for explicitly passed profiles
         if (args != null) {
             for (String arg : args) {
@@ -224,7 +224,7 @@ public class SPDFApplication {
         }
     }
 
-    private static boolean isClassPresent(String className) {
+    protected static boolean isClassPresent(String className) {
         try {
             Class.forName(className, false, SPDFApplication.class.getClassLoader());
             return true;
