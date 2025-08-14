@@ -61,6 +61,9 @@ i18n
     nonExplicitSupportedLngs: false,
     debug: process.env.NODE_ENV === 'development',
     
+    // Ensure synchronous loading to prevent timing issues
+    initImmediate: false,
+    
     interpolation: {
       escapeValue: false, // React already escapes values
     },
@@ -75,15 +78,14 @@ i18n
     },
     
     react: {
-      useSuspense: false, // Set to false to avoid suspense issues with SSR
+      useSuspense: true, // Enable suspense to prevent premature rendering
+      bindI18n: 'languageChanged loaded',
+      bindI18nStore: 'added removed',
+      transEmptyNodeValue: '', // Return empty string for missing keys instead of key name
+      transSupportBasicHtmlNodes: true,
+      transKeepBasicHtmlNodesFor: ['br', 'strong', 'i', 'p'],
     },
   });
-
-// Map base language codes to specific locales
-i18n.services.languageUtils.formatLanguageCode = (lng) => {
-  if (lng === 'en') return 'en-GB';
-  return lng;
-};
 
 // Set document direction based on language
 i18n.on('languageChanged', (lng) => {

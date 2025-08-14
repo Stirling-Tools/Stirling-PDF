@@ -118,7 +118,7 @@ interface ToolManagementResult {
 }
 
 export const useToolManagement = (): ToolManagementResult => {
-  const { t, ready } = useTranslation();
+  const { t } = useTranslation();
 
   const [selectedToolKey, setSelectedToolKey] = useState<string | null>(null);
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
@@ -136,10 +136,6 @@ export const useToolManagement = (): ToolManagementResult => {
   }, [endpointsLoading, endpointStatus]);
 
   const toolRegistry: ToolRegistry = useMemo(() => {
-    if (!ready) {
-      return {};
-    }
-    
     const availableTools: ToolRegistry = {};
     Object.keys(toolDefinitions).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
@@ -151,7 +147,7 @@ export const useToolManagement = (): ToolManagementResult => {
       }
     });
     return availableTools;
-  }, [t, isToolAvailable, ready]);
+  }, [t, isToolAvailable]);
 
   useEffect(() => {
     if (!endpointsLoading && selectedToolKey && !toolRegistry[selectedToolKey]) {
