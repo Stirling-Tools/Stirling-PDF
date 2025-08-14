@@ -61,28 +61,28 @@ i18n
     supportedLngs: Object.keys(supportedLanguages),
     nonExplicitSupportedLngs: false,
     debug: process.env.NODE_ENV === 'development',
-    
+
     // Ensure synchronous loading to prevent timing issues
     initImmediate: false,
-    
+
     interpolation: {
       escapeValue: false, // React already escapes values
     },
-    
+
     backend: {
-      loadPath: (lngs, namespaces) => {
+      loadPath: (lngs: string[], namespaces: string[]) => {
         // Map 'en' to 'en-GB' for loading translations
         const lng = lngs[0] === 'en' ? 'en-GB' : lngs[0];
         return `/locales/${lng}/${namespaces[0]}.json`;
       },
     },
-    
+
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
       convertDetectedLanguage: (lng: string) => lng === 'en' ? 'en-GB' : lng,
     },
-    
+
     react: {
       useSuspense: true, // Enable suspense to prevent premature rendering
       bindI18n: 'languageChanged loaded',
