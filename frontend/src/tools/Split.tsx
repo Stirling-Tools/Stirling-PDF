@@ -59,7 +59,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = splitOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles;
+  const filesCollapsed = hasFiles || hasResults;
   const settingsCollapsed = !hasFiles || hasResults;
 
   return createToolFlow({
