@@ -26,10 +26,6 @@ export const useAddPasswordTips = (): TooltipContent => {
           t("addPassword.tooltip.encryption.bullet3", "256-bit: Maximum security, requires modern viewers")
         ]
       },
-      {
-        title: t("addPassword.tooltip.restrictions.title", "Document Restrictions"),
-        description: t("addPassword.tooltip.restrictions.text", "These restrictions control what users can do with the PDF. Most effective when combined with an owner password."),
-      }
     ]
   };
 };
