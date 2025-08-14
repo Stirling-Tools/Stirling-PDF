@@ -273,7 +273,7 @@ public class SplitPdfBySizeController {
         log.debug("Starting handleSplitByPageCount with pageCount={}", pageCount);
         int currentPageCount = 0;
         log.debug("Creating initial output document");
-        PDDocument currentDoc = null;
+        PDDocument currentDoc;
         try {
             currentDoc = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
             log.debug("Successfully created initial output document");
@@ -387,7 +387,7 @@ public class SplitPdfBySizeController {
 
         for (int i = 0; i < documentCount; i++) {
             log.debug("Creating document {} of {}", i + 1, documentCount);
-            PDDocument currentDoc = null;
+            PDDocument currentDoc;
             try {
                 currentDoc = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
                 log.debug("Successfully created document {} of {}", i + 1, documentCount);

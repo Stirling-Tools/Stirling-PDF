@@ -143,7 +143,7 @@ public class MetadataController {
                 }
             }
         }
-        if (creationDate != null && creationDate.length() > 0) {
+        if (creationDate != null && !creationDate.isEmpty()) {
             Calendar creationDateCal = Calendar.getInstance();
             try {
                 creationDateCal.setTime(
@@ -155,7 +155,7 @@ public class MetadataController {
         } else {
             info.setCreationDate(null);
         }
-        if (modificationDate != null && modificationDate.length() > 0) {
+        if (modificationDate != null && !modificationDate.isEmpty()) {
             Calendar modificationDateCal = Calendar.getInstance();
             try {
                 modificationDateCal.setTime(

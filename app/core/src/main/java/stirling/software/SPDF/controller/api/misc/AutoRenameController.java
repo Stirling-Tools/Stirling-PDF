@@ -75,7 +75,7 @@ public class AutoRenameController {
                     }
 
                     private void processLine() {
-                        if (lineBuilder.length() > 0 && lineCount < LINE_LIMIT) {
+                        if (!lineBuilder.isEmpty() && lineCount < LINE_LIMIT) {
                             lineInfos.add(new LineInfo(lineBuilder.toString(), maxFontSizeInLine));
                         }
                     }

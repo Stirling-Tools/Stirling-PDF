@@ -31,7 +31,7 @@ public class MetricsAggregatorService {
     public void aggregateAndSendMetrics() {
         Map<String, Object> metrics = new HashMap<>();
 
-        final boolean validateGetEndpoints = endpointInspector.getValidGetEndpoints().size() != 0;
+        final boolean validateGetEndpoints = !endpointInspector.getValidGetEndpoints().isEmpty();
         Search.in(meterRegistry)
                 .name("http.requests")
                 .counters()
