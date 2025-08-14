@@ -12,6 +12,7 @@
       "Bash(ls:*)",
       "Bash(npx tsc:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

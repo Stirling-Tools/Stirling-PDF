@@ -244,8 +244,6 @@ const FileContext = createContext<any | undefined>(undefined);
 // Provider component
 export function FileContextProvider({
   children,
-export function FileContextProvider({
-  children,
   enableUrlSync = true,
   enablePersistence = true 
 }: FileContextProviderProps) {

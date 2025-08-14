@@ -146,11 +146,7 @@ export default function Workbench() {
       {/* Top Controls */}
       <TopControls
         currentView={currentView}
-<<<<<<< HEAD
-        setCurrentView={actions.setMode}
-=======
-        setCurrentView={setCurrentView as any /* FIX ME */}
->>>>>>> origin/V2
+        setCurrentView={setCurrentView}
         selectedToolKey={selectedToolKey}
       />
 

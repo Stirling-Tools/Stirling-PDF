@@ -3,7 +3,7 @@ import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useToolFileSelection } from "../contexts/FileContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";

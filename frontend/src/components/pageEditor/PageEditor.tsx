@@ -45,7 +45,6 @@ export interface PageEditorProps {
     exportLoading: boolean;
     selectionMode: boolean;
     selectedPages: number[];
-    selectedPages: number[];
     closePdf: () => void;
   }) => void;
 }
@@ -204,7 +203,6 @@ const PageEditor = ({
 
   // Drag and drop state
   const [draggedPage, setDraggedPage] = useState<number | null>(null);
-  const [dropTarget, setDropTarget] = useState<number | 'end' | null>(null);
   const [dropTarget, setDropTarget] = useState<number | 'end' | null>(null);
   const [multiPageDrag, setMultiPageDrag] = useState<{pageNumbers: number[], count: number} | null>(null);
   const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
@@ -870,7 +868,6 @@ const PageEditor = ({
 
     // Convert page numbers to page IDs for export service
     const exportPageIds = selectedOnly
-    const exportPageIds = selectedOnly
       ? selectedPageNumbers.map(pageNum => {
           const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
           return page?.id || '';
@@ -890,7 +887,6 @@ const PageEditor = ({
     try {
       // Convert page numbers to page IDs for export service
       const exportPageIds = selectedOnly
-      const exportPageIds = selectedOnly
         ? selectedPageNumbers.map(pageNum => {
             const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
             return page?.id || '';
@@ -900,7 +896,6 @@ const PageEditor = ({
 
       const errors = pdfExportService.validateExport(mergedPdfDocument, exportPageIds, selectedOnly);
       if (errors.length > 0) {
-        setStatus(errors.join(', '));
         setStatus(errors.join(', '));
         return;
       }
@@ -1160,10 +1155,6 @@ const PageEditor = ({
               width: '100%',
               height: '4px',
               backgroundColor: 'var(--mantine-color-gray-2)',
-            <div style={{
-              width: '100%',
-              height: '4px',
-              backgroundColor: 'var(--mantine-color-gray-2)',
               borderRadius: '2px',
               overflow: 'hidden'
             }}>
@@ -1190,10 +1181,6 @@ const PageEditor = ({
                 <Text size="sm" fw={500}>Processing thumbnails...</Text>
                 <Text size="sm" c="dimmed">{Math.round(processingProgress || 0)}%</Text>
               </Group>
-              <div style={{
-                width: '100%',
-                height: '4px',
-                backgroundColor: 'var(--mantine-color-gray-2)',
               <div style={{
                 width: '100%',
                 height: '4px',
@@ -1290,7 +1277,6 @@ const PageEditor = ({
               selectedPages={selectedPageNumbers}
               selectionMode={selectionMode}
               draggedPage={draggedPage}
-              dropTarget={dropTarget === 'end' ? null : dropTarget}
               dropTarget={dropTarget === 'end' ? null : dropTarget}
               movingPage={movingPage}
               isAnimating={isAnimating}
