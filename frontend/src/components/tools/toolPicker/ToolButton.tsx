@@ -12,11 +12,21 @@ interface ToolButtonProps {
 }
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect }) => {
+  const handleClick = (id: string) => {
+    if (tool.link) {
+      // Open external link in new tab 
+      window.open(tool.link, '_blank', 'noopener,noreferrer');
+      return; 
+    }
+    // Normal tool selection
+    onSelect(id);
+  };
+
   return (
     <Tooltip content={tool.description} position="right" arrow={true} delay={500}>
       <Button
         variant={isSelected ? "filled" : "subtle"}
-        onClick={() => onSelect(id)}
+        onClick={()=> handleClick(id)}
         size="md"
         radius="md"
         leftSection={<div className="tool-button-icon" style={{ color: "var(--tools-text-and-icon-color)" }}>{tool.icon}</div>}
@@ -28,7 +38,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
         <FitText
           text={tool.name}
           lines={1}
-          minimumFontScale={0.6}
+          minimumFontScale={0.8}
           as="span"
           style={{ display: 'inline-block', maxWidth: '100%' }}
         />

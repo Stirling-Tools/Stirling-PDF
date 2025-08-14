@@ -135,6 +135,9 @@
   --text-brand: var(--color-gray-700);
   --text-brand-accent: #DC2626;
 
+  /* Placeholder text colors */
+  --search-text-and-icon-color: #6B7382;
+
   /* container */
   --landing-paper-bg: var(--bg-surface);
   --landing-inner-paper-bg: #EEF8FF;
@@ -277,6 +280,9 @@
   /* Subcategory title styling (dark mode) */
   --tool-subcategory-text-color: #9CA3AF; /* lighter text in dark mode as well */
   --tool-subcategory-rule-color: #3A4047; /* doubly lighter (relative) line in dark */
+
+  /* Placeholder text colors (dark mode) */
+  --search-text-and-icon-color: #FFFFFF !important;
 }
 
 /* Dropzone drop state styling */

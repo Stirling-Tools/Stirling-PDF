@@ -17,6 +17,10 @@ export type ToolRegistryEntry = {
     maxFiles?: number; 
     supportedFormats?: string[];
     endpoints?: string[]; 
+    
+    // Optional key to distinguish between regular tools and links
+    link?: string;
+    type?: string;
 };
 
 export type ToolRegistry = {
@@ -554,36 +558,40 @@ export const flatToolRegistryMap: ToolRegistry = {
         name: "API",
         component: null,
         view: "external",
-        description: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html",
+        description: "Link to API documentation",
         category: "Advanced Tools",
-        subcategory: "Developer Tools"
+        subcategory: "Developer Tools",
+        link: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html"
     },
     "dev-folder-scanning": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
         name: "Automated Folder Scanning",
         component: null,
         view: "external",
-        description: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/",
+        description: "Link to automated folder scanning guide",
         category: "Advanced Tools",
-        subcategory: "Developer Tools"
+        subcategory: "Developer Tools",
+        link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/"
     },
     "dev-sso-guide": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
         name: "SSO Guide",
         component: null,
         view: "external",
-        description: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
+        description: "Link to SSO guide",
         category: "Advanced Tools",
-        subcategory: "Developer Tools"
+        subcategory: "Developer Tools",
+        link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
     },
     "dev-airgapped": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
         name: "Air-gapped Setup",
         component: null,
         view: "external",
-        description: "https://docs.stirlingpdf.com/Pro/#activation",
+        description: "Link to air-gapped setup guide",
         category: "Advanced Tools",
-        subcategory: "Developer Tools"
+        subcategory: "Developer Tools",
+        link: "https://docs.stirlingpdf.com/Pro/#activation"
     },
 
 

@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { TextInput, Stack, Button, Text } from "@mantine/core";
+import { TextInput, Stack, Button, Text, useMantineColorScheme } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import SearchIcon from "@mui/icons-material/Search";
 import { type ToolRegistryEntry } from "../../../data/toolRegistry";
+import './ToolPicker.css';
 
 interface ToolSearchProps {
   value: string;
@@ -22,6 +22,7 @@ const ToolSearch = ({
   selectedToolKey 
 }: ToolSearchProps) => {
   const { t } = useTranslation();
+  const { colorScheme } = useMantineColorScheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -55,16 +56,24 @@ const ToolSearch = ({
   }, []);
 
   const searchInput = (
-    <TextInput
-      ref={searchRef}
-      placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
-      value={value}
-      radius="md"
-      onChange={(e) => handleSearchChange(e.currentTarget.value)}
-      autoComplete="off"
-      className="search-input rounded-lg"
-      leftSection={<SearchIcon sx={{ fontSize: 16, color: 'var(--tools-text-and-icon-color)' }} />}
-    />
+    <div className="search-input-container">
+      <span className="material-symbols-rounded search-icon" style={{ color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382' }}>
+        search
+      </span>
+      <input
+        ref={searchRef}
+        type="text"
+        placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
+        value={value}
+        onChange={(e) => handleSearchChange(e.currentTarget.value)}
+        autoComplete="off"
+        className="search-input-field"
+        style={{
+          backgroundColor: colorScheme === 'dark' ? '#4B525A' : '#FFFFFF',
+          color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382',
+        }}
+      />
+    </div>
   );
 
   if (mode === 'filter') {

@@ -53,7 +53,7 @@ const FitText: React.FC<FitTextProps> = ({
   const clampStyles: CSSProperties = {
     // Multi-line clamp with ellipsis fallback
     whiteSpace: lines === 1 ? 'nowrap' : 'normal',
-    overflow: 'hidden',
+    overflow: 'visible',
     textOverflow: 'ellipsis',
     display: lines > 1 ? ('-webkit-box' as any) : undefined,
     WebkitBoxOrient: lines > 1 ? ('vertical' as any) : undefined,

@@ -1,11 +1,12 @@
 import React from 'react';
-import { TextInput, useMantineColorScheme } from '@mantine/core';
+import { useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolPanelState, useToolSelection, useWorkbenchState } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
 import SearchResults from './SearchResults';
 import ToolRenderer from './ToolRenderer';
+import ToolSearch from './toolPicker/ToolSearch';
 import { useSidebarContext } from "../../contexts/SidebarContext";
 import rainbowStyles from '../../styles/rainbow.module.css';
 
@@ -25,6 +26,7 @@ export default function ToolPanel() {
     isPanelVisible,
     searchQuery,
     filteredTools,
+    toolRegistry,
     setSearchQuery,
     handleBackToTools
   } = useToolPanelState();
@@ -58,29 +60,11 @@ export default function ToolPanel() {
             marginBottom: (leftPanelView === 'toolContent') ? '1rem' : 0,
           }}
         >
-          <TextInput
-            placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
+          <ToolSearch
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.currentTarget.value)}
-            autoComplete="off"
-            size="sm"
-            styles={{
-              root: {
-                marginTop: '0.5rem',
-                marginBottom: '0.5rem',
-              },
-              input: {
-                backgroundColor: colorScheme === 'dark' ? '#4B525A' : '#FFFFFF',
-                color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382',
-                border: 'none',
-                boxShadow: 'none',
-                borderBottom: leftPanelView === 'toolContent' ? `1px solid ${colorScheme === 'dark' ? '#3A4047' : '#E0E0E0'}` : 'none',
-              },
-              section: {
-                color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382',
-              }
-            }}
-            leftSection={<span className="material-symbols-rounded" style={{ fontSize: 16, color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382' }}>search</span>}
+            onChange={setSearchQuery}
+            toolRegistry={toolRegistry}
+            mode="filter"
           />
         </div>
 
