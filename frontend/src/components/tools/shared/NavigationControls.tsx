@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Group, ActionIcon, Box, Text } from '@mantine/core';
+import { Stack, Group, ActionIcon, Text } from '@mantine/core';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
@@ -46,8 +46,6 @@ const NavigationControls = ({
           <ChevronRightIcon style={{ fontSize: '1rem' }} />
         </ActionIcon>
       </Group>
-
-
     </Stack>
   );
 };
