@@ -19,7 +19,7 @@ export function formatFileSize(bytes: number): string {
 /**
  * Get file date as string
  */
-export function getFileDate(file: File): string {
+export function getFileDate(file: File | { lastModified: number }): string {
   if (file.lastModified) {
     return new Date(file.lastModified).toLocaleString();
   }
@@ -29,7 +29,7 @@ export function getFileDate(file: File): string {
 /**
  * Get file size as string (legacy method for backward compatibility)
  */
-export function getFileSize(file: File): string {
+export function getFileSize(file: File | { size: number }): string {
   if (!file.size) return "Unknown";
   return formatFileSize(file.size);
 }

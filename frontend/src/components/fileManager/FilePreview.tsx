@@ -3,10 +3,10 @@ import { Box, Center, ActionIcon, Image } from '@mantine/core';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { FileWithUrl } from '../../types/file';
+import { FileMetadata } from '../../types/file';
 
 interface FilePreviewProps {
-  currentFile: FileWithUrl | null;
+  currentFile: FileMetadata | null;
   thumbnail: string | null;
   numberOfFiles: number;
   isAnimating: boolean;

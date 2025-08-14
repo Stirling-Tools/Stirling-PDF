@@ -19,6 +19,8 @@ export interface FileRecord {
   thumbnailUrl?: string;
   blobUrl?: string;
   createdAt: number;
+  contentHash?: string; // Optional content hash for deduplication
+  hashStatus?: 'pending' | 'completed' | 'failed'; // Hash computation status
   processedFile?: {
     pages: Array<{
       thumbnail?: string;
@@ -34,10 +36,66 @@ export interface FileContextNormalizedFiles {
   byId: Record<FileId, FileRecord>;
 }
 
-// Helper functions
+// Helper functions - UUID-based primary keys (zero collisions, synchronous)
+export function createFileId(): FileId {
+  // Use crypto.randomUUID for authoritative primary key
+  if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+  // Fallback for environments without randomUUID
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// Legacy support - now just delegates to createFileId
 export function createStableFileId(file: File): FileId {
-  // Use existing ID if file already has one, otherwise create stable ID from metadata
-  return (file as any).id || `${file.name}-${file.size}-${file.lastModified}`;
+  // Don't mutate File objects - always return new UUID
+  return createFileId();
+}
+
+// Multi-region content hash for deduplication (head + middle + tail)
+export async function computeContentHash(file: File): Promise<string | null> {
+  try {
+    const fileSize = file.size;
+    const chunkSize = 32 * 1024; // 32KB chunks
+    const chunks: ArrayBuffer[] = [];
+    
+    // Head chunk (first 32KB)
+    chunks.push(await file.slice(0, Math.min(chunkSize, fileSize)).arrayBuffer());
+    
+    // Middle chunk (if file is large enough)
+    if (fileSize > chunkSize * 2) {
+      const middleStart = Math.floor(fileSize / 2) - Math.floor(chunkSize / 2);
+      chunks.push(await file.slice(middleStart, middleStart + chunkSize).arrayBuffer());
+    }
+    
+    // Tail chunk (last 32KB, if different from head)
+    if (fileSize > chunkSize) {
+      const tailStart = Math.max(chunkSize, fileSize - chunkSize);
+      chunks.push(await file.slice(tailStart, fileSize).arrayBuffer());
+    }
+    
+    // Combine all chunks
+    const totalSize = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
+    const combined = new Uint8Array(totalSize);
+    let offset = 0;
+    
+    for (const chunk of chunks) {
+      combined.set(new Uint8Array(chunk), offset);
+      offset += chunk.byteLength;
+    }
+    
+    // Hash the combined chunks
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', combined);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (error) {
+    console.warn('Content hash calculation failed:', error);
+    return null;
+  }
 }
 
 export function toFileRecord(file: File, id?: FileId): FileRecord {
@@ -53,17 +111,30 @@ export function toFileRecord(file: File, id?: FileId): FileRecord {
 }
 
 export function revokeFileResources(record: FileRecord): void {
-  if (record.thumbnailUrl) {
-    URL.revokeObjectURL(record.thumbnailUrl);
+  // Only revoke blob: URLs to prevent errors on other schemes
+  if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
+    try {
+      URL.revokeObjectURL(record.thumbnailUrl);
+    } catch (error) {
+      console.warn('Failed to revoke thumbnail URL:', error);
+    }
   }
-  if (record.blobUrl) {
-    URL.revokeObjectURL(record.blobUrl);
+  if (record.blobUrl && record.blobUrl.startsWith('blob:')) {
+    try {
+      URL.revokeObjectURL(record.blobUrl);
+    } catch (error) {
+      console.warn('Failed to revoke blob URL:', error);
+    }
   }
   // Clean up processed file thumbnails
   if (record.processedFile?.pages) {
     record.processedFile.pages.forEach(page => {
       if (page.thumbnail && page.thumbnail.startsWith('blob:')) {
-        URL.revokeObjectURL(page.thumbnail);
+        try {
+          URL.revokeObjectURL(page.thumbnail);
+        } catch (error) {
+          console.warn('Failed to revoke page thumbnail URL:', error);
+        }
       }
     });
   }
@@ -132,7 +203,7 @@ export interface FileContextState {
 // Action types for reducer pattern
 export type FileContextAction = 
   // File management actions
-  | { type: 'ADD_FILES'; payload: { files: File[] } }
+  | { type: 'ADD_FILES'; payload: { fileRecords: FileRecord[] } }
   | { type: 'REMOVE_FILES'; payload: { fileIds: FileId[] } }
   | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<FileRecord> } }
   
@@ -155,6 +226,7 @@ export interface FileContextActions {
   // File management - lightweight actions only
   addFiles: (files: File[]) => Promise<File[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => void;
+  updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   clearAllFiles: () => void;
 
   // Navigation

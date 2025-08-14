@@ -10,15 +10,13 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { PDFPage, PDFDocument } from '../../types/pageEditor';
 import { RotatePagesCommand, DeletePagesCommand, ToggleSplitCommand } from '../../commands/pageCommands';
 import { Command } from '../../hooks/useUndoRedo';
+import { useFileState } from '../../contexts/FileContext';
 import styles from './PageEditor.module.css';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
 // Ensure PDF.js worker is available
 if (!GlobalWorkerOptions.workerSrc) {
   GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
-  console.log('📸 PageThumbnail: Set PDF.js worker source to /pdf.worker.js');
-} else {
-  console.log('📸 PageThumbnail: PDF.js worker source already set to', GlobalWorkerOptions.workerSrc);
 }
 
 interface PageThumbnailProps {
@@ -81,15 +79,15 @@ const PageThumbnail = React.memo(({
   setPdfDocument,
 }: PageThumbnailProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
-  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
+  const { state, selectors } = useFileState();
 
-  // Update thumbnail URL when page prop changes
+  // Update thumbnail URL when page prop changes - prevent redundant updates
   useEffect(() => {
     if (page.thumbnail && page.thumbnail !== thumbnailUrl) {
       console.log(`📸 PageThumbnail: Updating thumbnail URL for page ${page.pageNumber}`, page.thumbnail.substring(0, 50) + '...');
       setThumbnailUrl(page.thumbnail);
     }
-  }, [page.thumbnail, page.pageNumber, page.id, thumbnailUrl]);
+  }, [page.thumbnail, page.id]); // Remove thumbnailUrl dependency to prevent redundant cycles
 
   // Listen for ready thumbnails from Web Workers (only if no existing thumbnail)
   useEffect(() => {
@@ -100,8 +98,15 @@ const PageThumbnail = React.memo(({
     const handleThumbnailReady = (event: CustomEvent) => {
       const { pageNumber, thumbnail, pageId } = event.detail;
 
+      // Guard: check if this component is still mounted and page still exists
       if (pageNumber === page.pageNumber && pageId === page.id) {
-        setThumbnailUrl(thumbnail);
+        // Additional safety: check if the file still exists in FileContext
+        const fileId = page.id.split('-page-')[0]; // Extract fileId from pageId
+        const fileExists = selectors.getAllFileIds().includes(fileId);
+        
+        if (fileExists) {
+          setThumbnailUrl(thumbnail);
+        }
       }
     };
 
@@ -109,7 +114,7 @@ const PageThumbnail = React.memo(({
     return () => {
       window.removeEventListener('thumbnailReady', handleThumbnailReady as EventListener);
     };
-  }, [page.pageNumber, page.id, thumbnailUrl]);
+  }, [page.pageNumber, page.id]); // Remove thumbnailUrl dependency to stabilize effect
 
 
   // Register this component with pageRefs for animations
@@ -225,11 +230,6 @@ const PageThumbnail = React.memo(({
                 transition: 'transform 0.3s ease-in-out'
               }}
             />
-          ) : isLoadingThumbnail ? (
-            <div style={{ textAlign: 'center' }}>
-              <Loader size="sm" />
-              <Text size="xs" c="dimmed" mt={4}>Loading...</Text>
-            </div>
           ) : (
             <div style={{ textAlign: 'center' }}>
               <Text size="lg" c="dimmed">📄</Text>
@@ -416,13 +416,20 @@ const PageThumbnail = React.memo(({
     </div>
   );
 }, (prevProps, nextProps) => {
+  // Helper for shallow array comparison
+  const arraysEqual = (a: number[], b: number[]) => {
+    return a.length === b.length && a.every((val, i) => val === b[i]);
+  };
+
   // Only re-render if essential props change
   return (
     prevProps.page.id === nextProps.page.id &&
     prevProps.page.pageNumber === nextProps.page.pageNumber &&
     prevProps.page.rotation === nextProps.page.rotation &&
     prevProps.page.thumbnail === nextProps.page.thumbnail &&
-    prevProps.selectedPages === nextProps.selectedPages && // Compare array reference - will re-render when selection changes
+    // Shallow compare selectedPages array for better stability
+    (prevProps.selectedPages === nextProps.selectedPages || 
+     arraysEqual(prevProps.selectedPages, nextProps.selectedPages)) &&
     prevProps.selectionMode === nextProps.selectionMode &&
     prevProps.draggedPage === nextProps.draggedPage &&
     prevProps.dropTarget === nextProps.dropTarget &&

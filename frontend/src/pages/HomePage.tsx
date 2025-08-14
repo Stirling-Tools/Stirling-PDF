@@ -29,7 +29,7 @@ function HomePageContent() {
     } else {
       setMaxFiles(-1);
       setIsToolMode(false);
-      setSelectedFiles([]);
+      // Don't clear selections when exiting tool mode - preserve selections for file/page editor
     }
   }, [selectedTool]); // Remove action dependencies to prevent loops
 
@@ -48,8 +48,9 @@ function HomePageContent() {
   );
 }
 
-export default function HomePage() {
+function HomePageWithProviders() {
   const { actions } = useFileActions();
+  
   return (
     <ToolWorkflowProvider onViewChange={actions.setMode as any /* FIX ME */}>
       <SidebarProvider>
@@ -57,4 +58,8 @@ export default function HomePage() {
       </SidebarProvider>
     </ToolWorkflowProvider>
   );
+}
+
+export default function HomePage() {
+  return <HomePageWithProviders />;
 }

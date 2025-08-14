@@ -1,8 +1,9 @@
-import { FileWithUrl } from "../types/file";
+import { FileWithUrl, FileMetadata } from "../types/file";
 import { fileStorage, StorageStats } from "./fileStorage";
-import { loadFilesFromIndexedDB, createEnhancedFileFromStored, cleanupFileUrls } from "../utils/fileUtils";
+import { loadFilesFromIndexedDB, cleanupFileUrls } from "../utils/fileUtils";
 import { generateThumbnailForFile } from "../utils/thumbnailUtils";
 import { updateStorageStatsIncremental } from "../utils/storageUtils";
+import { createFileId } from "../types/fileContext";
 
 /**
  * Service for file storage operations
@@ -79,31 +80,35 @@ export const fileOperationsService = {
           // Generate thumbnail only during upload
           const thumbnail = await generateThumbnailForFile(file);
           
-          const storedFile = await fileStorage.storeFile(file, thumbnail);
+          const fileId = createFileId(); // Generate UUID
+          const storedFile = await fileStorage.storeFile(file, fileId, thumbnail);
           console.log('File stored with ID:', storedFile.id);
           
-          const baseFile = fileStorage.createFileFromStored(storedFile);
-          const enhancedFile = createEnhancedFileFromStored(storedFile, thumbnail);
-          
-          // Copy File interface methods from baseFile
-          enhancedFile.arrayBuffer = baseFile.arrayBuffer.bind(baseFile);
-          enhancedFile.slice = baseFile.slice.bind(baseFile);
-          enhancedFile.stream = baseFile.stream.bind(baseFile);
-          enhancedFile.text = baseFile.text.bind(baseFile);
+          // Create FileWithUrl that extends the original File
+          const enhancedFile: FileWithUrl = Object.assign(file, {
+            id: fileId,
+            url: URL.createObjectURL(file),
+            thumbnail,
+            storedInIndexedDB: true
+          });
           
           newFiles.push(enhancedFile);
         } catch (error) {
           console.error('Failed to store file in IndexedDB:', error);
-          // Fallback to RAM storage
+          // Fallback to RAM storage with UUID
+          const fileId = createFileId();
           const enhancedFile: FileWithUrl = Object.assign(file, {
+            id: fileId,
             url: URL.createObjectURL(file),
             storedInIndexedDB: false
           });
           newFiles.push(enhancedFile);
         }
       } else {
-        // IndexedDB disabled - use RAM
+        // IndexedDB disabled - use RAM with UUID
+        const fileId = createFileId();
         const enhancedFile: FileWithUrl = Object.assign(file, {
+          id: fileId,
           url: URL.createObjectURL(file),
           storedInIndexedDB: false
         });
@@ -167,7 +172,13 @@ export const fileOperationsService = {
       }
     }
     
-    // Fallback for files not in IndexedDB
+    // Fallback for files not in IndexedDB - use existing URL if available
+    if (file.url) {
+      return file.url;
+    }
+    
+    // Last resort - create new blob URL (but this shouldn't happen with FileWithUrl)
+    console.warn('Creating blob URL for file without existing URL - this may indicate a type issue');
     return URL.createObjectURL(file);
   },
 

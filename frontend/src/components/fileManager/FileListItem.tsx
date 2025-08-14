@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Group, Box, Text, ActionIcon, Checkbox, Divider } from '@mantine/core';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
-import { FileWithUrl } from '../../types/file';
+import { FileMetadata } from '../../types/file';
 
 interface FileListItemProps {
-  file: FileWithUrl;
+  file: FileMetadata;
   isSelected: boolean;
   isSupported: boolean;
   onSelect: () => void;

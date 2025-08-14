@@ -1,11 +1,29 @@
 /**
- * Enhanced file types for IndexedDB storage
+ * Enhanced file types for IndexedDB storage with UUID system
+ * Extends File interface for compatibility with existing utilities
  */
 
 export interface FileWithUrl extends File {
-  id?: string;
-  url?: string;
+  id: string; // Required UUID from FileContext
+  url?: string; // Blob URL for display
   thumbnail?: string;
+  contentHash?: string; // SHA-256 content hash
+  hashStatus?: 'pending' | 'completed' | 'failed';
+  storedInIndexedDB?: boolean;
+}
+
+/**
+ * Metadata-only version for efficient recent files loading
+ */
+export interface FileMetadata {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  lastModified: number;
+  thumbnail?: string;
+  contentHash?: string;
+  hashStatus?: 'pending' | 'completed' | 'failed';
   storedInIndexedDB?: boolean;
 }
 

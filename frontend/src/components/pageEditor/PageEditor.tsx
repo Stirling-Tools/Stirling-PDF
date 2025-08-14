@@ -84,6 +84,19 @@ const PageEditor = ({
    * Using this instead of direct file arrays prevents unnecessary re-renders.
    */
   
+  // Thumbnail generation (opt-in for visual tools) - MUST be before mergedPdfDocument
+  const {
+    generateThumbnails,
+    addThumbnailToCache,
+    getThumbnailFromCache,
+    stopGeneration,
+    destroyThumbnails
+  } = useThumbnailGeneration();
+  
+  // State for discovered page document
+  const [discoveredDocument, setDiscoveredDocument] = useState<PDFDocument | null>(null);
+  const [isDiscoveringPages, setIsDiscoveringPages] = useState(false);
+
   // Compute merged document with stable signature (prevents infinite loops)
   const mergedPdfDocument = useMemo((): PDFDocument | null => {
     if (activeFileIds.length === 0) return null;
@@ -107,24 +120,64 @@ const PageEditor = ({
     // Get pages from processed file data
     const processedFile = primaryFileRecord.processedFile;
     
-    // Convert processed pages to PageEditor format, or create placeholder if not processed yet
-    const pages = processedFile?.pages?.length > 0 
-      ? processedFile.pages.map((page, index) => ({
-          id: `${primaryFileId}-page-${index + 1}`,
+    // Debug logging for processed file data
+    console.log(`🎬 PageEditor: Building document for ${name}`);
+    console.log(`🎬 ProcessedFile exists:`, !!processedFile);
+    console.log(`🎬 ProcessedFile pages:`, processedFile?.pages?.length || 0);
+    if (processedFile?.pages) {
+      console.log(`🎬 Pages structure:`, processedFile.pages.map(p => ({ pageNumber: p.pageNumber || 'unknown', hasThumbnail: !!p.thumbnail })));
+    }
+    
+    // Convert processed pages to PageEditor format, or discover pages if not processed yet
+    let pages: PDFPage[];
+    
+    if (processedFile?.pages && processedFile.pages.length > 0) {
+      // Use existing processed data
+      pages = processedFile.pages.map((page, index) => {
+        const pageId = `${primaryFileId}-page-${index + 1}`;
+        // Try multiple sources for thumbnails in order of preference:
+        // 1. Processed data thumbnail
+        // 2. Cached thumbnail from previous generation
+        // 3. For page 1: FileEditor's thumbnailUrl (sharing optimization)
+        let thumbnail = page.thumbnail || null;
+        if (!thumbnail) {
+          thumbnail = getThumbnailFromCache(pageId) || null;
+        }
+        if (!thumbnail && index === 0) {
+          // For page 1, also check if FileEditor has already generated a thumbnail
+          thumbnail = primaryFileRecord.thumbnailUrl || null;
+          // If we found a FileEditor thumbnail, cache it for consistency
+          if (thumbnail) {
+            addThumbnailToCache(pageId, thumbnail);
+            console.log(`📸 PageEditor: Reused FileEditor thumbnail for page 1 (${pageId})`);
+          }
+        }
+        
+        return {
+          id: pageId,
           pageNumber: index + 1,
-          thumbnail: page.thumbnail || null,
+          thumbnail,
           rotation: page.rotation || 0,
           selected: false,
           splitBefore: page.splitBefore || false,
-        }))
-      : [{
-          id: `${primaryFileId}-page-1`,
-          pageNumber: 1,
-          thumbnail: null,
-          rotation: 0,
-          selected: false,
-          splitBefore: false,
-        }]; // Fallback: single page placeholder
+        };
+      });
+    } else if (discoveredDocument && discoveredDocument.id === (primaryFileId ?? 'unknown')) {
+      // Use discovered document if available and matches current file
+      pages = discoveredDocument.pages;
+    } else {
+      // No processed data and no discovered data yet - show placeholder while discovering
+      console.log(`🎬 PageEditor: No processedFile data, showing placeholder while discovering pages for ${name}`);
+      
+      pages = [{
+        id: `${primaryFileId}-page-1`,
+        pageNumber: 1,
+        thumbnail: getThumbnailFromCache(`${primaryFileId}-page-1`) || primaryFileRecord.thumbnailUrl || null,
+        rotation: 0,
+        selected: false,
+        splitBefore: false,
+      }];
+    }
 
     // Create document with determined pages
 
@@ -136,7 +189,123 @@ const PageEditor = ({
       totalPages: pages.length,
       destroy: () => {} // Optional cleanup function
     };
-  }, [filesSignature, activeFileIds, primaryFileId, selectors]);
+  }, [filesSignature, activeFileIds, primaryFileId, selectors, getThumbnailFromCache, addThumbnailToCache, discoveredDocument]);
+
+  // Async page discovery effect
+  useEffect(() => {
+    const discoverPages = async () => {
+      if (!primaryFileId) return;
+      
+      const record = selectors.getFileRecord(primaryFileId);
+      const primaryFile = selectors.getFile(primaryFileId);
+      if (!record || !primaryFile) return;
+      
+      // Skip if we already have processed data or are currently discovering
+      if (record.processedFile?.pages || isDiscoveringPages) return;
+      
+      // Only discover for PDF files
+      if (primaryFile.type !== 'application/pdf') return;
+      
+      console.log(`🎬 PageEditor: Starting async page discovery for ${primaryFile.name}`);
+      setIsDiscoveringPages(true);
+      
+      try {
+        let discoveredPageCount = 1;
+        
+        // Try PDF.js first (more accurate)
+        try {
+          const arrayBuffer = await primaryFile.arrayBuffer();
+          const pdfDoc = await import('pdfjs-dist').then(pdfjs => pdfjs.getDocument({
+            data: arrayBuffer,
+            disableAutoFetch: true,
+            disableStream: true
+          }).promise);
+          
+          discoveredPageCount = pdfDoc.numPages;
+          console.log(`🎬 PageEditor: Discovered ${discoveredPageCount} pages using PDF.js`);
+          
+          // Clean up PDF document immediately
+          pdfDoc.destroy();
+        } catch (pdfError) {
+          console.warn(`🎬 PageEditor: PDF.js failed, trying text analysis:`, pdfError);
+          
+          // Fallback to text analysis
+          try {
+            const arrayBuffer = await primaryFile.arrayBuffer();
+            const text = new TextDecoder('latin1').decode(arrayBuffer);
+            const pageMatches = text.match(/\/Type\s*\/Page[^s]/g);
+            discoveredPageCount = pageMatches ? pageMatches.length : 1;
+            console.log(`🎬 PageEditor: Discovered ${discoveredPageCount} pages using text analysis`);
+          } catch (textError) {
+            console.warn(`🎬 PageEditor: Text analysis also failed:`, textError);
+            discoveredPageCount = 1;
+          }
+        }
+        
+        // Create page structure
+        const pages = Array.from({ length: discoveredPageCount }, (_, index) => {
+          const pageId = `${primaryFileId}-page-${index + 1}`;
+          let thumbnail = getThumbnailFromCache(pageId) || null;
+          
+          // For page 1, also check FileEditor's thumbnail
+          if (!thumbnail && index === 0) {
+            thumbnail = record.thumbnailUrl || null;
+            if (thumbnail) {
+              addThumbnailToCache(pageId, thumbnail);
+              console.log(`📸 PageEditor: Reused FileEditor thumbnail for page 1 (${pageId})`);
+            }
+          }
+          
+          return {
+            id: pageId,
+            pageNumber: index + 1,
+            thumbnail,
+            rotation: 0,
+            selected: false,
+            splitBefore: false,
+          };
+        });
+        
+        // Create discovered document
+        const discoveredDoc: PDFDocument = {
+          id: primaryFileId,
+          name: primaryFile.name,
+          file: primaryFile,
+          pages,
+          totalPages: pages.length,
+          destroy: () => {}
+        };
+        
+        // Save to state for immediate UI update
+        setDiscoveredDocument(discoveredDoc);
+        
+        // Save to FileContext for persistence
+        const processedFileData = {
+          pages: pages.map(page => ({
+            pageNumber: page.pageNumber,
+            thumbnail: page.thumbnail || undefined,
+            rotation: page.rotation,
+            splitBefore: page.splitBefore
+          })),
+          totalPages: discoveredPageCount,
+          lastProcessed: Date.now()
+        };
+        
+        actions.updateFileRecord(primaryFileId, {
+          processedFile: processedFileData
+        });
+        
+        console.log(`🎬 PageEditor: Page discovery complete - ${discoveredPageCount} pages saved to FileContext`);
+        
+      } catch (error) {
+        console.error(`🎬 PageEditor: Page discovery failed:`, error);
+      } finally {
+        setIsDiscoveringPages(false);
+      }
+    };
+    
+    discoverPages();
+  }, [primaryFileId, selectors, isDiscoveringPages, getThumbnailFromCache, addThumbnailToCache, actions]);
 
   // Display document: Use edited version if exists, otherwise original
   const displayDocument = editedDocument || mergedPdfDocument;
@@ -209,15 +378,6 @@ const PageEditor = ({
    */
   const thumbnailGenerationStarted = useRef(false);
 
-  // Thumbnail generation (opt-in for visual tools)
-  const {
-    generateThumbnails,
-    addThumbnailToCache,
-    getThumbnailFromCache,
-    stopGeneration,
-    destroyThumbnails
-  } = useThumbnailGeneration();
-
   // Start thumbnail generation process (guards against re-entry) - stable version
   const startThumbnailGeneration = useCallback(() => {
     // Access current values directly - avoid stale closures
@@ -280,6 +440,28 @@ const PageEditor = ({
                 if (!cached) {
                   addThumbnailToCache(pageId, thumbnail);
 
+                  // Persist thumbnail to FileContext for durability
+                  const fileRecord = selectors.getFileRecord(currentPrimaryFileId);
+                  if (fileRecord) {
+                    const updatedProcessedFile = {
+                      ...fileRecord.processedFile,
+                      pages: fileRecord.processedFile?.pages?.map((page, index) => 
+                        index + 1 === pageNumber 
+                          ? { ...page, thumbnail }
+                          : page
+                      ) || [{ thumbnail }] // Create pages array if it doesn't exist
+                    };
+                    
+                    // For page 1, also update the file record's thumbnailUrl so FileEditor can use it directly
+                    const updates: any = { processedFile: updatedProcessedFile };
+                    if (pageNumber === 1) {
+                      updates.thumbnailUrl = thumbnail;
+                      console.log(`📸 PageEditor: Set thumbnailUrl for FileEditor reuse (${currentPrimaryFileId})`);
+                    }
+                    
+                    actions.updateFileRecord(currentPrimaryFileId, updates);
+                  }
+
                   window.dispatchEvent(new CustomEvent('thumbnailReady', {
                     detail: { pageNumber, thumbnail, pageId }
                   }));
@@ -304,7 +486,7 @@ const PageEditor = ({
         thumbnailGenerationStarted.current = false;
       }
     }, 0); // setTimeout with 0ms to defer to next tick
-  }, [generateThumbnails, getThumbnailFromCache, addThumbnailToCache]); // Only stable function dependencies
+  }, [generateThumbnails, getThumbnailFromCache, addThumbnailToCache, selectors, actions]); // Only stable function dependencies
 
   // Start thumbnail generation when files change (stable signature prevents loops)
   useEffect(() => {

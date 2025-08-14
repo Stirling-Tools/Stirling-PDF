@@ -81,16 +81,15 @@ class FileStorageService {
   }
 
   /**
-   * Store a file in IndexedDB
+   * Store a file in IndexedDB with external UUID
    */
-  async storeFile(file: File, thumbnail?: string): Promise<StoredFile> {
+  async storeFile(file: File, fileId: string, thumbnail?: string): Promise<StoredFile> {
     if (!this.db) await this.init();
 
-    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const arrayBuffer = await file.arrayBuffer();
 
     const storedFile: StoredFile = {
-      id,
+      id: fileId, // Use provided UUID
       name: file.name,
       type: file.type,
       size: file.size,
@@ -106,8 +105,8 @@ class FileStorageService {
 
         // Debug logging
         console.log('Object store keyPath:', store.keyPath);
-        console.log('Storing file:', {
-          id: storedFile.id,
+        console.log('Storing file with UUID:', {
+          id: storedFile.id, // Now a UUID from FileContext
           name: storedFile.name,
           hasData: !!storedFile.data,
           dataSize: storedFile.data.byteLength

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileWithUrl } from "../types/file";
+import { FileMetadata } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
 import { generateThumbnailForFile } from "../utils/thumbnailUtils";
 
@@ -22,7 +22,7 @@ function calculateThumbnailScale(pageViewport: { width: number; height: number }
  * Hook for IndexedDB-aware thumbnail loading
  * Handles thumbnail generation for files not in IndexedDB
  */
-export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
+export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
   thumbnail: string | null;
   isGenerating: boolean
 } {

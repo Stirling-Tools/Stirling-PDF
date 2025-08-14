@@ -10,6 +10,7 @@ import { useToolFileSelection, useProcessedFiles, useFileState, useFileManagemen
 import { FileOperation, createStableFileId } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
+import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
 import styles from '../pageEditor/PageEditor.module.css';
@@ -47,6 +48,9 @@ const FileEditor = ({
 }: FileEditorProps) => {
   const { t } = useTranslation();
 
+  // Thumbnail cache for sharing with PageEditor
+  const { getThumbnailFromCache, addThumbnailToCache } = useThumbnailGeneration();
+
   // Utility function to check if a file extension is supported
   const isFileSupported = useCallback((fileName: string): boolean => {
     const extension = detectFileExtension(fileName);
@@ -60,6 +64,7 @@ const FileEditor = ({
   
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeFiles = useMemo(() => selectors.getFiles(), [selectors.getFilesSignature()]);
+  const activeFileRecords = useMemo(() => selectors.getFileRecords(), [selectors.getFilesSignature()]);
   const selectedFileIds = state.ui.selectedFileIds;
   const isProcessing = state.ui.isProcessing;
   
@@ -145,33 +150,48 @@ const FileEditor = ({
   // Map context selections to local file IDs for UI display
   const localSelectedIds = files
     .filter(file => {
-      const contextFileId = createStableFileId(file.file);
-      return contextSelectedIds.includes(contextFileId);
+      // file.id is already the correct UUID from FileContext
+      return contextSelectedIds.includes(file.id);
     })
     .map(file => file.id);
 
   // Convert shared files to FileEditor format
   const convertToFileItem = useCallback(async (sharedFile: any): Promise<FileItem> => {
-    // Generate thumbnail if not already available
-    const thumbnail = sharedFile.thumbnail || await generateThumbnailForFile(sharedFile.file || sharedFile);
+    let thumbnail = sharedFile.thumbnail;
+    
+    if (!thumbnail) {
+      // Check cache first using the file ID
+      const fileId = sharedFile.id || `file-${Date.now()}-${Math.random()}`;
+      const page1CacheKey = `${fileId}-page-1`;
+      thumbnail = getThumbnailFromCache(page1CacheKey);
+      
+      if (!thumbnail) {
+        // Generate and cache thumbnail
+        thumbnail = await generateThumbnailForFile(sharedFile.file || sharedFile);
+        if (thumbnail) {
+          addThumbnailToCache(page1CacheKey, thumbnail);
+          console.log(`📸 FileEditor: Cached page-1 thumbnail for legacy file (key: ${page1CacheKey})`);
+        }
+      }
+    }
 
     return {
       id: sharedFile.id || `file-${Date.now()}-${Math.random()}`,
       name: (sharedFile.file?.name || sharedFile.name || 'unknown'),
       pageCount: sharedFile.pageCount || 1, // Default to 1 page if unknown
-      thumbnail,
+      thumbnail: thumbnail || '',
       size: sharedFile.file?.size || sharedFile.size || 0,
       file: sharedFile.file || sharedFile,
     };
-  }, []);
+  }, [getThumbnailFromCache, addThumbnailToCache]);
 
   // Convert activeFiles to FileItem format using context (async to avoid blocking)
   useEffect(() => {
     // Check if the actual content has changed, not just references
-    const currentActiveFileNames = activeFiles.map(f => f.name);
+    const currentActiveFileIds = activeFileRecords.map(r => r.id);
     const currentProcessedFilesSize = processedFiles.processedFiles.size;
 
-    const activeFilesChanged = JSON.stringify(currentActiveFileNames) !== JSON.stringify(lastActiveFilesRef.current);
+    const activeFilesChanged = JSON.stringify(currentActiveFileIds) !== JSON.stringify(lastActiveFilesRef.current);
     const processedFilesChanged = currentProcessedFilesSize !== lastProcessedFilesRef.current;
 
     if (!activeFilesChanged && !processedFilesChanged) {
@@ -179,49 +199,59 @@ const FileEditor = ({
     }
 
     // Update refs
-    lastActiveFilesRef.current = currentActiveFileNames;
+    lastActiveFilesRef.current = currentActiveFileIds;
     lastProcessedFilesRef.current = currentProcessedFilesSize;
 
     const convertActiveFiles = async () => {
 
-      if (activeFiles.length > 0) {
+      if (activeFileRecords.length > 0) {
         setLocalLoading(true);
         try {
           // Process files in chunks to avoid blocking UI
           const convertedFiles: FileItem[] = [];
 
-          for (let i = 0; i < activeFiles.length; i++) {
-            const file = activeFiles[i];
+          for (let i = 0; i < activeFileRecords.length; i++) {
+            const record = activeFileRecords[i];
+            const file = selectors.getFile(record.id);
 
-            // Try to get thumbnail from processed file first
-            const processedFile = processedFiles.processedFiles.get(file);
-            let thumbnail = processedFile?.pages?.[0]?.thumbnail;
-
-            // If no thumbnail from processed file, try to generate one
+            if (!file) continue; // Skip if file not found
+            
+            // Use record's thumbnail if available, otherwise check cache, then generate
+            let thumbnail: string | undefined = record.thumbnailUrl;
             if (!thumbnail) {
-              try {
-                thumbnail = await generateThumbnailForFile(file);
-              } catch (error) {
-                console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
-                thumbnail = undefined; // Use placeholder
+              // Check if PageEditor has already cached a page-1 thumbnail for this file
+              const page1CacheKey = `${record.id}-page-1`;
+              thumbnail = getThumbnailFromCache(page1CacheKey) || undefined;
+              
+              if (!thumbnail) {
+                try {
+                  thumbnail = await generateThumbnailForFile(file);
+                  // Store in cache for PageEditor to reuse
+                  if (thumbnail) {
+                    addThumbnailToCache(page1CacheKey, thumbnail);
+                    console.log(`📸 FileEditor: Cached page-1 thumbnail for ${file.name} (key: ${page1CacheKey})`);
+                  }
+                } catch (error) {
+                  console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
+                  thumbnail = undefined; // Use placeholder
+                }
+              } else {
+                console.log(`📸 FileEditor: Reused cached page-1 thumbnail for ${file.name} (key: ${page1CacheKey})`);
               }
             }
 
+            // Page count estimation for display purposes only
+            let pageCount = 1; // Default for non-PDFs and display in FileEditor
             
-            // Get actual page count from processed file
-            let pageCount = 1; // Default for non-PDFs
-            if (processedFile) {
-              pageCount = processedFile.pages?.length || processedFile.totalPages || 1;
-            } else if (file.type === 'application/pdf') {
-              // For PDFs without processed data, try to get a quick page count estimate
-              // If processing is taking too long, show a reasonable default
+            if (file.type === 'application/pdf') {
+              // Quick page count estimation for FileEditor display only
+              // PageEditor will do its own more thorough page detection
               try {
-                // Quick and dirty page count using PDF structure analysis
                 const arrayBuffer = await file.arrayBuffer();
                 const text = new TextDecoder('latin1').decode(arrayBuffer);
                 const pageMatches = text.match(/\/Type\s*\/Page[^s]/g);
                 pageCount = pageMatches ? pageMatches.length : 1;
-                console.log(`📄 Quick page count for ${file.name}: ${pageCount} pages (estimated)`);
+                console.log(`📄 FileEditor estimated page count for ${file.name}: ${pageCount} pages (display only)`);
               } catch (error) {
                 console.warn(`Failed to estimate page count for ${file.name}:`, error);
                 pageCount = 1; // Safe fallback
@@ -229,7 +259,7 @@ const FileEditor = ({
             }
             
             const convertedFile = {
-              id: createStableFileId(file), // Use same ID function as context
+              id: record.id, // Use the record's UUID from FileContext
               name: file.name,
               pageCount: pageCount,
               thumbnail: thumbnail || '',
@@ -240,10 +270,10 @@ const FileEditor = ({
             convertedFiles.push(convertedFile);
 
             // Update progress
-            setConversionProgress(((i + 1) / activeFiles.length) * 100);
+            setConversionProgress(((i + 1) / activeFileRecords.length) * 100);
 
             // Yield to main thread between files
-            if (i < activeFiles.length - 1) {
+            if (i < activeFileRecords.length - 1) {
               await new Promise(resolve => requestAnimationFrame(resolve));
             }
           }
@@ -264,7 +294,7 @@ const FileEditor = ({
     };
 
     convertActiveFiles();
-  }, [activeFiles, processedFiles]);
+  }, [activeFileRecords, processedFiles, selectors]);
 
 
   // Process uploaded files using context
@@ -422,25 +452,25 @@ const FileEditor = ({
   }, [addFiles]);
 
   const selectAll = useCallback(() => {
-    setContextSelectedFiles(files.map(f => (f.file as any).id || f.name));
+    setContextSelectedFiles(files.map(f => f.id)); // Use FileEditor file IDs which are now correct UUIDs
   }, [files, setContextSelectedFiles]);
 
   const deselectAll = useCallback(() => setContextSelectedFiles([]), [setContextSelectedFiles]);
 
   const closeAllFiles = useCallback(() => {
-    if (activeFiles.length === 0) return;
+    if (activeFileRecords.length === 0) return;
 
     // Record close all operation for each file
     // Legacy operation tracking - now handled by FileContext
-    console.log('Close all operation for', activeFiles.length, 'files');
+    console.log('Close all operation for', activeFileRecords.length, 'files');
 
     // Remove all files from context but keep in storage
-    const fileIds = activeFiles.map(f => createStableFileId(f));
+    const fileIds = activeFileRecords.map(r => r.id); // Use record IDs directly
     removeFiles(fileIds, false);
 
     // Clear selections
     setContextSelectedFiles([]);
-  }, [activeFiles, removeFiles, setContextSelectedFiles]);
+  }, [activeFileRecords, removeFiles, setContextSelectedFiles]);
 
   const toggleFile = useCallback((fileId: string) => {
     const currentFiles = filesDataRef.current;
@@ -449,7 +479,8 @@ const FileEditor = ({
     const targetFile = currentFiles.find(f => f.id === fileId);
     if (!targetFile) return;
 
-    const contextFileId = createStableFileId(targetFile.file);
+    // The fileId from FileEditor is already the correct UUID from FileContext
+    const contextFileId = fileId; // No need to create a new ID
     const isSelected = currentSelectedIds.includes(contextFileId);
 
     let newSelection: string[];
@@ -611,7 +642,7 @@ const FileEditor = ({
 
       // Record close operation
       const fileName = file.file.name;
-      const fileId = (file.file as any).id || fileName;
+      const contextFileId = file.id; // Use the correct file ID (UUID from FileContext)
       const operationId = `close-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const operation: FileOperation = {
         id: operationId,
@@ -633,13 +664,13 @@ const FileEditor = ({
       console.log('Close operation recorded:', operation);
       
       // Remove file from context but keep in storage (close, don't delete)
-      console.log('Calling removeFiles with:', [fileId]);
-      removeFiles([fileId], false);
+      console.log('Calling removeFiles with:', [contextFileId]);
+      removeFiles([contextFileId], false);
 
       // Remove from context selections
       setContextSelectedFiles((prev: string[]) => {
         const safePrev = Array.isArray(prev) ? prev : [];
-        return safePrev.filter(id => id !== fileId);
+        return safePrev.filter(id => id !== contextFileId);
       });
     } else {
       console.log('File not found for fileId:', fileId);
@@ -650,7 +681,7 @@ const FileEditor = ({
     const file = files.find(f => f.id === fileId);
     if (file) {
       // Set the file as selected in context and switch to viewer for preview
-      const contextFileId = createStableFileId(file.file);
+      const contextFileId = file.id; // Use the correct file ID (UUID from FileContext)
       setContextSelectedFiles([contextFileId]);
       setCurrentView('viewer');
     }

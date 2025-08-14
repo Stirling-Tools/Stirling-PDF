@@ -36,23 +36,17 @@ import {
   FileRecord,
   toFileRecord,
   revokeFileResources,
-  createStableFileId
+  createFileId,
+  computeContentHash
 } from '../types/fileContext';
 
-// Mock services - these will need proper implementation
-const enhancedPDFProcessingService = {
-  clearAllProcessing: () => {},
-  cancelProcessing: (fileId: string) => {}
-};
+// Import real services
+import { EnhancedPDFProcessingService } from '../services/enhancedPDFProcessingService';
+import { thumbnailGenerationService } from '../services/thumbnailGenerationService';
+import { fileStorage } from '../services/fileStorage';
 
-const thumbnailGenerationService = {
-  destroy: () => {},
-  stopGeneration: () => {}
-};
-
-const fileStorage = {
-  deleteFile: async (fileId: string) => {}
-};
+// Get service instances
+const enhancedPDFProcessingService = EnhancedPDFProcessingService.getInstance();
 
 // Initial state
 const initialFileContextState: FileContextState = {
@@ -76,15 +70,13 @@ const initialFileContextState: FileContextState = {
 function fileContextReducer(state: FileContextState, action: FileContextAction): FileContextState {
   switch (action.type) {
     case 'ADD_FILES': {
-      const { files } = action.payload;
+      const { fileRecords } = action.payload;
       const newIds: FileId[] = [];
       const newById: Record<FileId, FileRecord> = { ...state.files.byId };
       
-      files.forEach(file => {
-        const stableId = createStableFileId(file);
+      fileRecords.forEach(record => {
         // Only add if not already present (dedupe by stable ID)
-        if (!newById[stableId]) {
-          const record = toFileRecord(file, stableId);
+        if (!newById[record.id]) {
           newIds.push(record.id);
           newById[record.id] = record;
         }
@@ -131,6 +123,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
       const existingRecord = state.files.byId[id];
       if (!existingRecord) return state;
       
+      // Immutable merge supports all FileRecord fields including contentHash, hashStatus
       return {
         ...state,
         files: {
@@ -368,12 +361,14 @@ export function FileContextProvider({
       });
       pdfDocuments.current.clear();
 
-      // Revoke all blob URLs
+      // Revoke all blob URLs (only blob: scheme)
       blobUrls.current.forEach(url => {
-        try {
-          URL.revokeObjectURL(url);
-        } catch (error) {
-          console.warn('Error revoking blob URL:', error);
+        if (url.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(url);
+          } catch (error) {
+            console.warn('Error revoking blob URL:', error);
+          }
         }
       });
       blobUrls.current.clear();
@@ -418,31 +413,75 @@ export function FileContextProvider({
 
   // Action implementations
   const addFiles = useCallback(async (files: File[]): Promise<File[]> => {
-    // Store Files in ref map with stable IDs
-    const fileIds: FileId[] = [];
+    // Generate UUID-based IDs and create records
+    const fileRecords: FileRecord[] = [];
+    const addedFiles: File[] = [];
+    
     for (const file of files) {
-      const stableId = createStableFileId(file);
-      // Dedupe - only add if not already present
-      if (!filesRef.current.has(stableId)) {
-        filesRef.current.set(stableId, file);
-        fileIds.push(stableId);
+      const fileId = createFileId(); // UUID-based, zero collisions
+      
+      // Store File in ref map
+      filesRef.current.set(fileId, file);
+      
+      // Create record with pending hash status
+      const record = toFileRecord(file, fileId);
+      record.hashStatus = 'pending';
+      
+      fileRecords.push(record);
+      addedFiles.push(file);
+      
+      // Optional: Persist to IndexedDB if enabled
+      if (enablePersistence) {
+        try {
+          // Generate thumbnail and store in IndexedDB with our UUID
+          import('../utils/thumbnailUtils').then(({ generateThumbnailForFile }) => {
+            return generateThumbnailForFile(file);
+          }).then(thumbnail => {
+            return fileStorage.storeFile(file, fileId, thumbnail);
+          }).then(() => {
+            console.log('File persisted to IndexedDB:', fileId);
+          }).catch(error => {
+            console.warn('Failed to persist file to IndexedDB:', error);
+          });
+        } catch (error) {
+          console.warn('Failed to initiate file persistence:', error);
+        }
       }
+      
+      // Start async content hashing (don't block add operation)
+      computeContentHash(file).then(contentHash => {
+        // Only update if file still exists in context
+        if (filesRef.current.has(fileId)) {
+          updateFileRecord(fileId, {
+            contentHash: contentHash || undefined, // Convert null to undefined
+            hashStatus: contentHash ? 'completed' : 'failed'
+          });
+        }
+      }).catch(() => {
+        // Hash failed, update status if file still exists
+        if (filesRef.current.has(fileId)) {
+          updateFileRecord(fileId, { hashStatus: 'failed' });
+        }
+      });
     }
     
-    // Dispatch only the file metadata to state
-    dispatch({ type: 'ADD_FILES', payload: { files } });
+    // Only dispatch if we have new files
+    if (fileRecords.length > 0) {
+      dispatch({ type: 'ADD_FILES', payload: { fileRecords } });
+    }
 
-    // Return files with their IDs assigned
-    return files;
-  }, [enablePersistence]);
+    // Return only the newly added files
+    return addedFiles;
+  }, [enablePersistence]); // Include enablePersistence for persistence logic
 
   const removeFiles = useCallback((fileIds: FileId[], deleteFromStorage: boolean = true) => {
-    // Clean up Files from ref map
+    // Clean up Files from ref map first
     fileIds.forEach(fileId => {
       filesRef.current.delete(fileId);
       cleanupFile(fileId);
     });
 
+    // Update state
     dispatch({ type: 'REMOVE_FILES', payload: { fileIds } });
 
     // Remove from IndexedDB only if requested
@@ -457,13 +496,19 @@ export function FileContextProvider({
     }
   }, [enablePersistence, cleanupFile]);
 
+  const updateFileRecord = useCallback((id: FileId, updates: Partial<FileRecord>) => {
+    // Ensure immutable merge by dispatching action
+    dispatch({ type: 'UPDATE_FILE_RECORD', payload: { id, updates } });
+  }, []);
+
   // Navigation guard system functions
   const setHasUnsavedChanges = useCallback((hasChanges: boolean) => {
     dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
   }, []);
 
   const requestNavigation = useCallback((navigationFn: () => void): boolean => {
-    if (state.ui.hasUnsavedChanges) {
+    // Use stateRef to avoid stale closure issues with rapid state changes
+    if (stateRef.current.ui.hasUnsavedChanges) {
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: true } });
       return false;
@@ -471,15 +516,16 @@ export function FileContextProvider({
       navigationFn();
       return true;
     }
-  }, [state.ui.hasUnsavedChanges]);
+  }, []); // No dependencies - uses stateRef for current state
 
   const confirmNavigation = useCallback(() => {
-    if (state.ui.pendingNavigation) {
-      state.ui.pendingNavigation();
+    // Use stateRef to get current navigation function
+    if (stateRef.current.ui.pendingNavigation) {
+      stateRef.current.ui.pendingNavigation();
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
     }
     dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: false } });
-  }, [state.ui.pendingNavigation]);
+  }, []); // No dependencies - uses stateRef
 
   const cancelNavigation = useCallback(() => {
     dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
@@ -490,6 +536,7 @@ export function FileContextProvider({
   const actions = useMemo<FileContextActions>(() => ({
     addFiles,
     removeFiles,
+    updateFileRecord,
     clearAllFiles: () => {
       cleanupAllFiles();
       filesRef.current.clear();
@@ -530,6 +577,7 @@ export function FileContextProvider({
     // Action compatibility layer
     addFiles,
     removeFiles,
+    updateFileRecord,
     clearAllFiles: actions.clearAllFiles,
     setCurrentMode: actions.setCurrentMode,
     setSelectedFiles: actions.setSelectedFiles,
@@ -551,7 +599,7 @@ export function FileContextProvider({
     get activeFiles() { return selectors.getFiles(); }, // Getter to avoid creating new arrays on every render
     // Selectors
     ...selectors
-  }), [state, actions, addFiles, removeFiles, setHasUnsavedChanges, requestNavigation, confirmNavigation, cancelNavigation, trackBlobUrl, trackPdfDocument, cleanupFile, scheduleCleanup]); // Removed selectors dependency
+  }), [state, actions, addFiles, removeFiles, updateFileRecord, setHasUnsavedChanges, requestNavigation, confirmNavigation, cancelNavigation, trackBlobUrl, trackPdfDocument, cleanupFile, scheduleCleanup]); // Removed selectors dependency
 
   // Cleanup on unmount
   useEffect(() => {
@@ -654,12 +702,12 @@ export function useProcessedFiles() {
   const compatibilityMap = {
     size: state.files.ids.length,
     get: (file: File) => {
-      const id = createStableFileId(file);
-      return selectors.getFileRecord(id)?.processedFile;
+      console.warn('useProcessedFiles.get is deprecated - File objects no longer have stable IDs');
+      return null;
     },
     has: (file: File) => {
-      const id = createStableFileId(file);
-      return !!selectors.getFileRecord(id)?.processedFile;
+      console.warn('useProcessedFiles.has is deprecated - File objects no longer have stable IDs');
+      return false;
     },
     set: () => {
       console.warn('processedFiles.set is deprecated - use FileRecord updates instead');
@@ -669,8 +717,8 @@ export function useProcessedFiles() {
   return {
     processedFiles: compatibilityMap, // Map-like interface for backward compatibility
     getProcessedFile: (file: File) => {
-      const id = createStableFileId(file);
-      return selectors.getFileRecord(id)?.processedFile;
+      console.warn('getProcessedFile is deprecated - File objects no longer have stable IDs');
+      return null;
     },
     updateProcessedFile: () => {
       console.warn('updateProcessedFile is deprecated - processed files are now stored in FileRecord');

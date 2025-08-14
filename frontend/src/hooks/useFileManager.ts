@@ -1,49 +1,46 @@
 import { useState, useCallback } from 'react';
 import { fileStorage } from '../services/fileStorage';
-import { FileWithUrl } from '../types/file';
-import { createEnhancedFileFromStored } from '../utils/fileUtils';
+import { FileWithUrl, FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
 
-  const convertToFile = useCallback(async (fileWithUrl: FileWithUrl): Promise<File> => {
-    if (fileWithUrl.url && fileWithUrl.url.startsWith('blob:')) {
-      const response = await fetch(fileWithUrl.url);
-      const data = await response.arrayBuffer();
-      const file = new File([data], fileWithUrl.name, {
-        type: fileWithUrl.type || 'application/pdf',
-        lastModified: fileWithUrl.lastModified || Date.now()
-      });
-      // Preserve the ID if it exists
-      if (fileWithUrl.id) {
-        Object.defineProperty(file, 'id', { value: fileWithUrl.id, writable: false });
-      }
-      return file;
+  const convertToFile = useCallback(async (fileMetadata: FileMetadata): Promise<File> => {
+    // Always use ID - no fallback to names to prevent identity drift
+    if (!fileMetadata.id) {
+      throw new Error('File ID is required - cannot convert file without stable ID');
     }
-
-    // Always use ID first, fallback to name only if ID doesn't exist
-    const lookupKey = fileWithUrl.id || fileWithUrl.name;
-    const storedFile = await fileStorage.getFile(lookupKey);
+    const storedFile = await fileStorage.getFile(fileMetadata.id);
     if (storedFile) {
       const file = new File([storedFile.data], storedFile.name, {
         type: storedFile.type,
         lastModified: storedFile.lastModified
       });
-      // Add the ID to the file object
-      Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+      // NO FILE MUTATION - Return clean File, let FileContext manage ID
       return file;
     }
 
     throw new Error('File not found in storage');
   }, []);
 
-  const loadRecentFiles = useCallback(async (): Promise<FileWithUrl[]> => {
+  const loadRecentFiles = useCallback(async (): Promise<FileMetadata[]> => {
     setLoading(true);
     try {
-      const files = await fileStorage.getAllFiles();
-      const sortedFiles = files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-      return sortedFiles.map(file => createEnhancedFileFromStored(file));
+      // Get metadata only (no file data) for performance
+      const storedFileMetadata = await fileStorage.getAllFileMetadata();
+      const sortedFiles = storedFileMetadata.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+      
+      // Convert StoredFile metadata to FileMetadata format
+      return sortedFiles.map(stored => ({
+        id: stored.id, // UUID from FileContext
+        name: stored.name,
+        type: stored.type,
+        size: stored.size,
+        lastModified: stored.lastModified,
+        thumbnail: stored.thumbnail,
+        storedInIndexedDB: true
+      }));
     } catch (error) {
       console.error('Failed to load recent files:', error);
       return [];
@@ -52,10 +49,13 @@ export const useFileManager = () => {
     }
   }, []);
 
-  const handleRemoveFile = useCallback(async (index: number, files: FileWithUrl[], setFiles: (files: FileWithUrl[]) => void) => {
+  const handleRemoveFile = useCallback(async (index: number, files: FileMetadata[], setFiles: (files: FileMetadata[]) => void) => {
     const file = files[index];
+    if (!file.id) {
+      throw new Error('File ID is required for removal');
+    }
     try {
-      await fileStorage.deleteFile(file.id || file.name);
+      await fileStorage.deleteFile(file.id);
       setFiles(files.filter((_, i) => i !== index));
     } catch (error) {
       console.error('Failed to remove file:', error);
@@ -63,16 +63,15 @@ export const useFileManager = () => {
     }
   }, []);
 
-  const storeFile = useCallback(async (file: File) => {
+  const storeFile = useCallback(async (file: File, fileId: string) => {
     try {
       // Generate thumbnail for the file
       const thumbnail = await generateThumbnailForFile(file);
 
-      // Store file with thumbnail
-      const storedFile = await fileStorage.storeFile(file, thumbnail);
+      // Store file with provided UUID from FileContext
+      const storedFile = await fileStorage.storeFile(file, fileId, thumbnail);
 
-      // Add the ID to the file object
-      Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+      // NO FILE MUTATION - Return StoredFile, FileContext manages mapping
       return storedFile;
     } catch (error) {
       console.error('Failed to store file:', error);
@@ -96,14 +95,15 @@ export const useFileManager = () => {
       setSelectedFiles([]);
     };
 
-    const selectMultipleFiles = async (files: FileWithUrl[], onFilesSelect: (files: File[]) => void) => {
+    const selectMultipleFiles = async (files: FileMetadata[], onFilesSelect: (files: File[]) => void) => {
       if (selectedFiles.length === 0) return;
 
       try {
-        const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id || f.name));
+        // Filter by UUID and convert to File objects
+        const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id));
         const filePromises = selectedFileObjects.map(convertToFile);
         const convertedFiles = await Promise.all(filePromises);
-        onFilesSelect(convertedFiles);
+        onFilesSelect(convertedFiles); // FileContext will assign new UUIDs
         clearSelection();
       } catch (error) {
         console.error('Failed to load selected files:', error);
