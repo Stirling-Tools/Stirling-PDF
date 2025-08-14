@@ -57,6 +57,8 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: 'en-GB',
+    supportedLngs: Object.keys(supportedLanguages),
+    nonExplicitSupportedLngs: false,
     debug: process.env.NODE_ENV === 'development',
     
     interpolation: {
@@ -76,6 +78,12 @@ i18n
       useSuspense: false, // Set to false to avoid suspense issues with SSR
     },
   });
+
+// Map base language codes to specific locales
+i18n.services.languageUtils.formatLanguageCode = (lng) => {
+  if (lng === 'en') return 'en-GB';
+  return lng;
+};
 
 // Set document direction based on language
 i18n.on('languageChanged', (lng) => {

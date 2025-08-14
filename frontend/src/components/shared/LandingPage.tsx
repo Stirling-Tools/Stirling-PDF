@@ -116,7 +116,7 @@ const LandingPage = () => {
             >
               <AddIcon className="text-[var(--accent-interactive)]" />
               <span>
-                {t('fileUpload.addFiles', 'Add Files')}
+                {t('fileUpload.uploadFiles', 'Upload Files')}
               </span>
             </Button>
 
@@ -137,7 +137,7 @@ const LandingPage = () => {
             className="text-[var(--accent-interactive)]"
             style={{ fontSize: '.8rem' }}
           >
-            {t('fileUpload.dragFilesInOrClick', 'Drag files in or click "Add Files" to browse')}
+            {t('fileUpload.dropFilesHere', 'Drop files here or click to upload')}
           </span>
         </div>
       </Dropzone>
