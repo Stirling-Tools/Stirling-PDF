@@ -7,8 +7,6 @@ export interface FileWithUrl extends File {
   id: string; // Required UUID from FileContext
   url?: string; // Blob URL for display
   thumbnail?: string;
-  contentHash?: string; // SHA-256 content hash
-  hashStatus?: 'pending' | 'completed' | 'failed';
   storedInIndexedDB?: boolean;
 }
 
@@ -22,8 +20,6 @@ export interface FileMetadata {
   size: number;
   lastModified: number;
   thumbnail?: string;
-  contentHash?: string;
-  hashStatus?: 'pending' | 'completed' | 'failed';
   storedInIndexedDB?: boolean;
 }
 

@@ -16,7 +16,7 @@ interface FileManagerProps {
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
-  const { isFilesModalOpen, closeFilesModal, onFilesSelect } = useFilesModalContext();
+  const { isFilesModalOpen, closeFilesModal, onFilesSelect, onStoredFilesSelect } = useFilesModalContext();
   const [recentFiles, setRecentFiles] = useState<FileMetadata[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -43,16 +43,19 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
 
   const handleFilesSelected = useCallback(async (files: FileMetadata[]) => {
     try {
-      const fileObjects = await Promise.all(
-        files.map(async (fileWithUrl) => {
-          return await convertToFile(fileWithUrl);
-        })
+      // NEW: Use stored files flow that preserves original IDs
+      const filesWithMetadata = await Promise.all(
+        files.map(async (metadata) => ({
+          file: await convertToFile(metadata),
+          originalId: metadata.id,
+          metadata
+        }))
       );
-      onFilesSelect(fileObjects);
+      onStoredFilesSelect(filesWithMetadata);
     } catch (error) {
       console.error('Failed to process selected files:', error);
     }
-  }, [convertToFile, onFilesSelect]);
+  }, [convertToFile, onStoredFilesSelect]);
 
   const handleNewFileUpload = useCallback(async (files: File[]) => {
     if (files.length > 0) {

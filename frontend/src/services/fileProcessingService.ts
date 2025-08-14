@@ -25,8 +25,13 @@ export interface FileProcessingResult {
   error?: string;
 }
 
+interface ProcessingOperation {
+  promise: Promise<FileProcessingResult>;
+  abortController: AbortController;
+}
+
 class FileProcessingService {
-  private processingCache = new Map<string, Promise<FileProcessingResult>>();
+  private processingCache = new Map<string, ProcessingOperation>();
 
   /**
    * Process a file to extract metadata, page count, and generate thumbnails
@@ -34,15 +39,24 @@ class FileProcessingService {
    */
   async processFile(file: File, fileId: string): Promise<FileProcessingResult> {
     // Check if we're already processing this file
-    const existingPromise = this.processingCache.get(fileId);
-    if (existingPromise) {
+    const existingOperation = this.processingCache.get(fileId);
+    if (existingOperation) {
       console.log(`📁 FileProcessingService: Using cached processing for ${file.name}`);
-      return existingPromise;
+      return existingOperation.promise;
     }
 
+    // Create abort controller for this operation
+    const abortController = new AbortController();
+    
     // Create processing promise
-    const processingPromise = this.performProcessing(file, fileId);
-    this.processingCache.set(fileId, processingPromise);
+    const processingPromise = this.performProcessing(file, fileId, abortController);
+    
+    // Store operation with abort controller
+    const operation: ProcessingOperation = {
+      promise: processingPromise,
+      abortController
+    };
+    this.processingCache.set(fileId, operation);
 
     // Clean up cache after completion
     processingPromise.finally(() => {
@@ -52,18 +66,30 @@ class FileProcessingService {
     return processingPromise;
   }
 
-  private async performProcessing(file: File, fileId: string): Promise<FileProcessingResult> {
+  private async performProcessing(file: File, fileId: string, abortController: AbortController): Promise<FileProcessingResult> {
     console.log(`📁 FileProcessingService: Starting processing for ${file.name} (${fileId})`);
 
     try {
+      // Check for cancellation at start
+      if (abortController.signal.aborted) {
+        throw new Error('Processing cancelled');
+      }
+
       let totalPages = 1;
       let thumbnailUrl: string | undefined;
 
       // Handle PDF files
       if (file.type === 'application/pdf') {
+        // Read arrayBuffer once and reuse for both PDF.js and fallback
+        const arrayBuffer = await file.arrayBuffer();
+        
+        // Check for cancellation after async operation
+        if (abortController.signal.aborted) {
+          throw new Error('Processing cancelled');
+        }
+        
         // Discover page count using PDF.js (most accurate)
         try {
-          const arrayBuffer = await file.arrayBuffer();
           const pdfDoc = await getDocument({
             data: arrayBuffer,
             disableAutoFetch: true,
@@ -75,12 +101,16 @@ class FileProcessingService {
 
           // Clean up immediately
           pdfDoc.destroy();
+          
+          // Check for cancellation after PDF.js processing
+          if (abortController.signal.aborted) {
+            throw new Error('Processing cancelled');
+          }
         } catch (pdfError) {
           console.warn(`📁 FileProcessingService: PDF.js failed for ${file.name}, trying fallback:`, pdfError);
           
-          // Fallback to text analysis
+          // Fallback to text analysis (reuse same arrayBuffer)
           try {
-            const arrayBuffer = await file.arrayBuffer();
             const text = new TextDecoder('latin1').decode(arrayBuffer);
             const pageMatches = text.match(/\/Type\s*\/Page[^s]/g);
             totalPages = pageMatches ? pageMatches.length : 1;
@@ -96,6 +126,11 @@ class FileProcessingService {
       try {
         thumbnailUrl = await generateThumbnailForFile(file);
         console.log(`📁 FileProcessingService: Generated thumbnail for ${file.name}`);
+        
+        // Check for cancellation after thumbnail generation
+        if (abortController.signal.aborted) {
+          throw new Error('Processing cancelled');
+        }
       } catch (thumbError) {
         console.warn(`📁 FileProcessingService: Thumbnail generation failed for ${file.name}:`, thumbError);
       }
@@ -144,6 +179,30 @@ class FileProcessingService {
    */
   isProcessing(fileId: string): boolean {
     return this.processingCache.has(fileId);
+  }
+
+  /**
+   * Cancel processing for a specific file
+   */
+  cancelProcessing(fileId: string): boolean {
+    const operation = this.processingCache.get(fileId);
+    if (operation) {
+      operation.abortController.abort();
+      console.log(`📁 FileProcessingService: Cancelled processing for ${fileId}`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Cancel all ongoing processing operations
+   */
+  cancelAllProcessing(): void {
+    this.processingCache.forEach((operation, fileId) => {
+      operation.abortController.abort();
+      console.log(`📁 FileProcessingService: Cancelled processing for ${fileId}`);
+    });
+    console.log(`📁 FileProcessingService: Cancelled ${this.processingCache.size} processing operations`);
   }
 }
 

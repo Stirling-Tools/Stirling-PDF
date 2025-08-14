@@ -7,7 +7,7 @@ import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useToolFileSelection, useProcessedFiles, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
-import { FileOperation, createStableFileId } from '../../types/fileContext';
+import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';

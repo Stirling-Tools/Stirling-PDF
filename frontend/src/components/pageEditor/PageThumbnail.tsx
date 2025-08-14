@@ -11,6 +11,7 @@ import { PDFPage, PDFDocument } from '../../types/pageEditor';
 import { RotatePagesCommand, DeletePagesCommand, ToggleSplitCommand } from '../../commands/pageCommands';
 import { Command } from '../../hooks/useUndoRedo';
 import { useFileState } from '../../contexts/FileContext';
+import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
 import styles from './PageEditor.module.css';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
@@ -80,6 +81,7 @@ const PageThumbnail = React.memo(({
 }: PageThumbnailProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { state, selectors } = useFileState();
+  const { getThumbnailFromCache } = useThumbnailGeneration();
 
   // Update thumbnail URL when page prop changes - prevent redundant updates
   useEffect(() => {
@@ -95,24 +97,19 @@ const PageThumbnail = React.memo(({
       return; // Skip if we already have a thumbnail
     }
 
-    const handleThumbnailReady = (event: CustomEvent) => {
-      const { pageNumber, thumbnail, pageId } = event.detail;
-
-      // Guard: check if this component is still mounted and page still exists
-      if (pageNumber === page.pageNumber && pageId === page.id) {
-        // Additional safety: check if the file still exists in FileContext
-        const fileId = page.id.split('-page-')[0]; // Extract fileId from pageId
-        const fileExists = selectors.getAllFileIds().includes(fileId);
-        
-        if (fileExists) {
-          setThumbnailUrl(thumbnail);
-        }
+    // Poll for thumbnail in cache (lightweight polling every 500ms)
+    const pollInterval = setInterval(() => {
+      // Check if thumbnail is now available in cache
+      const cachedThumbnail = getThumbnailFromCache(page.id);
+      if (cachedThumbnail) {
+        setThumbnailUrl(cachedThumbnail);
+        clearInterval(pollInterval); // Stop polling once found
       }
-    };
+    }, 500);
 
-    window.addEventListener('thumbnailReady', handleThumbnailReady as EventListener);
+    // Cleanup interval
     return () => {
-      window.removeEventListener('thumbnailReady', handleThumbnailReady as EventListener);
+      clearInterval(pollInterval);
     };
   }, [page.pageNumber, page.id]); // Remove thumbnailUrl dependency to stabilize effect
 

@@ -21,6 +21,7 @@ import { pdfExportService } from "../../services/pdfExportService";
 import { useThumbnailGeneration } from "../../hooks/useThumbnailGeneration";
 import { calculateScaleFromFileSize } from "../../utils/thumbnailUtils";
 import { fileStorage } from "../../services/fileStorage";
+import { indexedDBManager, DATABASE_CONFIGS } from "../../services/indexedDBManager";
 import './PageEditor.module.css';
 import PageThumbnail from './PageThumbnail';
 import BulkSelectionPanel from './BulkSelectionPanel';
@@ -184,7 +185,7 @@ const PageEditor = ({
       totalPages: pages.length,
       destroy: () => {} // Optional cleanup function
     };
-  }, [filesSignature, activeFileIds, primaryFileId, primaryFileRecord, processedFilePages, processedFileTotalPages, selectors, getThumbnailFromCache, addThumbnailToCache]);
+  }, [filesSignature, primaryFileId, primaryFileRecord]);
 
 
   // Display document: Use edited version if exists, otherwise original
@@ -308,23 +309,9 @@ const PageEditor = ({
               const pageId = `${primaryFileId}-page-${pageNumber}`;
               addThumbnailToCache(pageId, thumbnail);
 
-              // Also update the processedFile so document rebuilds include the thumbnail
-              const fileRecord = selectors.getFileRecord(primaryFileId);
-              if (fileRecord?.processedFile?.pages) {
-                const updatedProcessedFile = {
-                  ...fileRecord.processedFile,
-                  pages: fileRecord.processedFile.pages.map((page, index) => 
-                    index + 1 === pageNumber 
-                      ? { ...page, thumbnail }
-                      : page
-                  )
-                };
-                actions.updateFileRecord(primaryFileId, { processedFile: updatedProcessedFile });
-              }
-
-              window.dispatchEvent(new CustomEvent('thumbnailReady', {
-                detail: { pageNumber, thumbnail, pageId }
-              }));
+              // Don't update context state - thumbnails stay in cache only
+              // This eliminates per-page context rerenders
+              // PageThumbnail will find thumbnails via cache polling
             });
           });
         }
@@ -334,7 +321,7 @@ const PageEditor = ({
     } catch (error) {
       console.error('PageEditor: Thumbnail generation failed:', error);
     }
-  }, [mergedPdfDocument, primaryFileId, activeFileIds, generateThumbnails, getThumbnailFromCache, addThumbnailToCache, selectors, actions]);
+  }, [mergedPdfDocument, primaryFileId, activeFileIds, generateThumbnails, getThumbnailFromCache, addThumbnailToCache, selectors]);
 
   // Simple useEffect - just generate missing thumbnails when document is ready
   useEffect(() => {
@@ -563,7 +550,7 @@ const PageEditor = ({
     return updatedDoc;
   }, [actions, hasUnsavedDraft]);
 
-  // Enhanced draft save with proper IndexedDB handling
+  // Enhanced draft save using centralized IndexedDB manager
   const saveDraftToIndexedDB = useCallback(async (doc: PDFDocument) => {
     const draftKey = `draft-${doc.id || 'merged'}`;
     const draftData = {
@@ -573,173 +560,44 @@ const PageEditor = ({
     };
 
     try {
-      // Save to 'pdf-drafts' store in IndexedDB
-      const request = indexedDB.open('stirling-pdf-drafts', 1);
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains('drafts')) {
-          db.createObjectStore('drafts');
-        }
-      };
-
-      request.onsuccess = () => {
-        const db = request.result;
-        // Check if the object store exists before trying to access it
-        if (!db.objectStoreNames.contains('drafts')) {
-          console.warn('drafts object store does not exist, skipping auto-save');
-          return;
-        }
-        const transaction = db.transaction('drafts', 'readwrite');
-        const store = transaction.objectStore('drafts');
-        store.put(draftData, draftKey);
+      // Use centralized IndexedDB manager
+      const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
+      const transaction = db.transaction('drafts', 'readwrite');
+      const store = transaction.objectStore('drafts');
+      
+      const putRequest = store.put(draftData, draftKey);
+      putRequest.onsuccess = () => {
         console.log('Draft auto-saved to IndexedDB');
       };
+      putRequest.onerror = () => {
+        console.warn('Failed to put draft data:', putRequest.error);
+      };
+      
     } catch (error) {
       console.warn('Failed to auto-save draft:', error);
-      
-      // Robust IndexedDB initialization with proper error handling
-      const dbRequest = indexedDB.open('stirling-pdf-drafts', 1);
-      
-      return new Promise<void>((resolve, reject) => {
-        dbRequest.onerror = () => {
-          console.warn('Failed to open draft database:', dbRequest.error);
-          reject(dbRequest.error);
-        };
-        
-        dbRequest.onupgradeneeded = (event) => {
-          const db = (event.target as IDBOpenDBRequest).result;
-          
-          // Create object store if it doesn't exist
-          if (!db.objectStoreNames.contains('drafts')) {
-            const store = db.createObjectStore('drafts');
-            console.log('Created drafts object store');
-          }
-        };
-        
-        dbRequest.onsuccess = () => {
-          const db = dbRequest.result;
-          
-          // Verify object store exists before attempting transaction
-          if (!db.objectStoreNames.contains('drafts')) {
-            console.warn('Drafts object store not found, skipping save');
-            resolve();
-            return;
-          }
-          
-          try {
-            const transaction = db.transaction('drafts', 'readwrite');
-            const store = transaction.objectStore('drafts');
-            
-            transaction.onerror = () => {
-              console.warn('Draft save transaction failed:', transaction.error);
-              reject(transaction.error);
-            };
-            
-            transaction.oncomplete = () => {
-              console.log('Draft auto-saved successfully');
-              resolve();
-            };
-            
-            const putRequest = store.put(draftData, draftKey);
-            putRequest.onerror = () => {
-              console.warn('Failed to put draft data:', putRequest.error);
-              reject(putRequest.error);
-            };
-            
-          } catch (error) {
-            console.warn('Transaction creation failed:', error);
-            reject(error);
-          } finally {
-            db.close();
-          }
-        };
-      });
     }
   }, [activeFileIds, selectors]);
 
-  // Enhanced draft cleanup with proper IndexedDB handling
+  // Enhanced draft cleanup using centralized IndexedDB manager
   const cleanupDraft = useCallback(async () => {
     const draftKey = `draft-${mergedPdfDocument?.id || 'merged'}`;
     
     try {
-      const request = indexedDB.open('stirling-pdf-drafts', 1);
-
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains('drafts')) {
-          db.createObjectStore('drafts');
-        }
+      // Use centralized IndexedDB manager
+      const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
+      const transaction = db.transaction('drafts', 'readwrite');
+      const store = transaction.objectStore('drafts');
+      
+      const deleteRequest = store.delete(draftKey);
+      deleteRequest.onsuccess = () => {
+        console.log('Draft cleaned up successfully');
       };
-
-      request.onsuccess = () => {
-        const db = request.result;
-        // Check if the object store exists before trying to access it
-        if (!db.objectStoreNames.contains('drafts')) {
-          console.warn('drafts object store does not exist, skipping cleanup');
-          return;
-        }
-        const transaction = db.transaction('drafts', 'readwrite');
-        const store = transaction.objectStore('drafts');
-        store.delete(draftKey);
+      deleteRequest.onerror = () => {
+        console.warn('Failed to delete draft:', deleteRequest.error);
       };
+      
     } catch (error) {
       console.warn('Failed to cleanup draft:', error);
-      const dbRequest = indexedDB.open('stirling-pdf-drafts', 1);
-      
-      return new Promise<void>((resolve, reject) => {
-        dbRequest.onerror = () => {
-          console.warn('Failed to open draft database for cleanup:', dbRequest.error);
-          resolve(); // Don't fail the whole operation if cleanup fails
-        };
-        
-        dbRequest.onupgradeneeded = (event) => {
-          const db = (event.target as IDBOpenDBRequest).result;
-          
-          // Create object store if it doesn't exist
-          if (!db.objectStoreNames.contains('drafts')) {
-            db.createObjectStore('drafts');
-            console.log('Created drafts object store during cleanup fallback');
-          }
-        };
-        
-        dbRequest.onsuccess = () => {
-          const db = dbRequest.result;
-          
-          // Check if object store exists before attempting cleanup
-          if (!db.objectStoreNames.contains('drafts')) {
-            console.log('No drafts object store found, nothing to cleanup');
-            resolve();
-            return;
-          }
-          
-          try {
-            const transaction = db.transaction('drafts', 'readwrite');
-            const store = transaction.objectStore('drafts');
-            
-            transaction.onerror = () => {
-              console.warn('Draft cleanup transaction failed:', transaction.error);
-              resolve(); // Don't fail if cleanup fails
-            };
-            
-            transaction.oncomplete = () => {
-              console.log('Draft cleaned up successfully');
-              resolve();
-            };
-            
-            const deleteRequest = store.delete(draftKey);
-            deleteRequest.onerror = () => {
-              console.warn('Failed to delete draft:', deleteRequest.error);
-              resolve(); // Don't fail if delete fails
-            };
-            
-          } catch (error) {
-            console.warn('Draft cleanup transaction creation failed:', error);
-            resolve(); // Don't fail if cleanup fails
-          } finally {
-            db.close();
-          }
-        };
-      });
     }
   }, [mergedPdfDocument]);
 
@@ -1145,36 +1003,36 @@ const PageEditor = ({
     }
   }, [editedDocument, applyChanges, handleExport]);
 
-  // Enhanced draft checking with proper IndexedDB handling
+  // Enhanced draft checking using centralized IndexedDB manager
   const checkForDrafts = useCallback(async () => {
     if (!mergedPdfDocument) return;
 
     try {
       const draftKey = `draft-${mergedPdfDocument.id || 'merged'}`;
-      const request = indexedDB.open('stirling-pdf-drafts', 1);
+      // Use centralized IndexedDB manager
+      const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
+      const transaction = db.transaction('drafts', 'readonly');
+      const store = transaction.objectStore('drafts');
+      const getRequest = store.get(draftKey);
 
-      request.onsuccess = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains('drafts')) return;
+      getRequest.onsuccess = () => {
+        const draft = getRequest.result;
+        if (draft && draft.timestamp) {
+          // Check if draft is recent (within last 24 hours)
+          const draftAge = Date.now() - draft.timestamp;
+          const twentyFourHours = 24 * 60 * 60 * 1000;
 
-        const transaction = db.transaction('drafts', 'readonly');
-        const store = transaction.objectStore('drafts');
-        const getRequest = store.get(draftKey);
-
-        getRequest.onsuccess = () => {
-          const draft = getRequest.result;
-          if (draft && draft.timestamp) {
-            // Check if draft is recent (within last 24 hours)
-            const draftAge = Date.now() - draft.timestamp;
-            const twentyFourHours = 24 * 60 * 60 * 1000;
-
-            if (draftAge < twentyFourHours) {
-              setFoundDraft(draft);
-              setShowResumeModal(true);
-            }
+          if (draftAge < twentyFourHours) {
+            setFoundDraft(draft);
+            setShowResumeModal(true);
           }
-        };
+        }
       };
+      
+      getRequest.onerror = () => {
+        console.warn('Failed to get draft:', getRequest.error);
+      };
+      
     } catch (error) {
       console.warn('Draft check failed:', error);
       // Don't throw - draft checking failure shouldn't break the app

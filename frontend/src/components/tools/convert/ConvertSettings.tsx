@@ -6,7 +6,6 @@ import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import { isImageFormat, isWebFormat } from "../../../utils/convertUtils";
 import { useToolFileSelection } from "../../../contexts/FileContext";
 import { useFileState } from "../../../contexts/FileContext";
-import { createStableFileId } from "../../../types/fileContext";
 import { detectFileExtension } from "../../../utils/fileUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
@@ -151,7 +150,21 @@ const ConvertSettings = ({
   };
 
   const updateFileSelection = (files: File[]) => {
-    setSelectedFiles(files.map(f => createStableFileId(f)));
+    // Map File objects to their actual IDs in FileContext
+    const fileIds = files.map(file => {
+      // Find the file ID by matching file properties
+      const fileRecord = state.files.ids
+        .map(id => selectors.getFileRecord(id))
+        .find(record => 
+          record && 
+          record.name === file.name && 
+          record.size === file.size && 
+          record.lastModified === file.lastModified
+        );
+      return fileRecord?.id;
+    }).filter((id): id is string => id !== undefined); // Type guard to ensure only strings
+    
+    setSelectedFiles(fileIds);
   };
 
   const handleFromExtensionChange = (value: string) => {

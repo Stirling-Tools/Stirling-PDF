@@ -37,8 +37,9 @@ import {
   toFileRecord,
   revokeFileResources,
   createFileId,
-  computeContentHash
+  createQuickKey
 } from '../types/fileContext';
+import { FileMetadata } from '../types/file';
 
 // Import real services
 import { EnhancedPDFProcessingService } from '../services/enhancedPDFProcessingService';
@@ -124,7 +125,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
       const existingRecord = state.files.byId[id];
       if (!existingRecord) return state;
       
-      // Immutable merge supports all FileRecord fields including contentHash, hashStatus
+      // Immutable merge supports all FileRecord fields
       return {
         ...state,
         files: {
@@ -374,8 +375,12 @@ export function FileContextProvider({
       });
       blobUrls.current.clear();
 
-      // Clear all processing
-      enhancedPDFProcessingService.clearAllProcessing();
+      // Clear all processing and cache
+      enhancedPDFProcessingService.clearAll();
+      
+      // Cancel and clear centralized file processing
+      fileProcessingService.cancelAllProcessing();
+      fileProcessingService.clearCache();
 
       // Destroy thumbnails
       thumbnailGenerationService.destroy();
@@ -414,24 +419,40 @@ export function FileContextProvider({
 
   // Action implementations
   const addFiles = useCallback(async (files: File[]): Promise<File[]> => {
-    // Generate UUID-based IDs and create records
+    // Three-tier deduplication: UUID (primary key) + quickKey (soft dedupe) + contentHash (hard dedupe)
     const fileRecords: FileRecord[] = [];
     const addedFiles: File[] = [];
     
+    // Build quickKey lookup from existing files for deduplication
+    const existingQuickKeys = new Set<string>();
+    Object.values(stateRef.current.files.byId).forEach(record => {
+      existingQuickKeys.add(record.quickKey);
+    });
+    
     for (const file of files) {
+      const quickKey = createQuickKey(file);
+      
+      // Soft deduplication: Check if file already exists by metadata
+      if (existingQuickKeys.has(quickKey)) {
+        console.log(`📄 Skipping duplicate file: ${file.name} (already exists)`);
+        continue; // Skip duplicate file
+      }
+      
       const fileId = createFileId(); // UUID-based, zero collisions
       
       // Store File in ref map
       filesRef.current.set(fileId, file);
       
-      // Create record with pending hash status
+      // Create record
       const record = toFileRecord(file, fileId);
-      record.hashStatus = 'pending';
+      
+      // Add to deduplication tracking
+      existingQuickKeys.add(quickKey);
       
       fileRecords.push(record);
       addedFiles.push(file);
       
-      // Start centralized file processing (async, non-blocking)
+      // Start centralized file processing (async, non-blocking) - SINGLE CALL
       fileProcessingService.processFile(file, fileId).then(result => {
         // Only update if file still exists in context
         if (filesRef.current.has(fileId)) {
@@ -448,6 +469,20 @@ export function FileContextProvider({
               }
             });
             console.log(`✅ File processing complete for ${file.name}: ${result.metadata.totalPages} pages`);
+
+            // Optional: Persist to IndexedDB if enabled (reuse the same result)
+            if (enablePersistence) {
+              try {
+                const thumbnail = result.metadata.thumbnailUrl;
+                fileStorage.storeFile(file, fileId, thumbnail).then(() => {
+                  console.log('File persisted to IndexedDB:', fileId);
+                }).catch(error => {
+                  console.warn('Failed to persist file to IndexedDB:', error);
+                });
+              } catch (error) {
+                console.warn('Failed to initiate file persistence:', error);
+              }
+            }
           } else {
             console.warn(`❌ File processing failed for ${file.name}:`, result.error);
           }
@@ -456,38 +491,6 @@ export function FileContextProvider({
         console.error(`❌ File processing error for ${file.name}:`, error);
       });
       
-      // Optional: Persist to IndexedDB if enabled
-      if (enablePersistence) {
-        try {
-          // Use the thumbnail from processing service if available
-          fileProcessingService.processFile(file, fileId).then(result => {
-            const thumbnail = result.metadata?.thumbnailUrl;
-            return fileStorage.storeFile(file, fileId, thumbnail);
-          }).then(() => {
-            console.log('File persisted to IndexedDB:', fileId);
-          }).catch(error => {
-            console.warn('Failed to persist file to IndexedDB:', error);
-          });
-        } catch (error) {
-          console.warn('Failed to initiate file persistence:', error);
-        }
-      }
-      
-      // Start async content hashing (don't block add operation)
-      computeContentHash(file).then(contentHash => {
-        // Only update if file still exists in context
-        if (filesRef.current.has(fileId)) {
-          updateFileRecord(fileId, {
-            contentHash: contentHash || undefined, // Convert null to undefined
-            hashStatus: contentHash ? 'completed' : 'failed'
-          });
-        }
-      }).catch(() => {
-        // Hash failed, update status if file still exists
-        if (filesRef.current.has(fileId)) {
-          updateFileRecord(fileId, { hashStatus: 'failed' });
-        }
-      });
     }
     
     // Only dispatch if we have new files
@@ -499,7 +502,79 @@ export function FileContextProvider({
     return addedFiles;
   }, [enablePersistence]); // Remove updateFileRecord dependency
 
+  // NEW: Add stored files with preserved IDs to prevent duplicates across sessions
+  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>): Promise<File[]> => {
+    const fileRecords: FileRecord[] = [];
+    const addedFiles: File[] = [];
+    
+    for (const { file, originalId, metadata } of filesWithMetadata) {
+      // Skip if file already exists with same ID (exact match)
+      if (stateRef.current.files.byId[originalId]) {
+        console.log(`📄 Skipping stored file: ${file.name} (already loaded with same ID)`);
+        continue;
+      }
+      
+      // Store File in ref map with preserved ID
+      filesRef.current.set(originalId, file);
+      
+      // Create record with preserved ID and stored metadata
+      const record: FileRecord = {
+        id: originalId, // Preserve original UUID from storage
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+        quickKey: createQuickKey(file),
+        thumbnailUrl: metadata.thumbnail,
+        createdAt: Date.now(),
+        // Skip processedFile for now - it will be populated by background processing if needed
+      };
+      
+      fileRecords.push(record);
+      addedFiles.push(file);
+      
+      // Background processing with preserved ID (async, non-blocking)
+      fileProcessingService.processFile(file, originalId).then(result => {
+        // Only update if file still exists in context
+        if (filesRef.current.has(originalId)) {
+          if (result.success && result.metadata) {
+            // Update with processed metadata using dispatch directly
+            dispatch({ 
+              type: 'UPDATE_FILE_RECORD', 
+              payload: { 
+                id: originalId, 
+                updates: {
+                  processedFile: result.metadata,
+                  // Keep existing thumbnail if available, otherwise use processed one
+                  thumbnailUrl: metadata.thumbnail || result.metadata.thumbnailUrl
+                }
+              }
+            });
+            console.log(`✅ Stored file processing complete for ${file.name}: ${result.metadata.totalPages} pages`);
+          } else {
+            console.warn(`❌ Stored file processing failed for ${file.name}:`, result.error);
+          }
+        }
+      }).catch(error => {
+        console.error(`❌ Stored file processing error for ${file.name}:`, error);
+      });
+    }
+    
+    // Only dispatch if we have new files
+    if (fileRecords.length > 0) {
+      dispatch({ type: 'ADD_FILES', payload: { fileRecords } });
+    }
+
+    console.log(`📁 Added ${fileRecords.length} stored files with preserved IDs`);
+    return addedFiles;
+  }, []);
+
   const removeFiles = useCallback((fileIds: FileId[], deleteFromStorage: boolean = true) => {
+    // Cancel any ongoing processing for removed files
+    fileIds.forEach(fileId => {
+      fileProcessingService.cancelProcessing(fileId);
+    });
+
     // Clean up Files from ref map first
     fileIds.forEach(fileId => {
       filesRef.current.delete(fileId);
@@ -560,6 +635,7 @@ export function FileContextProvider({
   // Memoized actions to prevent re-renders
   const actions = useMemo<FileContextActions>(() => ({
     addFiles,
+    addStoredFiles,
     removeFiles,
     updateFileRecord,
     clearAllFiles: () => {
@@ -582,7 +658,7 @@ export function FileContextProvider({
     setMode: (mode: ModeType) => dispatch({ type: 'SET_CURRENT_MODE', payload: mode }),
     confirmNavigation,
     cancelNavigation
-  }), [addFiles, removeFiles, cleanupAllFiles, setHasUnsavedChanges, confirmNavigation, cancelNavigation]);
+  }), [addFiles, addStoredFiles, removeFiles, cleanupAllFiles, setHasUnsavedChanges, confirmNavigation, cancelNavigation]);
 
   // Split context values to minimize re-renders
   const stateValue = useMemo<FileContextStateValue>(() => ({
@@ -601,6 +677,7 @@ export function FileContextProvider({
     ...state.ui,
     // Action compatibility layer
     addFiles,
+    addStoredFiles,
     removeFiles,
     updateFileRecord,
     clearAllFiles: actions.clearAllFiles,
@@ -624,7 +701,7 @@ export function FileContextProvider({
     get activeFiles() { return selectors.getFiles(); }, // Getter to avoid creating new arrays on every render
     // Selectors
     ...selectors
-  }), [state, actions, addFiles, removeFiles, updateFileRecord, setHasUnsavedChanges, requestNavigation, confirmNavigation, cancelNavigation, trackBlobUrl, trackPdfDocument, cleanupFile, scheduleCleanup]); // Removed selectors dependency
+  }), [state, actions, addFiles, addStoredFiles, removeFiles, updateFileRecord, setHasUnsavedChanges, requestNavigation, confirmNavigation, cancelNavigation, trackBlobUrl, trackPdfDocument, cleanupFile, scheduleCleanup]); // Removed selectors dependency
 
   // Cleanup on unmount
   useEffect(() => {

@@ -3,7 +3,7 @@
  * Centralizes all PDF operations with proper type safety
  */
 
-import { FileId } from './fileRecord';
+import { FileId } from './fileContext';
 
 export type OperationId = string;
 
@@ -26,7 +26,7 @@ export interface BaseOperation {
   createdAt: number;
   startedAt?: number;
   completedAt?: number;
-  abortController?: AbortController;1
+  abortController?: AbortController;
 }
 
 // Split operations

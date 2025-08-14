@@ -1,35 +1,38 @@
 import { useCallback } from 'react';
 import { useFileState, useFileActions } from '../contexts/FileContext';
-import { createStableFileId } from '../types/fileContext';
+import { FileMetadata } from '../types/file';
 
 export const useFileHandler = () => {
-  const { state } = useFileState();
+  const { state } = useFileState(); // Still needed for addStoredFiles
   const { actions } = useFileActions();
 
   const addToActiveFiles = useCallback(async (file: File) => {
-    // Use stable ID function for consistent deduplication
-    const stableId = createStableFileId(file);
-    const exists = state.files.byId[stableId] !== undefined;
-    
-    if (!exists) {
-      await actions.addFiles([file]);
-    }
-  }, [state.files.byId, actions.addFiles]);
+    // Let FileContext handle deduplication with quickKey logic
+    await actions.addFiles([file]);
+  }, [actions.addFiles]);
 
   const addMultipleFiles = useCallback(async (files: File[]) => {
-    // Filter out files that already exist using stable IDs
-    const newFiles = files.filter(file => {
-      const stableId = createStableFileId(file);
-      return state.files.byId[stableId] === undefined;
+    // Let FileContext handle deduplication with quickKey logic
+    await actions.addFiles(files);
+  }, [actions.addFiles]);
+
+  // NEW: Add stored files preserving their original IDs to prevent session duplicates
+  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: string; metadata: FileMetadata }>) => {
+    // Filter out files that already exist with the same ID (exact match)
+    const newFiles = filesWithMetadata.filter(({ originalId }) => {
+      return state.files.byId[originalId] === undefined;
     });
     
     if (newFiles.length > 0) {
-      await actions.addFiles(newFiles);
+      await actions.addStoredFiles(newFiles);
     }
-  }, [state.files.byId, actions.addFiles]);
+    
+    console.log(`📁 Added ${newFiles.length} stored files (${filesWithMetadata.length - newFiles.length} skipped as duplicates)`);
+  }, [state.files.byId, actions.addStoredFiles]);
 
   return {
     addToActiveFiles,
     addMultipleFiles,
+    addStoredFiles,
   };
 };

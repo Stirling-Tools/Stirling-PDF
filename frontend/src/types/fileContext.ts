@@ -4,6 +4,7 @@
 
 import { ProcessedFile } from './processing';
 import { PDFDocument, PDFPage, PageOperation } from './pageEditor';
+import { FileMetadata } from './file';
 
 export type ModeType = 'viewer' | 'pageEditor' | 'fileEditor' | 'merge' | 'split' | 'compress' | 'ocr' | 'convert';
 
@@ -16,11 +17,10 @@ export interface FileRecord {
   size: number;
   type: string;
   lastModified: number;
+  quickKey: string; // Fast deduplication key: name|size|lastModified
   thumbnailUrl?: string;
   blobUrl?: string;
   createdAt: number;
-  contentHash?: string; // Optional content hash for deduplication
-  hashStatus?: 'pending' | 'completed' | 'failed'; // Hash computation status
   processedFile?: {
     pages: Array<{
       thumbnail?: string;
@@ -50,53 +50,18 @@ export function createFileId(): FileId {
   });
 }
 
+// Generate quick deduplication key from file metadata
+export function createQuickKey(file: File): string {
+  // Format: name|size|lastModified for fast duplicate detection
+  return `${file.name}|${file.size}|${file.lastModified}`;
+}
+
 // Legacy support - now just delegates to createFileId
 export function createStableFileId(file: File): FileId {
   // Don't mutate File objects - always return new UUID
   return createFileId();
 }
 
-// Multi-region content hash for deduplication (head + middle + tail)
-export async function computeContentHash(file: File): Promise<string | null> {
-  try {
-    const fileSize = file.size;
-    const chunkSize = 32 * 1024; // 32KB chunks
-    const chunks: ArrayBuffer[] = [];
-    
-    // Head chunk (first 32KB)
-    chunks.push(await file.slice(0, Math.min(chunkSize, fileSize)).arrayBuffer());
-    
-    // Middle chunk (if file is large enough)
-    if (fileSize > chunkSize * 2) {
-      const middleStart = Math.floor(fileSize / 2) - Math.floor(chunkSize / 2);
-      chunks.push(await file.slice(middleStart, middleStart + chunkSize).arrayBuffer());
-    }
-    
-    // Tail chunk (last 32KB, if different from head)
-    if (fileSize > chunkSize) {
-      const tailStart = Math.max(chunkSize, fileSize - chunkSize);
-      chunks.push(await file.slice(tailStart, fileSize).arrayBuffer());
-    }
-    
-    // Combine all chunks
-    const totalSize = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
-    const combined = new Uint8Array(totalSize);
-    let offset = 0;
-    
-    for (const chunk of chunks) {
-      combined.set(new Uint8Array(chunk), offset);
-      offset += chunk.byteLength;
-    }
-    
-    // Hash the combined chunks
-    const hashBuffer = await window.crypto.subtle.digest('SHA-256', combined);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  } catch (error) {
-    console.warn('Content hash calculation failed:', error);
-    return null;
-  }
-}
 
 export function toFileRecord(file: File, id?: FileId): FileRecord {
   const fileId = id || createStableFileId(file);
@@ -106,6 +71,7 @@ export function toFileRecord(file: File, id?: FileId): FileRecord {
     size: file.size,
     type: file.type,
     lastModified: file.lastModified,
+    quickKey: createQuickKey(file),
     createdAt: Date.now()
   };
 }
@@ -225,6 +191,7 @@ export type FileContextAction =
 export interface FileContextActions {
   // File management - lightweight actions only
   addFiles: (files: File[]) => Promise<File[]>;
+  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => Promise<File[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => void;
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   clearAllFiles: () => void;

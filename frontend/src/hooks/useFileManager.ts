@@ -95,15 +95,30 @@ export const useFileManager = () => {
       setSelectedFiles([]);
     };
 
-    const selectMultipleFiles = async (files: FileMetadata[], onFilesSelect: (files: File[]) => void) => {
+    const selectMultipleFiles = async (files: FileMetadata[], onFilesSelect: (files: File[]) => void, onStoredFilesSelect?: (filesWithMetadata: Array<{ file: File; originalId: string; metadata: FileMetadata }>) => void) => {
       if (selectedFiles.length === 0) return;
 
       try {
         // Filter by UUID and convert to File objects
         const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id));
-        const filePromises = selectedFileObjects.map(convertToFile);
-        const convertedFiles = await Promise.all(filePromises);
-        onFilesSelect(convertedFiles); // FileContext will assign new UUIDs
+        
+        if (onStoredFilesSelect) {
+          // NEW: Use stored files flow that preserves IDs
+          const filesWithMetadata = await Promise.all(
+            selectedFileObjects.map(async (metadata) => ({
+              file: await convertToFile(metadata),
+              originalId: metadata.id,
+              metadata
+            }))
+          );
+          onStoredFilesSelect(filesWithMetadata);
+        } else {
+          // LEGACY: Old flow that generates new UUIDs (for backward compatibility)
+          const filePromises = selectedFileObjects.map(convertToFile);
+          const convertedFiles = await Promise.all(filePromises);
+          onFilesSelect(convertedFiles); // FileContext will assign new UUIDs
+        }
+        
         clearSelection();
       } catch (error) {
         console.error('Failed to load selected files:', error);
