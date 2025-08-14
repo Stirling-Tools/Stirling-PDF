@@ -5,13 +5,10 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
-import PushPinIcon from "@mui/icons-material/PushPin";
-import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 
 import { FileWithUrl } from "../../types/file";
 import { getFileSize, getFileDate } from "../../utils/fileUtils";
 import { useIndexedDBThumbnail } from "../../hooks/useIndexedDBThumbnail";
-import { useFileContext } from "../../contexts/FileContext";
 
 interface FileCardProps {
   file: FileWithUrl;
@@ -28,9 +25,6 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
   const { t } = useTranslation();
   const { thumbnail: thumb, isGenerating } = useIndexedDBThumbnail(file);
   const [isHovered, setIsHovered] = useState(false);
-  const { pinFile, unpinFile, isFilePinned } = useFileContext();
-  
-  const isPinned = isFilePinned(file as File);
 
   return (
     <Card
@@ -70,25 +64,8 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
             position: 'relative'
           }}
         >
-          {/* Pin indicator - always visible when pinned */}
-          {isPinned && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 4,
-                left: 4,
-                zIndex: 10,
-                backgroundColor: 'rgba(255, 165, 0, 0.9)',
-                borderRadius: 4,
-                padding: 2
-              }}
-            >
-              <PushPinIcon style={{ fontSize: 16, color: 'white' }} />
-            </div>
-          )}
-
           {/* Hover action buttons */}
-          {isHovered && (onView || onEdit || true) && (
+          {isHovered && (onView || onEdit) && (
             <div
               style={{
                 position: 'absolute',
@@ -103,25 +80,6 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Pin/Unpin button */}
-              <Tooltip label={isPinned ? "Unpin file (will be consumed by operations)" : "Pin file (won't be consumed by operations)"}>
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color={isPinned ? "orange" : "gray"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (isPinned) {
-                      unpinFile(file as File);
-                    } else {
-                      pinFile(file as File);
-                    }
-                  }}
-                >
-                  {isPinned ? <PushPinIcon style={{ fontSize: 16 }} /> : <PushPinOutlinedIcon style={{ fontSize: 16 }} />}
-                </ActionIcon>
-              </Tooltip>
-              
               {onView && (
                 <Tooltip label="View in Viewer">
                   <ActionIcon
