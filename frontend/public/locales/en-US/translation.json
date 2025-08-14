@@ -72,6 +72,9 @@
     "githubSubmit": "GitHub - Submit a ticket",
     "discordSubmit": "Discord - Submit Support post"
   },
+  "warning": {
+    "tooltipTitle": "Warning"
+  },
   "delete": "Delete",
   "username": "Username",
   "password": "Password",
@@ -379,6 +382,10 @@
     "addPassword": {
       "title": "Add Password",
       "desc": "Encrypt your PDF document with a password."
+    },
+    "changePermissions": {
+      "title": "Change Permissions",
+      "desc": "Change document restrictions and permissions."
     },
     "removePassword": {
       "title": "Remove Password",
@@ -744,30 +751,6 @@
   },
   "removePages": {
     "tags": "Remove pages,delete pages"
-  },
-  "addPassword": {
-    "tags": "secure,security",
-    "title": "Add Password",
-    "header": "Add password (Encrypt)",
-    "selectText": {
-      "1": "Select PDF to encrypt",
-      "2": "User Password",
-      "3": "Encryption Key Length",
-      "4": "Higher values are stronger, but lower values have better compatibility.",
-      "5": "Permissions to set (Recommended to be used along with Owner password)",
-      "6": "Prevent assembly of document",
-      "7": "Prevent content extraction",
-      "8": "Prevent extraction for accessibility",
-      "9": "Prevent filling in form",
-      "10": "Prevent modification",
-      "11": "Prevent annotation modification",
-      "12": "Prevent printing",
-      "13": "Prevent printing different formats",
-      "14": "Owner Password",
-      "15": "Restricts what can be done with the document once it is opened (Not supported by all readers)",
-      "16": "Restricts the opening of the document itself"
-    },
-    "submit": "Encrypt"
   },
   "removePassword": {
     "tags": "secure,Decrypt,security,unpassword,delete password",
@@ -1648,6 +1631,110 @@
         "removeLinks.desc": "Remove external links and launch actions from the PDF",
         "removeFonts": "Remove Fonts",
         "removeFonts.desc": "Remove embedded fonts from the PDF"
+      }
+    }
+  },
+  "addPassword": {
+    "completed": "Password protection applied",
+    "submit": "Encrypt",
+    "filenamePrefix": "encrypted",
+    "error": {
+      "failed": "An error occurred while encrypting the PDF."
+    },
+    "passwords": {
+      "title": "Passwords",
+      "stepTitle": "Passwords & Encryption",
+      "completed": "Passwords configured",
+      "user": {
+        "label": "User Password",
+        "placeholder": "Enter user password"
+      },
+      "owner": {
+        "label": "Owner Password",
+        "placeholder": "Enter owner password"
+      }
+    },
+    "permissions": {
+      "stepTitle": "Document Permissions"
+    },
+    "encryption": {
+      "keyLength": {
+        "label": "Encryption Key Length",
+        "40bit": "40-bit (Low)",
+        "128bit": "128-bit (Standard)",
+        "256bit": "256-bit (High)"
+      }
+    },
+    "results": {
+      "title": "Password Protected PDFs"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Password Protection Overview"
+      },
+      "passwords": {
+        "title": "Password Types",
+        "text": "User passwords restrict opening the document, while owner passwords control what can be done with the document once opened. You can set both or just one.",
+        "bullet1": "User Password: Required to open the PDF",
+        "bullet2": "Owner Password: Controls document permissions (not supported by all PDF viewers)"
+      },
+      "encryption": {
+        "title": "Encryption Levels",
+        "text": "Higher encryption levels provide better security but may not be supported by older PDF viewers.",
+        "bullet1": "40-bit: Basic security, compatible with older viewers",
+        "bullet2": "128-bit: Standard security, widely supported",
+        "bullet3": "256-bit: Maximum security, requires modern viewers"
+      },
+      "permissions": {
+        "text": "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
+      }
+    }
+  },
+  "changePermissions": {
+    "completed": "Permissions changed",
+    "submit": "Change Permissions",
+    "title": "Document Permissions",
+    "error": {
+      "failed": "An error occurred while changing PDF permissions."
+    },
+    "permissions": {
+      "preventAssembly": {
+        "label": "Prevent assembly of document"
+      },
+      "preventExtractContent": {
+        "label": "Prevent content extraction"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Prevent extraction for accessibility"
+      },
+      "preventFillInForm": {
+        "label": "Prevent filling in form"
+      },
+      "preventModify": {
+        "label": "Prevent modification"
+      },
+      "preventModifyAnnotations": {
+        "label": "Prevent annotation modification"
+      },
+      "preventPrinting": {
+        "label": "Prevent printing"
+      },
+      "preventPrintingFaithful": {
+        "label": "Prevent printing different formats"
+      }
+    },
+    "results": {
+      "title": "Modified PDFs"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Change Permissions"
+      },
+      "description": {
+        "text": "Changes document permissions, allowing/disallowing access to different features in PDF readers."
+      },
+      "warning": {
+        "text": "To make these permissions unchangeable, use the Add Password tool to set an owner password."
       }
     }
   }
