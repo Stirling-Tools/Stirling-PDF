@@ -347,7 +347,7 @@
       "title": "Ruota",
       "desc": "Ruota un PDF."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Da immagine a PDF",
       "desc": "Converti un'immagine (PNG, JPEG, GIF) in PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Cambia Permessi",
       "desc": "Cambia i permessi del tuo PDF."
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Rimuovi",
       "desc": "Elimina alcune pagine dal PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Rimuovi Password",
       "desc": "Rimuovi la password dal tuo PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Comprimi",
       "desc": "Comprimi PDF per ridurne le dimensioni."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Esegui più azioni sui PDF definendo script di pipeline"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Aggiungi numeri di pagina",
       "desc": "Aggiungi numeri di pagina in tutto un documento in una posizione prestabilita"
     },
@@ -487,7 +487,7 @@
       "title": "Rinomina automaticamente il file PDF",
       "desc": "Rinomina automaticamente un file PDF in base all'intestazione rilevata"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Regola colori/contrasto",
       "desc": "Regola contrasto, saturazione e luminosità di un PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Pagine divise automaticamente",
       "desc": "Dividi automaticamente il PDF scansionato con il codice QR dello divisore di pagina fisico scansionato"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Pulire",
       "desc": "Rimuovi script e altri elementi dai file PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Ottieni TUTTE le informazioni in PDF",
       "desc": "Raccogli tutte le informazioni possibili sui PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Estrai pagina/e",
       "desc": "Estrae le pagine selezionate dal PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF in un'unica pagina di grandi dimensioni",
       "desc": "Unisce tutte le pagine PDF in un'unica grande pagina"
     },
@@ -543,11 +543,11 @@
       "title": "Redazione manuale",
       "desc": "Redige un PDF in base al testo selezionato, alle forme disegnate e/o alle pagina selezionata(e)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "Da PDF a CSV",
       "desc": "Estrae tabelle da un PDF convertendolo in CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Divisione automatica per dimensione/numero",
       "desc": "Dividi un singolo PDF in più documenti in base alle dimensioni, al numero di pagine o al numero di documenti"
     },
@@ -563,11 +563,11 @@
       "title": "Aggiungi timbro al PDF",
       "desc": "Aggiungi testo o aggiungi timbri immagine nelle posizioni prestabilite"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Rimuovi immagine",
       "desc": "Rimuovi le immagini dal PDF per ridurre la dimensione del file"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Dividi PDF per capitoli",
       "desc": "Dividi un PDF in più file in base alla struttura dei capitoli."
     },
@@ -575,7 +575,7 @@
       "title": "Convalida la firma PDF",
       "desc": "Verificare le firme digitali e i certificati nei documenti PDF"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Sostituisci e inverti il colore",
       "desc": "Sostituisci il colore del testo e dello sfondo nel PDF e inverti il ​​colore completo del PDF per ridurre le dimensioni del file"
     }

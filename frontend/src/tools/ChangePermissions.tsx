@@ -68,7 +68,7 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
       isCollapsed: hasFiles || hasResults,
     },
     steps: [{
-      title: t('settings.title', 'Settings'),
+      title: t('changePermissions.title', 'Document Permissions'),
       isCollapsed: settingsCollapsed,
       onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
       tooltip: changePermissionsTips,
