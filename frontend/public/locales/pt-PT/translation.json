@@ -347,7 +347,7 @@
       "title": "Rodar",
       "desc": "Rode facilmente os seus PDFs."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Imagem para PDF",
       "desc": "Converter uma imagem (PNG, JPEG, GIF) para PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Alterar Permissões",
       "desc": "Alterar as permissões do seu documento PDF"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Remover",
       "desc": "Eliminar páginas indesejadas do seu documento PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Remover Palavra-passe",
       "desc": "Remover proteção por palavra-passe do seu documento PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Comprimir",
       "desc": "Comprimir PDFs para reduzir o seu tamanho."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Executar múltiplas ações em PDFs definindo scripts pipeline"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Adicionar Números de Página",
       "desc": "Adicionar números de página ao longo de um documento numa localização definida"
     },
@@ -487,7 +487,7 @@
       "title": "Renomear Automaticamente Ficheiro PDF",
       "desc": "Renomeia automaticamente um ficheiro PDF baseado no cabeçalho detetado"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Ajustar Cores/Contraste",
       "desc": "Ajustar Contraste, Saturação e Brilho de um PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Divisão Automática de Páginas",
       "desc": "Dividir automaticamente PDF digitalizado com separador de páginas físico com Código QR"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sanitizar",
       "desc": "Remover scripts e outros elementos de ficheiros PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Obter TODA Informação sobre PDF",
       "desc": "Obtém qualquer e toda informação possível sobre PDFs"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extrair página(s)",
       "desc": "Extrai páginas selecionadas do PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "Página Única Grande",
       "desc": "Junta todas as páginas do PDF numa única página grande"
     },
@@ -543,11 +543,11 @@
       "title": "Redação Manual",
       "desc": "Redacta um PDF baseado em texto selecionado, formas desenhadas e/ou página(s) selecionada(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF para CSV",
       "desc": "Extrai Tabelas de um PDF convertendo para CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Divisão Automática por Tamanho/Contagem",
       "desc": "Dividir um único PDF em múltiplos documentos baseado em tamanho, contagem de páginas, ou contagem de documentos"
     },
@@ -563,11 +563,11 @@
       "title": "Adicionar Carimbo a PDF",
       "desc": "Adicionar carimbos de texto ou adicionar carimbos de imagem em localizações definidas"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Remover imagem",
       "desc": "Remover imagem do PDF para reduzir tamanho do ficheiro"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Dividir PDF por Capítulos",
       "desc": "Dividir um PDF em múltiplos ficheiros baseado na sua estrutura de capítulos."
     },
@@ -575,7 +575,7 @@
       "title": "Validar Assinatura PDF",
       "desc": "Verificar assinaturas digitais e certificados em documentos PDF"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Substituir e Inverter Cor",
       "desc": "Substituir cor para texto e fundo em PDF e inverter cor completa do pdf para reduzir tamanho do ficheiro"
     }

@@ -347,7 +347,7 @@
       "title": "تدوير ملفات",
       "desc": "قم بتدوير ملفات PDF الخاصة بك بسهولة."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "صورة إلى PDF",
       "desc": "تحويل الصور (PNG ، JPEG ، GIF) إلى PDF."
     },
@@ -371,7 +371,7 @@
       "title": "تغيير الأذونات",
       "desc": "قم بتغيير أذونات مستند PDF الخاص بك"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "إزالة الصفحات",
       "desc": "حذف الصفحات غير المرغوب فيها من مستند PDF الخاص بك."
     },
@@ -383,7 +383,7 @@
       "title": "إزالة كلمة المرور",
       "desc": "إزالة الحماية بكلمة مرور من مستند PDF الخاص بك."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "ضغط ملفات",
       "desc": "ضغط ملفات PDF لتقليل حجم الملف."
     },
@@ -479,7 +479,7 @@
       "title": "خط الأنابيب",
       "desc": "تشغيل إجراءات متعددة على ملفات PDF عن طريق تحديد نصوص خط الأنابيب"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "إضافة أرقام الصفحات",
       "desc": "إضافة أرقام الصفحات في جميع أنحاء المستند في موقع محدد"
     },
@@ -487,7 +487,7 @@
       "title": "إعادة تسمية ملف PDF تلقائيًا",
       "desc": "إعادة تسمية ملف PDF تلقائيًا بناءً على الرأس المكتشف"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "ضبط الألوان/التباين",
       "desc": "ضبط التباين والتشبع والسطوع لملف PDF"
     },
@@ -499,7 +499,7 @@
       "title": "تقسيم الصفحات تلقائيًا",
       "desc": "تقسيم PDF الممسوح ضوئيًا تلقائيًا باستخدام رمز QR لتقسيم الصفحات الممسوحة ضوئيًا فعليًا"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "تنظيف",
       "desc": "إزالة البرامج النصية والعناصر الأخرى من ملفات PDF"
     },
@@ -523,11 +523,11 @@
       "title": "الحصول على جميع المعلومات عن PDF",
       "desc": "يجمع أي وكل المعلومات الممكنة عن ملفات PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "استخراج الصفحة (الصفحات)",
       "desc": "يستخرج صفحات محددة من PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF إلى صفحة واحدة كبيرة",
       "desc": "يدمج جميع صفحات PDF في صفحة واحدة كبيرة"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF إلى CSV",
       "desc": "يستخرج الجداول من PDF ويحولها إلى CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "تقسيم تلقائي حسب الحجم/العدد",
       "desc": "تقسيم ملف PDF واحد إلى مستندات متعددة بناءً على الحجم أو عدد الصفحات أو عدد المستندات"
     },
@@ -563,11 +563,11 @@
       "title": "إضافة ختم إلى PDF",
       "desc": "إضافة نص أو إضافة أختام الصور في مواقع محددة"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "إزالة الصورة",
       "desc": "إزالة الصورة من PDF لتقليل حجم الملف"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "تجزئة المستندات PDF حسب الفصول",
       "desc": "قسم مستند PDF إلى ملفات متعددة بناءً على هيكل فصوله."
     },
@@ -575,7 +575,7 @@
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "إستبدال و عكس الألوان",
       "desc": "استبدال الألوان للنصوص والخلفيات في المستندات PDF وإلغاء تعكير اللون الكامل للمستند لتقليل حجم الملف"
     }

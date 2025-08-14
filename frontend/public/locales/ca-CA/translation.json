@@ -347,7 +347,7 @@
       "title": "Rota",
       "desc": "Rota els PDFs."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Imatge a PDF",
       "desc": "Converteix imatge (PNG, JPEG, GIF) a PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Canvia permisos",
       "desc": "Canvia els permisos del document PDF"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Elimina",
       "desc": "Elimina pàgines del document PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Elimina Contrasenya",
       "desc": "Elimina la contrasenya del document PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Comprimeix",
       "desc": "Comprimeix PDFs per reduir-ne la mida."
     },
@@ -479,7 +479,7 @@
       "title": "Procés",
       "desc": "Executa múltiples accions en PDFs definint scripts de procés"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Afegir Números de Pàgina",
       "desc": "Afegir números de pàgina en una localització"
     },
@@ -487,7 +487,7 @@
       "title": "Canvia Automàticament el Nom del Fitxer PDF",
       "desc": "Canvia automàticament el nom d'un fitxer PDF en funció de la capçalera detectada"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Ajusta Colors/Contrast",
       "desc": "Ajusta colors/contrast, saturació i brillantor"
     },
@@ -499,7 +499,7 @@
       "title": "Divisió Automàtica de Pàgines",
       "desc": "Divideix automàticament un PDF escanejat amb un codi QR de separació de pàgines escanejades"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Neteja",
       "desc": "Elimina scripts i altres elements dels fitxers PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Obteniu Tota la Informació sobre el PDF",
       "desc": "Recupera tota la informació possible sobre els PDFs"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extreu pàgina(es)",
       "desc": "Extreu pàgines seleccionades d'un PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF a Una Sola Pàgina Gran",
       "desc": "Fusiona totes les pàgines d'un PDF en una sola pàgina gran"
     },
@@ -543,11 +543,11 @@
       "title": "Redacció manual",
       "desc": "Redacta un PDF segons el text seleccionat, les formes dibuixades i/o les pàgines seleccionades"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF a CSV",
       "desc": "Extreu taules d'un PDF convertint-les a CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Divisió Automàtica per Mida/Quantitat",
       "desc": "Divideix un únic PDF en múltiples documents basant-se en la mida, el nombre de pàgines o el nombre de documents"
     },
@@ -563,11 +563,11 @@
       "title": "Afegeix segell al PDF",
       "desc": "Afegeix segells de text o imatge en ubicacions establertes"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Elimina imatge",
       "desc": "Elimina imatges d'un PDF per reduir la mida del fitxer"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Divideix PDF per Capítols",
       "desc": "Divideix un PDF en múltiples fitxers segons la seva estructura de capítols."
     },
@@ -575,7 +575,7 @@
       "title": "Validar Signatura PDF",
       "desc": "Verifica les signatures digitals i els certificats en documents PDF"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Reemplaça i Inverteix Color",
       "desc": "Reemplaça el color del text i el fons en un PDF i inverteix tot el color del PDF per reduir la mida del fitxer"
     }
