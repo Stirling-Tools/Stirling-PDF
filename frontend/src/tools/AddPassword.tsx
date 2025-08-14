@@ -63,7 +63,8 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = addPasswordOperation.files.length > 0 || addPasswordOperation.downloadUrl !== null;
-  const optionsCollapsed = !hasFiles || hasResults;
+  const passwordsCollapsed = !hasFiles || hasResults;
+  const permissionsCollapsed = collapsedPermissions || hasResults;
 
   return createToolFlow({
     files: {
@@ -73,7 +74,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     steps: [
       {
         title: t('addPassword.passwords.stepTitle', 'Passwords & Encryption'),
-        isCollapsed: optionsCollapsed,
+        isCollapsed: passwordsCollapsed,
         onCollapsedClick: hasResults ? handleSettingsReset : undefined,
         tooltip: addPasswordTips,
         content: (
@@ -86,7 +87,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       },
       {
         title: t('addPassword.permissions.stepTitle', 'Document Permissions'),
-        isCollapsed: optionsCollapsed,
+        isCollapsed: permissionsCollapsed,
         onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedPermissions(!collapsedPermissions),
         content: (
           <ChangePermissionsSettings
