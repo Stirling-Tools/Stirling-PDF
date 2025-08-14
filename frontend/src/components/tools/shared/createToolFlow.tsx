@@ -59,7 +59,7 @@ export function createToolFlow(config: ToolFlowConfig) {
   const steps = createToolSteps();
 
   return (
-    <Stack gap="sm" p="sm" style={{ height: '100vh', overflow: 'auto' }}>
+    <Stack gap="sm" p="sm" h="94vh" w="100%" style={{ overflow: 'auto' }}>
       <ToolStepProvider>
         {/* Files Step */}
         {steps.createFilesStep({
