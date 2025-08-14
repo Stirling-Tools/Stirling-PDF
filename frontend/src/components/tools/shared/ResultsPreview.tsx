@@ -9,23 +9,21 @@ export interface ReviewFile {
   thumbnail?: string;
 }
 
-export interface ReviewPanelProps {
+export interface ResultsPreviewProps {
   files: ReviewFile[];
   isGeneratingThumbnails?: boolean;
   onFileClick?: (file: File) => void;
-  title?: string;
   emptyMessage?: string;
   loadingMessage?: string;
 }
 
-const ReviewPanel = ({
+const ResultsPreview = ({
   files,
   isGeneratingThumbnails = false,
   onFileClick,
-  title,
   emptyMessage = "No files to preview",
   loadingMessage = "Generating previews..."
-}: ReviewPanelProps) => {
+}: ResultsPreviewProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handlePrevious = () => {
@@ -99,4 +97,4 @@ const ReviewPanel = ({
   );
 };
 
-export default ReviewPanel;
+export default ResultsPreview;

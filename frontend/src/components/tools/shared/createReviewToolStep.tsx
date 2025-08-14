@@ -3,7 +3,7 @@ import { Button, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import DownloadIcon from '@mui/icons-material/Download';
 import ErrorNotification from './ErrorNotification';
-import ReviewPanel from './ReviewPanel';
+import ResultsPreview from './ResultsPreview';
 import { SuggestedToolsSection } from './SuggestedToolsSection';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
 
@@ -26,7 +26,7 @@ export function createReviewToolStep<TParams = any>(
     thumbnail: operation.thumbnails[index]
   })) || [];
 
-  return createStep("Review", {
+  return createStep(t("review", "Review"), {
     isVisible: props.isVisible,
     _excludeFromCount: true,
     _noPadding: true
@@ -38,11 +38,10 @@ export function createReviewToolStep<TParams = any>(
       />
 
       {previewFiles.length > 0 && (
-        <ReviewPanel
+        <ResultsPreview
           files={previewFiles}
           onFileClick={props.onFileClick}
           isGeneratingThumbnails={operation.isGeneratingThumbnails}
-          title={props.title || "Review"}
         />
       )}
 
