@@ -22,7 +22,6 @@ public class DatabaseWebController {
 
     private final DatabaseService databaseService;
 
-
     @Deprecated
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     // @GetMapping("/database")

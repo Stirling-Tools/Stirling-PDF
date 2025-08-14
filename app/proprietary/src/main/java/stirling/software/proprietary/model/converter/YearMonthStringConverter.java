@@ -8,7 +8,7 @@ import jakarta.persistence.Converter;
 
 @Converter(autoApply = true)
 public class YearMonthStringConverter implements AttributeConverter<YearMonth, String> {
-    
+
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
 
     @Override

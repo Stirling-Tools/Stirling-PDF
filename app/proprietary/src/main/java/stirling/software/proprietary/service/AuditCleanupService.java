@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.config.AuditConfigurationProperties;
-import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+import stirling.software.proprietary.security.repository.PersistentAuditEventRepository;
 
 /** Service to periodically clean up old audit events based on retention policy. */
 @Slf4j

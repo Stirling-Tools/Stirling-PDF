@@ -40,7 +40,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
-import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+import stirling.software.proprietary.security.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 
 /** Controller for the audit dashboard. Admin-only access. */

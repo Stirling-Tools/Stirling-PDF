@@ -3,30 +3,37 @@ package stirling.software.proprietary.model;
 import java.io.Serializable;
 import java.time.Instant;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import lombok.*;
 
 import stirling.software.proprietary.security.model.User;
 
 @Entity
-@Table(name = "api_rate_limit_configs",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uq_user_cfg", columnNames = {"scope_type", "user_id"}),
-        @UniqueConstraint(name = "uq_org_cfg", columnNames = {"scope_type", "org_id"}),
-        @UniqueConstraint(name = "uq_role_cfg", columnNames = {"scope_type", "role_name"})
-    },
-    indexes = {
-        @Index(name = "idx_cfg_user", columnList = "user_id"),
-        @Index(name = "idx_cfg_org", columnList = "org_id"),
-        @Index(name = "idx_cfg_role", columnList = "role_name"),
-        @Index(name = "idx_cfg_scope", columnList = "scope_type")
-    })
+@Table(
+        name = "api_credit_configs",
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uq_user_credit_cfg",
+                    columnNames = {"scope_type", "user_id"}),
+            @UniqueConstraint(
+                    name = "uq_org_credit_cfg",
+                    columnNames = {"scope_type", "org_id"}),
+            @UniqueConstraint(
+                    name = "uq_role_credit_cfg",
+                    columnNames = {"scope_type", "role_name"})
+        },
+        indexes = {
+            @Index(name = "idx_credit_cfg_user", columnList = "user_id"),
+            @Index(name = "idx_credit_cfg_org", columnList = "org_id"),
+            @Index(name = "idx_credit_cfg_role", columnList = "role_name"),
+            @Index(name = "idx_credit_cfg_scope", columnList = "scope_type")
+        })
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -34,7 +41,7 @@ import stirling.software.proprietary.security.model.User;
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-public class ApiRateLimitConfig implements Serializable {
+public class ApiCreditConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -69,8 +76,8 @@ public class ApiRateLimitConfig implements Serializable {
 
     @NotNull
     @Min(0)
-    @Column(name = "monthly_limit", nullable = false)
-    private Integer monthlyLimit;
+    @Column(name = "monthly_credits", nullable = false)
+    private Integer monthlyCredits;
 
     @NotNull
     @Builder.Default
@@ -101,22 +108,23 @@ public class ApiRateLimitConfig implements Serializable {
         if (user != null) nonNullCount++;
         if (organization != null) nonNullCount++;
         if (roleName != null) nonNullCount++;
-        
+
         if (nonNullCount != 1) {
             throw new IllegalStateException(
-                "Exactly one of user, organization, or roleName must be set");
+                    "Exactly one of user, organization, or roleName must be set");
         }
 
         if (user != null && scopeType != ScopeType.USER) {
             throw new IllegalStateException("ScopeType must be USER when user is set");
         }
         if (organization != null && scopeType != ScopeType.ORGANIZATION) {
-            throw new IllegalStateException("ScopeType must be ORGANIZATION when organization is set");
+            throw new IllegalStateException(
+                    "ScopeType must be ORGANIZATION when organization is set");
         }
         if (roleName != null && scopeType != ScopeType.ROLE_DEFAULT) {
             throw new IllegalStateException("ScopeType must be ROLE_DEFAULT when roleName is set");
         }
-        
+
         if (Boolean.TRUE.equals(isPooled) && scopeType != ScopeType.ORGANIZATION) {
             throw new IllegalStateException("isPooled can only be true for ORGANIZATION scope");
         }

@@ -38,7 +38,8 @@ import stirling.software.proprietary.security.CustomAuthenticationSuccessHandler
 import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
 import stirling.software.proprietary.security.database.repository.JPATokenRepositoryImpl;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
-import stirling.software.proprietary.security.filter.ApiRateLimitFilter;
+import stirling.software.proprietary.security.filter.ApiCreditFilter;
+import stirling.software.proprietary.security.filter.CreditOutcomeFilter;
 import stirling.software.proprietary.security.filter.FirstLoginFilter;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
@@ -71,7 +72,8 @@ public class SecurityConfiguration {
     private final UserAuthenticationFilter userAuthenticationFilter;
     private final LoginAttemptService loginAttemptService;
     private final FirstLoginFilter firstLoginFilter;
-    private final ApiRateLimitFilter apiRateLimitFilter;
+    private final ApiCreditFilter apiCreditFilter;
+    private final CreditOutcomeFilter creditOutcomeFilter;
     private final SessionPersistentRegistry sessionRegistry;
     private final PersistentLoginRepository persistentLoginRepository;
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
@@ -90,7 +92,8 @@ public class SecurityConfiguration {
             UserAuthenticationFilter userAuthenticationFilter,
             LoginAttemptService loginAttemptService,
             FirstLoginFilter firstLoginFilter,
-            ApiRateLimitFilter apiRateLimitFilter,
+            ApiCreditFilter apiCreditFilter,
+            CreditOutcomeFilter creditOutcomeFilter,
             SessionPersistentRegistry sessionRegistry,
             @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
             @Autowired(required = false)
@@ -107,7 +110,8 @@ public class SecurityConfiguration {
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.loginAttemptService = loginAttemptService;
         this.firstLoginFilter = firstLoginFilter;
-        this.apiRateLimitFilter = apiRateLimitFilter;
+        this.apiCreditFilter = apiCreditFilter;
+        this.creditOutcomeFilter = creditOutcomeFilter;
         this.sessionRegistry = sessionRegistry;
         this.persistentLoginRepository = persistentLoginRepository;
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
@@ -181,7 +185,8 @@ public class SecurityConfiguration {
             }
 
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
-            http.addFilterAfter(apiRateLimitFilter, UserAuthenticationFilter.class);
+            http.addFilterAfter(apiCreditFilter, UserAuthenticationFilter.class);
+            http.addFilterAfter(creditOutcomeFilter, ApiCreditFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
             http.sessionManagement(
                     sessionManagement ->

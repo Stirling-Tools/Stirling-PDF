@@ -36,7 +36,6 @@ public class TeamWebController {
     @Deprecated
     // @GetMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-
     public String listTeams(HttpServletRequest request, Model model) {
         // Get teams with user counts using a DTO projection
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();

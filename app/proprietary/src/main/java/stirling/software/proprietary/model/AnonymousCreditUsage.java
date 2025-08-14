@@ -6,26 +6,29 @@ import java.time.YearMonth;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 import lombok.*;
 
 import stirling.software.proprietary.model.converter.YearMonthStringConverter;
 
 @Entity
-@Table(name = "anonymous_api_usage",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uq_anon_fingerprint_month", columnNames = {"fingerprint", "month"})
-    },
-    indexes = {
-        @Index(name = "idx_anon_fingerprint", columnList = "fingerprint"),
-        @Index(name = "idx_anon_month", columnList = "month"),
-        @Index(name = "idx_anon_ip", columnList = "ip_address")
-    })
+@Table(
+        name = "anonymous_api_credit_usage",
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uq_anon_credit_fingerprint_month",
+                    columnNames = {"fingerprint", "month"})
+        },
+        indexes = {
+            @Index(name = "idx_anon_credit_fingerprint", columnList = "fingerprint"),
+            @Index(name = "idx_anon_credit_month", columnList = "month"),
+            @Index(name = "idx_anon_credit_ip", columnList = "ip_address")
+        })
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -33,7 +36,7 @@ import stirling.software.proprietary.model.converter.YearMonthStringConverter;
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-public class AnonymousApiUsage implements Serializable {
+public class AnonymousCreditUsage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -55,9 +58,14 @@ public class AnonymousApiUsage implements Serializable {
     private YearMonth month;
 
     @NotNull
-    @Column(name = "usage_count", nullable = false)
+    @Column(name = "credits_consumed", nullable = false)
     @Builder.Default
-    private Integer usageCount = 0;
+    private Integer creditsConsumed = 0;
+
+    @NotNull
+    @Column(name = "credits_allocated", nullable = false)
+    @Builder.Default
+    private Integer creditsAllocated = 0;
 
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
@@ -67,9 +75,8 @@ public class AnonymousApiUsage implements Serializable {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
-        name = "anonymous_api_related_fingerprints",
-        joinColumns = @JoinColumn(name = "usage_id")
-    )
+            name = "anonymous_api_related_fingerprints",
+            joinColumns = @JoinColumn(name = "usage_id"))
     @Column(name = "related_fingerprint")
     @Builder.Default
     private Set<String> relatedFingerprints = new HashSet<>();
@@ -100,5 +107,13 @@ public class AnonymousApiUsage implements Serializable {
     @PreUpdate
     public void preUpdate() {
         this.lastAccess = Instant.now();
+    }
+
+    public int getRemainingCredits() {
+        return Math.max(0, creditsAllocated - creditsConsumed);
+    }
+
+    public boolean hasCreditsRemaining(int creditCost) {
+        return getRemainingCredits() >= creditCost;
     }
 }

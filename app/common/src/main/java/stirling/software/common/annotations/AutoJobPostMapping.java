@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
- * Shortcut for a POST endpoint that is executed through the Stirling "auto‑job" framework.
+ * Shortcut for a POST endpoint that is executed through the Stirling "auto-job" framework.
  *
  * <p>Behaviour notes:
  *
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  *       multipart/form-data} unless you override {@link #consumes()}.
  *   <li>When the client supplies {@code ?async=true} the call is handed to {@link
  *       stirling.software.common.service.JobExecutorService JobExecutorService} where it may be
- *       queued, retried, tracked and subject to time‑outs. For synchronous (default) invocations
+ *       queued, retried, tracked and subject to time-outs. For synchronous (default) invocations
  *       these advanced options are ignored.
  *   <li>Progress information (see {@link #trackProgress()}) is stored in {@link
  *       stirling.software.common.service.TaskManager TaskManager} and can be polled via <code>
@@ -48,8 +48,8 @@ public @interface AutoJobPostMapping {
     long timeout() default -1;
 
     /**
-     * Total number of attempts (initial + retries). Must be at least&nbsp;1. Retries are executed
-     * with exponential back‑off.
+     * Total number of attempts (initial + retries). Must be at least 1. Retries are executed
+     * with exponential back-off.
      *
      * <p>Only honoured when {@code async=true}.
      */
@@ -71,8 +71,9 @@ public @interface AutoJobPostMapping {
     boolean queueable() default false;
 
     /**
-     * Relative resource weight (1–100) used by the scheduler to prioritise / throttle jobs. Values
-     * below 1 are clamped to&nbsp;1, values above 100 to&nbsp;100.
+     * Credit cost for this endpoint in the API credit system. Also used as relative resource weight
+     * (1-100) by the scheduler to prioritise / throttle jobs. Values below 1 are clamped to 1,
+     * values above 100 to 100.
      */
-    int resourceWeight() default 50;
+    int resourceWeight() default 1;
 }

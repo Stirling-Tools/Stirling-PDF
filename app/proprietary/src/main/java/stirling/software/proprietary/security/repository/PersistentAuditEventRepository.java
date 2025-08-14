@@ -1,4 +1,4 @@
-package stirling.software.proprietary.repository;
+package stirling.software.proprietary.security.repository;
 
 import java.time.Instant;
 import java.util.List;

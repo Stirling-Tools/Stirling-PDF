@@ -28,13 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
+import stirling.software.proprietary.security.matcher.ApiJobEndpointMatcher;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
-import stirling.software.proprietary.security.matcher.ApiJobEndpointMatcher;
-import stirling.software.proprietary.service.ApiRateLimitService;
 
 @Slf4j
 @Component
@@ -44,24 +43,24 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     private final UserService userService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
-    private final ApiRateLimitService rateLimitService;
     private final ApiJobEndpointMatcher apiJobEndpointMatcher;
-    
-    @Value("${api.rate-limit.anonymous.enabled:true}")
+
+    @Value("${api.credit-system.anonymous.enabled:true}")
     private boolean anonymousApiEnabled;
+
+    @Value("${api.credit-system.anonymous.monthly-credits:10}")
+    private int anonymousMonthlyCredits;
 
     public UserAuthenticationFilter(
             @Lazy ApplicationProperties.Security securityProp,
             @Lazy UserService userService,
             SessionPersistentRegistry sessionPersistentRegistry,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
-            @Lazy ApiRateLimitService rateLimitService,
             ApiJobEndpointMatcher apiJobEndpointMatcher) {
         this.securityProp = securityProp;
         this.userService = userService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
-        this.rateLimitService = rateLimitService;
         this.apiJobEndpointMatcher = apiJobEndpointMatcher;
     }
 
@@ -126,21 +125,17 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         if (authentication == null || !authentication.isAuthenticated()) {
             String method = request.getMethod();
             String contextPath = request.getContextPath();
-            
+
             // Check if this is an API job endpoint and anonymous access is enabled
             if (anonymousApiEnabled && apiJobEndpointMatcher.matches(request)) {
                 // Check anonymous rate limit
                 String ipAddress = getClientIpAddress(request);
                 String userAgent = request.getHeader("User-Agent");
-                
-                ApiRateLimitService.UsageMetrics metrics = rateLimitService
-                    .getAnonymousUsageMetrics(ipAddress, userAgent);
-                
-                if (metrics.remaining() > 0) {
-                    // Allow anonymous API access - rate limiting will be enforced by ApiRateLimitFilter
-                    filterChain.doFilter(request, response);
-                    return;
-                }
+
+                // Anonymous users will be handled by ApiCreditFilter
+                // Just allow them through for now
+                filterChain.doFilter(request, response);
+                return;
             }
 
             if ("GET".equalsIgnoreCase(method) && !(contextPath + "/login").equals(requestURI)) {
@@ -153,8 +148,9 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                                 "Authentication required. Please provide a X-API-KEY in request"
                                         + " header.\n"
                                         + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Anonymous users have limited API access (" 
-                                        + rateLimitService.getAnonymousMonthlyLimit() + " requests/month)\n"
+                                        + "Anonymous users have limited API access ("
+                                        + anonymousMonthlyCredits
+                                        + " credits/month)\n"
                                         + "Alternatively you can disable authentication if this is"
                                         + " unexpected");
                 return;
@@ -285,16 +281,13 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         return false;
     }
-    
+
     private String getClientIpAddress(HttpServletRequest request) {
         // Check for proxy headers
         String[] headers = {
-            "X-Forwarded-For",
-            "X-Real-IP",
-            "Proxy-Client-IP",
-            "WL-Proxy-Client-IP"
+            "X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP", "WL-Proxy-Client-IP"
         };
-        
+
         for (String header : headers) {
             String ip = request.getHeader(header);
             if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
@@ -306,7 +299,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 return ip;
             }
         }
-        
+
         return request.getRemoteAddr();
     }
 }

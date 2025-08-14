@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
-import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+import stirling.software.proprietary.security.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.util.SecretMasker;
 
 @Component
@@ -30,13 +30,13 @@ public class CustomAuditEventRepository implements AuditEventRepository {
     private final PersistentAuditEventRepository repo;
     private final ObjectMapper mapper;
 
-    /* ── READ side intentionally inert (endpoint disabled) ── */
+    /* READ side intentionally inert (endpoint disabled) */
     @Override
     public List<AuditEvent> find(String p, Instant after, String type) {
         return List.of();
     }
 
-    /* ── WRITE side (async) ───────────────────────────────── */
+    /* WRITE side (async) */
     @Async("auditExecutor")
     @Override
     public void add(AuditEvent ev) {
