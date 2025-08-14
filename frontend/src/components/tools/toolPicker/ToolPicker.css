@@ -73,37 +73,6 @@
 }
 
 .search-input-container {
-  position: relative;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  z-index: 1;
-  font-size: 16px;
-  pointer-events: none;
-}
-
-.search-input-field {
-  width: 100%;
-  padding: 8px 12px 8px 40px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  box-shadow: none;
-}
-
-.search-input-field::placeholder {
-  color: var(--search-text-and-icon-color);
-  opacity: 1;
-}
-
-.search-input-field:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
