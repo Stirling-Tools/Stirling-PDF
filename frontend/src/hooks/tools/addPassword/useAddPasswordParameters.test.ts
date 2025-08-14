@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useAddPasswordParameters, defaultParameters } from './useAddPasswordParameters';
+import { useAddPasswordParameters, defaultParameters, AddPasswordParametersHook } from './useAddPasswordParameters';
 import { defaultParameters as defaultChangePermissionsParameters, ChangePermissionsParameters } from '../changePermissions/useChangePermissionsParameters';
 
 describe('useAddPasswordParameters', () => {
@@ -10,46 +10,31 @@ describe('useAddPasswordParameters', () => {
     expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
 
-  test('should update string parameters', () => {
+  test.each([
+    { paramName: 'password' as const, value: 'test-password' },
+    { paramName: 'ownerPassword' as const, value: 'owner-password' },
+    { paramName: 'keyLength' as const, value: 256 }
+  ])('should update parameter $paramName', ({ paramName, value }) => {
     const { result } = renderHook(() => useAddPasswordParameters());
 
     act(() => {
-      result.current.updateParameter('password', 'test-password');
+      result.current.updateParameter(paramName, value);
     });
 
-    expect(result.current.parameters.password).toBe('test-password');
-
-    act(() => {
-      result.current.updateParameter('ownerPassword', 'owner-password');
-    });
-
-    expect(result.current.parameters.ownerPassword).toBe('owner-password');
+    expect(result.current.parameters[paramName]).toBe(value);
   });
 
-  test('should update numeric parameters', () => {
+  test.each([
+    { paramName: 'preventAssembly' as const },
+    { paramName: 'preventPrinting' as const }
+  ])('should update boolean permission parameter $paramName', ({ paramName }) => {
     const { result } = renderHook(() => useAddPasswordParameters());
 
     act(() => {
-      result.current.updateParameter('keyLength', 256);
+      result.current.permissions.updateParameter(paramName, true);
     });
 
-    expect(result.current.parameters.keyLength).toBe(256);
-  });
-
-  test('should update boolean parameters', () => {
-    const { result } = renderHook(() => useAddPasswordParameters());
-
-    act(() => {
-      result.current.permissions.updateParameter('preventAssembly', true);
-    });
-
-    expect(result.current.permissions.parameters.preventAssembly).toBe(true);
-
-    act(() => {
-      result.current.permissions.updateParameter('preventPrinting', true);
-    });
-
-    expect(result.current.permissions.parameters.preventPrinting).toBe(true);
+    expect(result.current.permissions.parameters[paramName]).toBe(true);
   });
 
   test('should reset parameters to defaults', () => {
@@ -80,101 +65,75 @@ describe('useAddPasswordParameters', () => {
     expect(result.current.getEndpointName()).toBe('add-password');
   });
 
-  test('should validate parameters correctly - with passwords', () => {
-    const { result } = renderHook(() => useAddPasswordParameters());
-
-    // Default state should be valid (no passwords or restrictions)
-    expect(result.current.validateParameters()).toBe(true);
-
-    // Add user password - should be valid
-    act(() => {
-      result.current.updateParameter('password', 'user-password');
-    });
-
-    expect(result.current.validateParameters()).toBe(true);
-
-    // Remove user password, add owner password - should still be valid
-    act(() => {
-      result.current.updateParameter('password', '');
-      result.current.updateParameter('ownerPassword', 'owner-password');
-    });
-
-    expect(result.current.validateParameters()).toBe(true);
-
-    // Add both passwords - should be valid
-    act(() => {
-      result.current.updateParameter('password', 'user-password');
-    });
-
-    expect(result.current.validateParameters()).toBe(true);
-  });
-
-  test('should validate parameters correctly - with restrictions only', () => {
+  test.each([
+    {
+      description: 'with user password only',
+      setup: (hook: AddPasswordParametersHook) => {
+        hook.updateParameter('password', 'user-password');
+      }
+    },
+    {
+      description: 'with owner password only',
+      setup: (hook: AddPasswordParametersHook) => {
+        hook.updateParameter('ownerPassword', 'owner-password');
+      }
+    },
+    {
+      description: 'with both passwords',
+      setup: (hook: AddPasswordParametersHook) => {
+        hook.updateParameter('password', 'user-password');
+        hook.updateParameter('ownerPassword', 'owner-password');
+      }
+    },
+    {
+      description: 'with whitespace only password',
+      setup: (hook: AddPasswordParametersHook) => {
+        hook.updateParameter('password', '  \t  ');
+      }
+    },
+    {
+      description: 'with whitespace only owner password',
+      setup: (hook: AddPasswordParametersHook) => {
+        hook.updateParameter('ownerPassword', '  \t  ');
+      }
+    },
+    {
+      description: 'with restrictions only',
+      setup: (hook: AddPasswordParametersHook) => {
+        hook.permissions.updateParameter('preventAssembly', true);
+        hook.permissions.updateParameter('preventPrinting', true);
+      }
+    },
+    {
+      description: 'with passwords and restrictions',
+      setup: (hook: AddPasswordParametersHook) => {
+        hook.updateParameter('password', 'test-password');
+        hook.permissions.updateParameter('preventAssembly', true);
+      }
+    }
+  ])('should validate parameters correctly $description', ({ setup }) => {
     const { result } = renderHook(() => useAddPasswordParameters());
 
     // Default state should be valid
     expect(result.current.validateParameters()).toBe(true);
 
-    // Add one restriction - should be valid
+    // Apply the test scenario setup
     act(() => {
-      result.current.permissions.updateParameter('preventAssembly', true);
-    });
-
-    expect(result.current.permissions.validateParameters()).toBe(true);
-
-    // Add multiple restrictions - should still be valid
-    act(() => {
-      result.current.permissions.updateParameter('preventPrinting', true);
-      result.current.permissions.updateParameter('preventModify', true);
+      setup(result.current);
     });
 
     expect(result.current.validateParameters()).toBe(true);
   });
 
-  test('should validate parameters correctly - with passwords and restrictions', () => {
+  test.each(Object.keys(defaultChangePermissionsParameters) as Array<keyof ChangePermissionsParameters>)('should handle boolean restriction parameter %s', (param) => {
     const { result } = renderHook(() => useAddPasswordParameters());
 
-    // Add both password and restrictions - should be valid
     act(() => {
-      result.current.updateParameter('password', 'test-password');
-      result.current.permissions.updateParameter('preventAssembly', true);
+      result.current.resetParameters();
+      result.current.permissions.updateParameter(param, true);
     });
 
     expect(result.current.validateParameters()).toBe(true);
-  });
-
-  test('should handle whitespace-only passwords as valid', () => {
-    const { result } = renderHook(() => useAddPasswordParameters());
-
-    // Whitespace-only passwords should be considered valid
-    act(() => {
-      result.current.updateParameter('password', '   ');
-    });
-
-    expect(result.current.validateParameters()).toBe(true);
-
-    act(() => {
-      result.current.updateParameter('password', '');
-      result.current.updateParameter('ownerPassword', ' \t ');
-    });
-
-    expect(result.current.validateParameters()).toBe(true);
-  });
-
-  test('should handle all boolean restriction parameters', () => {
-    const { result } = renderHook(() => useAddPasswordParameters());
-
-    const booleanParams = Object.keys(defaultChangePermissionsParameters) as Array<keyof ChangePermissionsParameters>;
-
-    // Test each restriction individually makes validation pass
-    booleanParams.forEach(param => {
-      act(() => {
-        result.current.resetParameters();
-        result.current.permissions.updateParameter(param, true);
-      });
-
-      expect(result.current.validateParameters()).toBe(true);
-    });
   });
 
   test('should handle mixed parameter types in updateParameter', () => {
