@@ -29,3 +29,9 @@ project: &project
   - settings.gradle
   - frontend/**
   - docker/**
+
+frontend: &frontend
+  - frontend/**
+  - .github/workflows/testdriver.yml
+  - testing/**
+  - docker/**
