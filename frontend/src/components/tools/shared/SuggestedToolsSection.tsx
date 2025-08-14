@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Text, Divider, SimpleGrid, Card, Group } from '@mantine/core';
+import { Stack, Text, Divider, Card, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSuggestedTools } from '../../../hooks/useSuggestedTools';
 export interface SuggestedToolsSectionProps {}
@@ -16,7 +16,7 @@ export function SuggestedToolsSection(): React.ReactElement {
         {t('editYourNewFiles', 'Edit your new File(s)')}
       </Text>
 
-      <SimpleGrid cols={2} spacing="sm">
+      <Stack gap="xs">
         {suggestedTools.map((tool) => {
           const IconComponent = tool.icon;
           return (
@@ -36,7 +36,7 @@ export function SuggestedToolsSection(): React.ReactElement {
             </Card>
           );
         })}
-      </SimpleGrid>
+      </Stack>
     </Stack>
   );
 }
