@@ -1,19 +1,9 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
-import java.io.*;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
+import io.github.pixee.security.Filenames;
+import io.github.pixee.security.ZipSecurity;
+import jakarta.servlet.ServletContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -23,14 +13,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
-import io.github.pixee.security.Filenames;
-import io.github.pixee.security.ZipSecurity;
-
-import jakarta.servlet.ServletContext;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
@@ -38,6 +20,19 @@ import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.UserServiceInterface;
+
+import java.io.*;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Service
 @Slf4j
@@ -106,7 +101,7 @@ public class PipelineProcessor {
             Map<String, Object> parameters = pipelineOperation.getParameters();
             List<String> inputFileTypes = apiDocService.getExtensionTypes(false, operation);
             if (inputFileTypes == null) {
-                inputFileTypes = new ArrayList<String>(Arrays.asList("ALL"));
+                inputFileTypes = new ArrayList<>(List.of("ALL"));
             }
 
             if (!apiDocService.isValidOperation(operation, parameters)) {

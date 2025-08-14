@@ -1,12 +1,9 @@
 package stirling.software.SPDF.service;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.ServletContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -14,18 +11,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.servlet.ServletContext;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.UserServiceInterface;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -53,7 +49,7 @@ public class ApiDocService {
 
     public List<String> getExtensionTypes(boolean output, String operationName) {
         if (outputToFileTypes.size() == 0) {
-            outputToFileTypes.put("PDF", Arrays.asList("pdf"));
+            outputToFileTypes.put("PDF", List.of("pdf"));
             outputToFileTypes.put(
                     "IMAGE",
                     Arrays.asList(
@@ -63,10 +59,10 @@ public class ApiDocService {
                     "ZIP",
                     Arrays.asList("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "lz", "lzma", "z"));
             outputToFileTypes.put("WORD", Arrays.asList("doc", "docx", "odt", "rtf"));
-            outputToFileTypes.put("CSV", Arrays.asList("csv"));
+            outputToFileTypes.put("CSV", List.of("csv"));
             outputToFileTypes.put("JS", Arrays.asList("js", "jsx"));
             outputToFileTypes.put("HTML", Arrays.asList("html", "htm", "xhtml"));
-            outputToFileTypes.put("JSON", Arrays.asList("json"));
+            outputToFileTypes.put("JSON", List.of("json"));
             outputToFileTypes.put("TXT", Arrays.asList("txt", "text", "md", "markdown"));
             outputToFileTypes.put("PPT", Arrays.asList("ppt", "pptx", "odp"));
             outputToFileTypes.put("XML", Arrays.asList("xml", "xsd", "xsl"));
