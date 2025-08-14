@@ -15,7 +15,7 @@ export function createFilesToolStep(
 ): React.ReactElement {
   const { t } = useTranslation();
 
-  return createStep("Files", {
+  return createStep(t("files.title", "Files"), {
     isVisible: true,
     isCollapsed: props.isCollapsed,
     onCollapsedClick: props.onCollapsedClick

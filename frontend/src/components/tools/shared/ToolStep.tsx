@@ -4,8 +4,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Tooltip } from '../../shared/Tooltip';
 import { TooltipTip } from '../../shared/tooltip/TooltipContent';
-import { createFilesToolStep, FilesToolStepProps } from './createFilesToolStep';
-import { createReviewToolStep, ReviewToolStepProps } from './createReviewToolStep';
+import { createFilesToolStep, FilesToolStepProps } from './FilesToolStep';
+import { createReviewToolStep, ReviewToolStepProps } from './ReviewToolStep';
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -222,6 +222,6 @@ export function ToolStepProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export type { FilesToolStepProps } from './createFilesToolStep';
-export type { ReviewToolStepProps } from './createReviewToolStep';
+export type { FilesToolStepProps } from './FilesToolStep';
+export type { ReviewToolStepProps } from './ReviewToolStep';
 export default ToolStep;
