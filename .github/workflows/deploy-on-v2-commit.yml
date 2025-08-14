@@ -152,7 +152,7 @@ jobs:
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
                 SWAGGER_SERVER_URL: "https://demo.stirlingpdf.cloud"
-                BASE_URL: "https://demo.stirlingpdf.cloud"
+                baseUrl: "https://demo.stirlingpdf.cloud"
               restart: on-failure:5
       
             frontend:
