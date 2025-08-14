@@ -32,26 +32,9 @@ const NavigationControls = ({
         >
           <ChevronLeftIcon style={{ fontSize: '1rem' }} />
         </ActionIcon>
-
-        <Group gap="xs">
-          {Array.from({ length: totalFiles }, (_, index) => (
-            <Box
-              key={index}
-              style={{
-                width: '0.375rem',
-                height: '0.375rem',
-                borderRadius: '50%',
-                backgroundColor: index === currentIndex
-                  ? 'var(--mantine-color-blue-6)'
-                  : 'var(--mantine-color-gray-4)',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s ease'
-              }}
-              onClick={() => onIndexChange(index)}
-              data-testid={`review-panel-dot-${index}`}
-            />
-          ))}
-        </Group>
+        <Text size="xs" c="dimmed">
+        {currentIndex + 1} of {totalFiles}
+        </Text>
 
         <ActionIcon
           variant="light"
@@ -63,10 +46,8 @@ const NavigationControls = ({
           <ChevronRightIcon style={{ fontSize: '1rem' }} />
         </ActionIcon>
       </Group>
-      
-      <Text size="xs" c="dimmed">
-        {currentIndex + 1} of {totalFiles}
-      </Text>
+
+
     </Stack>
   );
 };
