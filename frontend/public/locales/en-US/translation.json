@@ -1652,8 +1652,7 @@
       }
     },
     "permissions": {
-      "stepTitle": "Document Permissions",
-      "completed": "Permissions configured"
+      "stepTitle": "Document Permissions"
     },
     "encryption": {
       "title": "Encryption",
@@ -1662,33 +1661,6 @@
         "40bit": "40-bit (Low)",
         "128bit": "128-bit (Standard)",
         "256bit": "256-bit (High)"
-      }
-    },
-    "restrictions": {
-      "title": "Document Restrictions",
-      "assembly": {
-        "label": "Prevent assembly of document"
-      },
-      "extractContent": {
-        "label": "Prevent content extraction"
-      },
-      "extractForAccessibility": {
-        "label": "Prevent extraction for accessibility"
-      },
-      "fillInForm": {
-        "label": "Prevent filling in form"
-      },
-      "modify": {
-        "label": "Prevent modification"
-      },
-      "modifyAnnotations": {
-        "label": "Prevent annotation modification"
-      },
-      "printing": {
-        "label": "Prevent printing"
-      },
-      "printingFaithful": {
-        "label": "Prevent printing different formats"
       }
     },
     "results": {
