@@ -145,7 +145,7 @@ const ToolStep = ({
         </Stack>
       )}
       </div>
-      <Divider style={{ marginLeft: '1rem', marginRight: '-1rem' }} />
+      <Divider style={{ marginLeft: '1rem', marginRight: '-0.5rem' }} />
     </div>
   );
 }
