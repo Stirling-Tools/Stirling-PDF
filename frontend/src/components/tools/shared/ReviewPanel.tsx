@@ -94,7 +94,6 @@ const ReviewPanel = ({
         totalFiles={files.length}
         onPrevious={handlePrevious}
         onNext={handleNext}
-        onIndexChange={setCurrentIndex}
       />
     </Box>
   );

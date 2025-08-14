@@ -8,7 +8,6 @@ export interface NavigationControlsProps {
   totalFiles: number;
   onPrevious: () => void;
   onNext: () => void;
-  onIndexChange: (index: number) => void;
 }
 
 const NavigationControls = ({
@@ -16,7 +15,6 @@ const NavigationControls = ({
   totalFiles,
   onPrevious,
   onNext,
-  onIndexChange
 }: NavigationControlsProps) => {
   if (totalFiles <= 1) return null;
 
