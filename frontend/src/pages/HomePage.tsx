@@ -6,6 +6,7 @@ import { ToolWorkflowProvider, useToolSelection } from "../contexts/ToolWorkflow
 import { Group } from "@mantine/core";
 import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
+import { getBaseUrl } from "../constants/app";
 
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
@@ -25,14 +26,16 @@ function HomePageContent() {
 
   const { selectedTool } = useToolSelection();
 
+  const baseUrl = getBaseUrl();
+
   // Update document meta when tool changes
   useDocumentMeta({
-    title: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    title: selectedTool ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
     description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogTitle: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    ogTitle: selectedTool ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
     ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogImage: selectedTool ? `https://demo.stirlingpdf.com/og_images/${selectedTool.id}.png` : 'https://demo.stirlingpdf.com/og_images/default.png',
-    ogUrl: selectedTool ? `https://demo.stirlingpdf.com${window.location.pathname}` : 'https://demo.stirlingpdf.com'
+    ogImage: selectedTool ? `${baseUrl}/og_images/${selectedTool.id}.png` : `${baseUrl}/og_images/default.png`,
+    ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
   });
 
   // Update file selection context when tool changes
