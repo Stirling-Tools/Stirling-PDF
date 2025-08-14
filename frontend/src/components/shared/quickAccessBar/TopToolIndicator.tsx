@@ -1,25 +1,23 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { ActionIcon, Divider, useMantineColorScheme } from '@mantine/core';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActionIcon, Divider } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
 import FitText from '../FitText';
 import { Tooltip } from '../Tooltip';
-import { getSubcategoryColor } from '../../../data/toolRegistry';
 
 interface TopToolIndicatorProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
 }
 
-const NAV_IDS = ['read','sign','automate','files','activity','config'];
+const NAV_IDS = ['read','sign','automate'];
 
 const TopToolIndicator: React.FC<TopToolIndicatorProps> = ({ activeButton, setActiveButton }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
-  const { colorScheme } = useMantineColorScheme();
 
   // Determine if the indicator should be visible
   const indicatorShouldShow = Boolean(
-    selectedToolKey && selectedTool && activeButton === 'tools' && leftPanelView === 'toolContent' && !NAV_IDS.includes(selectedToolKey)
+    selectedToolKey && selectedTool && leftPanelView === 'toolContent' && !NAV_IDS.includes(selectedToolKey)
   );
 
   // Local animation and hover state
@@ -64,11 +62,6 @@ const TopToolIndicator: React.FC<TopToolIndicatorProps> = ({ activeButton, setAc
     }
   }, [indicatorShouldShow, selectedTool, selectedToolKey]);
 
-  const lightModeBg = useMemo(() => {
-    if (!indicatorTool) return undefined;
-    return getSubcategoryColor(indicatorTool.subcategory || undefined);
-  }, [indicatorTool]);
-
   return (
     <>
       <div style={{overflow:'visible'}} className={`current-tool-slot ${indicatorVisible ? 'visible' : ''} ${replayAnim ? 'replay' : ''}`}>
@@ -87,12 +80,8 @@ const TopToolIndicator: React.FC<TopToolIndicatorProps> = ({ activeButton, setAc
                   }}
                   aria-label={isBackHover ? 'Back to all tools' : indicatorTool.name}
                   style={{
-                    backgroundColor: isBackHover
-                      ? '#9CA3AF'
-                      : (colorScheme === 'light' ? lightModeBg : 'var(--icon-tools-bg)'),
-                    color: isBackHover
-                      ? '#fff'
-                      : (colorScheme === 'light' ? '#fff' : 'var(--icon-tools-color)'),
+                    backgroundColor: isBackHover ? '#9CA3AF' : 'var(--icon-tools-bg)',
+                    color: isBackHover ? '#fff' : 'var(--icon-tools-color)',
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer'

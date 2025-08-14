@@ -13,6 +13,11 @@ import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
 import { Tooltip } from './Tooltip';
 import TopToolIndicator from './quickAccessBar/TopToolIndicator';
+import { 
+  isNavButtonActive, 
+  getNavButtonStyle, 
+  getTargetNavButton 
+} from './quickAccessBar/QuickAccessBar';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>(({
 }, ref) => {
@@ -27,16 +32,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
   // Sync left nav highlight with selected tool when appropriate
   useEffect(() => {
     if (leftPanelView === 'toolContent' && selectedTool) {
-      let target: string | null = null;
-      // Map tool.view to nav button ids
-      if (selectedTool.view === 'sign') target = 'sign';
-      if (selectedTool.view === 'view') target = 'read';
-      // Use subcategory to infer Automate group
-      if (!target && selectedTool.subcategory === 'Automation') target = 'automate';
+      const target = getTargetNavButton(selectedTool);
 
       if (target && activeButton !== target) {
         setActiveButton(target);
         return;
+      }
+      // If tool doesn't map to a nav button, clear the highlight
+      if (!target && activeButton !== 'tools') {
+        setActiveButton('tools');
       }
     }
     // Revert highlight when no specific mapping applies
@@ -92,7 +96,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'files',
       name: 'Files',
-      icon: <FolderIcon sx={{ fontSize: "1.5rem" }} />,
+      icon: <FolderIcon sx={{ fontSize: "1.25rem" }} />,
       tooltip: 'Manage files',
       isRound: true,
       size: 'lg',
@@ -125,41 +129,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     }
   ];
 
-  const CIRCULAR_BORDER_RADIUS = '50%';
-  const ROUND_BORDER_RADIUS = '8px';
 
-  const getBorderRadius = (config: ButtonConfig): string => {
-    return config.isRound ? CIRCULAR_BORDER_RADIUS : ROUND_BORDER_RADIUS;
-  };
-
-  const isButtonActive = (config: ButtonConfig): boolean => {
-    return (
-      (config.type === 'navigation' && activeButton === config.id) ||
-      (config.type === 'modal' && config.id === 'files' && isFilesModalOpen) ||
-      (config.type === 'modal' && config.id === 'config' && configModalOpen)
-    );
-  };
-
-  const getButtonStyle = (config: ButtonConfig) => {
-    const isActive = isButtonActive(config);
-
-    if (isActive) {
-      return {
-        backgroundColor: `var(--icon-${config.id}-bg)`,
-        color: `var(--icon-${config.id}-color)`,
-        border: 'none',
-        borderRadius: getBorderRadius(config),
-      };
-    }
-
-    // Inactive state for all buttons
-    return {
-      backgroundColor: 'var(--icon-inactive-bg)',
-      color: 'var(--icon-inactive-color)',
-      border: 'none',
-      borderRadius: getBorderRadius(config),
-    };
-  };
 
   return (
     <div
@@ -202,20 +172,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
                 <Tooltip content={config.tooltip} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
                   <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
                     <ActionIcon
-                      size={isButtonActive(config) ? (config.size || 'xl') : 'lg'}
+                      size={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? (config.size || 'xl') : 'lg'}
                       variant="subtle"
                        onClick={() => {
                          config.onClick();
                        }}
-                      style={getButtonStyle(config)}
-                      className={isButtonActive(config) ? 'activeIconScale' : ''}
+                      style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen)}
+                      className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? 'activeIconScale' : ''}
                       data-testid={`${config.id}-button`}
                     >
                       <span className="iconContainer">
                         {config.icon}
                       </span>
                     </ActionIcon>
-                    <span className={`button-text ${isButtonActive(config) ? 'active' : 'inactive'}`}>
+                    <span className={`button-text ${isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? 'active' : 'inactive'}`}>
                       {config.name}
                     </span>
                   </div>
@@ -245,15 +215,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
                     size={config.size || 'lg'}
                     variant="subtle"
                     onClick={config.onClick}
-                    style={getButtonStyle(config)}
-                    className={isButtonActive(config) ? 'activeIconScale' : ''}
+                    style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen)}
+                    className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? 'activeIconScale' : ''}
                     data-testid={`${config.id}-button`}
                   >
                     <span className="iconContainer">
                       {config.icon}
                     </span>
                   </ActionIcon>
-                  <span className={`button-text ${isButtonActive(config) ? 'active' : 'inactive'}`}>
+                  <span className={`button-text ${isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? 'active' : 'inactive'}`}>
                     {config.name}
                   </span>
                 </div>
