@@ -1,19 +1,7 @@
 import { Stack, TextInput, Select, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { isSplitMode, SPLIT_MODES, SPLIT_TYPES, type SplitMode, type SplitType } from '../../../constants/splitConstants';
-
-export interface SplitParameters {
-  mode: SplitMode | '';
-  pages: string;
-  hDiv: string;
-  vDiv: string;
-  merge: boolean;
-  splitType: SplitType | '';
-  splitValue: string;
-  bookmarkLevel: string;
-  includeMetadata: boolean;
-  allowDuplicates: boolean;
-}
+import { isSplitMode, SPLIT_MODES, SPLIT_TYPES } from '../../../constants/splitConstants';
+import { SplitParameters } from '../../../hooks/tools/split/useSplitParameters';
 
 export interface SplitSettingsProps {
   parameters: SplitParameters;

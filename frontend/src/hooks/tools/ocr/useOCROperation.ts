@@ -103,10 +103,9 @@ export const useOCROperation = () => {
     filePrefix: 'ocr_',
     multiFileEndpoint: false, // Process files individually
     responseHandler, // use shared flow
-    getErrorMessage: (error) =>
-      error.message?.includes('OCR tools') && error.message?.includes('not installed')
-        ? 'OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.'
-        : createStandardErrorHandler(t('ocr.error.failed', 'OCR operation failed'))(error),
+    getErrorMessage: (error) => {
+      return createStandardErrorHandler(t('ocr.error.failed', 'OCR operation failed'))(error);
+    },
   };
 
   return useToolOperation(ocrConfig);
