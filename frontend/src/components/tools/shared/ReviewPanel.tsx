@@ -78,7 +78,7 @@ const ReviewPanel = ({
 
       <Flex gap="md" align="flex-start" style={{ minHeight: '7.5rem', maxWidth: '100%' }} data-testid={`review-panel-item-${currentIndex}`}>
         <Box style={{ width: '6.25rem', height: '7.5rem', flexShrink: 0 }}>
-          <FilePreview 
+          <FilePreview
             file={currentFile.file}
             thumbnail={currentFile.thumbnail}
             showHoverOverlay={true}
