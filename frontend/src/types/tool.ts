@@ -43,7 +43,7 @@ export interface ToolConfiguration {
 export interface Tool {
   id: string;
   name: string;
-  title: string;
+  title?: string;
   icon: React.ReactNode;
   component: React.ComponentType<BaseToolProps>;
   maxFiles: MaxFiles;

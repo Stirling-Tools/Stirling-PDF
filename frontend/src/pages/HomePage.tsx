@@ -30,9 +30,9 @@ function HomePageContent() {
 
   // Update document meta when tool changes
   useDocumentMeta({
-    title: selectedTool ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    title: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
     description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogTitle: selectedTool ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    ogTitle: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
     ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
     ogImage: selectedTool ? `${baseUrl}/og_images/${selectedTool.id}.png` : `${baseUrl}/og_images/default.png`,
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
