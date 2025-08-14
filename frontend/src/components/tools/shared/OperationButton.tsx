@@ -44,6 +44,7 @@ const OperationButton = ({
       variant={variant}
       color={color}
       data-testid={dataTestId}
+      style={{ minHeight: '2.5rem'  }}
     >
       {isLoading
         ? (loadingText || t("loading", "Loading..."))
