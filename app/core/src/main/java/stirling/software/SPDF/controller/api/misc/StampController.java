@@ -1,7 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import stirling.software.common.annotations.AutoJobPostMapping;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -28,7 +26,6 @@ import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,6 +37,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -72,9 +70,17 @@ public class StampController {
         String stampType = request.getStampType();
         String stampText = request.getStampText();
         MultipartFile stampImage = request.getStampImage();
-        String stampImageName = stampImage.getOriginalFilename();
-        if (stampImageName.contains("..") || stampImageName.startsWith("/")) {
-            throw new IllegalArgumentException("Invalid stamp image file path");
+        if ("image".equalsIgnoreCase(stampType)) {
+            if (stampImage == null) {
+                throw new IllegalArgumentException(
+                        "Stamp image file must be provided when stamp type is 'image'");
+            }
+            String stampImageName = stampImage.getOriginalFilename();
+            if (stampImageName == null
+                    || stampImageName.contains("..")
+                    || stampImageName.startsWith("/")) {
+                throw new IllegalArgumentException("Invalid stamp image file path");
+            }
         }
         String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();

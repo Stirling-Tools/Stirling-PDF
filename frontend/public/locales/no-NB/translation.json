@@ -347,7 +347,7 @@
       "title": "Roter",
       "desc": "Roter enkelt dine PDF-er."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Bilde til PDF",
       "desc": "Konverter et bilde (PNG, JPEG, GIF) til PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Endre Tillatelser",
       "desc": "Endre tillatelsene til din PDF-dokument"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Fjern",
       "desc": "Slett uønskede sider fra din PDF-dokument."
     },
@@ -383,7 +383,7 @@
       "title": "Fjern Passord",
       "desc": "Fjern passordbeskyttelse fra din PDF-dokument."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Komprimer",
       "desc": "Komprimer PDF-er for å redusere filstørrelsen."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline (Avansert)",
       "desc": "Utfør flere handlinger på PDF-er ved å definere pipelineskripter"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Legg til Sidetall",
       "desc": "Legg til sidetall gjennom et dokument på en angitt plassering"
     },
@@ -487,7 +487,7 @@
       "title": "Auto Omdøp PDF Fil",
       "desc": "Omdøper automatisk en PDF-fil basert på dens oppdagede overskrift"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Juster Farger/Kontrast",
       "desc": "Juster kontrast, metning og lysstyrke i en PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Auto Del Sider",
       "desc": "Auto Del Skannet PDF med fysisk skannet sidesplitter QR-kode"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sanitiser",
       "desc": "Fjern skript og andre elementer fra PDF-filer"
     },
@@ -523,11 +523,11 @@
       "title": "Få ALL informasjon om PDF",
       "desc": "Fanger opp all tilgjengelig informasjon om PDF-er"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Ekstraher side(r)",
       "desc": "Ekstraher valgte sider fra PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF til Enkelt Stor Side",
       "desc": "Slår sammen alle PDF-sider til en stor enkeltside"
     },
@@ -543,11 +543,11 @@
       "title": "Manuell Sensurering",
       "desc": "Sensurerer en PDF basert på valgt tekst, tegnede former og/eller valgte side(r)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF til CSV",
       "desc": "Ekstraherer tabeller fra en PDF og konverterer dem til CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Auto Del etter Størrelse/Antall",
       "desc": "Del en enkelt PDF i flere dokumenter basert på størrelse, antall sider eller dokumenter"
     },
@@ -563,11 +563,11 @@
       "title": "Legg til Stempel i PDF",
       "desc": "Legg til tekst eller bilde stempler på angitte steder"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Fjern bilde",
       "desc": "Fjern bilde fra PDF for å redusere filstørrelsen"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
@@ -575,7 +575,7 @@
       "title": "Valider PDF-signatur",
       "desc": "Verifiser digitale signaturer og sertifikater i PDF-dokumenter"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Erstatt og Inverter Farge",
       "desc": "Erstatt farge for tekst og bakgrunn i PDF og inverter full farge av pdf for å redusere filstørrelsen"
     }

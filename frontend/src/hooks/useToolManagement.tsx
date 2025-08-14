@@ -4,6 +4,8 @@ import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ApiIcon from "@mui/icons-material/Api";
+import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
+import LockIcon from "@mui/icons-material/Lock";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
 
@@ -75,6 +77,33 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     description: "Extract text from images using OCR",
     endpoints: ["ocr-pdf"]
   },
+  sanitize: {
+    id: "sanitize",
+    icon: <CleaningServicesIcon />,
+    component: React.lazy(() => import("../tools/Sanitize")),
+    maxFiles: -1,
+    category: "security",
+    description: "Remove potentially harmful elements from PDF files",
+    endpoints: ["sanitize-pdf"]
+  },
+  addPassword: {
+    id: "addPassword",
+    icon: <LockIcon />,
+    component: React.lazy(() => import("../tools/AddPassword")),
+    maxFiles: -1,
+    category: "security",
+    description: "Add password protection and restrictions to PDF files",
+    endpoints: ["add-password"]
+  },
+  changePermissions: {
+    id: "changePermissions",
+    icon: <LockIcon />,
+    component: React.lazy(() => import("../tools/ChangePermissions")),
+    maxFiles: -1,
+    category: "security",
+    description: "Change document restrictions and permissions",
+    endpoints: ["add-password"]
+  },
 
 };
 
@@ -113,7 +142,9 @@ export const useToolManagement = (): ToolManagementResult => {
         const toolDef = toolDefinitions[toolKey];
         availableTools[toolKey] = {
           ...toolDef,
-          name: t(`home.${toolKey}.title`, toolKey.charAt(0).toUpperCase() + toolKey.slice(1))
+          name: t(`home.${toolKey}.title`, toolKey.charAt(0).toUpperCase() + toolKey.slice(1)),
+          title: t(`home.${toolKey}.title`, toolDef.description || toolKey),
+          description: t(`home.${toolKey}.desc`, toolDef.description || `${toolKey} tool`)
         };
       }
     });

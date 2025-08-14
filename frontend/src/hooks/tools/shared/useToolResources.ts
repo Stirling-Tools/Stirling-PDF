@@ -63,7 +63,6 @@ export const useToolResources = () => {
       }
     }
 
-    console.log(`🖼️ useToolResources.generateThumbnails: Complete. Generated ${thumbnails.filter(t => t).length}/${files.length} thumbnails`);
     return thumbnails;
   }, []);
 

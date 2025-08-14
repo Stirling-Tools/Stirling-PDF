@@ -1,6 +1,18 @@
 import { useState } from 'react';
-import { SPLIT_MODES, SPLIT_TYPES, ENDPOINTS, type SplitMode, type SplitType } from '../../../constants/splitConstants';
-import { SplitParameters } from '../../../components/tools/split/SplitSettings';
+import { SPLIT_MODES, SPLIT_TYPES, ENDPOINTS, type SplitMode, SplitType } from '../../../constants/splitConstants';
+
+export interface SplitParameters {
+  mode: SplitMode | '';
+  pages: string;
+  hDiv: string;
+  vDiv: string;
+  merge: boolean;
+  splitType: SplitType | '';
+  splitValue: string;
+  bookmarkLevel: string;
+  includeMetadata: boolean;
+  allowDuplicates: boolean;
+}
 
 export interface SplitParametersHook {
   parameters: SplitParameters;

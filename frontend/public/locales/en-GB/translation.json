@@ -38,7 +38,8 @@
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "close": "Close",
-  "filesSelected": "files selected",
+  "fileSelected": "Selected: {{filename}}",
+  "filesSelected": "{{count}} files selected",
   "noFavourites": "No favourites added",
   "downloadComplete": "Download Complete",
   "bored": "Bored Waiting?",
@@ -70,6 +71,9 @@
     "copyStack": "Copy Stack Trace",
     "githubSubmit": "GitHub - Submit a ticket",
     "discordSubmit": "Discord - Submit Support post"
+  },
+  "warning": {
+    "tooltipTitle": "Warning"
   },
   "delete": "Delete",
   "username": "Username",
@@ -351,7 +355,7 @@
       "title": "Convert",
       "desc": "Convert files between different formats"
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Image to PDF",
       "desc": "Convert a image (PNG, JPEG, GIF) to PDF."
     },
@@ -375,7 +379,7 @@
       "title": "Change Permissions",
       "desc": "Change the permissions of your PDF document"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Remove",
       "desc": "Delete unwanted pages from your PDF document."
     },
@@ -383,16 +387,21 @@
       "title": "Add Password",
       "desc": "Encrypt your PDF document with a password."
     },
+    "changePermissions": {
+      "title": "Change Permissions",
+      "desc": "Change document restrictions and permissions."
+    },
     "removePassword": {
       "title": "Remove Password",
       "desc": "Remove password protection from your PDF document."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Compress",
       "desc": "Compress PDFs to reduce their file size."
     },
-    "compress": {
-      "title": "Compress"
+    "sanitize": {
+      "title": "Sanitise",
+      "desc": "Remove potentially harmful elements from PDF files."
     },
     "unlockPDFForms": {
       "title": "Unlock PDF Forms",
@@ -486,7 +495,7 @@
       "title": "Pipeline",
       "desc": "Run multiple actions on PDFs by defining pipeline scripts"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Add Page Numbers",
       "desc": "Add Page numbers throughout a document in a set location"
     },
@@ -494,7 +503,7 @@
       "title": "Auto Rename PDF File",
       "desc": "Auto renames a PDF file based on its detected header"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Adjust Colours/Contrast",
       "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
     },
@@ -507,7 +516,7 @@
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
     "sanitizePdf": {
-      "title": "Sanitize",
+      "title": "Sanitise",
       "desc": "Remove scripts and other elements from PDF files"
     },
     "URLToPDF": {
@@ -530,11 +539,11 @@
       "title": "Get ALL Info on PDF",
       "desc": "Grabs any and all information possible on PDFs"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extract page(s)",
       "desc": "Extracts select pages from PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF to Single Large Page",
       "desc": "Merges all PDF pages into one large single page"
     },
@@ -550,11 +559,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF to CSV",
       "desc": "Extracts Tables from a PDF converting it to CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Auto Split by Size/Count",
       "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
     },
@@ -570,11 +579,11 @@
       "title": "Add Stamp to PDF",
       "desc": "Add text or add image stamps at set locations"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Remove image",
       "desc": "Remove image from PDF to reduce file size"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
@@ -586,7 +595,7 @@
       "title": "API Documentation",
       "desc": "View API documentation and test endpoints"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Advanced Colour options",
       "desc": "Replace colour for text and background in PDF and invert full colour of pdf to reduce file size"
     }
@@ -813,30 +822,6 @@
   },
   "removePages": {
     "tags": "Remove pages,delete pages"
-  },
-  "addPassword": {
-    "tags": "secure,security",
-    "title": "Add Password",
-    "header": "Add password (Encrypt)",
-    "selectText": {
-      "1": "Select PDF to encrypt",
-      "2": "User Password",
-      "3": "Encryption Key Length",
-      "4": "Higher values are stronger, but lower values have better compatibility.",
-      "5": "Permissions to set (Recommended to be used along with Owner password)",
-      "6": "Prevent assembly of document",
-      "7": "Prevent content extraction",
-      "8": "Prevent extraction for accessibility",
-      "9": "Prevent filling in form",
-      "10": "Prevent modification",
-      "11": "Prevent annotation modification",
-      "12": "Prevent printing",
-      "13": "Prevent printing different formats",
-      "14": "Owner Password",
-      "15": "Restricts what can be done with the document once it is opened (Not supported by all readers)",
-      "16": "Restricts the opening of the document itself"
-    },
-    "submit": "Encrypt"
   },
   "removePassword": {
     "tags": "secure,Decrypt,security,unpassword,delete password",
@@ -1428,8 +1413,8 @@
     "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
   },
   "sanitizePDF": {
-    "title": "Sanitize PDF",
-    "header": "Sanitize a PDF file",
+    "title": "Sanitise PDF",
+    "header": "Sanitise a PDF file",
     "selectText": {
       "1": "Remove JavaScript actions",
       "2": "Remove embedded files",
@@ -1766,5 +1751,137 @@
     "fileTooLarge": "File too large. Maximum size per file is",
     "storageQuotaExceeded": "Storage quota exceeded. Please remove some files before uploading more.",
     "approximateSize": "Approximate size"
+  },
+  "sanitize": {
+    "submit": "Sanitise PDF",
+    "completed": "Sanitisation completed successfully",
+    "error.generic": "Sanitisation failed",
+    "error.failed": "An error occurred while sanitising the PDF.",
+    "filenamePrefix": "sanitised",
+    "sanitizationResults": "Sanitisation Results",
+    "steps": {
+      "files": "Files",
+      "settings": "Settings",
+      "results": "Results"
+    },
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "options": {
+      "title": "Sanitisation Options",
+      "note": "Select the elements you want to remove from the PDF. At least one option must be selected.",
+      "removeJavaScript": "Remove JavaScript",
+      "removeJavaScript.desc": "Remove JavaScript actions and scripts from the PDF",
+      "removeEmbeddedFiles": "Remove Embedded Files",
+      "removeEmbeddedFiles.desc": "Remove any files embedded within the PDF",
+      "removeXMPMetadata": "Remove XMP Metadata",
+      "removeXMPMetadata.desc": "Remove XMP metadata from the PDF",
+      "removeMetadata": "Remove Document Metadata",
+      "removeMetadata.desc": "Remove document information metadata (title, author, etc.)",
+      "removeLinks": "Remove Links",
+      "removeLinks.desc": "Remove external links and launch actions from the PDF",
+      "removeFonts": "Remove Fonts",
+      "removeFonts.desc": "Remove embedded fonts from the PDF"
+    }
+  },
+  "addPassword": {
+    "completed": "Password protection applied",
+    "submit": "Encrypt",
+    "filenamePrefix": "encrypted",
+    "error": {
+      "failed": "An error occurred while encrypting the PDF."
+    },
+    "title": "Passwords & Encryption",
+    "passwords": {
+      "completed": "Passwords configured",
+      "user": {
+        "label": "User Password",
+        "placeholder": "Enter user password"
+      },
+      "owner": {
+        "label": "Owner Password",
+        "placeholder": "Enter owner password"
+      }
+    },
+    "encryption": {
+      "keyLength": {
+        "label": "Encryption Key Length",
+        "40bit": "40-bit (Low)",
+        "128bit": "128-bit (Standard)",
+        "256bit": "256-bit (High)"
+      }
+    },
+    "results": {
+      "title": "Encrypted PDFs"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Password Protection Overview"
+      },
+      "passwords": {
+        "title": "Password Types",
+        "text": "User passwords restrict opening the document, while owner passwords control what can be done with the document once opened. You can set both or just one.",
+        "bullet1": "User Password: Required to open the PDF",
+        "bullet2": "Owner Password: Controls document permissions (not supported by all PDF viewers)"
+      },
+      "encryption": {
+        "title": "Encryption Levels",
+        "text": "Higher encryption levels provide better security but may not be supported by older PDF viewers.",
+        "bullet1": "40-bit: Basic security, compatible with older viewers",
+        "bullet2": "128-bit: Standard security, widely supported",
+        "bullet3": "256-bit: Maximum security, requires modern viewers"
+      },
+      "permissions": {
+        "text": "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
+      }
+    }
+  },
+  "changePermissions": {
+    "completed": "Permissions changed",
+    "submit": "Change Permissions",
+    "title": "Document Permissions",
+    "error": {
+      "failed": "An error occurred while changing PDF permissions."
+    },
+    "permissions": {
+      "preventAssembly": {
+        "label": "Prevent assembly of document"
+      },
+      "preventExtractContent": {
+        "label": "Prevent content extraction"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Prevent extraction for accessibility"
+      },
+      "preventFillInForm": {
+        "label": "Prevent filling in form"
+      },
+      "preventModify": {
+        "label": "Prevent modification"
+      },
+      "preventModifyAnnotations": {
+        "label": "Prevent annotation modification"
+      },
+      "preventPrinting": {
+        "label": "Prevent printing"
+      },
+      "preventPrintingFaithful": {
+        "label": "Prevent printing different formats"
+      }
+    },
+    "results": {
+      "title": "Modified PDFs"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Change Permissions"
+      },
+      "description": {
+        "text": "Changes document permissions, allowing/disallowing access to different features in PDF readers."
+      },
+      "warning": {
+        "text": "To make these permissions unchangeable, use the Add Password tool to set an owner password."
+      }
+    }
   }
 }

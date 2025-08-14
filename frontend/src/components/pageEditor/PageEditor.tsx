@@ -45,6 +45,7 @@ export interface PageEditorProps {
     exportLoading: boolean;
     selectionMode: boolean;
     selectedPages: number[];
+    selectedPages: number[];
     closePdf: () => void;
   }) => void;
 }
@@ -194,6 +195,7 @@ const PageEditor = ({
   const [filename, setFilename] = useState<string>("");
 
 
+
   // Page editor state (use context for selectedPages)
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -202,6 +204,7 @@ const PageEditor = ({
 
   // Drag and drop state
   const [draggedPage, setDraggedPage] = useState<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | 'end' | null>(null);
   const [dropTarget, setDropTarget] = useState<number | 'end' | null>(null);
   const [multiPageDrag, setMultiPageDrag] = useState<{pageNumbers: number[], count: number} | null>(null);
   const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
@@ -392,8 +395,10 @@ const PageEditor = ({
   const togglePage = useCallback((pageNumber: number) => {
     console.log('🔄 Toggling page', pageNumber);
 
+
     // Check if currently selected and update accordingly
     const isCurrentlySelected = selectedPageNumbers.includes(pageNumber);
+
 
     if (isCurrentlySelected) {
       // Remove from selection
@@ -522,10 +527,12 @@ const PageEditor = ({
   const setPdfDocument = useCallback((updatedDoc: PDFDocument) => {
     console.log('setPdfDocument called - setting edited state');
 
+
     // Update local edit state for immediate visual feedback
     setEditedDocument(updatedDoc);
     actions.setHasUnsavedChanges(true); // Use actions from context
     setHasUnsavedDraft(true); // Mark that we have unsaved draft changes
+
 
     // Auto-save to drafts (debounced) - only if we have new changes
     
@@ -546,6 +553,7 @@ const PageEditor = ({
         }
       }
     }, 30000); // Auto-save after 30 seconds of inactivity
+
 
     return updatedDoc;
   }, [actions, hasUnsavedDraft]);
@@ -605,6 +613,7 @@ const PageEditor = ({
   const applyChanges = useCallback(async () => {
     if (!editedDocument || !mergedPdfDocument) return;
 
+
     try {
       if (activeFileIds.length === 1 && primaryFileId) {
         const file = selectors.getFile(primaryFileId);
@@ -646,6 +655,7 @@ const PageEditor = ({
     // Skip animation for large documents (500+ pages) to improve performance
     const isLargeDocument = displayDocument.pages.length > 500;
 
+
     if (isLargeDocument) {
       // For large documents, just execute the command without animation
       if (pagesToMove.length > 1) {
@@ -670,6 +680,7 @@ const PageEditor = ({
 
     // Only capture positions for potentially affected pages
     const currentPositions = new Map<string, { x: number; y: number }>();
+
 
     affectedPageIds.forEach(pageId => {
       const element = document.querySelector(`[data-page-number="${pageId}"]`);
@@ -721,12 +732,15 @@ const PageEditor = ({
               if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
                 elementsToAnimate.push(element);
 
+
                 // Apply initial transform
                 element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
                 element.style.transition = 'none';
 
+
                 // Force reflow
                 element.offsetHeight;
+
 
                 // Animate to final position
                 element.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
@@ -856,11 +870,13 @@ const PageEditor = ({
 
     // Convert page numbers to page IDs for export service
     const exportPageIds = selectedOnly
+    const exportPageIds = selectedOnly
       ? selectedPageNumbers.map(pageNum => {
           const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
           return page?.id || '';
         }).filter(id => id)
       : [];
+
 
     const preview = pdfExportService.getExportInfo(mergedPdfDocument, exportPageIds, selectedOnly);
     setExportPreview(preview);
@@ -874,14 +890,17 @@ const PageEditor = ({
     try {
       // Convert page numbers to page IDs for export service
       const exportPageIds = selectedOnly
+      const exportPageIds = selectedOnly
         ? selectedPageNumbers.map(pageNum => {
             const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
             return page?.id || '';
           }).filter(id => id)
         : [];
 
+
       const errors = pdfExportService.validateExport(mergedPdfDocument, exportPageIds, selectedOnly);
       if (errors.length > 0) {
+        setStatus(errors.join(', '));
         setStatus(errors.join(', '));
         return;
       }
@@ -913,6 +932,7 @@ const PageEditor = ({
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Export failed';
+      setStatus(errorMessage);
       setStatus(errorMessage);
     } finally {
       setExportLoading(false);
@@ -1007,6 +1027,7 @@ const PageEditor = ({
   const checkForDrafts = useCallback(async () => {
     if (!mergedPdfDocument) return;
 
+
     try {
       const draftKey = `draft-${mergedPdfDocument.id || 'merged'}`;
       // Use centralized IndexedDB manager
@@ -1069,6 +1090,7 @@ const PageEditor = ({
         clearTimeout(autoSaveTimer.current);
       }
 
+
       // Clean up draft if component unmounts with unsaved changes
       if (hasUnsavedChanges) {
         cleanupDraft();
@@ -1123,6 +1145,7 @@ const PageEditor = ({
         <Box p="md" pt="xl">
           <SkeletonLoader type="controls" />
 
+
           {/* Progress indicator */}
           <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
             <Group justify="space-between" mb="xs">
@@ -1133,6 +1156,10 @@ const PageEditor = ({
                 {Math.round(processingProgress || 0)}%
               </Text>
             </Group>
+            <div style={{
+              width: '100%',
+              height: '4px',
+              backgroundColor: 'var(--mantine-color-gray-2)',
             <div style={{
               width: '100%',
               height: '4px',
@@ -1149,6 +1176,7 @@ const PageEditor = ({
             </div>
           </Box>
 
+
           <SkeletonLoader type="pageGrid" count={8} />
         </Box>
       )}
@@ -1162,6 +1190,10 @@ const PageEditor = ({
                 <Text size="sm" fw={500}>Processing thumbnails...</Text>
                 <Text size="sm" c="dimmed">{Math.round(processingProgress || 0)}%</Text>
               </Group>
+              <div style={{
+                width: '100%',
+                height: '4px',
+                backgroundColor: 'var(--mantine-color-gray-2)',
               <div style={{
                 width: '100%',
                 height: '4px',
@@ -1208,6 +1240,7 @@ const PageEditor = ({
               </>
             )}
 
+
             {/* Apply Changes Button */}
             {hasUnsavedChanges && (
               <Button
@@ -1229,6 +1262,7 @@ const PageEditor = ({
               onUpdatePagesFromCSV={updatePagesFromCSV}
             />
           )}
+
 
 
         <DragDropGrid
@@ -1256,6 +1290,7 @@ const PageEditor = ({
               selectedPages={selectedPageNumbers}
               selectionMode={selectionMode}
               draggedPage={draggedPage}
+              dropTarget={dropTarget === 'end' ? null : dropTarget}
               dropTarget={dropTarget === 'end' ? null : dropTarget}
               movingPage={movingPage}
               isAnimating={isAnimating}
@@ -1370,11 +1405,13 @@ const PageEditor = ({
               We found unsaved changes from a previous session. Would you like to resume where you left off?
             </Text>
 
+
             {foundDraft && (
               <Text size="sm" c="dimmed">
                 Last saved: {new Date(foundDraft.timestamp).toLocaleString()}
               </Text>
             )}
+
 
             <Group justify="flex-end" gap="sm">
               <Button
@@ -1384,6 +1421,7 @@ const PageEditor = ({
               >
                 Start Fresh
               </Button>
+
 
               <Button
                 color="blue"

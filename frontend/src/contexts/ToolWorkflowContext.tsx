@@ -5,7 +5,8 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
-import { ToolConfiguration } from '../types/tool';
+import { useToolUrlRouting } from '../hooks/useToolUrlRouting';
+import { Tool } from '../types/tool';
 import { PageEditorFunctions } from '../types/pageEditor';
 
 // State interface
@@ -69,7 +70,7 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: string | null;
-  selectedTool: ToolConfiguration | null;
+  selectedTool: Tool | null;
   toolRegistry: any; // From useToolManagement
   
   // UI Actions
@@ -157,6 +158,20 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
   const handleReaderToggle = useCallback(() => {
     setReaderMode(true);
   }, [setReaderMode]);
+
+  // URL routing functionality
+  const { getToolUrlSlug, getToolKeyFromSlug } = useToolUrlRouting({
+    selectedToolKey,
+    toolRegistry,
+    selectTool,
+    clearToolSelection,
+    // During initial load, we want the full UI side-effects (like before):
+    onInitSelect: handleToolSelect,
+    // For back/forward nav, keep it lightweight like before (selection only):
+    onPopStateSelect: selectTool,
+    // If your app serves under a subpath, provide basePath here (e.g., '/app')
+    // basePath: ''
+  });
 
   // Filter tools based on search query
   const filteredTools = useMemo(() => {

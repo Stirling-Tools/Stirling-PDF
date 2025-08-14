@@ -106,7 +106,7 @@ export function revokeFileResources(record: FileRecord): void {
   }
 }
 
-export type OperationType = 'merge' | 'split' | 'compress' | 'add' | 'remove' | 'replace' | 'convert' | 'upload' | 'ocr';
+export type OperationType = 'merge' | 'split' | 'compress' | 'add' | 'remove' | 'replace' | 'convert' | 'upload' | 'ocr' | 'sanitize';
 
 export interface FileOperation {
   id: string;
@@ -197,6 +197,7 @@ export interface FileContextActions {
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   clearAllFiles: () => void;
 
+
   // Navigation
   setCurrentMode: (mode: ModeType) => void;
   
@@ -265,3 +266,4 @@ export interface FileContextUrlParams {
   zoom?: number;
   page?: number;
 }
+

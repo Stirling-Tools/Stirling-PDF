@@ -430,7 +430,6 @@ class FileStorageService {
       lastModified: storedFile.lastModified
     });
 
-    // Returns pure File object - no mutations
     // Use FileContext.addStoredFiles() to properly associate with metadata
     return file;
   }

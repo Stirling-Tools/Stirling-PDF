@@ -36,6 +36,8 @@
   "scripts": {
     "dev": "npx tsc --noEmit && vite",
     "build": "npx tsc --noEmit && vite build",
+    "dev": "npx tsc --noEmit && vite",
+    "build": "npx tsc --noEmit && vite build",
     "preview": "vite preview",
     "generate-licenses": "node scripts/generate-licenses.js",
     "test": "vitest",

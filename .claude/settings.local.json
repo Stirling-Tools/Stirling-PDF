@@ -10,14 +10,7 @@
       "Bash(npm test)",
       "Bash(npm test:*)",
       "Bash(ls:*)",
-      "Bash(npx tsc:*)",
-      "Bash(npx tsc:*)",
-      "Bash(sed:*)",
-      "Bash(cp:*)",
-      "Bash(npm run typecheck:*)",
-      "Bash(npm run:*)",
-      "Bash(rm:*)",
-      "Bash(timeout 30s npx tsc --noEmit --skipLibCheck)"
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

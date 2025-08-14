@@ -41,7 +41,7 @@ export interface ToolOperationConfig<TParams = void> {
    * - (params, files: File[]) => FormData: Multi-file processing
    * Not used when customProcessor is provided.
    */
-  buildFormData: ((params: TParams, file: File) => FormData) | ((params: TParams, files: File[]) => FormData);
+  buildFormData: ((params: TParams, file: File) => FormData) | ((params: TParams, files: File[]) => FormData); /* FIX ME */
 
   /** Prefix added to processed filenames (e.g., 'compressed_', 'split_') */
   filePrefix: string;
@@ -63,9 +63,6 @@ export interface ToolOperationConfig<TParams = void> {
    * Use for tools with complex routing logic or non-standard processing requirements.
    */
   customProcessor?: (params: TParams, files: File[]) => Promise<File[]>;
-
-  /** Validate parameters before execution. Return validation errors if invalid. */
-  validateParams?: (params: TParams) => ValidationResult;
 
   /** Extract user-friendly error messages from API errors */
   getErrorMessage?: (error: any) => string;
@@ -133,14 +130,6 @@ export const useToolOperation = <TParams = void>(
       return;
     }
 
-    if (config.validateParams) {
-      const validation = config.validateParams(params);
-      if (!validation.valid) {
-        actions.setError(validation.errors?.join(', ') || 'Invalid parameters');
-        return;
-      }
-    }
-
     const validFiles = selectedFiles.filter(file => file.size > 0);
     if (validFiles.length === 0) {
       actions.setError(t('noValidFiles', 'No valid files to process'));
@@ -185,8 +174,7 @@ export const useToolOperation = <TParams = void>(
             console.log(`🚀 Using default ZIP extraction for ${config.operationType}`);
             // Default: assume ZIP response for multi-file endpoints
             processedFiles = await extractZipFiles(response.data);
-            console.log(`🚀 Extracted ${processedFiles.length} files from ZIP`);
-
+            
             if (processedFiles.length === 0) {
               console.log(`🚀 ZIP extraction failed, trying generic fallback`);
               // Try the generic extraction as fallback
@@ -198,7 +186,7 @@ export const useToolOperation = <TParams = void>(
           // Individual file processing - separate API call per file
           const apiCallsConfig: ApiCallsConfig<TParams> = {
             endpoint: config.endpoint,
-            buildFormData: (file: File, params: TParams) => (config.buildFormData as any /* FIX ME */)(file, params),
+            buildFormData: (file: File, params: TParams) => (config.buildFormData as (params: TParams, file: File) => FormData /* FIX ME */)(params, file),
             filePrefix: config.filePrefix,
             responseHandler: config.responseHandler
           };

@@ -24,9 +24,10 @@ export default function Workbench() {
   const { actions } = useFileActions();
   const activeFiles = state.files.ids;
   const currentView = state.ui.currentMode;
-  const { 
-    previewFile, 
-    pageEditorFunctions, 
+  const setCurrentView = actions.setCurrentMode;
+  const {
+    previewFile,
+    pageEditorFunctions,
     sidebarsVisible,
     setPreviewFile,
     setPageEditorFunctions,
@@ -145,7 +146,11 @@ export default function Workbench() {
       {/* Top Controls */}
       <TopControls
         currentView={currentView}
+<<<<<<< HEAD
         setCurrentView={actions.setMode}
+=======
+        setCurrentView={setCurrentView as any /* FIX ME */}
+>>>>>>> origin/V2
         selectedToolKey={selectedToolKey}
       />
 

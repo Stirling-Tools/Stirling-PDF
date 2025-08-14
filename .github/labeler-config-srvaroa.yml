@@ -78,6 +78,7 @@ labels:
       - 'app/core/src/main/resources/banner.txt'
       - 'app/core/src/main/resources/static/python/png_to_webp.py'
       - 'app/core/src/main/resources/static/python/split_photos.py'
+      - 'app/core/src/main/resources/static/pipeline/defaultWebUIConfigs/**'
       - 'application.properties'
 
   - label: 'Security'

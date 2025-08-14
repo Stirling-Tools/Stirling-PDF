@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { TooltipContent } from '../../types/tips';
 
-export const CompressTips = (): TooltipContent => {
+export const useCompressTips = (): TooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -27,4 +27,4 @@ export const CompressTips = (): TooltipContent => {
       }
     ]
   };
-}; 
+};

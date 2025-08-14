@@ -244,6 +244,8 @@ const FileContext = createContext<any | undefined>(undefined);
 // Provider component
 export function FileContextProvider({
   children,
+export function FileContextProvider({
+  children,
   enableUrlSync = true,
   enablePersistence = true 
 }: FileContextProviderProps) {
@@ -324,6 +326,7 @@ export function FileContextProvider({
   const cleanupFile = useCallback(async (fileId: string) => {
     console.log('Cleaning up file:', fileId);
 
+
     try {
       // Cancel any pending cleanup timer
       const timer = cleanupTimers.current.get(fileId);
@@ -346,6 +349,7 @@ export function FileContextProvider({
 
   const cleanupAllFiles = useCallback(() => {
     console.log('Cleaning up all files');
+
 
     try {
       // Clear all timers
@@ -414,6 +418,7 @@ export function FileContextProvider({
     const timer = window.setTimeout(() => {
       cleanupFile(fileId);
     }, delay);
+
 
     cleanupTimers.current.set(fileId, timer);
   }, [cleanupFile]);

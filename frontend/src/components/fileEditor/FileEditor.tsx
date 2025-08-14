@@ -180,9 +180,11 @@ const FileEditor = ({
       return;
     }
 
+
     // Update refs
     lastActiveFilesRef.current = currentActiveFileIds;
     lastProcessedFilesRef.current = currentProcessedFilesSize;
+
 
     const convertActiveFiles = async () => {
 
@@ -312,12 +314,6 @@ const FileEditor = ({
                   }
                 }
               };
-
-              // Legacy operation tracking - now handled by FileContext
-              console.log('ZIP extraction operation recorded:', operation);
-
-              
-              // Legacy operation tracking removed
               
               if (extractionResult.errors.length > 0) {
                 errors.push(...extractionResult.errors);
@@ -370,11 +366,6 @@ const FileEditor = ({
               }
             }
           };
-
-          // Legacy operation tracking - now handled by FileContext
-          console.log('Upload operation recorded:', operation);
-          
-          // Legacy operation tracking removed
         }
 
         // Add files to context (they will be processed automatically)
@@ -385,7 +376,7 @@ const FileEditor = ({
       const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
       setError(errorMessage);
       console.error('File processing error:', err);
-
+      
       // Reset extraction progress on error
       setZipExtractionProgress({
         isExtracting: false,
@@ -406,14 +397,9 @@ const FileEditor = ({
   const closeAllFiles = useCallback(() => {
     if (activeFileRecords.length === 0) return;
 
-    // Record close all operation for each file
-    // Legacy operation tracking - now handled by FileContext
-    console.log('Close all operation for', activeFileRecords.length, 'files');
-
+    
     // Remove all files from context but keep in storage
-    const fileIds = activeFileRecords.map(r => r.id); // Use record IDs directly
-    removeFiles(fileIds, false);
-
+    
     // Clear selections
     setContextSelectedFiles([]);
   }, [activeFileRecords, removeFiles, setContextSelectedFiles]);
@@ -425,7 +411,6 @@ const FileEditor = ({
     const targetFile = currentFiles.find(f => f.id === fileId);
     if (!targetFile) return;
 
-    // The fileId from FileEditor is already the correct UUID from FileContext
     const contextFileId = fileId; // No need to create a new ID
     const isSelected = currentSelectedIds.includes(contextFileId);
 
@@ -605,10 +590,7 @@ const FileEditor = ({
           }
         }
       };
-
-      // Legacy operation tracking - now handled by FileContext
-      console.log('Close operation recorded:', operation);
-      
+            
       // Remove file from context but keep in storage (close, don't delete)
       console.log('Calling removeFiles with:', [contextFileId]);
       removeFiles([contextFileId], false);
