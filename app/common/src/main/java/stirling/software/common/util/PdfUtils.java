@@ -536,10 +536,10 @@ public class PdfUtils {
     public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck)
             throws IOException {
         PDFTextStripper textStripper = new PDFTextStripper();
-        String pdfText = "";
+        StringBuilder pdfText = new StringBuilder();
 
         if (pagesToCheck == null || "all".equals(pagesToCheck)) {
-            pdfText = textStripper.getText(pdfDocument);
+            pdfText = new StringBuilder(textStripper.getText(pdfDocument));
         } else {
             // remove whitespaces
             pagesToCheck = pagesToCheck.replaceAll("\\s+", "");
@@ -555,21 +555,21 @@ public class PdfUtils {
                     for (int i = startPage; i <= endPage; i++) {
                         textStripper.setStartPage(i);
                         textStripper.setEndPage(i);
-                        pdfText += textStripper.getText(pdfDocument);
+                        pdfText.append(textStripper.getText(pdfDocument));
                     }
                 } else {
                     // Handle individual page
                     int page = Integer.parseInt(splitPoint);
                     textStripper.setStartPage(page);
                     textStripper.setEndPage(page);
-                    pdfText += textStripper.getText(pdfDocument);
+                    pdfText.append(textStripper.getText(pdfDocument));
                 }
             }
         }
 
         pdfDocument.close();
 
-        return pdfText.contains(text);
+        return pdfText.toString().contains(text);
     }
 
     public boolean pageCount(PDDocument pdfDocument, int pageCount, String comparator)
