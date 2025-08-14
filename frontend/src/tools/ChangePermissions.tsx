@@ -100,7 +100,7 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
 
         {/* Settings Step */}
         <ToolStep
-          title={t('settings.title', 'Settings')}
+          title={t('changePermissions.title', 'Document Permissions')}
           isVisible={hasFiles}
           isCollapsed={settingsCollapsed}
           isCompleted={settingsCollapsed}

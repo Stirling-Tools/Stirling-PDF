@@ -1655,9 +1655,8 @@
       "stepTitle": "Document Permissions"
     },
     "encryption": {
-      "title": "Encryption",
       "keyLength": {
-        "label": "Key Length",
+        "label": "Encryption Key Length",
         "40bit": "40-bit (Low)",
         "128bit": "128-bit (Standard)",
         "256bit": "256-bit (High)"
@@ -1683,20 +1682,19 @@
         "bullet2": "128-bit: Standard security, widely supported",
         "bullet3": "256-bit: Maximum security, requires modern viewers"
       },
-      "restrictions": {
-        "title": "Document Restrictions",
-        "text": "These restrictions control what users can do with the PDF. Most effective when combined with an owner password."
+      "permissions": {
+        "text": "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
       }
     }
   },
   "changePermissions": {
     "completed": "Permissions changed",
     "submit": "Change Permissions",
+    "title": "Document Permissions",
     "error": {
       "failed": "An error occurred while changing PDF permissions."
     },
-    "restrictions": {
-      "title": "Document Restrictions",
+    "permissions": {
       "preventAssembly": {
         "label": "Prevent assembly of document"
       },
@@ -1730,8 +1728,11 @@
         "title": "Change Permissions"
       },
       "description": {
-        "title": "Description",
-        "text": "Changes document permissions. Warning: To make these restrictions unchangeable, use the Add Password tool to set an owner password."
+        "text": "Changes document permissions, allowing/disallowing access to different features in PDF readers."
+      },
+      "warning": {
+        "title": "Warning",
+        "text": "To make these permissions unchangeable, use the Add Password tool to set an owner password."
       }
     }
   }

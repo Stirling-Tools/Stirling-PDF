@@ -18,6 +18,7 @@ import ChangePermissionsSettings from "../components/tools/changePermissions/Cha
 import { useAddPasswordParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
 import { useAddPasswordOperation } from "../hooks/tools/addPassword/useAddPasswordOperation";
 import { useAddPasswordTips } from "../components/tooltips/useAddPasswordTips";
+import { useAddPasswordPermissionsTips } from "../components/tooltips/useAddPasswordPermissionsTips";
 import { BaseToolProps } from "../types/tool";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -30,6 +31,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const addPasswordParams = useAddPasswordParameters();
   const addPasswordOperation = useAddPasswordOperation();
   const addPasswordTips = useAddPasswordTips();
+  const addPasswordPermissionsTips = useAddPasswordPermissionsTips();
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(addPasswordParams.getEndpointName());
@@ -104,7 +106,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
         {/* Passwords & Encryption Step */}
         <ToolStep
-          title={t('addPassword.passwords.stepTitle', 'Passwords & Encryption')}
+          title={t('addPassword.title', 'Passwords & Encryption')}
           isVisible={hasFiles}
           isCollapsed={passwordsCollapsed}
           isCompleted={passwordsCollapsed}
@@ -121,11 +123,12 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
         {/* Permissions Step */}
         <ToolStep
-          title={t('addPassword.permissions.stepTitle', 'Document Permissions')}
+          title={t('changePermissions.title', 'Document Permissions')}
           isVisible={hasFiles}
           isCollapsed={permissionsCollapsed}
           isCompleted={permissionsCollapsed}
           onCollapsedClick={hasResults ? handleSettingsReset : () => setCollapsedPermissions(!collapsedPermissions)}
+          tooltip={addPasswordPermissionsTips}
         >
           <ChangePermissionsSettings
             parameters={addPasswordParams.permissions.parameters}
