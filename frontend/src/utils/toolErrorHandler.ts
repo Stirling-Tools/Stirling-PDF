@@ -78,7 +78,8 @@ export const extractErrorMessage = (error: unknown): string => {
  */
 export const createStandardErrorHandler = (fallbackMessage: string) => {
   return (error: unknown): string => {
-    return extractErrorMessage(error) || fallbackMessage;
+    const message = extractErrorMessage(error);
+    return message === 'Operation failed' ? fallbackMessage : message;
   };
 };
 
