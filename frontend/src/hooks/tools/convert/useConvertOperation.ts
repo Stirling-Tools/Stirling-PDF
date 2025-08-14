@@ -5,6 +5,7 @@ import { ConvertParameters } from './useConvertParameters';
 import { detectFileExtension } from '../../../utils/fileUtils';
 import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
 import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
+import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
 
 const shouldProcessFilesSeparately = (
@@ -134,14 +135,6 @@ export const useConvertOperation = () => {
     buildFormData, // Not used with customProcessor but required
     filePrefix: 'converted_',
     customProcessor: customConvertProcessor, // Convert handles its own routing
-    getErrorMessage: (error) => {
-      if (error.response?.data && typeof error.response.data === 'string') {
-        return error.response.data;
-      }
-      if (error.message) {
-        return error.message;
-      }
-      return t("convert.errorConversion", "An error occurred while converting the file.");
-    }
+    getErrorMessage: createStandardErrorHandler(t('convert.errorConversion', 'An error occurred while converting the file.'))
   });
 };

@@ -3,15 +3,71 @@
  */
 
 /**
+ * Standard error type that covers common error patterns
+ */
+export interface ToolError {
+  message?: string;
+  response?: {
+    data?: string | unknown;
+    status?: number;
+  };
+}
+
+/**
+ * Extract error message from JSON response data
+ */
+const extractFromJsonData = (data: unknown): string | null => {
+  if (typeof data === 'object' && data !== null) {
+    const obj = data as Record<string, unknown>;
+    // Common JSON error patterns
+    if (typeof obj.message === 'string' && obj.message.trim()) {
+      return obj.message.trim();
+    }
+    if (typeof obj.error === 'string' && obj.error.trim()) {
+      return obj.error.trim();
+    }
+    if (typeof obj.detail === 'string' && obj.detail.trim()) {
+      return obj.detail.trim();
+    }
+  }
+  return null;
+};
+
+/**
  * Default error extractor that follows the standard pattern
  */
-export const extractErrorMessage = (error: any): string => {
-  if (error.response?.data && typeof error.response.data === 'string') {
-    return error.response.data;
+export const extractErrorMessage = (error: unknown): string => {
+  const typedError = error as ToolError;
+
+  // Try response.data first
+  if (typedError.response?.data) {
+    // Handle string response.data
+    if (typeof typedError.response.data === 'string' && typedError.response.data.trim()) {
+      return typedError.response.data.trim();
+    }
+
+    // Handle JSON response.data
+    const jsonMessage = extractFromJsonData(typedError.response.data);
+    if (jsonMessage) {
+      return jsonMessage;
+    }
+
+    // Handle Blob or other non-string data gracefully
+    if (typedError.response.data instanceof Blob) {
+      return 'Server returned an error response';
+    }
   }
-  if (error.message) {
-    return error.message;
+
+  // Fallback to error.message
+  if (typedError.message && typedError.message.trim()) {
+    return typedError.message.trim();
   }
+
+  // Add HTTP status context if available
+  if (typedError.response?.status) {
+    return `Server error (${typedError.response.status})`;
+  }
+
   return 'Operation failed';
 };
 
@@ -21,13 +77,8 @@ export const extractErrorMessage = (error: any): string => {
  * @returns Error handler function that follows the standard pattern
  */
 export const createStandardErrorHandler = (fallbackMessage: string) => {
-  return (error: any): string => {
-    if (error.response?.data && typeof error.response.data === 'string') {
-      return error.response.data;
-    }
-    if (error.message) {
-      return error.message;
-    }
-    return fallbackMessage;
+  return (error: unknown): string => {
+    return extractErrorMessage(error) || fallbackMessage;
   };
 };
+
