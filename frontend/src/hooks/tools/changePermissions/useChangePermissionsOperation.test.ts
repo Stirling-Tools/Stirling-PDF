@@ -124,31 +124,15 @@ describe('useChangePermissionsOperation', () => {
     );
   });
 
-  test('should configure single file endpoint', () => {
+  test.each([
+    { property: 'multiFileEndpoint' as const, expectedValue: false },
+    { property: 'endpoint' as const, expectedValue: '/api/v1/security/add-password' },
+    { property: 'filePrefix' as const, expectedValue: 'permissions_' },
+    { property: 'operationType' as const, expectedValue: 'changePermissions' }
+  ])('should configure $property correctly', ({ property, expectedValue }) => {
     renderHook(() => useChangePermissionsOperation());
 
     const callArgs = getToolConfig();
-    expect(callArgs.multiFileEndpoint).toBe(false);
-  });
-
-  test('should use correct endpoint URL', () => {
-    renderHook(() => useChangePermissionsOperation());
-
-    const callArgs = getToolConfig();
-    expect(callArgs.endpoint).toBe('/api/v1/security/add-password');
-  });
-
-  test('should use correct file prefix', () => {
-    renderHook(() => useChangePermissionsOperation());
-
-    const callArgs = getToolConfig();
-    expect(callArgs.filePrefix).toBe('permissions_');
-  });
-
-  test('should use correct operation type', () => {
-    renderHook(() => useChangePermissionsOperation());
-
-    const callArgs = getToolConfig();
-    expect(callArgs.operationType).toBe('changePermissions');
+    expect(callArgs[property]).toBe(expectedValue);
   });
 });

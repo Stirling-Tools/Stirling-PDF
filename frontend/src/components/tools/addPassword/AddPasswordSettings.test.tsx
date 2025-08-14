@@ -160,27 +160,20 @@ describe('AddPasswordSettings', () => {
     expect(mockT).toHaveBeenCalledWith('addPassword.passwords.owner.label', 'Owner Password');
   });
 
-  test('should handle key length options correctly', () => {
-    const { rerender } = render(
+  test.each([
+    { keyLength: 40, expectedLabel: 'mock-addPassword.encryption.keyLength.40bit' },
+    { keyLength: 128, expectedLabel: 'mock-addPassword.encryption.keyLength.128bit' },
+    { keyLength: 256, expectedLabel: 'mock-addPassword.encryption.keyLength.256bit' }
+  ])('should handle key length $keyLength correctly', ({ keyLength, expectedLabel }) => {
+    render(
       <TestWrapper>
         <AddPasswordSettings
-          parameters={{ ...defaultParameters, keyLength: 40 }}
+          parameters={{ ...defaultParameters, keyLength }}
           onParameterChange={mockOnParameterChange}
         />
       </TestWrapper>
     );
 
-    expect(screen.getByText('mock-addPassword.encryption.keyLength.40bit')).toBeInTheDocument();
-
-    rerender(
-      <TestWrapper>
-        <AddPasswordSettings
-          parameters={{ ...defaultParameters, keyLength: 256 }}
-          onParameterChange={mockOnParameterChange}
-        />
-      </TestWrapper>
-    );
-
-    expect(screen.getByText('mock-addPassword.encryption.keyLength.256bit')).toBeInTheDocument();
+    expect(screen.getByText(expectedLabel)).toBeInTheDocument();
   });
 });

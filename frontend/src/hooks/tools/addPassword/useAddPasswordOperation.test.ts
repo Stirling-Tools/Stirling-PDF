@@ -21,8 +21,6 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 
 // Import the mocked function
 import { ToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
-import { get } from 'http';
-
 
 
 describe('useAddPasswordOperation', () => {
@@ -70,17 +68,35 @@ describe('useAddPasswordOperation', () => {
     expect(result.current).toBe(mockToolOperationReturn);
   });
 
-  test('should create form data correctly with all parameters', () => {
+  test.each([
+    {
+      description: 'with all parameters filled',
+      password: 'user-password',
+      ownerPassword: 'owner-password',
+      keyLength: 256
+    },
+    {
+      description: 'with empty passwords',
+      password: '',
+      ownerPassword: '',
+      keyLength: 128
+    },
+    {
+      description: 'with 40-bit key length',
+      password: 'test',
+      ownerPassword: '',
+      keyLength: 40
+    }
+  ])('should create form data correctly $description', ({ password, ownerPassword, keyLength }) => {
     renderHook(() => useAddPasswordOperation());
 
-    // Get the buildFormData function that was passed to useToolOperation
     const callArgs = getToolConfig();
     const buildFormData = callArgs.buildFormData;
 
     const testParameters: AddPasswordFullParameters = {
-      password: 'user-password',
-      ownerPassword: 'owner-password',
-      keyLength: 256,
+      password,
+      ownerPassword,
+      keyLength,
       permissions: {
         preventAssembly: false,
         preventExtractContent: false,
@@ -100,77 +116,9 @@ describe('useAddPasswordOperation', () => {
     expect(formData.get('fileInput')).toBe(testFile);
 
     // Verify password parameters
-    expect(formData.get('password')).toBe('user-password');
-    expect(formData.get('ownerPassword')).toBe('owner-password');
-    expect(formData.get('keyLength')).toBe('256');
-  });
-
-  test('should handle empty passwords in form data', () => {
-    renderHook(() => useAddPasswordOperation());
-
-    const callArgs = getToolConfig();
-    const buildFormData = callArgs.buildFormData;
-
-    const testParameters: AddPasswordFullParameters = {
-      password: '',
-      ownerPassword: '',
-      keyLength: 128,
-      permissions: {
-        preventAssembly: false,
-        preventExtractContent: false,
-        preventExtractForAccessibility: false,
-        preventFillInForm: false,
-        preventModify: false,
-        preventModifyAnnotations: false,
-        preventPrinting: false,
-        preventPrintingFaithful: false,
-      }
-    };
-
-    const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-    const formData = buildFormData(testParameters, testFile as any /* FIX ME */);
-
-    expect(formData.get('password')).toBe('');
-    expect(formData.get('ownerPassword')).toBe('');
-    expect(formData.get('keyLength')).toBe('128');
-  });
-
-  test('should handle different key length values', () => {
-    renderHook(() => useAddPasswordOperation());
-
-    const callArgs = getToolConfig();
-    const buildFormData = callArgs.buildFormData;
-
-    const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-
-    // Test 40-bit encryption
-    const params40: AddPasswordFullParameters = {
-      password: 'test',
-      ownerPassword: '',
-      keyLength: 40,
-      permissions: {
-        preventAssembly: false,
-        preventExtractContent: false,
-        preventExtractForAccessibility: false,
-        preventFillInForm: false,
-        preventModify: false,
-        preventModifyAnnotations: false,
-        preventPrinting: false,
-        preventPrintingFaithful: false
-      }
-    };
-
-    let formData = buildFormData(params40, testFile as any /* FIX ME */);
-    expect(formData.get('keyLength')).toBe('40');
-
-    // Test 256-bit encryption
-    const params256: AddPasswordFullParameters = {
-      ...params40,
-      keyLength: 256
-    };
-
-    formData = buildFormData(params256, testFile as any /* FIX ME */);
-    expect(formData.get('keyLength')).toBe('256');
+    expect(formData.get('password')).toBe(password);
+    expect(formData.get('ownerPassword')).toBe(ownerPassword);
+    expect(formData.get('keyLength')).toBe(keyLength.toString());
   });
 
   test('should use correct translation for error messages', () => {
@@ -182,31 +130,15 @@ describe('useAddPasswordOperation', () => {
     );
   });
 
-  test('should configure single file endpoint', () => {
+  test.each([
+    { property: 'multiFileEndpoint' as const, expectedValue: false },
+    { property: 'endpoint' as const, expectedValue: '/api/v1/security/add-password' },
+    { property: 'filePrefix' as const, expectedValue: 'translated-addPassword.filenamePrefix_' },
+    { property: 'operationType' as const, expectedValue: 'addPassword' }
+  ])('should configure $property correctly', ({ property, expectedValue }) => {
     renderHook(() => useAddPasswordOperation());
 
     const callArgs = getToolConfig();
-    expect(callArgs.multiFileEndpoint).toBe(false);
-  });
-
-  test('should use correct endpoint URL', () => {
-    renderHook(() => useAddPasswordOperation());
-
-    const callArgs = getToolConfig();
-    expect(callArgs.endpoint).toBe('/api/v1/security/add-password');
-  });
-
-  test('should use correct file prefix', () => {
-    renderHook(() => useAddPasswordOperation());
-
-    const callArgs = getToolConfig();
-    expect(callArgs.filePrefix).toBe('translated-addPassword.filenamePrefix_');
-  });
-
-  test('should use correct operation type', () => {
-    renderHook(() => useAddPasswordOperation());
-
-    const callArgs = getToolConfig();
-    expect(callArgs.operationType).toBe('addPassword');
+    expect(callArgs[property]).toBe(expectedValue);
   });
 });
