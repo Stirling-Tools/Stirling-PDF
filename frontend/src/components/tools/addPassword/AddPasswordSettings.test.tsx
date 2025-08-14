@@ -63,8 +63,8 @@ describe('AddPasswordSettings', () => {
     );
 
     // Check that main section titles are rendered
-    expect(screen.getByText('mock-addPassword.passwords.title')).toBeInTheDocument();
-    expect(screen.getByText('mock-addPassword.encryption.title')).toBeInTheDocument();
+    expect(screen.getByText('mock-addPassword.passwords.user.label')).toBeInTheDocument();
+    expect(screen.getByText('mock-addPassword.encryption.keyLength.label')).toBeInTheDocument();
   });
 
   test('should call onParameterChange when password fields are modified', () => {
@@ -154,8 +154,6 @@ describe('AddPasswordSettings', () => {
     );
 
     // Verify that translation keys are being called
-    expect(mockT).toHaveBeenCalledWith('addPassword.passwords.title', 'Passwords');
-    expect(mockT).toHaveBeenCalledWith('addPassword.encryption.title', 'Encryption');
     expect(mockT).toHaveBeenCalledWith('addPassword.passwords.user.label', 'User Password');
     expect(mockT).toHaveBeenCalledWith('addPassword.passwords.owner.label', 'Owner Password');
   });

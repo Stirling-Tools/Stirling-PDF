@@ -347,7 +347,7 @@
       "title": "Çevir",
       "desc": "PDF-lərinizi asanlıqla çevirin."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Şəkildən PDF-ə",
       "desc": "Şəkli (PNG, JPEG, GIF) PDF-ə Çevir."
     },
@@ -371,7 +371,7 @@
       "title": "İcazəni Dəyiş",
       "desc": "PDF Sənədinin icazələrini dəyiş"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Sil",
       "desc": "PDF Sənədindən istəmədiyin şəkilləri sil."
     },
@@ -383,7 +383,7 @@
       "title": "Şifri Sil",
       "desc": "PDF Sənədindən şifr qorumasını götür."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Sıx",
       "desc": "PDF fayllarını sıxaraq onların ölçüsünü azalt."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Pipeline Skriptləri təyin edərək PDF-lər üzərində bir neçə prosesi eyni vaxtda reallaşdırın."
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Səhifələri Nömrələ",
       "desc": "Sənədin səhifələrinə təyin edilmiş yerdə nömrələr əlavə edin"
     },
@@ -487,7 +487,7 @@
       "title": "PDF Faylını Avtomatik Yenidən Adlandır",
       "desc": "Tapılmış başlığa əsasən PDF faylının adını dəyişir"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Rəngləri/Kontrastı Tənzimlə",
       "desc": "PDF-in kontrastını, parlaqlığını, rəng doyğunluğunu tənzimlə"
     },
@@ -499,7 +499,7 @@
       "title": "Səhifələri Avtomatik Ayır",
       "desc": "Fiziki skan olunmuş səhifələri QR koda əsasən ayır"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Təmizlə",
       "desc": "Skriptləri və digər elementləri PDF faylından sil"
     },
@@ -523,11 +523,11 @@
       "title": "PDF-in Bütün Məlumatları",
       "desc": "PDF barədə mümkün olan bütün məlumatları əldə edir"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Səhifə(lər)i xaric et",
       "desc": "Seçilmiş səhifələri PDF-dən xaric edərək əldə et"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF-dən 1 Böyük Səhifəyə",
       "desc": "Bütün PDF səhifələrini bir böyük səhifəyə çevirir"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF-dən CSV-ə",
       "desc": "PDF-dən cədvəlləri CSV-ə çevirərək xaric edir"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Say/Ölçüyə Əsasən Avtomatik Ayır",
       "desc": "PDF-i ölçüyə, səhifə sayına və ya sənəd sayına əsasən bir neçə PDF-ə ayır."
     },
@@ -563,11 +563,11 @@
       "title": "PDF-i Möhürlə",
       "desc": "Təyin edilmiş hissələrə mətn və ya şəkil möhürləri əlavə edin"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Şəkli Sil",
       "desc": "Fayl ölçüsünü azaltmaq üçün PDF-dən şəkil sil"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "PDF-i Fəsillərə Əsasən Böl",
       "desc": "Fəsil strukturuna əsasən PDF-i bir neçə fayla böl."
     },
@@ -575,7 +575,7 @@
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Qabaqcıl Rəng Seçimləri",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }

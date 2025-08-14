@@ -347,7 +347,7 @@
       "title": "Obróć",
       "desc": "Łatwo obracaj dokumenty PDF."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Obraz na PDF",
       "desc": "Konwertuj obraz (PNG, JPEG, GIF) do dokumentu PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Zmień uprawnienia",
       "desc": "Zmień uprawnienia dokumentu PDF"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Usuń",
       "desc": "Usuń niechciane strony z dokumentu PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Usuń hasło",
       "desc": "Usuń ochronę hasłem z dokumentu PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Kompresuj",
       "desc": "Kompresuj dokumenty PDF, aby zmniejszyć ich rozmiar."
     },
@@ -479,7 +479,7 @@
       "title": "Automatyzacja",
       "desc": "Wykonaj wiele akcji na dokumentach PDF, tworząc automatyzację"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Dodaj numery stron",
       "desc": "Dodaj numery strony w dokumencie PDF w podanej lokalizacji"
     },
@@ -487,7 +487,7 @@
       "title": "Automatycznie zmień nazwę PDF",
       "desc": "Automatycznie zmień nazwę PDF bazując na nagłówku"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Zmień kolor/nasycenie/jasność",
       "desc": "Zmień kolor/nasycenie/jasność w dokumencie PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Automatycznie podziel strony",
       "desc": "Automatycznie podziel dokument na strony"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Dezynfekcja",
       "desc": "Usuń skrypt i inne elementy z dokumentu PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Pobierz informacje o pliku PDF",
       "desc": "Pobiera wszelkie informacje o pliku PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Wyciągnij stronę z PDF",
       "desc": "Wyciąga stronę z dokumentu PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF do jednej strony",
       "desc": "Łączy wszystkie strony PDFa w jedną wielką stronę PDF"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF do CSV",
       "desc": "Konwertuje tabele z PDF do pliku CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Podziel (Rozmiar/Ilość stron)",
       "desc": "Rozdziela dokument PDF na wiele dokumentów bazując na podanym rozmiarze, ilości stron bądź ilości dokumentów"
     },
@@ -563,11 +563,11 @@
       "title": "Dodaj pieczęć",
       "desc": "Dodaj pieczęć tekstową/obrazową w wyznaczonej lokalizacji dokumentu"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Usuń obraz",
       "desc": "Usuń obraz z pliku PDF, aby zmniejszyć rozmiar pliku"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Podziel PDF według rozdziałów",
       "desc": "Podział pliku PDF na wiele plików na podstawie struktury rozdziałów."
     },
@@ -575,7 +575,7 @@
       "title": "Sprawdź poprawność podpisu PDF",
       "desc": "Weryfikuj podpisy cyfrowe i certyfikaty w dokumentach PDF"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Zastąp i Odwróć Kolor",
       "desc": "Zastąp kolor tekstu i tła w pliku PDF i odwróć pełen kolor pliku PDF, aby zmniejszyć rozmiar pliku"
     }

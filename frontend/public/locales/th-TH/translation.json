@@ -347,7 +347,7 @@
       "title": "หมุน",
       "desc": "หมุน PDF ของคุณได้อย่างง่ายดาย"
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "รูปภาพเป็น PDF",
       "desc": "แปลงรูปภาพ (PNG, JPEG, GIF) เป็น PDF"
     },
@@ -371,7 +371,7 @@
       "title": "เปลี่ยนสิทธิ์",
       "desc": "เปลี่ยนสิทธิ์ของเอกสาร PDF ของคุณ"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "ลบ",
       "desc": "ลบหน้าที่ไม่ต้องการจากเอกสาร PDF ของคุณ"
     },
@@ -383,7 +383,7 @@
       "title": "ลบรหัสผ่าน",
       "desc": "ลบรหัสผ่านจากการป้องกันเอกสาร PDF ของคุณ"
     },
-    "compressPdfs": {
+    "compress": {
       "title": "บีบอัด",
       "desc": "บีบอัด PDF เพื่อลดขนาดไฟล์"
     },
@@ -479,7 +479,7 @@
       "title": "ทิศทางงาน",
       "desc": "เรียกใช้งานหลายการกระทำใน PDF โดยกำหนดสคริปต์ pipeline"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "เพิ่มหมายเลขหน้า",
       "desc": "เพิ่มหมายเลขหน้าตลอดทั้งเอกสารในตำแหน่งที่กำหนด"
     },
@@ -487,7 +487,7 @@
       "title": "เปลี่ยนชื่อ PDF อัตโนมัติ",
       "desc": "เปลี่ยนชื่อไฟล์ PDF โดยอัตโนมัติตามหัวข้อที่ตรวจจับได้"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "ปรับสี/คอนทราสต์",
       "desc": "ปรับคอนทราสต์ ความอิ่มตัว และความสว่างของ PDF"
     },
@@ -499,7 +499,7 @@
       "title": "แยกหน้าอัตโนมัติ",
       "desc": "แยก PDF ที่สแกนโดยใช้ QR Code แยกหน้า"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "ทำความสะอาด",
       "desc": "ลบสคริปต์และองค์ประกอบอื่นๆ จากไฟล์ PDF"
     },
@@ -523,11 +523,11 @@
       "title": "รับข้อมูลทั้งหมดเกี่ยวกับ PDF",
       "desc": "รับข้อมูลที่เป็นไปได้ทั้งหมดเกี่ยวกับ PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "แยกหน้า",
       "desc": "แยกหน้าที่เลือกจาก PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "หน้าขนาดใหญ่เพียงหน้าเดียว",
       "desc": "รวมหน้าทั้งหมดของ PDF เป็นหน้าเดียวขนาดใหญ่"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF เป็น CSV",
       "desc": "แยกตารางจาก PDF แปลงเป็น CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "แยกตามขนาด/จำนวน",
       "desc": "แยก PDF เป็นเอกสารหลายฉบับตามขนาด จำนวนหน้า หรือจำนวนเอกสาร"
     },
@@ -563,11 +563,11 @@
       "title": "เพิ่มตราประทับลงใน PDF",
       "desc": "เพิ่มข้อความหรือตราประทับรูปภาพในตำแหน่งที่กำหนด"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "ลบภาพออกจาก PDF",
       "desc": "ลบภาพออกจาก PDF เพื่อลดขนาดไฟล์"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
@@ -575,7 +575,7 @@
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }
