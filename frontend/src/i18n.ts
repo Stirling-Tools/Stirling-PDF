@@ -5,6 +5,7 @@ import Backend from 'i18next-http-backend';
 
 // Define supported languages (based on your existing translations)
 export const supportedLanguages = {
+  'en': 'English',
   'en-GB': 'English (UK)',
   'en-US': 'English (US)',
   'ar-AR': 'العربية',
@@ -69,12 +70,17 @@ i18n
     },
     
     backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
+      loadPath: (lngs, namespaces) => {
+        // Map 'en' to 'en-GB' for loading translations
+        const lng = lngs[0] === 'en' ? 'en-GB' : lngs[0];
+        return `/locales/${lng}/${namespaces[0]}.json`;
+      },
     },
     
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
+      convertDetectedLanguage: (lng: string) => lng === 'en' ? 'en-GB' : lng,
     },
     
     react: {
@@ -86,6 +92,7 @@ i18n
       transKeepBasicHtmlNodesFor: ['br', 'strong', 'i', 'p'],
     },
   });
+
 
 // Set document direction based on language
 i18n.on('languageChanged', (lng) => {
