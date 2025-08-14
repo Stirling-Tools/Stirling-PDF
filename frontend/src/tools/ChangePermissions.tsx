@@ -65,7 +65,7 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: hasFiles && !hasResults,
+      isCollapsed: hasFiles || hasResults,
     },
     steps: [{
       title: t('settings.title', 'Settings'),
