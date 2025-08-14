@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const addBookmarkBtn = document.getElementById("addBookmarkBtn");
   const bookmarkDataInput = document.getElementById("bookmarkData");
   let bookmarks = [];
+  let previousBookmarks = null; // Used for undo feature
   let counter = 0; // Used for generating unique IDs
 
   // callback function on file input change to extract bookmarks from PDF
@@ -53,6 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // display new bookmark data given by a callback function that loads or fetches the data
   async function loadBookmarks(getBookmarkDataCallback) {
     // reset bookmarks
+    saveBookmarkState();
     bookmarks = [];
     updateBookmarksUI();
     showLoadingIndicator();
@@ -172,6 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
       expanded: false, // New bookmarks start collapsed
     };
 
+    saveBookmarkState();
     if (parent === null) {
       bookmarks.push(newBookmark);
     } else {
@@ -232,6 +235,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function removeBookmark(id) {
     // Remove from top level
+    saveBookmarkState();
     const index = bookmarks.findIndex((b) => b.id === id);
     if (index !== -1) {
       bookmarks.splice(index, 1);
@@ -287,6 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateBookmarksUI() {
+    updateClearAllBtn();
     if (!bookmarksContainer) {
       return;
     }
@@ -628,6 +633,49 @@ document.addEventListener("DOMContentLoaded", function () {
     showEmptyState();
     updateEmptyStateButton();
   }
+
+  // Undo button funcionality
+  const undoBtn = document.getElementById("undoBtn");
+
+  function saveBookmarkState() {
+    previousBookmarks = [...bookmarks];
+    undoBtn.disabled = false;
+  }
+
+  function undoBookmarkChanges() {
+    if (previousBookmarks === null) return;
+
+    bookmarks = [...previousBookmarks];
+    previousBookmarks = null;
+    undoBtn.disabled = true;
+    updateBookmarksUI();
+  }
+  undoBtn.addEventListener("click", undoBookmarkChanges);
+
+  // ctrl+z keybind
+  function keyPressHandler(event) {
+    // do not override normal paste behavior on input fields
+    if (event.target.tagName.toLowerCase() === "input") return;
+
+    if (event.ctrlKey && event.keyCode == 90) {
+      undoBookmarkChanges();
+    }
+  }
+  document.body.addEventListener("keydown", keyPressHandler);
+
+  // ClearAll button functionality
+  const clearAllBtn = document.getElementById("clearAllBtn");
+
+  function updateClearAllBtn() {
+    clearAllBtn.disabled = !(bookmarks && bookmarks.length > 0);
+  }
+
+  function clearAllBookmarks() {
+    saveBookmarkState();
+    bookmarks = [];
+    updateBookmarksUI();
+  }
+  clearAllBtn.addEventListener("click", clearAllBookmarks);
 
   // Add bookmarks Import/Export functionality
 
