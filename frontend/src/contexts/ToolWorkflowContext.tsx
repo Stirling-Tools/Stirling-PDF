@@ -225,8 +225,3 @@ export function useToolWorkflow(): ToolWorkflowContextValue {
   }
   return context;
 }
-
-// Convenience exports for specific use cases (optional - components can use useToolWorkflow directly)
-export const useToolSelection = useToolWorkflow;
-export const useToolPanelState = useToolWorkflow;  
-export const useWorkbenchState = useToolWorkflow;

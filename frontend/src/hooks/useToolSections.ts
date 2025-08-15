@@ -14,8 +14,8 @@ export function useToolSections(filteredTools: [string, ToolRegistryEntry][]) {
   const groupedTools = useMemo(() => {
     const grouped: GroupedTools = {};
     filteredTools.forEach(([id, tool]) => {
-      const category = tool?.category || 'OTHER';
-      const subcategory = tool?.subcategory || 'General';
+      const category = tool.category;
+      const subcategory = tool.subcategory;
       if (!grouped[category]) grouped[category] = {};
       if (!grouped[category][subcategory]) grouped[category][subcategory] = [];
       grouped[category][subcategory].push({ id, tool });
@@ -72,7 +72,7 @@ export function useToolSections(filteredTools: [string, ToolRegistryEntry][]) {
     filteredTools.forEach(([id, tool]) => {
       if (seen.has(id)) return;
       seen.add(id);
-      const sub = tool?.subcategory || 'General';
+      const sub = tool.subcategory;
       if (!subMap[sub]) subMap[sub] = [];
       subMap[sub].push({ id, tool });
     });

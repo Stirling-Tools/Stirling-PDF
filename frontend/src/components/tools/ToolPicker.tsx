@@ -6,6 +6,7 @@ import ToolButton from "./toolPicker/ToolButton";
 import "./toolPicker/ToolPicker.css";
 import { useToolSections } from "../../hooks/useToolSections";
 import SubcategoryHeader from "./shared/SubcategoryHeader";
+import NoToolsFound from "./shared/NoToolsFound";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
@@ -13,6 +14,31 @@ interface ToolPickerProps {
   filteredTools: [string, ToolRegistryEntry][];
   isSearching?: boolean;
 }
+
+// Helper function to render tool buttons for a subcategory
+const renderToolButtons = (
+  subcategory: any,
+  selectedToolKey: string | null,
+  onSelect: (id: string) => void,
+  showSubcategoryHeader: boolean = true
+) => (
+  <Box key={subcategory.subcategory} w="100%">
+    {showSubcategoryHeader && (
+      <SubcategoryHeader label={subcategory.subcategory} />
+    )}
+    <Stack gap="xs">
+      {subcategory.tools.map(({ id, tool }: { id: string; tool: any }) => (
+        <ToolButton
+          key={id}
+          id={id}
+          tool={tool}
+          isSelected={selectedToolKey === id}
+          onSelect={onSelect}
+        />
+      ))}
+    </Stack>
+  </Box>
+);
 
 const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = false }: ToolPickerProps) => {
   const { t } = useTranslation();
@@ -92,26 +118,9 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
         {isSearching ? (
           <Stack p="sm" gap="xs">
             {searchGroups.length === 0 ? (
-              <Text c="dimmed" size="sm" p="sm">
-                {t("toolPicker.noToolsFound", "No tools found")}
-              </Text>
+              <NoToolsFound />
             ) : (
-              searchGroups.map(group => (
-                <Box key={group.subcategory} w="100%">
-                  <SubcategoryHeader label={group.subcategory} />
-                  <Stack gap="xs">
-                    {group.tools.map(({ id, tool }) => (
-                      <ToolButton
-                        key={id}
-                        id={id}
-                        tool={tool}
-                        isSelected={selectedToolKey === id}
-                        onSelect={onSelect}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              ))
+              searchGroups.map(group => renderToolButtons(group, selectedToolKey, onSelect))
             )}
           </Stack>
         ) : (
@@ -124,8 +133,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 position: "sticky",
                 top: 0,
                 zIndex: 2,
-                borderTop: `1px solid var(--tool-header-border)`,
-                borderBottom: `1px solid var(--tool-header-border)`,
+                borderTop: `0.0625rem solid var(--tool-header-border)`,
+                borderBottom: `0.0625rem solid var(--tool-header-border)`,
                 marginBottom: -1,
                 padding: "0.5rem 1rem",
                 fontWeight: 700,
@@ -143,9 +152,9 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 style={{
                   background: "var(--tool-header-badge-bg)",
                   color: "var(--tool-header-badge-text)",
-                  borderRadius: 8,
-                  padding: "2px 8px",
-                  fontSize: 12,
+                  borderRadius: ".5rem",
+                  padding: "0.125rem 0.5rem",
+                  fontSize: ".75rem",
                   fontWeight: 700
                 }}
               >
@@ -155,24 +164,9 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={quickAccessRef} w="100%">
               <Stack p="sm" gap="xs">
-                {quickSection?.subcategories.map(sc => (
-                  <Box key={sc.subcategory} w="100%">
-                    {quickSection?.subcategories.length > 1 && (
-                      <SubcategoryHeader label={sc.subcategory} />
-                    )}
-                    <Stack gap="xs">
-                      {sc.tools.map(({ id, tool }) => (
-                        <ToolButton
-                          key={id}
-                          id={id}
-                          tool={tool}
-                          isSelected={selectedToolKey === id}
-                          onSelect={onSelect}
-                        />
-                      ))}
-                    </Stack>
-                  </Box>
-                ))}
+                {quickSection?.subcategories.map(sc => 
+                  renderToolButtons(sc, selectedToolKey, onSelect, quickSection?.subcategories.length === 1)
+                )}
               </Stack>
             </Box>
           </>
@@ -186,8 +180,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 position: "sticky",
                 top: quickSection ? quickHeaderHeight - 1: 0,
                 zIndex: 2,
-                borderTop: `1px solid var(--tool-header-border)`,
-                borderBottom: `1px solid var(--tool-header-border)`,
+                borderTop: `0.0625rem solid var(--tool-header-border)`,
+                borderBottom: `0.0625rem solid var(--tool-header-border)`,
                 padding: "0.5rem 1rem",
                 fontWeight: 700,
                 background: "var(--tool-header-bg)",
@@ -204,9 +198,9 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 style={{
                   background: "var(--tool-header-badge-bg)",
                   color: "var(--tool-header-badge-text)",
-                  borderRadius: 8,
-                  padding: "2px 8px",
-                  fontSize: 12,
+                  borderRadius: ".5rem",
+                  padding: "0.125rem 0.5rem",
+                  fontSize: ".75rem",
                   fontWeight: 700
                 }}
               >
@@ -216,34 +210,15 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
-                {allSection?.subcategories.map(sc => (
-                  <Box key={sc.subcategory} w="100%">
-                    {allSection?.subcategories.length > 1 && (
-                      <SubcategoryHeader label={sc.subcategory} />
-                    )}
-                    <Stack gap="xs">
-                      {sc.tools.map(({ id, tool }) => (
-                        <ToolButton
-                          key={id}
-                          id={id}
-                          tool={tool}
-                          isSelected={selectedToolKey === id}
-                          onSelect={onSelect}
-                        />
-                      ))}
-                    </Stack>
-                  </Box>
-                ))}
+                {allSection?.subcategories.map(sc => 
+                  renderToolButtons(sc, selectedToolKey, onSelect, allSection?.subcategories.length === 1)
+                )}
               </Stack>
             </Box>
           </>
         )}
 
-        {!quickSection && !allSection && (
-          <Text c="dimmed" size="sm" p="sm">
-            {t("toolPicker.noToolsFound", "No tools found")}
-          </Text>
-        )}
+        {!quickSection && !allSection && <NoToolsFound />}
 
         {/* bottom spacer to allow scrolling past the last row */}
         <div aria-hidden style={{ height: 200 }} />

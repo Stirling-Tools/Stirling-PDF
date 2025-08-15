@@ -12,7 +12,7 @@ export type ToolRegistryEntry = {
     view: string;
     description: string;
     category: string;
-    subcategory: string | null;
+    subcategory: string;
     
     // Optional custom props for tools
     maxFiles?: number; 
@@ -77,8 +77,7 @@ export const SUBCATEGORY_COLOR_MAP: Record<string, string> = {
     'Developer Tools': '#F55454',
 };
 
-export const getSubcategoryColor = (subcategory?: string | null): string => {
-    if (!subcategory) return '#7882FF';
+export const getSubcategoryColor = (subcategory: string): string => {
     return SUBCATEGORY_COLOR_MAP[subcategory] || '#7882FF';
 };
 
@@ -575,7 +574,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.compare.desc", "Compare two PDF documents and highlight differences"),
         category: "Recommended Tools",
-        subcategory: null
+        subcategory: "General"
     },
     "compressPdfs": {
         icon: <span className="material-symbols-rounded">zoom_in_map</span>,
@@ -584,7 +583,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "compress",
         description: t("home.compressPdfs.desc", "Compress PDFs to reduce their file size."),
         category: "Recommended Tools",
-        subcategory: null,
+        subcategory: "General",
         maxFiles: -1
     },
     "convert": {
@@ -594,7 +593,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "convert",
         description: t("home.fileToPDF.desc", "Convert files to and from PDF format"),
         category: "Recommended Tools",
-        subcategory: null,
+        subcategory: "General",
         maxFiles: -1,
         endpoints: [
             "pdf-to-img",
@@ -638,7 +637,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "merge",
         description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
         category: "Recommended Tools",
-        subcategory: null,
+        subcategory: "General",
         maxFiles: -1
     },
     "multi-tool": {
@@ -648,7 +647,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "pageEditor",
         description: t("home.multiTool.desc", "Use multiple tools on a single PDF document"),
         category: "Recommended Tools",
-        subcategory: null,
+        subcategory: "General",
         maxFiles: -1
     },
     "ocr": {
@@ -658,7 +657,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "convert",
         description: t("home.ocr.desc", "Extract text from scanned PDFs using Optical Character Recognition"),
         category: "Recommended Tools",
-        subcategory: null,
+        subcategory: "General",
         maxFiles: -1
     },
     "redact": {
@@ -668,7 +667,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "redact",
         description: t("home.redact.desc", "Permanently remove sensitive information from PDF documents"),
         category: "Recommended Tools",
-        subcategory: null
+        subcategory: "General"
     },
     };
 }
@@ -681,4 +680,57 @@ export const toolEndpoints: Record<string, string[]> = {
     compressPdfs: ["compress-pdf"],
     merge: ["merge-pdfs"],
     // Add more endpoint mappings as needed
+};
+
+/**
+ * Get all endpoints from both registry entries and legacy toolEndpoints mapping
+ * This consolidates endpoint discovery logic in one place
+ */
+export const getAllEndpoints = (registry: ToolRegistry): string[] => {
+    const lists: string[][] = [];
+    
+    // Get endpoints from registry entries
+    Object.values(registry).forEach(entry => {
+        if (entry.endpoints && entry.endpoints.length > 0) {
+            lists.push(entry.endpoints);
+        }
+    });
+    
+    // Get endpoints from legacy toolEndpoints mapping
+    Object.entries(toolEndpoints).forEach(([key, list]) => {
+        // Only add if not already covered by registry entries
+        if (!registry[key]?.endpoints) {
+            lists.push(list);
+        }
+    });
+    
+    return Array.from(new Set(lists.flat()));
+};
+
+/**
+ * Get all endpoints from a conversion matrix (like EXTENSION_TO_ENDPOINT)
+ * This is useful for convert-specific endpoint discovery
+ */
+export const getConversionEndpoints = (extensionToEndpoint: Record<string, Record<string, string>>): string[] => {
+    const endpoints = new Set<string>();
+    Object.values(extensionToEndpoint).forEach(toEndpoints => {
+        Object.values(toEndpoints).forEach(endpoint => {
+            endpoints.add(endpoint);
+        });
+    });
+    return Array.from(endpoints);
+};
+
+/**
+ * Get all endpoints from both tool registry and conversion matrix
+ * This provides comprehensive endpoint coverage for the entire application
+ */
+export const getAllApplicationEndpoints = (
+    registry: ToolRegistry, 
+    extensionToEndpoint?: Record<string, Record<string, string>>
+): string[] => {
+    const toolEndpoints = getAllEndpoints(registry);
+    const conversionEndpoints = extensionToEndpoint ? getConversionEndpoints(extensionToEndpoint) : [];
+    
+    return Array.from(new Set([...toolEndpoints, ...conversionEndpoints]));
 };

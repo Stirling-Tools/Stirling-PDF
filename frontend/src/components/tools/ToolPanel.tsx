@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
-import { useToolPanelState, useToolSelection, useWorkbenchState } from '../../contexts/ToolWorkflowContext';
+import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
 import SearchResults from './SearchResults';
 import ToolRenderer from './ToolRenderer';
@@ -27,10 +27,10 @@ export default function ToolPanel() {
     toolRegistry,
     setSearchQuery,
     handleBackToTools
-  } = useToolPanelState();
+  } = useToolWorkflow();
 
-  const { selectedToolKey, handleToolSelect } = useToolSelection();
-  const { setPreviewFile } = useWorkbenchState();
+  const { selectedToolKey, handleToolSelect } = useToolWorkflow();
+  const { setPreviewFile } = useToolWorkflow();
 
   return (
     <div

@@ -6,7 +6,7 @@
 }
 
 .tool-picker-scrollable::-webkit-scrollbar {
-  width: 6px;
+  width: 0.375rem;
 }
 
 .tool-picker-scrollable::-webkit-scrollbar-track {
@@ -15,7 +15,7 @@
 
 .tool-picker-scrollable::-webkit-scrollbar-thumb {
   background-color: var(--mantine-color-gray-4);
-  border-radius: 3px;
+  border-radius: 0.1875rem;
 }
 
 .tool-picker-scrollable::-webkit-scrollbar-thumb:hover {

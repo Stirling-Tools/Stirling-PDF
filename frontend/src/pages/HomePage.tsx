@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useFileContext } from "../contexts/FileContext";
 import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
-import { ToolWorkflowProvider, useToolSelection } from "../contexts/ToolWorkflowContext";
+import { ToolWorkflowProvider, useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
 
@@ -20,7 +20,7 @@ function HomePageContent() {
 
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
 
-  const { selectedTool } = useToolSelection();
+  const { selectedTool } = useToolWorkflow();
 
   // Update file selection context when tool changes
   useEffect(() => {

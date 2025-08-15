@@ -5,6 +5,7 @@ import ToolButton from './toolPicker/ToolButton';
 import { useTranslation } from 'react-i18next';
 import { useToolSections } from '../../hooks/useToolSections';
 import SubcategoryHeader from './shared/SubcategoryHeader';
+import NoToolsFound from './shared/NoToolsFound';
 
 interface SearchResultsProps {
   filteredTools: [string, ToolRegistryEntry][];
@@ -16,11 +17,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }
   const { searchGroups } = useToolSections(filteredTools);
 
   if (searchGroups.length === 0) {
-    return (
-      <Text c="dimmed" size="sm" p="sm">
-        {t('toolPicker.noToolsFound', 'No tools found')}
-      </Text>
-    );
+    return <NoToolsFound />;
   }
 
   return (
