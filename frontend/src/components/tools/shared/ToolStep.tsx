@@ -3,7 +3,7 @@ import { Text, Stack, Box, Flex, Divider } from '@mantine/core';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Tooltip } from '../../shared/Tooltip';
-import { TooltipTip } from '../../shared/tooltip/TooltipContent';
+import { TooltipTip } from '../../../types/tips';
 import { createFilesToolStep, FilesToolStepProps } from './FilesToolStep';
 import { createReviewToolStep, ReviewToolStepProps } from './ReviewToolStep';
 
