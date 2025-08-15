@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { type ToolRegistryEntry, SUBCATEGORY_ORDER } from '../data/toolRegistry';
+import { useTranslation } from 'react-i18next';
 
 type GroupedTools = {
   [category: string]: {
@@ -8,6 +9,8 @@ type GroupedTools = {
 };
 
 export function useToolSections(filteredTools: [string, ToolRegistryEntry][]) {
+  const { t } = useTranslation();
+
   const groupedTools = useMemo(() => {
     const grouped: GroupedTools = {};
     filteredTools.forEach(([id, tool]) => {
@@ -56,8 +59,8 @@ export function useToolSections(filteredTools: [string, ToolRegistryEntry][]) {
         .map(([subcategory, tools]) => ({ subcategory, tools }));
 
     const built = [
-      { title: 'QUICK ACCESS', subcategories: sortSubs(quick) },
-      { title: 'ALL TOOLS', subcategories: sortSubs(all) }
+      { key: 'quick', title: t('toolPicker.quickAccess', 'QUICK ACCESS'), subcategories: sortSubs(quick) },
+      { key: 'all', title: t('toolPicker.allTools', 'ALL TOOLS'), subcategories: sortSubs(all) }
     ];
 
     return built.filter(section => section.subcategories.some(sc => sc.tools.length > 0));

@@ -30,6 +30,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const quickAccessRef = useRef<HTMLDivElement>(null);
   const allToolsRef = useRef<HTMLDivElement>(null);
 
+  // On resize adjust headers height to offset height
   useLayoutEffect(() => {
     const update = () => {
       if (quickHeaderRef.current) {
@@ -53,16 +54,14 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
     </div>
   );
 
-  const { sections } = useToolSections(filteredTools);
-
-  const visibleSections = sections;
+  const { sections: visibleSections } = useToolSections(filteredTools);
 
   const quickSection = useMemo(
-    () => visibleSections.find(s => s.title === "QUICK ACCESS"),
+    () => visibleSections.find(s => (s as any).key === 'quick'),
     [visibleSections]
   );
   const allSection = useMemo(
-    () => visibleSections.find(s => s.title === "ALL TOOLS"),
+    () => visibleSections.find(s => (s as any).key === 'all'),
     [visibleSections]
   );
 

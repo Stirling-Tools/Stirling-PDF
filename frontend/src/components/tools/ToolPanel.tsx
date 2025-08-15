@@ -1,5 +1,4 @@
 import React from 'react';
-import { useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolPanelState, useToolSelection, useWorkbenchState } from '../../contexts/ToolWorkflowContext';

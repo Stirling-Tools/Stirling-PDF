@@ -1738,7 +1738,20 @@
     "searchPlaceholder": "Search tools...",
     "noToolsFound": "No tools found",
     "allTools": "ALL TOOLS",
-    "quickAccess": "QUICK ACCESS"
+    "quickAccess": "QUICK ACCESS",
+    "subcategories": {
+      "Signing": "Signing",
+      "Document Security": "Document Security",
+      "Verification": "Verification",
+      "Document Review": "Document Review",
+      "Page Formatting": "Page Formatting",
+      "Extraction": "Extraction",
+      "Removal": "Removal",
+      "Automation": "Automation",
+      "General": "General",
+      "Advanced Formatting": "Advanced Formatting",
+      "Developer Tools": "Developer Tools"
+    }
   },
   "quickAccess": {
     "read": "Read",

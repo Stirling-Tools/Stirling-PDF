@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Box, Stack, Text } from '@mantine/core';
 import { type ToolRegistryEntry } from '../../data/toolRegistry';
 import ToolButton from './toolPicker/ToolButton';
+import { useTranslation } from 'react-i18next';
 
 interface SearchResultsProps {
   filteredTools: [string, ToolRegistryEntry][];
@@ -9,6 +10,7 @@ interface SearchResultsProps {
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }) => {
+  const { t } = useTranslation();
   // Group tools by subcategory and remove duplicates
   const groupedToolsByCategory = useMemo(() => {
     const categoryToToolsMap: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
@@ -43,7 +45,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }
   if (groupedToolsByCategory.length === 0) {
     return (
       <Text c="dimmed" size="sm" p="sm">
-        No tools found
+        {t('toolPicker.noToolsFound', 'No tools found')}
       </Text>
     );
   }
@@ -53,7 +55,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }
       {groupedToolsByCategory.map(categoryGroup => (
         <Box key={categoryGroup.categoryName} w="100%">
           <Text size="sm" fw={500} mb="0.25rem" mt="1rem" className="tool-subcategory-title">
-            {categoryGroup.categoryName}
+            {t(`toolPicker.subcategories.${categoryGroup.categoryName}`, categoryGroup.categoryName)}
           </Text>
           <Stack gap="xs">
             {categoryGroup.toolsInCategory.map(({ id, tool }) => (
