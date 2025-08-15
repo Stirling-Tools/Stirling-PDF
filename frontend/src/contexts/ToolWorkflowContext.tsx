@@ -5,7 +5,6 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
-import { ToolConfiguration } from '../types/tool';
 import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry } from '../data/toolRegistry';
 
@@ -70,7 +69,7 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: string | null;
-  selectedTool: ToolConfiguration | null;
+  selectedTool: ToolRegistryEntry | null;
   toolRegistry: any; // From useToolManagement
   
   // UI Actions

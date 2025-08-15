@@ -24,17 +24,17 @@ function HomePageContent() {
 
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
 
-  const { selectedTool } = useToolWorkflow();
+  const { selectedTool, selectedToolKey } = useToolWorkflow();
 
   const baseUrl = getBaseUrl();
 
   // Update document meta when tool changes
   useDocumentMeta({
-    title: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    title: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
     description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogTitle: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    ogTitle: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
     ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogImage: selectedTool ? `${baseUrl}/og_images/${selectedTool.id}.png` : `${baseUrl}/og_images/home.png`,
+    ogImage: selectedToolKey ? `${baseUrl}/og_images/${selectedToolKey}.png` : `${baseUrl}/og_images/home.png`,
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
   });
 
