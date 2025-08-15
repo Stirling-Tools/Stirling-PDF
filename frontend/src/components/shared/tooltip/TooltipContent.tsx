@@ -1,12 +1,6 @@
 import React from 'react';
 import styles from './Tooltip.module.css';
-
-export interface TooltipTip {
-  title?: string;
-  description?: string;
-  bullets?: string[];
-  body?: React.ReactNode;
-}
+import { TooltipTip } from '../../../types/tips';
 
 interface TooltipContentProps {
   content?: React.ReactNode;

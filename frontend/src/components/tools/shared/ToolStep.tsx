@@ -3,12 +3,13 @@ import { Text, Stack, Box, Flex, Divider } from '@mantine/core';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Tooltip } from '../../shared/Tooltip';
-import { TooltipTip } from '../../shared/tooltip/TooltipContent';
+import { TooltipTip } from '../../../types/tips';
 import { createFilesToolStep, FilesToolStepProps } from './FilesToolStep';
 import { createReviewToolStep, ReviewToolStepProps } from './ReviewToolStep';
 
 interface ToolStepContextType {
   visibleStepCount: number;
+  forceStepNumbers?: boolean;
 }
 
 const ToolStepContext = createContext<ToolStepContextType | null>(null);
@@ -82,10 +83,11 @@ const ToolStep = ({
 
   const parent = useContext(ToolStepContext);
 
-  // Auto-detect if we should show numbers based on sibling count
+  // Auto-detect if we should show numbers based on sibling count or force option
   const shouldShowNumber = useMemo(() => {
-    if (showNumber !== undefined) return showNumber;
-    return parent ? parent.visibleStepCount >= 3 : false;
+    if (showNumber !== undefined) return showNumber; // Individual step override
+    if (parent?.forceStepNumbers) return true; // Flow-level force
+    return parent ? parent.visibleStepCount >= 3 : false; // Auto-detect
   }, [showNumber, parent]);
 
   const stepNumber = _stepNumber;
@@ -196,7 +198,7 @@ export function createToolSteps() {
 }
 
 // Context provider wrapper for tools using the factory
-export function ToolStepProvider({ children }: { children: React.ReactNode }) {
+export function ToolStepProvider({ children, forceStepNumbers }: { children: React.ReactNode; forceStepNumbers?: boolean }) {
   // Count visible steps from children that are ToolStep elements
   const visibleStepCount = useMemo(() => {
     let count = 0;
@@ -212,8 +214,9 @@ export function ToolStepProvider({ children }: { children: React.ReactNode }) {
   }, [children]);
 
   const contextValue = useMemo(() => ({
-    visibleStepCount
-  }), [visibleStepCount]);
+    visibleStepCount,
+    forceStepNumbers
+  }), [visibleStepCount, forceStepNumbers]);
 
   return (
     <ToolStepContext.Provider value={contextValue}>

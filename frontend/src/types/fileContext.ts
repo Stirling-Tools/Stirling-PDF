@@ -16,7 +16,8 @@ export type ModeType =
   | 'convert' 
   | 'sanitize'
   | 'addPassword'
-  | 'changePermissions';
+  | 'changePermissions'
+  | 'watermark';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 
