@@ -1740,6 +1740,15 @@
     "allTools": "ALL TOOLS",
     "quickAccess": "QUICK ACCESS"
   },
+  "quickAccess": {
+    "read": "Read",
+    "sign": "Sign",
+    "automate": "Automate",
+    "files": "Files",
+    "activity": "Activity",
+    "config": "Config",
+    "allTools": "All Tools"
+  },
   "fileUpload": {
     "selectFile": "Select a file",
     "selectFiles": "Select files",

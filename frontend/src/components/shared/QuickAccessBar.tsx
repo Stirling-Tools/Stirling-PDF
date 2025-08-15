@@ -1,5 +1,6 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
 import { ActionIcon, Stack, Divider } from "@mantine/core";
+import { useTranslation } from 'react-i18next';
 import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
 import SettingsIcon from "@mui/icons-material/SettingsRounded";
 import FolderIcon from "@mui/icons-material/FolderRounded";
@@ -20,6 +21,7 @@ import {
 
 const QuickAccessBar = forwardRef<HTMLDivElement>(({
 }, ref) => {
+  const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const { handleReaderToggle, selectedTool, selectedToolKey, leftPanelView } = useToolWorkflow();
@@ -55,7 +57,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
   const buttonConfigs: ButtonConfig[] = [
     {
       id: 'read',
-      name: 'Read',
+      name: t("quickAccess.read", "Read"),
       icon: <MenuBookIcon sx={{ fontSize: "1.5rem" }} />,
       size: 'lg',
       isRound: false,
@@ -67,7 +69,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     },
     {
       id: 'sign',
-      name: 'Sign',
+      name: t("quickAccess.sign", "Sign"),
       icon:
         <span className="material-symbols-rounded font-size-20">
           signature
@@ -79,7 +81,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     },
     {
       id: 'automate',
-      name: 'Automate',
+      name: t("quickAccess.automate", "Automate"),
       icon:
         <span className="material-symbols-rounded font-size-20">
           automation
@@ -91,7 +93,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     },
     {
       id: 'files',
-      name: 'Files',
+      name: t("quickAccess.files", "Files"),
       icon: <FolderIcon sx={{ fontSize: "1.25rem" }} />,
       isRound: true,
       size: 'lg',
@@ -100,7 +102,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     },
     {
       id: 'activity',
-      name: 'Activity',
+      name: t("quickAccess.activity", "Activity"),
       icon:
         <span className="material-symbols-rounded font-size-20">
           vital_signs
@@ -112,7 +114,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     },
     {
       id: 'config',
-      name: 'Config',
+      name: t("quickAccess.config", "Config"),
       icon: <SettingsIcon sx={{ fontSize: "1rem" }} />,
       size: 'lg',
       type: 'modal',

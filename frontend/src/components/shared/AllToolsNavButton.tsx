@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActionIcon } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { Tooltip } from './Tooltip';
 import AppsIcon from '@mui/icons-material/AppsRounded';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
@@ -10,6 +11,7 @@ interface AllToolsNavButtonProps {
 }
 
 const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, setActiveButton }) => {
+  const { t } = useTranslation();
   const { handleReaderToggle, handleBackToTools, selectedToolKey, leftPanelView } = useToolWorkflow();
 
   const handleClick = () => {
@@ -30,7 +32,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
 
   return (
     
-    <Tooltip content={'All tools'} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
+    <Tooltip content={t("quickAccess.allTools", "All Tools")} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
       <div className="flex flex-col items-center gap-1 mt-4 mb-2">
         <ActionIcon
           size={'lg'}
@@ -47,7 +49,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
           {iconNode}
         </ActionIcon>
         <span className={`all-tools-text ${isActive ? 'active' : 'inactive'}`}>
-          All Tools
+          {t("quickAccess.allTools", "All Tools")}
         </span>
       </div>
     </Tooltip>
