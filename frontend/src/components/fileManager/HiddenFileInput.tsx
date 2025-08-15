@@ -9,7 +9,7 @@ const HiddenFileInput: React.FC = () => {
       ref={fileInputRef}
       type="file"
       multiple={true}
-      accept="*/*"
+      accept={["*/*"] as any}
       onChange={onFileInputChange}
       style={{ display: 'none' }}
       data-testid="file-input"
