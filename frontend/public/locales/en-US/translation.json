@@ -1745,6 +1745,7 @@
     "desc": "Remove password protection from your PDF document.",
     "tags": "secure,Decrypt,security,unpassword,delete password",
     "password": {
+      "stepTitle": "Remove Password",
       "label": "Current Password",
       "placeholder": "Enter current password",
       "completed": "Password configured"
@@ -1756,6 +1757,7 @@
     "tooltip": {
       "description": "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
     },
+    "submit": "Remove Password",
     "results": {
       "title": "Decrypted PDFs"
     }

@@ -66,7 +66,7 @@ const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     },
     steps: [
       {
-        title: t("removePassword.password.stepTitle", "Password"),
+        title: t("removePassword.password.stepTitle", "Remove Password"),
         isCollapsed: passwordCollapsed,
         onCollapsedClick: hasResults ? handleSettingsReset : undefined,
         tooltip: removePasswordTips,
