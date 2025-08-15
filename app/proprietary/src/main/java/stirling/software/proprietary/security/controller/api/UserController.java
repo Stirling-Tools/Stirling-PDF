@@ -105,9 +105,7 @@ public class UserController {
         if (user.getUsername().equals(newUsername)) {
             return new RedirectView("/account?messageType=usernameExists", true);
         }
-        if (!userService.isPasswordCorrect(user, currentPassword)) {
-            return new RedirectView("/account?messageType=incorrectPassword", true);
-        }
+        
         if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
             return new RedirectView("/account?messageType=usernameExists", true);
         }
@@ -141,9 +139,7 @@ public class UserController {
             return new RedirectView("/change-creds?messageType=userNotFound", true);
         }
         User user = userOpt.get();
-        if (!userService.isPasswordCorrect(user, currentPassword)) {
-            return new RedirectView("/change-creds?messageType=incorrectPassword", true);
-        }
+       
         userService.changePassword(user, newPassword);
         userService.changeFirstUse(user, false);
         // Logout using Spring's utility
@@ -169,9 +165,7 @@ public class UserController {
             return new RedirectView("/account?messageType=userNotFound", true);
         }
         User user = userOpt.get();
-        if (!userService.isPasswordCorrect(user, currentPassword)) {
-            return new RedirectView("/account?messageType=incorrectPassword", true);
-        }
+       
         userService.changePassword(user, newPassword);
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);

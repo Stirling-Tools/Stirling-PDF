@@ -51,7 +51,6 @@ public class UserService implements UserServiceInterface {
     private final TeamRepository teamRepository;
     private final AuthorityRepository authorityRepository;
 
-    private final PasswordEncoder passwordEncoder;
 
     private final MessageSource messageSource;
 
@@ -344,7 +343,7 @@ public class UserService implements UserServiceInterface {
 
     public void changePassword(User user, String newPassword)
             throws SQLException, UnsupportedProviderException {
-        user.setPassword(passwordEncoder.encode(newPassword));
+        //user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         databaseService.exportDatabase();
     }
@@ -381,10 +380,7 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
-    public boolean isPasswordCorrect(User user, String currentPassword) {
-        return passwordEncoder.matches(currentPassword, user.getPassword());
-    }
-
+ 
     /**
      * Resolves a team based on the provided information, with consistent error handling.
      *
@@ -456,7 +452,7 @@ public class UserService implements UserServiceInterface {
 
         // Set password if provided
         if (password != null && !password.isEmpty()) {
-            user.setPassword(passwordEncoder.encode(password));
+          //  user.setPassword(passwordEncoder.encode(password));
         }
 
         // Set authentication type
