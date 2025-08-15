@@ -5,18 +5,13 @@ import { type ToolRegistryEntry } from "../../data/toolRegistry";
 import ToolButton from "./toolPicker/ToolButton";
 import "./toolPicker/ToolPicker.css";
 import { useToolSections } from "../../hooks/useToolSections";
+import SubcategoryHeader from "./shared/SubcategoryHeader";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
   filteredTools: [string, ToolRegistryEntry][];
   isSearching?: boolean;
-}
-
-interface GroupedTools {
-  [category: string]: {
-    [subcategory: string]: Array<{ id: string; tool: ToolRegistryEntry }>;
-  };
 }
 
 const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = false }: ToolPickerProps) => {
@@ -44,15 +39,6 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
-
-  // Lightweight inline component to avoid an extra file
-  const SubcategoryHeader: React.FC<{ label: string; mt?: string | number; mb?: string | number }> = ({ label, mt = "1rem", mb = "0.25rem" }) => (
-    <div className="tool-subcategory-row" style={{ marginLeft: "1rem", marginRight: "1rem", marginTop: mt, marginBottom: mb }}>
-      <div className="tool-subcategory-row-rule" />
-      <span className="tool-subcategory-row-title">{label}</span>
-      <div className="tool-subcategory-row-rule" />
-    </div>
-  );
 
   const { sections: visibleSections } = useToolSections(filteredTools);
 
