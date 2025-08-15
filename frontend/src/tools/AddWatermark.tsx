@@ -7,13 +7,14 @@ import { useToolFileSelection } from "../contexts/FileSelectionContext";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import WatermarkTypeSettings from "../components/tools/addWatermark/WatermarkTypeSettings";
-import WatermarkContentSettings from "../components/tools/addWatermark/WatermarkContentSettings";
-import WatermarkStyleSettings from "../components/tools/addWatermark/WatermarkStyleSettings";
-import WatermarkAdvancedSettings from "../components/tools/addWatermark/WatermarkAdvancedSettings";
+import WatermarkWording from "../components/tools/addWatermark/WatermarkWording";
+import WatermarkTextStyle from "../components/tools/addWatermark/WatermarkTextStyle";
+import WatermarkFile from "../components/tools/addWatermark/WatermarkFile";
+import WatermarkFormatting from "../components/tools/addWatermark/WatermarkFormatting";
 
 import { useAddWatermarkParameters } from "../hooks/tools/addWatermark/useAddWatermarkParameters";
 import { useAddWatermarkOperation } from "../hooks/tools/addWatermark/useAddWatermarkOperation";
-import { useWatermarkTypeTips, useWatermarkContentTips, useWatermarkStyleTips, useWatermarkAdvancedTips } from "../components/tooltips/useWatermarkTips";
+import { useWatermarkTypeTips, useWatermarkWordingTips, useWatermarkTextStyleTips, useWatermarkFileTips, useWatermarkFormattingTips } from "../components/tooltips/useWatermarkTips";
 import { BaseToolProps } from "../types/tool";
 
 const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -28,9 +29,10 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
   const watermarkParams = useAddWatermarkParameters();
   const watermarkOperation = useAddWatermarkOperation();
   const watermarkTypeTips = useWatermarkTypeTips();
-  const watermarkContentTips = useWatermarkContentTips();
-  const watermarkStyleTips = useWatermarkStyleTips();
-  const watermarkAdvancedTips = useWatermarkAdvancedTips();
+  const watermarkWordingTips = useWatermarkWordingTips();
+  const watermarkTextStyleTips = useWatermarkTextStyleTips();
+  const watermarkFileTips = useWatermarkFileTips();
+  const watermarkFormattingTips = useWatermarkFormattingTips();
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-watermark");
@@ -78,24 +80,22 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
 
   // Step completion logic
   const typeStepCompleted = hasFiles && !!watermarkParams.parameters.watermarkType;
-  const contentStepCompleted = typeStepCompleted && (
-    (watermarkParams.parameters.watermarkType === 'text' && watermarkParams.parameters.watermarkText.trim().length > 0) ||
-    (watermarkParams.parameters.watermarkType === 'image' && watermarkParams.parameters.watermarkImage !== undefined)
-  );
+  const textWordingCompleted = typeStepCompleted &&
+    watermarkParams.parameters.watermarkType === 'text' &&
+    watermarkParams.parameters.watermarkText.trim().length > 0;
+  const imageFileCompleted = typeStepCompleted &&
+    watermarkParams.parameters.watermarkType === 'image' &&
+    watermarkParams.parameters.watermarkImage !== undefined;
 
-  // Step visibility logic - all steps always visible once files are selected
-  const styleCollapsed = collapsedStyle || hasResults;
-  const advancedCollapsed = collapsedAdvanced || hasResults;
+  // Dynamic step structure based on watermark type
+  const getSteps = () => {
+    const steps = [];
 
-  return createToolFlow({
-    files: {
-      selectedFiles,
-      isCollapsed: hasFiles || hasResults,
-    },
-    steps: [
-      {
+    // Step 1: Watermark Type (always visible after files)
+    if (hasFiles) {
+      steps.push({
         title: t("watermark.steps.type", "Watermark Type"),
-        isCollapsed: settingsCollapsed? true : collapsedType,
+        isCollapsed: hasResults ? true : collapsedType,
         onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedType(!collapsedType),
         tooltip: watermarkTypeTips,
         content: (
@@ -105,48 +105,97 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
             disabled={endpointLoading}
           />
         ),
-      },
-      {
-        title: watermarkParams.parameters.watermarkType === 'text'
-          ? t("watermark.steps.textContent", "Text Content")
-          : t("watermark.steps.imageContent", "Image Content"),
-        isCollapsed: settingsCollapsed? true : contentStepCompleted,
-        tooltip: watermarkContentTips,
+      });
+    }
+
+    // Text watermark path
+    if (watermarkParams.parameters.watermarkType === 'text') {
+      // Step 2: Wording
+      steps.push({
+        title: t("watermark.steps.wording", "Wording"),
+        isCollapsed: hasResults,
+        tooltip: watermarkWordingTips,
         content: (
-          <WatermarkContentSettings
+          <WatermarkWording
             parameters={watermarkParams.parameters}
             onParameterChange={watermarkParams.updateParameter}
             disabled={endpointLoading}
           />
         ),
-      },
-      {
-        title: t("watermark.steps.style", "Style & Position"),
-        isCollapsed: settingsCollapsed? true : styleCollapsed,
+      });
+
+      // Step 3: Style
+      steps.push({
+        title: t("watermark.steps.textStyle", "Style"),
+        isCollapsed: hasResults ? true : collapsedStyle,
         onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedStyle(!collapsedStyle),
-        tooltip: watermarkStyleTips,
+        tooltip: watermarkTextStyleTips,
         content: (
-          <WatermarkStyleSettings
+          <WatermarkTextStyle
             parameters={watermarkParams.parameters}
             onParameterChange={watermarkParams.updateParameter}
             disabled={endpointLoading}
           />
         ),
-      },
-      {
-        title: t("watermark.steps.advanced", "Advanced Options"),
-        isCollapsed: settingsCollapsed? true : advancedCollapsed,
+      });
+
+      // Step 4: Formatting
+      steps.push({
+        title: t("watermark.steps.formatting", "Formatting"),
+        isCollapsed: hasResults ? true : collapsedAdvanced,
         onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedAdvanced(!collapsedAdvanced),
-        tooltip: watermarkAdvancedTips,
+        tooltip: watermarkFormattingTips,
         content: (
-          <WatermarkAdvancedSettings
+          <WatermarkFormatting
             parameters={watermarkParams.parameters}
             onParameterChange={watermarkParams.updateParameter}
             disabled={endpointLoading}
           />
         ),
-      },
-    ],
+      });
+    }
+
+    // Image watermark path
+    if (watermarkParams.parameters.watermarkType === 'image') {
+      // Step 2: Watermark File
+      steps.push({
+        title: t("watermark.steps.file", "Watermark File"),
+        isCollapsed: false,
+        tooltip: watermarkFileTips,
+        content: (
+          <WatermarkFile
+            parameters={watermarkParams.parameters}
+            onParameterChange={watermarkParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        ),
+      });
+
+      // Step 3: Formatting
+      steps.push({
+        title: t("watermark.steps.formatting", "Formatting"),
+        isCollapsed: hasResults ? true : collapsedAdvanced,
+        onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedAdvanced(!collapsedAdvanced),
+        tooltip: watermarkFormattingTips,
+        content: (
+          <WatermarkFormatting
+            parameters={watermarkParams.parameters}
+            onParameterChange={watermarkParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        ),
+      });
+    }
+
+    return steps;
+  };
+
+  return createToolFlow({
+    files: {
+      selectedFiles,
+      isCollapsed: hasFiles || hasResults,
+    },
+    steps: getSteps(),
     executeButton: {
       text: t("watermark.submit", "Add Watermark"),
       isVisible: !hasResults,

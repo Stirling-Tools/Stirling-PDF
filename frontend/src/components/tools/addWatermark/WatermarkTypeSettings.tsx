@@ -13,7 +13,6 @@ const WatermarkTypeSettings = ({ watermarkType, onWatermarkTypeChange, disabled 
 
   return (
     <Stack gap="sm">
-      <Text size="sm" fw={500}>{t('watermark.settings.type', 'Watermark Type')}</Text>
       <div style={{ display: 'flex', gap: '4px' }}>
         <Button
           variant={watermarkType === 'text' ? 'filled' : 'outline'}
