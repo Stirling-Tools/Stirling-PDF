@@ -7,14 +7,14 @@ import ResultsPreview from './ResultsPreview';
 import { SuggestedToolsSection } from './SuggestedToolsSection';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
 
-export interface ReviewToolStepProps<TParams = any> {
+export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
   operation: ToolOperationHook<TParams>;
   title?: string;
   onFileClick?: (file: File) => void;
 }
 
-export function createReviewToolStep<TParams = any>(
+export function createReviewToolStep<TParams = unknown>(
   createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
   props: ReviewToolStepProps<TParams>
 ): React.ReactElement {
