@@ -1,7 +1,8 @@
 import React from "react";
 import { Stack, Text, Select, ColorInput, NumberInput, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddWatermarkParameters } from "./types";
+import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
+import { alphabetOptions } from "../../../constants/addWatermarkConstants";
 
 interface WatermarkTextStyleProps {
   parameters: AddWatermarkParameters;
@@ -12,14 +13,6 @@ interface WatermarkTextStyleProps {
 const WatermarkTextStyle = ({ parameters, onParameterChange, disabled = false }: WatermarkTextStyleProps) => {
   const { t } = useTranslation();
 
-  const alphabetOptions = [
-    { value: "roman", label: "Roman" },
-    { value: "arabic", label: "العربية" },
-    { value: "japanese", label: "日本語" },
-    { value: "korean", label: "한국어" },
-    { value: "chinese", label: "简体中文" },
-    { value: "thai", label: "ไทย" },
-  ];
 
   return (
     <Stack gap="sm">

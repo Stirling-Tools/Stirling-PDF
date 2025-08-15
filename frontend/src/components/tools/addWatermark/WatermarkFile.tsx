@@ -1,7 +1,8 @@
-import React, { useRef } from "react";
-import { Stack, Text, FileButton, Button } from "@mantine/core";
+import React from "react";
+import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddWatermarkParameters } from "./types";
+import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
+import FileUploadButton from "../../shared/FileUploadButton";
 
 interface WatermarkFileProps {
   parameters: AddWatermarkParameters;
@@ -11,22 +12,16 @@ interface WatermarkFileProps {
 
 const WatermarkFile = ({ parameters, onParameterChange, disabled = false }: WatermarkFileProps) => {
   const { t } = useTranslation();
-  const resetRef = useRef<() => void>(null);
 
   return (
     <Stack gap="sm">
-      <FileButton
-        resetRef={resetRef}
+      <FileUploadButton
+        file={parameters.watermarkImage}
         onChange={(file) => onParameterChange('watermarkImage', file)}
         accept="image/*"
         disabled={disabled}
-      >
-        {(props) => (
-          <Button {...props} variant="outline" fullWidth>
-            {parameters.watermarkImage ? parameters.watermarkImage.name : t('watermark.settings.image.choose', 'Choose Image')}
-          </Button>
-        )}
-      </FileButton>
+        placeholder={t('watermark.settings.image.choose', 'Choose Image')}
+      />
     </Stack>
   );
 };

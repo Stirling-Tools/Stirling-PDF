@@ -22,7 +22,6 @@ import {
   useWatermarkFormattingTips,
 } from "../components/tooltips/useWatermarkTips";
 import { BaseToolProps } from "../types/tool";
-import { isVisible } from "@testing-library/user-event/dist/utils";
 
 const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

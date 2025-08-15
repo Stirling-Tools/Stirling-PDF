@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { defaultWatermarkParameters } from '../../../constants/addWatermarkConstants';
 
 export interface AddWatermarkParameters {
   watermarkType?: 'text' | 'image';
@@ -14,21 +15,9 @@ export interface AddWatermarkParameters {
   convertPDFToImage: boolean;
 }
 
-const defaultParameters: AddWatermarkParameters = {
-  watermarkType: undefined,
-  watermarkText: '',
-  fontSize: 12,
-  rotation: 0,
-  opacity: 50,
-  widthSpacer: 50,
-  heightSpacer: 50,
-  alphabet: 'roman',
-  customColor: '#d3d3d3',
-  convertPDFToImage: false
-};
 
 export const useAddWatermarkParameters = () => {
-  const [parameters, setParameters] = useState<AddWatermarkParameters>(defaultParameters);
+  const [parameters, setParameters] = useState<AddWatermarkParameters>(defaultWatermarkParameters);
 
   const updateParameter = useCallback(<K extends keyof AddWatermarkParameters>(
     key: K,
@@ -38,7 +27,7 @@ export const useAddWatermarkParameters = () => {
   }, []);
 
   const resetParameters = useCallback(() => {
-    setParameters(defaultParameters);
+    setParameters(defaultWatermarkParameters);
   }, []);
 
   const validateParameters = useCallback((): boolean => {

@@ -1,5 +1,43 @@
 import { useTranslation } from 'react-i18next';
-import { TooltipContent } from '../../types/tips';
+import { TooltipContent, TooltipTip } from '../../types/tips';
+
+// Shared tooltip content to reduce duplication
+const useSharedWatermarkContent = () => {
+  const { t } = useTranslation();
+
+  const languageSupportTip: TooltipTip = {
+    title: t("watermark.tooltip.language.title", "Language Support"),
+    description: t("watermark.tooltip.language.text", "Choose the appropriate language setting to ensure proper font rendering for your text."),
+    bullets: [
+      t("watermark.tooltip.language.bullet1", "Roman/Latin for Western languages"),
+      t("watermark.tooltip.language.bullet2", "Arabic for Arabic script"),
+      t("watermark.tooltip.language.bullet3", "Japanese, Korean, Chinese for Asian languages"),
+      t("watermark.tooltip.language.bullet4", "Thai for Thai script")
+    ]
+  };
+
+  const appearanceTip: TooltipTip = {
+    title: t("watermark.tooltip.appearance.title", "Appearance Settings"),
+    description: t("watermark.tooltip.appearance.text", "Control how your watermark looks and blends with the document."),
+    bullets: [
+      t("watermark.tooltip.appearance.bullet1", "Rotation: -360° to 360° for angled watermarks"),
+      t("watermark.tooltip.appearance.bullet2", "Opacity: 0-100% for transparency control"),
+      t("watermark.tooltip.appearance.bullet3", "Lower opacity creates subtle watermarks")
+    ]
+  };
+
+  const spacingTip: TooltipTip = {
+    title: t("watermark.tooltip.spacing.title", "Spacing Control"),
+    description: t("watermark.tooltip.spacing.text", "Adjust the spacing between repeated watermarks across the page."),
+    bullets: [
+      t("watermark.tooltip.spacing.bullet1", "Width spacing: Horizontal distance between watermarks"),
+      t("watermark.tooltip.spacing.bullet2", "Height spacing: Vertical distance between watermarks"),
+      t("watermark.tooltip.spacing.bullet3", "Higher values create more spread out patterns")
+    ]
+  };
+
+  return { languageSupportTip, appearanceTip, spacingTip };
+};
 
 export const useWatermarkTypeTips = (): TooltipContent => {
   const { t } = useTranslation();
@@ -35,67 +73,7 @@ export const useWatermarkTypeTips = (): TooltipContent => {
   };
 };
 
-export const useWatermarkContentTips = (): TooltipContent => {
-  const { t } = useTranslation();
 
-  return {
-    header: {
-      title: t("watermark.tooltip.content.header.title", "Content Configuration")
-    },
-    tips: [
-      {
-        title: t("watermark.tooltip.content.text.title", "Text Settings"),
-        description: t("watermark.tooltip.content.text.text", "Configure your text watermark appearance and language support."),
-        bullets: [
-          t("watermark.tooltip.content.text.bullet1", "Enter your watermark text"),
-          t("watermark.tooltip.content.text.bullet2", "Adjust font size (8-72pt)"),
-          t("watermark.tooltip.content.text.bullet3", "Select language/script support"),
-          t("watermark.tooltip.content.text.bullet4", "Choose custom colors")
-        ]
-      },
-      {
-        title: t("watermark.tooltip.content.language.title", "Language Support"),
-        description: t("watermark.tooltip.content.language.text", "Choose the appropriate language setting to ensure proper font rendering for your text."),
-        bullets: [
-          t("watermark.tooltip.content.language.bullet1", "Roman/Latin for Western languages"),
-          t("watermark.tooltip.content.language.bullet2", "Arabic for Arabic script"),
-          t("watermark.tooltip.content.language.bullet3", "Japanese, Korean, Chinese for Asian languages"),
-          t("watermark.tooltip.content.language.bullet4", "Thai for Thai script")
-        ]
-      }
-    ]
-  };
-};
-
-export const useWatermarkStyleTips = (): TooltipContent => {
-  const { t } = useTranslation();
-
-  return {
-    header: {
-      title: t("watermark.tooltip.style.header.title", "Style & Positioning")
-    },
-    tips: [
-      {
-        title: t("watermark.tooltip.style.appearance.title", "Appearance Settings"),
-        description: t("watermark.tooltip.style.appearance.text", "Control how your watermark looks and blends with the document."),
-        bullets: [
-          t("watermark.tooltip.style.appearance.bullet1", "Rotation: -360° to 360° for angled watermarks"),
-          t("watermark.tooltip.style.appearance.bullet2", "Opacity: 0-100% for transparency control"),
-          t("watermark.tooltip.style.appearance.bullet3", "Lower opacity creates subtle watermarks")
-        ]
-      },
-      {
-        title: t("watermark.tooltip.style.spacing.title", "Spacing Control"),
-        description: t("watermark.tooltip.style.spacing.text", "Adjust the spacing between repeated watermarks across the page."),
-        bullets: [
-          t("watermark.tooltip.style.spacing.bullet1", "Width spacing: Horizontal distance between watermarks"),
-          t("watermark.tooltip.style.spacing.bullet2", "Height spacing: Vertical distance between watermarks"),
-          t("watermark.tooltip.style.spacing.bullet3", "Higher values create more spread out patterns")
-        ]
-      }
-    ]
-  };
-};
 
 export const useWatermarkWordingTips = (): TooltipContent => {
   const { t } = useTranslation();
@@ -129,22 +107,14 @@ export const useWatermarkWordingTips = (): TooltipContent => {
 
 export const useWatermarkTextStyleTips = (): TooltipContent => {
   const { t } = useTranslation();
+  const { languageSupportTip } = useSharedWatermarkContent();
 
   return {
     header: {
       title: t("watermark.tooltip.textStyle.header.title", "Text Style")
     },
     tips: [
-      {
-        title: t("watermark.tooltip.textStyle.language.title", "Language Support"),
-        description: t("watermark.tooltip.textStyle.language.text", "Choose the appropriate language setting to ensure proper font rendering."),
-        bullets: [
-          t("watermark.tooltip.textStyle.language.bullet1", "Roman/Latin for Western languages"),
-          t("watermark.tooltip.textStyle.language.bullet2", "Arabic for Arabic script"),
-          t("watermark.tooltip.textStyle.language.bullet3", "Japanese, Korean, Chinese for Asian languages"),
-          t("watermark.tooltip.textStyle.language.bullet4", "Thai for Thai script")
-        ]
-      },
+      languageSupportTip,
       {
         title: t("watermark.tooltip.textStyle.color.title", "Color Selection"),
         description: t("watermark.tooltip.textStyle.color.text", "Choose a color that provides good contrast with your document content."),
@@ -190,30 +160,15 @@ export const useWatermarkFileTips = (): TooltipContent => {
 
 export const useWatermarkFormattingTips = (): TooltipContent => {
   const { t } = useTranslation();
+  const { appearanceTip, spacingTip } = useSharedWatermarkContent();
 
   return {
     header: {
       title: t("watermark.tooltip.formatting.header.title", "Formatting & Layout")
     },
     tips: [
-      {
-        title: t("watermark.tooltip.formatting.appearance.title", "Appearance Settings"),
-        description: t("watermark.tooltip.formatting.appearance.text", "Control how your watermark looks and blends with the document."),
-        bullets: [
-          t("watermark.tooltip.formatting.appearance.bullet1", "Rotation: -360° to 360° for angled watermarks"),
-          t("watermark.tooltip.formatting.appearance.bullet2", "Opacity: 0-100% for transparency control"),
-          t("watermark.tooltip.formatting.appearance.bullet3", "Lower opacity creates subtle watermarks")
-        ]
-      },
-      {
-        title: t("watermark.tooltip.formatting.spacing.title", "Spacing Control"),
-        description: t("watermark.tooltip.formatting.spacing.text", "Adjust the spacing between repeated watermarks across the page."),
-        bullets: [
-          t("watermark.tooltip.formatting.spacing.bullet1", "Width spacing: Horizontal distance between watermarks"),
-          t("watermark.tooltip.formatting.spacing.bullet2", "Height spacing: Vertical distance between watermarks"),
-          t("watermark.tooltip.formatting.spacing.bullet3", "Higher values create more spread out patterns")
-        ]
-      },
+      appearanceTip,
+      spacingTip,
       {
         title: t("watermark.tooltip.formatting.security.title", "Security Option"),
         description: t("watermark.tooltip.formatting.security.text", "Convert the final PDF to an image-based format for enhanced security."),
