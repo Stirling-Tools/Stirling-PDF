@@ -83,6 +83,7 @@
   color: "DEDEDE"
 - name: "v2"
   color: "FFFF00"
+  description: "Issues or pull requests related to the v2 branch"
 - name: "wontfix"
   description: "This will not be worked on"
   color: "FFFFFF"

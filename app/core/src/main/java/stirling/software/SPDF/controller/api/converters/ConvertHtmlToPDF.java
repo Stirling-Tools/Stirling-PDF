@@ -37,7 +37,6 @@ public class ConvertHtmlToPDF {
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/html/pdf")
-
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =

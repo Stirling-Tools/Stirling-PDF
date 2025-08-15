@@ -31,8 +31,7 @@ jobs:
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
     steps:
-
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@v4.3.0
 
       - name: Check for file changes
         uses: dorny/paths-filter@v3.0.2
@@ -56,14 +55,15 @@ jobs:
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4.3.0
+
       - name: Set up JDK ${{ matrix.jdk-version }}
         uses: actions/setup-java@v4.7.1
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4.4.1
+        uses: gradle/actions/setup-gradle@v4.4.2
         with:
           gradle-version: 8.14
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
@@ -106,19 +106,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.12.2
+        uses: step-security/harden-runner@v2.13.0
         with:
           egress-policy: audit
-      - uses: actions/checkout@v4.2.2
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.3.0
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4.7.1
         with:
           java-version: "17"
           distribution: "temurin"
-      - uses: gradle/actions/setup-gradle@v4.4.1
+      - uses: gradle/actions/setup-gradle@v4.4.2
       - name: Generate OpenAPI documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
-
+        env:
+          DISABLE_ADDITIONAL_FEATURES: true
+      
       - name: Upload OpenAPI Documentation
         uses: actions/upload-artifact@v4.6.2
         with:
@@ -163,7 +168,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4.3.0
       - name: Set up JDK 17
         uses: actions/setup-java@v4.7.1
         with:
@@ -205,7 +210,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Set up Java 17
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
@@ -254,7 +259,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Set up JDK 17
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
@@ -263,7 +268,7 @@ jobs:
           distribution: "temurin"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
         with:
           gradle-version: 8.14
 

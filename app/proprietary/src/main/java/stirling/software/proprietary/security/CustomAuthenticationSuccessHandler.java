@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -17,6 +18,8 @@ import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
+import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -24,13 +27,17 @@ import stirling.software.proprietary.security.service.UserService;
 public class CustomAuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
-    private LoginAttemptService loginAttemptService;
-    private UserService userService;
+    private final LoginAttemptService loginAttemptService;
+    private final UserService userService;
+    private final JwtServiceInterface jwtService;
 
     public CustomAuthenticationSuccessHandler(
-            LoginAttemptService loginAttemptService, UserService userService) {
+            LoginAttemptService loginAttemptService,
+            UserService userService,
+            JwtServiceInterface jwtService) {
         this.loginAttemptService = loginAttemptService;
         this.userService = userService;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -46,23 +53,31 @@ public class CustomAuthenticationSuccessHandler
         }
         loginAttemptService.loginSucceeded(userName);
 
-        // Get the saved request
-        HttpSession session = request.getSession(false);
-        SavedRequest savedRequest =
-                (session != null)
-                        ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
-                        : null;
+        if (jwtService.isJwtEnabled()) {
+            String jwt =
+                    jwtService.generateToken(
+                            authentication, Map.of("authType", AuthenticationType.WEB));
+            jwtService.addToken(response, jwt);
+            log.debug("JWT generated for user: {}", userName);
 
-        if (savedRequest != null
-                && !RequestUriUtils.isStaticResource(
-                        request.getContextPath(), savedRequest.getRedirectUrl())) {
-            // Redirect to the original destination
-            super.onAuthenticationSuccess(request, response, authentication);
-        } else {
-            // Redirect to the root URL (considering context path)
             getRedirectStrategy().sendRedirect(request, response, "/");
-        }
+        } else {
+            // Get the saved request
+            HttpSession session = request.getSession(false);
+            SavedRequest savedRequest =
+                    (session != null)
+                            ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
+                            : null;
 
-        // super.onAuthenticationSuccess(request, response, authentication);
+            if (savedRequest != null
+                    && !RequestUriUtils.isStaticResource(
+                            request.getContextPath(), savedRequest.getRedirectUrl())) {
+                // Redirect to the original destination
+                super.onAuthenticationSuccess(request, response, authentication);
+            } else {
+                // No saved request or it's a static resource, redirect to home page
+                getRedirectStrategy().sendRedirect(request, response, "/");
+            }
+        }
     }
 }
