@@ -1736,7 +1736,9 @@
   },
   "toolPicker": {
     "searchPlaceholder": "Search tools...",
-    "noToolsFound": "No tools found"
+    "noToolsFound": "No tools found",
+    "allTools": "ALL TOOLS",
+    "quickAccess": "QUICK ACCESS"
   },
   "fileUpload": {
     "selectFile": "Select a file",

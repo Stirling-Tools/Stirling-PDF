@@ -153,7 +153,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               }}
               onClick={() => scrollTo(quickAccessRef)}
             >
-              <span>QUICK ACCESS</span>
+              <span>{t("toolPicker.quickAccess", "QUICK ACCESS")}</span>
               <span
                 style={{
                   background: "var(--tool-header-badge-bg)",
@@ -214,7 +214,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               }}
               onClick={() => scrollTo(allToolsRef)}
             >
-              <span>ALL TOOLS</span>
+              <span>{t("toolPicker.allTools", "ALL TOOLS")}</span>
               <span
                 style={{
                   background: "var(--tool-header-badge-bg)",

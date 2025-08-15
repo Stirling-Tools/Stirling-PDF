@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getFlatToolRegistry, toolEndpoints, type ToolRegistryEntry } from "../data/toolRegistry";
+import { useFlatToolRegistry, toolEndpoints, type ToolRegistryEntry } from "../data/toolRegistry";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 
 interface ToolManagementResult {
@@ -20,7 +20,7 @@ export const useToolManagement = (): ToolManagementResult => {
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
 
   // Build endpoints list from registry entries with fallback to legacy mapping
-  const baseRegistry = useMemo(() => getFlatToolRegistry(), []);
+      const baseRegistry = useFlatToolRegistry();
   const registryDerivedEndpoints = useMemo(() => {
     const endpointsByTool: Record<string, string[]> = {};
     Object.entries(baseRegistry).forEach(([key, entry]) => {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
 import OCRPanel from '../tools/OCR';
@@ -28,14 +29,17 @@ export type ToolRegistry = {
 };
 
 /**
- * Shape overview:
- * - flatToolRegistryMap: { [toolId]: ToolRegistryEntry }
- * - buildStructuredRegistry(): {
- *     QUICK_ACCESS: Array<ToolRegistryEntry & { id: string }>,
- *     ALL_TOOLS: { [category]: { [subcategory]: Array<ToolRegistryEntry & { id: string }> } }
- *   }
- * - baseToolRegistry: [ { QUICK_ACCESS }, { ALL_TOOLS } ]
- *   Quick reference helpers are provided below for convenience.
+ * Tool Registry
+ * 
+ * This file contains the main tool registry for the application.
+ * 
+ * Structure:
+ * - useFlatToolRegistry: Hook that returns Record<string, ToolRegistryEntry> with translations
+ * 
+ * The registry is organized by categories and subcategories:
+ * - Standard Tools: Signing, Document Security, Verification, Document Review, Page Formatting, Document Assembly, Extraction, Removal
+ * - Advanced Tools: Automation, Advanced Formatting, Developer Tools
+ * - Recommended Tools: Quick access tools
  */
 // Ordered list used elsewhere for display ordering
 // Subcategory display order (top to bottom, left to right)
@@ -78,64 +82,32 @@ export const getSubcategoryColor = (subcategory?: string | null): string => {
     return SUBCATEGORY_COLOR_MAP[subcategory] || '#7882FF';
 };
 
-// Grouped structure by subcategory (ordered by SUBCATEGORY_ORDER)
-export type SubcategoryGroup = {
-    name: string;
-    color: string;
-    tools: (ToolRegistryEntry & { id: string })[];
-};
 
-export const getAllToolsBySubcategoryOrdered = (): SubcategoryGroup[] => {
-    const entries: Array<[string, ToolRegistryEntry]> = Object.entries(flatToolRegistryMap);
-    const grouping: Record<string, SubcategoryGroup> = {};
-    for (const [id, tool] of entries) {
-        const sub = tool.subcategory ?? 'General';
-        if (!grouping[sub]) {
-            grouping[sub] = {
-                name: sub,
-                color: getSubcategoryColor(sub),
-                tools: [],
-            };
-        }
-        grouping[sub].tools.push({ id, ...tool });
-    }
-    // Order tools within each subcategory alphabetically by name (display key)
-    Object.values(grouping).forEach(group => {
-        group.tools.sort((a, b) => a.name.localeCompare(b.name));
-    });
-    // Return groups ordered by SUBCATEGORY_ORDER
-    const ordered: SubcategoryGroup[] = [];
-    SUBCATEGORY_ORDER.forEach(sub => {
-        if (grouping[sub]) ordered.push(grouping[sub]);
-    });
-    // Append any subcategories not explicitly listed
-    Object.keys(grouping)
-        .filter(name => !SUBCATEGORY_ORDER.includes(name))
-        .sort((a, b) => a.localeCompare(b))
-        .forEach(name => ordered.push(grouping[name]));
-    return ordered;
-};
 
-export const flatToolRegistryMap: ToolRegistry = {
+// Hook to get the translated tool registry
+export function useFlatToolRegistry(): ToolRegistry {
+    const { t } = useTranslation();
+    
+    return {
     
     
     // Signing
 
     "certSign": {
         icon: <span className="material-symbols-rounded">workspace_premium</span>,
-        name: "home.certSign.title",
+        name: t("home.certSign.title", "Sign with Certificate"),
         component: null,
         view: "sign",
-        description: "home.certSign.desc",
+        description: t("home.certSign.desc", "Signs a PDF with a Certificate/Key (PEM/P12)"),
         category: "Standard Tools",
         subcategory: "Signing"
     },
     "sign": {
         icon: <span className="material-symbols-rounded">signature</span>,
-        name: "home.sign.title",
+        name: t("home.sign.title", "Sign"),
         component: null,
         view: "sign",
-        description: "home.sign.desc",
+        description: t("home.sign.desc", "Adds signature to PDF by drawing, text or image"),
         category: "Standard Tools",
         subcategory: "Signing"
     },
@@ -145,64 +117,64 @@ export const flatToolRegistryMap: ToolRegistry = {
 
     "add-password": {
         icon: <span className="material-symbols-rounded">password</span>,
-        name: "home.addPassword.title",
+        name: t("home.addPassword.title", "Add Password"),
         component: null,
         view: "security",
-        description: "home.addPassword.desc",
+        description: t("home.addPassword.desc", "Encrypt your PDF document with a password."),
         category: "Standard Tools",
         subcategory: "Document Security"
     },
     "add-watermark": {
         icon: <span className="material-symbols-rounded">branding_watermark</span>,
-        name: "home.watermark.title",
+        name: t("home.watermark.title", "Add Watermark"),
         component: null,
         view: "format",
-        description: "home.watermark.desc",
+        description: t("home.watermark.desc", "Add a custom watermark to your PDF document."),
         category: "Standard Tools",
         subcategory: "Document Security"
     },
     "add-stamp": {
         icon: <span className="material-symbols-rounded">approval</span>,
-        name: "home.AddStampRequest.title",
+        name: t("home.AddStampRequest.title", "Add Stamp to PDF"),
         component: null,
         view: "format",
-        description: "home.AddStampRequest.desc",
+        description: t("home.AddStampRequest.desc", "Add text or add image stamps at set locations"),
         category: "Standard Tools",
         subcategory: "Document Security"
     },
     "sanitize": {
         icon: <span className="material-symbols-rounded">sanitizer</span>,
-        name: "home.sanitizePdf.title",
+        name: t("home.sanitizePdf.title", "Sanitise"),
         component: null,
         view: "security",
-        description: "home.sanitizePdf.desc",
+        description: t("home.sanitizePdf.desc", "Remove scripts and other elements from PDF files"),
         category: "Standard Tools",
         subcategory: "Document Security"
     },
     "flatten": {
         icon: <span className="material-symbols-rounded">layers_clear</span>,
-        name: "home.flatten.title",
+        name: t("home.flatten.title", "Flatten"),
         component: null,
         view: "format",
-        description: "home.flatten.desc",
+        description: t("home.flatten.desc", "Remove all interactive elements and forms from a PDF"),
         category: "Standard Tools",
         subcategory: "Document Security"
     },
     "unlock-pdf-forms": {
         icon: <span className="material-symbols-rounded">preview_off</span>,
-        name: "home.unlockPDFForms.title",
+        name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
         component: null,
         view: "security",
-        description: "home.unlockPDFForms.desc",
+        description: t("home.unlockPDFForms.desc", "Remove read-only property of form fields in a PDF document."),
         category: "Standard Tools",
         subcategory: "Document Security"
     },
     "manage-certificates": {
         icon: <span className="material-symbols-rounded">license</span>,
-        name: "home.manageCertificates.title",
+        name: t("home.manageCertificates.title", "Manage Certificates"),
         component: null,
         view: "security",
-        description: "home.manageCertificates.desc",
+        description: t("home.manageCertificates.desc", "Import, export, or delete digital certificate files used for signing PDFs."),
         category: "Standard Tools",
         subcategory: "Document Security"
     },
@@ -212,19 +184,19 @@ export const flatToolRegistryMap: ToolRegistry = {
 
     "get-all-info-on-pdf": {
         icon: <span className="material-symbols-rounded">fact_check</span>,
-        name: "home.getPdfInfo.title",
+        name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
         component: null,
         view: "extract",
-        description: "home.getPdfInfo.desc",
+        description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
         category: "Standard Tools",
         subcategory: "Verification"
     },
     "validate-pdf-signature": {
         icon: <span className="material-symbols-rounded">verified</span>,
-        name: "home.validateSignature.title",
+        name: t("home.validateSignature.title", "Validate PDF Signature"),
         component: null,
         view: "security",
-        description: "home.validateSignature.desc",
+        description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
         category: "Standard Tools",
         subcategory: "Verification"
     },
@@ -234,28 +206,28 @@ export const flatToolRegistryMap: ToolRegistry = {
 
     "read": {
         icon: <span className="material-symbols-rounded">article</span>,
-        name: "home.read.title",
+        name: t("home.read.title", "Read"),
         component: null,
         view: "view",
-        description: "home.read.desc",
+        description: t("home.read.desc", "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."),
         category: "Standard Tools",
         subcategory: "Document Review"
     },
     "change-metadata": {
         icon: <span className="material-symbols-rounded">assignment</span>,
-        name: "home.changeMetadata.title",
+        name: t("home.changeMetadata.title", "Change Metadata"),
         component: null,
         view: "format",
-        description: "home.changeMetadata.desc",
+        description: t("home.changeMetadata.desc", "Change/Remove/Add metadata from a PDF document"),
         category: "Standard Tools",
         subcategory: "Document Review"
     },
     "change-permissions": {
         icon: <span className="material-symbols-rounded">admin_panel_settings</span>,
-        name: "home.permissions.title",
+        name: t("home.permissions.title", "Change Permissions"),
         component: null,
         view: "security",
-        description: "home.permissions.desc",
+        description: t("home.permissions.desc", "Change the permissions of your PDF document"),
         category: "Standard Tools",
         subcategory: "Document Review"
     },
@@ -265,82 +237,82 @@ export const flatToolRegistryMap: ToolRegistry = {
 
     "cropPdf": {
         icon: <span className="material-symbols-rounded">crop</span>,
-        name: "home.crop.title",
+        name: t("home.crop.title", "Crop PDF"),
         component: null,
         view: "format",
-        description: "home.crop.desc",
+        description: t("home.crop.desc", "Crop a PDF to reduce its size (maintains text!)"),
         category: "Standard Tools",
         subcategory: "Page Formatting"
     },
     "rotate": {
         icon: <span className="material-symbols-rounded">rotate_right</span>,
-        name: "home.rotate.title",
+        name: t("home.rotate.title", "Rotate"),
         component: null,
         view: "format",
-        description: "home.rotate.desc",
+        description: t("home.rotate.desc", "Easily rotate your PDFs."),
         category: "Standard Tools",
         subcategory: "Page Formatting"
     },
     "splitPdf": {
         icon: <span className="material-symbols-rounded">content_cut</span>,
-        name: "home.split.title",
+        name: t("home.split.title", "Split"),
         component: SplitPdfPanel,
         view: "split",
-        description: "home.split.desc",
+        description: t("home.split.desc", "Split PDFs into multiple documents"),
         category: "Standard Tools",
         subcategory: "Page Formatting"
     },
     "reorganize-pages": {
         icon: <span className="material-symbols-rounded">move_down</span>,
-        name: "home.reorganizePages.title",
+        name: t("home.reorganizePages.title", "Reorganize Pages"),
         component: null,
         view: "pageEditor",
-        description: "home.reorganizePages.desc",
+        description: t("home.reorganizePages.desc", "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."),
         category: "Standard Tools", 
         subcategory: "Page Formatting"
     },
     "adjust-page-size-scale": {
         icon: <span className="material-symbols-rounded">crop_free</span>,
-        name: "home.scalePages.title",
+        name: t("home.scalePages.title", "Adjust page size/scale"),
         component: null,
         view: "format",
-        description: "home.scalePages.desc",
+        description: t("home.scalePages.desc", "Change the size/scale of a page and/or its contents."),
         category: "Standard Tools",
         subcategory: "Page Formatting"
     },
     "add-page-numbers": {
         icon: <span className="material-symbols-rounded">123</span>,
-        name: "home.add-page-numbers.title",
+        name: t("home.add-page-numbers.title", "Add Page Numbers"),
         component: null,
         view: "format",
-        description: "home.add-page-numbers.desc",
+        description: t("home.add-page-numbers.desc", "Add Page numbers throughout a document in a set location"),
         category: "Standard Tools",
         subcategory: "Page Formatting"
     },
     "multi-page-layout": {
         icon: <span className="material-symbols-rounded">dashboard</span>,
-        name: "home.pageLayout.title",
+        name: t("home.pageLayout.title", "Multi-Page Layout"),
         component: null,
         view: "format",
-        description: "home.pageLayout.desc",
+        description: t("home.pageLayout.desc", "Merge multiple pages of a PDF document into a single page"),
         category: "Standard Tools",
         subcategory: "Page Formatting"
     },
     "single-large-page": {
         icon: <span className="material-symbols-rounded">looks_one</span>,
-        name: "home.PdfToSinglePage.title",
+        name: t("home.PdfToSinglePage.title", "PDF to Single Large Page"),
         component: null,
         view: "format",
-        description: "home.PdfToSinglePage.desc",
+        description: t("home.PdfToSinglePage.desc", "Merges all PDF pages into one large single page"),
         category: "Standard Tools",
         subcategory: "Page Formatting"
     },
     "add-attachments": {
         icon: <span className="material-symbols-rounded">attachment</span>,
-        name: "home.attachments.title",
+        name: t("home.attachments.title", "Add Attachments"),
         component: null,
         view: "format",
-        description: "home.attachments.desc",
+        description: t("home.attachments.desc", "Add or remove embedded files (attachments) to/from a PDF"),
         category: "Standard Tools",
         subcategory: "Page Formatting",
     },
@@ -350,19 +322,19 @@ export const flatToolRegistryMap: ToolRegistry = {
 
     "extract-pages": {
         icon: <span className="material-symbols-rounded">upload</span>,
-        name: "home.extractPage.title",
+        name: t("home.extractPage.title", "Extract Pages"),
         component: null,
         view: "extract",
-        description: "home.extractPage.desc",
+        description: t("home.extractPage.desc", "Extract specific pages from a PDF document"),
         category: "Standard Tools",
         subcategory: "Extraction"
     },
     "extract-images": {
         icon: <span className="material-symbols-rounded">filter</span>,
-        name: "home.extractImages.title",
+        name: t("home.extractImages.title", "Extract Images"),
         component: null,
         view: "extract",
-        description: "home.extractImages.desc",
+        description: t("home.extractImages.desc", "Extract images from PDF documents"),
         category: "Standard Tools",
         subcategory: "Extraction"
     },
@@ -372,55 +344,55 @@ export const flatToolRegistryMap: ToolRegistry = {
 
     "remove": {
         icon: <span className="material-symbols-rounded">delete</span>,
-        name: "home.removePages.title",
+        name: t("home.removePages.title", "Remove Pages"),
         component: null,
         view: "remove",
-        description: "home.removePages.desc",
+        description: t("home.removePages.desc", "Remove specific pages from a PDF document"),
         category: "Standard Tools",
         subcategory: "Removal"
     },
     "remove-blank-pages": {
         icon: <span className="material-symbols-rounded">scan_delete</span>,
-        name: "home.removeBlanks.title",
+        name: t("home.removeBlanks.title", "Remove Blank Pages"),
         component: null,
         view: "remove",
-        description: "home.removeBlanks.desc",
+        description: t("home.removeBlanks.desc", "Remove blank pages from PDF documents"),
         category: "Standard Tools",
         subcategory: "Removal"
     },
     "remove-annotations": {
         icon: <span className="material-symbols-rounded">thread_unread</span>,
-        name: "home.removeAnnotations.title",
+        name: t("home.removeAnnotations.title", "Remove Annotations"),
         component: null,
         view: "remove",
-        description: "home.removeAnnotations.desc",
+        description: t("home.removeAnnotations.desc", "Remove annotations and comments from PDF documents"),
         category: "Standard Tools",
         subcategory: "Removal"
     },
     "remove-image": {
         icon: <span className="material-symbols-rounded">remove_selection</span>,
-        name: "home.removeImagePdf.title",
+        name: t("home.removeImagePdf.title", "Remove Image"),
         component: null,
         view: "format",
-        description: "home.removeImagePdf.desc",
+        description: t("home.removeImagePdf.desc", "Remove images from PDF documents"),
         category: "Standard Tools",
         subcategory: "Removal"
     },
     "remove-password": {
         icon: <span className="material-symbols-rounded">lock_open_right</span>,
-        name: "home.removePassword.title",
+        name: t("home.removePassword.title", "Remove Password"),
         component: null,
         view: "security",
-        description: "home.removePassword.desc",
+        description: t("home.removePassword.desc", "Remove password protection from PDF documents"),
         category: "Standard Tools",
         subcategory: "Removal"
     },
     "remove-certificate-sign": {
         icon: <span className="material-symbols-rounded">remove_moderator</span>,
-        name: "home.removeCertSign.title",
+        name: t("home.removeCertSign.title", "Remove Certificate Signatures"),
         component: null,
         view: "security",
-        description: "home.removeCertSign.desc",
+        description: t("home.removeCertSign.desc", "Remove digital signatures from PDF documents"),
         category: "Standard Tools",
         subcategory: "Removal"
     },
@@ -430,37 +402,37 @@ export const flatToolRegistryMap: ToolRegistry = {
 
     "automate": {
         icon: <span className="material-symbols-rounded">automation</span>,
-        name: "home.automate.title",
+        name: t("home.automate.title", "Automate"),
         component: null,
         view: "format",
-        description: "home.automate.desc",
+        description: t("home.automate.desc", "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."),
         category: "Advanced Tools",
         subcategory: "Automation"
     },
     "auto-rename-pdf-file": {
         icon: <span className="material-symbols-rounded">match_word</span>,
-        name: "home.auto-rename.title",
+        name: t("home.auto-rename.title", "Auto Rename PDF File"),
         component: null,
         view: "format",
-        description: "home.auto-rename.desc",
+        description: t("home.auto-rename.desc", "Automatically rename PDF files based on their content"),
         category: "Advanced Tools",
         subcategory: "Automation"
     },
     "auto-split-pages": {
         icon: <span className="material-symbols-rounded">split_scene_right</span>,
-        name: "home.autoSplitPDF.title",
+        name: t("home.autoSplitPDF.title", "Auto Split Pages"),
         component: null,
         view: "format",
-        description: "home.autoSplitPDF.desc",
+        description: t("home.autoSplitPDF.desc", "Automatically split PDF pages based on content detection"),
         category: "Advanced Tools",
         subcategory: "Automation"
     },
     "auto-split-by-size-count": {
         icon: <span className="material-symbols-rounded">content_cut</span>,
-        name: "home.autoSizeSplitPDF.title",
+        name: t("home.autoSizeSplitPDF.title", "Auto Split by Size/Count"),
         component: null,
         view: "format",
-        description: "home.autoSizeSplitPDF.desc",
+        description: t("home.autoSizeSplitPDF.desc", "Automatically split PDFs by file size or page count"),
         category: "Advanced Tools",
         subcategory: "Automation"
     },
@@ -470,73 +442,73 @@ export const flatToolRegistryMap: ToolRegistry = {
 
     "adjust-colors-contrast": {
         icon: <span className="material-symbols-rounded">palette</span>,
-        name: "home.adjust-contrast.title",
+        name: t("home.adjust-contrast.title", "Adjust Colors/Contrast"),
         component: null,
         view: "format",
-        description: "home.adjust-contrast.desc",
+        description: t("home.adjust-contrast.desc", "Adjust colors and contrast of PDF documents"),
         category: "Advanced Tools",
         subcategory: "Advanced Formatting"
     },
     "repair": {
         icon: <span className="material-symbols-rounded">build</span>,
-        name: "home.repair.title",
+        name: t("home.repair.title", "Repair"),
         component: null,
         view: "format",
-        description: "home.repair.desc",
+        description: t("home.repair.desc", "Repair corrupted or damaged PDF files"),
         category: "Advanced Tools",
         subcategory: "Advanced Formatting"
     },
     "detect-split-scanned-photos": {
         icon: <span className="material-symbols-rounded">scanner</span>,
-        name: "home.ScannerImageSplit.title",
+        name: t("home.ScannerImageSplit.title", "Detect & Split Scanned Photos"),
         component: null,
         view: "format",
-        description: "home.ScannerImageSplit.desc",
+        description: t("home.ScannerImageSplit.desc", "Detect and split scanned photos into separate pages"),
         category: "Advanced Tools",
         subcategory: "Advanced Formatting"
     },
     "overlay-pdfs": {
         icon: <span className="material-symbols-rounded">layers</span>,
-        name: "home.overlay-pdfs.title",
+        name: t("home.overlay-pdfs.title", "Overlay PDFs"),
         component: null,
         view: "format",
-        description: "home.overlay-pdfs.desc",
+        description: t("home.overlay-pdfs.desc", "Overlay one PDF on top of another"),
         category: "Advanced Tools",
         subcategory: "Advanced Formatting"
     },
     "replace-and-invert-color": {
         icon: <span className="material-symbols-rounded">format_color_fill</span>,
-        name: "home.replaceColorPdf.title",
+        name: t("home.replaceColorPdf.title", "Replace & Invert Color"),
         component: null,
         view: "format",
-        description: "home.replaceColorPdf.desc",
+        description: t("home.replaceColorPdf.desc", "Replace or invert colors in PDF documents"),
         category: "Advanced Tools",
         subcategory: "Advanced Formatting"
     },
     "add-image": {
         icon: <span className="material-symbols-rounded">image</span>,
-        name: "home.addImage.title",
+        name: t("home.addImage.title", "Add Image"),
         component: null,
         view: "format",
-        description: "home.addImage.desc",
+        description: t("home.addImage.desc", "Add images to PDF documents"),
         category: "Advanced Tools",
         subcategory: "Advanced Formatting"
     },
     "edit-table-of-contents": {
         icon: <span className="material-symbols-rounded">bookmark_add</span>,
-        name: "home.editTableOfContents.title",
+        name: t("home.editTableOfContents.title", "Edit Table of Contents"),
         component: null,
         view: "format",
-        description: "home.editTableOfContents.desc",
+        description: t("home.editTableOfContents.desc", "Add or edit bookmarks and table of contents in PDF documents"),
         category: "Advanced Tools",
         subcategory: "Advanced Formatting"
     },
     "scanner-effect": {
         icon: <span className="material-symbols-rounded">scanner</span>,
-        name: "home.fakeScan.title",
+        name: t("home.fakeScan.title", "Scanner Effect"),
         component: null,
         view: "format",
-        description: "home.fakeScan.desc",
+        description: t("home.fakeScan.desc", "Create a PDF that looks like it was scanned"),
         category: "Advanced Tools",
         subcategory: "Advanced Formatting"
     },
@@ -546,49 +518,49 @@ export const flatToolRegistryMap: ToolRegistry = {
 
     "show-javascript": {
         icon: <span className="material-symbols-rounded">javascript</span>,
-        name: "home.showJS.title",
+        name: t("home.showJS.title", "Show JavaScript"),
         component: null,
         view: "extract",
-        description: "home.showJS.desc",
+        description: t("home.showJS.desc", "Extract and display JavaScript code from PDF documents"),
         category: "Advanced Tools",
         subcategory: "Developer Tools"
     },
     "dev-api": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
-        name: "API",
+        name: t("home.devApi.title", "API"),
         component: null,
         view: "external",
-        description: "Link to API documentation",
+        description: t("home.devApi.desc", "Link to API documentation"),
         category: "Advanced Tools",
         subcategory: "Developer Tools",
         link: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html"
     },
     "dev-folder-scanning": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
-        name: "Automated Folder Scanning",
+        name: t("home.devFolderScanning.title", "Automated Folder Scanning"),
         component: null,
         view: "external",
-        description: "Link to automated folder scanning guide",
+        description: t("home.devFolderScanning.desc", "Link to automated folder scanning guide"),
         category: "Advanced Tools",
         subcategory: "Developer Tools",
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/"
     },
     "dev-sso-guide": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
-        name: "SSO Guide",
+        name: t("home.devSsoGuide.title", "SSO Guide"),
         component: null,
         view: "external",
-        description: "Link to SSO guide",
+        description: t("home.devSsoGuide.desc", "Link to SSO guide"),
         category: "Advanced Tools",
         subcategory: "Developer Tools",
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
     },
     "dev-airgapped": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
-        name: "Air-gapped Setup",
+        name: t("home.devAirgapped.title", "Air-gapped Setup"),
         component: null,
         view: "external",
-        description: "Link to air-gapped setup guide",
+        description: t("home.devAirgapped.desc", "Link to air-gapped setup guide"),
         category: "Advanced Tools",
         subcategory: "Developer Tools",
         link: "https://docs.stirlingpdf.com/Pro/#activation"
@@ -598,29 +570,29 @@ export const flatToolRegistryMap: ToolRegistry = {
     // Recommended Tools
     "compare": {
         icon: <span className="material-symbols-rounded">compare</span>,
-        name: "home.compare.title",
+        name: t("home.compare.title", "Compare"),
         component: null,
         view: "format",
-        description: "home.compare.desc",
+        description: t("home.compare.desc", "Compare two PDF documents and highlight differences"),
         category: "Recommended Tools",
         subcategory: null
     },
     "compressPdfs": {
         icon: <span className="material-symbols-rounded">zoom_in_map</span>,
-        name: "home.compressPdfs.title",
+        name: t("home.compressPdfs.title", "Compress"),
         component: CompressPdfPanel,
         view: "compress",
-        description: "home.compressPdfs.desc",
+        description: t("home.compressPdfs.desc", "Compress PDFs to reduce their file size."),
         category: "Recommended Tools",
         subcategory: null,
         maxFiles: -1
     },
     "convert": {
         icon: <span className="material-symbols-rounded">sync_alt</span>,
-        name: "home.fileToPDF.title",
+        name: t("home.fileToPDF.title", "Convert"),
         component: ConvertPanel,
         view: "convert",
-        description: "home.fileToPDF.desc",
+        description: t("home.fileToPDF.desc", "Convert files to and from PDF format"),
         category: "Recommended Tools",
         subcategory: null,
         maxFiles: -1,
@@ -661,111 +633,53 @@ export const flatToolRegistryMap: ToolRegistry = {
     },
     "mergePdfs": {
         icon: <span className="material-symbols-rounded">library_add</span>,
-        name: "home.merge.title",
+        name: t("home.merge.title", "Merge"),
         component: null,
         view: "merge",
-        description: "home.merge.desc",
+        description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
         category: "Recommended Tools",
         subcategory: null,
         maxFiles: -1
     },
     "multi-tool": {
         icon: <span className="material-symbols-rounded">dashboard_customize</span>,
-        name: "home.multiTool.title",
+        name: t("home.multiTool.title", "Multi-Tool"),
         component: null,
         view: "pageEditor",
-        description: "home.multiTool.desc",
+        description: t("home.multiTool.desc", "Use multiple tools on a single PDF document"),
         category: "Recommended Tools",
         subcategory: null,
         maxFiles: -1
     },
     "ocr": {
         icon: <span className="material-symbols-rounded">quick_reference_all</span>,
-        name: "home.ocr.title",
+        name: t("home.ocr.title", "OCR"),
         component: OCRPanel,
         view: "convert",
-        description: "home.ocr.desc",
+        description: t("home.ocr.desc", "Extract text from scanned PDFs using Optical Character Recognition"),
         category: "Recommended Tools",
         subcategory: null,
         maxFiles: -1
     },
     "redact": {
         icon: <span className="material-symbols-rounded">visibility_off</span>,
-        name: "home.redact.title",
+        name: t("home.redact.title", "Redact"),
         component: null,
         view: "redact",
-        description: "home.redact.desc",
+        description: t("home.redact.desc", "Permanently remove sensitive information from PDF documents"),
         category: "Recommended Tools",
         subcategory: null
     },
     "view-pdf": {
         icon: <span className="material-symbols-rounded">article</span>,
-        name: "home.viewPdf.title",
+        name: t("home.viewPdf.title", "View/Edit PDF"),
         component: null,
         view: "view",
-        description: "home.viewPdf.desc",
+        description: t("home.viewPdf.desc", "View, annotate, draw, add text or images"),
         category: "Recommended Tools",
         subcategory: null
     }
-};
-
-// Build structured registry that preserves order for sections
-export type ToolConfig = ToolRegistryEntry & { id: string };
-export type ToolRegistryStructured = {
-    QUICK_ACCESS: ToolConfig[];
-    ALL_TOOLS: Record<string, Record<string, ToolConfig[]>>;
-};
-
-function buildStructuredRegistry(): ToolRegistryStructured {
-    const entries: Array<[string, ToolRegistryEntry]> = Object.entries(flatToolRegistryMap);
-    const quick: ToolConfig[] = [];
-    const all: Record<string, Record<string, ToolConfig[]>> = {};
-
-    for (const [id, tool] of entries) {
-        const sub = tool.subcategory ?? 'General';
-        const cat = tool.category ?? 'OTHER';
-        // Quick access: use the existing "Recommended Tools" category, this will change in future
-        if (tool.category === 'Recommended Tools') {
-            quick.push({ id, ...tool });
-        }
-        if (!all[cat]) all[cat] = {};
-        if (!all[cat][sub]) all[cat][sub] = [];
-        all[cat][sub].push({ id, ...tool });
-    }
-
-    // Preserve subcategory ordering within each category
-    for (const cat of Object.keys(all)) {
-        const subcats = all[cat];
-        const ordered: Record<string, ToolConfig[]> = {};
-        SUBCATEGORY_ORDER.forEach(orderName => {
-            if (subcats[orderName]) ordered[orderName] = subcats[orderName];
-        });
-        // Append any remaining subcategories not in the predefined order
-        Object.keys(subcats)
-            .filter(name => !(name in ordered))
-            .sort((a, b) => a.localeCompare(b))
-            .forEach(name => (ordered[name] = subcats[name]));
-        all[cat] = ordered;
-    }
-
-    return { QUICK_ACCESS: quick, ALL_TOOLS: all };
-}
-
-export const baseToolRegistry: [
-    { QUICK_ACCESS: ToolConfig[] },
-    { ALL_TOOLS: Record<string, Record<string, ToolConfig[]>> }
-] = [
-    { QUICK_ACCESS: buildStructuredRegistry().QUICK_ACCESS },
-    { ALL_TOOLS: buildStructuredRegistry().ALL_TOOLS }
-];
-
-// Convenience accessors for the structured shape
-export const getQuickAccessTools = (): ToolConfig[] => baseToolRegistry[0].QUICK_ACCESS;
-export const getAllToolsStructured = (): Record<string, Record<string, ToolConfig[]>> => baseToolRegistry[1].ALL_TOOLS;
-
-// Compatibility: provide a flat registry for existing hooks/components
-export function getFlatToolRegistry(): ToolRegistry {
-    return flatToolRegistryMap;
+    };
 }
 
 export const toolEndpoints: Record<string, string[]> = {
