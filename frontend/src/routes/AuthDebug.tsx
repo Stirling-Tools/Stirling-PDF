@@ -92,19 +92,29 @@ export default function AuthDebug() {
     alert(`Cleared ${keys.length} auth-related localStorage keys`)
   }
 
-  const testSignIn = async () => {
+  const testSignIn = async (provider: 'github' | 'google' | 'facebook' = 'github') => {
     try {
+      // Supabase redirects back to your app after OAuth
       const redirectTo = `${window.location.origin}/auth/callback`
+      
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: { redirectTo }
+        provider,
+        options: { 
+          redirectTo,
+          queryParams: provider === 'facebook' 
+            ? { scope: 'email' }
+            : {
+                access_type: 'offline',
+                prompt: 'consent',
+              }
+        }
       })
       
       if (error) {
-        alert(`Sign in test failed: ${error.message}`)
+        alert(`${provider} sign in test failed: ${error.message}`)
       }
     } catch (err) {
-      alert(`Sign in test error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      alert(`${provider} sign in test error: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
@@ -248,6 +258,45 @@ export default function AuthDebug() {
             </div>
           )}
 
+          {/* Prominent JWT Token Display */}
+          {session && (
+            <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg mb-6">
+              <h3 className="text-lg font-semibold text-yellow-900 mb-3 flex items-center">
+                🔑 JWT Access Token
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-yellow-800 mb-1">
+                    Full Token (Click to select all):
+                  </label>
+                  <textarea
+                    value={session.access_token}
+                    readOnly
+                    onClick={(e) => e.currentTarget.select()}
+                    className="w-full h-32 px-3 py-2 border border-yellow-400 rounded-md bg-white font-mono text-xs resize-none focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+                
+                <div className="flex flex-wrap gap-2 justify-between items-center">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(session.access_token || '')
+                      alert('JWT token copied to clipboard!')
+                    }}
+                    className="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    📋 Copy Full Token
+                  </button>
+                  
+                  <div className="text-yellow-800 text-xs">
+                    <div><strong>Expires:</strong> {session?.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'Unknown'}</div>
+                    <div><strong>Length:</strong> {session.access_token?.length || 0} characters</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {session && (
             <details className="mb-4">
               <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
@@ -281,10 +330,24 @@ export default function AuthDebug() {
             </button>
             
             <button
-              onClick={testSignIn}
+              onClick={() => testSignIn('github')}
               className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
             >
-              Test Sign In
+              Test GitHub Sign In
+            </button>
+            
+            <button
+              onClick={() => testSignIn('google')}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Test Google Sign In
+            </button>
+            
+            <button
+              onClick={() => testSignIn('facebook')}
+              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            >
+              Test Facebook Sign In
             </button>
             
             {session && (
@@ -366,13 +429,32 @@ export default function AuthDebug() {
                 </div>
               )}
 
-              {/* Token Info */}
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <div className="text-sm font-medium text-blue-900 mb-1">JWT Token Info</div>
-                <div className="text-blue-700 text-sm space-y-1">
-                  <div>Token: {session?.access_token ? `${session.access_token.substring(0, 30)}...` : 'No token'}</div>
-                  <div>Expires: {session?.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'Unknown'}</div>
-                </div>
+              {/* JWT Token Display */}
+              <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                <div className="text-sm font-medium text-green-900 mb-2">🔑 JWT Access Token (Full)</div>
+                {session?.access_token ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={session.access_token}
+                      readOnly
+                      className="w-full h-24 px-3 py-2 border border-green-300 rounded-md bg-white font-mono text-xs resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="No token available"
+                    />
+                    <div className="flex justify-between items-center">
+                      <button
+                        onClick={() => navigator.clipboard.writeText(session.access_token || '')}
+                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        📋 Copy Token
+                      </button>
+                      <span className="text-green-700 text-xs">
+                        Expires: {session?.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'Unknown'}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-green-700 text-sm">No JWT token available. Please sign in first.</p>
+                )}
               </div>
 
               {/* Send Request Button */}

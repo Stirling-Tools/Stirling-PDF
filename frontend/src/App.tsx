@@ -5,7 +5,7 @@ import { FileContextProvider } from './contexts/FileContext';
 import { FilesModalProvider } from './contexts/FilesModalContext';
 import { AuthProvider } from './lib/useSession';
 import HomePage from './pages/HomePage';
-import Login from './routes/Login';
+import LoginCompact from './routes/LoginCompact';
 import AuthCallback from './routes/AuthCallback';
 import AuthDebug from './routes/AuthDebug';
 
@@ -21,7 +21,7 @@ export default function App() {
           <FilesModalProvider>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<LoginCompact />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/debug" element={<AuthDebug />} />
               {/* Catch-all route - redirects unknown paths to home */}
