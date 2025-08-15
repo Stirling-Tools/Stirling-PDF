@@ -6,6 +6,7 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ApiIcon from "@mui/icons-material/Api";
 import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import LockIcon from "@mui/icons-material/Lock";
+import BrandingWatermarkIcon from "@mui/icons-material/BrandingWatermark";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
 
@@ -103,6 +104,15 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     category: "security",
     description: "Change document restrictions and permissions",
     endpoints: ["add-password"]
+  },
+  watermark: {
+    id: "watermark",
+    icon: <BrandingWatermarkIcon />,
+    component: React.lazy(() => import("../tools/AddWatermark")),
+    maxFiles: -1,
+    category: "security",
+    description: "Add text or image watermarks to PDF files",
+    endpoints: ["add-watermark"]
   },
 
 };

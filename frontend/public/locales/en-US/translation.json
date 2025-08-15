@@ -1737,5 +1737,48 @@
         "text": "To make these permissions unchangeable, use the Add Password tool to set an owner password."
       }
     }
+  },
+  "watermark": {
+    "completed": "Watermark added",
+    "submit": "Add Watermark",
+    "filenamePrefix": "watermarked",
+    "error": {
+      "failed": "An error occurred while adding watermark to the PDF."
+    },
+    "watermarkType": {
+      "text": "Text",
+      "image": "Image"
+    },
+    "settings": {
+      "type": "Watermark Type",
+      "text": {
+        "label": "Watermark Text",
+        "placeholder": "Enter watermark text"
+      },
+      "image": {
+        "label": "Watermark Image",
+        "choose": "Choose Image",
+        "selected": "Selected: {{filename}}"
+      },
+      "fontSize": "Font Size",
+      "position": "Position",
+      "rotation": "Rotation (degrees)",
+      "opacity": "Opacity (%)",
+      "spacing": {
+        "width": "Width Spacing",
+        "height": "Height Spacing"
+      }
+    },
+    "positions": {
+      "topLeft": "Top Left",
+      "topCenter": "Top Center", 
+      "topRight": "Top Right",
+      "centerLeft": "Center Left",
+      "center": "Center",
+      "centerRight": "Center Right",
+      "bottomLeft": "Bottom Left",
+      "bottomCenter": "Bottom Center",
+      "bottomRight": "Bottom Right"
+    }
   }
 }
