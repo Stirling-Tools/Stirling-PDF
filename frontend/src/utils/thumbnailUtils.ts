@@ -273,6 +273,29 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
+async function generatePDFThumbnail(arrayBuffer: ArrayBuffer, file: File, scale: number): Promise<string> {
+  try {
+    const pdf = await getDocument({
+      data: arrayBuffer,
+      disableAutoFetch: true,
+      disableStream: true
+    }).promise;
+
+    const thumbnail = await generateStandardPDFThumbnail(pdf, scale);
+
+    // Immediately clean up memory after thumbnail generation
+    pdf.destroy();
+    return thumbnail;
+  } catch (error) {
+    if (error instanceof Error) {
+      // Check if PDF is encrypted
+      if (error.name === "PasswordException") {
+        return generateEncryptedPDFThumbnail(file);
+      }
+    }
+    throw error; // Not an encryption issue, re-throw
+  }
+}
 
 /**
  * Generate thumbnail for any file type
@@ -306,51 +329,15 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
   const chunk = file.slice(0, Math.min(chunkSize, file.size));
   const arrayBuffer = await chunk.arrayBuffer();
 
-  let thumbnail: string;
   try {
-    const pdf = await getDocument({
-      data: arrayBuffer,
-      disableAutoFetch: true,
-      disableStream: true
-    }).promise;
-
-    thumbnail = await generateStandardPDFThumbnail(pdf, scale);
-
-    // Immediately clean up memory after thumbnail generation
-    pdf.destroy();
-
+    return await generatePDFThumbnail(arrayBuffer, file, scale);
   } catch (error) {
     if (error instanceof Error) {
-      // Check if PDF is encrypted
-      if (error.name === "PasswordException") {
-        thumbnail = generateEncryptedPDFThumbnail(file);
-
-      } else if (error.name === 'InvalidPDFException') {
+      if (error.name === 'InvalidPDFException') {
         console.warn(`PDF structure issue for ${file.name} - using fallback thumbnail`);
         // Return a placeholder or try with full file instead of chunk
         const fullArrayBuffer = await file.arrayBuffer();
-        try {
-          const pdf = await getDocument({
-            data: fullArrayBuffer,
-            disableAutoFetch: true,
-            disableStream: true,
-            verbosity: 0 // Reduce PDF.js warnings
-          }).promise;
-          thumbnail = await generateStandardPDFThumbnail(pdf, scale);
-          pdf.destroy();
-        } catch (fallbackError) {
-          if (fallbackError instanceof Error) {
-            // Check if PDF is encrypted
-            if (fallbackError.name === "PasswordException") {
-              thumbnail = generateEncryptedPDFThumbnail(file);
-            } else {
-              console.warn('Fallback thumbnail generation also failed for', file.name, fallbackError);
-              return undefined;
-            }
-          } else {
-            throw fallbackError; // Re-throw non-Error exceptions
-          }
-        }
+        return await generatePDFThumbnail(fullArrayBuffer, file, scale);
       } else {
         console.warn('Unknown error thrown. Failed to generate thumbnail for', file.name, error);
         return undefined;
@@ -359,6 +346,4 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
       throw error; // Re-throw non-Error exceptions
     }
   }
-
-  return thumbnail;
 }
