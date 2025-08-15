@@ -811,16 +811,6 @@
   "removePages": {
     "tags": "Remove pages,delete pages"
   },
-  "removePassword": {
-    "tags": "secure,Decrypt,security,unpassword,delete password",
-    "title": "Remove password",
-    "header": "Remove password (Decrypt)",
-    "selectText": {
-      "1": "Select PDF to Decrypt",
-      "2": "Password"
-    },
-    "submit": "Remove"
-  },
   "compressPdfs": {
     "tags": "squish,small,tiny"
   },
@@ -1874,6 +1864,22 @@
       "warning": {
         "text": "To make these permissions unchangeable, use the Add Password tool to set an owner password."
       }
+    }
+  },
+  "removePassword": {
+    "tags": "secure,Decrypt,security,unpassword,delete password",
+    "title": "Remove Password",
+    "password": {
+      "label": "Current Password",
+      "placeholder": "Enter current password",
+      "completed": "Password configured"
+    },
+    "filenamePrefix": "decrypted",
+    "error": {
+      "failed": "An error occurred while removing the password from the PDF."
+    },
+    "results": {
+      "title": "Decrypted PDFs"
     }
   }
 }
