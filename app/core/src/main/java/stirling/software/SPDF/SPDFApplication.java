@@ -27,7 +27,6 @@ import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.UrlUtils;
 
 @Slf4j
@@ -46,17 +45,14 @@ public class SPDFApplication {
 
     private final AppConfig appConfig;
     private final Environment env;
-    private final ApplicationProperties applicationProperties;
     private final WebBrowser webBrowser;
 
     public SPDFApplication(
             AppConfig appConfig,
             Environment env,
-            ApplicationProperties applicationProperties,
             @Autowired(required = false) WebBrowser webBrowser) {
         this.appConfig = appConfig;
         this.env = env;
-        this.applicationProperties = applicationProperties;
         this.webBrowser = webBrowser;
     }
 

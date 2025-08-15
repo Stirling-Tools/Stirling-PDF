@@ -252,8 +252,10 @@ public class JobExecutorService {
                         }
                     }
 
-                    if (response.getHeaders().getContentType() != null) {
-                        contentType = response.getHeaders().getContentType().toString();
+                    MediaType mediaType = response.getHeaders().getContentType();
+
+                    if (mediaType != null) {
+                        contentType = mediaType.toString();
                     }
 
                     // Store byte array directly to disk
