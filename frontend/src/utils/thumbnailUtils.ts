@@ -53,14 +53,14 @@ function generateEncryptedPDFThumbnail(file: File): string {
   ctx.stroke();
   ctx.setLineDash([]); // Reset dash pattern
 
-  // Modern document icon
-  drawModernDocumentIcon(ctx, canvas.width / 2, 35, colorScheme.icon);
+  // Large lock icon as main element
+  drawLargeLockIcon(ctx, canvas.width / 2, canvas.height / 2 - 10, colorScheme);
 
-  // Large lock icon overlay
-  drawLockIcon(ctx, canvas.width / 2, canvas.height / 2, colorScheme);
-
-  // "ENCRYPTED" badge
-  drawEncryptionBadge(ctx, canvas.width / 2, canvas.height / 2 + 25, colorScheme);
+  // "PDF" text under the lock
+  ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = colorScheme.icon;
+  ctx.textAlign = 'center';
+  ctx.fillText('PDF', canvas.width / 2, canvas.height / 2 + 35);
 
   // File size with subtle styling
   const sizeText = formatFileSize(file.size);
@@ -189,57 +189,39 @@ function drawModernDocumentIcon(ctx: CanvasRenderingContext2D, centerX: number, 
 }
 
 /**
- * Draw lock icon for encrypted PDFs
+ * Draw large lock icon for encrypted PDFs
  */
-function drawLockIcon(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, colorScheme: ColorScheme) {
-  const size = 16;
+function drawLargeLockIcon(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, colorScheme: ColorScheme) {
+  const size = 48;
   ctx.fillStyle = colorScheme.icon;
   ctx.strokeStyle = colorScheme.icon;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 3;
 
   // Lock body (rectangle)
   const bodyWidth = size;
-  const bodyHeight = size * 0.6;
+  const bodyHeight = size * 0.75;
   const bodyX = centerX - bodyWidth / 2;
   const bodyY = centerY - bodyHeight / 4;
 
-  drawRoundedRect(ctx, bodyX, bodyY, bodyWidth, bodyHeight, 2);
+  drawRoundedRect(ctx, bodyX, bodyY, bodyWidth, bodyHeight, 4);
   ctx.fill();
 
   // Lock shackle (semicircle)
-  const shackleRadius = size * 0.35;
-  const shackleY = centerY - size * 0.4;
+  const shackleRadius = size * 0.32;
+  const shackleY = centerY - size * 0.25;
 
   ctx.beginPath();
   ctx.arc(centerX, shackleY, shackleRadius, Math.PI, 2 * Math.PI);
   ctx.stroke();
 
   // Keyhole
+  const keyholeX = centerX;
+  const keyholeY = bodyY + bodyHeight * 0.4;
   ctx.fillStyle = colorScheme.textPrimary;
   ctx.beginPath();
-  ctx.arc(centerX, centerY - 2, 2, 0, 2 * Math.PI);
+  ctx.arc(keyholeX, keyholeY, 4, 0, 2 * Math.PI);
   ctx.fill();
-  ctx.fillRect(centerX - 1, centerY - 2, 2, 4);
-}
-
-/**
- * Draw encryption badge
- */
-function drawEncryptionBadge(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, colorScheme: ColorScheme) {
-  const extension = "ENCRYPTED";
-  const badgeWidth = extension.length * 6 + 12;
-  const badgeHeight = 18;
-
-  // Badge background
-  drawRoundedRect(ctx, centerX - badgeWidth/2, centerY - badgeHeight/2, badgeWidth, badgeHeight, 9);
-  ctx.fillStyle = colorScheme.badge;
-  ctx.fill();
-
-  // Badge text
-  ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillStyle = colorScheme.textPrimary;
-  ctx.textAlign = 'center';
-  ctx.fillText(extension, centerX, centerY + 3);
+  ctx.fillRect(keyholeX - 2, keyholeY, 4, 8);
 }
 
 /**
@@ -345,7 +327,7 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
         console.log('PDF appears to be encrypted based on error, generating encrypted thumbnail:', file.name);
         return generateEncryptedPDFThumbnail(file);
       }
-      
+
       if (error.name === 'InvalidPDFException') {
         console.warn(`PDF structure issue for ${file.name} - using fallback thumbnail`);
         // Return a placeholder or try with full file instead of chunk
