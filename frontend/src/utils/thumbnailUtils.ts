@@ -225,6 +225,25 @@ function drawLargeLockIcon(ctx: CanvasRenderingContext2D, centerX: number, cente
 }
 
 /**
+ * Generate standard PDF thumbnail by rendering first page
+ */
+async function generateStandardPDFThumbnail(pdf: any, scale: number): Promise<string> {
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement("canvas");
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error('Could not get canvas context');
+  }
+
+  await page.render({ canvasContext: context, viewport }).promise;
+  return canvas.toDataURL();
+}
+
+/**
  * Draw extension badge
  */
 function drawExtensionBadge(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, extension: string, colorScheme: ColorScheme) {
@@ -281,98 +300,65 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
   console.log('Generating thumbnail for', file.name);
   const scale = calculateScaleFromFileSize(file.size);
   console.log(`Using scale ${scale} for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
-  try {
-    // Only read first 2MB for thumbnail generation to save memory
-    const chunkSize = 2 * 1024 * 1024; // 2MB
-    const chunk = file.slice(0, Math.min(chunkSize, file.size));
-    const arrayBuffer = await chunk.arrayBuffer();
 
+  // Only read first 2MB for thumbnail generation to save memory
+  const chunkSize = 2 * 1024 * 1024; // 2MB
+  const chunk = file.slice(0, Math.min(chunkSize, file.size));
+  const arrayBuffer = await chunk.arrayBuffer();
+
+  let thumbnail: string;
+  try {
     const pdf = await getDocument({
       data: arrayBuffer,
       disableAutoFetch: true,
       disableStream: true
     }).promise;
 
-    // Check if PDF is encrypted
-    if ((pdf as any).isEncrypted) {
-      console.log('PDF is encrypted, generating encrypted thumbnail:', file.name);
-      pdf.destroy();
-      return generateEncryptedPDFThumbnail(file);
-    }
-
-    const page = await pdf.getPage(1);
-    const viewport = page.getViewport({ scale }); // Dynamic scale based on file size
-    const canvas = document.createElement("canvas");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const context = canvas.getContext("2d");
-
-    if (!context) {
-      throw new Error('Could not get canvas context');
-    }
-
-    await page.render({ canvasContext: context, viewport }).promise;
-    const thumbnail = canvas.toDataURL();
+    thumbnail = await generateStandardPDFThumbnail(pdf, scale);
 
     // Immediately clean up memory after thumbnail generation
     pdf.destroy();
-    console.log('Thumbnail generated and PDF destroyed for', file.name);
 
-    return thumbnail;
   } catch (error) {
     if (error instanceof Error) {
-      // Check if error indicates encrypted PDF
-      const errorMessage = error.message.toLowerCase();
-      if (errorMessage.includes('password') || errorMessage.includes('encrypted')) {
-        console.log('PDF appears to be encrypted based on error, generating encrypted thumbnail:', file.name);
-        return generateEncryptedPDFThumbnail(file);
-      }
+      // Check if PDF is encrypted
+      if (error.name === "PasswordException") {
+        thumbnail = generateEncryptedPDFThumbnail(file);
 
-      if (error.name === 'InvalidPDFException') {
+      } else if (error.name === 'InvalidPDFException') {
         console.warn(`PDF structure issue for ${file.name} - using fallback thumbnail`);
         // Return a placeholder or try with full file instead of chunk
+        const fullArrayBuffer = await file.arrayBuffer();
         try {
-          const fullArrayBuffer = await file.arrayBuffer();
           const pdf = await getDocument({
             data: fullArrayBuffer,
             disableAutoFetch: true,
             disableStream: true,
             verbosity: 0 // Reduce PDF.js warnings
           }).promise;
-
-          // Check if PDF is encrypted in fallback too
-          if ((pdf as any).isEncrypted) {
-            console.log('PDF is encrypted in fallback, generating encrypted thumbnail:', file.name);
-            pdf.destroy();
-            return generateEncryptedPDFThumbnail(file);
-          }
-
-          const page = await pdf.getPage(1);
-          const viewport = page.getViewport({ scale });
-          const canvas = document.createElement("canvas");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const context = canvas.getContext("2d");
-
-          if (!context) {
-            throw new Error('Could not get canvas context');
-          }
-
-          await page.render({ canvasContext: context, viewport }).promise;
-          const thumbnail = canvas.toDataURL();
-
+          thumbnail = await generateStandardPDFThumbnail(pdf, scale);
           pdf.destroy();
-          return thumbnail;
         } catch (fallbackError) {
-          console.warn('Fallback thumbnail generation also failed for', file.name, fallbackError);
-          return undefined;
+          if (fallbackError instanceof Error) {
+            // Check if PDF is encrypted
+            if (fallbackError.name === "PasswordException") {
+              thumbnail = generateEncryptedPDFThumbnail(file);
+            } else {
+              console.warn('Fallback thumbnail generation also failed for', file.name, fallbackError);
+              return undefined;
+            }
+          } else {
+            throw fallbackError; // Re-throw non-Error exceptions
+          }
         }
       } else {
-        console.warn('Failed to generate thumbnail for', file.name, error);
+        console.warn('Unknown error thrown. Failed to generate thumbnail for', file.name, error);
         return undefined;
       }
+    } else {
+      throw error; // Re-throw non-Error exceptions
     }
-    console.warn('Unknown error generating thumbnail for', file.name, error);
-    return undefined;
   }
+
+  return thumbnail;
 }
