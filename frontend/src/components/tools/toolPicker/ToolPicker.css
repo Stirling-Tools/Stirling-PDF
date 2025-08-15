@@ -48,6 +48,7 @@
   font-size: 0.75rem;
   color: var(--tool-subcategory-text-color);
   white-space: nowrap;
+  overflow: visible;
 }
 
 .tool-subcategory-row-rule {

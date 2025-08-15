@@ -39,7 +39,7 @@ export function adjustFontSizeToFit(
   element.style.overflowWrap = 'normal';
   // Disable automatic hyphenation to avoid mid-word breaks; use only manual opportunities
   element.style.setProperty('hyphens', 'manual');
-  element.style.overflow = 'hidden';
+  element.style.overflow = 'visible';
 
   const minFontPx = baseFontPx * minScale;
   const stepPx = Math.max(0.5, baseFontPx * stepScale);
