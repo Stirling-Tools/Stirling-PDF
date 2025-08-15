@@ -347,7 +347,7 @@
       "title": "회전",
       "desc": "PDF를 쉽게 회전합니다."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "이미지를 PDF로",
       "desc": "이미지(PNG, JPEG, GIF)를 PDF로 변환합니다."
     },
@@ -371,7 +371,7 @@
       "title": "권한 변경",
       "desc": "PDF 문서의 권한을 변경합니다"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "제거",
       "desc": "PDF 문서에서 원하지 않는 페이지를 삭제합니다."
     },
@@ -383,7 +383,7 @@
       "title": "비밀번호 제거",
       "desc": "PDF 문서에서 비밀번호 보호를 제거합니다."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "압축",
       "desc": "PDF를 압축하여 파일 크기를 줄입니다."
     },
@@ -479,7 +479,7 @@
       "title": "파이프라인",
       "desc": "파이프라인 스크립트를 정의하여 PDF에서 여러 작업 실행"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "페이지 번호 추가",
       "desc": "문서 전체에 지정된 위치에 페이지 번호 추가"
     },
@@ -487,7 +487,7 @@
       "title": "PDF 파일 자동 이름 변경",
       "desc": "감지된 헤더를 기반으로 PDF 파일 이름 자동 변경"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "색상/대비 조정",
       "desc": "PDF의 대비, 채도 및 밝기 조정"
     },
@@ -499,7 +499,7 @@
       "title": "자동 페이지 분할",
       "desc": "물리적 스캔 페이지 분할기 QR 코드가 있는 스캔된 PDF 자동 분할"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "정리",
       "desc": "PDF 파일에서 스크립트 및 기타 요소 제거"
     },
@@ -523,11 +523,11 @@
       "title": "PDF 모든 정보 가져오기",
       "desc": "PDF에서 가능한 모든 정보 가져오기"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "페이지 추출",
       "desc": "PDF에서 선택한 페이지 추출"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "단일 큰 페이지",
       "desc": "모든 PDF 페이지를 하나의 큰 단일 페이지로 병합"
     },
@@ -543,11 +543,11 @@
       "title": "수동 검열",
       "desc": "선택한 텍스트, 그린 도형 및/또는 선택한 페이지를 기반으로 PDF 검열"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF를 CSV로",
       "desc": "PDF에서 표를 추출하여 CSV로 변환"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "크기/개수별 자동 분할",
       "desc": "단일 PDF를 크기, 페이지 수 또는 문서 수를 기준으로 여러 문서로 분할"
     },
@@ -563,11 +563,11 @@
       "title": "PDF에 스탬프 추가",
       "desc": "지정된 위치에 텍스트 또는 이미지 스탬프 추가"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "이미지 제거",
       "desc": "파일 크기를 줄이기 위해 PDF에서 이미지 제거"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "챕터별 PDF 분할",
       "desc": "PDF를 챕터 구조에 따라 여러 파일로 분할합니다."
     },
@@ -575,7 +575,7 @@
       "title": "PDF 서명 검증",
       "desc": "PDF 문서의 디지털 서명과 인증서 검증"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "색상 교체 및 반전",
       "desc": "PDF에서 텍스트와 배경의 색상을 교체하고 파일 크기를 줄이기 위해 전체 PDF 색상을 반전"
     }

@@ -347,7 +347,7 @@
       "title": "Otočit",
       "desc": "Snadno otočit vaše PDF."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Obrázek na PDF",
       "desc": "Převést obrázek (PNG, JPEG, GIF) na PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Změnit oprávnění",
       "desc": "Změnit oprávnění vašeho PDF dokumentu"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Odstranit",
       "desc": "Smazat nežádoucí stránky z vašeho PDF dokumentu."
     },
@@ -383,7 +383,7 @@
       "title": "Odstranit heslo",
       "desc": "Odstranit ochranu heslem z vašeho PDF dokumentu."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Komprimovat",
       "desc": "Komprimovat PDF pro zmenšení jejich velikosti."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Spustit více akcí na PDF definováním pipeline skriptů"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Přidat čísla stránek",
       "desc": "Přidat čísla stránek v celém dokumentu na určeném místě"
     },
@@ -487,7 +487,7 @@
       "title": "Automaticky přejmenovat PDF soubor",
       "desc": "Automaticky přejmenuje PDF soubor podle detekované hlavičky"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Upravit barvy/kontrast",
       "desc": "Upravit kontrast, sytost a jas PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Automaticky rozdělit stránky",
       "desc": "Automaticky rozdělit naskenované PDF s fyzickým QR kódem pro rozdělení stránek"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sanitizovat",
       "desc": "Odstranit skripty a další prvky z PDF souborů"
     },
@@ -523,11 +523,11 @@
       "title": "Získat VŠECHNY informace o PDF",
       "desc": "Získá všechny možné informace o PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extrahovat stránky",
       "desc": "Extrahuje vybrané stránky z PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "Jedna velká stránka",
       "desc": "Sloučí všechny stránky PDF do jedné velké stránky"
     },
@@ -543,11 +543,11 @@
       "title": "Ruční začernění",
       "desc": "Začerní PDF na základě vybraného textu, nakreslených tvarů a/nebo vybraných stránek"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF na CSV",
       "desc": "Extrahuje tabulky z PDF a převádí je na CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Automaticky rozdělit podle velikosti/počtu",
       "desc": "Rozdělí jeden PDF na více dokumentů podle velikosti, počtu stránek nebo počtu dokumentů"
     },
@@ -563,11 +563,11 @@
       "title": "Přidat razítko do PDF",
       "desc": "Přidá textová nebo obrázkové razítka na určená místa"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Odstranit obrázek",
       "desc": "Odstranit obrázek z PDF pro zmenšení velikosti souboru"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Rozdělit PDF podle kapitol",
       "desc": "Rozdělí PDF do více souborů podle jeho struktury kapitol."
     },
@@ -575,7 +575,7 @@
       "title": "Ověřit podpis PDF",
       "desc": "Ověřit digitální podpisy a certifikáty v PDF dokumentech"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Nahrazení a inverze barev",
       "desc": "Úprava barev textu a pozadí v PDF nebo jejich inverze ke snížení velikosti souboru"
     }

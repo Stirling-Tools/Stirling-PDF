@@ -39,7 +39,10 @@ export default function ToolPanel() {
       className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       }`}
-      style={{width: isPanelVisible ? '20rem' : '0'}}
+      style={{
+        width: isPanelVisible ? '20rem' : '0',
+        padding: '0'
+      }}
     >
       <div
         style={{

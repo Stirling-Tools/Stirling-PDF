@@ -1,16 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Button, Stack, Text, Box } from "@mantine/core";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
-import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
-import OperationButton from "../components/tools/shared/OperationButton";
-import ErrorNotification from "../components/tools/shared/ErrorNotification";
-import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator";
-import ResultsPreview from "../components/tools/shared/ResultsPreview";
+import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import OCRSettings from "../components/tools/ocr/OCRSettings";
 import AdvancedOCRSettings from "../components/tools/ocr/AdvancedOCRSettings";
@@ -18,7 +12,7 @@ import AdvancedOCRSettings from "../components/tools/ocr/AdvancedOCRSettings";
 import { useOCRParameters } from "../hooks/tools/ocr/useOCRParameters";
 import { useOCROperation } from "../hooks/tools/ocr/useOCROperation";
 import { BaseToolProps } from "../types/tool";
-import { OcrTips } from "../components/tooltips/OCRTips";
+import { useOCRTips } from "../components/tooltips/useOCRTips";
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -27,10 +21,10 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const ocrParams = useOCRParameters();
   const ocrOperation = useOCROperation();
-  const ocrTips = OcrTips();
+  const ocrTips = useOCRTips();
 
   // Step expansion state management
-  const [expandedStep, setExpandedStep] = useState<'files' | 'settings' | 'advanced' | null>('files');
+  const [expandedStep, setExpandedStep] = useState<"files" | "settings" | "advanced" | null>("files");
 
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("ocr-pdf");
 
@@ -41,11 +35,11 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     ocrOperation.resetResults();
     onPreviewFile?.(null);
-  }, [ocrParams.parameters, selectedFiles]);
+  }, [ocrParams.parameters]);
 
   useEffect(() => {
-    if (selectedFiles.length > 0 && expandedStep === 'files') {
-      setExpandedStep('settings');
+    if (selectedFiles.length > 0 && expandedStep === "files") {
+      setExpandedStep("settings");
     }
   }, [selectedFiles.length, expandedStep]);
 
@@ -58,161 +52,88 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleOCR = async () => {
     try {
-      await ocrOperation.executeOperation(
-        ocrParams.parameters,
-        selectedFiles
-      );
+      await ocrOperation.executeOperation(ocrParams.parameters, selectedFiles);
       if (ocrOperation.files && onComplete) {
         onComplete(ocrOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : 'OCR operation failed');
+        onError(error instanceof Error ? error.message : "OCR operation failed");
       }
     }
   };
 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
-    sessionStorage.setItem('previousMode', 'ocr');
-    setCurrentMode('viewer');
+    sessionStorage.setItem("previousMode", "ocr");
+    setCurrentMode("viewer");
   };
 
+  const handleSettingsReset = () => {
+    ocrOperation.resetResults();
+    onPreviewFile?.(null);
+    setCurrentMode("ocr");
+  };
 
-  // Step visibility and collapse logic
-  const filesVisible = true;
-  const settingsVisible = true;
-  const resultsVisible = hasResults;
+  const settingsCollapsed = expandedStep !== "settings";
 
-  const filesCollapsed = expandedStep !== 'files';
-  const settingsCollapsed = expandedStep !== 'settings';
-
-  const previewResults = useMemo(() =>
-    ocrOperation.files?.map((file: File, index: number) => ({
-      file,
-      thumbnail: ocrOperation.thumbnails[index]
-    })) || [],
-    [ocrOperation.files, ocrOperation.thumbnails]
-  );
-
-  return (
-    <ToolStepContainer>
-      <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
-        {/* Files Step */}
-        <ToolStep
-          title="Files"
-          isVisible={filesVisible}
-          isCollapsed={hasFiles ? filesCollapsed : false}
-          isCompleted={hasFiles}
-          onCollapsedClick={undefined}
-          completedMessage={hasFiles && filesCollapsed ? 
-            selectedFiles.length === 1
-              ? `Selected: ${selectedFiles[0].name}`
-              : `Selected: ${selectedFiles.length} files`
-            : undefined}
-        >
-          <FileStatusIndicator
-            selectedFiles={selectedFiles}
-            placeholder="Select a PDF file in the main view to get started"
+  return createToolFlow({
+    files: {
+      selectedFiles,
+      isCollapsed: hasFiles || hasResults,
+    },
+    steps: [
+      {
+        title: "Settings",
+        isCollapsed: !hasFiles || settingsCollapsed,
+        onCollapsedClick: hasResults
+          ? handleSettingsReset
+          : () => {
+              if (!hasFiles) return; // Only allow if files are selected
+              setExpandedStep(expandedStep === "settings" ? null : "settings");
+            },
+        tooltip: ocrTips,
+        content: (
+          <OCRSettings
+            parameters={ocrParams.parameters}
+            onParameterChange={ocrParams.updateParameter}
+            disabled={endpointLoading}
           />
-        </ToolStep>
-
-        {/* Settings Step */}
-        <ToolStep
-          title="Settings"
-          isVisible={settingsVisible}
-          isCollapsed={settingsCollapsed}
-          isCompleted={hasFiles && hasValidSettings}
-          onCollapsedClick={() => {
-            if (!hasFiles) return; // Only allow if files are selected
-            setExpandedStep(expandedStep === 'settings' ? null : 'settings');
-          }}
-          completedMessage={hasFiles && hasValidSettings && settingsCollapsed ? "Basic settings configured" : undefined}
-          tooltip={ocrTips}
-        >
-          <Stack gap="sm">
-            <OCRSettings
-              parameters={ocrParams.parameters}
-              onParameterChange={ocrParams.updateParameter}
-              disabled={endpointLoading}
-            />
-
-          </Stack>
-        </ToolStep>
-
-        {/* Advanced Step */}
-        <ToolStep
-          title="Advanced"
-          isVisible={true}
-          isCollapsed={expandedStep !== 'advanced'}
-          isCompleted={hasFiles && hasResults}
-          onCollapsedClick={() => {
-            if (!hasFiles) return; // Only allow if files are selected
-            setExpandedStep(expandedStep === 'advanced' ? null : 'advanced');
-          }}
-          completedMessage={hasFiles && hasResults && expandedStep !== 'advanced' ? "OCR processing completed" : undefined}
-        >
+        ),
+      },
+      {
+        title: "Advanced",
+        isCollapsed: expandedStep !== "advanced",
+        onCollapsedClick: hasResults
+          ? handleSettingsReset
+          : () => {
+              if (!hasFiles) return; // Only allow if files are selected
+              setExpandedStep(expandedStep === "advanced" ? null : "advanced");
+            },
+        content: (
           <AdvancedOCRSettings
             advancedOptions={ocrParams.parameters.additionalOptions}
             ocrRenderType={ocrParams.parameters.ocrRenderType}
             onParameterChange={ocrParams.updateParameter}
             disabled={endpointLoading}
           />
-        </ToolStep>
+        ),
+      },
+    ],
+    executeButton: {
+      text: t("ocr.operation.submit", "Process OCR and Review"),
+      loadingText: t("loading"),
+      onClick: handleOCR,
+      isVisible: hasValidSettings && !hasResults,
+      disabled: !ocrParams.validateParameters() || !hasFiles || !endpointEnabled,
+    },
+    review: {
+      isVisible: hasResults,
+      operation: ocrOperation,
+      title: t("ocr.results.title", "OCR Results"),
+      onFileClick: handleThumbnailClick,
+    },
+  });
+};
 
-        {/* Process Button - Available after all configuration */}
-        {hasValidSettings && !hasResults && (
-          <Box mt="md">
-            <OperationButton
-              onClick={handleOCR}
-              isLoading={ocrOperation.isLoading}
-              disabled={!ocrParams.validateParameters() || !hasFiles || !endpointEnabled}
-              loadingText={t("loading")}
-              submitText="Process OCR and Review"
-            />
-          </Box>
-        )}
-
-        {/* Results Step */}
-        <ToolStep
-          title="Results"
-          isVisible={resultsVisible}
-        >
-          <Stack gap="sm">
-            {ocrOperation.status && (
-              <Text size="sm" c="dimmed">{ocrOperation.status}</Text>
-            )}
-
-            <ErrorNotification
-              error={ocrOperation.errorMessage}
-              onClose={ocrOperation.clearError}
-            />
-
-            {ocrOperation.downloadUrl && (
-              <Button
-                component="a"
-                href={ocrOperation.downloadUrl}
-                download={ocrOperation.downloadFilename}
-                leftSection={<DownloadIcon />}
-                color="green"
-                fullWidth
-                mb="md"
-              >
-                {t("download", "Download")}
-              </Button>
-            )}
-
-            <ResultsPreview
-              files={previewResults}
-              onFileClick={handleThumbnailClick}
-              isGeneratingThumbnails={ocrOperation.isGeneratingThumbnails}
-              title="OCR Results"
-            />
-          </Stack>
-        </ToolStep>
-      </Stack>
-    </ToolStepContainer>
-  );
-}
-
-export default OCR; 
+export default OCR;

@@ -15,9 +15,7 @@ export interface ToolStepConfig {
   type: ToolStepType;
   title: string;
   isVisible: boolean;
-  isCompleted: boolean;
   isCollapsed?: boolean;
-  completedMessage?: string;
   onCollapsedClick?: () => void;
 }
 
@@ -36,13 +34,14 @@ export interface ToolResult {
 }
 
 export interface ToolConfiguration {
-  maxFiles: number;
+  maxFiles?: number;
   supportedFormats?: string[];
 }
 
 export interface Tool {
   id: string;
   name: string;
+  title?: string;
   icon: React.ReactNode;
   component: React.ComponentType<BaseToolProps>;
   maxFiles: MaxFiles;

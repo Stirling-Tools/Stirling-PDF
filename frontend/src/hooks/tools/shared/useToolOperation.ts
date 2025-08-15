@@ -36,7 +36,7 @@ export interface ToolOperationConfig<TParams = void> {
    * - (params, files: File[]) => FormData: Multi-file processing
    * Not used when customProcessor is provided.
    */
-  buildFormData: ((params: TParams, file: File) => FormData) | ((params: TParams, files: File[]) => FormData);
+  buildFormData: ((params: TParams, file: File) => FormData) | ((params: TParams, files: File[]) => FormData); /* FIX ME */
 
   /** Prefix added to processed filenames (e.g., 'compressed_', 'split_') */
   filePrefix: string;
@@ -104,7 +104,7 @@ export const useToolOperation = <TParams = void>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { recordOperation, markOperationApplied, markOperationFailed, addFiles } = useFileContext();
+  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -170,7 +170,7 @@ export const useToolOperation = <TParams = void>(
           // Individual file processing - separate API call per file
           const apiCallsConfig: ApiCallsConfig<TParams> = {
             endpoint: config.endpoint,
-            buildFormData: (file: File, params: TParams) => (config.buildFormData as (params: TParams, file: File) => FormData /* FIX ME */)(params, file),
+            buildFormData: config.buildFormData as (params: TParams, file: File) => FormData,
             filePrefix: config.filePrefix,
             responseHandler: config.responseHandler
           };
@@ -198,8 +198,8 @@ export const useToolOperation = <TParams = void>(
         actions.setThumbnails(thumbnails);
         actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
 
-        // Add to file context
-        await addFiles(processedFiles);
+        // Consume input files and add output files (will replace unpinned inputs)
+        await consumeFiles(validFiles, processedFiles);
 
         markOperationApplied(fileId, operationId);
       }

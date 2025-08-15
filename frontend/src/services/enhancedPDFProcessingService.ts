@@ -519,9 +519,7 @@ export class EnhancedPDFProcessingService {
     this.notifyListeners();
 
     // Force memory cleanup hint
-    if (typeof window !== 'undefined') {
-      setTimeout(() => window.gc && window.gc(), 100);
-    }
+    setTimeout(() => window?.gc?.(), 100);
   }
 
   /**

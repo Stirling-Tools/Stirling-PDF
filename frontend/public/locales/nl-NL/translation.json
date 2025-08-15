@@ -347,7 +347,7 @@
       "title": "Roteren",
       "desc": "Roteer eenvoudig je PDF's."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Afbeelding naar PDF",
       "desc": "Converteer een afbeelding (PNG, JPEG, GIF) naar PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Permissies wijzigen",
       "desc": "Wijzig de permissies van je PDF-document"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Verwijderen",
       "desc": "Verwijder ongewenste pagina's uit je PDF-document."
     },
@@ -383,7 +383,7 @@
       "title": "Wachtwoord verwijderen",
       "desc": "Verwijder wachtwoordbeveiliging van je PDF-document."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Comprimeren",
       "desc": "Comprimeer PDF's om hun bestandsgrootte te verkleinen."
     },
@@ -479,7 +479,7 @@
       "title": "Pijplijn",
       "desc": "Voer meerdere acties uit op PDF's door pipelinescripts te definiëren"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Paginanummers toevoegen",
       "desc": "Voeg paginanummers toe binnen het volledige document op een vastgestelde locatie"
     },
@@ -487,7 +487,7 @@
       "title": "Automatisch hernoemen PDF-bestand",
       "desc": "Hernoemt automatisch een PDF-bestand op basis van de gedetecteerde header"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Kleuren/contrast aanpassen",
       "desc": "Pas contrast, verzadiging en helderheid van een PDF aan"
     },
@@ -499,7 +499,7 @@
       "title": "Automatisch splitsen pagina's",
       "desc": "Automatisch splitsen van gescande PDF met fysieke gescande paginasplitter QR-code"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Opschonen",
       "desc": "Verwijder scripts en andere elementen uit PDF-bestanden"
     },
@@ -523,11 +523,11 @@
       "title": "Haal ALLE informatie op over PDF",
       "desc": "Haalt alle mogelijke informatie op van PDF's"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Pagina('s) extraheren",
       "desc": "Extraheert geselecteerde pagina's uit PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF naar één grote pagina",
       "desc": "Voegt alle PDF-pagina's samen tot één grote pagina"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF naar CSV",
       "desc": "Haalt tabellen uit een PDF en converteert ze naar CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Automatisch splitsen op grootte/aantal",
       "desc": "Splits een enkele PDF in meerdere documenten op basis van grootte, aantal pagina's of aantal documenten"
     },
@@ -563,11 +563,11 @@
       "title": "Stempel toevoegen aan PDF",
       "desc": "Voeg tekst of afbeeldingsstempels toe op vaste locaties"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Afbeelding verwijderen",
       "desc": "Afbeeldingen uit PDF verwijderen om het bestandsgrootte te verminderen"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "PDF op hoofdstukken splitsen",
       "desc": "Splits een PDF op basis van zijn hoofdstukstructuur in meerdere bestanden."
     },
@@ -575,7 +575,7 @@
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Vervang de kleur van tekst en achtergrond in een PDF en omverkeer de volledige kleur van het document om bestandsgrootte te verkleinen."
     }

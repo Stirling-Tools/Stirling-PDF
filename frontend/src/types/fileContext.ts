@@ -5,7 +5,18 @@
 import { ProcessedFile } from './processing';
 import { PDFDocument, PDFPage, PageOperation } from './pageEditor';
 
-export type ModeType = 'viewer' | 'pageEditor' | 'fileEditor' | 'merge' | 'split' | 'compress' | 'ocr' | 'convert' | 'sanitize';
+export type ModeType = 
+  | 'viewer' 
+  | 'pageEditor' 
+  | 'fileEditor' 
+  | 'merge' 
+  | 'split' 
+  | 'compress' 
+  | 'ocr' 
+  | 'convert' 
+  | 'sanitize'
+  | 'addPassword'
+  | 'changePermissions';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 
@@ -55,6 +66,7 @@ export interface FileContextState {
   // Core file management
   activeFiles: File[];
   processedFiles: Map<File, ProcessedFile>;
+  pinnedFiles: Set<File>; // Files that are pinned and won't be consumed
 
   // Current navigation state
   currentMode: ModeType;
@@ -95,6 +107,14 @@ export interface FileContextActions {
   removeFiles: (fileIds: string[], deleteFromStorage?: boolean) => void;
   replaceFile: (oldFileId: string, newFile: File) => Promise<void>;
   clearAllFiles: () => void;
+  
+  // File pinning
+  pinFile: (file: File) => void;
+  unpinFile: (file: File) => void;
+  isFilePinned: (file: File) => boolean;
+  
+  // File consumption (replace unpinned files with outputs)
+  consumeFiles: (inputFiles: File[], outputFiles: File[]) => Promise<void>;
 
   // Navigation
   setCurrentMode: (mode: ModeType) => void;

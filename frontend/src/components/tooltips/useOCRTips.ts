@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { TooltipContent } from '../../types/tips';
 
-export const OcrTips = (): TooltipContent => {
+export const useOCRTips = (): TooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -33,4 +33,4 @@ export const OcrTips = (): TooltipContent => {
       }
     ]
   };
-}; 
+};

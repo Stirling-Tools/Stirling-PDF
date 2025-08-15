@@ -4,6 +4,9 @@ import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
 import OCRPanel from '../tools/OCR';
 import ConvertPanel from '../tools/Convert';
+import Sanitize from '../tools/Sanitize';
+import AddPassword from '../tools/AddPassword';
+import ChangePermissions from '../tools/ChangePermissions';
 
 // Category and subcategory enums for type safety
 export enum ToolCategory {
@@ -135,14 +138,16 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Document Security
 
-    "add-password": {
+    "addPassword": {
         icon: <span className="material-symbols-rounded">password</span>,
         name: t("home.addPassword.title", "Add Password"),
-        component: null,
+        component: AddPassword,
         view: "security",
-        description: t("home.addPassword.desc", "Encrypt your PDF document with a password."),
+        description: t("home.addPassword.desc", "Add password protection and restrictions to PDF files"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY
+        subcategory: ToolSubcategory.DOCUMENT_SECURITY,
+        maxFiles: -1,
+        endpoints: ["add-password"]
     },
     "add-watermark": {
         icon: <span className="material-symbols-rounded">branding_watermark</span>,
@@ -163,13 +168,15 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategory: ToolSubcategory.DOCUMENT_SECURITY
     },
     "sanitize": {
-        icon: <span className="material-symbols-rounded">sanitizer</span>,
-        name: t("home.sanitizePdf.title", "Sanitise"),
-        component: null,
+        icon: <span className="material-symbols-rounded">cleaning_services</span>,
+        name: t("home.sanitize.title", "Sanitize"),
+        component: Sanitize,
         view: "security",
-        description: t("home.sanitizePdf.desc", "Remove scripts and other elements from PDF files"),
+        maxFiles: -1,
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY
+        subcategory: ToolSubcategory.DOCUMENT_SECURITY,
+        description: t("home.sanitize.desc", "Remove potentially harmful elements from PDF files"),
+        endpoints: ["sanitize-pdf"]
     },
     "flatten": {
         icon: <span className="material-symbols-rounded">layers_clear</span>,
@@ -198,8 +205,17 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: ToolSubcategory.DOCUMENT_SECURITY
     },
-
-    
+    "changePermissions": {
+        icon: <span className="material-symbols-rounded">lock</span>,
+        name: t("home.changePermissions.title", "Change Permissions"),
+        component: ChangePermissions,
+        view: "security",
+        description: t("home.changePermissions.desc", "Change document restrictions and permissions"),
+        category: ToolCategory.STANDARD_TOOLS,
+        subcategory: ToolSubcategory.DOCUMENT_SECURITY,
+        maxFiles: -1,
+        endpoints: ["add-password"]
+    },
     // Verification
 
     "get-all-info-on-pdf": {
