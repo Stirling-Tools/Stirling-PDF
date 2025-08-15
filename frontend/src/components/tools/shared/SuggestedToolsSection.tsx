@@ -11,9 +11,9 @@ export function SuggestedToolsSection(): React.ReactElement {
   return (
     <Stack gap="md">
       <Divider />
-      
+
       <Text size="lg" fw={600}>
-        {t('editYourNewFiles', 'Edit your new File(s)')}
+        {t('editYourNewFiles', 'Edit your new file(s)')}
       </Text>
 
       <Stack gap="xs">

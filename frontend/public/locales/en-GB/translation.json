@@ -40,6 +40,8 @@
   },
   "save": "Save",
   "saveToBrowser": "Save to Browser",
+  "download": "Download",
+  "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
   "fileSelected": "Selected: {{filename}}",
   "filesSelected": "{{count}} files selected",
