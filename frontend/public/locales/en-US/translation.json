@@ -1780,6 +1780,98 @@
       "chinese": "Chinese",
       "thai": "Thai"
     },
+    "steps": {
+      "type": "Watermark Type",
+      "textContent": "Text Content",
+      "imageContent": "Image Content", 
+      "style": "Style & Position",
+      "advanced": "Advanced Options"
+    },
+    "results": {
+      "title": "Watermark Results"
+    },
+    "tooltip": {
+      "type": {
+        "header": {
+          "title": "Watermark Type Selection"
+        },
+        "description": {
+          "title": "Choose Your Watermark",
+          "text": "Select between text or image watermarks based on your needs."
+        },
+        "text": {
+          "title": "Text Watermarks",
+          "text": "Perfect for adding copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colors.",
+          "bullet1": "Customizable fonts and languages",
+          "bullet2": "Adjustable colors and transparency",
+          "bullet3": "Ideal for legal or branding text"
+        },
+        "image": {
+          "title": "Image Watermarks",
+          "text": "Use logos, stamps, or any image as a watermark. Great for branding and visual identification.",
+          "bullet1": "Upload any image format",
+          "bullet2": "Maintains image quality",
+          "bullet3": "Perfect for logos and stamps"
+        }
+      },
+      "content": {
+        "header": {
+          "title": "Content Configuration"
+        },
+        "text": {
+          "title": "Text Settings",
+          "text": "Configure your text watermark appearance and language support.",
+          "bullet1": "Enter your watermark text",
+          "bullet2": "Adjust font size (8-72pt)",
+          "bullet3": "Select language/script support",
+          "bullet4": "Choose custom colors"
+        },
+        "language": {
+          "title": "Language Support",
+          "text": "Choose the appropriate language setting to ensure proper font rendering for your text.",
+          "bullet1": "Roman/Latin for Western languages",
+          "bullet2": "Arabic for Arabic script",
+          "bullet3": "Japanese, Korean, Chinese for Asian languages",
+          "bullet4": "Thai for Thai script"
+        }
+      },
+      "style": {
+        "header": {
+          "title": "Style & Positioning"
+        },
+        "appearance": {
+          "title": "Appearance Settings",
+          "text": "Control how your watermark looks and blends with the document.",
+          "bullet1": "Rotation: -360° to 360° for angled watermarks",
+          "bullet2": "Opacity: 0-100% for transparency control",
+          "bullet3": "Lower opacity creates subtle watermarks"
+        },
+        "spacing": {
+          "title": "Spacing Control",
+          "text": "Adjust the spacing between repeated watermarks across the page.",
+          "bullet1": "Width spacing: Horizontal distance between watermarks",
+          "bullet2": "Height spacing: Vertical distance between watermarks",
+          "bullet3": "Higher values create more spread out patterns"
+        }
+      },
+      "advanced": {
+        "header": {
+          "title": "Advanced Options"
+        },
+        "conversion": {
+          "title": "PDF to Image Conversion",
+          "text": "Convert the final PDF to an image-based format for enhanced security.",
+          "bullet1": "Prevents text selection and copying",
+          "bullet2": "Makes watermarks harder to remove",
+          "bullet3": "Results in larger file sizes",
+          "bullet4": "Best for sensitive or copyrighted content"
+        },
+        "security": {
+          "title": "Security Considerations",
+          "text": "Image-based PDFs provide additional protection against unauthorized editing and content extraction."
+        }
+      }
+    },
     "positions": {
       "topLeft": "Top Left",
       "topCenter": "Top Center", 

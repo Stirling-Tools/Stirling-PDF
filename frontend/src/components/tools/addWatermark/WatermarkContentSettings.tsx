@@ -1,20 +1,7 @@
 import React, { useRef } from "react";
-import { Stack, Text, TextInput, FileButton, Button, NumberInput } from "@mantine/core";
+import { Stack, Text, TextInput, FileButton, Button, NumberInput, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-
-interface AddWatermarkParameters {
-  watermarkType?: 'text' | 'image';
-  watermarkText: string;
-  watermarkImage?: File;
-  fontSize: number;
-  rotation: number;
-  opacity: number;
-  widthSpacer: number;
-  heightSpacer: number;
-  position: string;
-  overrideX?: number;
-  overrideY?: number;
-}
+import { AddWatermarkParameters } from "./types";
 
 interface WatermarkContentSettingsProps {
   parameters: AddWatermarkParameters;
@@ -25,6 +12,15 @@ interface WatermarkContentSettingsProps {
 const WatermarkContentSettings = ({ parameters, onParameterChange, disabled = false }: WatermarkContentSettingsProps) => {
   const { t } = useTranslation();
   const resetRef = useRef<() => void>(null);
+
+  const alphabetOptions = [
+    { value: 'roman', label: t('watermark.alphabet.roman', 'Roman/Latin') },
+    { value: 'arabic', label: t('watermark.alphabet.arabic', 'Arabic') },
+    { value: 'japanese', label: t('watermark.alphabet.japanese', 'Japanese') },
+    { value: 'korean', label: t('watermark.alphabet.korean', 'Korean') },
+    { value: 'chinese', label: t('watermark.alphabet.chinese', 'Chinese') },
+    { value: 'thai', label: t('watermark.alphabet.thai', 'Thai') }
+  ];
 
   return (
     <Stack gap="md">
@@ -46,6 +42,23 @@ const WatermarkContentSettings = ({ parameters, onParameterChange, disabled = fa
             min={8}
             max={72}
             disabled={disabled}
+          />
+
+          <Text size="sm" fw={500}>{t('watermark.settings.alphabet', 'Font/Language')}</Text>
+          <Select
+            value={parameters.alphabet}
+            onChange={(value) => value && onParameterChange('alphabet', value)}
+            data={alphabetOptions}
+            disabled={disabled}
+          />
+
+          <Text size="sm" fw={500}>{t('watermark.settings.color', 'Watermark Color')}</Text>
+          <ColorInput
+            value={parameters.customColor}
+            onChange={(value) => onParameterChange('customColor', value)}
+            disabled={disabled}
+            format="hex"
+            swatches={['#d3d3d3', '#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff']}
           />
         </Stack>
       )}
