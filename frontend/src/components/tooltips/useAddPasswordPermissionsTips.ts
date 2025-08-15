@@ -6,7 +6,7 @@ export const useAddPasswordPermissionsTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("addPassword.tooltip.permissions.title", "Document Permissions")
+      title: t("addPassword.tooltip.permissions.title", "Change Permissions")
     },
     tips: [
       {

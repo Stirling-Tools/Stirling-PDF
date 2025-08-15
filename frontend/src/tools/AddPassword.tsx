@@ -95,6 +95,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             disabled={endpointLoading}
           />
         ),
+        tooltip: addPasswordPermissionsTips,
       },
     ],
     executeButton: {
