@@ -46,10 +46,9 @@ export class DecryptFile {
         formData.append('password', password);
       }
       // Send decryption request
-      const response = await fetch('/api/v1/security/remove-password', {
+      const response = await fetchWithCsrf('/api/v1/security/remove-password', {
         method: 'POST',
         body: formData,
-        headers: csrfToken ? {'X-XSRF-TOKEN': csrfToken} : undefined,
       });
 
       if (response.ok) {
