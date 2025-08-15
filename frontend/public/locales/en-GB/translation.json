@@ -383,14 +383,6 @@
       "title": "Remove",
       "desc": "Delete unwanted pages from your PDF document."
     },
-    "addPassword": {
-      "title": "Add Password",
-      "desc": "Encrypt your PDF document with a password."
-    },
-    "changePermissions": {
-      "title": "Change Permissions",
-      "desc": "Change document restrictions and permissions."
-    },
     "removePassword": {
       "title": "Remove Password",
       "desc": "Remove password protection from your PDF document."
@@ -398,10 +390,6 @@
     "compress": {
       "title": "Compress",
       "desc": "Compress PDFs to reduce their file size."
-    },
-    "sanitize": {
-      "title": "Sanitise",
-      "desc": "Remove potentially harmful elements from PDF files."
     },
     "unlockPDFForms": {
       "title": "Unlock PDF Forms",
@@ -1751,6 +1739,8 @@
     "approximateSize": "Approximate size"
   },
   "sanitize": {
+    "title": "Sanitise",
+    "desc": "Remove potentially harmful elements from PDF files.",
     "submit": "Sanitise PDF",
     "completed": "Sanitisation completed successfully",
     "error.generic": "Sanitisation failed",
@@ -1783,6 +1773,8 @@
     }
   },
   "addPassword": {
+    "title": "Add Password",
+    "desc": "Encrypt your PDF document with a password.",
     "completed": "Password protection applied",
     "submit": "Encrypt",
     "filenamePrefix": "encrypted",
@@ -1835,6 +1827,8 @@
     }
   },
   "changePermissions": {
+    "title": "Change Permissions",
+    "desc": "Change document restrictions and permissions.",
     "completed": "Permissions changed",
     "submit": "Change Permissions",
     "title": "Document Permissions",
