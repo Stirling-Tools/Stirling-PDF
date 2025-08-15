@@ -37,11 +37,6 @@ const NumberInputWithUnit = ({
           </Text>
         }
         rightSectionWidth={unit.length * 8 + 20} // Dynamic width based on unit length
-        styles={{
-          rightSection: {
-            pointerEvents: 'none',
-          }
-        }}
       />
     </Stack>
   );
