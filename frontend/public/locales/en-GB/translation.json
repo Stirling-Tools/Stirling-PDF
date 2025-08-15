@@ -35,11 +35,18 @@
   "true": "True",
   "false": "False",
   "unknown": "Unknown",
+  "app": {
+    "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+  },
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "close": "Close",
   "fileSelected": "Selected: {{filename}}",
   "filesSelected": "{{count}} files selected",
+  "files": {
+    "title": "Files",
+    "placeholder": "Select a PDF file in the main view to get started"
+  },
   "noFavourites": "No favourites added",
   "downloadComplete": "Download Complete",
   "bored": "Bored Waiting?",
@@ -119,6 +126,7 @@
   "page": "Page",
   "pages": "Pages",
   "loading": "Loading...",
+  "review": "Review",
   "addToDoc": "Add to Document",
   "reset": "Reset",
   "apply": "Apply",
@@ -853,6 +861,7 @@
   "ocr": {
     "tags": "recognition,text,image,scan,read,identify,detection,editable",
     "title": "OCR / Scan Cleanup",
+    "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text.",
     "header": "Cleanup Scans / OCR (Optical Character Recognition)",
     "selectText": {
       "1": "Select languages that are to be detected within the PDF (Ones listed are the ones currently detected):",
@@ -1413,6 +1422,7 @@
   },
   "compress": {
     "title": "Compress",
+    "desc": "Compress PDFs to reduce their file size.",
     "header": "Compress PDF",
     "credit": "This service uses qpdf for PDF Compress/Optimisation.",
     "grayscale": {
@@ -1771,8 +1781,8 @@
     "error": {
       "failed": "An error occurred while encrypting the PDF."
     },
-    "title": "Passwords & Encryption",
     "passwords": {
+      "stepTitle": "Passwords & Encryption",
       "completed": "Passwords configured",
       "user": {
         "label": "User Password",
@@ -1812,6 +1822,7 @@
         "bullet3": "256-bit: Maximum security, requires modern viewers"
       },
       "permissions": {
+        "title": "Change Permissions",
         "text": "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
       }
     }
@@ -1821,7 +1832,6 @@
     "desc": "Change document restrictions and permissions.",
     "completed": "Permissions changed",
     "submit": "Change Permissions",
-    "title": "Document Permissions",
     "error": {
       "failed": "An error occurred while changing PDF permissions."
     },
@@ -1867,8 +1877,9 @@
     }
   },
   "removePassword": {
-    "tags": "secure,Decrypt,security,unpassword,delete password",
     "title": "Remove Password",
+    "desc": "Remove password protection from your PDF document.",
+    "tags": "secure,Decrypt,security,unpassword,delete password",
     "password": {
       "label": "Current Password",
       "placeholder": "Enter current password",

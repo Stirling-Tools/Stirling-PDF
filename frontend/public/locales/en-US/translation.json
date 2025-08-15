@@ -35,11 +35,18 @@
   "true": "True",
   "false": "False",
   "unknown": "Unknown",
+  "app": {
+    "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+  },
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "close": "Close",
   "fileSelected": "Selected: {{filename}}",
   "filesSelected": "{{count}} files selected",
+  "files": {
+    "title": "Files",
+    "placeholder": "Select a PDF file in the main view to get started"
+  },
   "noFavourites": "No favorites added",
   "downloadComplete": "Download Complete",
   "bored": "Bored Waiting?",
@@ -119,6 +126,7 @@
   "page": "Page",
   "pages": "Pages",
   "loading": "Loading...",
+  "review": "Review",
   "addToDoc": "Add to Document",
   "reset": "Reset",
   "apply": "Apply",
@@ -794,6 +802,7 @@
   "ocr": {
     "tags": "recognition,text,image,scan,read,identify,detection,editable",
     "title": "OCR / Scan Cleanup",
+    "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text.",
     "header": "Cleanup Scans / OCR (Optical Character Recognition)",
     "selectText": {
       "1": "Select languages that are to be detected within the PDF (Ones listed are the ones currently detected):",
@@ -1625,6 +1634,8 @@
     }
   },
   "addPassword": {
+    "title": "Add Password",
+    "desc": "Encrypt your PDF document with a password.",
     "completed": "Password protection applied",
     "submit": "Encrypt",
     "filenamePrefix": "encrypted",
@@ -1676,6 +1687,7 @@
         "bullet3": "256-bit: Maximum security, requires modern viewers"
       },
       "permissions": {
+        "title": "Change Permissions",
         "text": "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
       }
     }
@@ -1729,8 +1741,9 @@
     }
   },
   "removePassword": {
-    "tags": "secure,Decrypt,security,unpassword,delete password",
     "title": "Remove Password",
+    "desc": "Remove password protection from your PDF document.",
+    "tags": "secure,Decrypt,security,unpassword,delete password",
     "password": {
       "label": "Current Password",
       "placeholder": "Enter current password",
