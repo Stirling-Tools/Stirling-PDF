@@ -32,30 +32,27 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleCompress = async () => {
     try {
-      await compressOperation.executeOperation(
-        compressParams.parameters,
-        selectedFiles
-      );
+      await compressOperation.executeOperation(compressParams.parameters, selectedFiles);
       if (compressOperation.files && onComplete) {
         onComplete(compressOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : 'Compress operation failed');
+        onError(error instanceof Error ? error.message : "Compress operation failed");
       }
     }
   };
 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
-    sessionStorage.setItem('previousMode', 'compress');
-    setCurrentMode('viewer');
+    sessionStorage.setItem("previousMode", "compress");
+    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     compressOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode('compress');
+    setCurrentMode("compress");
   };
 
   const hasFiles = selectedFiles.length > 0;
@@ -63,38 +60,39 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const settingsCollapsed = !hasFiles || hasResults;
 
   return createToolFlow({
-        files: {
-          selectedFiles,
-          isCollapsed: hasFiles && !hasResults,
-        },
-        steps: [{
-          title: "Settings",
-          isCollapsed: settingsCollapsed,
-          onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
-          tooltip: compressTips,
-          content: (
-            <CompressSettings
-              parameters={compressParams.parameters}
-              onParameterChange={compressParams.updateParameter}
-              disabled={endpointLoading}
-            />
-          )
-        }],
-        executeButton: {
-          text: t("compress.submit", "Compress"),
-          isVisible: !hasResults,
-          loadingText: t("loading"),
-          onClick: handleCompress,
-          disabled: !compressParams.validateParameters() || !hasFiles || !endpointEnabled
-        },
-        review: {
-          isVisible: hasResults,
-          operation: compressOperation,
-          title: t("compress.title", "Compression Results"),
-          onFileClick: handleThumbnailClick
-        }
-      });
-}
-
+    files: {
+      selectedFiles,
+      isCollapsed: hasFiles && !hasResults,
+    },
+    steps: [
+      {
+        title: "Settings",
+        isCollapsed: settingsCollapsed,
+        onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
+        tooltip: compressTips,
+        content: (
+          <CompressSettings
+            parameters={compressParams.parameters}
+            onParameterChange={compressParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        ),
+      },
+    ],
+    executeButton: {
+      text: t("compress.submit", "Compress"),
+      isVisible: !hasResults,
+      loadingText: t("loading"),
+      onClick: handleCompress,
+      disabled: !compressParams.validateParameters() || !hasFiles || !endpointEnabled,
+    },
+    review: {
+      isVisible: hasResults,
+      operation: compressOperation,
+      title: t("compress.title", "Compression Results"),
+      onFileClick: handleThumbnailClick,
+    },
+  });
+};
 
 export default Compress;

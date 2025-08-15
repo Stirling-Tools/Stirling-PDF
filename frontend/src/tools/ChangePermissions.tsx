@@ -32,30 +32,29 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
 
   const handleChangePermissions = async () => {
     try {
-      await changePermissionsOperation.executeOperation(
-        changePermissionsParams.parameters,
-        selectedFiles
-      );
+      await changePermissionsOperation.executeOperation(changePermissionsParams.parameters, selectedFiles);
       if (changePermissionsOperation.files && onComplete) {
         onComplete(changePermissionsOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : t('changePermissions.error.failed', 'Change permissions operation failed'));
+        onError(
+          error instanceof Error ? error.message : t("changePermissions.error.failed", "Change permissions operation failed")
+        );
       }
     }
   };
 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
-    sessionStorage.setItem('previousMode', 'changePermissions');
-    setCurrentMode('viewer');
+    sessionStorage.setItem("previousMode", "changePermissions");
+    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     changePermissionsOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode('changePermissions');
+    setCurrentMode("changePermissions");
   };
 
   const hasFiles = selectedFiles.length > 0;
@@ -67,33 +66,35 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
       selectedFiles,
       isCollapsed: hasFiles || hasResults,
     },
-    steps: [{
-      title: t('changePermissions.title', 'Document Permissions'),
-      isCollapsed: settingsCollapsed,
-      onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
-      tooltip: changePermissionsTips,
-      content: (
-        <ChangePermissionsSettings
-          parameters={changePermissionsParams.parameters}
-          onParameterChange={changePermissionsParams.updateParameter}
-          disabled={endpointLoading}
-        />
-      )
-    }],
+    steps: [
+      {
+        title: t("changePermissions.title", "Document Permissions"),
+        isCollapsed: settingsCollapsed,
+        onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
+        tooltip: changePermissionsTips,
+        content: (
+          <ChangePermissionsSettings
+            parameters={changePermissionsParams.parameters}
+            onParameterChange={changePermissionsParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        ),
+      },
+    ],
     executeButton: {
-      text: t('changePermissions.submit', 'Change Permissions'),
+      text: t("changePermissions.submit", "Change Permissions"),
       isVisible: !hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: handleChangePermissions,
-      disabled: !changePermissionsParams.validateParameters() || !hasFiles || !endpointEnabled
+      disabled: !changePermissionsParams.validateParameters() || !hasFiles || !endpointEnabled,
     },
     review: {
       isVisible: hasResults,
       operation: changePermissionsOperation,
-      title: t('changePermissions.results.title', 'Modified PDFs'),
-      onFileClick: handleThumbnailClick
-    }
+      title: t("changePermissions.results.title", "Modified PDFs"),
+      onFileClick: handleThumbnailClick,
+    },
   });
-}
+};
 
 export default ChangePermissions;

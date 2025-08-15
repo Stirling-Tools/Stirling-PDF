@@ -21,15 +21,13 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const convertParams = useConvertParameters();
   const convertOperation = useConvertOperation();
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(
-    convertParams.getEndpointName()
-  );
+  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(convertParams.getEndpointName());
 
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   };
@@ -73,68 +71,67 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleConvert = async () => {
     try {
-      await convertOperation.executeOperation(
-        convertParams.parameters,
-        selectedFiles
-      );
+      await convertOperation.executeOperation(convertParams.parameters, selectedFiles);
       if (convertOperation.files && onComplete) {
         onComplete(convertOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : 'Convert operation failed');
+        onError(error instanceof Error ? error.message : "Convert operation failed");
       }
     }
   };
 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
-    sessionStorage.setItem('previousMode', 'convert');
-    setCurrentMode('viewer');
+    sessionStorage.setItem("previousMode", "convert");
+    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     convertOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode('convert');
+    setCurrentMode("convert");
   };
 
   return createToolFlow({
-          files: {
-            selectedFiles,
-            isCollapsed: filesCollapsed,
-            placeholder: t("convert.selectFilesPlaceholder", "Select files in the main view to get started")
-          },
-          steps: [{
-            title: t("convert.settings", "Settings"),
-            isCollapsed: settingsCollapsed,
-            onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
-            content: (
-              <ConvertSettings
-                parameters={convertParams.parameters}
-                onParameterChange={convertParams.updateParameter}
-                getAvailableToExtensions={convertParams.getAvailableToExtensions}
-                selectedFiles={selectedFiles}
-                disabled={endpointLoading}
-              />
-            )
-          }],
-          executeButton: {
-            text: t("convert.convertFiles", "Convert Files"),
-            loadingText: t("convert.converting", "Converting..."),
-            onClick: handleConvert,
-            isVisible: !hasResults,
-            disabled: !convertParams.validateParameters() || !hasFiles || !endpointEnabled,
-            testId: "convert-button"
-          },
-          review: {
-            isVisible: hasResults,
-            operation: convertOperation,
-            title: t("convert.conversionResults", "Conversion Results"),
-            onFileClick: handleThumbnailClick,
-            testId: "conversion-results"
-          }
-        });
+    files: {
+      selectedFiles,
+      isCollapsed: filesCollapsed,
+      placeholder: t("convert.selectFilesPlaceholder", "Select files in the main view to get started"),
+    },
+    steps: [
+      {
+        title: t("convert.settings", "Settings"),
+        isCollapsed: settingsCollapsed,
+        onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
+        content: (
+          <ConvertSettings
+            parameters={convertParams.parameters}
+            onParameterChange={convertParams.updateParameter}
+            getAvailableToExtensions={convertParams.getAvailableToExtensions}
+            selectedFiles={selectedFiles}
+            disabled={endpointLoading}
+          />
+        ),
+      },
+    ],
+    executeButton: {
+      text: t("convert.convertFiles", "Convert Files"),
+      loadingText: t("convert.converting", "Converting..."),
+      onClick: handleConvert,
+      isVisible: !hasResults,
+      disabled: !convertParams.validateParameters() || !hasFiles || !endpointEnabled,
+      testId: "convert-button",
+    },
+    review: {
+      isVisible: hasResults,
+      operation: convertOperation,
+      title: t("convert.conversionResults", "Conversion Results"),
+      onFileClick: handleThumbnailClick,
+      testId: "conversion-results",
+    },
+  });
 };
 
 export default Convert;

@@ -37,30 +37,27 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleAddPassword = async () => {
     try {
-      await addPasswordOperation.executeOperation(
-        addPasswordParams.fullParameters,
-        selectedFiles
-      );
+      await addPasswordOperation.executeOperation(addPasswordParams.fullParameters, selectedFiles);
       if (addPasswordOperation.files && onComplete) {
         onComplete(addPasswordOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : t('addPassword.error.failed', 'Add password operation failed'));
+        onError(error instanceof Error ? error.message : t("addPassword.error.failed", "Add password operation failed"));
       }
     }
   };
 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
-    sessionStorage.setItem('previousMode', 'addPassword');
-    setCurrentMode('viewer');
+    sessionStorage.setItem("previousMode", "addPassword");
+    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     addPasswordOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode('addPassword');
+    setCurrentMode("addPassword");
   };
 
   const hasFiles = selectedFiles.length > 0;
@@ -75,7 +72,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     },
     steps: [
       {
-        title: t('addPassword.passwords.stepTitle', 'Passwords & Encryption'),
+        title: t("addPassword.passwords.stepTitle", "Passwords & Encryption"),
         isCollapsed: passwordsCollapsed,
         onCollapsedClick: hasResults ? handleSettingsReset : undefined,
         tooltip: addPasswordTips,
@@ -85,10 +82,10 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             onParameterChange={addPasswordParams.updateParameter}
             disabled={endpointLoading}
           />
-        )
+        ),
       },
       {
-        title: t('changePermissions.title', 'Document Permissions'),
+        title: t("changePermissions.title", "Document Permissions"),
         isCollapsed: permissionsCollapsed,
         onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedPermissions(!collapsedPermissions),
         content: (
@@ -97,23 +94,23 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             onParameterChange={addPasswordParams.permissions.updateParameter}
             disabled={endpointLoading}
           />
-        )
-      }
+        ),
+      },
     ],
     executeButton: {
-      text: t('addPassword.submit', 'Encrypt'),
+      text: t("addPassword.submit", "Encrypt"),
       isVisible: !hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: handleAddPassword,
-      disabled: !addPasswordParams.validateParameters() || !hasFiles || !endpointEnabled
+      disabled: !addPasswordParams.validateParameters() || !hasFiles || !endpointEnabled,
     },
     review: {
       isVisible: hasResults,
       operation: addPasswordOperation,
-      title: t('addPassword.results.title', 'Encrypted PDFs'),
-      onFileClick: handleThumbnailClick
-    }
+      title: t("addPassword.results.title", "Encrypted PDFs"),
+      onFileClick: handleThumbnailClick,
+    },
   });
-}
+};
 
 export default AddPassword;

@@ -24,7 +24,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const ocrTips = useOCRTips();
 
   // Step expansion state management
-  const [expandedStep, setExpandedStep] = useState<'files' | 'settings' | 'advanced' | null>('files');
+  const [expandedStep, setExpandedStep] = useState<"files" | "settings" | "advanced" | null>("files");
 
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("ocr-pdf");
 
@@ -38,8 +38,8 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   }, [ocrParams.parameters]);
 
   useEffect(() => {
-    if (selectedFiles.length > 0 && expandedStep === 'files') {
-      setExpandedStep('settings');
+    if (selectedFiles.length > 0 && expandedStep === "files") {
+      setExpandedStep("settings");
     }
   }, [selectedFiles.length, expandedStep]);
 
@@ -52,88 +52,88 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleOCR = async () => {
     try {
-      await ocrOperation.executeOperation(
-        ocrParams.parameters,
-        selectedFiles
-      );
+      await ocrOperation.executeOperation(ocrParams.parameters, selectedFiles);
       if (ocrOperation.files && onComplete) {
         onComplete(ocrOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : 'OCR operation failed');
+        onError(error instanceof Error ? error.message : "OCR operation failed");
       }
     }
   };
 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
-    sessionStorage.setItem('previousMode', 'ocr');
-    setCurrentMode('viewer');
+    sessionStorage.setItem("previousMode", "ocr");
+    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     ocrOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode('ocr');
+    setCurrentMode("ocr");
   };
 
-
-  const settingsCollapsed = expandedStep !== 'settings';
+  const settingsCollapsed = expandedStep !== "settings";
 
   return createToolFlow({
-        files: {
-          selectedFiles,
-          isCollapsed: hasFiles || hasResults,
-        },
-        steps: [
-          {
-            title: "Settings",
-            isCollapsed: !hasFiles || settingsCollapsed,
-            onCollapsedClick: hasResults ? handleSettingsReset : () => {
+    files: {
+      selectedFiles,
+      isCollapsed: hasFiles || hasResults,
+    },
+    steps: [
+      {
+        title: "Settings",
+        isCollapsed: !hasFiles || settingsCollapsed,
+        onCollapsedClick: hasResults
+          ? handleSettingsReset
+          : () => {
               if (!hasFiles) return; // Only allow if files are selected
-              setExpandedStep(expandedStep === 'settings' ? null : 'settings');
+              setExpandedStep(expandedStep === "settings" ? null : "settings");
             },
-            tooltip: ocrTips,
-            content: (
-              <OCRSettings
-                parameters={ocrParams.parameters}
-                onParameterChange={ocrParams.updateParameter}
-                disabled={endpointLoading}
-              />
-            )
-          },
-          {
-            title: "Advanced",
-            isCollapsed: expandedStep !== 'advanced',
-            onCollapsedClick: hasResults ? handleSettingsReset : () => {
+        tooltip: ocrTips,
+        content: (
+          <OCRSettings
+            parameters={ocrParams.parameters}
+            onParameterChange={ocrParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        ),
+      },
+      {
+        title: "Advanced",
+        isCollapsed: expandedStep !== "advanced",
+        onCollapsedClick: hasResults
+          ? handleSettingsReset
+          : () => {
               if (!hasFiles) return; // Only allow if files are selected
-              setExpandedStep(expandedStep === 'advanced' ? null : 'advanced');
+              setExpandedStep(expandedStep === "advanced" ? null : "advanced");
             },
-            content: (
-              <AdvancedOCRSettings
-                advancedOptions={ocrParams.parameters.additionalOptions}
-                ocrRenderType={ocrParams.parameters.ocrRenderType}
-                onParameterChange={ocrParams.updateParameter}
-                disabled={endpointLoading}
-              />
-            )
-          }
-        ],
-        executeButton: {
-          text: t("ocr.operation.submit", "Process OCR and Review"),
-          loadingText: t("loading"),
-          onClick: handleOCR,
-          isVisible: hasValidSettings && !hasResults,
-          disabled: !ocrParams.validateParameters() || !hasFiles || !endpointEnabled
-        },
-        review: {
-          isVisible: hasResults,
-          operation: ocrOperation,
-          title: t("ocr.results.title", "OCR Results"),
-          onFileClick: handleThumbnailClick
-        }
-      });
-}
+        content: (
+          <AdvancedOCRSettings
+            advancedOptions={ocrParams.parameters.additionalOptions}
+            ocrRenderType={ocrParams.parameters.ocrRenderType}
+            onParameterChange={ocrParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        ),
+      },
+    ],
+    executeButton: {
+      text: t("ocr.operation.submit", "Process OCR and Review"),
+      loadingText: t("loading"),
+      onClick: handleOCR,
+      isVisible: hasValidSettings && !hasResults,
+      disabled: !ocrParams.validateParameters() || !hasFiles || !endpointEnabled,
+    },
+    review: {
+      isVisible: hasResults,
+      operation: ocrOperation,
+      title: t("ocr.results.title", "OCR Results"),
+      onFileClick: handleThumbnailClick,
+    },
+  });
+};
 
 export default OCR;
