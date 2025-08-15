@@ -1,5 +1,15 @@
 import { getDocument } from "pdfjs-dist";
 
+interface ColorScheme {
+  bgTop: string;
+  bgBottom: string;
+  border: string;
+  icon: string;
+  badge: string;
+  textPrimary: string;
+  textSecondary: string;
+}
+
 /**
  * Calculate thumbnail scale based on file size
  * Smaller files get higher quality, larger files get lower quality
@@ -15,6 +25,54 @@ export function calculateScaleFromFileSize(fileSize: number): number {
 }
 
 /**
+ * Generate encrypted PDF thumbnail with lock icon
+ */
+function generateEncryptedPDFThumbnail(file: File): string {
+  const canvas = document.createElement('canvas');
+  canvas.width = 120;
+  canvas.height = 150;
+  const ctx = canvas.getContext('2d')!;
+
+  // Use PDF color scheme but with encrypted styling
+  const colorScheme = getFileTypeColorScheme('PDF');
+
+  // Create gradient background
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, colorScheme.bgTop);
+  gradient.addColorStop(1, colorScheme.bgBottom);
+
+  // Rounded rectangle background
+  drawRoundedRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 8);
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  // Border with dashed pattern for encrypted indicator
+  ctx.strokeStyle = colorScheme.border;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]); // Reset dash pattern
+
+  // Modern document icon
+  drawModernDocumentIcon(ctx, canvas.width / 2, 35, colorScheme.icon);
+
+  // Large lock icon overlay
+  drawLockIcon(ctx, canvas.width / 2, canvas.height / 2, colorScheme);
+
+  // "ENCRYPTED" badge
+  drawEncryptionBadge(ctx, canvas.width / 2, canvas.height / 2 + 25, colorScheme);
+
+  // File size with subtle styling
+  const sizeText = formatFileSize(file.size);
+  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = colorScheme.textSecondary;
+  ctx.textAlign = 'center';
+  ctx.fillText(sizeText, canvas.width / 2, canvas.height - 15);
+
+  return canvas.toDataURL();
+}
+
+/**
  * Generate modern placeholder thumbnail with file extension
  */
 function generatePlaceholderThumbnail(file: File): string {
@@ -22,71 +80,71 @@ function generatePlaceholderThumbnail(file: File): string {
   canvas.width = 120;
   canvas.height = 150;
   const ctx = canvas.getContext('2d')!;
-  
+
   // Get file extension for color theming
   const extension = file.name.split('.').pop()?.toUpperCase() || 'FILE';
   const colorScheme = getFileTypeColorScheme(extension);
-  
+
   // Create gradient background
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
   gradient.addColorStop(0, colorScheme.bgTop);
   gradient.addColorStop(1, colorScheme.bgBottom);
-  
+
   // Rounded rectangle background
   drawRoundedRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 8);
   ctx.fillStyle = gradient;
   ctx.fill();
-  
+
   // Subtle shadow/border
   ctx.strokeStyle = colorScheme.border;
   ctx.lineWidth = 1.5;
   ctx.stroke();
-  
+
   // Modern document icon
   drawModernDocumentIcon(ctx, canvas.width / 2, 45, colorScheme.icon);
-  
+
   // Extension badge
   drawExtensionBadge(ctx, canvas.width / 2, canvas.height / 2 + 15, extension, colorScheme);
-  
+
   // File size with subtle styling
   const sizeText = formatFileSize(file.size);
   ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = colorScheme.textSecondary;
   ctx.textAlign = 'center';
   ctx.fillText(sizeText, canvas.width / 2, canvas.height - 15);
-  
+
   return canvas.toDataURL();
 }
 
 /**
  * Get color scheme based on file extension
  */
-function getFileTypeColorScheme(extension: string) {
-  const schemes: Record<string, any> = {
+function getFileTypeColorScheme(extension: string): ColorScheme {
+  const schemes: Record<string, ColorScheme> = {
     // Documents
     'PDF': { bgTop: '#FF6B6B20', bgBottom: '#FF6B6B10', border: '#FF6B6B40', icon: '#FF6B6B', badge: '#FF6B6B', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'DOC': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'DOCX': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'TXT': { bgTop: '#95A5A620', bgBottom: '#95A5A610', border: '#95A5A640', icon: '#95A5A6', badge: '#95A5A6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
-    
+
     // Spreadsheets
     'XLS': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'XLSX': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'CSV': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
-    
+
     // Presentations
     'PPT': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'PPTX': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
-    
+
     // Archives
     'ZIP': { bgTop: '#9B59B620', bgBottom: '#9B59B610', border: '#9B59B640', icon: '#9B59B6', badge: '#9B59B6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'RAR': { bgTop: '#9B59B620', bgBottom: '#9B59B610', border: '#9B59B640', icon: '#9B59B6', badge: '#9B59B6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     '7Z': { bgTop: '#9B59B620', bgBottom: '#9B59B610', border: '#9B59B640', icon: '#9B59B6', badge: '#9B59B6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
-    
+
     // Default
     'DEFAULT': { bgTop: '#74B9FF20', bgBottom: '#74B9FF10', border: '#74B9FF40', icon: '#74B9FF', badge: '#74B9FF', textPrimary: '#FFFFFF', textSecondary: '#666666' }
   };
-  
+
   return schemes[extension] || schemes['DEFAULT'];
 }
 
@@ -115,11 +173,11 @@ function drawModernDocumentIcon(ctx: CanvasRenderingContext2D, centerX: number, 
   ctx.fillStyle = color;
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
-  
+
   // Document body
   drawRoundedRect(ctx, centerX - size/2, centerY - size/2, size, size * 1.2, 3);
   ctx.fill();
-  
+
   // Folded corner
   ctx.beginPath();
   ctx.moveTo(centerX + size/2 - 6, centerY - size/2);
@@ -131,17 +189,71 @@ function drawModernDocumentIcon(ctx: CanvasRenderingContext2D, centerX: number, 
 }
 
 /**
+ * Draw lock icon for encrypted PDFs
+ */
+function drawLockIcon(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, colorScheme: ColorScheme) {
+  const size = 16;
+  ctx.fillStyle = colorScheme.icon;
+  ctx.strokeStyle = colorScheme.icon;
+  ctx.lineWidth = 2;
+
+  // Lock body (rectangle)
+  const bodyWidth = size;
+  const bodyHeight = size * 0.6;
+  const bodyX = centerX - bodyWidth / 2;
+  const bodyY = centerY - bodyHeight / 4;
+
+  drawRoundedRect(ctx, bodyX, bodyY, bodyWidth, bodyHeight, 2);
+  ctx.fill();
+
+  // Lock shackle (semicircle)
+  const shackleRadius = size * 0.35;
+  const shackleY = centerY - size * 0.4;
+
+  ctx.beginPath();
+  ctx.arc(centerX, shackleY, shackleRadius, Math.PI, 2 * Math.PI);
+  ctx.stroke();
+
+  // Keyhole
+  ctx.fillStyle = colorScheme.textPrimary;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY - 2, 2, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.fillRect(centerX - 1, centerY - 2, 2, 4);
+}
+
+/**
+ * Draw encryption badge
+ */
+function drawEncryptionBadge(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, colorScheme: ColorScheme) {
+  const extension = "ENCRYPTED";
+  const badgeWidth = extension.length * 6 + 12;
+  const badgeHeight = 18;
+
+  // Badge background
+  drawRoundedRect(ctx, centerX - badgeWidth/2, centerY - badgeHeight/2, badgeWidth, badgeHeight, 9);
+  ctx.fillStyle = colorScheme.badge;
+  ctx.fill();
+
+  // Badge text
+  ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = colorScheme.textPrimary;
+  ctx.textAlign = 'center';
+  ctx.fillText(extension, centerX, centerY + 3);
+}
+
+/**
  * Draw extension badge
  */
-function drawExtensionBadge(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, extension: string, colorScheme: any) {
+function drawExtensionBadge(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, extension: string, colorScheme: ColorScheme) {
   const badgeWidth = Math.max(extension.length * 8 + 16, 40);
   const badgeHeight = 22;
-  
+
   // Badge background
   drawRoundedRect(ctx, centerX - badgeWidth/2, centerY - badgeHeight/2, badgeWidth, badgeHeight, 11);
   ctx.fillStyle = colorScheme.badge;
   ctx.fill();
-  
+
   // Badge text
   ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = colorScheme.textPrimary;
@@ -199,6 +311,13 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
       disableStream: true
     }).promise;
 
+    // Check if PDF is encrypted
+    if ((pdf as any).isEncrypted) {
+      console.log('PDF is encrypted, generating encrypted thumbnail:', file.name);
+      pdf.destroy();
+      return generateEncryptedPDFThumbnail(file);
+    }
+
     const page = await pdf.getPage(1);
     const viewport = page.getViewport({ scale }); // Dynamic scale based on file size
     const canvas = document.createElement("canvas");
@@ -220,6 +339,13 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
     return thumbnail;
   } catch (error) {
     if (error instanceof Error) {
+      // Check if error indicates encrypted PDF
+      const errorMessage = error.message.toLowerCase();
+      if (errorMessage.includes('password') || errorMessage.includes('encrypted')) {
+        console.log('PDF appears to be encrypted based on error, generating encrypted thumbnail:', file.name);
+        return generateEncryptedPDFThumbnail(file);
+      }
+      
       if (error.name === 'InvalidPDFException') {
         console.warn(`PDF structure issue for ${file.name} - using fallback thumbnail`);
         // Return a placeholder or try with full file instead of chunk
@@ -231,6 +357,13 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
             disableStream: true,
             verbosity: 0 // Reduce PDF.js warnings
           }).promise;
+
+          // Check if PDF is encrypted in fallback too
+          if ((pdf as any).isEncrypted) {
+            console.log('PDF is encrypted in fallback, generating encrypted thumbnail:', file.name);
+            pdf.destroy();
+            return generateEncryptedPDFThumbnail(file);
+          }
 
           const page = await pdf.getPage(1);
           const viewport = page.getViewport({ scale });
