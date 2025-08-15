@@ -179,7 +179,7 @@ export function createToolSteps() {
     return createFilesToolStep(create, props);
   };
 
-  const createReviewStep = <TParams = any>(props: ReviewToolStepProps<TParams>): React.ReactElement => {
+  const createReviewStep = <TParams = unknown>(props: ReviewToolStepProps<TParams>): React.ReactElement => {
     return createReviewToolStep(create, props);
   };
 
