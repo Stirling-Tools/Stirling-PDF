@@ -165,7 +165,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             <Box ref={quickAccessRef} w="100%">
               <Stack p="sm" gap="xs">
                 {quickSection?.subcategories.map(sc => 
-                  renderToolButtons(sc, selectedToolKey, onSelect, quickSection?.subcategories.length === 1)
+                  renderToolButtons(sc, selectedToolKey, onSelect, false)
                 )}
               </Stack>
             </Box>
