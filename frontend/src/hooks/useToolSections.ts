@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { type ToolRegistryEntry, SUBCATEGORY_ORDER } from '../data/toolRegistry';
+import { type ToolRegistryEntry, SUBCATEGORY_ORDER, ToolCategory } from '../data/toolRegistry';
 import { useTranslation } from 'react-i18next';
 
 type GroupedTools = {
@@ -25,7 +25,7 @@ export function useToolSections(filteredTools: [string, ToolRegistryEntry][]) {
 
   const sections = useMemo(() => {
     const getOrderIndex = (name: string) => {
-      const idx = SUBCATEGORY_ORDER.indexOf(name);
+      const idx = SUBCATEGORY_ORDER.indexOf(name as any);
       return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
     };
 
@@ -40,7 +40,7 @@ export function useToolSections(filteredTools: [string, ToolRegistryEntry][]) {
         all[sub].push(...tools);
       });
 
-      if (upperCat === 'RECOMMENDED TOOLS') {
+      if (upperCat === ToolCategory.RECOMMENDED_TOOLS.toUpperCase()) {
         Object.entries(subs).forEach(([sub, tools]) => {
           if (!quick[sub]) quick[sub] = [];
           quick[sub].push(...tools);
