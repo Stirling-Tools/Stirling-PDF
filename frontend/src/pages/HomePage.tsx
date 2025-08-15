@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "../contexts/FileContext";
 import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
-import { ToolWorkflowProvider, useToolSelection } from "../contexts/ToolWorkflowContext";
+import { ToolWorkflowProvider, useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
@@ -24,24 +24,24 @@ function HomePageContent() {
 
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
 
-  const { selectedTool } = useToolSelection();
+  const { selectedTool, selectedToolKey } = useToolWorkflow();
 
   const baseUrl = getBaseUrl();
 
   // Update document meta when tool changes
   useDocumentMeta({
-    title: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    title: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
     description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogTitle: selectedTool?.title ? `${selectedTool.title} - Stirling PDF` : 'Stirling PDF',
+    ogTitle: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
     ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogImage: selectedTool ? `${baseUrl}/og_images/${selectedTool.id}.png` : `${baseUrl}/og_images/home.png`,
+    ogImage: selectedToolKey ? `${baseUrl}/og_images/${selectedToolKey}.png` : `${baseUrl}/og_images/home.png`,
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
   });
 
   // Update file selection context when tool changes
   useEffect(() => {
     if (selectedTool) {
-      setMaxFiles(selectedTool.maxFiles);
+      setMaxFiles(selectedTool.maxFiles ?? -1);
       setIsToolMode(true);
     } else {
       setMaxFiles(-1);

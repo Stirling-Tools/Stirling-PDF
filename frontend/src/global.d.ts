@@ -5,3 +5,4 @@ declare module "../components/PageEditor";
 declare module "../components/Viewer";
 declare module "*.js";
 declare module '*.module.css';
+declare module 'pdfjs-dist';

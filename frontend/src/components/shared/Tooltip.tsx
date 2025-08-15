@@ -14,6 +14,7 @@ export interface TooltipProps {
   children: React.ReactElement;
   offset?: number;
   maxWidth?: number | string;
+  minWidth?: number | string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   arrow?: boolean;
@@ -22,6 +23,8 @@ export interface TooltipProps {
     title: string;
     logo?: React.ReactNode;
   };
+  delay?: number;
+  containerStyle?: React.CSSProperties;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -31,18 +34,28 @@ export const Tooltip: React.FC<TooltipProps> = ({
   tips,
   children,
   offset: gap = 8,
-  maxWidth = 280,
+  maxWidth,
+  minWidth,
   open: controlledOpen,
   onOpenChange,
   arrow = false,
   portalTarget,
   header,
+  delay = 0,
+  containerStyle={},
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const triggerRef = useRef<HTMLElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  const clearTimers = () => {
+    if (openTimeoutRef.current) {
+      clearTimeout(openTimeoutRef.current);
+      openTimeoutRef.current = null;
+    }
+  };
   
   // Get sidebar context for tooltip positioning
   const sidebarContext = sidebarTooltip ? useSidebarContext() : null;
@@ -52,6 +65,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const open = isControlled ? controlledOpen : internalOpen;
 
   const handleOpenChange = (newOpen: boolean) => {
+    clearTimers();
     if (isControlled) {
       onOpenChange?.(newOpen);
     } else {
@@ -62,6 +76,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     if (!newOpen) {
       setIsPinned(false);
     }
+
   };
 
   const handleTooltipClick = (e: React.MouseEvent) => {
@@ -96,6 +111,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
     }
   }, [isPinned]);
 
+  useEffect(() => {
+    return () => {
+      clearTimers();
+    };
+  }, []);
+
+
   const getArrowClass = () => {
     // No arrow for sidebar tooltips
     if (sidebarTooltip) return null;
@@ -117,8 +139,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
       '';
   };
 
-  // Only show tooltip when position is ready and correct
-  const shouldShowTooltip = open && (sidebarTooltip ? positionReady : true);
+  // Always mount when open so we can measure; hide until positioned to avoid flash
+  const shouldShowTooltip = open;
 
   const tooltipElement = shouldShowTooltip ? (
     <div
@@ -127,11 +149,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
         position: 'fixed',
         top: coords.top,
         left: coords.left,
-        maxWidth,
+        width: (maxWidth !== undefined ? maxWidth : '25rem'),
+        minWidth: minWidth,
         zIndex: 9999,
-        visibility: 'visible',
-        opacity: 1,
+        visibility: positionReady ? 'visible' : 'hidden',
+        opacity: positionReady ? 1 : 0,
         color: 'var(--text-primary)',
+        ...containerStyle,
       }}
       className={`${styles['tooltip-container']} ${isPinned ? styles.pinned : ''}`}
       onClick={handleTooltipClick}
@@ -175,27 +199,27 @@ export const Tooltip: React.FC<TooltipProps> = ({
   ) : null;
 
   const handleMouseEnter = (e: React.MouseEvent) => {
-    // Clear any existing timeout
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
+    if (openTimeoutRef.current) {
+      clearTimeout(openTimeoutRef.current);
     }
-
-    // Only show on hover if not pinned
     if (!isPinned) {
-      handleOpenChange(true);
+      const effectiveDelay = Math.max(0, delay || 0);
+      openTimeoutRef.current = setTimeout(() => {
+        handleOpenChange(true);
+      }, effectiveDelay);
     }
 
     (children.props as any)?.onMouseEnter?.(e);
   };
 
   const handleMouseLeave = (e: React.MouseEvent) => {
-    // Only hide on mouse leave if not pinned
+    if (openTimeoutRef.current) {
+      clearTimeout(openTimeoutRef.current);
+      openTimeoutRef.current = null;
+    }
+
     if (!isPinned) {
-      // Add a small delay to prevent flickering
-      hoverTimeoutRef.current = setTimeout(() => {
-        handleOpenChange(false);
-      }, 100);
+      handleOpenChange(false);
     }
 
     (children.props as any)?.onMouseLeave?.(e);
@@ -206,6 +230,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     if (open) {
       setIsPinned(!isPinned);
     } else {
+      clearTimers();
       handleOpenChange(true);
       setIsPinned(true);
     }
