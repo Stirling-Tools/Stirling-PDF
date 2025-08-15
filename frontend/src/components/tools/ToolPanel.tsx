@@ -39,7 +39,7 @@ export default function ToolPanel() {
       }`}
       style={{
         width: isPanelVisible ? '20rem' : '0',
-        padding: isPanelVisible ? '0.5rem' : '0'
+        padding: '0'
       }}
     >
       <div

@@ -15,11 +15,11 @@ interface ToolWorkflowState {
   sidebarsVisible: boolean;
   leftPanelView: 'toolPicker' | 'toolContent';
   readerMode: boolean;
-  
+
   // File/Preview State
   previewFile: File | null;
   pageEditorFunctions: PageEditorFunctions | null;
-  
+
   // Search State
   searchQuery: string;
 }
@@ -72,7 +72,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   selectedToolKey: string | null;
   selectedTool: Tool | null;
   toolRegistry: any; // From useToolManagement
-  
+
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
   setLeftPanelView: (view: 'toolPicker' | 'toolContent') => void;
@@ -80,16 +80,16 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setPreviewFile: (file: File | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
-  
+
   // Tool Actions
   selectTool: (toolId: string) => void;
   clearToolSelection: () => void;
-  
+
   // Workflow Actions (compound actions)
   handleToolSelect: (toolId: string) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
-  
+
   // Computed values
   filteredTools: [string, any][]; // Filtered by search
   isPanelVisible: boolean;
@@ -106,7 +106,7 @@ interface ToolWorkflowProviderProps {
 
 export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, initialState);
-  
+
   // Tool management hook
   const {
     selectedToolKey,
@@ -181,7 +181,7 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     );
   }, [toolRegistry, state.searchQuery]);
 
-  const isPanelVisible = useMemo(() => 
+  const isPanelVisible = useMemo(() =>
     state.sidebarsVisible && !state.readerMode,
     [state.sidebarsVisible, state.readerMode]
   );
@@ -193,7 +193,7 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     selectedToolKey,
     selectedTool,
     toolRegistry,
-    
+
     // Actions
     setSidebarsVisible,
     setLeftPanelView,
@@ -203,12 +203,12 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     setSearchQuery,
     selectTool,
     clearToolSelection,
-    
+
     // Workflow Actions
     handleToolSelect,
     handleBackToTools,
     handleReaderToggle,
-    
+
     // Computed
     filteredTools,
     isPanelVisible,
@@ -232,5 +232,5 @@ export function useToolWorkflow(): ToolWorkflowContextValue {
 
 // Convenience exports for specific use cases (optional - components can use useToolWorkflow directly)
 export const useToolSelection = useToolWorkflow;
-export const useToolPanelState = useToolWorkflow;  
+export const useToolPanelState = useToolWorkflow;
 export const useWorkbenchState = useToolWorkflow;

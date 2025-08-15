@@ -5,7 +5,7 @@ import type { ProcessingProgress } from './useToolState';
 
 export interface ApiCallsConfig<TParams = void> {
   endpoint: string | ((params: TParams) => string);
-  buildFormData: (file: File, params: TParams) => FormData;
+  buildFormData: (params: TParams, file: File) => FormData;
   filePrefix: string;
   responseHandler?: ResponseHandler;
 }
@@ -34,7 +34,7 @@ export const useToolApiCalls = <TParams = void>() => {
       onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
       try {
-        const formData = config.buildFormData(file, params);
+        const formData = config.buildFormData(params, file);
         const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
         const response = await axios.post(endpoint, formData, {
           responseType: 'blob',

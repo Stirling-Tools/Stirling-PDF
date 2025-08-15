@@ -15,12 +15,7 @@ export interface MergePdfPanelProps {
   updateParams: (newParams: Partial<MergePdfPanelProps["params"]>) => void;
 }
 
-const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
-  files,
-  setDownloadUrl,
-  params,
-  updateParams,
-}) => {
+const MergePdfPanel: React.FC<MergePdfPanelProps> = ({ files, setDownloadUrl, params, updateParams }) => {
   const { t } = useTranslation();
   const [selectedFiles, setSelectedFiles] = useState<boolean[]>([]);
   const [downloadUrl, setLocalDownloadUrl] = useState<string | null>(null);
@@ -51,7 +46,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
         const blob = new Blob([storedFile.data], { type: storedFile.type });
         const actualFile = new File([blob], storedFile.name, {
           type: storedFile.type,
-          lastModified: storedFile.lastModified
+          lastModified: storedFile.lastModified,
         });
         formData.append("fileInput", actualFile);
       }
@@ -83,9 +78,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
   };
 
   const handleCheckboxChange = (index: number) => {
-    setSelectedFiles((prev) =>
-      prev.map((selected, i) => (i === index ? !selected : selected))
-    );
+    setSelectedFiles((prev) => prev.map((selected, i) => (i === index ? !selected : selected)));
   };
 
   const selectedCount = selectedFiles.filter(Boolean).length;
@@ -96,7 +89,9 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="md" />
-        <Text size="sm" c="dimmed">{t("loading", "Loading...")}</Text>
+        <Text size="sm" c="dimmed">
+          {t("loading", "Loading...")}
+        </Text>
       </Stack>
     );
   }
@@ -112,55 +107,42 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
   }
 
   return (
-      <Stack>
-        <Text fw={500} size="lg">{t("merge.header")}</Text>
-        <Stack gap={4}>
-          {files.map((file, index) => (
-            <Group key={index} gap="xs">
-              <Checkbox
-                checked={selectedFiles[index] || false}
-                onChange={() => handleCheckboxChange(index)}
-              />
-              <Text size="sm">{file.name}</Text>
-            </Group>
-          ))}
-        </Stack>
-        {selectedCount < 2 && (
-          <Text size="sm" c="red">
-            {t("multiPdfPrompt")}
-          </Text>
-        )}
-        <Button
-          onClick={handleMerge}
-          loading={isLoading}
-          disabled={selectedCount < 2 || isLoading}
-          mt="md"
-        >
-{t("merge.submit")}
-        </Button>
-        {errorMessage && (
-          <Alert color="red" mt="sm">
-            {errorMessage}
-          </Alert>
-        )}
-        {downloadUrl && (
-          <Button
-            component="a"
-            href={downloadUrl}
-            download="merged.pdf"
-            color="green"
-            variant="light"
-            mt="md"
-          >
-{t("downloadPdf")}
-          </Button>
-        )}
-        <Checkbox
-          label={t("merge.removeCertSign")}
-          checked={removeDuplicates}
-          onChange={() => updateParams({ removeDuplicates: !removeDuplicates })}
-        />
+    <Stack>
+      <Text fw={500} size="lg">
+        {t("merge.header")}
+      </Text>
+      <Stack gap={4}>
+        {files.map((file, index) => (
+          <Group key={index} gap="xs">
+            <Checkbox checked={selectedFiles[index] || false} onChange={() => handleCheckboxChange(index)} />
+            <Text size="sm">{file.name}</Text>
+          </Group>
+        ))}
       </Stack>
+      {selectedCount < 2 && (
+        <Text size="sm" c="red">
+          {t("multiPdfPrompt")}
+        </Text>
+      )}
+      <Button onClick={handleMerge} loading={isLoading} disabled={selectedCount < 2 || isLoading} mt="md">
+        {t("merge.submit")}
+      </Button>
+      {errorMessage && (
+        <Alert color="red" mt="sm">
+          {errorMessage}
+        </Alert>
+      )}
+      {downloadUrl && (
+        <Button component="a" href={downloadUrl} download="merged.pdf" color="green" variant="light" mt="md">
+          {t("downloadPdf")}
+        </Button>
+      )}
+      <Checkbox
+        label={t("merge.removeCertSign")}
+        checked={removeDuplicates}
+        onChange={() => updateParams({ removeDuplicates: !removeDuplicates })}
+      />
+    </Stack>
   );
 };
 

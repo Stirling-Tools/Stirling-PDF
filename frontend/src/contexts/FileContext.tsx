@@ -35,6 +35,7 @@ const initialViewerConfig: ViewerConfig = {
 const initialState: FileContextState = {
   activeFiles: [],
   processedFiles: new Map(),
+  pinnedFiles: new Set(),
   currentMode: 'pageEditor',
   currentView: 'fileEditor', // Legacy field
   currentTool: null, // Legacy field
@@ -77,6 +78,9 @@ type FileContextAction =
   | { type: 'SET_UNSAVED_CHANGES'; payload: boolean }
   | { type: 'SET_PENDING_NAVIGATION'; payload: (() => void) | null }
   | { type: 'SHOW_NAVIGATION_WARNING'; payload: boolean }
+  | { type: 'PIN_FILE'; payload: File }
+  | { type: 'UNPIN_FILE'; payload: File }
+  | { type: 'CONSUME_FILES'; payload: { inputFiles: File[]; outputFiles: File[] } }
   | { type: 'RESET_CONTEXT' }
   | { type: 'LOAD_STATE'; payload: Partial<FileContextState> };
 
@@ -316,6 +320,43 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
         ...state,
         showNavigationWarning: action.payload
       };
+
+    case 'PIN_FILE':
+      return {
+        ...state,
+        pinnedFiles: new Set([...state.pinnedFiles, action.payload])
+      };
+
+    case 'UNPIN_FILE':
+      const newPinnedFiles = new Set(state.pinnedFiles);
+      newPinnedFiles.delete(action.payload);
+      return {
+        ...state,
+        pinnedFiles: newPinnedFiles
+      };
+
+    case 'CONSUME_FILES': {
+      const { inputFiles, outputFiles } = action.payload;
+      const unpinnedInputFiles = inputFiles.filter(file => !state.pinnedFiles.has(file));
+      
+      // Remove unpinned input files and add output files
+      const newActiveFiles = [
+        ...state.activeFiles.filter(file => !unpinnedInputFiles.includes(file)),
+        ...outputFiles
+      ];
+      
+      // Update processed files map - remove consumed files, keep pinned ones
+      const newProcessedFiles = new Map(state.processedFiles);
+      unpinnedInputFiles.forEach(file => {
+        newProcessedFiles.delete(file);
+      });
+      
+      return {
+        ...state,
+        activeFiles: newActiveFiles,
+        processedFiles: newProcessedFiles
+      };
+    }
 
     case 'RESET_CONTEXT':
       return {
@@ -560,6 +601,46 @@ export function FileContextProvider({
     dispatch({ type: 'CLEAR_SELECTIONS' });
   }, [cleanupAllFiles]);
 
+  // File pinning functions
+  const pinFile = useCallback((file: File) => {
+    dispatch({ type: 'PIN_FILE', payload: file });
+  }, []);
+
+  const unpinFile = useCallback((file: File) => {
+    dispatch({ type: 'UNPIN_FILE', payload: file });
+  }, []);
+
+  const isFilePinned = useCallback((file: File): boolean => {
+    return state.pinnedFiles.has(file);
+  }, [state.pinnedFiles]);
+
+  // File consumption function
+  const consumeFiles = useCallback(async (inputFiles: File[], outputFiles: File[]): Promise<void> => {
+    dispatch({ type: 'CONSUME_FILES', payload: { inputFiles, outputFiles } });
+    
+    // Store new output files if persistence is enabled
+    if (enablePersistence) {
+      for (const file of outputFiles) {
+        try {
+          const fileId = getFileId(file);
+          if (!fileId) {
+            try {
+              const thumbnail = await (thumbnailGenerationService as any).generateThumbnail(file);
+              const storedFile = await fileStorage.storeFile(file, thumbnail);
+              Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            } catch (thumbnailError) {
+              console.warn('Failed to generate thumbnail, storing without:', thumbnailError);
+              const storedFile = await fileStorage.storeFile(file);
+              Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            }
+          }
+        } catch (error) {
+          console.error('Failed to store output file:', error);
+        }
+      }
+    }
+  }, [enablePersistence, state.pinnedFiles]);
+
   // Navigation guard system functions
   const setHasUnsavedChanges = useCallback((hasChanges: boolean) => {
     dispatch({ type: 'SET_UNSAVED_CHANGES', payload: hasChanges });
@@ -783,6 +864,10 @@ export function FileContextProvider({
     removeFiles,
     replaceFile,
     clearAllFiles,
+    pinFile,
+    unpinFile,
+    isFilePinned,
+    consumeFiles,
     setCurrentMode,
     setCurrentView,
     setCurrentTool,
