@@ -37,7 +37,6 @@ function stripExt(name: string): string {
   return i > 0 ? name.slice(0, i) : name;
 }
 
-// Signature must be (file, params) to match useToolApiCalls interface
 const buildFormData = (parameters: OCRParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
