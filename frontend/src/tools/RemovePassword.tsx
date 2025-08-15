@@ -16,6 +16,7 @@ import RemovePasswordSettings from "../components/tools/removePassword/RemovePas
 
 import { useRemovePasswordParameters } from "../hooks/tools/removePassword/useRemovePasswordParameters";
 import { useRemovePasswordOperation } from "../hooks/tools/removePassword/useRemovePasswordOperation";
+import { useRemovePasswordTips } from "../components/tooltips/useRemovePasswordTips";
 import { BaseToolProps } from "../types/tool";
 
 const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -25,6 +26,7 @@ const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
 
   const removePasswordParams = useRemovePasswordParameters();
   const removePasswordOperation = useRemovePasswordOperation();
+  const removePasswordTips = useRemovePasswordTips();
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(removePasswordParams.getEndpointName());
@@ -104,6 +106,7 @@ const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
           isCompleted={passwordCollapsed}
           onCollapsedClick={hasResults ? handleSettingsReset : undefined}
           completedMessage={passwordCollapsed ? t('removePassword.password.completed', 'Password configured') : undefined}
+          tooltip={removePasswordTips}
         >
           <RemovePasswordSettings
             parameters={removePasswordParams.parameters}

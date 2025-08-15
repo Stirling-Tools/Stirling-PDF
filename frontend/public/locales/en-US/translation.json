@@ -1740,6 +1740,9 @@
     "error": {
       "failed": "An error occurred while removing the password from the PDF."
     },
+    "tooltip": {
+      "description": "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
+    },
     "results": {
       "title": "Decrypted PDFs"
     }
