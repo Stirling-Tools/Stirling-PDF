@@ -24,7 +24,7 @@ const OperationButton = ({
   submitText,
   variant = 'filled',
   color = 'blue',
-  fullWidth = true,
+  fullWidth = false,
   mt = 'md',
   type = 'button',
   'data-testid': dataTestId
@@ -36,14 +36,17 @@ const OperationButton = ({
       type={type}
       onClick={onClick}
       fullWidth={fullWidth}
+      mr='md'
+      ml='md'
       mt={mt}
       loading={isLoading}
       disabled={disabled}
       variant={variant}
       color={color}
       data-testid={dataTestId}
+      style={{ minHeight: '2.5rem'  }}
     >
-      {isLoading 
+      {isLoading
         ? (loadingText || t("loading", "Loading..."))
         : (submitText || t("submit", "Submit"))
       }
