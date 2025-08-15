@@ -36,7 +36,13 @@ const extractFromJsonData = (data: unknown): string | null => {
 /**
  * Default error extractor that follows the standard pattern
  */
-export const extractErrorMessage = (error: ToolError): string => {
+export const extractErrorMessage = (error: unknown): string => {
+  // Early return if error is null/undefined
+  if (!error || (typeof error !== 'object')) {
+    return 'Operation failed';
+  }
+
+  const typedError = error as ToolError;
 
   // Try response.data first
   if (typedError.response?.data) {
