@@ -1761,13 +1761,24 @@
         "selected": "Selected: {{filename}}"
       },
       "fontSize": "Font Size",
-      "position": "Position",
+      "alphabet": "Font/Language",
+      "color": "Watermark Color",
       "rotation": "Rotation (degrees)",
       "opacity": "Opacity (%)",
       "spacing": {
         "width": "Width Spacing",
         "height": "Height Spacing"
-      }
+      },
+      "convertToImage": "Convert result to image-based PDF",
+      "convertToImageDesc": "Creates a PDF with images instead of text (more secure but larger file size)"
+    },
+    "alphabet": {
+      "roman": "Roman/Latin",
+      "arabic": "Arabic",
+      "japanese": "Japanese", 
+      "korean": "Korean",
+      "chinese": "Chinese",
+      "thai": "Thai"
     },
     "positions": {
       "topLeft": "Top Left",

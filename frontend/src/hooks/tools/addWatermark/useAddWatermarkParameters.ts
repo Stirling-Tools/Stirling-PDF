@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 export interface AddWatermarkParameters {
-  watermarkType: 'text' | 'image';
+  watermarkType?: 'text' | 'image';
   watermarkText: string;
   watermarkImage?: File;
   fontSize: number;
@@ -9,20 +9,22 @@ export interface AddWatermarkParameters {
   opacity: number;
   widthSpacer: number;
   heightSpacer: number;
-  position: string;
-  overrideX?: number;
-  overrideY?: number;
+  alphabet: string;
+  customColor: string;
+  convertPDFToImage: boolean;
 }
 
 const defaultParameters: AddWatermarkParameters = {
-  watermarkType: 'text',
+  watermarkType: undefined,
   watermarkText: '',
   fontSize: 12,
   rotation: 0,
   opacity: 50,
   widthSpacer: 50,
   heightSpacer: 50,
-  position: 'center'
+  alphabet: 'roman',
+  customColor: '#d3d3d3',
+  convertPDFToImage: false
 };
 
 export const useAddWatermarkParameters = () => {
@@ -40,6 +42,9 @@ export const useAddWatermarkParameters = () => {
   }, []);
 
   const validateParameters = useCallback((): boolean => {
+    if (!parameters.watermarkType) {
+      return false;
+    }
     if (parameters.watermarkType === 'text') {
       return parameters.watermarkText.trim().length > 0;
     } else {

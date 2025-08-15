@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -12,7 +12,9 @@ import ErrorNotification from "../components/tools/shared/ErrorNotification";
 import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator";
 import ResultsPreview from "../components/tools/shared/ResultsPreview";
 
-import AddWatermarkSettings from "../components/tools/addWatermark/AddWatermarkSettings";
+import WatermarkTypeSettings from "../components/tools/addWatermark/WatermarkTypeSettings";
+import WatermarkContentSettings from "../components/tools/addWatermark/WatermarkContentSettings";
+import WatermarkStyleSettings from "../components/tools/addWatermark/WatermarkStyleSettings";
 
 import { useAddWatermarkParameters } from "../hooks/tools/addWatermark/useAddWatermarkParameters";
 import { useAddWatermarkOperation } from "../hooks/tools/addWatermark/useAddWatermarkOperation";
@@ -65,7 +67,65 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = watermarkOperation.files.length > 0 || watermarkOperation.downloadUrl !== null;
   const filesCollapsed = hasFiles;
-  const settingsCollapsed = hasResults;
+  
+  // Step completion logic  
+  const typeStepCompleted = hasFiles && !!watermarkParams.parameters.watermarkType;
+  const contentStepCompleted = typeStepCompleted && (
+    (watermarkParams.parameters.watermarkType === 'text' && watermarkParams.parameters.watermarkText.trim().length > 0) ||
+    (watermarkParams.parameters.watermarkType === 'image' && watermarkParams.parameters.watermarkImage !== undefined)
+  );
+  const styleStepCompleted = contentStepCompleted; // Style step has defaults, so completed when content is done
+  
+  // Track which steps have been manually opened
+  const [manuallyOpenedSteps, setManuallyOpenedSteps] = useState<Set<string>>(new Set());
+  
+  // Auto-collapse logic with manual override
+  const typeStepCollapsed = typeStepCompleted && !hasResults && !manuallyOpenedSteps.has('type');
+  const contentStepCollapsed = contentStepCompleted && !hasResults && !manuallyOpenedSteps.has('content');
+  const styleStepCollapsed = !manuallyOpenedSteps.has('style'); // Style starts collapsed, only opens when clicked
+  
+  // Click handlers to manage step visibility and reset results
+  const handleTypeStepClick = () => {
+    setManuallyOpenedSteps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has('type')) {
+        newSet.delete('type'); // Close if already open
+      } else {
+        newSet.add('type'); // Open if closed
+      }
+      return newSet;
+    });
+    watermarkOperation.resetResults();
+    onPreviewFile?.(null);
+  };
+  
+  const handleContentStepClick = () => {
+    setManuallyOpenedSteps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has('content')) {
+        newSet.delete('content'); // Close if already open
+      } else {
+        newSet.add('content'); // Open if closed
+      }
+      return newSet;
+    });
+    watermarkOperation.resetResults();
+    onPreviewFile?.(null);
+  };
+  
+  const handleStyleStepClick = () => {
+    setManuallyOpenedSteps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has('style')) {
+        newSet.delete('style'); // Close if already open
+      } else {
+        newSet.add('style'); // Open if closed
+      }
+      return newSet;
+    });
+    watermarkOperation.resetResults();
+    onPreviewFile?.(null);
+  };
 
   const previewResults = useMemo(() =>
     watermarkOperation.files?.map((file, index) => ({
@@ -96,22 +156,62 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
           />
         </ToolStep>
 
-        {/* Settings Step */}
+        {/* Watermark Type Step */}
         <ToolStep
-          title="Settings"
+          title="Watermark Type"
           isVisible={hasFiles}
-          isCollapsed={settingsCollapsed}
-          isCompleted={settingsCollapsed}
-          onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
-          completedMessage={settingsCollapsed ? "Watermark added" : undefined}
+          isCollapsed={typeStepCollapsed}
+          isCompleted={typeStepCompleted}
+          onCollapsedClick={handleTypeStepClick}
+          completedMessage={typeStepCompleted ? 
+            `Type: ${watermarkParams.parameters.watermarkType === 'text' ? 'Text' : 'Image'}` : undefined}
         >
-          <Stack gap="sm">
-            <AddWatermarkSettings
-              parameters={watermarkParams.parameters}
-              onParameterChange={watermarkParams.updateParameter}
-              disabled={endpointLoading}
-            />
+          <WatermarkTypeSettings
+            watermarkType={watermarkParams.parameters.watermarkType}
+            onWatermarkTypeChange={(type) => watermarkParams.updateParameter('watermarkType', type)}
+            disabled={endpointLoading}
+          />
+        </ToolStep>
 
+        {/* Content Step */}
+        <ToolStep
+          title={watermarkParams.parameters.watermarkType === 'text' ? "Text Content" : "Image Content"}
+          isVisible={typeStepCompleted}
+          isCollapsed={contentStepCollapsed}
+          isCompleted={contentStepCompleted}
+          onCollapsedClick={handleContentStepClick}
+          completedMessage={contentStepCompleted ? 
+            (watermarkParams.parameters.watermarkType === 'text' 
+              ? `Text: "${watermarkParams.parameters.watermarkText}"` 
+              : `Image: ${watermarkParams.parameters.watermarkImage?.name}`) : undefined}
+        >
+          <WatermarkContentSettings
+            parameters={watermarkParams.parameters}
+            onParameterChange={watermarkParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        </ToolStep>
+
+        {/* Style Step */}
+        <ToolStep
+          title="Style & Position (Optional)"
+          isVisible={contentStepCompleted}
+          isCollapsed={styleStepCollapsed}
+          isCompleted={styleStepCompleted}
+          onCollapsedClick={handleStyleStepClick}
+          completedMessage={styleStepCompleted ? 
+            `Opacity: ${watermarkParams.parameters.opacity}%, Rotation: ${watermarkParams.parameters.rotation}°` : undefined}
+        >
+          <WatermarkStyleSettings
+            parameters={watermarkParams.parameters}
+            onParameterChange={watermarkParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        </ToolStep>
+
+        {/* Apply Button - Outside of settings steps */}
+        {styleStepCompleted && !hasResults && (
+          <Stack gap="sm" p="md">
             <OperationButton
               onClick={handleAddWatermark}
               isLoading={watermarkOperation.isLoading}
@@ -120,7 +220,7 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
               submitText="Add Watermark and Review"
             />
           </Stack>
-        </ToolStep>
+        )}
 
         {/* Results Step */}
         <ToolStep
