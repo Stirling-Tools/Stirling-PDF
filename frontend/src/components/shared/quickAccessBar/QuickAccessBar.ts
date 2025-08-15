@@ -1,14 +1,8 @@
 import { ButtonConfig } from '../../../types/sidebar';
+import { useFlatToolRegistry } from '../../../data/toolRegistry';
 
 // Border radius constants
 export const ROUND_BORDER_RADIUS = '0.5rem';
-
-/**
- * Get border radius for a button based on its configuration
- */
-export const getNavButtonBorderRadius = (config: ButtonConfig): string => {
-  return config.isRound ? ROUND_BORDER_RADIUS : ROUND_BORDER_RADIUS;
-};
 
 /**
  * Check if a navigation button is currently active
@@ -42,7 +36,7 @@ export const getNavButtonStyle = (
       backgroundColor: `var(--icon-${config.id}-bg)`,
       color: `var(--icon-${config.id}-color)`,
       border: 'none',
-      borderRadius: getNavButtonBorderRadius(config),
+      borderRadius: ROUND_BORDER_RADIUS,
     };
   }
 
@@ -51,23 +45,38 @@ export const getNavButtonStyle = (
     backgroundColor: 'var(--icon-inactive-bg)',
     color: 'var(--icon-inactive-color)',
     border: 'none',
-    borderRadius: getNavButtonBorderRadius(config),
+    borderRadius: ROUND_BORDER_RADIUS,
   };
 };
 
 /**
- * Determine which nav button should be highlighted based on selected tool
+ * Determine which nav button should be highlighted based on the tool registry.
+ * Uses the tool's `view` property to map to the nav button id.
  */
-export const getTargetNavButton = (selectedTool: any, selectedToolKey: string | null): string | null => {
-  if (!selectedTool || !selectedToolKey) return null;
-  
-  // Map specific tool keys to nav button ids
-  if (selectedToolKey === 'sign') return 'sign';
-  if (selectedToolKey === 'read') return 'read';
-  if (selectedToolKey === 'automate') return 'automate';
-  
-  // Fallback: use subcategory for automation tools
-  if (selectedTool.subcategory === 'Automation') return 'automate';
-  
-  return null;
+export const getTargetNavButton = (
+  selectedToolKey: string | null,
+  registry: ReturnType<typeof useFlatToolRegistry>
+): string | null => {
+  if (!selectedToolKey) return null;
+
+  const toolEntry = registry[selectedToolKey];
+  if (!toolEntry) return null;
+
+  // Use the tool's view as the nav button id
+  return toolEntry.view || null;
+};
+
+/**
+ * Determine the active nav button based on current tool state and registry
+ */
+export const getActiveNavButton = (
+  leftPanelView: 'toolPicker' | 'toolContent',
+  selectedToolKey: string | null,
+  registry: ReturnType<typeof useFlatToolRegistry>
+): string => {
+  if (leftPanelView !== 'toolContent' || !selectedToolKey) {
+    return 'tools';
+  }
+
+  return getTargetNavButton(selectedToolKey, registry) || 'tools';
 };

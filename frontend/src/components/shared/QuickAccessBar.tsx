@@ -16,7 +16,7 @@ import TopToolIndicator from './quickAccessBar/TopToolIndicator';
 import { 
   isNavButtonActive, 
   getNavButtonStyle, 
-  getTargetNavButton 
+  getActiveNavButton 
 } from './quickAccessBar/QuickAccessBar';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>(({
@@ -24,36 +24,21 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, selectedTool, selectedToolKey, leftPanelView } = useToolWorkflow();
+  const { handleReaderToggle, handleBackToTools, selectedTool, selectedToolKey, leftPanelView } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
 
-  // Sync left nav highlight with selected tool when appropriate
   useEffect(() => {
-    if (leftPanelView === 'toolContent' && selectedTool) {
-      const target = getTargetNavButton(selectedTool, selectedToolKey);
-
-      if (target && activeButton !== target) {
-        setActiveButton(target);
-        return;
-      }
-      // If tool doesn't map to a nav button, clear the highlight
-      if (!target && activeButton !== 'tools') {
-        setActiveButton('tools');
-      }
-    }
-    // Revert highlight when no specific mapping applies
-    if (leftPanelView !== 'toolContent') {
-      setActiveButton('tools');
-    }
+    setActiveButton(getActiveNavButton(leftPanelView, selectedTool, selectedToolKey));
   }, [leftPanelView, selectedTool, selectedToolKey]);
 
   const handleFilesButtonClick = () => {
     openFilesModal();
   };
 
+  
   const buttonConfigs: ButtonConfig[] = [
     {
       id: 'read',
@@ -64,6 +49,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       type: 'navigation',
       onClick: () => {
         setActiveButton('read');
+        // Clear any selected tool and return to picker so the top tool indicator hides
+        handleBackToTools();
+        // Then enter reader mode
         handleReaderToggle();
       }
     },
@@ -77,7 +65,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       size: 'lg',
       isRound: false,
       type: 'navigation',
-      onClick: () => setActiveButton('sign')
+      onClick: () => {
+        setActiveButton('sign');
+        // Ensure any previously selected tool is cleared so indicator hides
+        handleBackToTools();
+      }
     },
     {
       id: 'automate',
@@ -89,7 +81,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       size: 'lg',
       isRound: false,
       type: 'navigation',
-      onClick: () => setActiveButton('automate')
+      onClick: () => {
+        setActiveButton('automate');
+        // Ensure any previously selected tool is cleared so indicator hides
+        handleBackToTools();
+      }
     },
     {
       id: 'files',

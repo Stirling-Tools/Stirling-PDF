@@ -34,7 +34,7 @@ export function CardTitle({ title }: { title: string }) {
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `text` | `string` | — | The string to render and fit |
-| `fontSize` | `number` | computed | Maximum starting font size in px |
+| `fontSize` | `number` | computed | Maximum starting font size in rem (e.g., 1.2, 0.9) |
 | `minimumFontScale` | `number` | `0.8` | Smallest scale relative to the max (0..1) |
 | `lines` | `number` | `1` | Maximum number of lines to display and fit |
 | `className` | `string` | — | Optional class on the rendered element |
@@ -67,7 +67,7 @@ Notes:
 ### Explicit starting size
 
 ```tsx
-<FitText text="Starts at 18px, scales down if needed" fontSize={18} />
+<FitText text="Starts at 1.2rem, scales down if needed" fontSize={1.2} />
 ```
 
 ### Render as a div
@@ -107,5 +107,6 @@ export function CustomFit() {
 - For predictable measurements, ensure the container has a fixed width (or stable layout) when fitting occurs.
 - Avoid animating width while fitting; update after animation completes for best results.
 - When you need more control of typography, pass `fontSize` to define the starting ceiling.
+- **Important**: The `fontSize` prop expects `rem` values (e.g., 1.2, 0.9) to ensure text scales with global font size changes.
 
 

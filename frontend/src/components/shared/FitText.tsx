@@ -63,7 +63,8 @@ const FitText: React.FC<FitTextProps> = ({
     wordBreak: lines > 1 ? ('keep-all' as any) : ('normal' as any),
     overflowWrap: 'normal',
     hyphens: 'manual',
-    fontSize: fontSize ? `${fontSize}px` : undefined,
+    // fontSize expects rem values (e.g., 1.2, 0.9) to scale with global font size
+    fontSize: fontSize ? `${fontSize}rem` : undefined,
   };
 
   return (
