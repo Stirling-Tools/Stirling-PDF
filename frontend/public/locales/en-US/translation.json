@@ -369,7 +369,7 @@
     },
     "watermark": {
       "title": "Add Watermark",
-      "desc": "Add a custom watermark to your PDF document."
+      "desc": "Add text or image watermarks to PDF files"
     },
     "permissions": {
       "title": "Change Permissions",
@@ -710,6 +710,7 @@
   "watermark": {
     "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
     "title": "Add Watermark",
+    "desc": "Add text or image watermarks to PDF files",
     "header": "Add Watermark",
     "customColor": "Custom Text Color",
     "selectText": {
@@ -1967,5 +1968,13 @@
       "bottomCenter": "Bottom Center",
       "bottomRight": "Bottom Right"
     }
+  },
+  "files": {
+    "title": "Files",
+    "placeholder": "Select a PDF file in the main view to get started"
+  },
+  "review": "Review",
+  "common": {
+    "chooseFile": "Choose File"
   }
 }
