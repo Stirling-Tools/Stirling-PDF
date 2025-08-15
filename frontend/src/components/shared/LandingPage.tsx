@@ -33,7 +33,7 @@ const LandingPage = () => {
       {/* White PDF Page Background */}
       <Dropzone
         onDrop={handleFileDrop}
-        accept="*/*"
+        accept={["*/*"] as any}
         multiple={true}
         className="w-4/5 flex items-center justify-center h-[95vh]"
         style={{
