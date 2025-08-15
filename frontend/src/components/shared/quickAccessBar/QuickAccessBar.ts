@@ -59,11 +59,7 @@ export const getTargetNavButton = (
 ): string | null => {
   if (!selectedToolKey) return null;
 
-  const toolEntry = registry[selectedToolKey];
-  if (!toolEntry) return null;
-
-  // Use the tool's view as the nav button id
-  return toolEntry.view || null;
+  return selectedToolKey;
 };
 
 /**
@@ -72,8 +68,13 @@ export const getTargetNavButton = (
 export const getActiveNavButton = (
   leftPanelView: 'toolPicker' | 'toolContent',
   selectedToolKey: string | null,
-  registry: ReturnType<typeof useFlatToolRegistry>
+  registry: ReturnType<typeof useFlatToolRegistry>,
+  readerMode: boolean
 ): string => {
+  // Reader mode takes precedence and should highlight the Read nav item
+  if (readerMode) {
+    return 'read';
+  }
   if (leftPanelView !== 'toolContent' || !selectedToolKey) {
     return 'tools';
   }

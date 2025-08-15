@@ -142,13 +142,22 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: string) => {
+    // Special-case: if tool is a dedicated reader tool, enter reader mode and do not go to toolContent
+    if (toolId === 'read' || toolId === 'view-pdf') {
+      setReaderMode(true);
+      setLeftPanelView('toolPicker');
+      clearToolSelection();
+      setSearchQuery('');
+      return;
+    }
+
     selectTool(toolId);
     onViewChange?.('fileEditor');
     setLeftPanelView('toolContent');
     setReaderMode(false);
     // Clear search so the tool content becomes visible immediately
     setSearchQuery('');
-  }, [selectTool, onViewChange, setLeftPanelView, setReaderMode, setSearchQuery]);
+  }, [selectTool, onViewChange, setLeftPanelView, setReaderMode, setSearchQuery, clearToolSelection]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');

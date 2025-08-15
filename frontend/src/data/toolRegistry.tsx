@@ -670,15 +670,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: "Recommended Tools",
         subcategory: null
     },
-    "view-pdf": {
-        icon: <span className="material-symbols-rounded">article</span>,
-        name: t("home.viewPdf.title", "View/Edit PDF"),
-        component: null,
-        view: "view",
-        description: t("home.viewPdf.desc", "View, annotate, draw, add text or images"),
-        category: "Recommended Tools",
-        subcategory: null
-    }
     };
 }
 

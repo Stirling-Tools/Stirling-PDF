@@ -16,7 +16,7 @@ import TopToolIndicator from './quickAccessBar/TopToolIndicator';
 import { 
   isNavButtonActive, 
   getNavButtonStyle, 
-  getActiveNavButton 
+  getActiveNavButton,
 } from './quickAccessBar/QuickAccessBar';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>(({
@@ -24,15 +24,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleBackToTools, selectedTool, selectedToolKey, leftPanelView } = useToolWorkflow();
+  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedTool, selectedToolKey, leftPanelView, toolRegistry, readerMode } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
 
   useEffect(() => {
-    setActiveButton(getActiveNavButton(leftPanelView, selectedTool, selectedToolKey));
-  }, [leftPanelView, selectedTool, selectedToolKey]);
+    setActiveButton(getActiveNavButton(leftPanelView, selectedToolKey, toolRegistry as any, readerMode));
+  }, [leftPanelView, selectedToolKey, toolRegistry, readerMode]);
 
   const handleFilesButtonClick = () => {
     openFilesModal();
@@ -49,9 +49,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       type: 'navigation',
       onClick: () => {
         setActiveButton('read');
-        // Clear any selected tool and return to picker so the top tool indicator hides
         handleBackToTools();
-        // Then enter reader mode
         handleReaderToggle();
       }
     },
@@ -67,8 +65,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       type: 'navigation',
       onClick: () => {
         setActiveButton('sign');
-        // Ensure any previously selected tool is cleared so indicator hides
-        handleBackToTools();
+        handleToolSelect('sign');
       }
     },
     {
@@ -83,8 +80,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       type: 'navigation',
       onClick: () => {
         setActiveButton('automate');
-        // Ensure any previously selected tool is cleared so indicator hides
-        handleBackToTools();
+        handleToolSelect('automate');
       }
     },
     {
