@@ -151,7 +151,7 @@ export default function Login() {
     )
   }
 
-  const signInWithOAuth = async (provider: 'github' | 'google' | 'facebook', nextPath = '/') => {
+  const signInWithOAuth = async (provider: 'github' | 'google' | 'facebook' | 'linkedin_oidc', nextPath = '/') => {
     try {
       setIsSigningIn(true)
       setError(null)
@@ -186,6 +186,10 @@ export default function Login() {
         oauthOptions.queryParams = {
           scope: 'email',
         }
+      } else if (provider === 'linkedin_oidc') {
+        oauthOptions.queryParams = {
+          scope: 'openid profile email',
+        }
       }
 
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -207,7 +211,9 @@ export default function Login() {
           ? 'github.com' 
           : provider === 'google' 
             ? 'accounts.google.com'
-            : 'facebook.com'
+            : provider === 'facebook'
+            ? 'facebook.com'
+            : 'linkedin.com'
         setTimeout(() => {
           if (!window.location.href.includes(expectedDomain)) {
             setError('OAuth redirect did not occur as expected')
@@ -231,6 +237,7 @@ export default function Login() {
   const signInWithGitHub = (nextPath = '/') => signInWithOAuth('github', nextPath)
   const signInWithGoogle = (nextPath = '/') => signInWithOAuth('google', nextPath)
   const signInWithFacebook = (nextPath = '/') => signInWithOAuth('facebook', nextPath)
+  const signInWithLinkedIn = (nextPath = '/') => signInWithOAuth('linkedin_oidc', nextPath)
 
   const testSupabaseConnection = async () => {
     try {

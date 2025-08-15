@@ -92,7 +92,7 @@ export default function AuthDebug() {
     alert(`Cleared ${keys.length} auth-related localStorage keys`)
   }
 
-  const testSignIn = async (provider: 'github' | 'google' | 'facebook' = 'github') => {
+  const testSignIn = async (provider: 'github' | 'google' | 'facebook' | 'linkedin_oidc' = 'github') => {
     try {
       // Supabase redirects back to your app after OAuth
       const redirectTo = `${window.location.origin}/auth/callback`
@@ -103,6 +103,8 @@ export default function AuthDebug() {
           redirectTo,
           queryParams: provider === 'facebook' 
             ? { scope: 'email' }
+            : provider === 'linkedin_oidc'
+            ? { scope: 'openid profile email' }
             : {
                 access_type: 'offline',
                 prompt: 'consent',
@@ -348,6 +350,13 @@ export default function AuthDebug() {
               className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
             >
               Test Facebook Sign In
+            </button>
+            
+            <button
+              onClick={() => testSignIn('linkedin_oidc')}
+              className="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700"
+            >
+              Test LinkedIn Sign In
             </button>
             
             {session && (
