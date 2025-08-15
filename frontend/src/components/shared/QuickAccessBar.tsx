@@ -12,7 +12,7 @@ import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
-import TopToolIndicator from './quickAccessBar/TopToolIndicator';
+import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
 import { 
   isNavButtonActive, 
   getNavButtonStyle, 
@@ -129,7 +129,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">
-        <TopToolIndicator activeButton={activeButton} setActiveButton={setActiveButton} />
+        <ActiveToolButton activeButton={activeButton} setActiveButton={setActiveButton} />
         <AllToolsNavButton activeButton={activeButton} setActiveButton={setActiveButton} />
 
       </div>

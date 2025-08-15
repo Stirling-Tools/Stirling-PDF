@@ -15,7 +15,6 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 export default function ToolPanel() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
-  const { colorScheme } = useMantineColorScheme();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef } = sidebarRefs;
 
@@ -55,7 +54,7 @@ export default function ToolPanel() {
         {/* Search Bar - Always visible at the top */}
         <div
           style={{
-            backgroundColor: colorScheme === 'dark' ? '#1F2329' : '#EFF1F4',
+            backgroundColor: 'var(--tool-panel-search-bg)',
             padding: '0.75rem 1rem',
             marginBottom: (leftPanelView === 'toolContent') ? '1rem' : 0,
           }}

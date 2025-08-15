@@ -9,27 +9,38 @@ interface SearchResultsProps {
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }) => {
-  const groups = useMemo(() => {
-    const subMap: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
-    const seen = new Set<string>();
+  // Group tools by subcategory and remove duplicates
+  const groupedToolsByCategory = useMemo(() => {
+    const categoryToToolsMap: Record<string, Array<{ id: string; tool: ToolRegistryEntry }>> = {};
+    const processedToolIds = new Set<string>();
 
-    filteredTools.forEach(([id, tool]) => {
-      if (seen.has(id)) return;
-      seen.add(id);
-      const sub = tool?.subcategory || 'General';
-      if (!subMap[sub]) subMap[sub] = [];
-      subMap[sub].push({ id, tool });
+    // Process each tool, skipping duplicates and grouping by subcategory
+    filteredTools.forEach(([toolId, toolEntry]) => {
+      // Skip if we've already processed this tool ID (deduplication)
+      if (processedToolIds.has(toolId)) return;
+      processedToolIds.add(toolId);
+      
+      // Use subcategory or default to 'General' if not specified
+      const categoryName = toolEntry?.subcategory || 'General';
+      
+      // Initialize category array if it doesn't exist
+      if (!categoryToToolsMap[categoryName]) {
+        categoryToToolsMap[categoryName] = [];
+      }
+      
+      categoryToToolsMap[categoryName].push({ id: toolId, tool: toolEntry });
     });
 
-    return Object.entries(subMap)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([subcategory, tools]) => ({
-        subcategory,
-        tools
+    // Convert to sorted array format for rendering
+    return Object.entries(categoryToToolsMap)
+      .sort(([categoryA], [categoryB]) => categoryA.localeCompare(categoryB))
+      .map(([categoryName, toolsInCategory]) => ({
+        categoryName,
+        toolsInCategory
       }));
   }, [filteredTools]);
 
-  if (groups.length === 0) {
+  if (groupedToolsByCategory.length === 0) {
     return (
       <Text c="dimmed" size="sm" p="sm">
         No tools found
@@ -39,13 +50,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }
 
   return (
     <Stack p="sm" gap="xs">
-      {groups.map(group => (
-        <Box key={group.subcategory} w="100%">
+      {groupedToolsByCategory.map(categoryGroup => (
+        <Box key={categoryGroup.categoryName} w="100%">
           <Text size="sm" fw={500} mb="0.25rem" mt="1rem" className="tool-subcategory-title">
-            {group.subcategory}
+            {categoryGroup.categoryName}
           </Text>
           <Stack gap="xs">
-            {group.tools.map(({ id, tool }) => (
+            {categoryGroup.toolsInCategory.map(({ id, tool }) => (
               <ToolButton
                 key={id}
                 id={id}
@@ -59,7 +70,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }
         </Box>
       ))}
       {/* global spacer to allow scrolling past last row in search mode */}
-      <div aria-hidden style={{ height: 44 * 4 }} />
+      <div aria-hidden style={{ height: 200 }} />
     </Stack>
   );
 };

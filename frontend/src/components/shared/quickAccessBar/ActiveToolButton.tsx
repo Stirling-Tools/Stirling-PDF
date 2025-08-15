@@ -1,3 +1,17 @@
+/**
+ * ActiveToolButton - Shows the currently selected tool at the top of the Quick Access Bar
+ * 
+ * When a user selects a tool from the All Tools list, this component displays the tool's
+ * icon and name at the top of the navigation bar. It provides a quick way to see which
+ * tool is currently active and offers a back button to return to the All Tools list.
+ * 
+ * Features:
+ * - Shows tool icon and name when a tool is selected
+ * - Hover to reveal back arrow for returning to All Tools
+ * - Smooth slide-down/slide-up animations
+ * - Only appears for tools that don't have dedicated nav buttons (read, sign, automate)
+ */
+
 import React, { useEffect, useRef, useState } from 'react';
 import { ActionIcon, Divider } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
@@ -5,14 +19,14 @@ import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
 import FitText from '../FitText';
 import { Tooltip } from '../Tooltip';
 
-interface TopToolIndicatorProps {
+interface ActiveToolButtonProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
 }
 
-const NAV_IDS = ['read','sign','automate'];
+const NAV_IDS = ['read', 'sign', 'automate'];
 
-const TopToolIndicator: React.FC<TopToolIndicatorProps> = ({ activeButton, setActiveButton }) => {
+const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setActiveButton }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
 
   // Determine if the indicator should be visible
@@ -28,43 +42,55 @@ const TopToolIndicator: React.FC<TopToolIndicatorProps> = ({ activeButton, setAc
   const [isBackHover, setIsBackHover] = useState<boolean>(false);
   const prevKeyRef = useRef<string | null>(null);
 
+  const isSwitchingToNewTool = () => { return prevKeyRef.current && prevKeyRef.current !== selectedToolKey };
+
+  const playGrowDown = () => {
+
+    setIndicatorTool(selectedTool);
+    setIndicatorVisible(true);
+    setReplayAnim(true);
+    setIsAnimating(true);
+    const t = window.setTimeout(() => {
+      setReplayAnim(false);
+      setIsAnimating(false);
+    }, 500);
+    return () => window.clearTimeout(t);
+  }
+
+  const firstShow = () => {
+    setIndicatorTool(selectedTool);
+    setIndicatorVisible(true);
+    setIsAnimating(true);
+    prevKeyRef.current = (selectedToolKey as string) || null;
+    const tShow = window.setTimeout(() => setIsAnimating(false), 500);
+    return () => window.clearTimeout(tShow);
+  }
+
+  const triggerCollapse = () => {
+    setIndicatorVisible(false);
+    setIsAnimating(true);
+    const timeout = window.setTimeout(() => {
+      setIndicatorTool(null);
+      prevKeyRef.current = null;
+      setIsAnimating(false);
+    }, 500); // match CSS transition duration
+    return () => window.clearTimeout(timeout);
+  }
+
   useEffect(() => {
     if (indicatorShouldShow) {
-      // If switching to a different tool while visible, replay the grow down
-      if (prevKeyRef.current && prevKeyRef.current !== selectedToolKey) {
-        setIndicatorTool(selectedTool);
-        setIndicatorVisible(true);
-        setReplayAnim(true);
-        setIsAnimating(true);
-        const t = window.setTimeout(() => {
-          setReplayAnim(false);
-          setIsAnimating(false);
-        }, 500);
-        return () => window.clearTimeout(t);
+      if (isSwitchingToNewTool()) {
+        playGrowDown();
       }
-      // First show
-      setIndicatorTool(selectedTool);
-      setIndicatorVisible(true);
-      setIsAnimating(true);
-      prevKeyRef.current = (selectedToolKey as string) || null;
-      const tShow = window.setTimeout(() => setIsAnimating(false), 500);
-      return () => window.clearTimeout(tShow);
+      firstShow()
     } else if (indicatorTool) {
-      // trigger collapse
-      setIndicatorVisible(false);
-      setIsAnimating(true);
-      const timeout = window.setTimeout(() => {
-        setIndicatorTool(null);
-        prevKeyRef.current = null;
-        setIsAnimating(false);
-      }, 500); // match CSS transition duration
-      return () => window.clearTimeout(timeout);
+      triggerCollapse();
     }
   }, [indicatorShouldShow, selectedTool, selectedToolKey]);
 
   return (
     <>
-      <div style={{overflow:'visible'}} className={`current-tool-slot ${indicatorVisible ? 'visible' : ''} ${replayAnim ? 'replay' : ''}`}>
+      <div style={{ overflow: 'visible' }} className={`current-tool-slot ${indicatorVisible ? 'visible' : ''} ${replayAnim ? 'replay' : ''}`}>
         {indicatorTool && (
           <div className="current-tool-content">
             <div className="flex flex-col items-center gap-1">
@@ -80,7 +106,7 @@ const TopToolIndicator: React.FC<TopToolIndicatorProps> = ({ activeButton, setAc
                   }}
                   aria-label={isBackHover ? 'Back to all tools' : indicatorTool.name}
                   style={{
-                    backgroundColor: isBackHover ? '#9CA3AF' : 'var(--icon-tools-bg)',
+                    backgroundColor: isBackHover ? 'var(--color-gray-300)' : 'var(--icon-tools-bg)',
                     color: isBackHover ? '#fff' : 'var(--icon-tools-color)',
                     border: 'none',
                     borderRadius: '8px',
@@ -114,6 +140,6 @@ const TopToolIndicator: React.FC<TopToolIndicatorProps> = ({ activeButton, setAc
   );
 };
 
-export default TopToolIndicator;
+export default ActiveToolButton;
 
 

@@ -138,6 +138,9 @@
   /* Placeholder text colors */
   --search-text-and-icon-color: #6B7382;
 
+  /* Tool panel search bar background colors */
+  --tool-panel-search-bg: #EFF1F4;
+
   /* container */
   --landing-paper-bg: var(--bg-surface);
   --landing-inner-paper-bg: #EEF8FF;
@@ -283,6 +286,9 @@
 
   /* Placeholder text colors (dark mode) */
   --search-text-and-icon-color: #FFFFFF !important;
+
+  /* Tool panel search bar background colors (dark mode) */
+  --tool-panel-search-bg: #1F2329;
 }
 
 /* Dropzone drop state styling */
