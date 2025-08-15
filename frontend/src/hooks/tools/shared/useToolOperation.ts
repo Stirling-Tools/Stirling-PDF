@@ -5,7 +5,7 @@ import { useFileContext } from '../../../contexts/FileContext';
 import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
-import { extractErrorMessage } from '../../../utils/toolErrorHandler';
+import { extractErrorMessage, type ToolError } from '../../../utils/toolErrorHandler';
 import { createOperation } from '../../../utils/toolOperationTracker';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 
@@ -60,7 +60,7 @@ export interface ToolOperationConfig<TParams = void> {
   customProcessor?: (params: TParams, files: File[]) => Promise<File[]>;
 
   /** Extract user-friendly error messages from API errors */
-  getErrorMessage?: (error: any) => string;
+  getErrorMessage?: (error: unknown) => string;
 }
 
 /**
@@ -204,7 +204,7 @@ export const useToolOperation = <TParams = void>(
         markOperationApplied(fileId, operationId);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
       actions.setError(errorMessage);
       actions.setStatus('');
