@@ -130,6 +130,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
           onDrop={handleNewFileUpload}
           onDragEnter={() => setIsDragging(true)}
           onDragLeave={() => setIsDragging(false)}
+          accept="*/*"
           multiple={true}
           activateOnClick={false}
           style={{ 
