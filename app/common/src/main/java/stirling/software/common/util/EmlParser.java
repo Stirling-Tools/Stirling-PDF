@@ -25,7 +25,7 @@ public class EmlParser {
     private static volatile boolean mimeUtilityChecked = false;
 
     private static final Pattern MIME_ENCODED_PATTERN =
-            Pattern.compile("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
+        RegexPatternUtils.getInstance().getMimeEncodedWordPattern();
 
     private static final String DISPOSITION_ATTACHMENT = "attachment";
     private static final String TEXT_PLAIN = "text/plain";

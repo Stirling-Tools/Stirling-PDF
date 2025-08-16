@@ -506,7 +506,7 @@ public class EmlProcessingUtils {
                                 .matcher(match.group())
                                 .replaceAll(""));
 
-            Pattern mimePattern = Pattern.compile("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
+            Pattern mimePattern = RegexPatternUtils.getInstance().getMimeEncodedWordPattern();
             Matcher matcher = mimePattern.matcher(processedText);
             int lastEnd = 0;
 

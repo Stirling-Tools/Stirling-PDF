@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -33,7 +34,6 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class UnlockPDFFormsController {
-    private static final Pattern PATTERN = Pattern.compile("access\\s*=\\s*\"readOnly\"");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     public UnlockPDFFormsController(CustomPDFDocumentFactory pdfDocumentFactory) {
@@ -68,13 +68,15 @@ public class UnlockPDFFormsController {
                 COSBase xfaBase = acroForm.getCOSObject().getDictionaryObject(COSName.XFA);
                 if (xfaBase != null) {
                     try {
+                        Pattern accessReadOnlyPattern =
+                            RegexPatternUtils.getInstance().getAccessReadOnlyPattern();
                         if (xfaBase instanceof COSStream xfaStream) {
                             InputStream is = xfaStream.createInputStream();
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
                             is.transferTo(baos);
                             String xml = baos.toString(StandardCharsets.UTF_8);
 
-                            xml = PATTERN.matcher(xml).replaceAll("access=\"open\"");
+                            xml = accessReadOnlyPattern.matcher(xml).replaceAll("access=\"open\"");
 
                             PDStream newStream =
                                     new PDStream(
@@ -93,7 +95,10 @@ public class UnlockPDFFormsController {
                                     is.transferTo(baos);
                                     String xml = baos.toString(StandardCharsets.UTF_8);
 
-                                    xml = PATTERN.matcher(xml).replaceAll("access=\"open\"");
+                                    xml =
+                                        accessReadOnlyPattern
+                                            .matcher(xml)
+                                            .replaceAll("access=\"open\"");
 
                                     PDStream newStream =
                                             new PDStream(

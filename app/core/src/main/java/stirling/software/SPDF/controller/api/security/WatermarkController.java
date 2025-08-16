@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -43,6 +42,7 @@ import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -51,7 +51,6 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class WatermarkController {
 
-    private static final Pattern PATTERN = Pattern.compile("\\\\n");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @InitBinder
@@ -219,7 +218,8 @@ public class WatermarkController {
         }
         contentStream.setNonStrokingColor(redactColor);
 
-        String[] textLines = PATTERN.split(watermarkText);
+        String[] textLines =
+            RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(watermarkText);
         float maxLineWidth = 0;
 
         for (int i = 0; i < textLines.length; ++i) {

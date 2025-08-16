@@ -50,7 +50,7 @@ public class GeneralUtils {
      *
      * @param multipartFile the multipart file to convert
      * @return temporary File containing the multipart file data
-     * @throws IOException              if I/O error occurs during conversion
+     * @throws IOException if I/O error occurs during conversion
      * @throws IllegalArgumentException if file exceeds maximum allowed size
      */
     public File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
@@ -146,7 +146,7 @@ public class GeneralUtils {
      * Append suffix to base name with null safety.
      *
      * @param baseName the base filename, null becomes "default"
-     * @param suffix   the suffix to append, null becomes empty string
+     * @param suffix the suffix to append, null becomes empty string
      * @return concatenated string with null safety
      */
     public String appendSuffix(String baseName, String suffix) {
@@ -160,7 +160,7 @@ public class GeneralUtils {
      * extension removal.
      *
      * @param firstFilename the filename of the first file being, may be null
-     * @param suffix        the suffix to append (e.g., "_merged.pdf")
+     * @param suffix the suffix to append (e.g., "_merged.pdf")
      * @return filename with suffix, or default name if input is null
      */
     public String generateFilename(String firstFilename, String suffix) {
@@ -175,7 +175,7 @@ public class GeneralUtils {
      * where possible. Handles null safety for both input list and individual filenames.
      *
      * @param filenames the list of filenames to process, may be null
-     * @param suffix    the suffix to append to each processed filename
+     * @param suffix the suffix to append to each processed filename
      * @param processor consumer to handle each processed filename, may be null
      */
     public void processFilenames(
@@ -274,9 +274,9 @@ public class GeneralUtils {
     /**
      * Checks if a URL is reachable with configurable timeouts.
      *
-     * @param urlStr         the URL string to check
+     * @param urlStr the URL string to check
      * @param connectTimeout connection timeout in milliseconds
-     * @param readTimeout    read timeout in milliseconds
+     * @param readTimeout read timeout in milliseconds
      * @return true if URL is reachable, false otherwise
      */
     public boolean isURLReachable(String urlStr, int connectTimeout, int readTimeout) {
@@ -346,7 +346,7 @@ public class GeneralUtils {
     /**
      * Supports TB/PB units and provides detailed error messages.
      *
-     * @param sizeStr     the size string to convert (e.g., "100MB", "1.5GB")
+     * @param sizeStr the size string to convert (e.g., "100MB", "1.5GB")
      * @param defaultUnit the default unit to assume if none specified ("MB", "GB", etc.)
      * @return size in bytes, or null if parsing fails
      * @throws IllegalArgumentException if defaultUnit is invalid
@@ -429,9 +429,7 @@ public class GeneralUtils {
             || "TB".equals(upperUnit);
     }
 
-    /**
-     * Enhanced byte formatting with TB/PB support and better precision.
-     */
+    /** Enhanced byte formatting with TB/PB support and better precision. */
     public String formatBytes(long bytes) {
         if (bytes < 0) {
             return "Invalid size";
@@ -491,7 +489,7 @@ public class GeneralUtils {
      * Enhanced mathematical expression evaluation with bounds checking and timeout protection.
      *
      * @param expression the mathematical expression containing 'n'
-     * @param maxValue   the maximum value for 'n' and result bounds
+     * @param maxValue the maximum value for 'n' and result bounds
      * @return list of valid page numbers
      * @throws IllegalArgumentException if expression is invalid or unsafe
      */

@@ -39,7 +39,7 @@ public final class RegexPatternUtils {
      *
      * @param regex the regular expression string to compile
      * @return compiled Pattern object, never null
-     * @throws PatternSyntaxException   if the regex syntax is invalid
+     * @throws PatternSyntaxException if the regex syntax is invalid
      * @throws IllegalArgumentException if regex is null
      */
     public Pattern getPattern(String regex) {
@@ -65,7 +65,7 @@ public final class RegexPatternUtils {
      * @param regex the regular expression string
      * @param flags pattern flags (e.g., Pattern.CASE_INSENSITIVE)
      * @return compiled Pattern object with specified flags
-     * @throws PatternSyntaxException   if the regex syntax is invalid
+     * @throws PatternSyntaxException if the regex syntax is invalid
      * @throws IllegalArgumentException if regex is null
      */
     public Pattern getPattern(String regex, int flags) {
@@ -192,313 +192,262 @@ public final class RegexPatternUtils {
         return getPattern(regex, flags);
     }
 
-    /**
-     * Pattern for matching trailing slashes (e.g., "/path/to/dir///")
-     */
+    /** Pattern for matching trailing slashes (e.g., "/path/to/dir///") */
     public Pattern getTrailingSlashesPattern() {
         return getPattern("/+$");
     }
 
-    /**
-     * Pattern for removing drive letters from paths
-     */
+    /** Pattern for removing drive letters from paths */
     public Pattern getDriveLetterPattern() {
         return getPattern("^[a-zA-Z]:[\\\\/]+");
     }
 
-    /**
-     * Pattern for removing leading slashes from paths
-     */
+    /** Pattern for removing leading slashes from paths */
     public Pattern getLeadingSlashesPattern() {
         return getPattern("^[\\\\/]+");
     }
 
-    /**
-     * Pattern for matching backslashes
-     */
+    /** Pattern for matching backslashes */
     public Pattern getBackslashPattern() {
         return getPattern("\\\\");
     }
 
-    /**
-     * Pattern for sanitizing filenames by removing problematic characters
-     */
+    /** Pattern for sanitizing filenames by removing problematic characters */
     public Pattern getSafeFilenamePattern() {
         return getPattern("[/\\\\?%*:|\"<>]");
     }
 
-    /**
-     * Pattern for sanitizing filenames (keeps only alphanumeric)
-     */
+    /** Pattern for sanitizing filenames (keeps only alphanumeric) */
     public Pattern getFilenameSafePattern() {
         return getPattern("[^a-zA-Z0-9]");
     }
 
-    /**
-     * Pattern for matching upload/download paths (case insensitive)
-     */
+    /** Pattern for matching upload/download paths (case insensitive) */
     public Pattern getUploadDownloadPathPattern() {
         return getPattern("(?i).*/(upload|download)/.*");
     }
 
-    /**
-     * Pattern for matching one or more whitespace characters
-     */
+    /** Pattern for matching one or more whitespace characters */
     public Pattern getWhitespacePattern() {
         return getPattern("\\s+");
     }
 
-    /**
-     * Pattern for matching newlines (Windows and Unix style)
-     */
+    /** Pattern for matching newlines (Windows and Unix style) */
     public Pattern getNewlinesPattern() {
         return getPattern("\\r?\\n");
     }
 
-    /**
-     * Pattern for splitting on newlines (Windows and Unix style)
-     */
+    /** Pattern for splitting on newlines (Windows and Unix style) */
     public Pattern getNewlineSplitPattern() {
         return getPattern("\\r?\\n");
     }
 
-    /**
-     * Pattern for splitting text into words
-     */
+    /** Pattern for splitting text into words */
     public Pattern getWordSplitPattern() {
         return getPattern("\\s+");
     }
 
-    /**
-     * Pattern for removing carriage returns
-     */
+    /** Pattern for removing carriage returns */
     public Pattern getCarriageReturnPattern() {
         return getPattern("\\r");
     }
 
-    /**
-     * Pattern for matching newline characters
-     */
+    /** Pattern for matching newline characters */
     public Pattern getNewlineCharsPattern() {
         return getPattern("[\n\r]");
     }
 
-    /**
-     * Pattern for multi-format newline splitting (Windows, Mac, Unix)
-     */
+    /** Pattern for multi-format newline splitting (Windows, Mac, Unix) */
     public Pattern getMultiFormatNewlinePattern() {
         return getPattern("\r\n|\r|\n");
     }
 
-    /**
-     * Pattern for encoded payload newline removal
-     */
+    /** Pattern for encoded payload newline removal */
     public Pattern getEncodedPayloadNewlinePattern() {
         return getPattern("\\r?\\n");
     }
 
-    /**
-     * Pattern for escaped newlines in watermark text
-     */
+    /** Pattern for escaped newlines in watermark text */
     public Pattern getEscapedNewlinePattern() {
         return getPattern("\\\\n");
     }
 
-    /**
-     * Pattern for input sanitization (allows only alphanumeric and spaces)
-     */
+    /** Pattern for input sanitization (allows only alphanumeric and spaces) */
     public Pattern getInputSanitizePattern() {
         return getPattern("[^a-zA-Z0-9 ]");
     }
 
-    /**
-     * Pattern for removing angle brackets
-     */
+    /** Pattern for removing angle brackets */
     public Pattern getAngleBracketsPattern() {
         return getPattern("[<>]");
     }
 
-    /**
-     * Pattern for removing leading and trailing quotes
-     */
+    /** Pattern for removing leading and trailing quotes */
     public Pattern getQuotesRemovalPattern() {
         return getPattern("^\"|\"$");
     }
 
-    /**
-     * Pattern for plus signs (URL encoding replacement)
-     */
+    /** Pattern for plus signs (URL encoding replacement) */
     public Pattern getPlusSignPattern() {
         return getPattern("\\+");
     }
 
-    /**
-     * Pattern for username validation
-     */
+    /** Pattern for username validation */
     public Pattern getUsernameValidationPattern() {
         return getPattern("^[a-zA-Z0-9](?!.*[-@._+]{2,})[a-zA-Z0-9@._+-]{1,48}[a-zA-Z0-9]$");
     }
 
-    /**
-     * Pattern for email validation
-     */
+    /** Pattern for email validation */
     public Pattern getEmailValidationPattern() {
         return getPattern(
             "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-ZaZ0-9])?@[^-][A-Za-z0-9-]+(?:\\\\.[A-Za-z0-9-]+)*(?:\\\\.[A-Za-z]{2,})$");
     }
 
-    /**
-     * Pattern for extracting non-numeric characters
-     */
+    /** Pattern for extracting non-numeric characters */
     public Pattern getNumericExtractionPattern() {
         return getPattern("\\D");
     }
 
-    /**
-     * Pattern for removing non-digit/dot characters (for timeout parsing)
-     */
+    /** Pattern for removing non-digit/dot characters (for timeout parsing) */
     public Pattern getNonDigitDotPattern() {
         return getPattern("[^\\d.]");
     }
 
-    /**
-     * Pattern for matching digit/dot characters (for timeout parsing)
-     */
+    /** Pattern for matching digit/dot characters (for timeout parsing) */
     public Pattern getDigitDotPattern() {
         return getPattern("[\\d.]");
     }
 
-    /**
-     * Pattern for detecting strings containing digits
-     */
+    /** Pattern for detecting strings containing digits */
     public Pattern getContainsDigitsPattern() {
         return getPattern(".*\\d+.*");
     }
 
-    /**
-     * Pattern for matching 1-3 digit numbers
-     */
+    /** Pattern for matching 1-3 digit numbers */
     public Pattern getNumberRangePattern() {
         return getPattern("[1-9][0-9]{0,2}");
     }
 
-    /**
-     * Pattern for validating mathematical expressions
-     */
+    /** Pattern for validating mathematical expressions */
     public Pattern getMathExpressionPattern() {
         return getPattern("[0-9n+\\-*/() ]+");
     }
 
-    /**
-     * Pattern for adding multiplication between numbers and 'n'
-     */
+    /** Pattern for adding multiplication between numbers and 'n' */
     public Pattern getNumberBeforeNPattern() {
         return getPattern("(\\d)n");
     }
 
-    /**
-     * Pattern for detecting consecutive 'n' characters
-     */
+    /** Pattern for detecting consecutive 'n' characters */
     public Pattern getConsecutiveNPattern() {
         return getPattern(".*n{2,}.*");
     }
 
-    /**
-     * Pattern for replacing consecutive 'n' characters
-     */
+    /** Pattern for replacing consecutive 'n' characters */
     public Pattern getConsecutiveNReplacementPattern() {
         return getPattern("(?<!n)n{2}");
     }
 
-    /**
-     * Pattern for validating HTTP/HTTPS URLs
-     */
+    /** Pattern for validating HTTP/HTTPS URLs */
     public Pattern getHttpUrlPattern() {
         return getPattern("^https?://.*");
     }
 
-    /**
-     * Pattern for matching URLs in text for link creation
-     */
+    /** Pattern for matching URLs in text for link creation */
     public Pattern getUrlLinkPattern() {
         return getPattern("(https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+)");
     }
 
-    /**
-     * Pattern for matching email addresses in text for link creation
-     */
+    /** Pattern for matching email addresses in text for link creation */
     public Pattern getEmailLinkPattern() {
         return getPattern("([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,63})");
     }
 
-    /**
-     * Pattern for removing script tags from HTML
-     */
+    /** Pattern for removing script tags from HTML */
     public Pattern getScriptTagPattern() {
         return getPattern("(?i)<script[^>]*>.*?</script>");
     }
 
-    /**
-     * Pattern for removing style tags from HTML
-     */
+    /** Pattern for removing style tags from HTML */
     public Pattern getStyleTagPattern() {
         return getPattern("(?i)<style[^>]*>.*?</style>");
     }
 
-    /**
-     * Pattern for removing fixed position CSS
-     */
+    /** Pattern for removing fixed position CSS */
     public Pattern getFixedPositionCssPattern() {
         return getPattern("(?i)\\s*position\\s*:\\s*fixed[^;]*;?");
     }
 
-    /**
-     * Pattern for removing absolute position CSS
-     */
+    /** Pattern for removing absolute position CSS */
     public Pattern getAbsolutePositionCssPattern() {
         return getPattern("(?i)\\s*position\\s*:\\s*absolute[^;]*;?");
     }
 
-    /**
-     * Pattern for matching size unit suffixes (KB, MB, GB, etc.)
-     */
+    /** Pattern for matching size unit suffixes (KB, MB, GB, etc.) */
     public Pattern getSizeUnitPattern() {
         return getPattern("[KMGkmg][Bb]");
     }
 
-    /**
-     * Pattern for system temp file type 1
-     */
+    /** Pattern for system temp file type 1 */
     public Pattern getSystemTempFile1Pattern() {
         return getPattern("lu\\d+[a-z0-9]*\\.tmp");
     }
 
-    /**
-     * Pattern for system temp file type 2 (OCR processes)
-     */
+    /** Pattern for system temp file type 2 (OCR processes) */
     public Pattern getSystemTempFile2Pattern() {
         return getPattern("ocr_process\\d+");
     }
 
-    /**
-     * Pattern for splitting on whitespace and parentheses
-     */
+    /** Pattern for splitting on whitespace and parentheses */
     public Pattern getWhitespaceParenthesesSplitPattern() {
         return getPattern("[\\s\\(\\)]+");
     }
 
-    /**
-     * Pattern for MIME header whitespace cleanup before encoded sequences
-     */
+    /** Pattern for MIME header whitespace cleanup before encoded sequences */
     public Pattern getMimeHeaderWhitespacePattern() {
         return getPattern("\\s+(?==\\?)");
     }
 
-    /**
-     * Pattern for font name validation (6 uppercase letters + plus + rest)
-     */
+    /** Pattern for font name validation (6 uppercase letters + plus + rest) */
     public Pattern getFontNamePattern() {
         return getPattern("^[A-Z]{6}\\+.*");
+    }
+
+    /**
+     * Pattern for matching access="readOnly" attribute in XFA XML (with optional whitespace)
+     */
+    public Pattern getAccessReadOnlyPattern() {
+        return getPattern("access\\s*=\\s*\"readOnly\"");
+    }
+
+    /**
+     * Pattern for matching MIME encoded-word headers (RFC 2047) Example: =?charset?B?encoded?=
+     */
+    public Pattern getMimeEncodedWordPattern() {
+        return getPattern("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
+    }
+
+    /**
+     * Pattern for matching inline CID images in HTML (case-insensitive)
+     */
+    public Pattern getInlineCidImagePattern() {
+        return getPattern(
+            "(?i)<img[^>]*\\ssrc\\s*=\\s*['\"]cid:([^'\"]+)['\"][^>]*>",
+            Pattern.CASE_INSENSITIVE);
+    }
+
+    /**
+     * Pattern for matching attachment section headers (case-insensitive)
+     */
+    public Pattern getAttachmentSectionPattern() {
+        return getPattern("attachments\\s*\\(\\d+\\)", Pattern.CASE_INSENSITIVE);
+    }
+
+    /**
+     * Pattern for matching filenames in attachment markers
+     */
+    public Pattern getAttachmentFilenamePattern() {
+        return getPattern("@\\s*([^\\s\\(]+(?:\\.[a-zA-Z0-9]+)?)");
     }
 
     private record PatternKey(String regex, int flags) {

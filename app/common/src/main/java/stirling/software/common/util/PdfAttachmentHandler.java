@@ -256,10 +256,7 @@ public class PdfAttachmentHandler {
 
         if (contentIdMap.isEmpty()) return htmlContent;
 
-        Pattern cidPattern =
-                Pattern.compile(
-                        "(?i)<img[^>]*\\ssrc\\s*=\\s*['\"]cid:([^'\"]+)['\"][^>]*>",
-                        Pattern.CASE_INSENSITIVE);
+        Pattern cidPattern = RegexPatternUtils.getInstance().getInlineCidImagePattern();
         Matcher matcher = cidPattern.matcher(htmlContent);
 
         StringBuilder result = new StringBuilder();
@@ -508,9 +505,9 @@ public class PdfAttachmentHandler {
 
     public static class AttachmentMarkerPositionFinder extends PDFTextStripper {
         private static final Pattern ATTACHMENT_SECTION_PATTERN =
-            Pattern.compile("attachments\\s*\\(\\d+\\)", Pattern.CASE_INSENSITIVE);
+            RegexPatternUtils.getInstance().getAttachmentSectionPattern();
         private static final Pattern FILENAME_PATTERN =
-            Pattern.compile("@\\s*([^\\s\\(]+(?:\\.[a-zA-Z0-9]+)?)");
+            RegexPatternUtils.getInstance().getAttachmentFilenamePattern();
         @Getter
         private final List<MarkerPosition> positions = new ArrayList<>();
         private final StringBuilder currentText = new StringBuilder();
