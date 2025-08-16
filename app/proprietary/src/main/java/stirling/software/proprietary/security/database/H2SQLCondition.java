@@ -8,16 +8,15 @@ public class H2SQLCondition implements Condition {
 
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        var env = context.getEnvironment();
         boolean enableCustomDatabase =
-                Boolean.parseBoolean(
-                        context.getEnvironment()
-                                .getProperty("system.datasource.enableCustomDatabase"));
+                env.getProperty("system.datasource.enableCustomDatabase", Boolean.class, false);
 
-        if (!enableCustomDatabase) {
+        String dataSourceType = env.getProperty("system.datasource.type", String.class, "");
+
+        if (enableCustomDatabase && !"h2".equalsIgnoreCase(dataSourceType)) {
             return false;
         }
-
-        String dataSourceType = context.getEnvironment().getProperty("system.datasource.type");
-        return "h2".equalsIgnoreCase(dataSourceType);
+        return true;
     }
 }
