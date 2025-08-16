@@ -12,11 +12,11 @@ public class H2SQLCondition implements Condition {
         boolean enableCustomDatabase =
                 env.getProperty("system.datasource.enableCustomDatabase", Boolean.class, false);
 
-        String dataSourceType = env.getProperty("system.datasource.type", String.class, "");
-
-        if (enableCustomDatabase && !"h2".equalsIgnoreCase(dataSourceType)) {
+        if (enableCustomDatabase) {
             return false;
         }
-        return true;
+
+        String dataSourceType = env.getProperty("system.datasource.type", String.class, "");
+        return "h2".equalsIgnoreCase(dataSourceType);
     }
 }
