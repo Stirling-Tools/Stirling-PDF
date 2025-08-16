@@ -164,7 +164,7 @@ public class PageNumbersController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-            GeneralUtils.removeExtension(Filenames.toSimpleFileName(file.getOriginalFilename()))
-                + "_page_numbers_added.pdf");
+            GeneralUtils.generateFilename(
+                file.getOriginalFilename(), "_page_numbers_added.pdf"));
     }
 }

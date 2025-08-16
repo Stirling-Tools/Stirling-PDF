@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -54,9 +53,7 @@ public class OverlayImageController {
 
             return WebResponseUtils.bytesToWebResponse(
                     result,
-                GeneralUtils.removeExtension(
-                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
-                            + "_overlayed.pdf");
+                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_overlayed.pdf"));
         } catch (IOException e) {
             log.error("Failed to add image to PDF", e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
