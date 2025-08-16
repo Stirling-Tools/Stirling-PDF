@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -128,8 +129,8 @@ public class BlankPageController {
             ZipOutputStream zos = new ZipOutputStream(baos);
 
             String filename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                            .replaceFirst("[.][^.]+$", "");
+                GeneralUtils.removeExtension(
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
 
             if (!nonBlankPages.isEmpty()) {
                 createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");

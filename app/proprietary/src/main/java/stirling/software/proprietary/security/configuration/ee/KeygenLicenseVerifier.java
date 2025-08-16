@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Service
 @Slf4j
@@ -117,7 +118,11 @@ public class KeygenLicenseVerifier {
             // Remove the footer
             encodedPayload = encodedPayload.replace(CERT_SUFFIX, "");
             // Remove all newlines
-            encodedPayload = encodedPayload.replaceAll("\\r?\\n", "");
+            encodedPayload =
+                RegexPatternUtils.getInstance()
+                    .getEncodedPayloadNewlinePattern()
+                    .matcher(encodedPayload)
+                    .replaceAll("");
 
             byte[] payloadBytes = Base64.getDecoder().decode(encodedPayload);
             String payload = new String(payloadBytes);

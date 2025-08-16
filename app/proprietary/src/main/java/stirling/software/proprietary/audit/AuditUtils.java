@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 
@@ -322,7 +323,10 @@ public class AuditUtils {
                 return AuditEventType.SETTINGS_CHANGED;
             } else if (cls.contains("file")
                     || path.startsWith("/file")
-                    || path.matches("(?i).*/(upload|download)/.*")) {
+                || RegexPatternUtils.getInstance()
+                .getUploadDownloadPathPattern()
+                .matcher(path)
+                .matches()) {
                 return AuditEventType.FILE_OPERATION;
             }
         }
@@ -386,7 +390,10 @@ public class AuditUtils {
             return AuditEventType.SETTINGS_CHANGED;
         } else if (cls.contains("file")
                 || path.startsWith("/file")
-                || path.matches("(?i).*/(upload|download)/.*")) {
+            || RegexPatternUtils.getInstance()
+            .getUploadDownloadPathPattern()
+            .matcher(path)
+            .matches()) {
             return AuditEventType.FILE_OPERATION;
         } else {
             return AuditEventType.PDF_PROCESS;

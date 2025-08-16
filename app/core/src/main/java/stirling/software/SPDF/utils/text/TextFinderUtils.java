@@ -10,6 +10,8 @@ import org.apache.pdfbox.pdmodel.PDResources;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.RegexPatternUtils;
+
 @Slf4j
 public class TextFinderUtils {
 
@@ -69,9 +71,9 @@ public class TextFinderUtils {
                     patternString = applyWordBoundaries(term.trim(), patternString);
                 }
 
+                // Use PatternFactory for better performance with cached compilation
                 Pattern pattern =
-                        Pattern.compile(
-                                patternString, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+                    RegexPatternUtils.getInstance().createSearchPattern(patternString, true);
                 patterns.add(pattern);
 
                 log.debug("Created search pattern: '{}' -> '{}'", term.trim(), patternString);

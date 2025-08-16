@@ -44,7 +44,10 @@ public class WebResponseUtils {
         headers.setContentType(mediaType);
         headers.setContentLength(bytes.length);
         String encodedDocName =
-                URLEncoder.encode(docName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+            RegexPatternUtils.getInstance()
+                .getPlusSignPattern()
+                .matcher(URLEncoder.encode(docName, StandardCharsets.UTF_8))
+                .replaceAll("%20");
         headers.setContentDispositionFormData("attachment", encodedDocName);
         return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
     }

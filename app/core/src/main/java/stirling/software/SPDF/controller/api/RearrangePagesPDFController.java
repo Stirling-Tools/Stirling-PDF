@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -67,9 +66,7 @@ public class RearrangePagesPDFController {
         }
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_removed_pages.pdf");
+            GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
     }
 
     private List<Integer> removeFirst(int totalPages) {
@@ -285,9 +282,8 @@ public class RearrangePagesPDFController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_rearranged.pdf");
+                GeneralUtils.generateFilename(
+                    pdfFile.getOriginalFilename(), "_rearranged.pdf"));
         } catch (IOException e) {
             ExceptionUtils.logException("document rearrangement", e);
             throw e;

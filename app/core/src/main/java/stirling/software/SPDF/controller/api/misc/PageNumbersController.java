@@ -10,7 +10,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -92,8 +91,9 @@ public class PageNumbersController {
                             .replace("{total}", String.valueOf(document.getNumberOfPages()))
                             .replace(
                                     "{filename}",
-                                    Filenames.toSimpleFileName(file.getOriginalFilename())
-                                            .replaceFirst("[.][^.]+$", ""));
+                                GeneralUtils.removeExtension(
+                                    Filenames.toSimpleFileName(
+                                        file.getOriginalFilename())));
 
             PDType1Font currentFont =
                     switch (fontType.toLowerCase()) {
@@ -164,8 +164,7 @@ public class PageNumbersController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_numbersAdded.pdf",
-                MediaType.APPLICATION_PDF);
+            GeneralUtils.removeExtension(Filenames.toSimpleFileName(file.getOriginalFilename()))
+                + "_page_numbers_added.pdf");
     }
 }

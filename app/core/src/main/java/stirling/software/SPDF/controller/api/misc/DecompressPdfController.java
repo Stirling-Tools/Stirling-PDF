@@ -10,7 +10,6 @@ import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -55,10 +55,10 @@ public class DecompressPdfController {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             document.save(baos, CompressParameters.NO_COMPRESSION);
 
-            String outputFilename =
-                    file.getOriginalFilename().replaceFirst("\\.(?=[^.]+$)", "_decompressed.");
+            // Return the PDF as a response
             return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(), outputFilename, MediaType.APPLICATION_PDF);
+                baos.toByteArray(),
+                GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
         }
     }
 

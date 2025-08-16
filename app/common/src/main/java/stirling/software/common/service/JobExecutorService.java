@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.util.ExecutorFactory;
+import stirling.software.common.util.RegexPatternUtils;
 
 /** Service for executing jobs asynchronously or synchronously */
 @Service
@@ -315,8 +316,7 @@ public class JobExecutorService {
                     // Store generic result
                     taskManager.setResult(jobId, body);
                 }
-            } else if (result instanceof MultipartFile) {
-                MultipartFile file = (MultipartFile) result;
+            } else if (result instanceof MultipartFile file) {
                 String fileId = fileStorage.storeFile(file);
                 taskManager.setFileResult(
                         jobId, fileId, file.getOriginalFilename(), file.getContentType());
@@ -396,9 +396,8 @@ public class JobExecutorService {
                             HttpHeaders.CONTENT_DISPOSITION,
                             "form-data; name=\"attachment\"; filename=\"result.pdf\"")
                     .body(result);
-        } else if (result instanceof MultipartFile) {
+        } else if (result instanceof MultipartFile file) {
             // Return MultipartFile content
-            MultipartFile file = (MultipartFile) result;
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(file.getContentType()))
                     .header(
@@ -425,8 +424,16 @@ public class JobExecutorService {
         }
 
         try {
-            String value = timeout.replaceAll("[^\\d.]", "");
-            String unit = timeout.replaceAll("[\\d.]", "");
+            String value =
+                RegexPatternUtils.getInstance()
+                    .getNonDigitDotPattern()
+                    .matcher(timeout)
+                    .replaceAll("");
+            String unit =
+                RegexPatternUtils.getInstance()
+                    .getDigitDotPattern()
+                    .matcher(timeout)
+                    .replaceAll("");
 
             double numericValue = Double.parseDouble(value);
 

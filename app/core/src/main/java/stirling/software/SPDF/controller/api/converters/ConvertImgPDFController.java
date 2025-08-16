@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLConnection;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -34,13 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CheckProgramInstall;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.PdfUtils;
-import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.*;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/convert")
@@ -87,9 +80,7 @@ public class ConvertImgPDFController {
             }
             // returns bytes for image
             boolean singleImage = "single".equals(singleOrMultiple);
-            String filename =
-                    Filenames.toSimpleFileName(new File(file.getOriginalFilename()).getName())
-                            .replaceFirst("[.][^.]+$", "");
+            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
 
             result =
                     PdfUtils.convertFromPdf(
@@ -236,8 +227,7 @@ public class ConvertImgPDFController {
                 PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
         return WebResponseUtils.bytesToWebResponse(
                 bytes,
-                new File(file[0].getOriginalFilename()).getName().replaceFirst("[.][^.]+$", "")
-                        + "_converted.pdf");
+            GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
     }
 
     private String getMediaType(String imageFormat) {

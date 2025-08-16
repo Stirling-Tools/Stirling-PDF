@@ -98,8 +98,11 @@ public class PipelineController {
                 // Check if the filename already exists, and modify it if necessary
                 if (filenameCount.containsKey(originalFilename)) {
                     int count = filenameCount.get(originalFilename);
-                    String baseName = originalFilename.replaceAll("\\.[^.]*$", "");
-                    String extension = originalFilename.replaceAll("^.*\\.", "");
+                    assert originalFilename != null;
+                    String baseName =
+                        originalFilename.substring(0, originalFilename.lastIndexOf('.'));
+                    String extension =
+                        originalFilename.substring(originalFilename.lastIndexOf('.') + 1);
                     filename = baseName + "(" + count + ")." + extension;
                     filenameCount.put(originalFilename, count + 1);
                 } else {

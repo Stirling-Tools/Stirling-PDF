@@ -126,10 +126,7 @@ public class MergeController {
         for (MultipartFile file : files) {
             // Get the filename without extension to use as bookmark title
             String filename = file.getOriginalFilename();
-            String title = filename;
-            if (title != null && title.contains(".")) {
-                title = title.substring(0, title.lastIndexOf('.'));
-            }
+            String title = GeneralUtils.removeExtension(filename);
 
             // Create an outline item for this file
             PDOutlineItem item = new PDOutlineItem();
@@ -234,8 +231,8 @@ public class MergeController {
             mergedDocument.save(baos);
 
             String mergedFileName =
-                    files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                            + "_merged_unsigned.pdf";
+                GeneralUtils.generateFilename(
+                    files[0].getOriginalFilename(), "_merged_unsigned.pdf");
             return WebResponseUtils.baosToWebResponse(
                     baos, mergedFileName); // Return the modified PDF
 

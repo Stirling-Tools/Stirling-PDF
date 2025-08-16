@@ -13,6 +13,7 @@ import org.apache.pdfbox.text.TextPosition;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Slf4j
 public class TextFinder extends PDFTextStripper {
@@ -80,7 +81,8 @@ public class TextFinder extends PDFTextStripper {
             }
         }
 
-        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        // Use cached pattern compilation for better performance
+        Pattern pattern = RegexPatternUtils.getInstance().createSearchPattern(regex, true);
         Matcher matcher = pattern.matcher(text);
 
         log.debug(

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -31,6 +33,7 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class UnlockPDFFormsController {
+    private static final Pattern PATTERN = Pattern.compile("access\\s*=\\s*\"readOnly\"");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     public UnlockPDFFormsController(CustomPDFDocumentFactory pdfDocumentFactory) {
@@ -71,7 +74,7 @@ public class UnlockPDFFormsController {
                             is.transferTo(baos);
                             String xml = baos.toString(StandardCharsets.UTF_8);
 
-                            xml = xml.replaceAll("access\\s*=\\s*\"readOnly\"", "access=\"open\"");
+                            xml = PATTERN.matcher(xml).replaceAll("access=\"open\"");
 
                             PDStream newStream =
                                     new PDStream(
@@ -90,10 +93,7 @@ public class UnlockPDFFormsController {
                                     is.transferTo(baos);
                                     String xml = baos.toString(StandardCharsets.UTF_8);
 
-                                    xml =
-                                            xml.replaceAll(
-                                                    "access\\s*=\\s*\"readOnly\"",
-                                                    "access=\"open\"");
+                                    xml = PATTERN.matcher(xml).replaceAll("access=\"open\"");
 
                                     PDStream newStream =
                                             new PDStream(
@@ -110,8 +110,8 @@ public class UnlockPDFFormsController {
                 }
             }
             String mergedFileName =
-                    file.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                            + "_unlocked_forms.pdf";
+                GeneralUtils.generateFilename(
+                    file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(mergedFileName));
         } catch (Exception e) {

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -22,6 +21,7 @@ import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -48,9 +48,8 @@ public class PasswordController {
             document.setAllSecurityToBeRemoved(true);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_password_removed.pdf");
+                GeneralUtils.generateFilename(
+                    fileInput.getOriginalFilename(), "_password_removed.pdf"));
         } catch (IOException e) {
             document.close();
             ExceptionUtils.logException("password removal", e);
@@ -103,13 +102,10 @@ public class PasswordController {
         if ("".equals(ownerPassword) && "".equals(password))
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_permissions.pdf");
+                GeneralUtils.generateFilename(
+                    fileInput.getOriginalFilename(), "_permissions.pdf"));
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_passworded.pdf");
+            GeneralUtils.generateFilename(fileInput.getOriginalFilename(), "_passworded.pdf"));
     }
 }

@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -39,9 +38,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.TempFile;
-import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.*;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -162,11 +159,10 @@ public class StampController {
                 contentStream.close();
             }
         }
+        // Return the stamped PDF as a response
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_stamped.pdf");
+            GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"));
     }
 
     private void addTextStamp(
@@ -251,7 +247,8 @@ public class StampController {
                             pageSize, position, calculateTextCapHeight(font, fontSize), margin);
         }
         // Split the stampText into multiple lines
-        String[] lines = stampText.split("\\\\n");
+                String[] lines =
+                    RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(stampText);
 
         // Calculate dynamic line height based on font ascent and descent
         float ascent = font.getFontDescriptor().getAscent();

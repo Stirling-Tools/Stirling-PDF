@@ -23,11 +23,8 @@ import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.*;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
@@ -55,7 +52,8 @@ public class ConvertWebsiteToPDF {
                     "error.endpointDisabled", "This endpoint has been disabled by the admin");
         }
         // Validate the URL format
-        if (!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
+        if (!RegexPatternUtils.getInstance().getHttpUrlPattern().matcher(URL).matches()
+            || !GeneralUtils.isValidURL(URL)) {
             throw ExceptionUtils.createInvalidArgumentException(
                     "URL", "provided format is invalid");
         }
@@ -103,10 +101,10 @@ public class ConvertWebsiteToPDF {
     }
 
     private String convertURLToFileName(String url) {
-        String safeName = url.replaceAll("[^a-zA-Z0-9]", "_");
+        String safeName = GeneralUtils.convertToFileName(url);
         if (safeName.length() > 50) {
             safeName = safeName.substring(0, 50); // restrict to 50 characters
         }
-        return safeName + ".pdf";
+        return GeneralUtils.generateFilename(safeName, ".pdf");
     }
 }

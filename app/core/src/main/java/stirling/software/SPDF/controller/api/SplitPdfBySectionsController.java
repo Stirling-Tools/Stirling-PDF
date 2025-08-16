@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -33,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -63,14 +63,12 @@ public class SplitPdfBySectionsController {
         boolean merge = Boolean.TRUE.equals(request.getMerge());
         List<PDDocument> splitDocuments = splitPdfPages(sourceDocument, verti, horiz);
 
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
+        String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.pdf");
         if (merge) {
             MergeController mergeController = new MergeController(pdfDocumentFactory);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             mergeController.mergeDocuments(splitDocuments).save(baos);
-            return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), filename + "_split.pdf");
+            return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), filename);
         }
         for (PDDocument doc : splitDocuments) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -102,7 +100,9 @@ public class SplitPdfBySectionsController {
             zipOut.finish();
             data = Files.readAllBytes(zipFile);
             return WebResponseUtils.bytesToWebResponse(
-                    data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
+                data,
+                filename.replace("_split.pdf", "_split.zip"),
+                MediaType.APPLICATION_OCTET_STREAM);
 
         } finally {
             Files.deleteIfExists(zipFile);

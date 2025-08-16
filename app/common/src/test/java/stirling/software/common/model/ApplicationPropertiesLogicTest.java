@@ -12,6 +12,7 @@ import stirling.software.common.model.ApplicationProperties.Driver;
 import stirling.software.common.model.ApplicationProperties.Premium;
 import stirling.software.common.model.ApplicationProperties.Security;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.util.RegexPatternUtils;
 
 class ApplicationPropertiesLogicTest {
 
@@ -35,7 +36,10 @@ class ApplicationPropertiesLogicTest {
                 new ApplicationProperties.TempFileManagement();
 
         String expectedBase =
-                java.lang.System.getProperty("java.io.tmpdir").replaceAll("/+$", "")
+            RegexPatternUtils.getInstance()
+                .getTrailingSlashesPattern()
+                .matcher(java.lang.System.getProperty("java.io.tmpdir"))
+                .replaceAll("")
                         + "/stirling-pdf";
         assertEquals(expectedBase, tfm.getBaseTmpDir());
 

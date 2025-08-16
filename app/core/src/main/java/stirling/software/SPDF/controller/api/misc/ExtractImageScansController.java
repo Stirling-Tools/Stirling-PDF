@@ -32,12 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CheckProgramInstall;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.*;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -154,7 +150,7 @@ public class ExtractImageScansController {
             // Create zip file if multiple images
             if (processedImageBytes.size() > 1) {
                 String outputZipFilename =
-                        fileName.replaceFirst(REPLACEFIRST, "") + "_processed.zip";
+                    GeneralUtils.generateFilename(fileName, "_processed.zip");
                 tempZipFile = Files.createTempFile("output_", ".zip");
 
                 try (ZipOutputStream zipOut =
@@ -163,10 +159,8 @@ public class ExtractImageScansController {
                     for (int i = 0; i < processedImageBytes.size(); i++) {
                         ZipEntry entry =
                                 new ZipEntry(
-                                        fileName.replaceFirst(REPLACEFIRST, "")
-                                                + "_"
-                                                + (i + 1)
-                                                + ".png");
+                                    GeneralUtils.generateFilename(
+                                        fileName, "_processed_" + (i + 1) + ".png"));
                         zipOut.putNextEntry(entry);
                         zipOut.write(processedImageBytes.get(i));
                         zipOut.closeEntry();
@@ -189,7 +183,7 @@ public class ExtractImageScansController {
                 byte[] imageBytes = processedImageBytes.get(0);
                 return WebResponseUtils.bytesToWebResponse(
                         imageBytes,
-                        fileName.replaceFirst(REPLACEFIRST, "") + ".png",
+                    GeneralUtils.generateFilename(fileName, ".png"),
                         MediaType.IMAGE_PNG);
             }
         } finally {

@@ -57,14 +57,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -75,6 +70,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -213,10 +209,10 @@ public class CertSignController {
                 location,
                 reason,
                 showLogo);
-        return WebResponseUtils.baosToWebResponse(
-                baos,
-                Filenames.toSimpleFileName(pdf.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_signed.pdf");
+        // Return the signed PDF
+        return WebResponseUtils.bytesToWebResponse(
+            baos.toByteArray(),
+            GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
     }
 
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)

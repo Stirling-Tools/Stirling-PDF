@@ -16,7 +16,6 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -35,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -313,13 +312,10 @@ public class ScannerEffectController {
             outputDocument.save(outputStream);
             outputDocument.close();
 
-            String outputFilename =
-                    Filenames.toSimpleFileName(file.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_scanner_effect.pdf";
-
             return WebResponseUtils.bytesToWebResponse(
-                    outputStream.toByteArray(), outputFilename, MediaType.APPLICATION_PDF);
+                outputStream.toByteArray(),
+                GeneralUtils.generateFilename(
+                    file.getOriginalFilename(), "_scanner_effect.pdf"));
         }
     }
 

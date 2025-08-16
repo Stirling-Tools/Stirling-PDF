@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -153,9 +154,10 @@ public class AutoSplitPdfController {
             splitDocuments.removeIf(pdDocument -> pdDocument.getNumberOfPages() == 0);
 
             zipFile = Files.createTempFile("split_documents", ".zip");
+
             String filename =
-                    Filenames.toSimpleFileName(file.getOriginalFilename())
-                            .replaceFirst("[.][^.]+$", "");
+                GeneralUtils.removeExtension(
+                    Filenames.toSimpleFileName(file.getOriginalFilename()));
 
             try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
                 for (int i = 0; i < splitDocuments.size(); i++) {

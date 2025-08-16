@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Service
 @Slf4j
@@ -32,8 +33,17 @@ public class UploadLimitService {
                     maxUploadSize);
             return 0;
         } else {
-            String unit = maxUploadSize.replaceAll("[1-9][0-9]{0,2}", "").toUpperCase();
-            String number = maxUploadSize.replaceAll("[KMGkmg][Bb]", "");
+            String unit =
+                RegexPatternUtils.getInstance()
+                    .getNumberRangePattern()
+                    .matcher(maxUploadSize)
+                    .replaceAll("")
+                    .toUpperCase();
+            String number =
+                RegexPatternUtils.getInstance()
+                    .getSizeUnitPattern()
+                    .matcher(maxUploadSize)
+                    .replaceAll("");
             long size = Long.parseLong(number);
             return switch (unit) {
                 case "KB" -> size * 1024;

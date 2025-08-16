@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -53,8 +54,8 @@ public class OverlayImageController {
 
             return WebResponseUtils.bytesToWebResponse(
                     result,
-                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
+                GeneralUtils.removeExtension(
+                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
                             + "_overlayed.pdf");
         } catch (IOException e) {
             log.error("Failed to add image to PDF", e);

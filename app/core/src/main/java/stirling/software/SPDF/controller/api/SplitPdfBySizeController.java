@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -57,9 +56,7 @@ public class SplitPdfBySizeController {
         Path zipFile = Files.createTempFile("split_documents", ".zip");
         log.debug("Created temporary zip file: {}", zipFile);
 
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
+        String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
         log.debug("Base filename for output: {}", filename);
 
         byte[] data = null;
