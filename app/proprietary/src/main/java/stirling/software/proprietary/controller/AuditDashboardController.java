@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.context.annotation.Conditional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +46,6 @@ import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
-import stirling.software.proprietary.security.database.H2SQLCondition;
 
 /** Controller for the audit dashboard. Admin-only access. */
 @Slf4j
@@ -56,7 +54,6 @@ import stirling.software.proprietary.security.database.H2SQLCondition;
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
-@Conditional(H2SQLCondition.class)
 @Tag(name = "Audit", description = "Only Enterprise - Audit related operations")
 public class AuditDashboardController {
 
