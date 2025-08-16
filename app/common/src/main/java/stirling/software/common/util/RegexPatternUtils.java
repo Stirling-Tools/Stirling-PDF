@@ -298,7 +298,7 @@ public final class RegexPatternUtils {
     /** Pattern for email validation */
     public Pattern getEmailValidationPattern() {
         return getPattern(
-                "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-ZaZ0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-ZaZ0-9-]+)*(?:\\.[A-Za-z]{2,})$");
+                "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(?:\\.[A-Za-z]{2,})$");
     }
 
     /** Pattern for extracting non-numeric characters */
