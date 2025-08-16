@@ -413,39 +413,29 @@ public final class RegexPatternUtils {
         return getPattern("^[A-Z]{6}\\+.*");
     }
 
-    /**
-     * Pattern for matching access="readOnly" attribute in XFA XML (with optional whitespace)
-     */
+    /** Pattern for matching access="readOnly" attribute in XFA XML (with optional whitespace) */
     public Pattern getAccessReadOnlyPattern() {
         return getPattern("access\\s*=\\s*\"readOnly\"");
     }
 
-    /**
-     * Pattern for matching MIME encoded-word headers (RFC 2047) Example: =?charset?B?encoded?=
-     */
+    /** Pattern for matching MIME encoded-word headers (RFC 2047) Example: =?charset?B?encoded?= */
     public Pattern getMimeEncodedWordPattern() {
         return getPattern("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
     }
 
-    /**
-     * Pattern for matching inline CID images in HTML (case-insensitive)
-     */
+    /** Pattern for matching inline CID images in HTML (case-insensitive) */
     public Pattern getInlineCidImagePattern() {
         return getPattern(
             "(?i)<img[^>]*\\ssrc\\s*=\\s*['\"]cid:([^'\"]+)['\"][^>]*>",
             Pattern.CASE_INSENSITIVE);
     }
 
-    /**
-     * Pattern for matching attachment section headers (case-insensitive)
-     */
+    /** Pattern for matching attachment section headers (case-insensitive) */
     public Pattern getAttachmentSectionPattern() {
         return getPattern("attachments\\s*\\(\\d+\\)", Pattern.CASE_INSENSITIVE);
     }
 
-    /**
-     * Pattern for matching filenames in attachment markers
-     */
+    /** Pattern for matching filenames in attachment markers */
     public Pattern getAttachmentFilenamePattern() {
         return getPattern("@\\s*([^\\s\\(]+(?:\\.[a-zA-Z0-9]+)?)");
     }

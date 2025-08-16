@@ -226,11 +226,17 @@ public class GeneralUtils {
     }
 
     public String convertToFileName(String name) {
-        String safeName =
-            RegexPatternUtils.getInstance()
-                .getFilenameSafePattern()
-                .matcher(name)
-                .replaceAll("_");
+        if (name == null) return "_";
+        StringBuilder safeNameBuilder = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isLetterOrDigit(c)) {
+                safeNameBuilder.append(c);
+            } else {
+                safeNameBuilder.append('_');
+            }
+        }
+        String safeName = safeNameBuilder.toString();
         if (safeName.length() > 50) {
             safeName = safeName.substring(0, 50);
         }
@@ -542,7 +548,15 @@ public class GeneralUtils {
     }
 
     private String sanitizeNFunction(String expression, int nValue) {
-        String sanitizedExpression = expression.replace(" ", "");
+        // Remove all spaces using a specialized character removal
+        StringBuilder sb = new StringBuilder(expression.length());
+        for (int i = 0; i < expression.length(); i++) {
+            char c = expression.charAt(i);
+            if (c != ' ') {
+                sb.append(c);
+            }
+        }
+        String sanitizedExpression = sb.toString();
         String multiplyByOpeningRoundBracketPattern =
                 "([0-9n)])\\("; // example: n(n-1), 9(n-1), (n-1)(n-2)
         sanitizedExpression =
@@ -558,25 +572,39 @@ public class GeneralUtils {
     }
 
     private String insertMultiplicationBeforeN(String expression, int nValue) {
-        // Insert multiplication between a number and 'n' (e.g., "4n" becomes "4*n")
-        String withMultiplication =
-            RegexPatternUtils.getInstance()
-                .getNumberBeforeNPattern()
-                .matcher(expression)
-                        .replaceAll("$1*n");
+        // Insert multiplication between a number and 'n' (e.g., "4n" becomes "4*n") using a loop
+        StringBuilder sb = new StringBuilder(expression.length() + 4); // +4 for possible extra '*'
+        for (int i = 0; i < expression.length(); i++) {
+            char c = expression.charAt(i);
+            sb.append(c);
+            if (Character.isDigit(c)
+                && i + 1 < expression.length()
+                && expression.charAt(i + 1) == 'n') {
+                sb.append('*');
+            }
+        }
+        String withMultiplication = sb.toString();
         withMultiplication = formatConsecutiveNsForNFunction(withMultiplication);
         // Now replace 'n' with its current value
-        return withMultiplication.replace("n", String.valueOf(nValue));
+        return withMultiplication.replace('n', String.valueOf(nValue).charAt(0));
     }
 
     private String formatConsecutiveNsForNFunction(String expression) {
         String text = expression;
-        while (RegexPatternUtils.getInstance().getConsecutiveNPattern().matcher(text).matches()) {
-            text =
-                RegexPatternUtils.getInstance()
-                    .getConsecutiveNReplacementPattern()
-                    .matcher(text)
-                    .replaceAll("n*n");
+        // Replace all consecutive 'nn' with 'n*n' until no more 'nn' is found
+        while (text.contains("nn")) {
+            StringBuilder sb = new StringBuilder(text.length() + 2); // +2 for possible extra '*'
+            int i = 0;
+            while (i < text.length()) {
+                if (i < text.length() - 1 && text.charAt(i) == 'n' && text.charAt(i + 1) == 'n') {
+                    sb.append("n*n");
+                    i += 2;
+                } else {
+                    sb.append(text.charAt(i));
+                    i++;
+                }
+            }
+            text = sb.toString();
         }
         return text;
     }
