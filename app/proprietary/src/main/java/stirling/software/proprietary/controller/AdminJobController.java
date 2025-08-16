@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,6 +25,8 @@ import stirling.software.common.service.TaskManager;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@PreAuthorize("hasRole('ROLE_ADMIN')")
+@Tag(name = "Admin Job Management", description = "Admin-only Job  Management APIs")
 public class AdminJobController {
 
     private final TaskManager taskManager;
@@ -32,7 +37,8 @@ public class AdminJobController {
      *
      * @return Job statistics
      */
-    @GetMapping("/api/v1/admin/job/stats")
+    @GetMapping("/job/stats")
+    @Operation(summary = "Get job statistics")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<JobStats> getJobStats() {
         JobStats stats = taskManager.getJobStats();
@@ -48,7 +54,8 @@ public class AdminJobController {
      *
      * @return Queue statistics
      */
-    @GetMapping("/api/v1/admin/job/queue/stats")
+    @GetMapping("/job/queue/stats")
+    @Operation(summary = "Get job queue statistics")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> getQueueStats() {
         Map<String, Object> queueStats = jobQueue.getQueueStats();
@@ -61,7 +68,8 @@ public class AdminJobController {
      *
      * @return A response indicating how many jobs were cleaned up
      */
-    @PostMapping("/api/v1/admin/job/cleanup")
+    @PostMapping("/job/cleanup")
+    @Operation(summary = "Cleanup old jobs")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> cleanupOldJobs() {
         int beforeCount = taskManager.getJobStats().getTotalJobs();

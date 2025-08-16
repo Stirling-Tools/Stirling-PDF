@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.context.annotation.Conditional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +33,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -43,14 +47,17 @@ import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
+import stirling.software.proprietary.security.database.H2SQLCondition;
 
 /** Controller for the audit dashboard. Admin-only access. */
 @Slf4j
 @Controller
 @RequestMapping("/audit")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
+@Conditional(H2SQLCondition.class)
+@Tag(name = "Audit", description = "Only Enterprise - Audit related operations")
 public class AuditDashboardController {
 
     private final PersistentAuditEventRepository auditRepository;
@@ -76,6 +83,7 @@ public class AuditDashboardController {
 
     /** Get audit events data for the dashboard tables. */
     @GetMapping("/data")
+    @Operation(summary = "Get audit events data")
     @ResponseBody
     public Map<String, Object> getAuditData(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -147,6 +155,7 @@ public class AuditDashboardController {
 
     /** Get statistics for charts. */
     @GetMapping("/stats")
+    @Operation(summary = "Get audit statistics")
     @ResponseBody
     public Map<String, Object> getAuditStats(
             @RequestParam(value = "days", defaultValue = "7") int days) {
@@ -192,6 +201,7 @@ public class AuditDashboardController {
 
     /** Get all unique event types from the database for filtering. */
     @GetMapping("/types")
+    @Operation(summary = "Get all unique audit event types")
     @ResponseBody
     public List<String> getAuditTypes() {
         // Get distinct event types from the database
@@ -213,6 +223,8 @@ public class AuditDashboardController {
 
     /** Export audit data as CSV. */
     @GetMapping("/export")
+    @Operation(summary = "Export audit data as CSV")
+    @ResponseBody
     public ResponseEntity<byte[]> exportAuditData(
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "principal", required = false) String principal,
@@ -282,6 +294,8 @@ public class AuditDashboardController {
 
     /** Export audit data as JSON. */
     @GetMapping("/export/json")
+    @Operation(summary = "Export audit data as JSON")
+    @ResponseBody
     public ResponseEntity<byte[]> exportAuditDataJson(
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "principal", required = false) String principal,
