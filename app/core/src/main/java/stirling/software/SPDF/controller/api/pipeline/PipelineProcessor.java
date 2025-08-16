@@ -1,26 +1,5 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
-import io.github.pixee.security.Filenames;
-import io.github.pixee.security.ZipSecurity;
-import jakarta.servlet.ServletContext;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.*;
-import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
-import stirling.software.SPDF.SPDFApplication;
-import stirling.software.SPDF.model.PipelineConfig;
-import stirling.software.SPDF.model.PipelineOperation;
-import stirling.software.SPDF.model.PipelineResult;
-import stirling.software.SPDF.service.ApiDocService;
-import stirling.software.common.model.enumeration.Role;
-import stirling.software.common.service.UserServiceInterface;
-
 import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +12,31 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.github.pixee.security.ZipSecurity;
+
+import jakarta.servlet.ServletContext;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.SPDFApplication;
+import stirling.software.SPDF.model.PipelineConfig;
+import stirling.software.SPDF.model.PipelineOperation;
+import stirling.software.SPDF.model.PipelineResult;
+import stirling.software.SPDF.service.ApiDocService;
+import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.service.UserServiceInterface;
 
 @Service
 @Slf4j

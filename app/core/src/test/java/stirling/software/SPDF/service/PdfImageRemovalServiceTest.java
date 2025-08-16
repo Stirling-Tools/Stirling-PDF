@@ -1,5 +1,11 @@
 package stirling.software.SPDF.service;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
+import java.util.*;
+
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -9,12 +15,6 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import java.io.IOException;
-import java.util.*;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 class PdfImageRemovalServiceTest {
 
