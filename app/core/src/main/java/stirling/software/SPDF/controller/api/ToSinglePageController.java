@@ -92,7 +92,7 @@ public class ToSinglePageController {
         byte[] result = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 result,
-            GeneralUtils.generateFilename(
-                request.getFileInput().getOriginalFilename(), "_singlePage.pdf"));
+                GeneralUtils.generateFilename(
+                        request.getFileInput().getOriginalFilename(), "_singlePage.pdf"));
     }
 }

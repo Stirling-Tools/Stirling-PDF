@@ -91,9 +91,9 @@ public class PageNumbersController {
                             .replace("{total}", String.valueOf(document.getNumberOfPages()))
                             .replace(
                                     "{filename}",
-                                GeneralUtils.removeExtension(
-                                    Filenames.toSimpleFileName(
-                                        file.getOriginalFilename())));
+                                    GeneralUtils.removeExtension(
+                                            Filenames.toSimpleFileName(
+                                                    file.getOriginalFilename())));
 
             PDType1Font currentFont =
                     switch (fontType.toLowerCase()) {
@@ -164,7 +164,7 @@ public class PageNumbersController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-            GeneralUtils.generateFilename(
-                file.getOriginalFilename(), "_page_numbers_added.pdf"));
+                GeneralUtils.generateFilename(
+                        file.getOriginalFilename(), "_page_numbers_added.pdf"));
     }
 }

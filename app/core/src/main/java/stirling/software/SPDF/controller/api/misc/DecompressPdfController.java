@@ -57,8 +57,8 @@ public class DecompressPdfController {
 
             // Return the PDF as a response
             return WebResponseUtils.bytesToWebResponse(
-                baos.toByteArray(),
-                GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
+                    baos.toByteArray(),
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
         }
     }
 

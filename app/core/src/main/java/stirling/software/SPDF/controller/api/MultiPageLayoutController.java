@@ -140,7 +140,7 @@ public class MultiPageLayoutController {
         byte[] result = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 result,
-            GeneralUtils.generateFilename(
-                file.getOriginalFilename(), "_multi_page_layout.pdf"));
+                GeneralUtils.generateFilename(
+                        file.getOriginalFilename(), "_multi_page_layout.pdf"));
     }
 }

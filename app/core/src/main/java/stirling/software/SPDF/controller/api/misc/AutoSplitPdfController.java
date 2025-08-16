@@ -156,8 +156,8 @@ public class AutoSplitPdfController {
             zipFile = Files.createTempFile("split_documents", ".zip");
 
             String filename =
-                GeneralUtils.removeExtension(
-                    Filenames.toSimpleFileName(file.getOriginalFilename()));
+                    GeneralUtils.removeExtension(
+                            Filenames.toSimpleFileName(file.getOriginalFilename()));
 
             try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
                 for (int i = 0; i < splitDocuments.size(); i++) {

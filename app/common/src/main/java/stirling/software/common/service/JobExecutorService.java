@@ -425,15 +425,15 @@ public class JobExecutorService {
 
         try {
             String value =
-                RegexPatternUtils.getInstance()
-                    .getNonDigitDotPattern()
-                    .matcher(timeout)
-                    .replaceAll("");
+                    RegexPatternUtils.getInstance()
+                            .getNonDigitDotPattern()
+                            .matcher(timeout)
+                            .replaceAll("");
             String unit =
-                RegexPatternUtils.getInstance()
-                    .getDigitDotPattern()
-                    .matcher(timeout)
-                    .replaceAll("");
+                    RegexPatternUtils.getInstance()
+                            .getDigitDotPattern()
+                            .matcher(timeout)
+                            .replaceAll("");
 
             double numericValue = Double.parseDouble(value);
 

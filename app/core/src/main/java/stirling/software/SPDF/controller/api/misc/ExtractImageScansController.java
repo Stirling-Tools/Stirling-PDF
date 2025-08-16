@@ -150,7 +150,7 @@ public class ExtractImageScansController {
             // Create zip file if multiple images
             if (processedImageBytes.size() > 1) {
                 String outputZipFilename =
-                    GeneralUtils.generateFilename(fileName, "_processed.zip");
+                        GeneralUtils.generateFilename(fileName, "_processed.zip");
                 tempZipFile = Files.createTempFile("output_", ".zip");
 
                 try (ZipOutputStream zipOut =
@@ -159,8 +159,8 @@ public class ExtractImageScansController {
                     for (int i = 0; i < processedImageBytes.size(); i++) {
                         ZipEntry entry =
                                 new ZipEntry(
-                                    GeneralUtils.generateFilename(
-                                        fileName, "_processed_" + (i + 1) + ".png"));
+                                        GeneralUtils.generateFilename(
+                                                fileName, "_processed_" + (i + 1) + ".png"));
                         zipOut.putNextEntry(entry);
                         zipOut.write(processedImageBytes.get(i));
                         zipOut.closeEntry();
@@ -183,7 +183,7 @@ public class ExtractImageScansController {
                 byte[] imageBytes = processedImageBytes.get(0);
                 return WebResponseUtils.bytesToWebResponse(
                         imageBytes,
-                    GeneralUtils.generateFilename(fileName, ".png"),
+                        GeneralUtils.generateFilename(fileName, ".png"),
                         MediaType.IMAGE_PNG);
             }
         } finally {

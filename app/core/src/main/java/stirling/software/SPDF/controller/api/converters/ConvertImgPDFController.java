@@ -227,7 +227,7 @@ public class ConvertImgPDFController {
                 PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
         return WebResponseUtils.bytesToWebResponse(
                 bytes,
-            GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
+                GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
     }
 
     private String getMediaType(String imageFormat) {

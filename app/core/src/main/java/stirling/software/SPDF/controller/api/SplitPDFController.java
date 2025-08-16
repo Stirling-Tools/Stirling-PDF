@@ -129,9 +129,9 @@ public class SplitPDFController {
             Files.deleteIfExists(zipFile);
 
             String zipFilename =
-                GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.zip");
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.zip");
             return WebResponseUtils.bytesToWebResponse(
-                data, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
+                    data, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
 
         } finally {
             try {

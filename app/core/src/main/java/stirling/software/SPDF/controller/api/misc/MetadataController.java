@@ -139,11 +139,11 @@ public class MetadataController {
                     info.setCustomMetadataValue(key, entry.getValue());
                 } else if (key.contains("customKey")) {
                     int number =
-                        Integer.parseInt(
-                            RegexPatternUtils.getInstance()
-                                .getNumericExtractionPattern()
-                                .matcher(key)
-                                .replaceAll(""));
+                            Integer.parseInt(
+                                    RegexPatternUtils.getInstance()
+                                            .getNumericExtractionPattern()
+                                            .matcher(key)
+                                            .replaceAll(""));
                     String customKey = entry.getValue();
                     String customValue = allRequestParams.get("customValue" + number);
                     info.setCustomMetadataValue(customKey, customValue);
@@ -185,8 +185,8 @@ public class MetadataController {
         document.setDocumentInformation(info);
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-            GeneralUtils.removeExtension(
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
+                GeneralUtils.removeExtension(
+                                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
                         + "_metadata.pdf");
     }
 }

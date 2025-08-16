@@ -208,15 +208,15 @@ public class FileToPdf {
         }
         // Remove any drive letters (e.g., "C:\") and leading forward/backslashes
         entryName =
-            RegexPatternUtils.getInstance()
-                .getDriveLetterPattern()
-                .matcher(entryName)
-                .replaceAll("");
+                RegexPatternUtils.getInstance()
+                        .getDriveLetterPattern()
+                        .matcher(entryName)
+                        .replaceAll("");
         entryName =
-            RegexPatternUtils.getInstance()
-                .getLeadingSlashesPattern()
-                .matcher(entryName)
-                .replaceAll("");
+                RegexPatternUtils.getInstance()
+                        .getLeadingSlashesPattern()
+                        .matcher(entryName)
+                        .replaceAll("");
 
         // Recursively remove path traversal sequences
         while (entryName.contains("../") || entryName.contains("..\\")) {
@@ -224,10 +224,10 @@ public class FileToPdf {
         }
         // Normalize all backslashes to forward slashes
         entryName =
-            RegexPatternUtils.getInstance()
-                .getBackslashPattern()
-                .matcher(entryName)
-                .replaceAll("/");
+                RegexPatternUtils.getInstance()
+                        .getBackslashPattern()
+                        .matcher(entryName)
+                        .replaceAll("/");
         return entryName;
     }
 }

@@ -231,8 +231,8 @@ public class MergeController {
             mergedDocument.save(baos);
 
             String mergedFileName =
-                GeneralUtils.generateFilename(
-                    files[0].getOriginalFilename(), "_merged_unsigned.pdf");
+                    GeneralUtils.generateFilename(
+                            files[0].getOriginalFilename(), "_merged_unsigned.pdf");
             return WebResponseUtils.baosToWebResponse(
                     baos, mergedFileName); // Return the modified PDF
 

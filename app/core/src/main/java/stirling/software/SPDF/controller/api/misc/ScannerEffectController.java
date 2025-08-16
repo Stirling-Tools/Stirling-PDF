@@ -313,9 +313,9 @@ public class ScannerEffectController {
             outputDocument.close();
 
             return WebResponseUtils.bytesToWebResponse(
-                outputStream.toByteArray(),
-                GeneralUtils.generateFilename(
-                    file.getOriginalFilename(), "_scanner_effect.pdf"));
+                    outputStream.toByteArray(),
+                    GeneralUtils.generateFilename(
+                            file.getOriginalFilename(), "_scanner_effect.pdf"));
         }
     }
 

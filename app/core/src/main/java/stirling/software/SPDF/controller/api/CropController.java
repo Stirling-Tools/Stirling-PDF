@@ -93,7 +93,7 @@ public class CropController {
         byte[] pdfContent = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 pdfContent,
-            GeneralUtils.generateFilename(
-                request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
+                GeneralUtils.generateFilename(
+                        request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
     }
 }

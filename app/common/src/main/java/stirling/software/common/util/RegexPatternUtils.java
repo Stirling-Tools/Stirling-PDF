@@ -160,7 +160,7 @@ public final class RegexPatternUtils {
             return pattern;
         } catch (PatternSyntaxException e) {
             log.error(
-                "Invalid regex pattern: '{}' with flags {} - {}", regex, flags, e.getMessage());
+                    "Invalid regex pattern: '{}' with flags {} - {}", regex, flags, e.getMessage());
             throw e;
         }
     }
@@ -184,9 +184,7 @@ public final class RegexPatternUtils {
         log.debug("Pre-compiled {} common regex patterns", patternCache.size());
     }
 
-    /**
-     * Creates a case-insensitive pattern for text searching
-     */
+    /** Creates a case-insensitive pattern for text searching */
     public Pattern createSearchPattern(String regex, boolean caseInsensitive) {
         int flags = caseInsensitive ? (Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE) : 0;
         return getPattern(regex, flags);
@@ -300,7 +298,7 @@ public final class RegexPatternUtils {
     /** Pattern for email validation */
     public Pattern getEmailValidationPattern() {
         return getPattern(
-            "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-ZaZ0-9])?@[^-][A-Za-z0-9-]+(?:\\\\.[A-Za-z0-9-]+)*(?:\\\\.[A-Za-z]{2,})$");
+                "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-ZaZ0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-ZaZ0-9-]+)*(?:\\.[A-Za-z]{2,})$");
     }
 
     /** Pattern for extracting non-numeric characters */
@@ -426,8 +424,8 @@ public final class RegexPatternUtils {
     /** Pattern for matching inline CID images in HTML (case-insensitive) */
     public Pattern getInlineCidImagePattern() {
         return getPattern(
-            "(?i)<img[^>]*\\ssrc\\s*=\\s*['\"]cid:([^'\"]+)['\"][^>]*>",
-            Pattern.CASE_INSENSITIVE);
+                "(?i)<img[^>]*\\ssrc\\s*=\\s*['\"]cid:([^'\"]+)['\"][^>]*>",
+                Pattern.CASE_INSENSITIVE);
     }
 
     /** Pattern for matching attachment section headers (case-insensitive) */

@@ -174,7 +174,7 @@ public class GeneralUtilsTest {
         assertEquals("default", GeneralUtils.removeExtension(null));
         assertEquals("noextension", GeneralUtils.removeExtension("noextension"));
         assertEquals(
-            ".hidden", GeneralUtils.removeExtension(".hidden")); // Hidden file, no extension
+                ".hidden", GeneralUtils.removeExtension(".hidden")); // Hidden file, no extension
         assertEquals("trailing.", GeneralUtils.removeExtension("trailing.")); // Trailing dot
         assertEquals("", GeneralUtils.removeExtension(""));
         assertEquals("a", GeneralUtils.removeExtension("a"));
@@ -214,13 +214,13 @@ public class GeneralUtilsTest {
         GeneralUtils.processFilenames(filenames, "_processed", results::add);
 
         List<String> expected =
-            List.of(
-                "document_processed",
-                "image_processed",
-                "spreadsheet_processed",
-                "presentation_processed",
-                "default_processed",
-                "noextension_processed");
+                List.of(
+                        "document_processed",
+                        "image_processed",
+                        "spreadsheet_processed",
+                        "presentation_processed",
+                        "default_processed",
+                        "noextension_processed");
 
         assertEquals(expected, results);
     }
@@ -254,30 +254,30 @@ public class GeneralUtilsTest {
 
         for (int i = 0; i < threadCount; i++) {
             executor.submit(
-                () -> {
-                    try {
-                        for (int j = 0; j < operationsPerThread; j++) {
-                            String filename = testFilenames[j % testFilenames.length];
-                            String result = GeneralUtils.removeExtension(filename);
+                    () -> {
+                        try {
+                            for (int j = 0; j < operationsPerThread; j++) {
+                                String filename = testFilenames[j % testFilenames.length];
+                                String result = GeneralUtils.removeExtension(filename);
 
-                            // Verify result is correct
-                            assertFalse(
-                                result.contains("."),
-                                "Result should not contain extension: " + result);
-                            assertTrue(
-                                filename.startsWith(result),
-                                "Original should start with result: "
-                                    + filename
-                                    + " -> "
-                                    + result);
+                                // Verify result is correct
+                                assertFalse(
+                                        result.contains("."),
+                                        "Result should not contain extension: " + result);
+                                assertTrue(
+                                        filename.startsWith(result),
+                                        "Original should start with result: "
+                                                + filename
+                                                + " -> "
+                                                + result);
+                            }
+                            successCount.incrementAndGet();
+                        } catch (Exception e) {
+                            exceptions.add(e);
+                        } finally {
+                            latch.countDown();
                         }
-                        successCount.incrementAndGet();
-                    } catch (Exception e) {
-                        exceptions.add(e);
-                    } finally {
-                        latch.countDown();
-                    }
-                });
+                    });
         }
 
         assertTrue(latch.await(10, TimeUnit.SECONDS), "All threads should complete");
@@ -337,21 +337,24 @@ public class GeneralUtilsTest {
                 case ".." -> assertEquals("..", result, "Double dots should remain unchanged");
                 case "..." -> assertEquals("...", result, "Triple dots should remain unchanged");
                 case ".hidden" ->
-                    assertEquals(".hidden", result, "Hidden file should remain unchanged");
+                        assertEquals(".hidden", result, "Hidden file should remain unchanged");
                 case "file." ->
-                    assertEquals("file.", result, "Trailing dot should remain unchanged");
-                case "no-extension-here" -> assertEquals(
-                    "no-extension-here",
-                    result,
-                    "No extension should remain unchanged");
-                case "a.b.c.d.e.f.g" -> assertEquals(
-                    "a.b.c.d.e.f",
-                    result,
-                    "Multiple extensions should remove last one");
-                case "file..double.dot" -> assertEquals(
-                    "file..double",
-                    result,
-                    "Double dot case should remove last extension");
+                        assertEquals("file.", result, "Trailing dot should remain unchanged");
+                case "no-extension-here" ->
+                        assertEquals(
+                                "no-extension-here",
+                                result,
+                                "No extension should remain unchanged");
+                case "a.b.c.d.e.f.g" ->
+                        assertEquals(
+                                "a.b.c.d.e.f",
+                                result,
+                                "Multiple extensions should remove last one");
+                case "file..double.dot" ->
+                        assertEquals(
+                                "file..double",
+                                result,
+                                "Double dot case should remove last extension");
             }
         }
     }
@@ -374,7 +377,7 @@ public class GeneralUtilsTest {
 
         // Test complex cases
         assertEquals(
-            "complex.file.name", GeneralUtils.getTitleFromFilename("complex.file.name.txt"));
+                "complex.file.name", GeneralUtils.getTitleFromFilename("complex.file.name.txt"));
         assertEquals("path/to/file", GeneralUtils.getTitleFromFilename("path/to/file.ext"));
     }
 }

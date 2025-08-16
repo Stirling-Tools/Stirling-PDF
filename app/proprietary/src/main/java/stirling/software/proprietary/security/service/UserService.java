@@ -481,18 +481,18 @@ public class UserService implements UserServiceInterface {
         // Checks whether the simple username is formatted correctly
         // Regular expression for user name: Min. 3 characters, max. 50 characters
         boolean isValidSimpleUsername =
-            RegexPatternUtils.getInstance()
-                .getUsernameValidationPattern()
-                .matcher(username)
-                .matches();
+                RegexPatternUtils.getInstance()
+                        .getUsernameValidationPattern()
+                        .matcher(username)
+                        .matches();
 
         // Checks whether the email address is formatted correctly
         // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
         boolean isValidEmail =
-            RegexPatternUtils.getInstance()
-                .getEmailValidationPattern()
-                .matcher(username)
-                .matches();
+                RegexPatternUtils.getInstance()
+                        .getEmailValidationPattern()
+                        .matcher(username)
+                        .matches();
 
         List<String> notAllowedUserList = new ArrayList<>();
         notAllowedUserList.add("ALL_USERS".toLowerCase());

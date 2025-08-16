@@ -152,7 +152,7 @@ public class WatermarkController {
         // Return the watermarked PDF as a response
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-            GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_watermarked.pdf"));
+                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_watermarked.pdf"));
     }
 
     private void addTextWatermark(
@@ -219,7 +219,7 @@ public class WatermarkController {
         contentStream.setNonStrokingColor(redactColor);
 
         String[] textLines =
-            RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(watermarkText);
+                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(watermarkText);
         float maxLineWidth = 0;
 
         for (int i = 0; i < textLines.length; ++i) {

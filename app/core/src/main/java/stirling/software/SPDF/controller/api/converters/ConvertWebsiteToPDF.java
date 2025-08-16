@@ -53,7 +53,7 @@ public class ConvertWebsiteToPDF {
         }
         // Validate the URL format
         if (!RegexPatternUtils.getInstance().getHttpUrlPattern().matcher(URL).matches()
-            || !GeneralUtils.isValidURL(URL)) {
+                || !GeneralUtils.isValidURL(URL)) {
             throw ExceptionUtils.createInvalidArgumentException(
                     "URL", "provided format is invalid");
         }

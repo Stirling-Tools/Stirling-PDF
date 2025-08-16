@@ -248,8 +248,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
      */
     private String sanitizeInput(String input) {
         return RegexPatternUtils.getInstance()
-            .getInputSanitizePattern()
-            .matcher(input)
-            .replaceAll("");
+                .getInputSanitizePattern()
+                .matcher(input)
+                .replaceAll("");
     }
 }

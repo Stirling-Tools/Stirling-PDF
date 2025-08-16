@@ -62,14 +62,14 @@ public class GeneralUtils {
         long maxFileSize = 100 * 1024 * 1024; // 100MB
         if (multipartFile.getSize() > maxFileSize) {
             throw new IllegalArgumentException(
-                "File size exceeds maximum allowed size of " + formatBytes(maxFileSize));
+                    "File size exceeds maximum allowed size of " + formatBytes(maxFileSize));
         }
 
         Path tempDir = getTempDirectory();
         File tempFile = Files.createTempFile(tempDir, "stirling-pdf-", null).toFile();
 
         try (InputStream inputStream = multipartFile.getInputStream();
-             FileOutputStream outputStream = new FileOutputStream(tempFile)) {
+                FileOutputStream outputStream = new FileOutputStream(tempFile)) {
 
             // Use Java 9+ transferTo for efficient copying
             inputStream.transferTo(outputStream);
@@ -179,14 +179,14 @@ public class GeneralUtils {
      * @param processor consumer to handle each processed filename, may be null
      */
     public void processFilenames(
-        List<String> filenames, String suffix, java.util.function.Consumer<String> processor) {
+            List<String> filenames, String suffix, java.util.function.Consumer<String> processor) {
         if (filenames == null || processor == null) {
             return;
         }
 
         filenames.stream()
-            .map(filename -> appendSuffix(removeExtension(filename), suffix))
-            .forEach(processor);
+                .map(filename -> appendSuffix(removeExtension(filename), suffix))
+                .forEach(processor);
     }
 
     /**
@@ -207,8 +207,8 @@ public class GeneralUtils {
 
     public void deleteDirectory(Path path) throws IOException {
         Files.walkFileTree(
-            path,
-            new SimpleFileVisitor<>() {
+                path,
+                new SimpleFileVisitor<>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                             throws IOException {
@@ -222,7 +222,7 @@ public class GeneralUtils {
                         Files.deleteIfExists(dir);
                         return FileVisitResult.CONTINUE;
                     }
-            });
+                });
     }
 
     public String convertToFileName(String name) {
@@ -254,7 +254,7 @@ public class GeneralUtils {
             pattern = "file:" + normalizePath.toString().replace("\\", "/") + "/*";
         }
         return ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
-            .getResources(pattern);
+                .getResources(pattern);
     }
 
     public boolean isValidURL(String urlStr) {
@@ -373,24 +373,24 @@ public class GeneralUtils {
             if (sizeStr.endsWith("TB")) {
                 return (long)
                         (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                            * 1024L
-                            * 1024L
-                            * 1024L
-                            * 1024L);
+                                * 1024L
+                                * 1024L
+                                * 1024L
+                                * 1024L);
             } else if (sizeStr.endsWith("GB")) {
                 return (long)
                         (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                            * 1024L
-                            * 1024L
-                            * 1024L);
+                                * 1024L
+                                * 1024L
+                                * 1024L);
             } else if (sizeStr.endsWith("MB")) {
                 return (long)
-                    (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                        * 1024L
-                        * 1024L);
+                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
+                                * 1024L
+                                * 1024L);
             } else if (sizeStr.endsWith("KB")) {
                 return (long)
-                    (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024L);
+                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024L);
             } else if (!sizeStr.isEmpty() && sizeStr.charAt(sizeStr.length() - 1) == 'B') {
                 return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
             } else {
@@ -422,17 +422,15 @@ public class GeneralUtils {
         return convertSizeToBytes(sizeStr, "MB");
     }
 
-    /**
-     * Validates if a string represents a valid size unit.
-     */
+    /** Validates if a string represents a valid size unit. */
     private boolean isValidSizeUnit(String unit) {
         if (unit == null) return false;
         String upperUnit = unit.toUpperCase();
         return "B".equals(upperUnit)
-            || "KB".equals(upperUnit)
-            || "MB".equals(upperUnit)
-            || "GB".equals(upperUnit)
-            || "TB".equals(upperUnit);
+                || "KB".equals(upperUnit)
+                || "MB".equals(upperUnit)
+                || "GB".equals(upperUnit)
+                || "TB".equals(upperUnit);
     }
 
     /** Enhanced byte formatting with TB/PB support and better precision. */
@@ -513,9 +511,9 @@ public class GeneralUtils {
 
         // Validate the expression format
         if (!RegexPatternUtils.getInstance()
-            .getMathExpressionPattern()
-            .matcher(expression.trim())
-            .matches()) {
+                .getMathExpressionPattern()
+                .matcher(expression.trim())
+                .matches()) {
             throw new IllegalArgumentException("Invalid expression format: " + expression);
         }
 
@@ -536,10 +534,10 @@ public class GeneralUtils {
                 }
             } catch (Exception e) {
                 log.debug(
-                    "Failed to evaluate expression '{}' for n={}: {}",
-                    expression,
-                    n,
-                    e.getMessage());
+                        "Failed to evaluate expression '{}' for n={}: {}",
+                        expression,
+                        n,
+                        e.getMessage());
                 // Continue with next value instead of breaking
             }
         }
@@ -578,15 +576,15 @@ public class GeneralUtils {
             char c = expression.charAt(i);
             sb.append(c);
             if (Character.isDigit(c)
-                && i + 1 < expression.length()
-                && expression.charAt(i + 1) == 'n') {
+                    && i + 1 < expression.length()
+                    && expression.charAt(i + 1) == 'n') {
                 sb.append('*');
             }
         }
         String withMultiplication = sb.toString();
         withMultiplication = formatConsecutiveNsForNFunction(withMultiplication);
         // Now replace 'n' with its current value
-        return withMultiplication.replace('n', String.valueOf(nValue).charAt(0));
+        return withMultiplication.replace("n", String.valueOf(nValue));
     }
 
     private String formatConsecutiveNsForNFunction(String expression) {

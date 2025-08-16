@@ -69,8 +69,8 @@ public class PdfImageRemovalController {
 
         // Generate a new filename for the modified PDF
         String mergedFileName =
-            GeneralUtils.generateFilename(
-                file.getFileInput().getOriginalFilename(), "_images_removed.pdf");
+                GeneralUtils.generateFilename(
+                        file.getFileInput().getOriginalFilename(), "_images_removed.pdf");
 
         // Convert the byte array to a web response and return it
         return WebResponseUtils.bytesToWebResponse(outputStream.toByteArray(), mergedFileName);

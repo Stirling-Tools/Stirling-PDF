@@ -226,10 +226,10 @@ public class GetInfoOnPDF {
             String[] words = RegexPatternUtils.getInstance().getWhitespacePattern().split(fullText);
             int wordCount = words.length;
             int paragraphCount =
-                RegexPatternUtils.getInstance()
-                    .getMultiFormatNewlinePattern()
-                    .split(fullText)
-                    .length;
+                    RegexPatternUtils.getInstance()
+                            .getMultiFormatNewlinePattern()
+                            .split(fullText)
+                            .length;
             basicInfo.put("WordCount", wordCount);
             basicInfo.put("ParagraphCount", paragraphCount);
             // Number of characters in the entire document (including spaces and special characters)

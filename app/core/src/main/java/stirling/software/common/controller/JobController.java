@@ -306,10 +306,10 @@ public class JobController {
     private String createContentDispositionHeader(String fileName) {
         try {
             String encodedFileName =
-                RegexPatternUtils.getInstance()
-                    .getPlusSignPattern()
-                    .matcher(URLEncoder.encode(fileName, StandardCharsets.UTF_8))
-                    .replaceAll("%20"); // URLEncoder uses + for spaces, but we want %20
+                    RegexPatternUtils.getInstance()
+                            .getPlusSignPattern()
+                            .matcher(URLEncoder.encode(fileName, StandardCharsets.UTF_8))
+                            .replaceAll("%20"); // URLEncoder uses + for spaces, but we want %20
             return "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + encodedFileName;
         } catch (Exception e) {
             // Fallback to basic filename if encoding fails

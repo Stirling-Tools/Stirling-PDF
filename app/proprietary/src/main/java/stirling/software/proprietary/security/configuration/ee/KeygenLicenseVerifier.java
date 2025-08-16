@@ -119,10 +119,10 @@ public class KeygenLicenseVerifier {
             encodedPayload = encodedPayload.replace(CERT_SUFFIX, "");
             // Remove all newlines
             encodedPayload =
-                RegexPatternUtils.getInstance()
-                    .getEncodedPayloadNewlinePattern()
-                    .matcher(encodedPayload)
-                    .replaceAll("");
+                    RegexPatternUtils.getInstance()
+                            .getEncodedPayloadNewlinePattern()
+                            .matcher(encodedPayload)
+                            .replaceAll("");
 
             byte[] payloadBytes = Base64.getDecoder().decode(encodedPayload);
             String payload = new String(payloadBytes);

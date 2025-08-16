@@ -116,8 +116,8 @@ public class ConvertOfficeController {
             PDDocument doc = pdfDocumentFactory.load(file);
             return WebResponseUtils.pdfDocToWebResponse(
                     doc,
-                GeneralUtils.generateFilename(
-                    inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
         } finally {
             if (file != null) file.delete();
         }

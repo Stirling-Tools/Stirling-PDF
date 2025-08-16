@@ -796,8 +796,8 @@ public class CompressController {
             }
 
             String outputFilename =
-                GeneralUtils.generateFilename(
-                    inputFile.getOriginalFilename(), "_Optimized.pdf");
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_Optimized.pdf");
 
             return WebResponseUtils.pdfDocToWebResponse(
                     pdfDocumentFactory.load(currentFile.toFile()), outputFilename);

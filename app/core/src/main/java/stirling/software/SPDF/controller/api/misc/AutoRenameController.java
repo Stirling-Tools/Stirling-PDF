@@ -136,11 +136,11 @@ public class AutoRenameController {
         // Sanitize the header string by removing characters not allowed in a filename.
         if (header != null && header.length() < 255) {
             header =
-                RegexPatternUtils.getInstance()
-                    .getSafeFilenamePattern()
-                    .matcher(header)
-                    .replaceAll("")
-                    .trim();
+                    RegexPatternUtils.getInstance()
+                            .getSafeFilenamePattern()
+                            .matcher(header)
+                            .replaceAll("")
+                            .trim();
             return WebResponseUtils.pdfDocToWebResponse(document, header + ".pdf");
         } else {
             log.info("File has no good title to be found");

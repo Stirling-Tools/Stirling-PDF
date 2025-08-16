@@ -94,8 +94,8 @@ public class SanitizeController {
         document.close();
 
         return WebResponseUtils.bytesToWebResponse(
-            outputStream.toByteArray(),
-            GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_sanitized.pdf"));
+                outputStream.toByteArray(),
+                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_sanitized.pdf"));
     }
 
     private void sanitizeJavaScript(PDDocument document) throws IOException {

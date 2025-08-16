@@ -62,14 +62,14 @@ public class TempFileCleanupService {
     // File patterns that identify common system temp files
     private static final Predicate<String> IS_SYSTEM_TEMP_FILE =
             fileName ->
-                RegexPatternUtils.getInstance()
-                    .getSystemTempFile1Pattern()
-                    .matcher(fileName)
-                    .matches()
-                    || RegexPatternUtils.getInstance()
-                    .getSystemTempFile2Pattern()
-                    .matcher(fileName)
-                    .matches()
+                    RegexPatternUtils.getInstance()
+                                    .getSystemTempFile1Pattern()
+                                    .matcher(fileName)
+                                    .matches()
+                            || RegexPatternUtils.getInstance()
+                                    .getSystemTempFile2Pattern()
+                                    .matcher(fileName)
+                                    .matches()
                             || (fileName.startsWith("tmp") && !fileName.contains("jetty"))
                             || fileName.startsWith("OSL_PIPE_")
                             || (fileName.endsWith(".tmp") && !fileName.contains("jetty"));

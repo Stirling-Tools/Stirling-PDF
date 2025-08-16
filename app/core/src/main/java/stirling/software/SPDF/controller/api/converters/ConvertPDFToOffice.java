@@ -66,7 +66,7 @@ public class ConvertPDFToOffice {
                 String text = stripper.getText(document);
                 return WebResponseUtils.bytesToWebResponse(
                         text.getBytes(),
-                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt"),
+                        GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt"),
                         MediaType.TEXT_PLAIN);
             }
         } else {

@@ -162,7 +162,7 @@ public class StampController {
         // Return the stamped PDF as a response
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-            GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"));
+                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"));
     }
 
     private void addTextStamp(
@@ -247,8 +247,8 @@ public class StampController {
                             pageSize, position, calculateTextCapHeight(font, fontSize), margin);
         }
         // Split the stampText into multiple lines
-                String[] lines =
-                    RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(stampText);
+        String[] lines =
+                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(stampText);
 
         // Calculate dynamic line height based on font ascent and descent
         float ascent = font.getFontDescriptor().getAscent();

@@ -314,15 +314,15 @@ public class PdfAttachmentHandler {
         if (filename == null) return "";
         String normalized = filename.toLowerCase().trim();
         normalized =
-            RegexPatternUtils.getInstance()
-                .getWhitespacePattern()
-                .matcher(normalized)
-                .replaceAll(" ");
+                RegexPatternUtils.getInstance()
+                        .getWhitespacePattern()
+                        .matcher(normalized)
+                        .replaceAll(" ");
         normalized =
-            RegexPatternUtils.getInstance()
-                .getPattern("[^a-zA-Z0-9._-]")
-                .matcher(normalized)
-                .replaceAll("");
+                RegexPatternUtils.getInstance()
+                        .getPattern("[^a-zA-Z0-9._-]")
+                        .matcher(normalized)
+                        .replaceAll("");
         return normalized;
     }
 
@@ -505,11 +505,10 @@ public class PdfAttachmentHandler {
 
     public static class AttachmentMarkerPositionFinder extends PDFTextStripper {
         private static final Pattern ATTACHMENT_SECTION_PATTERN =
-            RegexPatternUtils.getInstance().getAttachmentSectionPattern();
+                RegexPatternUtils.getInstance().getAttachmentSectionPattern();
         private static final Pattern FILENAME_PATTERN =
-            RegexPatternUtils.getInstance().getAttachmentFilenamePattern();
-        @Getter
-        private final List<MarkerPosition> positions = new ArrayList<>();
+                RegexPatternUtils.getInstance().getAttachmentFilenamePattern();
+        @Getter private final List<MarkerPosition> positions = new ArrayList<>();
         private final StringBuilder currentText = new StringBuilder();
         protected boolean sortByPosition;
         private int currentPageIndex;
@@ -530,12 +529,12 @@ public class PdfAttachmentHandler {
 
             if (sortByPosition) {
                 positions.sort(
-                    (a, b) -> {
-                        int pageCompare = Integer.compare(a.getPageIndex(), b.getPageIndex());
-                        if (pageCompare != 0) return pageCompare;
-                        return Float.compare(
-                            b.getY(), a.getY()); // Descending Y per PDF coordinate system
-                    });
+                        (a, b) -> {
+                            int pageCompare = Integer.compare(a.getPageIndex(), b.getPageIndex());
+                            if (pageCompare != 0) return pageCompare;
+                            return Float.compare(
+                                    b.getY(), a.getY()); // Descending Y per PDF coordinate system
+                        });
             }
 
             return ""; // Return empty string as we only need positions
@@ -554,7 +553,7 @@ public class PdfAttachmentHandler {
 
         @Override
         protected void writeString(String string, List<TextPosition> textPositions)
-            throws IOException {
+                throws IOException {
             String lowerString = string.toLowerCase();
 
             if (ATTACHMENT_SECTION_PATTERN.matcher(lowerString).find()) {
@@ -563,11 +562,11 @@ public class PdfAttachmentHandler {
             }
 
             if (isInAttachmentSection
-                && (lowerString.contains("</body>")
-                || lowerString.contains("</html>")
-                || (attachmentSectionFound
-                && lowerString.trim().isEmpty()
-                && string.length() > 50))) {
+                    && (lowerString.contains("</body>")
+                            || lowerString.contains("</html>")
+                            || (attachmentSectionFound
+                                    && lowerString.trim().isEmpty()
+                                    && string.length() > 50))) {
                 isInAttachmentSection = false;
             }
 
@@ -581,12 +580,12 @@ public class PdfAttachmentHandler {
                         String filename = extractFilenameAfterMarker(string, i);
 
                         MarkerPosition position =
-                            new MarkerPosition(
-                                currentPageIndex,
-                                textPosition.getXDirAdj(),
-                                textPosition.getYDirAdj(),
-                                ATTACHMENT_MARKER,
-                                filename);
+                                new MarkerPosition(
+                                        currentPageIndex,
+                                        textPosition.getXDirAdj(),
+                                        textPosition.getYDirAdj(),
+                                        ATTACHMENT_MARKER,
+                                        filename);
                         positions.add(position);
                     }
                 }
@@ -608,9 +607,9 @@ public class PdfAttachmentHandler {
             }
 
             String[] parts =
-                RegexPatternUtils.getInstance()
-                    .getWhitespaceParenthesesSplitPattern()
-                    .split(afterMarker);
+                    RegexPatternUtils.getInstance()
+                            .getWhitespaceParenthesesSplitPattern()
+                            .split(afterMarker);
             for (String part : parts) {
                 part = part.trim();
                 if (part.length() > 3 && part.contains(".")) {

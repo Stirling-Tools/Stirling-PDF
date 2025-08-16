@@ -73,7 +73,7 @@ public class TextFinderUtils {
 
                 // Use PatternFactory for better performance with cached compilation
                 Pattern pattern =
-                    RegexPatternUtils.getInstance().createSearchPattern(patternString, true);
+                        RegexPatternUtils.getInstance().createSearchPattern(patternString, true);
                 patterns.add(pattern);
 
                 log.debug("Created search pattern: '{}' -> '{}'", term.trim(), patternString);

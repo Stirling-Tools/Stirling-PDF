@@ -160,16 +160,16 @@ public class OCRController {
 
                 // Return the OCR processed PDF as a response
                 String outputFilename =
-                    GeneralUtils.removeExtension(
-                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                        GeneralUtils.removeExtension(
+                                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
                                 + "_OCR.pdf";
 
                 if (sidecar != null && sidecar && sidecarTextFile != null) {
                     // Create a zip file containing both the PDF and the text file
                     String outputZipFilename =
-                        GeneralUtils.removeExtension(
-                            Filenames.toSimpleFileName(
-                                inputFile.getOriginalFilename()))
+                            GeneralUtils.removeExtension(
+                                            Filenames.toSimpleFileName(
+                                                    inputFile.getOriginalFilename()))
                                     + "_OCR.zip";
 
                     try (TempFile tempZipFile = new TempFile(tempFileManager, ".zip");

@@ -323,10 +323,10 @@ public class AuditUtils {
                 return AuditEventType.SETTINGS_CHANGED;
             } else if (cls.contains("file")
                     || path.startsWith("/file")
-                || RegexPatternUtils.getInstance()
-                .getUploadDownloadPathPattern()
-                .matcher(path)
-                .matches()) {
+                    || RegexPatternUtils.getInstance()
+                            .getUploadDownloadPathPattern()
+                            .matcher(path)
+                            .matches()) {
                 return AuditEventType.FILE_OPERATION;
             }
         }
@@ -390,10 +390,10 @@ public class AuditUtils {
             return AuditEventType.SETTINGS_CHANGED;
         } else if (cls.contains("file")
                 || path.startsWith("/file")
-            || RegexPatternUtils.getInstance()
-            .getUploadDownloadPathPattern()
-            .matcher(path)
-            .matches()) {
+                || RegexPatternUtils.getInstance()
+                        .getUploadDownloadPathPattern()
+                        .matcher(path)
+                        .matches()) {
             return AuditEventType.FILE_OPERATION;
         } else {
             return AuditEventType.PDF_PROCESS;

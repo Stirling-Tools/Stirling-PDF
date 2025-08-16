@@ -198,15 +198,15 @@ public class EmlProcessingUtils {
                 customHtmlSanitizer != null ? customHtmlSanitizer.sanitize(htmlBody) : htmlBody;
 
         processed =
-            RegexPatternUtils.getInstance()
-                .getFixedPositionCssPattern()
-                .matcher(processed)
-                .replaceAll("");
+                RegexPatternUtils.getInstance()
+                        .getFixedPositionCssPattern()
+                        .matcher(processed)
+                        .replaceAll("");
         processed =
-            RegexPatternUtils.getInstance()
-                .getAbsolutePositionCssPattern()
-                .matcher(processed)
-                .replaceAll("");
+                RegexPatternUtils.getInstance()
+                        .getAbsolutePositionCssPattern()
+                        .matcher(processed)
+                        .replaceAll("");
 
         if (emailContent != null && !emailContent.getAttachments().isEmpty()) {
             processed = PdfAttachmentHandler.processInlineImages(processed, emailContent);
@@ -228,18 +228,18 @@ public class EmlProcessingUtils {
         html = html.replace("\n", "<br>\n");
 
         html =
-            RegexPatternUtils.getInstance()
-                .getUrlLinkPattern()
-                .matcher(html)
-                .replaceAll(
-                    "<a href=\"$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
+                RegexPatternUtils.getInstance()
+                        .getUrlLinkPattern()
+                        .matcher(html)
+                        .replaceAll(
+                                "<a href=\"$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
 
         html =
-            RegexPatternUtils.getInstance()
-                .getEmailLinkPattern()
-                .matcher(html)
-                .replaceAll(
-                    "<a href=\"mailto:$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
+                RegexPatternUtils.getInstance()
+                        .getEmailLinkPattern()
+                        .matcher(html)
+                        .replaceAll(
+                                "<a href=\"mailto:$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
 
         return html;
     }
@@ -500,11 +500,11 @@ public class EmlProcessingUtils {
             Matcher concatenatedMatcher = concatenatedPattern.matcher(encodedText);
             String processedText =
                     concatenatedMatcher.replaceAll(
-                        match ->
-                            RegexPatternUtils.getInstance()
-                                .getMimeHeaderWhitespacePattern()
-                                .matcher(match.group())
-                                .replaceAll(""));
+                            match ->
+                                    RegexPatternUtils.getInstance()
+                                            .getMimeHeaderWhitespacePattern()
+                                            .matcher(match.group())
+                                            .replaceAll(""));
 
             Pattern mimePattern = RegexPatternUtils.getInstance().getMimeEncodedWordPattern();
             Matcher matcher = mimePattern.matcher(processedText);
@@ -522,10 +522,10 @@ public class EmlProcessingUtils {
                             switch (encoding) {
                                 case "B" -> {
                                     String cleanBase64 =
-                                        RegexPatternUtils.getInstance()
-                                            .getWhitespacePattern()
-                                            .matcher(encodedValue)
-                                            .replaceAll("");
+                                            RegexPatternUtils.getInstance()
+                                                    .getWhitespacePattern()
+                                                    .matcher(encodedValue)
+                                                    .replaceAll("");
                                     byte[] decodedBytes = Base64.getDecoder().decode(cleanBase64);
                                     Charset targetCharset;
                                     try {
@@ -615,15 +615,15 @@ public class EmlProcessingUtils {
 
     public static String simplifyHtmlContent(String htmlContent) {
         String simplified =
-            RegexPatternUtils.getInstance()
-                .getScriptTagPattern()
-                .matcher(htmlContent)
-                .replaceAll("");
+                RegexPatternUtils.getInstance()
+                        .getScriptTagPattern()
+                        .matcher(htmlContent)
+                        .replaceAll("");
         simplified =
-            RegexPatternUtils.getInstance()
-                .getStyleTagPattern()
-                .matcher(simplified)
-                .replaceAll("");
+                RegexPatternUtils.getInstance()
+                        .getStyleTagPattern()
+                        .matcher(simplified)
+                        .replaceAll("");
         return simplified;
     }
 }

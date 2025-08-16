@@ -155,9 +155,9 @@ public class LoadingWindow extends JDialog {
                                                                 reader, 5_000_000))
                                                 != null) {
                                             if (RegexPatternUtils.getInstance()
-                                                .getContainsDigitsPattern()
-                                                .matcher(line)
-                                                .matches()) { // Contains numbers
+                                                    .getContainsDigitsPattern()
+                                                    .matcher(line)
+                                                    .matches()) { // Contains numbers
                                                 String[] parts = line.trim().split(",");
                                                 if (parts.length >= 2) {
                                                     existingPids.add(
@@ -213,7 +213,7 @@ public class LoadingWindow extends JDialog {
                                                                                                 5_000_000))
                                                                         != null) {
                                                                     if (PATTERN.matcher(newLine)
-                                                                        .matches()) {
+                                                                            .matches()) {
                                                                         String[] parts =
                                                                                 newLine.trim()
                                                                                         .split(",");

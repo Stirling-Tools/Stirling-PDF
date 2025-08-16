@@ -25,7 +25,7 @@ public class EmlParser {
     private static volatile boolean mimeUtilityChecked = false;
 
     private static final Pattern MIME_ENCODED_PATTERN =
-        RegexPatternUtils.getInstance().getMimeEncodedWordPattern();
+            RegexPatternUtils.getInstance().getMimeEncodedWordPattern();
 
     private static final String DISPOSITION_ATTACHMENT = "attachment";
     private static final String TEXT_PLAIN = "text/plain";
@@ -350,10 +350,10 @@ public class EmlParser {
                         if (contentIdHeader != null && !contentIdHeader.trim().isEmpty()) {
                             attachment.setEmbedded(true);
                             String contentId =
-                                RegexPatternUtils.getInstance()
-                                    .getAngleBracketsPattern()
-                                    .matcher(contentIdHeader.trim())
-                                    .replaceAll("");
+                                    RegexPatternUtils.getInstance()
+                                            .getAngleBracketsPattern()
+                                            .matcher(contentIdHeader.trim())
+                                            .replaceAll("");
                             attachment.setContentId(contentId);
                             break;
                         }
@@ -411,7 +411,7 @@ public class EmlParser {
     private static String extractBasicHeader(String emlContent, String headerName) {
         try {
             String[] lines =
-                RegexPatternUtils.getInstance().getNewlineSplitPattern().split(emlContent);
+                    RegexPatternUtils.getInstance().getNewlineSplitPattern().split(emlContent);
             for (int i = 0; i < lines.length; i++) {
                 String line = lines[i];
                 if (line.toLowerCase().startsWith(headerName.toLowerCase())) {
@@ -483,9 +483,9 @@ public class EmlParser {
 
     private static int findPartEnd(String content, int start) {
         String[] lines =
-            RegexPatternUtils.getInstance()
-                .getNewlineSplitPattern()
-                .split(content.substring(start));
+                RegexPatternUtils.getInstance()
+                        .getNewlineSplitPattern()
+                        .split(content.substring(start));
         StringBuilder result = new StringBuilder();
 
         for (String line : lines) {
@@ -500,7 +500,7 @@ public class EmlParser {
         List<EmailAttachment> attachments = new ArrayList<>();
         try {
             String[] lines =
-                RegexPatternUtils.getInstance().getNewlineSplitPattern().split(emlContent);
+                    RegexPatternUtils.getInstance().getNewlineSplitPattern().split(emlContent);
             boolean inHeaders = true;
             String currentContentType = "";
             String currentDisposition = "";
@@ -564,10 +564,10 @@ public class EmlParser {
             String extendedFilename =
                     disposition.substring(filenameStarStart, filenameStarEnd).trim();
             extendedFilename =
-                RegexPatternUtils.getInstance()
-                    .getQuotesRemovalPattern()
-                    .matcher(extendedFilename)
-                    .replaceAll("");
+                    RegexPatternUtils.getInstance()
+                            .getQuotesRemovalPattern()
+                            .matcher(extendedFilename)
+                            .replaceAll("");
 
             if (extendedFilename.contains("'")) {
                 String[] parts = extendedFilename.split("'", 3);
@@ -583,10 +583,10 @@ public class EmlParser {
         if (filenameEnd == -1) filenameEnd = disposition.length();
         String filename = disposition.substring(filenameStart, filenameEnd).trim();
         filename =
-            RegexPatternUtils.getInstance()
-                .getQuotesRemovalPattern()
-                .matcher(filename)
-                .replaceAll("");
+                RegexPatternUtils.getInstance()
+                        .getQuotesRemovalPattern()
+                        .matcher(filename)
+                        .replaceAll("");
         return safeMimeDecode(filename);
     }
 
@@ -640,22 +640,22 @@ public class EmlParser {
 
         public void setHtmlBody(String htmlBody) {
             this.htmlBody =
-                htmlBody != null
-                    ? RegexPatternUtils.getInstance()
-                    .getCarriageReturnPattern()
-                    .matcher(htmlBody)
-                    .replaceAll("")
-                    : null;
+                    htmlBody != null
+                            ? RegexPatternUtils.getInstance()
+                                    .getCarriageReturnPattern()
+                                    .matcher(htmlBody)
+                                    .replaceAll("")
+                            : null;
         }
 
         public void setTextBody(String textBody) {
             this.textBody =
-                textBody != null
-                    ? RegexPatternUtils.getInstance()
-                    .getCarriageReturnPattern()
-                    .matcher(textBody)
-                    .replaceAll("")
-                    : null;
+                    textBody != null
+                            ? RegexPatternUtils.getInstance()
+                                    .getCarriageReturnPattern()
+                                    .matcher(textBody)
+                                    .replaceAll("")
+                            : null;
         }
     }
 

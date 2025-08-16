@@ -34,16 +34,16 @@ public class UploadLimitService {
             return 0;
         } else {
             String unit =
-                RegexPatternUtils.getInstance()
-                    .getNumberRangePattern()
-                    .matcher(maxUploadSize)
-                    .replaceAll("")
-                    .toUpperCase();
+                    RegexPatternUtils.getInstance()
+                            .getNumberRangePattern()
+                            .matcher(maxUploadSize)
+                            .replaceAll("")
+                            .toUpperCase();
             String number =
-                RegexPatternUtils.getInstance()
-                    .getSizeUnitPattern()
-                    .matcher(maxUploadSize)
-                    .replaceAll("");
+                    RegexPatternUtils.getInstance()
+                            .getSizeUnitPattern()
+                            .matcher(maxUploadSize)
+                            .replaceAll("");
             long size = Long.parseLong(number);
             return switch (unit) {
                 case "KB" -> size * 1024;

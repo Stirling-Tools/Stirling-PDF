@@ -69,7 +69,7 @@ public class UnlockPDFFormsController {
                 if (xfaBase != null) {
                     try {
                         Pattern accessReadOnlyPattern =
-                            RegexPatternUtils.getInstance().getAccessReadOnlyPattern();
+                                RegexPatternUtils.getInstance().getAccessReadOnlyPattern();
                         if (xfaBase instanceof COSStream xfaStream) {
                             InputStream is = xfaStream.createInputStream();
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -96,9 +96,9 @@ public class UnlockPDFFormsController {
                                     String xml = baos.toString(StandardCharsets.UTF_8);
 
                                     xml =
-                                        accessReadOnlyPattern
-                                            .matcher(xml)
-                                            .replaceAll("access=\"open\"");
+                                            accessReadOnlyPattern
+                                                    .matcher(xml)
+                                                    .replaceAll("access=\"open\"");
 
                                     PDStream newStream =
                                             new PDStream(
@@ -115,8 +115,8 @@ public class UnlockPDFFormsController {
                 }
             }
             String mergedFileName =
-                GeneralUtils.generateFilename(
-                    file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
+                    GeneralUtils.generateFilename(
+                            file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(mergedFileName));
         } catch (Exception e) {

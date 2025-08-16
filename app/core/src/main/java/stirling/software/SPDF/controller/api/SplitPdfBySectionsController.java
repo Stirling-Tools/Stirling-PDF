@@ -100,9 +100,9 @@ public class SplitPdfBySectionsController {
             zipOut.finish();
             data = Files.readAllBytes(zipFile);
             return WebResponseUtils.bytesToWebResponse(
-                data,
-                filename.replace("_split.pdf", "_split.zip"),
-                MediaType.APPLICATION_OCTET_STREAM);
+                    data,
+                    filename.replace("_split.pdf", "_split.zip"),
+                    MediaType.APPLICATION_OCTET_STREAM);
 
         } finally {
             Files.deleteIfExists(zipFile);

@@ -53,7 +53,7 @@ public class OverlayImageController {
 
             return WebResponseUtils.bytesToWebResponse(
                     result,
-                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_overlayed.pdf"));
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_overlayed.pdf"));
         } catch (IOException e) {
             log.error("Failed to add image to PDF", e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

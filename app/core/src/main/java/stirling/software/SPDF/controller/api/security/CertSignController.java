@@ -211,8 +211,8 @@ public class CertSignController {
                 showLogo);
         // Return the signed PDF
         return WebResponseUtils.bytesToWebResponse(
-            baos.toByteArray(),
-            GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
+                baos.toByteArray(),
+                GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
     }
 
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)

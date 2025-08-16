@@ -177,9 +177,9 @@ public class EditTableOfContentsController {
             document.save(baos);
 
             return WebResponseUtils.bytesToWebResponse(
-                baos.toByteArray(),
-                GeneralUtils.generateFilename(file.getOriginalFilename(), "_with_toc.pdf"),
-                MediaType.APPLICATION_PDF);
+                    baos.toByteArray(),
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_with_toc.pdf"),
+                    MediaType.APPLICATION_PDF);
 
         } finally {
             if (document != null) {

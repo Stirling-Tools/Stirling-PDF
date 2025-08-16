@@ -124,9 +124,9 @@ public class RepairController {
 
             // Return the repaired PDF as a response
             return WebResponseUtils.bytesToWebResponse(
-                pdfBytes,
-                GeneralUtils.generateFilename(
-                    inputFile.getOriginalFilename(), "_repaired.pdf"));
+                    pdfBytes,
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_repaired.pdf"));
         }
     }
 }

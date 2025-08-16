@@ -48,8 +48,8 @@ public class PasswordController {
             document.setAllSecurityToBeRemoved(true);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                GeneralUtils.generateFilename(
-                    fileInput.getOriginalFilename(), "_password_removed.pdf"));
+                    GeneralUtils.generateFilename(
+                            fileInput.getOriginalFilename(), "_password_removed.pdf"));
         } catch (IOException e) {
             document.close();
             ExceptionUtils.logException("password removal", e);
@@ -102,10 +102,10 @@ public class PasswordController {
         if ("".equals(ownerPassword) && "".equals(password))
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                GeneralUtils.generateFilename(
-                    fileInput.getOriginalFilename(), "_permissions.pdf"));
+                    GeneralUtils.generateFilename(
+                            fileInput.getOriginalFilename(), "_permissions.pdf"));
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-            GeneralUtils.generateFilename(fileInput.getOriginalFilename(), "_passworded.pdf"));
+                GeneralUtils.generateFilename(fileInput.getOriginalFilename(), "_passworded.pdf"));
     }
 }

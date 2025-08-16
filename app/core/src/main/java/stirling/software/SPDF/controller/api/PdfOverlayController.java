@@ -83,8 +83,8 @@ public class PdfOverlayController {
                 overlay.overlay(overlayGuide).save(outputStream);
                 byte[] data = outputStream.toByteArray();
                 String outputFilename =
-                    GeneralUtils.generateFilename(
-                        baseFile.getOriginalFilename(), "_overlayed.pdf");
+                        GeneralUtils.generateFilename(
+                                baseFile.getOriginalFilename(), "_overlayed.pdf");
 
                 return WebResponseUtils.bytesToWebResponse(
                         data, outputFilename, MediaType.APPLICATION_PDF);

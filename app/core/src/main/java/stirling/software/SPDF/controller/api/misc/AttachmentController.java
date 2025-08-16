@@ -51,8 +51,8 @@ public class AttachmentController {
 
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-            GeneralUtils.generateFilename(
-                Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
-                "_with_attachments.pdf"));
+                GeneralUtils.generateFilename(
+                        Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
+                        "_with_attachments.pdf"));
     }
 }

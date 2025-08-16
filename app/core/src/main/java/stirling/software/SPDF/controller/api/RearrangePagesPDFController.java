@@ -66,7 +66,7 @@ public class RearrangePagesPDFController {
         }
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-            GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
+                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
     }
 
     private List<Integer> removeFirst(int totalPages) {
@@ -282,8 +282,8 @@ public class RearrangePagesPDFController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                GeneralUtils.generateFilename(
-                    pdfFile.getOriginalFilename(), "_rearranged.pdf"));
+                    GeneralUtils.generateFilename(
+                            pdfFile.getOriginalFilename(), "_rearranged.pdf"));
         } catch (IOException e) {
             ExceptionUtils.logException("document rearrangement", e);
             throw e;

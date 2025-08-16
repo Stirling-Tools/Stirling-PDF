@@ -129,8 +129,8 @@ public class BlankPageController {
             ZipOutputStream zos = new ZipOutputStream(baos);
 
             String filename =
-                GeneralUtils.removeExtension(
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+                    GeneralUtils.removeExtension(
+                            Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
 
             if (!nonBlankPages.isEmpty()) {
                 createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");

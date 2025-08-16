@@ -36,10 +36,10 @@ class ApplicationPropertiesLogicTest {
                 new ApplicationProperties.TempFileManagement();
 
         String expectedBase =
-            RegexPatternUtils.getInstance()
-                .getTrailingSlashesPattern()
-                .matcher(java.lang.System.getProperty("java.io.tmpdir"))
-                .replaceAll("")
+                RegexPatternUtils.getInstance()
+                                .getTrailingSlashesPattern()
+                                .matcher(java.lang.System.getProperty("java.io.tmpdir"))
+                                .replaceAll("")
                         + "/stirling-pdf";
         assertEquals(expectedBase, tfm.getBaseTmpDir());
 
