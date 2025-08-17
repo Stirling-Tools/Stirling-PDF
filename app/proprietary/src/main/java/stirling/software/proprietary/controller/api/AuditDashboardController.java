@@ -67,48 +67,38 @@ public class AuditDashboardController {
                         request.getPage(), request.getSize(), Sort.by("timestamp").descending());
         Page<PersistentAuditEvent> events;
 
-        String mode;
-
         String type = request.getType();
         String principal = request.getPrincipal();
         LocalDate startDate = request.getStartDate();
         LocalDate endDate = request.getEndDate();
 
         if (type != null && principal != null && startDate != null && endDate != null) {
-            mode = "principal + type + startDate + endDate";
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
             events =
                     auditRepository.findByPrincipalAndTypeAndTimestampBetween(
                             principal, type, start, end, pageable);
         } else if (type != null && principal != null) {
-            mode = "principal + type";
             events = auditRepository.findByPrincipalAndType(principal, type, pageable);
         } else if (type != null && startDate != null && endDate != null) {
-            mode = "type + startDate + endDate";
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
             events = auditRepository.findByTypeAndTimestampBetween(type, start, end, pageable);
         } else if (principal != null && startDate != null && endDate != null) {
-            mode = "principal + startDate + endDate";
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
             events =
                     auditRepository.findByPrincipalAndTimestampBetween(
                             principal, start, end, pageable);
         } else if (startDate != null && endDate != null) {
-            mode = "startDate + endDate";
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
             events = auditRepository.findByTimestampBetween(start, end, pageable);
         } else if (type != null) {
-            mode = "type";
             events = auditRepository.findByType(type, pageable);
         } else if (principal != null) {
-            mode = "principal";
             events = auditRepository.findByPrincipal(principal, pageable);
         } else {
-            mode = "all";
             events = auditRepository.findAll(pageable);
         }
 
@@ -119,11 +109,11 @@ public class AuditDashboardController {
                 content, events.getTotalPages(), events.getTotalElements(), events.getNumber());
     }
 
-    /** Get statistics for charts. */
+    /** Get statistics for charts (last X days). Existing behavior preserved. */
     @GetMapping("/stats")
-    @Operation(summary = "Get audit statistics")
+    @Operation(summary = "Get audit statistics for the last N days")
     public AuditStatsResponse getAuditStats(
-            @RequestParam(value = "days", defaultValue = "7") int days) {
+            @ParameterObject @RequestParam(value = "days", defaultValue = "7") int days) {
 
         // Get events from the last X days
         Instant startDate = Instant.now().minus(java.time.Duration.ofDays(days));
@@ -158,6 +148,47 @@ public class AuditDashboardController {
         return new AuditStatsResponse(eventsByType, eventsByPrincipal, eventsByDay, events.size());
     }
 
+    // /** Advanced statistics using repository aggregations, with explicit date range. */
+    // @GetMapping("/stats/range")
+    // @Operation(summary = "Get audit statistics for a date range (aggregated in DB)")
+    // public Map<String, Object> getAuditStatsRange(@ParameterObject AuditDateExportRequest
+    // request) {
+
+    //     LocalDate startDate = request.getStartDate();
+    //     LocalDate endDate = request.getEndDate();
+    //     Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+    //     Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+    //     Map<String, Long> byType = toStringLongMap(auditRepository.countByTypeBetween(start,
+    // end));
+    //     Map<String, Long> byPrincipal =
+    //             toStringLongMap(auditRepository.countByPrincipalBetween(start, end));
+
+    //     Map<String, Long> byDay = new HashMap<>();
+    //     for (Object[] row : auditRepository.histogramByDayBetween(start, end)) {
+    //         int y = ((Number) row[0]).intValue();
+    //         int m = ((Number) row[1]).intValue();
+    //         int d = ((Number) row[2]).intValue();
+    //         long count = ((Number) row[3]).longValue();
+    //         String key = String.format("%04d-%02d-%02d", y, m, d);
+    //         byDay.put(key, count);
+    //     }
+
+    //     Map<String, Long> byHour = new HashMap<>();
+    //     for (Object[] row : auditRepository.histogramByHourBetween(start, end)) {
+    //         int hour = ((Number) row[0]).intValue();
+    //         long count = ((Number) row[1]).longValue();
+    //         byHour.put(String.format("%02d:00", hour), count);
+    //     }
+
+    //     Map<String, Object> payload = new HashMap<>();
+    //     payload.put("byType", byType);
+    //     payload.put("byPrincipal", byPrincipal);
+    //     payload.put("byDay", byDay);
+    //     payload.put("byHour", byHour);
+    //     return payload;
+    // }
+
     /** Get all unique event types from the database for filtering. */
     @GetMapping("/types")
     @Operation(summary = "Get all unique audit event types")
@@ -188,13 +219,6 @@ public class AuditDashboardController {
         String principal = request.getPrincipal();
         LocalDate startDate = request.getStartDate();
         LocalDate endDate = request.getEndDate();
-
-        log.info(
-                "Exporting audit data: type={}, principal={}, startDate={}, endDate={}",
-                type,
-                principal,
-                startDate,
-                endDate);
 
         // Get data with same filtering as getAuditData
         List<PersistentAuditEvent> events;
@@ -311,6 +335,75 @@ public class AuditDashboardController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    // /** Get all unique principals. */
+    // @GetMapping("/principals")
+    // @Operation(summary = "Get all distinct principals")
+    // public List<String> getPrincipals() {
+    //     return auditRepository.findDistinctPrincipals();
+    // }
+
+    // /** Get principals by event type. */
+    // @GetMapping("/types/{type}/principals")
+    // @Operation(summary = "Get distinct principals for a given type")
+    // public List<String> getPrincipalsByType(@PathVariable("type") String type) {
+    //     return auditRepository.findDistinctPrincipalsByType(type);
+    // }
+
+    // /** Latest helpers */
+    // @GetMapping("/latest")
+    // @Operation(summary = "Get the latest audit event, optionally filtered by type or principal")
+    // public ResponseEntity<PersistentAuditEvent> getLatest(
+    //         @RequestParam(value = "type", required = false) String type,
+    //         @RequestParam(value = "principal", required = false) String principal) {
+    //     if (type != null) {
+    //         return auditRepository
+    //                 .findTopByTypeOrderByTimestampDesc(type)
+    //                 .map(ResponseEntity::ok)
+    //                 .orElse(ResponseEntity.noContent().build());
+    //     } else if (principal != null) {
+    //         return auditRepository
+    //                 .findTopByPrincipalOrderByTimestampDesc(principal)
+    //                 .map(ResponseEntity::ok)
+    //                 .orElse(ResponseEntity.noContent().build());
+    //     }
+    //     return auditRepository
+    //             .findTopByOrderByTimestampDesc()
+    //             .map(ResponseEntity::ok)
+    //             .orElse(ResponseEntity.noContent().build());
+    // }
+
+    // /** Cleanup endpoints */
+    // @GetMapping("/cleanup/before")
+    // @Operation(
+    //         summary = "Delete events older than the given date or the last N days",
+    //         description =
+    //                 "Provide either 'date=YYYY-MM-DD' or 'days'. Also accepts synonyms via query
+    // or"
+    //                         + " JSON body: cutoff, cutoffDate. If both are provided, 'date'
+    // wins.")
+    // public Map<String, Object> cleanupBefore(
+    //         @ModelAttribute
+    //                 @RequestParam(value = "date", required = false)
+    //                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    //                 LocalDate date) {
+    //     LocalDate cutoffDate = date;
+    //     Instant cutoff = cutoffDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+    //     int deleted = auditRepository.deleteByTimestampBefore(cutoff);
+    //     return Map.of("deleted", deleted, "cutoffDate", cutoffDate.toString());
+    // }
+
+    // // ===== Helpers =====
+
+    // private Map<String, Long> toStringLongMap(List<Object[]> rows) {
+    //     Map<String, Long> map = new HashMap<>();
+    //     for (Object[] row : rows) {
+    //         String key = String.valueOf(row[0]);
+    //         long val = ((Number) row[1]).longValue();
+    //         map.put(key, val);
+    //     }
+    //     return map;
+    // }
 
     /** Helper method to escape CSV fields. */
     private String escapeCSV(String field) {
