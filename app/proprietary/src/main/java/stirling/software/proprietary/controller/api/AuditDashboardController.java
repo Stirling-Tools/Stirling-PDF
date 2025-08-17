@@ -1,4 +1,4 @@
-package stirling.software.proprietary.controller;
+package stirling.software.proprietary.controller.api;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -6,28 +6,25 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,21 +32,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.audit.AuditEventType;
-import stirling.software.proprietary.audit.AuditLevel;
-import stirling.software.proprietary.config.AuditConfigurationProperties;
+import stirling.software.proprietary.model.api.audit.AuditDataRequest;
+import stirling.software.proprietary.model.api.audit.AuditDataResponse;
+import stirling.software.proprietary.model.api.audit.AuditExportRequest;
+import stirling.software.proprietary.model.api.audit.AuditStatsResponse;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 
-/** Controller for the audit dashboard. Admin-only access. */
+/** REST endpoints for the audit dashboard. */
 @Slf4j
-@Controller
+@RestController
 @RequestMapping("/audit")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @RequiredArgsConstructor
@@ -58,47 +55,24 @@ import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 public class AuditDashboardController {
 
     private final PersistentAuditEventRepository auditRepository;
-    private final AuditConfigurationProperties auditConfig;
     private final ObjectMapper objectMapper;
-
-    /** Display the audit dashboard. */
-    @GetMapping
-    public String showDashboard(Model model) {
-        model.addAttribute("auditEnabled", auditConfig.isEnabled());
-        model.addAttribute("auditLevel", auditConfig.getAuditLevel());
-        model.addAttribute("auditLevelInt", auditConfig.getLevel());
-        model.addAttribute("retentionDays", auditConfig.getRetentionDays());
-
-        // Add audit level enum values for display
-        model.addAttribute("auditLevels", AuditLevel.values());
-
-        // Add audit event types for the dropdown
-        model.addAttribute("auditEventTypes", AuditEventType.values());
-
-        return "audit/dashboard";
-    }
 
     /** Get audit events data for the dashboard tables. */
     @GetMapping("/data")
     @Operation(summary = "Get audit events data")
-    @ResponseBody
-    public Map<String, Object> getAuditData(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "30") int size,
-            @RequestParam(value = "type", required = false) String type,
-            @RequestParam(value = "principal", required = false) String principal,
-            @RequestParam(value = "startDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate startDate,
-            @RequestParam(value = "endDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate endDate,
-            HttpServletRequest request) {
+    public AuditDataResponse getAuditData(@ParameterObject AuditDataRequest request) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
+        Pageable pageable =
+                PageRequest.of(
+                        request.getPage(), request.getSize(), Sort.by("timestamp").descending());
         Page<PersistentAuditEvent> events;
 
         String mode;
+
+        String type = request.getType();
+        String principal = request.getPrincipal();
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
 
         if (type != null && principal != null && startDate != null && endDate != null) {
             mode = "principal + type + startDate + endDate";
@@ -141,20 +115,14 @@ public class AuditDashboardController {
         // Logging
         List<PersistentAuditEvent> content = events.getContent();
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", content);
-        response.put("totalPages", events.getTotalPages());
-        response.put("totalElements", events.getTotalElements());
-        response.put("currentPage", events.getNumber());
-
-        return response;
+        return new AuditDataResponse(
+                content, events.getTotalPages(), events.getTotalElements(), events.getNumber());
     }
 
     /** Get statistics for charts. */
     @GetMapping("/stats")
     @Operation(summary = "Get audit statistics")
-    @ResponseBody
-    public Map<String, Object> getAuditStats(
+    public AuditStatsResponse getAuditStats(
             @RequestParam(value = "days", defaultValue = "7") int days) {
 
         // Get events from the last X days
@@ -187,19 +155,12 @@ public class AuditDashboardController {
                                                         .format(DateTimeFormatter.ISO_LOCAL_DATE),
                                         Collectors.counting()));
 
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("eventsByType", eventsByType);
-        stats.put("eventsByPrincipal", eventsByPrincipal);
-        stats.put("eventsByDay", eventsByDay);
-        stats.put("totalEvents", events.size());
-
-        return stats;
+        return new AuditStatsResponse(eventsByType, eventsByPrincipal, eventsByDay, events.size());
     }
 
     /** Get all unique event types from the database for filtering. */
     @GetMapping("/types")
     @Operation(summary = "Get all unique audit event types")
-    @ResponseBody
     public List<String> getAuditTypes() {
         // Get distinct event types from the database
         List<String> dbTypes = auditRepository.findDistinctEventTypes();
@@ -221,16 +182,19 @@ public class AuditDashboardController {
     /** Export audit data as CSV. */
     @GetMapping("/export")
     @Operation(summary = "Export audit data as CSV")
-    @ResponseBody
-    public ResponseEntity<byte[]> exportAuditData(
-            @RequestParam(value = "type", required = false) String type,
-            @RequestParam(value = "principal", required = false) String principal,
-            @RequestParam(value = "startDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate startDate,
-            @RequestParam(value = "endDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate endDate) {
+    public ResponseEntity<byte[]> exportAuditData(@ParameterObject AuditExportRequest request) {
+
+        String type = request.getType();
+        String principal = request.getPrincipal();
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
+
+        log.info(
+                "Exporting audit data: type={}, principal={}, startDate={}, endDate={}",
+                type,
+                principal,
+                startDate,
+                endDate);
 
         // Get data with same filtering as getAuditData
         List<PersistentAuditEvent> events;
@@ -292,16 +256,12 @@ public class AuditDashboardController {
     /** Export audit data as JSON. */
     @GetMapping("/export/json")
     @Operation(summary = "Export audit data as JSON")
-    @ResponseBody
-    public ResponseEntity<byte[]> exportAuditDataJson(
-            @RequestParam(value = "type", required = false) String type,
-            @RequestParam(value = "principal", required = false) String principal,
-            @RequestParam(value = "startDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate startDate,
-            @RequestParam(value = "endDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate endDate) {
+    public ResponseEntity<byte[]> exportAuditDataJson(@ParameterObject AuditExportRequest request) {
+
+        String type = request.getType();
+        String principal = request.getPrincipal();
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
 
         // Get data with same filtering as getAuditData
         List<PersistentAuditEvent> events;

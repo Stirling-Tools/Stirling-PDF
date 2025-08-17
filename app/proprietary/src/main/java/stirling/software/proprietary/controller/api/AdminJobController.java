@@ -1,4 +1,4 @@
-package stirling.software.proprietary.controller;
+package stirling.software.proprietary.controller.api;
 
 import java.util.Map;
 
