@@ -42,7 +42,6 @@ public class GeneralUtils {
 
     private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
     private final String PYTHON_SCRIPTS_DIR = "python";
-    private final String EXTENSION_REGEX = "\\.(?:[^.]*+)?$";
     private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
 
     /**
@@ -137,7 +136,7 @@ public class GeneralUtils {
             return filename;
         }
 
-        Pattern pattern = patternCache.getPattern(EXTENSION_REGEX);
+        Pattern pattern = patternCache.getPattern(RegexPatternUtils.getExtensionRegex());
         Matcher matcher = pattern.matcher(filename);
         return matcher.find() ? matcher.replaceFirst("") : filename;
     }

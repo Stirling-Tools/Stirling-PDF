@@ -12,6 +12,9 @@ public final class RegexPatternUtils {
     private static final RegexPatternUtils INSTANCE = new RegexPatternUtils();
     private final ConcurrentHashMap<PatternKey, Pattern> patternCache = new ConcurrentHashMap<>();
 
+    private static final String WHITESPACE_REGEX = "\\s++";
+    private static final String EXTENSION_REGEX = "\\.(?:[^.]*+)?$";
+
     private RegexPatternUtils() {
         super();
         // Initialize with commonly used patterns for immediate availability
@@ -165,23 +168,8 @@ public final class RegexPatternUtils {
         }
     }
 
-    /**
-     * Pre-compile commonly used patterns for immediate availability. This eliminates first-call
-     * compilation overhead for frequent patterns.
-     */
-    private void precompileCommonPatterns() {
-        getPattern("\\.(?:[^.]*+)?$"); // Extension removal - possessive, optional, anchored
-        getPattern("\\.[^.]+$"); // Simple extension match - anchored
-
-        getPattern("\\s+"); // One or more whitespace
-        getPattern("\\s*"); // Zero or more whitespace
-
-        getPattern("/+$"); // Trailing slashes
-        getPattern("\\D"); // Non-numeric characters
-        getPattern("[/\\\\?%*:|\"<>]"); // Unsafe filename characters
-        getPattern("[^a-zA-Z0-9 ]"); // Input sanitization
-        getPattern("[^a-zA-Z0-9]"); // Filename sanitization
-        log.debug("Pre-compiled {} common regex patterns", patternCache.size());
+    public static String getWhitespaceRegex() {
+        return WHITESPACE_REGEX;
     }
 
     /** Creates a case-insensitive pattern for text searching */
@@ -295,10 +283,8 @@ public final class RegexPatternUtils {
         return getPattern("^[a-zA-Z0-9](?!.*[-@._+]{2,})[a-zA-Z0-9@._+-]{1,48}[a-zA-Z0-9]$");
     }
 
-    /** Pattern for email validation */
-    public Pattern getEmailValidationPattern() {
-        return getPattern(
-                "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(?:\\.[A-Za-z]{2,})$");
+    public static String getExtensionRegex() {
+        return EXTENSION_REGEX;
     }
 
     /** Pattern for extracting non-numeric characters */
@@ -436,6 +422,65 @@ public final class RegexPatternUtils {
     /** Pattern for matching filenames in attachment markers */
     public Pattern getAttachmentFilenamePattern() {
         return getPattern("@\\s*([^\\s\\(]+(?:\\.[a-zA-Z0-9]+)?)");
+    }
+
+    // API doc parsing patterns
+
+    /**
+     * Pre-compile commonly used patterns for immediate availability. This eliminates first-call
+     * compilation overhead for frequent patterns.
+     */
+    private void precompileCommonPatterns() {
+        getPattern("\\.(?:[^.]*+)?$"); // Extension removal - possessive, optional, anchored
+        getPattern("\\.[^.]+$"); // Simple extension match - anchored
+
+        getPattern("\\s+"); // One or more whitespace
+        getPattern("\\s*"); // Zero or more whitespace
+
+        getPattern("/+$"); // Trailing slashes
+        getPattern("\\D"); // Non-numeric characters
+        getPattern("[/\\\\?%*:|\"<>]"); // Unsafe filename characters
+        getPattern("[^a-zA-Z0-9 ]"); // Input sanitization
+        getPattern("[^a-zA-Z0-9]"); // Filename sanitization
+        // API doc patterns
+        getPattern("Output:(\\\\w+)");
+        getPattern("Input:(\\\\w+)");
+        getPattern("Type:(\\\\w+)");
+        log.debug("Pre-compiled {} common regex patterns", patternCache.size());
+    }
+
+    /** Pattern for email validation */
+    public Pattern getEmailValidationPattern() {
+        return getPattern(
+            "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-ZaZ0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(?:\\.[A-Za-z]{2,})$");
+    }
+
+    /**
+     * Pattern for matching Output:<TYPE> in API descriptions
+     */
+    public Pattern getApiDocOutputTypePattern() {
+        return getPattern("Output:(\\w+)");
+    }
+
+    /**
+     * Pattern for matching Input:<TYPE> in API descriptions
+     */
+    public Pattern getApiDocInputTypePattern() {
+        return getPattern("Input:(\\w+)");
+    }
+
+    /**
+     * Pattern for matching Type:<CODE> in API descriptions
+     */
+    public Pattern getApiDocTypePattern() {
+        return getPattern("Type:(\\w+)");
+    }
+
+    /**
+     * Pattern for validating file extensions (2-4 alphanumeric, case-insensitive)
+     */
+    public Pattern getFileExtensionValidationPattern() {
+        return getPattern("^[a-zA-Z0-9]{2,4}$", Pattern.CASE_INSENSITIVE);
     }
 
     private record PatternKey(String regex, int flags) {

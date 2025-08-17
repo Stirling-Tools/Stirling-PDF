@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.web;
 
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.RegexPatternUtils;
 
 @Service
 @Slf4j
@@ -18,40 +16,44 @@ public class UploadLimitService {
     @Autowired private ApplicationProperties applicationProperties;
 
     public long getUploadLimit() {
-        String maxUploadSize =
+        String raw =
                 applicationProperties.getSystem().getFileUploadLimit() != null
                         ? applicationProperties.getSystem().getFileUploadLimit()
                         : "";
-
-        if (maxUploadSize.isEmpty()) {
-            return 0;
-        } else if (!Pattern.compile("^[1-9][0-9]{0,2}[KMGkmg][Bb]$")
-                .matcher(maxUploadSize)
-                .matches()) {
-            log.error(
-                    "Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb], but got: {}",
-                    maxUploadSize);
-            return 0;
-        } else {
-            String unit =
-                    RegexPatternUtils.getInstance()
-                            .getNumberRangePattern()
-                            .matcher(maxUploadSize)
-                            .replaceAll("")
-                            .toUpperCase();
-            String number =
-                    RegexPatternUtils.getInstance()
-                            .getSizeUnitPattern()
-                            .matcher(maxUploadSize)
-                            .replaceAll("");
-            long size = Long.parseLong(number);
-            return switch (unit) {
-                case "KB" -> size * 1024;
-                case "MB" -> size * 1024 * 1024;
-                case "GB" -> size * 1024 * 1024 * 1024;
-                default -> 0;
-            };
+        if (raw == null || raw.isEmpty()) {
+            return 0L;
         }
+        String s = raw.trim();
+        // Normalize case for unit parsing
+        String upper = s.toUpperCase(Locale.ROOT);
+        // Expect strictly: 0-999 followed by KB/MB/GB
+        // Find last two chars as unit if length >= 3
+        if (upper.length() < 3) return 0L;
+        String unit = upper.substring(upper.length() - 2);
+        if (!unit.equals("KB") && !unit.equals("MB") && !unit.equals("GB")) {
+            return 0L;
+        }
+        String numPart = upper.substring(0, upper.length() - 2);
+        // Disallow signs, decimals, spaces; only 1-3 digits (allow 0)
+        if (numPart.length() > 3) {
+            return 0L;
+        }
+        for (int i = 0; i < numPart.length(); i++) {
+            char c = numPart.charAt(i);
+            if (c < '0' || c > '9') return 0L;
+        }
+        long value;
+        try {
+            value = Long.parseLong(numPart);
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
+        return switch (unit) {
+            case "KB" -> value * 1024L;
+            case "MB" -> value * 1024L * 1024L;
+            case "GB" -> value * 1024L * 1024L * 1024L;
+            default -> 0L;
+        };
     }
 
     // TODO: why do this server side not client?

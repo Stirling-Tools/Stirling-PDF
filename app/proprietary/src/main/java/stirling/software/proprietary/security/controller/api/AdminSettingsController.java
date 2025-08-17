@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
@@ -432,7 +433,8 @@ public class AdminSettingsController {
                     "legal");
 
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
-    private static final Pattern SAFE_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9._]+$");
+    private static final Pattern SAFE_KEY_PATTERN =
+        RegexPatternUtils.getInstance().getPattern("^[a-zA-Z0-9._]+$");
     private static final int MAX_NESTING_DEPTH = 10;
 
     // Security: Generic error messages to prevent information disclosure

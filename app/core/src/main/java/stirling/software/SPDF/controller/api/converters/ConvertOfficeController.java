@@ -31,6 +31,7 @@ import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -94,8 +95,10 @@ public class ConvertOfficeController {
     }
 
     private boolean isValidFileExtension(String fileExtension) {
-        String extensionPattern = "^(?i)[a-z0-9]{2,4}$";
-        return fileExtension.matches(extensionPattern);
+        return RegexPatternUtils.getInstance()
+            .getFileExtensionValidationPattern()
+            .matcher(fileExtension)
+            .matches();
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/file/pdf")

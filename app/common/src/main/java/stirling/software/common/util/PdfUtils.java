@@ -45,8 +45,6 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class PdfUtils {
 
-    private final String WHITESPACE_REGEX = "\\s++";
-
     private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
 
     public PDRectangle textToPageSize(String size) {
@@ -550,7 +548,8 @@ public class PdfUtils {
             pdfText = textStripper.getText(pdfDocument);
         } else {
             // remove whitespaces using cached pattern
-            Pattern whitespacePattern = patternCache.getPattern(WHITESPACE_REGEX);
+            Pattern whitespacePattern =
+                patternCache.getPattern(RegexPatternUtils.getWhitespaceRegex());
             Matcher whitespaceMatcher = whitespacePattern.matcher(pagesToCheck);
             pagesToCheck = whitespaceMatcher.replaceAll("");
 
