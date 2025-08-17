@@ -17,7 +17,19 @@ import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 @EqualsAndHashCode(callSuper = true)
 public class AuditExportRequest extends AuditDateExportRequest {
 
-    @Schema(description = "Audit event type to filter by", example = "USER_LOGIN")
+    @Schema(
+            description = "Audit event type to filter by",
+            example = "USER_LOGIN",
+            allowableValues = {
+                "USER_LOGIN",
+                "USER_LOGOUT",
+                "USER_FAILED_LOGIN",
+                "USER_PROFILE_UPDATE",
+                "SETTINGS_CHANGED",
+                "FILE_OPERATION",
+                "PDF_PROCESS",
+                "HTTP_REQUEST"
+            })
     private String type;
 
     @Schema(description = "Principal (username) to filter by", example = "admin")
