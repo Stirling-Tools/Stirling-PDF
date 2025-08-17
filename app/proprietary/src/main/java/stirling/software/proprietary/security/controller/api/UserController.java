@@ -85,7 +85,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username")
-    @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public RedirectView changeUsername(
             Principal principal,
             @RequestParam(name = "currentPasswordChangeUsername") String currentPassword,
@@ -129,7 +129,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password-on-login")
-    @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public RedirectView changePasswordOnLogin(
             Principal principal,
             @RequestParam(name = "currentPassword") String currentPassword,
@@ -158,7 +158,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password")
-    @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public RedirectView changePassword(
             Principal principal,
             @RequestParam(name = "currentPassword") String currentPassword,
