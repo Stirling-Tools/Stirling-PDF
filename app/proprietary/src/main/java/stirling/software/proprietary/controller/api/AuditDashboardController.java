@@ -17,11 +17,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +33,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
@@ -211,47 +215,11 @@ public class AuditDashboardController {
     }
 
     /** Export audit data as CSV. */
-    @GetMapping("/export")
+    @GetMapping("/export/csv")
     @Operation(summary = "Export audit data as CSV")
     public ResponseEntity<byte[]> exportAuditData(@ParameterObject AuditExportRequest request) {
 
-        String type = request.getType();
-        String principal = request.getPrincipal();
-        LocalDate startDate = request.getStartDate();
-        LocalDate endDate = request.getEndDate();
-
-        // Get data with same filtering as getAuditData
-        List<PersistentAuditEvent> events;
-
-        if (type != null && principal != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events =
-                    auditRepository.findAllByPrincipalAndTypeAndTimestampBetweenForExport(
-                            principal, type, start, end);
-        } else if (type != null && principal != null) {
-            events = auditRepository.findAllByPrincipalAndTypeForExport(principal, type);
-        } else if (type != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findAllByTypeAndTimestampBetweenForExport(type, start, end);
-        } else if (principal != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events =
-                    auditRepository.findAllByPrincipalAndTimestampBetweenForExport(
-                            principal, start, end);
-        } else if (startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findAllByTimestampBetweenForExport(start, end);
-        } else if (type != null) {
-            events = auditRepository.findByTypeForExport(type);
-        } else if (principal != null) {
-            events = auditRepository.findAllByPrincipalForExport(principal);
-        } else {
-            events = auditRepository.findAll();
-        }
+        List<PersistentAuditEvent> events = getAuditEventsByCriteria(request);
 
         // Convert to CSV
         StringBuilder csv = new StringBuilder();
@@ -282,43 +250,7 @@ public class AuditDashboardController {
     @Operation(summary = "Export audit data as JSON")
     public ResponseEntity<byte[]> exportAuditDataJson(@ParameterObject AuditExportRequest request) {
 
-        String type = request.getType();
-        String principal = request.getPrincipal();
-        LocalDate startDate = request.getStartDate();
-        LocalDate endDate = request.getEndDate();
-
-        // Get data with same filtering as getAuditData
-        List<PersistentAuditEvent> events;
-
-        if (type != null && principal != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events =
-                    auditRepository.findAllByPrincipalAndTypeAndTimestampBetweenForExport(
-                            principal, type, start, end);
-        } else if (type != null && principal != null) {
-            events = auditRepository.findAllByPrincipalAndTypeForExport(principal, type);
-        } else if (type != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findAllByTypeAndTimestampBetweenForExport(type, start, end);
-        } else if (principal != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events =
-                    auditRepository.findAllByPrincipalAndTimestampBetweenForExport(
-                            principal, start, end);
-        } else if (startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findAllByTimestampBetweenForExport(start, end);
-        } else if (type != null) {
-            events = auditRepository.findByTypeForExport(type);
-        } else if (principal != null) {
-            events = auditRepository.findAllByPrincipalForExport(principal);
-        } else {
-            events = auditRepository.findAll();
-        }
+        List<PersistentAuditEvent> events = getAuditEventsByCriteria(request);
 
         // Convert to JSON
         try {
@@ -373,25 +305,29 @@ public class AuditDashboardController {
     //             .orElse(ResponseEntity.noContent().build());
     // }
 
-    // /** Cleanup endpoints */
-    // @GetMapping("/cleanup/before")
-    // @Operation(
-    //         summary = "Delete events older than the given date or the last N days",
-    //         description =
-    //                 "Provide either 'date=YYYY-MM-DD' or 'days'. Also accepts synonyms via query
-    // or"
-    //                         + " JSON body: cutoff, cutoffDate. If both are provided, 'date'
-    // wins.")
-    // public Map<String, Object> cleanupBefore(
-    //         @ModelAttribute
-    //                 @RequestParam(value = "date", required = false)
-    //                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    //                 LocalDate date) {
-    //     LocalDate cutoffDate = date;
-    //     Instant cutoff = cutoffDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-    //     int deleted = auditRepository.deleteByTimestampBefore(cutoff);
-    //     return Map.of("deleted", deleted, "cutoffDate", cutoffDate.toString());
-    // }
+    /** Cleanup endpoints data before a certain date */
+    @DeleteMapping("/cleanup/before")
+    @Operation(
+            summary = "Cleanup audit events before a certain date",
+            description = "Deletes all audit events before the specified date.")
+    public Map<String, Object> cleanupBefore(
+            @ModelAttribute
+                    @RequestParam(value = "date", required = true)
+                    @Schema(
+                            description = "The cutoff date for cleanup",
+                            example = "2025-01-01",
+                            format = "date")
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate date) {
+        if (date != null && !date.isAfter(LocalDate.now())) {
+            Instant cutoff = date.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            int deleted = auditRepository.deleteByTimestampBefore(cutoff);
+            return Map.of("deleted", deleted, "cutoffDate", date.toString());
+        }
+        return Map.of(
+                "error",
+                "Invalid date format. Use ISO date format (YYYY-MM-DD). Date must be in the past.");
+    }
 
     // // ===== Helpers =====
 
@@ -412,5 +348,46 @@ public class AuditDashboardController {
         }
         // Replace double quotes with two double quotes and wrap in quotes
         return "\"" + field.replace("\"", "\"\"") + "\"";
+    }
+
+    private List<PersistentAuditEvent> getAuditEventsByCriteria(AuditExportRequest request) {
+        String type = request.getType();
+        String principal = request.getPrincipal();
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
+
+        // Get data with same filtering as getAuditData
+        List<PersistentAuditEvent> events;
+
+        if (type != null && principal != null && startDate != null && endDate != null) {
+            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+            events =
+                    auditRepository.findAllByPrincipalAndTypeAndTimestampBetweenForExport(
+                            principal, type, start, end);
+        } else if (type != null && principal != null) {
+            events = auditRepository.findAllByPrincipalAndTypeForExport(principal, type);
+        } else if (type != null && startDate != null && endDate != null) {
+            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+            events = auditRepository.findAllByTypeAndTimestampBetweenForExport(type, start, end);
+        } else if (principal != null && startDate != null && endDate != null) {
+            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+            events =
+                    auditRepository.findAllByPrincipalAndTimestampBetweenForExport(
+                            principal, start, end);
+        } else if (startDate != null && endDate != null) {
+            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+            events = auditRepository.findAllByTimestampBetweenForExport(start, end);
+        } else if (type != null) {
+            events = auditRepository.findByTypeForExport(type);
+        } else if (principal != null) {
+            events = auditRepository.findAllByPrincipalForExport(principal);
+        } else {
+            events = auditRepository.findAll();
+        }
+        return events;
     }
 }

@@ -328,7 +328,7 @@ function exportAuditData(format) {
     const startDate = exportStartDateFilter.value;
     const endDate = exportEndDateFilter.value;
 
-    let url = format === 'json' ? '/audit/export/json?' : '/audit/export?';
+    let url = format === 'json' ? '/audit/export/json?' : '/audit/export/csv?';
 
     if (type) url += `&type=${encodeURIComponent(type)}`;
     if (principal) url += `&principal=${encodeURIComponent(principal)}`;
