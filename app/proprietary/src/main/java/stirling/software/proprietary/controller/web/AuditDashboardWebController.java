@@ -4,7 +4,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+
+import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,7 +15,6 @@ import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 
 @Controller
-@RequestMapping("/audit")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
@@ -22,7 +22,8 @@ public class AuditDashboardWebController {
     private final AuditConfigurationProperties auditConfig;
 
     /** Display the audit dashboard. */
-    @GetMapping
+    @GetMapping("/audit")
+    @Hidden
     public String showDashboard(Model model) {
         model.addAttribute("auditEnabled", auditConfig.isEnabled());
         model.addAttribute("auditLevel", auditConfig.getAuditLevel());

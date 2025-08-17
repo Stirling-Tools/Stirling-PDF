@@ -218,7 +218,7 @@ function loadAuditData(targetPage, realPageSize) {
     showLoading('table-loading');
 
     // Always request page 0 from server, but with increased page size if needed
-    let url = `/audit/data?page=${requestedPage}&size=${realPageSize}`;
+    let url = `/api/v1/audit/data?page=${requestedPage}&size=${realPageSize}`;
 
     if (typeFilter) url += `&type=${encodeURIComponent(typeFilter)}`;
     if (principalFilter) url += `&principal=${encodeURIComponent(principalFilter)}`;
@@ -302,7 +302,7 @@ function loadStats(days) {
     showLoading('user-chart-loading');
     showLoading('time-chart-loading');
 
-    fetchWithCsrf(`/audit/stats?days=${days}`)
+    fetchWithCsrf(`/api/v1/audit/stats?days=${days}`)
         .then(response => response.json())
         .then(data => {
             document.getElementById('total-events').textContent = data.totalEvents;
@@ -328,7 +328,7 @@ function exportAuditData(format) {
     const startDate = exportStartDateFilter.value;
     const endDate = exportEndDateFilter.value;
 
-    let url = format === 'json' ? '/audit/export/json?' : '/audit/export/csv?';
+    let url = format === 'json' ? '/api/v1/audit/export/json?' : '/api/v1/audit/export/csv?';
 
     if (type) url += `&type=${encodeURIComponent(type)}`;
     if (principal) url += `&principal=${encodeURIComponent(principal)}`;
@@ -835,7 +835,7 @@ function hideLoading(id) {
 
 // Load event types from the server for filter dropdowns
 function loadEventTypes() {
-    fetchWithCsrf('/audit/types')
+    fetchWithCsrf('/api/v1/audit/types')
         .then(response => response.json())
         .then(types => {
             if (!types || types.length === 0) {

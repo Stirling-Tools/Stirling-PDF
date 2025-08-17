@@ -51,7 +51,7 @@ import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 /** REST endpoints for the audit dashboard. */
 @Slf4j
 @RestController
-@RequestMapping("/audit")
+@RequestMapping("/api/v1/audit")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
