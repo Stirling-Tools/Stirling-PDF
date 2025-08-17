@@ -24,7 +24,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -117,7 +116,8 @@ public class AuditDashboardController {
     @GetMapping("/stats")
     @Operation(summary = "Get audit statistics for the last N days")
     public AuditStatsResponse getAuditStats(
-            @ParameterObject @RequestParam(value = "days", defaultValue = "7") int days) {
+        @Schema(description = "Number of days to look back for audit events", example = "7", required = true)
+            @RequestParam(value = "days", defaultValue = "7") int days) {
 
         // Get events from the last X days
         Instant startDate = Instant.now().minus(java.time.Duration.ofDays(days));
@@ -311,8 +311,7 @@ public class AuditDashboardController {
             summary = "Cleanup audit events before a certain date",
             description = "Deletes all audit events before the specified date.")
     public Map<String, Object> cleanupBefore(
-            @ModelAttribute
-                    @RequestParam(value = "date", required = true)
+            @RequestParam(value = "date", required = true)
                     @Schema(
                             description = "The cutoff date for cleanup",
                             example = "2025-01-01",
