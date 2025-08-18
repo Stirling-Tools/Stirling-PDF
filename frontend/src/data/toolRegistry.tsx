@@ -34,7 +34,7 @@ export type ToolRegistryEntry = {
     icon: React.ReactNode;
     name: string;
     component: React.ComponentType<any> | null;
-    view: string;
+    view: 'sign' | 'security' | 'format' | 'extract' | 'view' | 'merge' | 'pageEditor' | 'convert' | 'redact' | 'split' | 'convert' | 'remove' | 'compress' | 'external';
     description: string;
     category: ToolCategory;
     subcategory: ToolSubcategory;
