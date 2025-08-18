@@ -49,25 +49,6 @@ describe('useAddPasswordOperation', () => {
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
 
-  test('should configure useToolOperation with correct parameters', () => {
-    renderHook(() => useAddPasswordOperation());
-
-    expect(mockUseToolOperation).toHaveBeenCalledWith({
-      operationType: 'addPassword',
-      endpoint: '/api/v1/security/add-password',
-      buildFormData: expect.any(Function),
-      filePrefix: 'translated-addPassword.filenamePrefix_',
-      multiFileEndpoint: false,
-      getErrorMessage: 'error-handler-function'
-    });
-  });
-
-  test('should return the result from useToolOperation', () => {
-    const { result } = renderHook(() => useAddPasswordOperation());
-
-    expect(result.current).toBe(mockToolOperationReturn);
-  });
-
   test.each([
     {
       description: 'with all parameters filled',

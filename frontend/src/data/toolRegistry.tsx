@@ -7,6 +7,7 @@ import ConvertPanel from '../tools/Convert';
 import Sanitize from '../tools/Sanitize';
 import AddPassword from '../tools/AddPassword';
 import ChangePermissions from '../tools/ChangePermissions';
+import RemovePassword from '../tools/RemovePassword';
 
 // Category and subcategory enums for type safety
 export enum ToolCategory {
@@ -205,7 +206,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: ToolSubcategory.DOCUMENT_SECURITY
     },
-    "changePermissions": {
+    "change-permissions": {
         icon: <span className="material-symbols-rounded">lock</span>,
         name: t("home.changePermissions.title", "Change Permissions"),
         component: ChangePermissions,
@@ -258,17 +259,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: ToolSubcategory.DOCUMENT_REVIEW
     },
-    "change-permissions": {
-        icon: <span className="material-symbols-rounded">admin_panel_settings</span>,
-        name: t("home.permissions.title", "Change Permissions"),
-        component: null,
-        view: "security",
-        description: t("home.permissions.desc", "Change the permissions of your PDF document"),
-        category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_REVIEW
-    },
-
-    
     // Page Formatting
 
     "cropPdf": {
@@ -417,11 +407,14 @@ export function useFlatToolRegistry(): ToolRegistry {
     "remove-password": {
         icon: <span className="material-symbols-rounded">lock_open_right</span>,
         name: t("home.removePassword.title", "Remove Password"),
-        component: null,
+        component: RemovePassword,
         view: "security",
         description: t("home.removePassword.desc", "Remove password protection from PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.REMOVAL
+        subcategory: ToolSubcategory.REMOVAL,
+        endpoints: ["remove-password"],
+        maxFiles: -1,
+
     },
     "remove-certificate-sign": {
         icon: <span className="material-symbols-rounded">remove_moderator</span>,
@@ -708,6 +701,7 @@ export function useFlatToolRegistry(): ToolRegistry {
     },
     };
 }
+
 
 export const toolEndpoints: Record<string, string[]> = {
     split: ["split-pages",

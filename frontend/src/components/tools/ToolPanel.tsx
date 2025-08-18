@@ -59,7 +59,6 @@ export default function ToolPanel() {
             backgroundColor: 'var(--tool-panel-search-bg)',
             borderBottom: '1px solid var(--tool-panel-search-border-bottom)',
             padding: '0.75rem 1rem',
-            marginBottom: (leftPanelView === 'toolContent') ? '1rem' : 0,
           }}
         >
           <ToolSearch
