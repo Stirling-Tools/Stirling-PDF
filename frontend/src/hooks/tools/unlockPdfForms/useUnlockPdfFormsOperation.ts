@@ -12,11 +12,11 @@ export const buildUnlockPdfFormsFormData = (parameters: UnlockPdfFormsParameters
 
 // Static configuration object
 export const unlockPdfFormsOperationConfig = {
+  toolType: 'singleFile',
+  buildFormData: buildUnlockPdfFormsFormData,
   operationType: 'unlock-pdf-forms',
   endpoint: '/api/v1/misc/unlock-pdf-forms',
-  buildFormData: buildUnlockPdfFormsFormData,
   filePrefix: 'unlocked_forms_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 

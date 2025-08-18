@@ -26,11 +26,11 @@ const fullDefaultParameters: AddPasswordFullParameters = {
 
 // Static configuration object
 export const addPasswordOperationConfig = {
+  toolType: 'singleFile',
+  buildFormData: buildAddPasswordFormData,
   operationType: 'addPassword',
   endpoint: '/api/v1/security/add-password',
-  buildFormData: buildAddPasswordFormData,
   filePrefix: 'encrypted_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters: fullDefaultParameters,
 } as const;
 

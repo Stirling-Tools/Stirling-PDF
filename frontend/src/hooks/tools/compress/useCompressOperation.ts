@@ -24,11 +24,11 @@ export const buildCompressFormData = (parameters: CompressParameters, file: File
 
 // Static configuration object
 export const compressOperationConfig = {
+  toolType: 'singleFile',
+  buildFormData: buildCompressFormData,
   operationType: 'compress',
   endpoint: '/api/v1/misc/compress-pdf',
-  buildFormData: buildCompressFormData,
   filePrefix: 'compressed_',
-  multiFileEndpoint: false, // Individual API calls per file
   defaultParameters,
 } as const;
 

@@ -129,11 +129,10 @@ export const convertProcessor = async (
 
 // Static configuration object
 export const convertOperationConfig = {
+  toolType: 'custom',
+  customProcessor: convertProcessor, // Can't use callback version here
   operationType: 'convert',
-  endpoint: '', // Not used with customProcessor but required
-  buildFormData: buildConvertFormData, // Not used with customProcessor but required
   filePrefix: 'converted_',
-  customProcessor: convertProcessor,
   defaultParameters,
 } as const;
 
@@ -158,6 +157,6 @@ export const useConvertOperation = () => {
         return error.message;
       }
       return t("convert.errorConversion", "An error occurred while converting the file.");
-    }
+    },
   });
 };

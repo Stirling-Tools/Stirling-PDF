@@ -13,11 +13,11 @@ export const buildRemovePasswordFormData = (parameters: RemovePasswordParameters
 
 // Static configuration object
 export const removePasswordOperationConfig = {
+  toolType: 'singleFile',
+  buildFormData: buildRemovePasswordFormData,
   operationType: 'removePassword',
   endpoint: '/api/v1/security/remove-password',
-  buildFormData: buildRemovePasswordFormData,
   filePrefix: 'decrypted_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 

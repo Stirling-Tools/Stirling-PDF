@@ -12,11 +12,11 @@ export const buildRemoveCertificateSignFormData = (parameters: RemoveCertificate
 
 // Static configuration object
 export const removeCertificateSignOperationConfig = {
+  toolType: 'singleFile',
+  buildFormData: buildRemoveCertificateSignFormData,
   operationType: 'remove-certificate-sign',
   endpoint: '/api/v1/security/remove-cert-sign',
-  buildFormData: buildRemoveCertificateSignFormData,
   filePrefix: 'unsigned_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 

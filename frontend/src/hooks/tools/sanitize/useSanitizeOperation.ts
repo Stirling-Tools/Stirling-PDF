@@ -21,9 +21,10 @@ export const buildSanitizeFormData = (parameters: SanitizeParameters, file: File
 
 // Static configuration object
 export const sanitizeOperationConfig = {
+  toolType: 'singleFile',
+  buildFormData: buildSanitizeFormData,
   operationType: 'sanitize',
   endpoint: '/api/v1/security/sanitize-pdf',
-  buildFormData: buildSanitizeFormData,
   filePrefix: 'sanitized_', // Will be overridden in hook with translation
   multiFileEndpoint: false,
   defaultParameters,

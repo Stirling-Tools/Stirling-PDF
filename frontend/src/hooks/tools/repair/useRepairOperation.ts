@@ -12,11 +12,11 @@ export const buildRepairFormData = (parameters: RepairParameters, file: File): F
 
 // Static configuration object
 export const repairOperationConfig = {
+  toolType: 'singleFile',
+  buildFormData: buildRepairFormData,
   operationType: 'repair',
   endpoint: '/api/v1/misc/repair',
-  buildFormData: buildRepairFormData,
   filePrefix: 'repaired_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 

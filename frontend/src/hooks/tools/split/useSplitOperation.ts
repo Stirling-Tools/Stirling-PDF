@@ -57,11 +57,11 @@ export const getSplitEndpoint = (parameters: SplitParameters): string => {
 
 // Static configuration object
 export const splitOperationConfig = {
+  toolType: 'multiFile',
+  buildFormData: buildSplitFormData,
   operationType: 'splitPdf',
   endpoint: getSplitEndpoint,
-  buildFormData: buildSplitFormData,
   filePrefix: 'split_',
-  multiFileEndpoint: true, // Single API call with all files
   defaultParameters,
 } as const;
 

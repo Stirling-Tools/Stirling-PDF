@@ -35,11 +35,11 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
 
 // Static configuration object
 export const addWatermarkOperationConfig = {
+  toolType: 'singleFile',
+  buildFormData: buildAddWatermarkFormData,
   operationType: 'watermark',
   endpoint: '/api/v1/security/add-watermark',
-  buildFormData: buildAddWatermarkFormData,
   filePrefix: 'watermarked_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 

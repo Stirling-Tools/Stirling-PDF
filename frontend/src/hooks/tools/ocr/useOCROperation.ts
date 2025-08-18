@@ -52,7 +52,7 @@ export const buildOCRFormData = (parameters: OCRParameters, file: File): FormDat
   return formData;
 };
 
-// Static response handler for OCR - can be used by automation executor  
+// Static response handler for OCR - can be used by automation executor
 export const ocrResponseHandler = async (blob: Blob, originalFiles: File[], extractZipFiles: (blob: Blob) => Promise<File[]>): Promise<File[]> => {
   const headBuf = await blob.slice(0, 8).arrayBuffer();
   const head = new TextDecoder().decode(new Uint8Array(headBuf));
@@ -94,11 +94,11 @@ export const ocrResponseHandler = async (blob: Blob, originalFiles: File[], extr
 
 // Static configuration object (without t function dependencies)
 export const ocrOperationConfig = {
+  toolType: 'singleFile',
+  buildFormData: buildOCRFormData,
   operationType: 'ocr',
   endpoint: '/api/v1/misc/ocr-pdf',
-  buildFormData: buildOCRFormData,
   filePrefix: 'ocr_',
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 
