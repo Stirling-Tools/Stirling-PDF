@@ -26,7 +26,6 @@ export class ThumbnailGenerationService {
   private workers: Worker[] = [];
   private activeJobs = new Map<string, { resolve: Function; reject: Function; onProgress?: Function }>();
   private jobCounter = 0;
-  private isGenerating = false;
   
   // Session-based thumbnail cache
   private thumbnailCache = new Map<string, CachedThumbnail>();
@@ -133,11 +132,11 @@ export class ThumbnailGenerationService {
     options: ThumbnailGenerationOptions = {},
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
-    if (this.isGenerating) {
-      throw new Error('Thumbnail generation already in progress');
-    }
-
-    this.isGenerating = true;
+    // Create unique job ID to track this specific generation request
+    const jobId = `thumbnails-${++this.jobCounter}`;
+    
+    // Instead of blocking globally, we'll track individual generation jobs
+    // This allows multiple thumbnail generation requests to run concurrently
     
     const {
       scale = 0.2,
@@ -207,7 +206,7 @@ export class ThumbnailGenerationService {
     } catch (error) {
       return await this.generateThumbnailsMainThread(pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
     } finally {
-      this.isGenerating = false;
+      // Individual job completed, no need to reset global flag
     }
   }
 
@@ -401,7 +400,6 @@ export class ThumbnailGenerationService {
    */
   stopGeneration(): void {
     this.activeJobs.clear();
-    this.isGenerating = false;
   }
 
   /**
@@ -411,7 +409,6 @@ export class ThumbnailGenerationService {
     this.workers.forEach(worker => worker.terminate());
     this.workers = [];
     this.activeJobs.clear();
-    this.isGenerating = false;
     this.clearThumbnailCache();
   }
 }

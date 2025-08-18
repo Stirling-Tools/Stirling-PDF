@@ -81,7 +81,7 @@ const PageThumbnail = React.memo(({
 }: PageThumbnailProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { state, selectors } = useFileState();
-  const { getThumbnailFromCache } = useThumbnailGeneration();
+  const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
 
   // Update thumbnail URL when page prop changes - prevent redundant updates
   useEffect(() => {
@@ -91,27 +91,43 @@ const PageThumbnail = React.memo(({
     }
   }, [page.thumbnail, page.id]); // Remove thumbnailUrl dependency to prevent redundant cycles
 
-  // Listen for ready thumbnails from Web Workers (only if no existing thumbnail)
+  // Request thumbnail generation if not available (optimized for performance)
   useEffect(() => {
-    if (thumbnailUrl) {
-      return; // Skip if we already have a thumbnail
+    if (thumbnailUrl || !originalFile) {
+      return; // Skip if we already have a thumbnail or no original file
     }
 
-    // Poll for thumbnail in cache (lightweight polling every 500ms)
-    const pollInterval = setInterval(() => {
-      // Check if thumbnail is now available in cache
-      const cachedThumbnail = getThumbnailFromCache(page.id);
-      if (cachedThumbnail) {
-        setThumbnailUrl(cachedThumbnail);
-        clearInterval(pollInterval); // Stop polling once found
-      }
-    }, 500);
+    // Check cache first without async call
+    const cachedThumbnail = getThumbnailFromCache(page.id);
+    if (cachedThumbnail) {
+      setThumbnailUrl(cachedThumbnail);
+      return;
+    }
 
-    // Cleanup interval
-    return () => {
-      clearInterval(pollInterval);
+    let cancelled = false;
+
+    const loadThumbnail = async () => {
+      try {
+        const thumbnail = await requestThumbnail(page.id, originalFile, page.pageNumber);
+        
+        // Only update if component is still mounted and we got a result
+        if (!cancelled && thumbnail) {
+          setThumbnailUrl(thumbnail);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn(`📸 PageThumbnail: Failed to load thumbnail for page ${page.pageNumber}:`, error);
+        }
+      }
     };
-  }, [page.pageNumber, page.id]); // Remove thumbnailUrl dependency to stabilize effect
+
+    loadThumbnail();
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      cancelled = true;
+    };
+  }, [page.id, originalFile, requestThumbnail, getThumbnailFromCache]); // Removed thumbnailUrl to prevent loops
 
 
   // Register this component with pageRefs for animations

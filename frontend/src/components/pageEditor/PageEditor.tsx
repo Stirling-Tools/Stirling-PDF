@@ -132,48 +132,79 @@ const PageEditor = ({
     }
     console.log(`🎬 Will use ${(processedFile?.pages?.length || 0) > 0 ? 'PROCESSED' : 'FALLBACK'} pages`);
     
-    // Convert processed pages to PageEditor format
-    // All processing is now handled by FileProcessingService when files are added
-    const pages: PDFPage[] = processedFile?.pages && processedFile.pages.length > 0
-      ? processedFile.pages.map((page, index) => {
-          const pageId = `${primaryFileId}-page-${index + 1}`;
-          // Try multiple sources for thumbnails in order of preference:
-          // 1. Processed data thumbnail
-          // 2. Cached thumbnail from previous generation
-          // 3. For page 1: FileRecord's thumbnailUrl (from FileProcessingService)
-          let thumbnail = page.thumbnail || null;
-          const cachedThumbnail = getThumbnailFromCache(pageId);
-          if (!thumbnail && cachedThumbnail) {
-            thumbnail = cachedThumbnail;
-            console.log(`📸 PageEditor: Using cached thumbnail for page ${index + 1} (${pageId})`);
+    // Convert processed pages to PageEditor format or create placeholders from metadata
+    let pages: PDFPage[] = [];
+    
+    if (processedFile?.pages && processedFile.pages.length > 0) {
+      // Use fully processed pages with thumbnails
+      pages = processedFile.pages.map((page, index) => {
+        const pageId = `${primaryFileId}-page-${index + 1}`;
+        // Try multiple sources for thumbnails in order of preference:
+        // 1. Processed data thumbnail
+        // 2. Cached thumbnail from previous generation
+        // 3. For page 1: FileRecord's thumbnailUrl (from FileProcessingService)
+        let thumbnail = page.thumbnail || null;
+        const cachedThumbnail = getThumbnailFromCache(pageId);
+        if (!thumbnail && cachedThumbnail) {
+          thumbnail = cachedThumbnail;
+          console.log(`📸 PageEditor: Using cached thumbnail for page ${index + 1} (${pageId})`);
+        }
+        if (!thumbnail && index === 0) {
+          // For page 1, use the thumbnail from FileProcessingService
+          thumbnail = primaryFileRecord.thumbnailUrl || null;
+          if (thumbnail) {
+            addThumbnailToCache(pageId, thumbnail);
+            console.log(`📸 PageEditor: Using FileProcessingService thumbnail for page 1 (${pageId})`);
           }
-          if (!thumbnail && index === 0) {
-            // For page 1, use the thumbnail from FileProcessingService
-            thumbnail = primaryFileRecord.thumbnailUrl || null;
-            if (thumbnail) {
-              addThumbnailToCache(pageId, thumbnail);
-              console.log(`📸 PageEditor: Using FileProcessingService thumbnail for page 1 (${pageId})`);
-            }
+        }
+        
+        return {
+          id: pageId,
+          pageNumber: index + 1,
+          thumbnail,
+          rotation: page.rotation || 0,
+          selected: false,
+          splitBefore: page.splitBefore || false,
+        };
+      });
+    } else if (processedFile?.totalPages && processedFile.totalPages > 0) {
+      // Create placeholder pages from metadata while thumbnails are being generated
+      console.log(`🎬 PageEditor: Creating ${processedFile.totalPages} placeholder pages from metadata`);
+      pages = Array.from({ length: processedFile.totalPages }, (_, index) => {
+        const pageId = `${primaryFileId}-page-${index + 1}`;
+        
+        // Check for existing cached thumbnail
+        let thumbnail = getThumbnailFromCache(pageId) || null;
+        
+        // For page 1, try to use the FileRecord thumbnail
+        if (!thumbnail && index === 0) {
+          thumbnail = primaryFileRecord.thumbnailUrl || null;
+          if (thumbnail) {
+            addThumbnailToCache(pageId, thumbnail);
+            console.log(`📸 PageEditor: Using FileProcessingService thumbnail for placeholder page 1 (${pageId})`);
           }
-          
-          
-          return {
-            id: pageId,
-            pageNumber: index + 1,
-            thumbnail,
-            rotation: page.rotation || 0,
-            selected: false,
-            splitBefore: page.splitBefore || false,
-          };
-        })
-      : [{ // Fallback while FileProcessingService is working
-          id: `${primaryFileId}-page-1`,
-          pageNumber: 1,
-          thumbnail: getThumbnailFromCache(`${primaryFileId}-page-1`) || primaryFileRecord.thumbnailUrl || null,
+        }
+        
+        return {
+          id: pageId,
+          pageNumber: index + 1,
+          thumbnail, // Will be null initially, populated by PageThumbnail components
           rotation: 0,
           selected: false,
           splitBefore: false,
-        }];
+        };
+      });
+    } else {
+      // Ultimate fallback - single page while we wait for metadata
+      pages = [{
+        id: `${primaryFileId}-page-1`,
+        pageNumber: 1,
+        thumbnail: getThumbnailFromCache(`${primaryFileId}-page-1`) || primaryFileRecord.thumbnailUrl || null,
+        rotation: 0,
+        selected: false,
+        splitBefore: false,
+      }];
+    }
 
     // Create document with determined pages
 
@@ -1123,7 +1154,7 @@ const PageEditor = ({
   const displayedPages = displayDocument?.pages || [];
 
   return (
-    <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
+    <Box pos="relative" h="100vh" style={{ overflow: 'auto' }} data-scrolling-container="true">
       <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
 
       {showEmpty && (
