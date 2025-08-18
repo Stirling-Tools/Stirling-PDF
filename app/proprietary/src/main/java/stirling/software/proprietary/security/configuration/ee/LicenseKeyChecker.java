@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 
 @Slf4j
@@ -84,12 +83,6 @@ public class LicenseKeyChecker {
 
         // It's a direct license key
         return keyOrFilePath;
-    }
-
-    public void updateLicenseKey(String newKey) throws IOException {
-        applicationProperties.getPremium().setKey(newKey);
-        GeneralUtils.saveKeyToSettings("EnterpriseEdition.key", newKey);
-        checkLicense();
     }
 
     public License getPremiumLicenseEnabledResult() {

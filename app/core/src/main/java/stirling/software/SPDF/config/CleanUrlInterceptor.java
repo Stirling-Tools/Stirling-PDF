@@ -20,6 +20,8 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                     "endpoints",
                     "logout",
                     "error",
+                    "days",
+                    "date",
                     "errorOAuth",
                     "file",
                     "messageType",
