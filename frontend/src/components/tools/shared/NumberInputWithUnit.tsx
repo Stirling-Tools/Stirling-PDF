@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Stack, Text, NumberInput } from "@mantine/core";
 
 interface NumberInputWithUnitProps {
@@ -20,14 +20,26 @@ const NumberInputWithUnit = ({
   max, 
   disabled = false 
 }: NumberInputWithUnitProps) => {
+  const [localValue, setLocalValue] = useState<number | string>(value);
+
+  // Sync local value when external value changes
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleBlur = () => {
+    onChange(localValue);
+  };
+
   return (
     <Stack gap="xs" style={{ flex: 1 }}>
       <Text size="xs" fw={500} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {label}
       </Text>
       <NumberInput
-        value={value}
-        onChange={onChange}
+        value={localValue}
+        onChange={setLocalValue}
+        onBlur={handleBlur}
         min={min}
         max={max}
         disabled={disabled}
