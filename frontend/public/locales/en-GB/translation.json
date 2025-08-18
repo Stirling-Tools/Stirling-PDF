@@ -35,11 +35,21 @@
   "true": "True",
   "false": "False",
   "unknown": "Unknown",
+  "app": {
+    "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+  },
   "save": "Save",
   "saveToBrowser": "Save to Browser",
+  "download": "Download",
+  "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
   "fileSelected": "Selected: {{filename}}",
+  "chooseFile": "Choose File",
   "filesSelected": "{{count}} files selected",
+  "files": {
+    "title": "Files",
+    "placeholder": "Select a PDF file in the main view to get started"
+  },
   "noFavourites": "No favourites added",
   "downloadComplete": "Download Complete",
   "bored": "Bored Waiting?",
@@ -119,6 +129,7 @@
   "page": "Page",
   "pages": "Pages",
   "loading": "Loading...",
+  "review": "Review",
   "addToDoc": "Add to Document",
   "reset": "Reset",
   "apply": "Apply",
@@ -960,16 +971,6 @@
   "removePages": {
     "tags": "Remove pages,delete pages"
   },
-  "removePassword": {
-    "tags": "secure,Decrypt,security,unpassword,delete password",
-    "title": "Remove password",
-    "header": "Remove password (Decrypt)",
-    "selectText": {
-      "1": "Select PDF to Decrypt",
-      "2": "Password"
-    },
-    "submit": "Remove"
-  },
   "compressPdfs": {
     "tags": "squish,small,tiny"
   },
@@ -1012,6 +1013,7 @@
   "ocr": {
     "tags": "recognition,text,image,scan,read,identify,detection,editable",
     "title": "OCR / Scan Cleanup",
+    "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text.",
     "header": "Cleanup Scans / OCR (Optical Character Recognition)",
     "selectText": {
       "1": "Select languages that are to be detected within the PDF (Ones listed are the ones currently detected):",
@@ -1572,6 +1574,7 @@
   },
   "compress": {
     "title": "Compress",
+    "desc": "Compress PDFs to reduce their file size.",
     "header": "Compress PDF",
     "credit": "This service uses qpdf for PDF Compress/Optimisation.",
     "grayscale": {
@@ -1930,8 +1933,8 @@
     "error": {
       "failed": "An error occurred while encrypting the PDF."
     },
-    "title": "Passwords & Encryption",
     "passwords": {
+      "stepTitle": "Passwords & Encryption",
       "completed": "Passwords configured",
       "user": {
         "label": "User Password",
@@ -1971,6 +1974,7 @@
         "bullet3": "256-bit: Maximum security, requires modern viewers"
       },
       "permissions": {
+        "title": "Change Permissions",
         "text": "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
       }
     }
@@ -1980,7 +1984,6 @@
     "desc": "Change document restrictions and permissions.",
     "completed": "Permissions changed",
     "submit": "Change Permissions",
-    "title": "Document Permissions",
     "error": {
       "failed": "An error occurred while changing PDF permissions."
     },
@@ -2025,12 +2028,26 @@
       }
     }
   },
-  "files": {
-    "title": "Files",
-    "placeholder": "Select a PDF file in the main view to get started"
-  },
-  "review": "Review",
-  "common": {
-    "chooseFile": "Choose File"
+  "removePassword": {
+    "title": "Remove Password",
+    "desc": "Remove password protection from your PDF document.",
+    "tags": "secure,Decrypt,security,unpassword,delete password",
+    "password": {
+      "stepTitle": "Remove Password",
+      "label": "Current Password",
+      "placeholder": "Enter current password",
+      "completed": "Password configured"
+    },
+    "filenamePrefix": "decrypted",
+    "error": {
+      "failed": "An error occurred while removing the password from the PDF."
+    },
+    "tooltip": {
+      "description": "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
+    },
+    "submit": "Remove Password",
+    "results": {
+      "title": "Decrypted PDFs"
+    }
   }
 }

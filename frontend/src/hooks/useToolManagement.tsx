@@ -7,8 +7,9 @@ import ApiIcon from "@mui/icons-material/Api";
 import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import LockIcon from "@mui/icons-material/Lock";
 import BrandingWatermarkIcon from "@mui/icons-material/BrandingWatermark";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
-import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
+import { Tool, ToolDefinition, ToolRegistry } from "../types/tool";
 
 
 // Add entry here with maxFiles, endpoints, and lazy component
@@ -113,6 +114,15 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     category: "security",
     description: "Add text or image watermarks to PDF files",
     endpoints: ["add-watermark"]
+  },
+  removePassword: {
+    id: "removePassword",
+    icon: <LockOpenIcon />,
+    component: React.lazy(() => import("../tools/RemovePassword")),
+    maxFiles: -1,
+    category: "security",
+    description: "Remove password protection from PDF files",
+    endpoints: ["remove-password"]
   },
 
 };
