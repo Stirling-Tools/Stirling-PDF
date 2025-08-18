@@ -49,7 +49,7 @@ const LandingPage = () => {
         activateOnClick={false}
         styles={{
           root: {
-            '&[data-accept]': {
+            '&[dataAccept]': {
               backgroundColor: 'var(--landing-drop-paper-bg)',
             },
           },

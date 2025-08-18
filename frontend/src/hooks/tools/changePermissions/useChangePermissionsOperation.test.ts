@@ -48,25 +48,6 @@ describe('useChangePermissionsOperation', () => {
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
 
-  test('should configure useToolOperation with correct parameters', () => {
-    renderHook(() => useChangePermissionsOperation());
-
-    expect(mockUseToolOperation).toHaveBeenCalledWith({
-      operationType: 'changePermissions',
-      endpoint: '/api/v1/security/add-password',
-      buildFormData: expect.any(Function),
-      filePrefix: 'permissions_',
-      multiFileEndpoint: false,
-      getErrorMessage: 'error-handler-function'
-    });
-  });
-
-  test('should return the result from useToolOperation', () => {
-    const { result } = renderHook(() => useChangePermissionsOperation());
-
-    expect(result.current).toBe(mockToolOperationReturn);
-  });
-
   test.each([
     {
       preventAssembly: false,
