@@ -8,6 +8,13 @@ export default function LoginCompact() {
   const { session, user, loading, signOut } = useAuth()
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showEmailForm, setShowEmailForm] = useState(false)
+  const [showMagicLink, setShowMagicLink] = useState(false)
+  const [showPasswordReset, setShowPasswordReset] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [magicLinkEmail, setMagicLinkEmail] = useState('')
+  const [resetEmail, setResetEmail] = useState('')
 
   // Show logged in state if authenticated
   if (session && !loading) {
@@ -130,6 +137,108 @@ export default function LoginCompact() {
     }
   }
 
+  const signInWithEmail = async () => {
+    if (!email || !password) {
+      setError('Please enter both email and password')
+      return
+    }
+
+    try {
+      setIsSigningIn(true)
+      setError(null)
+      
+      console.log('[LoginCompact] Signing in with email:', email)
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password
+      })
+
+      if (error) {
+        console.error('[LoginCompact] Email sign in error:', error)
+        setError(error.message)
+      } else if (data.user) {
+        console.log('[LoginCompact] Email sign in successful')
+        // User will be redirected by the auth state change
+      }
+    } catch (err) {
+      console.error('[LoginCompact] Unexpected error:', err)
+      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsSigningIn(false)
+    }
+  }
+
+  const signInWithMagicLink = async () => {
+    if (!magicLinkEmail) {
+      setError('Please enter your email address')
+      return
+    }
+
+    try {
+      setIsSigningIn(true)
+      setError(null)
+      
+      console.log('[LoginCompact] Sending magic link to:', magicLinkEmail)
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicLinkEmail.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) {
+        console.error('[LoginCompact] Magic link error:', error)
+        setError(error.message)
+      } else {
+        setError(null)
+        alert(`Magic link sent to ${magicLinkEmail}! Check your email and click the link to sign in.`)
+        setMagicLinkEmail('')
+        setShowMagicLink(false)
+      }
+    } catch (err) {
+      console.error('[LoginCompact] Unexpected error:', err)
+      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsSigningIn(false)
+    }
+  }
+
+  const resetPassword = async () => {
+    if (!resetEmail) {
+      setError('Please enter your email address')
+      return
+    }
+
+    try {
+      setIsSigningIn(true)
+      setError(null)
+      
+      console.log('[LoginCompact] Sending password reset to:', resetEmail)
+
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        resetEmail.trim(),
+        { redirectTo: `${window.location.origin}/auth/reset` }
+      )
+
+      if (error) {
+        console.error('[LoginCompact] Password reset error:', error)
+        setError(error.message)
+      } else {
+        setError(null)
+        alert(`Password reset link sent to ${resetEmail}! Check your email and follow the instructions.`)
+        setResetEmail('')
+        setShowPasswordReset(false)
+      }
+    } catch (err) {
+      console.error('[LoginCompact] Unexpected error:', err)
+      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsSigningIn(false)
+    }
+  }
+
   if (loading) {
     return (
       <div style={{ 
@@ -205,8 +314,352 @@ export default function LoginCompact() {
           </div>
         )}
 
-        {/* Buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* Email/Password Form */}
+        {showEmailForm ? (
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !isSigningIn && signInWithEmail()}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  backgroundColor: '#ffffff',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !isSigningIn && signInWithEmail()}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  backgroundColor: '#ffffff',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={signInWithEmail}
+                  disabled={isSigningIn || !email || !password}
+                  style={{
+                    flex: '1',
+                    padding: '12px 16px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    backgroundColor: '#059669',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: isSigningIn || !email || !password ? 'not-allowed' : 'pointer',
+                    opacity: isSigningIn || !email || !password ? 0.6 : 1,
+                  }}
+                >
+                  {isSigningIn ? 'Signing In...' : 'Sign In'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEmailForm(false)
+                    setEmail('')
+                    setPassword('')
+                    setError(null)
+                  }}
+                  disabled={isSigningIn}
+                  style={{
+                    padding: '12px 16px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    backgroundColor: '#ffffff',
+                    color: '#374151',
+                    fontSize: '14px',
+                    cursor: isSigningIn ? 'not-allowed' : 'pointer',
+                    opacity: isSigningIn ? 0.6 : 1,
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  onClick={() => navigate('/signup')}
+                  disabled={isSigningIn}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#3b82f6',
+                    fontSize: '13px',
+                    cursor: isSigningIn ? 'not-allowed' : 'pointer',
+                    textDecoration: 'underline',
+                    opacity: isSigningIn ? 0.6 : 1,
+                  }}
+                >
+                  Don't have an account? Sign up
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : showMagicLink ? (
+          /* Magic Link Form */
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                value={magicLinkEmail}
+                onChange={(e) => setMagicLinkEmail(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !isSigningIn && signInWithMagicLink()}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  backgroundColor: '#ffffff',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={signInWithMagicLink}
+                  disabled={isSigningIn || !magicLinkEmail}
+                  style={{
+                    flex: '1',
+                    padding: '12px 16px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    backgroundColor: '#7c3aed',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: isSigningIn || !magicLinkEmail ? 'not-allowed' : 'pointer',
+                    opacity: isSigningIn || !magicLinkEmail ? 0.6 : 1,
+                  }}
+                >
+                  {isSigningIn ? 'Sending...' : 'Send Magic Link'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMagicLink(false)
+                    setMagicLinkEmail('')
+                    setError(null)
+                  }}
+                  disabled={isSigningIn}
+                  style={{
+                    padding: '12px 16px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    backgroundColor: '#ffffff',
+                    color: '#374151',
+                    fontSize: '14px',
+                    cursor: isSigningIn ? 'not-allowed' : 'pointer',
+                    opacity: isSigningIn ? 0.6 : 1,
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+              <div style={{ textAlign: 'center', fontSize: '12px', color: '#6b7280' }}>
+                We'll send you a secure link to sign in without a password
+              </div>
+            </div>
+          </div>
+        ) : showPasswordReset ? (
+          /* Password Reset Form */
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !isSigningIn && resetPassword()}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  backgroundColor: '#ffffff',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={resetPassword}
+                  disabled={isSigningIn || !resetEmail}
+                  style={{
+                    flex: '1',
+                    padding: '12px 16px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: isSigningIn || !resetEmail ? 'not-allowed' : 'pointer',
+                    opacity: isSigningIn || !resetEmail ? 0.6 : 1,
+                  }}
+                >
+                  {isSigningIn ? 'Sending...' : 'Reset Password'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPasswordReset(false)
+                    setResetEmail('')
+                    setError(null)
+                  }}
+                  disabled={isSigningIn}
+                  style={{
+                    padding: '12px 16px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    backgroundColor: '#ffffff',
+                    color: '#374151',
+                    fontSize: '14px',
+                    cursor: isSigningIn ? 'not-allowed' : 'pointer',
+                    opacity: isSigningIn ? 0.6 : 1,
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+              <div style={{ textAlign: 'center', fontSize: '12px', color: '#6b7280' }}>
+                We'll send you instructions to reset your password
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Auth Method Toggles */}
+            <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                onClick={() => {
+                  setShowEmailForm(true)
+                  setShowMagicLink(false)
+                  setShowPasswordReset(false)
+                  setError(null)
+                }}
+                disabled={isSigningIn}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  border: '2px solid #059669',
+                  borderRadius: '8px',
+                  backgroundColor: '#f0fdf4',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: '#059669',
+                  cursor: isSigningIn ? 'not-allowed' : 'pointer',
+                  opacity: isSigningIn ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                📧 Email & Password
+              </button>
+              
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => {
+                    setShowMagicLink(true)
+                    setShowEmailForm(false)
+                    setShowPasswordReset(false)
+                    setError(null)
+                  }}
+                  disabled={isSigningIn}
+                  style={{
+                    flex: '1',
+                    padding: '10px 16px',
+                    border: '2px solid #7c3aed',
+                    borderRadius: '8px',
+                    backgroundColor: '#faf5ff',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#7c3aed',
+                    cursor: isSigningIn ? 'not-allowed' : 'pointer',
+                    opacity: isSigningIn ? 0.6 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  🪄 Magic Link
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowPasswordReset(true)
+                    setShowEmailForm(false)
+                    setShowMagicLink(false)
+                    setError(null)
+                  }}
+                  disabled={isSigningIn}
+                  style={{
+                    flex: '1',
+                    padding: '10px 16px',
+                    border: '2px solid #dc2626',
+                    borderRadius: '8px',
+                    backgroundColor: '#fef2f2',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#dc2626',
+                    cursor: isSigningIn ? 'not-allowed' : 'pointer',
+                    opacity: isSigningIn ? 0.6 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  🔑 Reset
+                </button>
+              </div>
+            </div>
+
+            {/* Separator */}
+            <div style={{ 
+              position: 'relative',
+              margin: '16px 0',
+              textAlign: 'center'
+            }}>
+              <div style={{ 
+                position: 'absolute',
+                top: '50%',
+                left: '0',
+                right: '0',
+                height: '1px',
+                backgroundColor: '#e5e7eb'
+              }} />
+              <span style={{ 
+                backgroundColor: '#ffffff',
+                color: '#6b7280',
+                fontSize: '12px',
+                padding: '0 12px'
+              }}>
+                or continue with
+              </span>
+            </div>
+          </>
+        )}
+
+        {/* OAuth Buttons Container */}
+        {!showEmailForm && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {/* GitHub */}
           <button
             onClick={() => signInWithProvider('github')}
@@ -317,7 +770,8 @@ export default function LoginCompact() {
             </svg>
             LinkedIn
           </button>
-        </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div style={{ 

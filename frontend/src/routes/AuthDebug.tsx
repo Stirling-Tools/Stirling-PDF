@@ -13,6 +13,11 @@ export default function AuthDebug() {
   const [apiRequestBody, setApiRequestBody] = useState('')
   const [apiResponse, setApiResponse] = useState<any>(null)
   const [isTestingApi, setIsTestingApi] = useState(false)
+  
+  // Admin functions state
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [isProcessingAdmin, setIsProcessingAdmin] = useState(false)
 
   const runAuthTests = async () => {
     setIsTestingAuth(true)
@@ -200,6 +205,94 @@ export default function AuthDebug() {
       setApiResponse(errorResult)
     } finally {
       setIsTestingApi(false)
+    }
+  }
+
+  const inviteUser = async () => {
+    if (!inviteEmail || !session) {
+      alert('Please enter an email and ensure you are signed in')
+      return
+    }
+
+    // Show information about service role requirement
+    const proceed = confirm(
+      `⚠️ Admin Invite requires SERVICE ROLE permissions.\n\n` +
+      `This will likely fail unless you:\n` +
+      `1. Have a service role key configured\n` +
+      `2. Are using RLS bypass\n` +
+      `3. Have admin privileges\n\n` +
+      `Alternative: Use the Magic Link feature instead.\n\n` +
+      `Continue anyway?`
+    )
+    
+    if (!proceed) return
+
+    try {
+      setIsProcessingAdmin(true)
+      console.log('[Admin Debug] Inviting user:', inviteEmail)
+
+      // Note: This requires admin/service role permissions
+      const { data, error } = await supabase.auth.admin.inviteUserByEmail(
+        inviteEmail.trim(),
+        { redirectTo: `${window.location.origin}/welcome` }
+      )
+
+      if (error) {
+        console.error('[Admin Debug] Invite error:', error)
+        
+        // Provide helpful error message
+        let errorMsg = error.message
+        if (error.message.includes('Bearer token') || error.message.includes('service role')) {
+          errorMsg = `❌ Service Role Required\n\n` +
+            `The invite function requires a service role key, not a user JWT.\n\n` +
+            `Solutions:\n` +
+            `• Use Magic Link instead (works with user permissions)\n` +
+            `• Configure service role in backend\n` +
+            `• Use Supabase Dashboard → Authentication → Users → Invite\n\n` +
+            `Original error: ${error.message}`
+        }
+        
+        alert(errorMsg)
+      } else {
+        console.log('[Admin Debug] Invite successful:', data)
+        alert(`✅ Invitation sent to ${inviteEmail}!`)
+        setInviteEmail('')
+      }
+    } catch (err) {
+      console.error('[Admin Debug] Invite unexpected error:', err)
+      alert(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsProcessingAdmin(false)
+    }
+  }
+
+  const changeEmail = async () => {
+    if (!newEmail || !session) {
+      alert('Please enter a new email and ensure you are signed in')
+      return
+    }
+
+    try {
+      setIsProcessingAdmin(true)
+      console.log('[Admin Debug] Changing email to:', newEmail)
+
+      const { data, error } = await supabase.auth.updateUser({
+        email: newEmail.trim()
+      })
+
+      if (error) {
+        console.error('[Admin Debug] Email change error:', error)
+        alert(`Failed to change email: ${error.message}`)
+      } else {
+        console.log('[Admin Debug] Email change initiated:', data)
+        alert(`Email change confirmation sent to both ${user?.email} and ${newEmail}. Check both inboxes for confirmation links.`)
+        setNewEmail('')
+      }
+    } catch (err) {
+      console.error('[Admin Debug] Email change unexpected error:', err)
+      alert(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsProcessingAdmin(false)
     }
   }
 
@@ -535,6 +628,145 @@ export default function AuthDebug() {
                   </pre>
                 </details>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Admin Functions */}
+        {session && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              👑 Admin Functions
+            </h2>
+            <p className="text-gray-600 mb-6 text-sm">
+              Test admin-level authentication features (requires appropriate permissions)
+            </p>
+
+            <div className="space-y-6">
+              {/* Invite User */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <h3 className="text-lg font-medium text-blue-900 mb-3">📨 Invite User</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">
+                      Email Address to Invite:
+                    </label>
+                    <input
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder="user@example.com"
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={inviteUser}
+                      disabled={isProcessingAdmin || !inviteEmail}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isProcessingAdmin ? 'Sending Invite...' : 'Try Admin Invite'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (inviteEmail) {
+                          supabase.auth.signInWithOtp({
+                            email: inviteEmail.trim(),
+                            options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+                          }).then(({ error }) => {
+                            if (error) alert(`Error: ${error.message}`)
+                            else {
+                              alert(`✅ Magic link sent to ${inviteEmail}!\n\nThey can use this to create an account and sign in.`)
+                              setInviteEmail('')
+                            }
+                          })
+                        }
+                      }}
+                      disabled={!inviteEmail}
+                      className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Send Magic Link Instead
+                    </button>
+                  </div>
+                  <div className="text-xs text-blue-700 space-y-1">
+                    <div><strong>⚠️ Admin Invite:</strong> Requires service role key (will likely fail from frontend)</div>
+                    <div><strong>✅ Magic Link:</strong> Works with user permissions, allows account creation</div>
+                    <div><strong>Alternative:</strong> Use Supabase Dashboard → Authentication → Users → Invite</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Change Email */}
+              <div className="p-4 bg-orange-50 border border-orange-200 rounded-md">
+                <h3 className="text-lg font-medium text-orange-900 mb-3">📧 Change Email Address</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-orange-800 mb-1">
+                      New Email Address:
+                    </label>
+                    <input
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="new-email@example.com"
+                      className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+                  <button
+                    onClick={changeEmail}
+                    disabled={isProcessingAdmin || !newEmail}
+                    className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isProcessingAdmin ? 'Processing...' : 'Change Email'}
+                  </button>
+                  <div className="text-xs text-orange-700 space-y-1">
+                    <div><strong>Current Email:</strong> {user?.email}</div>
+                    <div><strong>Note:</strong> Sends confirmation emails to both old and new addresses.</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Admin Actions */}
+              <div className="p-4 bg-purple-50 border border-purple-200 rounded-md">
+                <h3 className="text-lg font-medium text-purple-900 mb-3">⚡ Quick Actions</h3>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => {
+                      const email = prompt('Enter email address for magic link:')
+                      if (email) {
+                        supabase.auth.signInWithOtp({
+                          email: email.trim(),
+                          options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+                        }).then(({ error }) => {
+                          if (error) alert(`Error: ${error.message}`)
+                          else alert(`Magic link sent to ${email}!`)
+                        })
+                      }
+                    }}
+                    className="px-3 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+                  >
+                    🪄 Send Magic Link
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      const email = prompt('Enter email address for password reset:')
+                      if (email) {
+                        supabase.auth.resetPasswordForEmail(
+                          email.trim(),
+                          { redirectTo: `${window.location.origin}/auth/reset` }
+                        ).then(({ error }) => {
+                          if (error) alert(`Error: ${error.message}`)
+                          else alert(`Password reset sent to ${email}!`)
+                        })
+                      }
+                    }}
+                    className="px-3 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+                  >
+                    🔑 Reset Password
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
