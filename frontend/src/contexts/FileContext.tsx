@@ -338,19 +338,19 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
     case 'CONSUME_FILES': {
       const { inputFiles, outputFiles } = action.payload;
       const unpinnedInputFiles = inputFiles.filter(file => !state.pinnedFiles.has(file));
-      
+
       // Remove unpinned input files and add output files
       const newActiveFiles = [
         ...state.activeFiles.filter(file => !unpinnedInputFiles.includes(file)),
         ...outputFiles
       ];
-      
+
       // Update processed files map - remove consumed files, keep pinned ones
       const newProcessedFiles = new Map(state.processedFiles);
       unpinnedInputFiles.forEach(file => {
         newProcessedFiles.delete(file);
       });
-      
+
       return {
         ...state,
         activeFiles: newActiveFiles,
@@ -617,7 +617,7 @@ export function FileContextProvider({
   // File consumption function
   const consumeFiles = useCallback(async (inputFiles: File[], outputFiles: File[]): Promise<void> => {
     dispatch({ type: 'CONSUME_FILES', payload: { inputFiles, outputFiles } });
-    
+
     // Store new output files if persistence is enabled
     if (enablePersistence) {
       for (const file of outputFiles) {
@@ -625,7 +625,7 @@ export function FileContextProvider({
           const fileId = getFileId(file);
           if (!fileId) {
             try {
-              const thumbnail = await (thumbnailGenerationService as any).generateThumbnail(file);
+              const thumbnail = await (thumbnailGenerationService as any /* FIX ME */).generateThumbnail(file);
               const storedFile = await fileStorage.storeFile(file, thumbnail);
               Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
             } catch (thumbnailError) {
