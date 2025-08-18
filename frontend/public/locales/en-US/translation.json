@@ -1863,14 +1863,7 @@
           "text": "Enter the text that will appear as your watermark across the document.",
           "bullet1": "Keep it concise for better readability",
           "bullet2": "Common examples: 'CONFIDENTIAL', 'DRAFT', company name",
-          "bullet3": "Supports all Unicode characters"
-        },
-        "fontSize": {
-          "title": "Font Size",
-          "text": "Control the size of your watermark text (8-72 points).",
-          "bullet1": "Smaller sizes (8-14pt) for subtle watermarks",
-          "bullet2": "Medium sizes (16-24pt) for standard visibility",
-          "bullet3": "Large sizes (30-72pt) for prominent watermarks"
+          "bullet3": "Emoji characters are not supported and will be filtered out"
         }
       },
       "textStyle": {
@@ -1915,6 +1908,11 @@
       "formatting": {
         "header": {
           "title": "Formatting & Layout"
+        },
+        "size": {
+          "title": "Size Control",
+          "text": "Adjust the size of your watermark (text or image).",
+          "bullet1": "Larger sizes create more prominent watermarks"
         },
         "appearance": {
           "title": "Appearance Settings",

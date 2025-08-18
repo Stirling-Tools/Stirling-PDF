@@ -15,6 +15,16 @@ const WatermarkFormatting = ({ parameters, onParameterChange, disabled = false }
 
   return (
     <Stack gap="md">
+      {/* Size - single row */}
+      <NumberInputWithUnit
+        label={t('watermark.settings.size', 'Size')}
+        value={parameters.fontSize}
+        onChange={(value) => onParameterChange('fontSize', typeof value === 'number' ? value : 12)}
+        unit={parameters.watermarkType === 'text' ? 'pt' : 'px'}
+        min={1}
+        disabled={disabled}
+      />
+
       {/* Position & Appearance - 2 per row */}
       <Group grow align="flex-start">
         <NumberInputWithUnit

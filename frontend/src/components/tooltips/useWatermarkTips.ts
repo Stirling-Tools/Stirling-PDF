@@ -7,13 +7,7 @@ const useSharedWatermarkContent = () => {
 
   const languageSupportTip: TooltipTip = {
     title: t("watermark.tooltip.language.title", "Language Support"),
-    description: t("watermark.tooltip.language.text", "Choose the appropriate language setting to ensure proper font rendering for your text."),
-    bullets: [
-      t("watermark.tooltip.language.bullet1", "Roman/Latin for Western languages"),
-      t("watermark.tooltip.language.bullet2", "Arabic for Arabic script"),
-      t("watermark.tooltip.language.bullet3", "Japanese, Korean, Chinese for Asian languages"),
-      t("watermark.tooltip.language.bullet4", "Thai for Thai script")
-    ]
+    description: t("watermark.tooltip.language.text", "Choose the appropriate language setting to ensure proper font rendering for your text.")
   };
 
   const appearanceTip: TooltipTip = {
@@ -89,16 +83,7 @@ export const useWatermarkWordingTips = (): TooltipContent => {
         bullets: [
           t("watermark.tooltip.wording.text.bullet1", "Keep it concise for better readability"),
           t("watermark.tooltip.wording.text.bullet2", "Common examples: 'CONFIDENTIAL', 'DRAFT', company name"),
-          t("watermark.tooltip.wording.text.bullet3", "Supports all Unicode characters")
-        ]
-      },
-      {
-        title: t("watermark.tooltip.wording.fontSize.title", "Font Size"),
-        description: t("watermark.tooltip.wording.fontSize.text", "Control the size of your watermark text (8-72 points)."),
-        bullets: [
-          t("watermark.tooltip.wording.fontSize.bullet1", "Smaller sizes (8-14pt) for subtle watermarks"),
-          t("watermark.tooltip.wording.fontSize.bullet2", "Medium sizes (16-24pt) for standard visibility"),
-          t("watermark.tooltip.wording.fontSize.bullet3", "Large sizes (30-72pt) for prominent watermarks")
+          t("watermark.tooltip.wording.text.bullet3", "Emoji characters are not supported and will be filtered out")
         ]
       }
     ]
@@ -114,7 +99,6 @@ export const useWatermarkTextStyleTips = (): TooltipContent => {
       title: t("watermark.tooltip.textStyle.header.title", "Text Style")
     },
     tips: [
-      languageSupportTip,
       {
         title: t("watermark.tooltip.textStyle.color.title", "Color Selection"),
         description: t("watermark.tooltip.textStyle.color.text", "Choose a color that provides good contrast with your document content."),
@@ -123,7 +107,8 @@ export const useWatermarkTextStyleTips = (): TooltipContent => {
           t("watermark.tooltip.textStyle.color.bullet2", "Black or dark colors for high contrast"),
           t("watermark.tooltip.textStyle.color.bullet3", "Custom colors for branding purposes")
         ]
-      }
+      },
+      languageSupportTip
     ]
   };
 };
@@ -167,6 +152,13 @@ export const useWatermarkFormattingTips = (): TooltipContent => {
       title: t("watermark.tooltip.formatting.header.title", "Formatting & Layout")
     },
     tips: [
+      {
+        title: t("watermark.tooltip.formatting.size.title", "Size Control"),
+        description: t("watermark.tooltip.formatting.size.text", "Adjust the size of your watermark (text or image)."),
+        bullets: [
+          t("watermark.tooltip.formatting.size.bullet1", "Larger sizes create more prominent watermarks")
+        ]
+      },
       appearanceTip,
       spacingTip,
       {

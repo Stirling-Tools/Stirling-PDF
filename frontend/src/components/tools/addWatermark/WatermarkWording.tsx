@@ -2,6 +2,7 @@ import React from "react";
 import { Stack, Text, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
+import { removeEmojis } from "../../../utils/textUtils";
 
 interface WatermarkWordingProps {
   parameters: AddWatermarkParameters;
@@ -12,12 +13,18 @@ interface WatermarkWordingProps {
 const WatermarkWording = ({ parameters, onParameterChange, disabled = false }: WatermarkWordingProps) => {
   const { t } = useTranslation();
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const filteredValue = removeEmojis(value);
+    onParameterChange('watermarkText', filteredValue);
+  };
+
   return (
     <Stack gap="sm">
       <TextInput
         placeholder={t('watermark.settings.text.placeholder', 'Enter watermark text')}
         value={parameters.watermarkText}
-        onChange={(e) => onParameterChange('watermarkText', e.target.value)}
+        onChange={handleTextChange}
         disabled={disabled}
       />
     </Stack>

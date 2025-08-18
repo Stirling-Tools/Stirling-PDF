@@ -5,7 +5,7 @@ export interface AddWatermarkParameters {
   watermarkType?: 'text' | 'image';
   watermarkText: string;
   watermarkImage?: File;
-  fontSize: number;
+  fontSize: number; // Used for both text size and image size
   rotation: number;
   opacity: number;
   widthSpacer: number;
