@@ -69,12 +69,11 @@ public class ConvertImgPDFController {
         Path tempFile = null;
         Path tempOutputDir = null;
         Path tempPdfPath = null;
-        byte[] result = null;
+        byte[] result;
         String[] pageOrderArr =
                 (pageNumbers != null && !pageNumbers.trim().isEmpty())
                         ? pageNumbers.split(",")
                         : new String[] {"all"};
-        ;
         try {
             // Load the input PDF
             byte[] newPdfBytes = rearrangePdfPages(file, pageOrderArr);
@@ -102,7 +101,7 @@ public class ConvertImgPDFController {
                             singleImage,
                             dpi,
                             filename);
-            if (result == null || result.length == 0) {
+            if (result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }
             if ("webp".equalsIgnoreCase(imageFormat) && !CheckProgramInstall.isPythonAvailable()) {
@@ -159,7 +158,7 @@ public class ConvertImgPDFController {
                             "No WebP files were created. " + resultProcess.getMessages());
                 }
 
-                byte[] bodyBytes = new byte[0];
+                byte[] bodyBytes;
 
                 if (webpFiles.size() == 1) {
                     // Return the single WebP file directly
@@ -179,7 +178,7 @@ public class ConvertImgPDFController {
                 }
                 // Clean up the temporary files
                 Files.deleteIfExists(tempFile);
-                if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
+                FileUtils.deleteDirectory(tempOutputDir.toFile());
                 result = bodyBytes;
             }
 
