@@ -1,5 +1,4 @@
 import { ButtonConfig } from '../../../types/sidebar';
-import { useFlatToolRegistry } from '../../../data/toolRegistry';
 
 // Border radius constants
 export const ROUND_BORDER_RADIUS = '0.5rem';
@@ -65,26 +64,12 @@ export const getNavButtonStyle = (
   };
 };
 
-/**
- * Determine which nav button should be highlighted based on the tool registry.
- * Uses the tool's `view` property to map to the nav button id.
- */
-export const getTargetNavButton = (
-  selectedToolKey: string | null,
-  registry: ReturnType<typeof useFlatToolRegistry>
-): string | null => {
-  if (!selectedToolKey) return null;
-
-  return selectedToolKey;
-};
 
 /**
  * Determine the active nav button based on current tool state and registry
  */
 export const getActiveNavButton = (
-  leftPanelView: 'toolPicker' | 'toolContent',
   selectedToolKey: string | null,
-  registry: ReturnType<typeof useFlatToolRegistry>,
   readerMode: boolean
 ): string => {
   // Reader mode takes precedence and should highlight the Read nav item
@@ -94,9 +79,5 @@ export const getActiveNavButton = (
   // If a tool is selected, highlight it immediately even if the panel view
   // transition to 'toolContent' has not completed yet. This prevents a brief
   // period of no-highlight during rapid navigation.
-  if (selectedToolKey) {
-    return getTargetNavButton(selectedToolKey, registry) || selectedToolKey;
-  }
-  // Default to All Tools when no tool is selected
-  return 'tools';
+    return selectedToolKey ? selectedToolKey : 'tools';
 };

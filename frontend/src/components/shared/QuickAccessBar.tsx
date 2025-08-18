@@ -24,14 +24,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedTool, selectedToolKey, leftPanelView, toolRegistry, readerMode } = useToolWorkflow();
+  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
 
   useEffect(() => {
-    const next = getActiveNavButton(leftPanelView, selectedToolKey, toolRegistry as any, readerMode);
+    const next = getActiveNavButton(selectedToolKey, readerMode);
     setActiveButton(next);
   }, [leftPanelView, selectedToolKey, toolRegistry, readerMode]);
 
