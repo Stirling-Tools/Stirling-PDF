@@ -199,9 +199,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   ) : null;
 
   const handleMouseEnter = (e: React.MouseEvent) => {
-    if (openTimeoutRef.current) {
-      clearTimeout(openTimeoutRef.current);
-    }
+      clearTimers();
     if (!isPinned) {
       const effectiveDelay = Math.max(0, delay || 0);
       openTimeoutRef.current = setTimeout(() => {
@@ -213,10 +211,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
   };
 
   const handleMouseLeave = (e: React.MouseEvent) => {
-    if (openTimeoutRef.current) {
-      clearTimeout(openTimeoutRef.current);
+      clearTimers();
       openTimeoutRef.current = null;
-    }
 
     if (!isPinned) {
       handleOpenChange(false);

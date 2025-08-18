@@ -212,10 +212,18 @@
 .current-tool-slot.visible {
   max-height: 8.25rem; /* icon + up to 3-line label + divider (132px) */
   opacity: 1;
+  border-bottom: 1px solid var(--color-gray-300);
+  padding-bottom: 0.75rem; /* push border down for spacing */
+  margin-bottom: 1rem;
 }
 
 /* Replay the grow-down animation when switching tools while visible */
 .current-tool-slot.replay .current-tool-content {
+  animation: currentToolGrowDown 450ms ease-out;
+}
+
+/* Also animate the container itself when replaying so it "pushes down" again */
+.current-tool-slot.replay {
   animation: currentToolGrowDown 450ms ease-out;
 }
 

@@ -31,7 +31,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
   const isOverflow = useIsOverflowing(scrollableRef);
 
   useEffect(() => {
-    setActiveButton(getActiveNavButton(leftPanelView, selectedToolKey, toolRegistry as any, readerMode));
+    const next = getActiveNavButton(leftPanelView, selectedToolKey, toolRegistry as any, readerMode);
+    setActiveButton(next);
   }, [leftPanelView, selectedToolKey, toolRegistry, readerMode]);
 
   const handleFilesButtonClick = () => {
@@ -159,20 +160,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
 
                   <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
                     <ActionIcon
-                      size={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? (config.size || 'xl') : 'lg'}
+                      size={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? (config.size || 'xl') : 'lg'}
                       variant="subtle"
                        onClick={() => {
                          config.onClick();
                        }}
-                      style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen)}
-                      className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? 'activeIconScale' : ''}
+                      style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
+                      className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'activeIconScale' : ''}
                       data-testid={`${config.id}-button`}
                     >
                       <span className="iconContainer">
                         {config.icon}
                       </span>
                     </ActionIcon>
-                    <span className={`button-text ${isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? 'active' : 'inactive'}`}>
+                    <span className={`button-text ${isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'active' : 'inactive'}`}>
                       {config.name}
                     </span>
                   </div>
@@ -201,15 +202,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
                     size={config.size || 'lg'}
                     variant="subtle"
                     onClick={config.onClick}
-                    style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen)}
-                    className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? 'activeIconScale' : ''}
+                    style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
+                    className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'activeIconScale' : ''}
                     data-testid={`${config.id}-button`}
                   >
                     <span className="iconContainer">
                       {config.icon}
                     </span>
                   </ActionIcon>
-                  <span className={`button-text ${isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen) ? 'active' : 'inactive'}`}>
+                  <span className={`button-text ${isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'active' : 'inactive'}`}>
                     {config.name}
                   </span>
                 </div>

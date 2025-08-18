@@ -591,10 +591,6 @@
       "title": "Advanced Colour options",
       "desc": "Replace colour for text and background in PDF and invert full colour of pdf to reduce file size"
     },
-    "EMLToPDF": {
-      "title": "Email to PDF",
-      "desc": "Converts email (EML) files to PDF format including headers, body, and inline images"
-    },
     "fakeScan": {
       "title": "Fake Scan",
       "desc": "Create a PDF that looks like it was scanned"

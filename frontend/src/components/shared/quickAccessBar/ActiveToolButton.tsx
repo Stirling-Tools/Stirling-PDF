@@ -13,7 +13,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ActionIcon, Divider } from '@mantine/core';
+import { ActionIcon } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
 import FitText from '../FitText';
@@ -29,9 +29,9 @@ const NAV_IDS = ['read', 'sign', 'automate'];
 const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setActiveButton }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
 
-  // Determine if the indicator should be visible
+  // Determine if the indicator should be visible (do not require selectedTool to be resolved yet)
   const indicatorShouldShow = Boolean(
-    selectedToolKey && selectedTool && leftPanelView === 'toolContent' && !NAV_IDS.includes(selectedToolKey)
+    selectedToolKey && leftPanelView === 'toolContent' && !NAV_IDS.includes(selectedToolKey)
   );
 
   // Local animation and hover state
@@ -41,52 +41,98 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [isBackHover, setIsBackHover] = useState<boolean>(false);
   const prevKeyRef = useRef<string | null>(null);
+  const collapseTimeoutRef = useRef<number | null>(null);
+  const animTimeoutRef = useRef<number | null>(null);
+  const replayRafRef = useRef<number | null>(null);
 
   const isSwitchingToNewTool = () => { return prevKeyRef.current && prevKeyRef.current !== selectedToolKey };
 
-  const playGrowDown = () => {
+  const clearTimers = () => {
+    if (collapseTimeoutRef.current) {
+      window.clearTimeout(collapseTimeoutRef.current);
+      collapseTimeoutRef.current = null;
+    }
+    if (animTimeoutRef.current) {
+      window.clearTimeout(animTimeoutRef.current);
+      animTimeoutRef.current = null;
+    }
+  };
 
+  const playGrowDown = () => {
+    clearTimers();
     setIndicatorTool(selectedTool);
     setIndicatorVisible(true);
-    setReplayAnim(true);
+    // Force a replay even if the class is already applied
+    setReplayAnim(false);
+    if (replayRafRef.current) {
+      cancelAnimationFrame(replayRafRef.current);
+      replayRafRef.current = null;
+    }
+    replayRafRef.current = requestAnimationFrame(() => {
+      setReplayAnim(true);
+    });
     setIsAnimating(true);
-    const t = window.setTimeout(() => {
+    prevKeyRef.current = (selectedToolKey as string) || null;
+    animTimeoutRef.current = window.setTimeout(() => {
       setReplayAnim(false);
       setIsAnimating(false);
+      animTimeoutRef.current = null;
     }, 500);
-    return () => window.clearTimeout(t);
   }
 
   const firstShow = () => {
+    clearTimers();
     setIndicatorTool(selectedTool);
     setIndicatorVisible(true);
     setIsAnimating(true);
     prevKeyRef.current = (selectedToolKey as string) || null;
-    const tShow = window.setTimeout(() => setIsAnimating(false), 500);
-    return () => window.clearTimeout(tShow);
+    animTimeoutRef.current = window.setTimeout(() => {
+      setIsAnimating(false);
+      animTimeoutRef.current = null;
+    }, 500);
   }
 
   const triggerCollapse = () => {
+    clearTimers();
     setIndicatorVisible(false);
     setIsAnimating(true);
-    const timeout = window.setTimeout(() => {
+    collapseTimeoutRef.current = window.setTimeout(() => {
       setIndicatorTool(null);
       prevKeyRef.current = null;
       setIsAnimating(false);
+      collapseTimeoutRef.current = null;
     }, 500); // match CSS transition duration
-    return () => window.clearTimeout(timeout);
   }
 
   useEffect(() => {
     if (indicatorShouldShow) {
-      if (isSwitchingToNewTool()) {
-        playGrowDown();
+      clearTimers();
+      if (!indicatorVisible) {
+        firstShow();
+        return;
       }
-      firstShow()
-    } else if (indicatorTool) {
+      if (!indicatorTool) {
+        firstShow();
+      } else if (isSwitchingToNewTool()) {
+        playGrowDown();
+      } else {
+        // keep reference in sync
+        prevKeyRef.current = (selectedToolKey as string) || null;
+      }
+    } else if (indicatorTool || indicatorVisible) {
       triggerCollapse();
     }
   }, [indicatorShouldShow, selectedTool, selectedToolKey]);
+
+  useEffect(() => {
+    return () => {
+      clearTimers();
+      if (replayRafRef.current) {
+        cancelAnimationFrame(replayRafRef.current);
+        replayRafRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -133,9 +179,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
           </div>
         )}
       </div>
-      {(indicatorTool && !isAnimating) && (
-        <Divider size="xs" className="current-tool-divider" />
-      )}
     </>
   );
 };

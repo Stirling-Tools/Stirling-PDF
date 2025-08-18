@@ -8,28 +8,44 @@ export const ROUND_BORDER_RADIUS = '0.5rem';
  * Check if a navigation button is currently active
  */
 export const isNavButtonActive = (
-  config: ButtonConfig, 
-  activeButton: string, 
-  isFilesModalOpen: boolean, 
-  configModalOpen: boolean
+  config: ButtonConfig,
+  activeButton: string,
+  isFilesModalOpen: boolean,
+  configModalOpen: boolean,
+  selectedToolKey?: string | null,
+  leftPanelView?: 'toolPicker' | 'toolContent'
 ): boolean => {
-  return (
-    (config.type === 'navigation' && activeButton === config.id) ||
+  const isActiveByLocalState = config.type === 'navigation' && activeButton === config.id;
+  const isActiveByContext =
+    config.type === 'navigation' &&
+    leftPanelView === 'toolContent' &&
+    selectedToolKey === config.id;
+  const isActiveByModal =
     (config.type === 'modal' && config.id === 'files' && isFilesModalOpen) ||
-    (config.type === 'modal' && config.id === 'config' && configModalOpen)
-  );
+    (config.type === 'modal' && config.id === 'config' && configModalOpen);
+
+  return isActiveByLocalState || isActiveByContext || isActiveByModal;
 };
 
 /**
  * Get button styles based on active state
  */
 export const getNavButtonStyle = (
-  config: ButtonConfig, 
-  activeButton: string, 
-  isFilesModalOpen: boolean, 
-  configModalOpen: boolean
+  config: ButtonConfig,
+  activeButton: string,
+  isFilesModalOpen: boolean,
+  configModalOpen: boolean,
+  selectedToolKey?: string | null,
+  leftPanelView?: 'toolPicker' | 'toolContent'
 ) => {
-  const isActive = isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen);
+  const isActive = isNavButtonActive(
+    config,
+    activeButton,
+    isFilesModalOpen,
+    configModalOpen,
+    selectedToolKey,
+    leftPanelView
+  );
 
   if (isActive) {
     return {
@@ -75,9 +91,12 @@ export const getActiveNavButton = (
   if (readerMode) {
     return 'read';
   }
-  if (leftPanelView !== 'toolContent' || !selectedToolKey) {
-    return 'tools';
+  // If a tool is selected, highlight it immediately even if the panel view
+  // transition to 'toolContent' has not completed yet. This prevents a brief
+  // period of no-highlight during rapid navigation.
+  if (selectedToolKey) {
+    return getTargetNavButton(selectedToolKey, registry) || selectedToolKey;
   }
-
-  return getTargetNavButton(selectedToolKey, registry) || 'tools';
+  // Default to All Tools when no tool is selected
+  return 'tools';
 };
