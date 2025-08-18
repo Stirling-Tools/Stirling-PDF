@@ -12,9 +12,9 @@ interface FileUploadButtonProps {
   fullWidth?: boolean;
 }
 
-const FileUploadButton = ({ 
-  file, 
-  onChange, 
+const FileUploadButton = ({
+  file,
+  onChange,
   accept = "*/*",
   disabled = false,
   placeholder,
@@ -24,7 +24,7 @@ const FileUploadButton = ({
   const { t } = useTranslation();
   const resetRef = useRef<() => void>(null);
 
-  const defaultPlaceholder = t('common.chooseFile', 'Choose File');
+  const defaultPlaceholder = t('chooseFile', 'Choose File');
 
   return (
     <FileButton
