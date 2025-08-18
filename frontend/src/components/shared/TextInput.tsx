@@ -102,5 +102,3 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
     </div>
   );
 });
-
-TextInput.displayName = 'TextInput';

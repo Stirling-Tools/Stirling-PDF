@@ -140,6 +140,7 @@
 
   /* Tool panel search bar background colors */
   --tool-panel-search-bg: #EFF1F4;
+  --tool-panel-search-border-bottom: #EFF1F4;
 
   /* container */
   --landing-paper-bg: var(--bg-surface);
@@ -289,6 +290,8 @@
 
   /* Tool panel search bar background colors (dark mode) */
   --tool-panel-search-bg: #1F2329;
+  --tool-panel-search-border-bottom: #4B525A;
+
 }
 
 /* Dropzone drop state styling */
