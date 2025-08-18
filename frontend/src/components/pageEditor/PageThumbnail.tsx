@@ -154,6 +154,7 @@ const PageThumbnail = React.memo(({
                 : undefined;
               onReorderPages(page.pageNumber, targetIndex, pagesToMove);
             }
+          }
         }
       });
 
