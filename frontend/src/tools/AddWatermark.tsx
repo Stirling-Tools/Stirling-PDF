@@ -9,7 +9,7 @@ import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import WatermarkTypeSettings from "../components/tools/addWatermark/WatermarkTypeSettings";
 import WatermarkWording from "../components/tools/addWatermark/WatermarkWording";
 import WatermarkTextStyle from "../components/tools/addWatermark/WatermarkTextStyle";
-import WatermarkFile from "../components/tools/addWatermark/WatermarkFile";
+import WatermarkImageFile from "../components/tools/addWatermark/WatermarkImageFile";
 import WatermarkFormatting from "../components/tools/addWatermark/WatermarkFormatting";
 
 import { useAddWatermarkParameters } from "../hooks/tools/addWatermark/useAddWatermarkParameters";
@@ -162,7 +162,7 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
           isCollapsed: false,
           tooltip: watermarkFileTips,
           content: (
-            <WatermarkFile
+            <WatermarkImageFile
               parameters={watermarkParams.parameters}
               onParameterChange={watermarkParams.updateParameter}
               disabled={endpointLoading}

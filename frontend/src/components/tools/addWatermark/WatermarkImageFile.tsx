@@ -4,13 +4,13 @@ import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
 import FileUploadButton from "../../shared/FileUploadButton";
 
-interface WatermarkFileProps {
+interface WatermarkImageFileProps {
   parameters: AddWatermarkParameters;
   onParameterChange: (key: keyof AddWatermarkParameters, value: any) => void;
   disabled?: boolean;
 }
 
-const WatermarkFile = ({ parameters, onParameterChange, disabled = false }: WatermarkFileProps) => {
+const WatermarkImageFile = ({ parameters, onParameterChange, disabled = false }: WatermarkImageFileProps) => {
   const { t } = useTranslation();
 
   return (
@@ -26,4 +26,4 @@ const WatermarkFile = ({ parameters, onParameterChange, disabled = false }: Wate
   );
 };
 
-export default WatermarkFile;
+export default WatermarkImageFile;
