@@ -6,7 +6,7 @@ import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { PDFPage, PDFDocument } from '../../types/pageEditor';
 import { RotatePagesCommand, DeletePagesCommand, ToggleSplitCommand } from '../../commands/pageCommands';
 import { Command } from '../../hooks/useUndoRedo';
@@ -27,22 +27,15 @@ interface PageThumbnailProps {
   originalFile?: File; // For lazy thumbnail generation
   selectedPages: number[];
   selectionMode: boolean;
-  draggedPage: number | null;
-  dropTarget: number | 'end' | null;
   movingPage: number | null;
   isAnimating: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  onDragStart: (pageNumber: number) => void;
-  onDragEnd: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragEnter: (pageNumber: number) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent, pageNumber: number) => void;
   onTogglePage: (pageNumber: number) => void;
   onAnimateReorder: (pageNumber: number, targetIndex: number) => void;
   onExecuteCommand: (command: Command) => void;
   onSetStatus: (status: string) => void;
   onSetMovingPage: (pageNumber: number | null) => void;
+  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => void;
   RotatePagesCommand: typeof RotatePagesCommand;
   DeletePagesCommand: typeof DeletePagesCommand;
   ToggleSplitCommand: typeof ToggleSplitCommand;
@@ -57,22 +50,15 @@ const PageThumbnail = React.memo(({
   originalFile,
   selectedPages,
   selectionMode,
-  draggedPage,
-  dropTarget,
   movingPage,
   isAnimating,
   pageRefs,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragEnter,
-  onDragLeave,
-  onDrop,
   onTogglePage,
   onAnimateReorder,
   onExecuteCommand,
   onSetStatus,
   onSetMovingPage,
+  onReorderPages,
   RotatePagesCommand,
   DeletePagesCommand,
   ToggleSplitCommand,
@@ -80,6 +66,8 @@ const PageThumbnail = React.memo(({
   setPdfDocument,
 }: PageThumbnailProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragElementRef = useRef<HTMLDivElement>(null);
   const { state, selectors } = useFileState();
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
 
@@ -130,14 +118,69 @@ const PageThumbnail = React.memo(({
   }, [page.id, originalFile, requestThumbnail, getThumbnailFromCache]); // Removed thumbnailUrl to prevent loops
 
 
-  // Register this component with pageRefs for animations
   const pageElementRef = useCallback((element: HTMLDivElement | null) => {
     if (element) {
       pageRefs.current.set(page.id, element);
+      dragElementRef.current = element;
+      
+      const dragCleanup = draggable({
+        element,
+        getInitialData: () => ({
+          pageNumber: page.pageNumber,
+          pageId: page.id,
+          selectedPages: selectionMode && selectedPages.includes(page.pageNumber) 
+            ? selectedPages 
+            : [page.pageNumber]
+        }),
+        onDragStart: () => {
+          setIsDragging(true);
+        },
+        onDrop: ({ location }) => {
+          setIsDragging(false);
+          
+          if (location.current.dropTargets.length === 0) {
+            return;
+          }
+          
+          const dropTarget = location.current.dropTargets[0];
+          const targetData = dropTarget.data;
+          
+          if (targetData.type === 'page') {
+            const targetPageNumber = targetData.pageNumber as number;
+            const targetIndex = pdfDocument.pages.findIndex(p => p.pageNumber === targetPageNumber);
+            if (targetIndex !== -1) {
+              const pagesToMove = selectionMode && selectedPages.includes(page.pageNumber)
+                ? selectedPages
+                : undefined;
+              onReorderPages(page.pageNumber, targetIndex, pagesToMove);
+            }
+        }
+      });
+
+      element.style.cursor = 'grab';
+      
+      
+      const dropCleanup = dropTargetForElements({
+        element,
+        getData: () => ({
+          type: 'page',
+          pageNumber: page.pageNumber
+        }),
+        onDrop: ({ source }) => {}
+      });
+      
+      (element as any).__dragCleanup = () => {
+        dragCleanup();
+        dropCleanup();
+      };
     } else {
       pageRefs.current.delete(page.id);
+      if (dragElementRef.current && (dragElementRef.current as any).__dragCleanup) {
+        (dragElementRef.current as any).__dragCleanup();
+      }
     }
-  }, [page.id, pageRefs]);
+  }, [page.id, page.pageNumber, pageRefs, selectionMode, selectedPages, pdfDocument.pages, onReorderPages]);
+
 
   return (
     <div
@@ -159,25 +202,13 @@ const PageThumbnail = React.memo(({
         ${selectionMode
           ? 'bg-white hover:bg-gray-50'
           : 'bg-white hover:bg-gray-50'}
-        ${draggedPage === page.pageNumber ? 'opacity-50 scale-95' : ''}
+        ${isDragging ? 'opacity-50 scale-95' : ''}
         ${movingPage === page.pageNumber ? 'page-moving' : ''}
       `}
       style={{
-        transform: (() => {
-          if (!isAnimating && draggedPage && page.pageNumber !== draggedPage && dropTarget === page.pageNumber) {
-            return 'translateX(20px)';
-          }
-          return 'translateX(0)';
-        })(),
         transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
       }}
-      draggable
-      onDragStart={() => onDragStart(page.pageNumber)}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      onDragEnter={() => onDragEnter(page.pageNumber)}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, page.pageNumber)}
+      draggable={false}
     >
       {selectionMode && (
         <div
@@ -201,7 +232,6 @@ const PageThumbnail = React.memo(({
             e.stopPropagation();
           }}
           onClick={(e) => {
-            console.log('📸 Checkbox clicked for page', page.pageNumber);
             e.stopPropagation();
             onTogglePage(page.pageNumber);
           }}
@@ -216,7 +246,7 @@ const PageThumbnail = React.memo(({
         </div>
       )}
 
-      <div className="page-container w-[90%] h-[90%]">
+      <div className="page-container w-[90%] h-[90%]" draggable={false}>
         <div
           style={{
             width: '100%',
@@ -234,6 +264,7 @@ const PageThumbnail = React.memo(({
             <img
               src={thumbnailUrl}
               alt={`Page ${page.pageNumber}`}
+              draggable={false}
               style={{
                 width: '100%',
                 height: '100%',
@@ -415,16 +446,6 @@ const PageThumbnail = React.memo(({
           )}
         </div>
 
-        <DragIndicatorIcon
-          style={{
-            position: 'absolute',
-            bottom: 4,
-            right: 4,
-            color: 'rgba(0,0,0,0.3)',
-            fontSize: 16,
-            zIndex: 1
-          }}
-        />
       </div>
     </div>
   );
@@ -444,8 +465,6 @@ const PageThumbnail = React.memo(({
     (prevProps.selectedPages === nextProps.selectedPages || 
      arraysEqual(prevProps.selectedPages, nextProps.selectedPages)) &&
     prevProps.selectionMode === nextProps.selectionMode &&
-    prevProps.draggedPage === nextProps.draggedPage &&
-    prevProps.dropTarget === nextProps.dropTarget &&
     prevProps.movingPage === nextProps.movingPage &&
     prevProps.isAnimating === nextProps.isAnimating
   );

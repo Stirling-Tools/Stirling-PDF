@@ -752,61 +752,34 @@ const FileEditor = ({
             <SkeletonLoader type="fileGrid" count={6} />
           </Box>
         ) : (
-          <DragDropGrid
-            items={files}
-            selectedItems={localSelectedIds as any /* FIX ME */}
-            selectionMode={selectionMode}
-            isAnimating={isAnimating}
-            onDragStart={handleDragStart as any /* FIX ME */}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragEnter={handleDragEnter as any /* FIX ME */}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop as any /* FIX ME */}
-            onEndZoneDragEnter={handleEndZoneDragEnter}
-            draggedItem={draggedFile as any /* FIX ME */}
-            dropTarget={dropTarget as any /* FIX ME */}
-            multiItemDrag={multiFileDrag as any /* FIX ME */}
-            dragPosition={dragPosition}
-            renderItem={(file, index, refs) => (
-            <FileThumbnail
-              file={file}
-              index={index}
-              totalFiles={files.length}
-              selectedFiles={localSelectedIds}
-              selectionMode={selectionMode}
-              draggedFile={draggedFile}
-              dropTarget={dropTarget}
-              isAnimating={isAnimating}
-              fileRefs={refs}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onToggleFile={toggleFile}
-              onDeleteFile={handleDeleteFile}
-              onViewFile={handleViewFile}
-              onSetStatus={setStatus}
-              toolMode={toolMode}
-              isSupported={isFileSupported(file.name)}
-            />
-          )}
-          renderSplitMarker={(file, index) => (
-            <div
-              style={{
-                width: '2px',
-                height: '24rem',
-                borderLeft: '2px dashed #3b82f6',
-                backgroundColor: 'transparent',
-                marginLeft: '-0.75rem',
-                marginRight: '-0.75rem',
-                flexShrink: 0
-              }}
-            />
-          )}
-        />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', padding: '1rem' }}>
+            {files.map((file, index) => (
+              <FileThumbnail
+                key={file.id}
+                file={file}
+                index={index}
+                totalFiles={files.length}
+                selectedFiles={localSelectedIds}
+                selectionMode={selectionMode}
+                draggedFile={draggedFile}
+                dropTarget={dropTarget}
+                isAnimating={isAnimating}
+                fileRefs={fileRefs}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onToggleFile={toggleFile}
+                onDeleteFile={handleDeleteFile}
+                onViewFile={handleViewFile}
+                onSetStatus={setStatus}
+                toolMode={toolMode}
+                isSupported={isFileSupported(file.name)}
+              />
+            ))}
+          </div>
         )}
       </Box>
 

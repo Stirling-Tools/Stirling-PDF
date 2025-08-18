@@ -232,11 +232,6 @@ const PageEditor = ({
   const [csvInput, setCsvInput] = useState<string>("");
   const [selectionMode, setSelectionMode] = useState(false);
 
-  // Drag and drop state
-  const [draggedPage, setDraggedPage] = useState<number | null>(null);
-  const [dropTarget, setDropTarget] = useState<number | 'end' | null>(null);
-  const [multiPageDrag, setMultiPageDrag] = useState<{pageNumbers: number[], count: number} | null>(null);
-  const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
 
   // Export state
   const [exportLoading, setExportLoading] = useState(false);
@@ -287,7 +282,7 @@ const PageEditor = ({
 
   // Simple cache-first thumbnail generation (no complex detection needed)
 
-  // Simple thumbnail generation - generate pages 2+ that aren't cached
+  // Lazy thumbnail generation - only generate when needed, with intelligent batching
   const generateMissingThumbnails = useCallback(async () => {
     if (!mergedPdfDocument || !primaryFileId || activeFileIds.length !== 1) {
       return;
@@ -299,7 +294,34 @@ const PageEditor = ({
     const totalPages = mergedPdfDocument.totalPages;
     if (totalPages <= 1) return; // Only page 1, nothing to generate
     
-    // Check which pages 2+ need thumbnails (not in cache)
+    // For very large documents (2000+ pages), be much more conservative
+    const isVeryLargeDocument = totalPages > 2000;
+    
+    if (isVeryLargeDocument) {
+      console.log(`📸 PageEditor: Very large document (${totalPages} pages) - using minimal thumbnail generation`);
+      // For very large docs, only generate the next visible batch (pages 2-25) to avoid UI blocking
+      const pageNumbersToGenerate = [];
+      for (let pageNum = 2; pageNum <= Math.min(25, totalPages); pageNum++) {
+        const pageId = `${primaryFileId}-page-${pageNum}`;
+        if (!getThumbnailFromCache(pageId)) {
+          pageNumbersToGenerate.push(pageNum);
+        }
+      }
+      
+      if (pageNumbersToGenerate.length > 0) {
+        console.log(`📸 PageEditor: Generating initial batch for large doc: pages [${pageNumbersToGenerate.join(', ')}]`);
+        await generateThumbnailBatch(file, primaryFileId, pageNumbersToGenerate);
+      }
+      
+      // Schedule remaining thumbnails with delay to avoid blocking
+      setTimeout(() => {
+        generateRemainingThumbnailsLazily(file, primaryFileId, totalPages, 26);
+      }, 2000); // 2 second delay before starting background generation
+      
+      return;
+    }
+    
+    // For smaller documents, check which pages 2+ need thumbnails
     const pageNumbersToGenerate = [];
     for (let pageNum = 2; pageNum <= totalPages; pageNum++) {
       const pageId = `${primaryFileId}-page-${pageNum}`;
@@ -313,19 +335,23 @@ const PageEditor = ({
       return;
     }
 
-    console.log(`📸 PageEditor: Generating thumbnails for pages: [${pageNumbersToGenerate.join(', ')}]`);
-    
+    console.log(`📸 PageEditor: Generating thumbnails for pages: [${pageNumbersToGenerate.slice(0, 5).join(', ')}${pageNumbersToGenerate.length > 5 ? '...' : ''}]`);
+    await generateThumbnailBatch(file, primaryFileId, pageNumbersToGenerate);
+  }, [mergedPdfDocument, primaryFileId, activeFileIds, selectors]);
+
+  // Helper function to generate thumbnails in batches
+  const generateThumbnailBatch = useCallback(async (file: File, fileId: string, pageNumbers: number[]) => {
     try {
       // Load PDF array buffer for Web Workers
       const arrayBuffer = await file.arrayBuffer();
 
       // Calculate quality scale based on file size
-      const scale = calculateScaleFromFileSize(selectors.getFileRecord(primaryFileId)?.size || 0);
+      const scale = calculateScaleFromFileSize(selectors.getFileRecord(fileId)?.size || 0);
 
       // Start parallel thumbnail generation WITHOUT blocking the main thread
       await generateThumbnails(
         arrayBuffer,
-        pageNumbersToGenerate,
+        pageNumbers,
         {
           scale, // Dynamic quality based on file size
           quality: 0.8,
@@ -338,7 +364,7 @@ const PageEditor = ({
           requestAnimationFrame(() => {
             progress.thumbnails.forEach(({ pageNumber, thumbnail }) => {
               // Use stable fileId for cache key
-              const pageId = `${primaryFileId}-page-${pageNumber}`;
+              const pageId = `${fileId}-page-${pageNumber}`;
               addThumbnailToCache(pageId, thumbnail);
 
               // Don't update context state - thumbnails stay in cache only
@@ -349,11 +375,40 @@ const PageEditor = ({
         }
       );
 
-      console.log(`📸 PageEditor: Thumbnail generation completed for pages [${pageNumbersToGenerate.join(', ')}]`);
+      console.log(`📸 PageEditor: Thumbnail generation completed for ${pageNumbers.length} pages`);
     } catch (error) {
       console.error('PageEditor: Thumbnail generation failed:', error);
     }
-  }, [mergedPdfDocument, primaryFileId, activeFileIds, generateThumbnails, getThumbnailFromCache, addThumbnailToCache, selectors]);
+  }, [generateThumbnails, addThumbnailToCache, selectors]);
+
+  // Background generation for remaining pages in very large documents
+  const generateRemainingThumbnailsLazily = useCallback(async (file: File, fileId: string, totalPages: number, startPage: number) => {
+    console.log(`📸 PageEditor: Starting background thumbnail generation from page ${startPage} to ${totalPages}`);
+    
+    // Generate in small chunks to avoid blocking
+    const CHUNK_SIZE = 50;
+    for (let start = startPage; start <= totalPages; start += CHUNK_SIZE) {
+      const end = Math.min(start + CHUNK_SIZE - 1, totalPages);
+      const chunkPageNumbers = [];
+      
+      for (let pageNum = start; pageNum <= end; pageNum++) {
+        const pageId = `${fileId}-page-${pageNum}`;
+        if (!getThumbnailFromCache(pageId)) {
+          chunkPageNumbers.push(pageNum);
+        }
+      }
+      
+      if (chunkPageNumbers.length > 0) {
+        console.log(`📸 PageEditor: Background generating chunk: pages ${start}-${end} (${chunkPageNumbers.length} needed)`);
+        await generateThumbnailBatch(file, fileId, chunkPageNumbers);
+        
+        // Small delay between chunks to keep UI responsive
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    console.log(`📸 PageEditor: Background thumbnail generation completed for ${totalPages} pages`);
+  }, [getThumbnailFromCache, generateThumbnailBatch]);
 
   // Simple useEffect - just generate missing thumbnails when document is ready
   useEffect(() => {
@@ -388,30 +443,6 @@ const PageEditor = ({
     setCsvInput(newCsvInput);
   }, [selectedPageNumbers]);
 
-  useEffect(() => {
-    const handleGlobalDragEnd = () => {
-      // Clean up drag state when drag operation ends anywhere
-      setDraggedPage(null);
-      setDropTarget(null);
-      setMultiPageDrag(null);
-      setDragPosition(null);
-    };
-
-    const handleGlobalDrop = (e: DragEvent) => {
-      // Prevent default to handle invalid drops
-      e.preventDefault();
-    };
-
-    if (draggedPage) {
-      document.addEventListener('dragend', handleGlobalDragEnd);
-      document.addEventListener('drop', handleGlobalDrop);
-    }
-
-    return () => {
-      document.removeEventListener('dragend', handleGlobalDragEnd);
-      document.removeEventListener('drop', handleGlobalDrop);
-    };
-  }, [draggedPage]);
 
   const selectAll = useCallback(() => {
     if (mergedPdfDocument) {
@@ -484,73 +515,8 @@ const PageEditor = ({
     actions.setSelectedPages(pageNumbers);
   }, [csvInput, parseCSVInput, actions]);
 
-  const handleDragStart = useCallback((pageNumber: number) => {
-    setDraggedPage(pageNumber);
 
-    // Check if this is a multi-page drag in selection mode
-    if (selectionMode && selectedPageNumbers.includes(pageNumber) && selectedPageNumbers.length > 1) {
-      setMultiPageDrag({
-        pageNumbers: selectedPageNumbers,
-        count: selectedPageNumbers.length
-      });
-    } else {
-      setMultiPageDrag(null);
-    }
-  }, [selectionMode, selectedPageNumbers]);
 
-  const handleDragEnd = useCallback(() => {
-    // Clean up drag state regardless of where the drop happened
-    setDraggedPage(null);
-    setDropTarget(null);
-    setMultiPageDrag(null);
-    setDragPosition(null);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-
-    if (!draggedPage) return;
-
-    // Update drag position for multi-page indicator
-    if (multiPageDrag) {
-      setDragPosition({ x: e.clientX, y: e.clientY });
-    }
-
-    // Get the element under the mouse cursor
-    const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
-    if (!elementUnderCursor) return;
-
-    // Find the closest page container
-    const pageContainer = elementUnderCursor.closest('[data-page-number]');
-    if (pageContainer) {
-      const pageNumberStr = pageContainer.getAttribute('data-page-number');
-      const pageNumber = pageNumberStr ? parseInt(pageNumberStr) : null;
-      if (pageNumber && pageNumber !== draggedPage) {
-        setDropTarget(pageNumber);
-        return;
-      }
-    }
-
-    // Check if over the end zone
-    const endZone = elementUnderCursor.closest('[data-drop-zone="end"]');
-    if (endZone) {
-      setDropTarget('end');
-      return;
-    }
-
-    // If not over any valid drop target, clear it
-    setDropTarget(null);
-  }, [draggedPage, multiPageDrag]);
-
-  const handleDragEnter = useCallback((pageNumber: number) => {
-    if (draggedPage && pageNumber !== draggedPage) {
-      setDropTarget(pageNumber);
-    }
-  }, [draggedPage]);
-
-  const handleDragLeave = useCallback(() => {
-    // Don't clear drop target on drag leave - let dragover handle it
-  }, []);
 
   // Update PDF document state with edit tracking
   const setPdfDocument = useCallback((updatedDoc: PDFDocument) => {
@@ -791,34 +757,22 @@ const PageEditor = ({
     }, 10); // Small delay to allow state update
   }, [displayDocument, isAnimating, executeCommand, selectionMode, selectedPageNumbers, setPdfDocument]);
 
-  const handleDrop = useCallback((e: React.DragEvent, targetPageNumber: number | 'end') => {
-    e.preventDefault();
-    if (!draggedPage || !displayDocument || draggedPage === targetPageNumber) return;
+  const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => {
+    if (!displayDocument) return;
 
-    let targetIndex: number;
-    if (targetPageNumber === 'end') {
-      targetIndex = displayDocument.pages.length;
-    } else {
-      targetIndex = displayDocument.pages.findIndex(p => p.pageNumber === targetPageNumber);
-      if (targetIndex === -1) return;
-    }
+    const pagesToMove = selectedPages && selectedPages.length > 1 
+      ? selectedPages 
+      : [sourcePageNumber];
+    
+    const sourceIndex = displayDocument.pages.findIndex(p => p.pageNumber === sourcePageNumber);
+    if (sourceIndex === -1 || sourceIndex === targetIndex) return;
 
-    animateReorder(draggedPage, targetIndex);
-
-    setDraggedPage(null);
-    setDropTarget(null);
-    setMultiPageDrag(null);
-    setDragPosition(null);
-
-    const moveCount = multiPageDrag ? multiPageDrag.count : 1;
+    animateReorder(sourcePageNumber, targetIndex);
+    
+    const moveCount = pagesToMove.length;
     setStatus(`${moveCount > 1 ? `${moveCount} pages` : 'Page'} reordered`);
-  }, [draggedPage, displayDocument, animateReorder, multiPageDrag]);
+  }, [displayDocument, animateReorder]);
 
-  const handleEndZoneDragEnter = useCallback(() => {
-    if (draggedPage) {
-      setDropTarget('end');
-    }
-  }, [draggedPage]);
 
   const handleRotate = useCallback((direction: 'left' | 'right') => {
     if (!displayDocument) return;
@@ -1058,6 +1012,13 @@ const PageEditor = ({
       const draftKey = `draft-${mergedPdfDocument.id || 'merged'}`;
       // Use centralized IndexedDB manager
       const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
+      
+      // Check if the drafts object store exists before using it
+      if (!db.objectStoreNames.contains('drafts')) {
+        console.log('📝 Drafts object store not found, skipping draft check');
+        return;
+      }
+      
       const transaction = db.transaction('drafts', 'readonly');
       const store = transaction.objectStore('drafts');
       const getRequest = store.get(draftKey);
@@ -1288,17 +1249,7 @@ const PageEditor = ({
           selectedItems={selectedPageNumbers}
           selectionMode={selectionMode}
           isAnimating={isAnimating}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onEndZoneDragEnter={handleEndZoneDragEnter}
-          draggedItem={draggedPage}
-          dropTarget={dropTarget}
-          multiItemDrag={multiPageDrag}
-          dragPosition={dragPosition}
+          onReorderPages={handleReorderPages}
           renderItem={(page, index, refs) => (
             <PageThumbnail
               page={page}
@@ -1307,17 +1258,10 @@ const PageEditor = ({
               originalFile={activeFileIds.length === 1 && primaryFileId ? selectors.getFile(primaryFileId) : undefined}
               selectedPages={selectedPageNumbers}
               selectionMode={selectionMode}
-              draggedPage={draggedPage}
-              dropTarget={dropTarget === 'end' ? null : dropTarget}
               movingPage={movingPage}
               isAnimating={isAnimating}
               pageRefs={refs}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+              onReorderPages={handleReorderPages}
               onTogglePage={togglePage}
               onAnimateReorder={animateReorder}
               onExecuteCommand={executeCommand}
