@@ -2,18 +2,33 @@ import React, { forwardRef } from 'react';
 import { useMantineColorScheme } from '@mantine/core';
 import styles from './textInput/TextInput.module.css';
 
+/**
+ * Props for the TextInput component
+ */
 export interface TextInputProps {
+  /** The input value (required) */
   value: string;
+  /** Callback when input value changes (required) */
   onChange: (value: string) => void;
+  /** Placeholder text */
   placeholder?: string;
+  /** Optional left icon */
   icon?: React.ReactNode;
+  /** Whether to show the clear button (default: true) */
   showClearButton?: boolean;
+  /** Custom clear handler (defaults to setting value to empty string) */
   onClear?: () => void;
+  /** Additional CSS classes */
   className?: string;
+  /** Additional inline styles */
   style?: React.CSSProperties;
+  /** HTML autocomplete attribute (default: 'off') */
   autoComplete?: string;
+  /** Whether the input is disabled (default: false) */
   disabled?: boolean;
+  /** Whether the input is read-only (default: false) */
   readOnly?: boolean;
+  /** Accessibility label */
   'aria-label'?: string;
 }
 
