@@ -106,83 +106,85 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
       ),
     });
 
-    // Text watermark path
-    if (watermarkParams.parameters.watermarkType === "text") {
-      // Step 2: Wording
-      steps.push({
-        title: t("watermark.steps.wording", "Wording"),
-        isCollapsed: hasResults,
-        tooltip: watermarkWordingTips,
-        content: (
-          <WatermarkWording
-            parameters={watermarkParams.parameters}
-            onParameterChange={watermarkParams.updateParameter}
-            disabled={endpointLoading}
-          />
-        ),
-      });
+    if (hasFiles || hasResults) {
+      // Text watermark path
+      if (watermarkParams.parameters.watermarkType === "text") {
+        // Step 2: Wording
+        steps.push({
+          title: t("watermark.steps.wording", "Wording"),
+          isCollapsed: hasResults,
+          tooltip: watermarkWordingTips,
+          content: (
+            <WatermarkWording
+              parameters={watermarkParams.parameters}
+              onParameterChange={watermarkParams.updateParameter}
+              disabled={endpointLoading}
+            />
+          ),
+        });
 
-      // Step 3: Style
-      steps.push({
-        title: t("watermark.steps.textStyle", "Style"),
-        isCollapsed: hasResults ? true : collapsedStyle,
-        onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedStyle(!collapsedStyle),
-        tooltip: watermarkTextStyleTips,
-        content: (
-          <WatermarkTextStyle
-            parameters={watermarkParams.parameters}
-            onParameterChange={watermarkParams.updateParameter}
-            disabled={endpointLoading}
-          />
-        ),
-      });
+        // Step 3: Style
+        steps.push({
+          title: t("watermark.steps.textStyle", "Style"),
+          isCollapsed: hasResults ? true : collapsedStyle,
+          onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedStyle(!collapsedStyle),
+          tooltip: watermarkTextStyleTips,
+          content: (
+            <WatermarkTextStyle
+              parameters={watermarkParams.parameters}
+              onParameterChange={watermarkParams.updateParameter}
+              disabled={endpointLoading}
+            />
+          ),
+        });
 
-      // Step 4: Formatting
-      steps.push({
-        title: t("watermark.steps.formatting", "Formatting"),
-        isCollapsed: hasResults ? true : collapsedFormatting,
-        onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedFormatting(!collapsedFormatting),
-        tooltip: watermarkFormattingTips,
-        content: (
-          <WatermarkFormatting
-            parameters={watermarkParams.parameters}
-            onParameterChange={watermarkParams.updateParameter}
-            disabled={endpointLoading}
-          />
-        ),
-      });
-    }
+        // Step 4: Formatting
+        steps.push({
+          title: t("watermark.steps.formatting", "Formatting"),
+          isCollapsed: hasResults ? true : collapsedFormatting,
+          onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedFormatting(!collapsedFormatting),
+          tooltip: watermarkFormattingTips,
+          content: (
+            <WatermarkFormatting
+              parameters={watermarkParams.parameters}
+              onParameterChange={watermarkParams.updateParameter}
+              disabled={endpointLoading}
+            />
+          ),
+        });
+      }
 
-    // Image watermark path
-    if (watermarkParams.parameters.watermarkType === "image") {
-      // Step 2: Watermark File
-      steps.push({
-        title: t("watermark.steps.file", "Watermark File"),
-        isCollapsed: false,
-        tooltip: watermarkFileTips,
-        content: (
-          <WatermarkFile
-            parameters={watermarkParams.parameters}
-            onParameterChange={watermarkParams.updateParameter}
-            disabled={endpointLoading}
-          />
-        ),
-      });
+      // Image watermark path
+      if (watermarkParams.parameters.watermarkType === "image") {
+        // Step 2: Watermark File
+        steps.push({
+          title: t("watermark.steps.file", "Watermark File"),
+          isCollapsed: false,
+          tooltip: watermarkFileTips,
+          content: (
+            <WatermarkFile
+              parameters={watermarkParams.parameters}
+              onParameterChange={watermarkParams.updateParameter}
+              disabled={endpointLoading}
+            />
+          ),
+        });
 
-      // Step 3: Formatting
-      steps.push({
-        title: t("watermark.steps.formatting", "Formatting"),
-        isCollapsed: hasResults ? true : collapsedFormatting,
-        onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedFormatting(!collapsedFormatting),
-        tooltip: watermarkFormattingTips,
-        content: (
-          <WatermarkFormatting
-            parameters={watermarkParams.parameters}
-            onParameterChange={watermarkParams.updateParameter}
-            disabled={endpointLoading}
-          />
-        ),
-      });
+        // Step 3: Formatting
+        steps.push({
+          title: t("watermark.steps.formatting", "Formatting"),
+          isCollapsed: hasResults ? true : collapsedFormatting,
+          onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedFormatting(!collapsedFormatting),
+          tooltip: watermarkFormattingTips,
+          content: (
+            <WatermarkFormatting
+              parameters={watermarkParams.parameters}
+              onParameterChange={watermarkParams.updateParameter}
+              disabled={endpointLoading}
+            />
+          ),
+        });
+      }
     }
 
     return steps;
