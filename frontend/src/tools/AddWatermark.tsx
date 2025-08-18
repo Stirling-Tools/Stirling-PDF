@@ -159,7 +159,7 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
         // Step 2: Watermark File
         steps.push({
           title: t("watermark.steps.file", "Watermark File"),
-          isCollapsed: false,
+          isCollapsed: hasResults,
           tooltip: watermarkFileTips,
           content: (
             <WatermarkImageFile
