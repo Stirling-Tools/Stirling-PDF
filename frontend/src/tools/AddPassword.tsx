@@ -3,7 +3,7 @@ import { Box, Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext, useToolFileSelection } from "../contexts/FileContext";
+import { useToolFileSelection } from "../contexts/FileContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";
@@ -22,8 +22,8 @@ import { BaseToolProps } from "../types/tool";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
+  // const setCurrentMode = (mode) => console.log('Navigate to:', mode); // TODO: Hook up to URL routing
 
   const [collapsedPermissions, setCollapsedPermissions] = useState(true);
 
@@ -58,14 +58,11 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
-    sessionStorage.setItem('previousMode', 'addPassword');
-    setCurrentMode('viewer');
   };
 
   const handleSettingsReset = () => {
     addPasswordOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode('addPassword');
   };
 
   const hasFiles = selectedFiles.length > 0;

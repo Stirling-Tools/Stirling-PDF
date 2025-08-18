@@ -10,7 +10,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import { Group } from "@mantine/core";
-import { ModeType } from '../../types/fileContext';
+import { ModeType } from '../../contexts/NavigationContext';
 
 // Stable view option objects that don't recreate on every render
 const VIEW_OPTIONS_BASE = [

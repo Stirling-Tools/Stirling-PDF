@@ -6,10 +6,25 @@ import { ProcessedFile } from './processing';
 import { PDFDocument, PDFPage, PageOperation } from './pageEditor';
 import { FileMetadata } from './file';
 
-export type ModeType = 'viewer' | 'pageEditor' | 'fileEditor' | 'merge' | 'split' | 'compress' | 'ocr' | 'convert';
 
 // Normalized state types
 export type FileId = string;
+
+export interface ProcessedFilePage {
+  thumbnail?: string;
+  pageNumber?: number;
+  rotation?: number;
+  splitBefore?: boolean;
+  [key: string]: any;
+}
+
+export interface ProcessedFileMetadata {
+  pages: ProcessedFilePage[];
+  totalPages?: number;
+  thumbnailUrl?: string;
+  lastProcessed?: number;
+  [key: string]: any;
+}
 
 export interface FileRecord {
   id: FileId;
@@ -21,13 +36,7 @@ export interface FileRecord {
   thumbnailUrl?: string;
   blobUrl?: string;
   createdAt: number;
-  processedFile?: {
-    pages: Array<{
-      thumbnail?: string;
-      [key: string]: any;
-    }>;
-    [key: string]: any;
-  };
+  processedFile?: ProcessedFileMetadata;
   // Note: File object stored in provider ref, not in state
 }
 
@@ -153,16 +162,13 @@ export interface FileContextState {
     byId: Record<FileId, FileRecord>;
   };
   
-  // UI state - flat structure for performance
+  // UI state - file-related UI state only
   ui: {
-    currentMode: ModeType;
     selectedFileIds: FileId[];
     selectedPageNumbers: number[];
     isProcessing: boolean;
     processingProgress: number;
     hasUnsavedChanges: boolean;
-    pendingNavigation: (() => void) | null;
-    showNavigationWarning: boolean;
   };
 }
 
@@ -173,17 +179,14 @@ export type FileContextAction =
   | { type: 'REMOVE_FILES'; payload: { fileIds: FileId[] } }
   | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<FileRecord> } }
   
-  // UI actions
-  | { type: 'SET_CURRENT_MODE'; payload: ModeType }
+  // UI actions  
   | { type: 'SET_SELECTED_FILES'; payload: { fileIds: FileId[] } }
   | { type: 'SET_SELECTED_PAGES'; payload: { pageNumbers: number[] } }
   | { type: 'CLEAR_SELECTIONS' }
   | { type: 'SET_PROCESSING'; payload: { isProcessing: boolean; progress: number } }
   
-  // Navigation guard actions
+  // Navigation guard actions (minimal for file-related unsaved changes only)
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
-  | { type: 'SET_PENDING_NAVIGATION'; payload: { navigationFn: (() => void) | null } }
-  | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } }
   
   // Context management
   | { type: 'RESET_CONTEXT' };
@@ -198,9 +201,6 @@ export interface FileContextActions {
   clearAllFiles: () => void;
 
 
-  // Navigation
-  setCurrentMode: (mode: ModeType) => void;
-  
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
@@ -209,16 +209,17 @@ export interface FileContextActions {
   // Processing state - simple flags only
   setProcessing: (isProcessing: boolean, progress?: number) => void;
   
-  // Navigation guard system
+  // File-related unsaved changes (minimal navigation guard support)
   setHasUnsavedChanges: (hasChanges: boolean) => void;
   
   // Context management
   resetContext: () => void;
   
-  // Legacy compatibility
-  setMode: (mode: ModeType) => void;
-  confirmNavigation: () => void;
-  cancelNavigation: () => void;
+  // Resource management
+  trackBlobUrl: (url: string) => void;
+  trackPdfDocument: (key: string, pdfDoc: any) => void;
+  scheduleCleanup: (fileId: string, delay?: number) => void;
+  cleanupFile: (fileId: string) => void;
 }
 
 // File selectors (separate from actions to avoid re-renders)
@@ -258,12 +259,5 @@ export interface FileContextActionsValue {
   dispatch: (action: FileContextAction) => void;
 }
 
-// URL parameter types for deep linking
-export interface FileContextUrlParams {
-  mode?: ModeType;
-  fileIds?: string[];
-  pageIds?: string[];
-  zoom?: number;
-  page?: number;
-}
+// TODO: URL parameter types will be redesigned for new routing system
 

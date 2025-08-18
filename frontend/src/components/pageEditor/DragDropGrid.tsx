@@ -65,7 +65,7 @@ const DragDropGrid = <T extends DragDropItem>({
   }, [items.length, isLargeDocument, BUFFER_SIZE]);
 
   // Throttled scroll handler to prevent excessive re-renders
-  const throttleRef = useRef<number>();
+  const throttleRef = useRef<number | undefined>(undefined);
   
   // Detect scroll position from parent container
   useEffect(() => {

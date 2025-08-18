@@ -5,6 +5,7 @@ import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useWorkbenchState, useToolSelection } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState, useFileActions } from '../../contexts/FileContext';
+import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
 
 import TopControls from '../shared/TopControls';
 import FileEditor from '../fileEditor/FileEditor';
@@ -22,9 +23,10 @@ export default function Workbench() {
   // Use context-based hooks to eliminate all prop drilling
   const { state } = useFileState();
   const { actions } = useFileActions();
+  const { currentMode: currentView } = useNavigationState();
+  const { actions: navActions } = useNavigationActions();
+  const setCurrentView = navActions.setMode;
   const activeFiles = state.files.ids;
-  const currentView = state.ui.currentMode;
-  const setCurrentView = actions.setCurrentMode;
   const {
     previewFile,
     pageEditorFunctions,
@@ -51,7 +53,7 @@ export default function Workbench() {
       handleToolSelect('convert');
       sessionStorage.removeItem('previousMode');
     } else {
-      actions.setMode('fileEditor');
+      setCurrentView('fileEditor');
     }
   };
 
@@ -73,11 +75,11 @@ export default function Workbench() {
             supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
             {...(!selectedToolKey && {
               onOpenPageEditor: (file) => {
-                actions.setMode("pageEditor");
+                setCurrentView("pageEditor");
               },
               onMergeFiles: (filesToMerge) => {
                 filesToMerge.forEach(addToActiveFiles);
-                actions.setMode("viewer");
+                setCurrentView("viewer");
               }
             })}
           />

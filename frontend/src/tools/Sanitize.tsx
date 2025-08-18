@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useToolFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";
@@ -15,13 +16,13 @@ import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
 import { useSanitizeParameters } from "../hooks/tools/sanitize/useSanitizeParameters";
 import { useSanitizeOperation } from "../hooks/tools/sanitize/useSanitizeOperation";
 import { BaseToolProps } from "../types/tool";
-import { useFileContext } from "../contexts/FileContext";
 
 const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
 
   const { selectedFiles } = useToolFileSelection();
-  const { setCurrentMode } = useFileContext();
+  const { actions } = useNavigationActions();
+  const setCurrentMode = actions.setMode;
 
   const sanitizeParams = useSanitizeParameters();
   const sanitizeOperation = useSanitizeOperation();

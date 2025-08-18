@@ -3,8 +3,8 @@ import { Button, Stack, Text, Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileActions } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";
@@ -22,8 +22,8 @@ import { useOCRTips } from "../components/tooltips/useOCRTips";
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { actions } = useFileActions();
-  const setCurrentMode = actions.setCurrentMode;
+  const { actions } = useNavigationActions();
+  const setCurrentMode = actions.setMode;
   const { selectedFiles } = useToolFileSelection();
 
   const ocrParams = useOCRParameters();

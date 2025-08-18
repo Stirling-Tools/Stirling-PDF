@@ -3,7 +3,8 @@ import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext, useToolFileSelection } from "../contexts/FileContext";
+import { useToolFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";
@@ -20,7 +21,8 @@ import { BaseToolProps } from "../types/tool";
 
 const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
+  const { actions } = useNavigationActions();
+  const setCurrentMode = actions.setMode;
   const { selectedFiles } = useToolFileSelection();
 
   const changePermissionsParams = useChangePermissionsParameters();

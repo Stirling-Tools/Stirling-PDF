@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileActions, useToolFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 import { ToolWorkflowProvider, useToolSelection } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
@@ -65,10 +66,15 @@ function HomePageContent() {
 }
 
 function HomePageWithProviders() {
-  const { actions } = useFileActions();
+  const { actions } = useNavigationActions();
+  
+  // Wrapper to convert string to ModeType
+  const handleViewChange = (view: string) => {
+    actions.setMode(view as any); // ToolWorkflowContext should validate this
+  };
   
   return (
-    <ToolWorkflowProvider onViewChange={actions.setMode as any /* FIX ME */}>
+    <ToolWorkflowProvider onViewChange={handleViewChange}>
       <SidebarProvider>
         <HomePageContent />
       </SidebarProvider>

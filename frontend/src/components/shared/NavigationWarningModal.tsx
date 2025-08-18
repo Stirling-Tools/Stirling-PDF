@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Text, Button, Group, Stack } from '@mantine/core';
-import { useFileState, useFileActions } from '../../contexts/FileContext';
+import { useNavigationGuard } from '../../contexts/NavigationContext';
 
 interface NavigationWarningModalProps {
   onApplyAndContinue?: () => Promise<void>;
@@ -11,34 +11,37 @@ const NavigationWarningModal = ({
   onApplyAndContinue,
   onExportAndContinue
 }: NavigationWarningModalProps) => {
-  const { state } = useFileState();
-  const { actions } = useFileActions();
-  const showNavigationWarning = state.ui.showNavigationWarning;
-  const hasUnsavedChanges = state.ui.hasUnsavedChanges;
+  const {
+    showNavigationWarning,
+    hasUnsavedChanges,
+    cancelNavigation,
+    confirmNavigation,
+    setHasUnsavedChanges
+  } = useNavigationGuard();
 
   const handleKeepWorking = () => {
-    actions.cancelNavigation();
+    cancelNavigation();
   };
 
   const handleDiscardChanges = () => {
-    actions.setHasUnsavedChanges(false);
-    actions.confirmNavigation();
+    setHasUnsavedChanges(false);
+    confirmNavigation();
   };
 
   const handleApplyAndContinue = async () => {
     if (onApplyAndContinue) {
       await onApplyAndContinue();
     }
-    actions.setHasUnsavedChanges(false);
-    actions.confirmNavigation();
+    setHasUnsavedChanges(false);
+    confirmNavigation();
   };
 
   const handleExportAndContinue = async () => {
     if (onExportAndContinue) {
       await onExportAndContinue();
     }
-    actions.setHasUnsavedChanges(false);
-    actions.confirmNavigation();
+    setHasUnsavedChanges(false);
+    confirmNavigation();
   };
 
   if (!hasUnsavedChanges) {
