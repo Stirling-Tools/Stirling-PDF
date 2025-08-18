@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
-import { ToolRegistryEntry } from '../data/toolRegistry';
+import { ToolRegistryEntry } from '../data/toolsTaxonomy';
 
 // State interface
 interface ToolWorkflowState {

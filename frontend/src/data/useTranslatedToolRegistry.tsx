@@ -8,104 +8,7 @@ import Sanitize from '../tools/Sanitize';
 import AddPassword from '../tools/AddPassword';
 import ChangePermissions from '../tools/ChangePermissions';
 import RemovePassword from '../tools/RemovePassword';
-
-// Category and subcategory enums for type safety
-export enum ToolCategory {
-    STANDARD_TOOLS = 'Standard Tools',
-    ADVANCED_TOOLS = 'Advanced Tools',
-    RECOMMENDED_TOOLS = 'Recommended Tools'
-}
-
-export enum ToolSubcategory {
-    SIGNING = 'Signing',
-    DOCUMENT_SECURITY = 'Document Security',
-    VERIFICATION = 'Verification',
-    DOCUMENT_REVIEW = 'Document Review',
-    PAGE_FORMATTING = 'Page Formatting',
-    EXTRACTION = 'Extraction',
-    REMOVAL = 'Removal',
-    AUTOMATION = 'Automation',
-    GENERAL = 'General',
-    ADVANCED_FORMATTING = 'Advanced Formatting',
-    DEVELOPER_TOOLS = 'Developer Tools'
-}
-
-export type ToolRegistryEntry = {
-    icon: React.ReactNode;
-    name: string;
-    component: React.ComponentType<any> | null;
-    view: 'sign' | 'security' | 'format' | 'extract' | 'view' | 'merge' | 'pageEditor' | 'convert' | 'redact' | 'split' | 'convert' | 'remove' | 'compress' | 'external';
-    description: string;
-    category: ToolCategory;
-    subcategory: ToolSubcategory;
-    
-    // Optional custom props for tools
-    maxFiles?: number; 
-    supportedFormats?: string[];
-    endpoints?: string[]; 
-    
-    // Optional key to distinguish between regular tools and links
-    link?: string;
-    type?: string;
-};
-
-export type ToolRegistry = {
-    [key: string]: ToolRegistryEntry;
-};
-
-/**
- * Tool Registry
- * 
- * This file contains the main tool registry for the application.
- * 
- * Structure:
- * - useFlatToolRegistry: Hook that returns Record<string, ToolRegistryEntry> with translations
- * 
- * The registry is organized by categories and subcategories:
- * - Standard Tools: Signing, Document Security, Verification, Document Review, Page Formatting, Document Assembly, Extraction, Removal
- * - Advanced Tools: Automation, Advanced Formatting, Developer Tools
- * - Recommended Tools: Quick access tools
- */
-// Ordered list used elsewhere for display ordering
-// Subcategory display order (top to bottom, left to right)
-export const SUBCATEGORY_ORDER: ToolSubcategory[] = [
-    ToolSubcategory.SIGNING,
-    ToolSubcategory.DOCUMENT_SECURITY,
-    ToolSubcategory.VERIFICATION,
-    ToolSubcategory.DOCUMENT_REVIEW,
-    ToolSubcategory.PAGE_FORMATTING,
-    ToolSubcategory.EXTRACTION,
-    ToolSubcategory.REMOVAL,
-    ToolSubcategory.AUTOMATION,
-    ToolSubcategory.GENERAL,
-    ToolSubcategory.ADVANCED_FORMATTING,
-    ToolSubcategory.DEVELOPER_TOOLS,
-];
-
-// Color coding for subcategories (loosely resembling the v1 color palette)
-export const SUBCATEGORY_COLOR_MAP: Record<ToolSubcategory, string> = {
-    // Security & Signing (pink)
-    [ToolSubcategory.SIGNING]: '#FF7892',
-    [ToolSubcategory.DOCUMENT_SECURITY]: '#FF7892',
-    // Review / Verification (blue-green)
-    [ToolSubcategory.VERIFICATION]: '#1BB1D4',
-    [ToolSubcategory.DOCUMENT_REVIEW]: '#48BD54',
-    // Organize / Page operations (purple/organize + blue accents)
-    [ToolSubcategory.PAGE_FORMATTING]: '#7882FF',
-    [ToolSubcategory.REMOVAL]: '#7882FF',
-    [ToolSubcategory.EXTRACTION]: '#1BB1D4',
-    // Automation / General quick actions (green)
-    [ToolSubcategory.AUTOMATION]: '#69DC95',
-    [ToolSubcategory.GENERAL]: '#69DC95',
-    // Advanced buckets (red family)
-    [ToolSubcategory.ADVANCED_FORMATTING]: '#F55454',
-    [ToolSubcategory.DEVELOPER_TOOLS]: '#F55454',
-};
-
-export const getSubcategoryColor = (subcategory: ToolSubcategory): string => {
-    return SUBCATEGORY_COLOR_MAP[subcategory] || '#7882FF';
-};
-
+import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
 
 
 // Hook to get the translated tool registry
@@ -113,8 +16,6 @@ export function useFlatToolRegistry(): ToolRegistry {
     const { t } = useTranslation();
     
     return {
-    
-    
     // Signing
 
     "certSign": {
@@ -124,7 +25,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "sign",
         description: t("home.certSign.desc", "Signs a PDF with a Certificate/Key (PEM/P12)"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.SIGNING
+        subcategory: SubcategoryId.SIGNING
     },
     "sign": {
         icon: <span className="material-symbols-rounded">signature</span>,
@@ -133,7 +34,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "sign",
         description: t("home.sign.desc", "Adds signature to PDF by drawing, text or image"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.SIGNING
+        subcategory: SubcategoryId.SIGNING
     },
 
 
@@ -146,7 +47,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "security",
         description: t("home.addPassword.desc", "Add password protection and restrictions to PDF files"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY,
+        subcategory: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
         endpoints: ["add-password"]
     },
@@ -157,7 +58,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.watermark.desc", "Add a custom watermark to your PDF document."),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY
+        subcategory: SubcategoryId.DOCUMENT_SECURITY
     },
     "add-stamp": {
         icon: <span className="material-symbols-rounded">approval</span>,
@@ -166,7 +67,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.AddStampRequest.desc", "Add text or add image stamps at set locations"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY
+        subcategory: SubcategoryId.DOCUMENT_SECURITY
     },
     "sanitize": {
         icon: <span className="material-symbols-rounded">cleaning_services</span>,
@@ -175,7 +76,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "security",
         maxFiles: -1,
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY,
+        subcategory: SubcategoryId.DOCUMENT_SECURITY,
         description: t("home.sanitize.desc", "Remove potentially harmful elements from PDF files"),
         endpoints: ["sanitize-pdf"]
     },
@@ -186,7 +87,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.flatten.desc", "Remove all interactive elements and forms from a PDF"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY
+        subcategory: SubcategoryId.DOCUMENT_SECURITY
     },
     "unlock-pdf-forms": {
         icon: <span className="material-symbols-rounded">preview_off</span>,
@@ -195,7 +96,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "security",
         description: t("home.unlockPDFForms.desc", "Remove read-only property of form fields in a PDF document."),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY
+        subcategory: SubcategoryId.DOCUMENT_SECURITY
     },
     "manage-certificates": {
         icon: <span className="material-symbols-rounded">license</span>,
@@ -204,7 +105,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "security",
         description: t("home.manageCertificates.desc", "Import, export, or delete digital certificate files used for signing PDFs."),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY
+        subcategory: SubcategoryId.DOCUMENT_SECURITY
     },
     "change-permissions": {
         icon: <span className="material-symbols-rounded">lock</span>,
@@ -213,7 +114,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "security",
         description: t("home.changePermissions.desc", "Change document restrictions and permissions"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_SECURITY,
+        subcategory: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
         endpoints: ["add-password"]
     },
@@ -226,7 +127,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "extract",
         description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.VERIFICATION
+        subcategory: SubcategoryId.VERIFICATION
     },
     "validate-pdf-signature": {
         icon: <span className="material-symbols-rounded">verified</span>,
@@ -235,7 +136,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "security",
         description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.VERIFICATION
+        subcategory: SubcategoryId.VERIFICATION
     },
     
     
@@ -248,7 +149,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "view",
         description: t("home.read.desc", "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_REVIEW
+        subcategory: SubcategoryId.DOCUMENT_REVIEW
     },
     "change-metadata": {
         icon: <span className="material-symbols-rounded">assignment</span>,
@@ -257,7 +158,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.changeMetadata.desc", "Change/Remove/Add metadata from a PDF document"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.DOCUMENT_REVIEW
+        subcategory: SubcategoryId.DOCUMENT_REVIEW
     },
     // Page Formatting
 
@@ -268,7 +169,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.crop.desc", "Crop a PDF to reduce its size (maintains text!)"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING
     },
     "rotate": {
         icon: <span className="material-symbols-rounded">rotate_right</span>,
@@ -277,7 +178,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.rotate.desc", "Easily rotate your PDFs."),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING
     },
     "splitPdf": {
         icon: <span className="material-symbols-rounded">content_cut</span>,
@@ -286,7 +187,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "split",
         description: t("home.split.desc", "Split PDFs into multiple documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING
     },
     "reorganize-pages": {
         icon: <span className="material-symbols-rounded">move_down</span>,
@@ -295,7 +196,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "pageEditor",
         description: t("home.reorganizePages.desc", "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."),
         category: ToolCategory.STANDARD_TOOLS, 
-        subcategory: ToolSubcategory.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING
     },
     "adjust-page-size-scale": {
         icon: <span className="material-symbols-rounded">crop_free</span>,
@@ -304,7 +205,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.scalePages.desc", "Change the size/scale of a page and/or its contents."),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING
     },
     "add-page-numbers": {
         icon: <span className="material-symbols-rounded">123</span>,
@@ -313,7 +214,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.add-page-numbers.desc", "Add Page numbers throughout a document in a set location"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING
     },
     "multi-page-layout": {
         icon: <span className="material-symbols-rounded">dashboard</span>,
@@ -322,7 +223,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.pageLayout.desc", "Merge multiple pages of a PDF document into a single page"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING
     },
     "single-large-page": {
         icon: <span className="material-symbols-rounded">looks_one</span>,
@@ -331,7 +232,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.PdfToSinglePage.desc", "Merges all PDF pages into one large single page"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING
     },
     "add-attachments": {
         icon: <span className="material-symbols-rounded">attachment</span>,
@@ -340,7 +241,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.attachments.desc", "Add or remove embedded files (attachments) to/from a PDF"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.PAGE_FORMATTING,
+        subcategory: SubcategoryId.PAGE_FORMATTING,
     },
 
 
@@ -353,7 +254,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "extract",
         description: t("home.extractPage.desc", "Extract specific pages from a PDF document"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.EXTRACTION
+        subcategory: SubcategoryId.EXTRACTION
     },
     "extract-images": {
         icon: <span className="material-symbols-rounded">filter</span>,
@@ -362,7 +263,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "extract",
         description: t("home.extractImages.desc", "Extract images from PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.EXTRACTION
+        subcategory: SubcategoryId.EXTRACTION
     },
 
 
@@ -375,7 +276,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "remove",
         description: t("home.removePages.desc", "Remove specific pages from a PDF document"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.REMOVAL
+        subcategory: SubcategoryId.REMOVAL
     },
     "remove-blank-pages": {
         icon: <span className="material-symbols-rounded">scan_delete</span>,
@@ -384,7 +285,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "remove",
         description: t("home.removeBlanks.desc", "Remove blank pages from PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.REMOVAL
+        subcategory: SubcategoryId.REMOVAL
     },
     "remove-annotations": {
         icon: <span className="material-symbols-rounded">thread_unread</span>,
@@ -393,7 +294,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "remove",
         description: t("home.removeAnnotations.desc", "Remove annotations and comments from PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.REMOVAL
+        subcategory: SubcategoryId.REMOVAL
     },
     "remove-image": {
         icon: <span className="material-symbols-rounded">remove_selection</span>,
@@ -402,7 +303,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.removeImagePdf.desc", "Remove images from PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.REMOVAL
+        subcategory: SubcategoryId.REMOVAL
     },
     "remove-password": {
         icon: <span className="material-symbols-rounded">lock_open_right</span>,
@@ -411,7 +312,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "security",
         description: t("home.removePassword.desc", "Remove password protection from PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.REMOVAL,
+        subcategory: SubcategoryId.REMOVAL,
         endpoints: ["remove-password"],
         maxFiles: -1,
 
@@ -423,7 +324,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "security",
         description: t("home.removeCertSign.desc", "Remove digital signatures from PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: ToolSubcategory.REMOVAL
+        subcategory: SubcategoryId.REMOVAL
     },
 
 
@@ -436,7 +337,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.automate.desc", "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.AUTOMATION
+        subcategory: SubcategoryId.AUTOMATION
     },
     "auto-rename-pdf-file": {
         icon: <span className="material-symbols-rounded">match_word</span>,
@@ -445,7 +346,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.auto-rename.desc", "Automatically rename PDF files based on their content"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.AUTOMATION
+        subcategory: SubcategoryId.AUTOMATION
     },
     "auto-split-pages": {
         icon: <span className="material-symbols-rounded">split_scene_right</span>,
@@ -454,7 +355,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.autoSplitPDF.desc", "Automatically split PDF pages based on content detection"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.AUTOMATION
+        subcategory: SubcategoryId.AUTOMATION
     },
     "auto-split-by-size-count": {
         icon: <span className="material-symbols-rounded">content_cut</span>,
@@ -463,7 +364,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.autoSizeSplitPDF.desc", "Automatically split PDFs by file size or page count"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.AUTOMATION
+        subcategory: SubcategoryId.AUTOMATION
     },
 
 
@@ -476,7 +377,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.adjust-contrast.desc", "Adjust colors and contrast of PDF documents"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING
     },
     "repair": {
         icon: <span className="material-symbols-rounded">build</span>,
@@ -485,7 +386,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.repair.desc", "Repair corrupted or damaged PDF files"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING
     },
     "detect-split-scanned-photos": {
         icon: <span className="material-symbols-rounded">scanner</span>,
@@ -494,7 +395,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.ScannerImageSplit.desc", "Detect and split scanned photos into separate pages"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING
     },
     "overlay-pdfs": {
         icon: <span className="material-symbols-rounded">layers</span>,
@@ -503,7 +404,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.overlay-pdfs.desc", "Overlay one PDF on top of another"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING
     },
     "replace-and-invert-color": {
         icon: <span className="material-symbols-rounded">format_color_fill</span>,
@@ -512,7 +413,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.replaceColorPdf.desc", "Replace or invert colors in PDF documents"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING
     },
     "add-image": {
         icon: <span className="material-symbols-rounded">image</span>,
@@ -521,7 +422,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.addImage.desc", "Add images to PDF documents"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING
     },
     "edit-table-of-contents": {
         icon: <span className="material-symbols-rounded">bookmark_add</span>,
@@ -530,7 +431,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.editTableOfContents.desc", "Add or edit bookmarks and table of contents in PDF documents"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING
     },
     "scanner-effect": {
         icon: <span className="material-symbols-rounded">scanner</span>,
@@ -539,7 +440,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.fakeScan.desc", "Create a PDF that looks like it was scanned"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING
     },
 
 
@@ -552,7 +453,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "extract",
         description: t("home.showJS.desc", "Extract and display JavaScript code from PDF documents"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.DEVELOPER_TOOLS
+        subcategory: SubcategoryId.DEVELOPER_TOOLS
     },
     "dev-api": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
@@ -561,7 +462,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "external",
         description: t("home.devApi.desc", "Link to API documentation"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.DEVELOPER_TOOLS,
+        subcategory: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html"
     },
     "dev-folder-scanning": {
@@ -571,7 +472,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "external",
         description: t("home.devFolderScanning.desc", "Link to automated folder scanning guide"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.DEVELOPER_TOOLS,
+        subcategory: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/"
     },
     "dev-sso-guide": {
@@ -581,7 +482,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "external",
         description: t("home.devSsoGuide.desc", "Link to SSO guide"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.DEVELOPER_TOOLS,
+        subcategory: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
     },
     "dev-airgapped": {
@@ -591,7 +492,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "external",
         description: t("home.devAirgapped.desc", "Link to air-gapped setup guide"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: ToolSubcategory.DEVELOPER_TOOLS,
+        subcategory: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Pro/#activation"
     },
 
@@ -604,7 +505,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "format",
         description: t("home.compare.desc", "Compare two PDF documents and highlight differences"),
         category: ToolCategory.RECOMMENDED_TOOLS,
-        subcategory: ToolSubcategory.GENERAL
+        subcategory: SubcategoryId.GENERAL
     },
     "compressPdfs": {
         icon: <span className="material-symbols-rounded">zoom_in_map</span>,
@@ -613,7 +514,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "compress",
         description: t("home.compressPdfs.desc", "Compress PDFs to reduce their file size."),
         category: ToolCategory.RECOMMENDED_TOOLS,
-        subcategory: ToolSubcategory.GENERAL,
+        subcategory: SubcategoryId.GENERAL,
         maxFiles: -1
     },
     "convert": {
@@ -623,7 +524,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "convert",
         description: t("home.fileToPDF.desc", "Convert files to and from PDF format"),
         category: ToolCategory.RECOMMENDED_TOOLS,
-        subcategory: ToolSubcategory.GENERAL,
+        subcategory: SubcategoryId.GENERAL,
         maxFiles: -1,
         endpoints: [
             "pdf-to-img",
@@ -667,7 +568,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "merge",
         description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
         category: ToolCategory.RECOMMENDED_TOOLS,
-        subcategory: ToolSubcategory.GENERAL,
+        subcategory: SubcategoryId.GENERAL,
         maxFiles: -1
     },
     "multi-tool": {
@@ -677,7 +578,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "pageEditor",
         description: t("home.multiTool.desc", "Use multiple tools on a single PDF document"),
         category: ToolCategory.RECOMMENDED_TOOLS,
-        subcategory: ToolSubcategory.GENERAL,
+        subcategory: SubcategoryId.GENERAL,
         maxFiles: -1
     },
     "ocr": {
@@ -687,7 +588,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "convert",
         description: t("home.ocr.desc", "Extract text from scanned PDFs using Optical Character Recognition"),
         category: ToolCategory.RECOMMENDED_TOOLS,
-        subcategory: ToolSubcategory.GENERAL,
+        subcategory: SubcategoryId.GENERAL,
         maxFiles: -1
     },
     "redact": {
@@ -697,71 +598,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "redact",
         description: t("home.redact.desc", "Permanently remove sensitive information from PDF documents"),
         category: ToolCategory.RECOMMENDED_TOOLS,
-        subcategory: ToolSubcategory.GENERAL
+        subcategory: SubcategoryId.GENERAL
     },
     };
 }
-
-
-export const toolEndpoints: Record<string, string[]> = {
-    split: ["split-pages",
-        "split-pdf-by-sections",
-        "split-by-size-or-count",
-        "split-pdf-by-chapters"],
-    compressPdfs: ["compress-pdf"],
-    merge: ["merge-pdfs"],
-    // Add more endpoint mappings as needed
-};
-
-/**
- * Get all endpoints from both registry entries and legacy toolEndpoints mapping
- * This consolidates endpoint discovery logic in one place
- */
-export const getAllEndpoints = (registry: ToolRegistry): string[] => {
-    const lists: string[][] = [];
-    
-    // Get endpoints from registry entries
-    Object.values(registry).forEach(entry => {
-        if (entry.endpoints && entry.endpoints.length > 0) {
-            lists.push(entry.endpoints);
-        }
-    });
-    
-    // Get endpoints from legacy toolEndpoints mapping
-    Object.entries(toolEndpoints).forEach(([key, list]) => {
-        // Only add if not already covered by registry entries
-        if (!registry[key]?.endpoints) {
-            lists.push(list);
-        }
-    });
-    
-    return Array.from(new Set(lists.flat()));
-};
-
-/**
- * Get all endpoints from a conversion matrix (like EXTENSION_TO_ENDPOINT)
- * This is useful for convert-specific endpoint discovery
- */
-export const getConversionEndpoints = (extensionToEndpoint: Record<string, Record<string, string>>): string[] => {
-    const endpoints = new Set<string>();
-    Object.values(extensionToEndpoint).forEach(toEndpoints => {
-        Object.values(toEndpoints).forEach(endpoint => {
-            endpoints.add(endpoint);
-        });
-    });
-    return Array.from(endpoints);
-};
-
-/**
- * Get all endpoints from both tool registry and conversion matrix
- * This provides comprehensive endpoint coverage for the entire application
- */
-export const getAllApplicationEndpoints = (
-    registry: ToolRegistry, 
-    extensionToEndpoint?: Record<string, Record<string, string>>
-): string[] => {
-    const toolEndpoints = getAllEndpoints(registry);
-    const conversionEndpoints = extensionToEndpoint ? getConversionEndpoints(extensionToEndpoint) : [];
-    
-    return Array.from(new Set([...toolEndpoints, ...conversionEndpoints]));
-};

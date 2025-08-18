@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useFlatToolRegistry, toolEndpoints, getAllEndpoints, type ToolRegistryEntry } from "../data/toolRegistry";
+import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
+import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 
 interface ToolManagementResult {
@@ -36,7 +37,7 @@ export const useToolManagement = (): ToolManagementResult => {
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
     if (endpointsLoading) return true;
-    const endpoints = baseRegistry[toolKey]?.endpoints || toolEndpoints[toolKey] || [];
+    const endpoints = baseRegistry[toolKey]?.endpoints || [];
     return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 

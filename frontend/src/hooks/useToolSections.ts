@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { type ToolRegistryEntry, SUBCATEGORY_ORDER, ToolCategory } from '../data/toolRegistry';
+
+import { SUBCATEGORY_ORDER, ToolCategory, ToolRegistryEntry } from '../data/toolsTaxonomy';
 import { useTranslation } from 'react-i18next';
 
 type GroupedTools = {

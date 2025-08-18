@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useLayoutEffect, useState } from "react";
 import { Box, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { type ToolRegistryEntry } from "../../data/toolRegistry";
+import { ToolRegistryEntry } from "../../data/toolsTaxonomy";
 import ToolButton from "./toolPicker/ToolButton";
 import "./toolPicker/ToolPicker.css";
 import { useToolSections } from "../../hooks/useToolSections";

@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@mantine/core";
 import { Tooltip } from "../../shared/Tooltip";
-import { type ToolRegistryEntry } from "../../../data/toolRegistry";
+import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import FitText from "../../shared/FitText";
 
 interface ToolButtonProps {

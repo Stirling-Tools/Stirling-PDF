@@ -4,7 +4,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import { isImageFormat, isWebFormat } from "../../../utils/convertUtils";
-import { getConversionEndpoints } from "../../../data/toolRegistry";
+import { getConversionEndpoints } from "../../../data/toolsTaxonomy";
 import { useFileSelectionActions } from "../../../contexts/FileSelectionContext";
 import { useFileContext } from "../../../contexts/FileContext";
 import { detectFileExtension } from "../../../utils/fileUtils";
