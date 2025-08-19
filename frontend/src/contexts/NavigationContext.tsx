@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import { useNavigationUrlSync } from '../hooks/useUrlSync';
 
 /**
  * NavigationContext - Complete navigation management system
@@ -92,7 +93,10 @@ const NavigationStateContext = createContext<NavigationContextStateValue | undef
 const NavigationActionsContext = createContext<NavigationContextActionsValue | undefined>(undefined);
 
 // Provider component
-export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const NavigationProvider: React.FC<{ 
+  children: React.ReactNode;
+  enableUrlSync?: boolean;
+}> = ({ children, enableUrlSync = true }) => {
   const [state, dispatch] = useReducer(navigationReducer, initialState);
 
   const actions: NavigationContextActions = {
@@ -148,6 +152,9 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const actionsValue: NavigationContextActionsValue = {
     actions
   };
+
+  // Enable URL synchronization
+  useNavigationUrlSync(state.currentMode, actions.setMode, enableUrlSync);
 
   return (
     <NavigationStateContext.Provider value={stateValue}>
