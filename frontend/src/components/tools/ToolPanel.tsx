@@ -1,10 +1,11 @@
 import React from 'react';
-import { TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
-import { useToolPanelState, useToolSelection, useWorkbenchState } from '../../contexts/ToolWorkflowContext';
+import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
+import SearchResults from './SearchResults';
 import ToolRenderer from './ToolRenderer';
+import ToolSearch from './toolPicker/ToolSearch';
 import { useSidebarContext } from "../../contexts/SidebarContext";
 import rainbowStyles from '../../styles/rainbow.module.css';
 
@@ -23,12 +24,13 @@ export default function ToolPanel() {
     isPanelVisible,
     searchQuery,
     filteredTools,
+    toolRegistry,
     setSearchQuery,
     handleBackToTools
-  } = useToolPanelState();
+  } = useToolWorkflow();
 
-  const { selectedToolKey, handleToolSelect } = useToolSelection();
-  const { setPreviewFile } = useWorkbenchState();
+  const { selectedToolKey, handleToolSelect } = useToolWorkflow();
+  const { setPreviewFile } = useToolWorkflow();
 
   return (
     <div
@@ -52,23 +54,39 @@ export default function ToolPanel() {
         }}
       >
         {/* Search Bar - Always visible at the top */}
-        <div className="mb-4">
-          <TextInput
-            placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
+        <div
+          style={{
+            backgroundColor: 'var(--tool-panel-search-bg)',
+            borderBottom: '1px solid var(--tool-panel-search-border-bottom)',
+            padding: '0.75rem 1rem',
+          }}
+        >
+          <ToolSearch
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.currentTarget.value)}
-            autoComplete="off"
-            size="sm"
+            onChange={setSearchQuery}
+            toolRegistry={toolRegistry}
+            mode="filter"
           />
         </div>
 
-        {leftPanelView === 'toolPicker' ? (
+        {searchQuery.trim().length > 0 ? (
+          // Searching view (replaces both picker and content)
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 min-h-0">
+              <SearchResults
+                filteredTools={filteredTools}
+                onSelect={handleToolSelect}
+              />
+            </div>
+          </div>
+        ) : leftPanelView === 'toolPicker' ? (
           // Tool Picker View
           <div className="flex-1 flex flex-col">
             <ToolPicker
               selectedToolKey={selectedToolKey}
               onSelect={handleToolSelect}
               filteredTools={filteredTools}
+              isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
             />
           </div>
         ) : (
@@ -76,10 +94,12 @@ export default function ToolPanel() {
           <div className="flex-1 flex flex-col">
             {/* Tool content */}
             <div className="flex-1 min-h-0">
-              <ToolRenderer
-                selectedToolKey={selectedToolKey || ''}
-                onPreviewFile={setPreviewFile}
-              />
+              {selectedToolKey && (
+                <ToolRenderer
+                  selectedToolKey={selectedToolKey}
+                  onPreviewFile={setPreviewFile}
+                />
+              )}
             </div>
           </div>
         )}

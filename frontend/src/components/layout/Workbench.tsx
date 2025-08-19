@@ -2,7 +2,7 @@ import React from 'react';
 import { Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
-import { useWorkbenchState, useToolSelection } from '../../contexts/ToolWorkflowContext';
+import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState, useFileActions } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
@@ -34,9 +34,9 @@ export default function Workbench() {
     setPreviewFile,
     setPageEditorFunctions,
     setSidebarsVisible
-  } = useWorkbenchState();
+  } = useToolWorkflow();
 
-  const { selectedToolKey, selectedTool, handleToolSelect } = useToolSelection();
+  const { selectedToolKey, selectedTool, handleToolSelect } = useToolWorkflow();
   const { addToActiveFiles } = useFileHandler();
 
   const handlePreviewClose = () => {

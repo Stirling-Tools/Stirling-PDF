@@ -4,6 +4,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import { isImageFormat, isWebFormat } from "../../../utils/convertUtils";
+import { getConversionEndpoints } from "../../../data/toolsTaxonomy";
 import { useToolFileSelection } from "../../../contexts/FileContext";
 import { useFileState } from "../../../contexts/FileContext";
 import { detectFileExtension } from "../../../utils/fileUtils";
@@ -44,15 +45,7 @@ const ConvertSettings = ({
   const { state, selectors } = useFileState();
   const activeFiles = state.files.ids;
 
-  const allEndpoints = useMemo(() => {
-    const endpoints = new Set<string>();
-    Object.values(EXTENSION_TO_ENDPOINT).forEach(toEndpoints => {
-      Object.values(toEndpoints).forEach(endpoint => {
-        endpoints.add(endpoint);
-      });
-    });
-    return Array.from(endpoints);
-  }, []);
+  const allEndpoints = useMemo(() => getConversionEndpoints(EXTENSION_TO_ENDPOINT), []);
 
   const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
 

@@ -14,6 +14,7 @@ A flexible, accessible tooltip component that supports both regular positioning 
 - 📌 **Click-to-Pin**: Click to pin tooltips open, click outside or the close button to unpin
 - 🔗 **Link Support**: Full support for clickable links in descriptions, bullets, and body content
 - 🎮 **Controlled by Default**: Always uses controlled state management for consistent behavior
+- ⏱️ **Hover Timing Controls**: Optional long-hover requirement via `delayAppearance` and `delay`
 
 ## Behavior
 
@@ -61,6 +62,7 @@ function MyComponent() {
 | `arrow` | `boolean` | `false` | Shows a small triangular arrow pointing to the trigger element |
 | `portalTarget` | `HTMLElement` | `undefined` | DOM node to portal the tooltip into |
 | `header` | `{ title: string; logo?: ReactNode }` | - | Optional header with title and logo |
+| `delay` | `number` | `0` | Optional hover-open delay (ms). If omitted or 0, opens immediately |
 
 ### TooltipTip Interface
 
@@ -105,6 +107,17 @@ interface TooltipTip {
   <button>Settings</button>
 </Tooltip>
 ```
+
+### Optional Hover Delay
+
+```tsx
+// Show after a 1s hover
+<Tooltip content="Appears after a long hover" delay={1000} />
+
+// Custom long-hover duration (2 seconds)
+<Tooltip content="Appears after 2s" delay={2000} />
+```
+
 
 ### Custom JSX Content
 
@@ -213,6 +226,12 @@ Links automatically get proper styling with hover states and open in new tabs wh
 - Automatically clamps to viewport boundaries
 - Calculates optimal position based on trigger element's `getBoundingClientRect()`
 - **Dynamic arrow positioning**: Arrow stays aligned with trigger even when tooltip is clamped
+
+## Timing Details
+
+- Opening uses `delay` (ms) if provided; otherwise opens immediately. Closing occurs immediately when the cursor leaves (unless pinned).
+- All internal timers are cleared on state changes, mouse transitions, and unmount to avoid overlaps.
+- Only one tooltip can be open at a time; hovering a new trigger closes others immediately.
 
 ### Sidebar Tooltips
 - When `sidebarTooltip={true}`, horizontal positioning is locked to the right of the sidebar
