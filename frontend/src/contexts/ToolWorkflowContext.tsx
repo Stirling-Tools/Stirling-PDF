@@ -5,9 +5,8 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
-import { useToolUrlRouting } from '../hooks/useToolUrlRouting';
-import { Tool } from '../types/tool';
 import { PageEditorFunctions } from '../types/pageEditor';
+import { ToolRegistryEntry } from '../data/toolsTaxonomy';
 
 // State interface
 interface ToolWorkflowState {
@@ -70,9 +69,9 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: string | null;
-  selectedTool: Tool | null;
+  selectedTool: ToolRegistryEntry | null;
   toolRegistry: any; // From useToolManagement
-
+  
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
   setLeftPanelView: (view: 'toolPicker' | 'toolContent') => void;
@@ -91,7 +90,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: [string, any][]; // Filtered by search
+  filteredTools: [string, ToolRegistryEntry][]; // Filtered by search
   isPanelVisible: boolean;
 }
 
@@ -143,11 +142,22 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: string) => {
+    // Special-case: if tool is a dedicated reader tool, enter reader mode and do not go to toolContent
+    if (toolId === 'read' || toolId === 'view-pdf') {
+      setReaderMode(true);
+      setLeftPanelView('toolPicker');
+      clearToolSelection();
+      setSearchQuery('');
+      return;
+    }
+
     selectTool(toolId);
     onViewChange?.('fileEditor');
     setLeftPanelView('toolContent');
     setReaderMode(false);
-  }, [selectTool, onViewChange, setLeftPanelView, setReaderMode]);
+    // Clear search so the tool content becomes visible immediately
+    setSearchQuery('');
+  }, [selectTool, onViewChange, setLeftPanelView, setReaderMode, setSearchQuery, clearToolSelection]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
@@ -158,20 +168,6 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
   const handleReaderToggle = useCallback(() => {
     setReaderMode(true);
   }, [setReaderMode]);
-
-  // URL routing functionality
-  const { getToolUrlSlug, getToolKeyFromSlug } = useToolUrlRouting({
-    selectedToolKey,
-    toolRegistry,
-    selectTool,
-    clearToolSelection,
-    // During initial load, we want the full UI side-effects (like before):
-    onInitSelect: handleToolSelect,
-    // For back/forward nav, keep it lightweight like before (selection only):
-    onPopStateSelect: selectTool,
-    // If your app serves under a subpath, provide basePath here (e.g., '/app')
-    // basePath: ''
-  });
 
   // Filter tools based on search query
   const filteredTools = useMemo(() => {
@@ -229,8 +225,3 @@ export function useToolWorkflow(): ToolWorkflowContextValue {
   }
   return context;
 }
-
-// Convenience exports for specific use cases (optional - components can use useToolWorkflow directly)
-export const useToolSelection = useToolWorkflow;
-export const useToolPanelState = useToolWorkflow;
-export const useWorkbenchState = useToolWorkflow;
