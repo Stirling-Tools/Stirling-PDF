@@ -10,6 +10,7 @@ import ChangePermissions from '../tools/ChangePermissions';
 import RemovePassword from '../tools/RemovePassword';
 import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
+import Repair from '../tools/Repair';
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -384,11 +385,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "repair": {
         icon: <span className="material-symbols-rounded">build</span>,
         name: t("home.repair.title", "Repair"),
-        component: null,
+        component: Repair,
         view: "format",
         description: t("home.repair.desc", "Repair corrupted or damaged PDF files"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: SubcategoryId.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["repair"]
     },
     "detect-split-scanned-photos": {
         icon: <span className="material-symbols-rounded">scanner</span>,

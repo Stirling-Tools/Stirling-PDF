@@ -1188,7 +1188,18 @@
     "tags": "fix,restore,correction,recover",
     "title": "Repair",
     "header": "Repair PDFs",
-    "submit": "Repair"
+    "submit": "Repair",
+    "description": "This tool will attempt to repair corrupted or damaged PDF files. No additional settings are required.",
+    "filenamePrefix": "repaired",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst repairing the PDF."
+    },
+    "results": {
+      "title": "Repair Results"
+    }
   },
   "removeBlanks": {
     "tags": "cleanup,streamline,non-content,organize",
