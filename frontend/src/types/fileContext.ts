@@ -19,7 +19,8 @@ export type ModeType =
   | 'changePermissions'
   | 'watermark'
   | 'removePassword'
-  | 'single-large-page'; 
+  | 'single-large-page'
+  | 'repair';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 

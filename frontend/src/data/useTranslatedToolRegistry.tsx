@@ -11,7 +11,10 @@ import RemovePassword from '../tools/RemovePassword';
 import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
 import Repair from '../tools/Repair';
+<<<<<<< HEAD
 import SingleLargePage from '../tools/SingleLargePage';
+=======
+>>>>>>> refs/remotes/origin/V2
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
