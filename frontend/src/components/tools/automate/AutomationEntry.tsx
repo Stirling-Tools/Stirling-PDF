@@ -30,13 +30,13 @@ export default function AutomationEntry({
       return (
         <Group gap="md" align="center" justify="flex-start" style={{ width: '100%' }}>
           {BadgeIcon && (
-            <BadgeIcon 
-              style={{ 
-                color: keepIconColor ? 'inherit' : 'var(--mantine-color-dimmed)' 
-              }} 
+            <BadgeIcon
+              style={{
+                color: keepIconColor ? 'inherit' : 'var(--mantine-color-text)'
+              }}
             />
           )}
-          <Text fw={600} size="sm" style={{ flex: 1, textAlign: 'left', color: 'var(--mantine-color-dimmed)' }}>
+          <Text size="sm" style={{ flex: 1, textAlign: 'left', color: 'var(--mantine-color-text)' }}>
             {title}
           </Text>
         </Group>
@@ -46,20 +46,21 @@ export default function AutomationEntry({
       return (
         <Group gap="md" align="center" justify="flex-start" style={{ width: '100%' }}>
           {BadgeIcon && (
-            <BadgeIcon 
-              style={{ 
-                color: keepIconColor ? 'inherit' : 'var(--mantine-color-dimmed)' 
-              }} 
+            <BadgeIcon
+              style={{
+                color: keepIconColor ? 'inherit' : 'var(--mantine-color-text)'
+              }}
             />
           )}
           <Group gap="xs" justify="flex-start" style={{ flex: 1 }}>
             {operations.map((op, index) => (
               <React.Fragment key={`${op}-${index}`}>
-                <Badge size="xs" variant="outline" style={{ color: 'var(--mantine-color-dimmed)', borderColor: 'var(--mantine-color-dimmed)' }}>
-                  {String(t(`${op}.title`, op))}
-                </Badge>
+                <Text size="sm" style={{ color: 'var(--mantine-color-text)' }}>
+                  {t(`${op}.title`, op)}
+                </Text>
+
                 {index < operations.length - 1 && (
-                  <Text size="xs" c="dimmed" style={{ color: 'var(--mantine-color-dimmed)' }}>
+                  <Text size="xs" c="dimmed" style={{ color: 'var(--mantine-color-text)' }}>
                     →
                   </Text>
                 )}

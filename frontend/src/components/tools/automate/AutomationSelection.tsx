@@ -20,7 +20,7 @@ export default function AutomationSelection({ onSelectCustom, onSelectSuggested,
 
   return (
     <div>
-      <Title order={3} size="h4" mb="md">
+      <Title order={3} size="h4" fw={600} mb="md" style={{color: 'var(--mantine-color-dimmed)'}}>
         {t("automate.selection.saved.title", "Saved")}
       </Title>
 
@@ -42,11 +42,11 @@ export default function AutomationSelection({ onSelectCustom, onSelectSuggested,
           onClick={() => onSelectCustom()}
         />
       ))}
-      <Divider />
+      <Divider pb='sm' />
 
       {/* Suggested Automations */}
       <div>
-        <Title order={3} size="h4" mb="md">
+        <Title order={3} size="h4" fw={600} mb="md"style={ {color: 'var(--mantine-color-dimmed)'}}>
           {t("automate.selection.suggested.title", "Suggested")}
         </Title>
         <Stack gap="xs">
