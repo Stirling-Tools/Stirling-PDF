@@ -82,10 +82,6 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = watermarkOperation.files.length > 0 || watermarkOperation.downloadUrl !== null;
-  const settingsCollapsed = !hasFiles || hasResults;
-
-  // Step completion logic
-  const typeStepCompleted = hasFiles && !!watermarkParams.parameters.watermarkType;
 
   // Dynamic step structure based on watermark type
   const getSteps = () => {

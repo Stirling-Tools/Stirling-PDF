@@ -718,30 +718,6 @@
     "upload": "Add image",
     "submit": "Add image"
   },
-  "watermark": {
-    "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
-    "title": "Add Watermark",
-    "desc": "Add text or image watermarks to PDF files",
-    "header": "Add Watermark",
-    "customColor": "Custom Text Color",
-    "selectText": {
-      "1": "Select PDF to add watermark to:",
-      "2": "Watermark Text:",
-      "3": "Font Size:",
-      "4": "Rotation (0-360):",
-      "5": "Width Spacer (Space between each watermark horizontally):",
-      "6": "Height Spacer (Space between each watermark vertically):",
-      "7": "Opacity (0% - 100%):",
-      "8": "Watermark Type:",
-      "9": "Watermark Image:",
-      "10": "Convert PDF to PDF-Image"
-    },
-    "submit": "Add Watermark",
-    "type": {
-      "1": "Text",
-      "2": "Image"
-    }
-  },
   "permissions": {
     "tags": "read,write,edit,print",
     "title": "Change Permissions",
@@ -1745,6 +1721,10 @@
     }
   },
   "watermark": {
+    "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
+    "title": "Add Watermark",
+    "desc": "Add text or image watermarks to PDF files",
+    "header": "Add Watermark",
     "completed": "Watermark added",
     "submit": "Add Watermark",
     "filenamePrefix": "watermarked",
@@ -1796,6 +1776,24 @@
       "title": "Watermark Results"
     },
     "tooltip": {
+      "language": {
+        "title": "Language Support",
+        "text": "Choose the appropriate language setting to ensure proper font rendering for your text."
+      },
+      "appearance": {
+        "title": "Appearance Settings",
+        "text": "Control how your watermark looks and blends with the document.",
+        "bullet1": "Rotation: -360° to 360° for angled watermarks",
+        "bullet2": "Opacity: 0-100% for transparency control",
+        "bullet3": "Lower opacity creates subtle watermarks"
+      },
+      "spacing": {
+        "title": "Spacing Control",
+        "text": "Adjust the spacing between repeated watermarks across the page.",
+        "bullet1": "Width spacing: Horizontal distance between watermarks",
+        "bullet2": "Height spacing: Vertical distance between watermarks",
+        "bullet3": "Higher values create more spread out patterns"
+      },
       "type": {
         "header": {
           "title": "Watermark Type Selection"

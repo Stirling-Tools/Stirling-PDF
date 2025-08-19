@@ -384,7 +384,7 @@
     },
     "watermark": {
       "title": "Add Watermark",
-      "desc": "Add a custom watermark to your PDF document."
+      "desc": "Add text or image watermarks to PDF files"
     },
     "permissions": {
       "title": "Change Permissions",
@@ -778,27 +778,48 @@
     "submit": "Add image"
   },
   "watermark": {
-    "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
-    "title": "Add Watermark",
+    "title": "Add Watermark", 
     "desc": "Add text or image watermarks to PDF files",
-    "header": "Add Watermark",
-    "customColor": "Custom Text Colour",
-    "selectText": {
-      "1": "Select PDF to add watermark to:",
-      "2": "Watermark Text:",
-      "3": "Font Size:",
-      "4": "Rotation (0-360):",
-      "5": "Width Spacer (Space between each watermark horizontally):",
-      "6": "Height Spacer (Space between each watermark vertically):",
-      "7": "Opacity (0% - 100%):",
-      "8": "Watermark Type:",
-      "9": "Watermark Image:",
-      "10": "Convert PDF to PDF-Image"
-    },
+    "completed": "Watermark added",
     "submit": "Add Watermark",
-    "type": {
-      "1": "Text",
-      "2": "Image"
+    "filenamePrefix": "watermarked",
+    "error": {
+      "failed": "An error occurred while adding watermark to the PDF."
+    },
+    "watermarkType": {
+      "text": "Text",
+      "image": "Image"
+    },
+    "settings": {
+      "type": "Watermark Type",
+      "text": {
+        "label": "Watermark Text",
+        "placeholder": "Enter watermark text"
+      },
+      "image": {
+        "label": "Watermark Image",
+        "choose": "Choose Image",
+        "selected": "Selected: {{filename}}"
+      },
+      "fontSize": "Font Size",
+      "size": "Size",
+      "alphabet": "Font/Language",
+      "color": "Watermark Colour",
+      "rotation": "Rotation (degrees)",
+      "opacity": "Opacity (%)",
+      "spacing": {
+        "horizontal": "Horizontal Spacing",
+        "vertical": "Vertical Spacing"
+      },
+      "convertToImage": "Flatten PDF pages to images"
+    },
+    "alphabet": {
+      "roman": "Roman/Latin",
+      "arabic": "Arabic",
+      "japanese": "Japanese",
+      "korean": "Korean",
+      "chinese": "Chinese",
+      "thai": "Thai"
     },
     "steps": {
       "type": "Watermark Type",
@@ -807,38 +828,28 @@
       "formatting": "Formatting",
       "file": "Watermark File"
     },
-    "watermarkType": {
-      "text": "Text",
-      "image": "Image"
-    },
-    "settings": {
-      "text": {
-        "placeholder": "Enter watermark text"
-      },
-      "color": "Colour",
-      "fontSize": "Size",
-      "alphabet": "Alphabet",
-      "rotation": "Rotation",
-      "opacity": "Opacity",
-      "spacing": {
-        "width": "Width Spacing",
-        "height": "Height Spacing",
-        "horizontal": "Horizontal Spacing",
-        "vertical": "Vertical Spacing"
-      },
-      "image": {
-        "choose": "Choose Image"
-      },
-      "convertToImage": "Flatten PDF pages to images"
-    },
-    "error": {
-      "failed": "Add watermark operation failed"
-    },
-    "filenamePrefix": "watermarked",
     "results": {
       "title": "Watermark Results"
     },
     "tooltip": {
+      "language": {
+        "title": "Language Support",
+        "text": "Choose the appropriate language setting to ensure proper font rendering for your text."
+      },
+      "appearance": {
+        "title": "Appearance Settings",
+        "text": "Control how your watermark looks and blends with the document.",
+        "bullet1": "Rotation: -360° to 360° for angled watermarks",
+        "bullet2": "Opacity: 0-100% for transparency control",
+        "bullet3": "Lower opacity creates subtle watermarks"
+      },
+      "spacing": {
+        "title": "Spacing Control",
+        "text": "Adjust the spacing between repeated watermarks across the page.",
+        "bullet1": "Width spacing: Horizontal distance between watermarks",
+        "bullet2": "Height spacing: Vertical distance between watermarks",
+        "bullet3": "Higher values create more spread out patterns"
+      },
       "type": {
         "header": {
           "title": "Watermark Type Selection"
@@ -871,14 +882,7 @@
           "text": "Enter the text that will appear as your watermark across the document.",
           "bullet1": "Keep it concise for better readability",
           "bullet2": "Common examples: 'CONFIDENTIAL', 'DRAFT', company name",
-          "bullet3": "Supports all Unicode characters"
-        },
-        "fontSize": {
-          "title": "Font Size",
-          "text": "Control the size of your watermark text (8-72 points).",
-          "bullet1": "Smaller sizes (8-14pt) for subtle watermarks",
-          "bullet2": "Medium sizes (16-24pt) for standard visibility",
-          "bullet3": "Large sizes (30-72pt) for prominent watermarks"
+          "bullet3": "Emoji characters are not supported and will be filtered out"
         }
       },
       "textStyle": {
@@ -891,6 +895,10 @@
           "bullet1": "Light grey (#d3d3d3) for subtle watermarks",
           "bullet2": "Black or dark colours for high contrast",
           "bullet3": "Custom colours for branding purposes"
+        },
+        "language": {
+          "title": "Language Support",
+          "text": "Choose the appropriate language setting to ensure proper font rendering."
         }
       },
       "file": {
@@ -916,6 +924,25 @@
         "header": {
           "title": "Formatting & Layout"
         },
+        "size": {
+          "title": "Size Control",
+          "text": "Adjust the size of your watermark (text or image).",
+          "bullet1": "Larger sizes create more prominent watermarks"
+        },
+        "appearance": {
+          "title": "Appearance Settings",
+          "text": "Control how your watermark looks and blends with the document.",
+          "bullet1": "Rotation: -360° to 360° for angled watermarks",
+          "bullet2": "Opacity: 0-100% for transparency control",
+          "bullet3": "Lower opacity creates subtle watermarks"
+        },
+        "spacing": {
+          "title": "Spacing Control",
+          "text": "Adjust the spacing between repeated watermarks across the page.",
+          "bullet1": "Horizontal spacing: Distance between watermarks left to right",
+          "bullet2": "Vertical spacing: Distance between watermarks top to bottom",
+          "bullet3": "Higher values create more spread out patterns"
+        },
         "security": {
           "title": "Security Option",
           "text": "Convert the final PDF to an image-based format for enhanced security.",
@@ -924,28 +951,6 @@
           "bullet3": "Results in larger file sizes",
           "bullet4": "Best for sensitive or copyrighted content"
         }
-      },
-      "language": {
-        "title": "Language Support",
-        "text": "Choose the appropriate language setting to ensure proper font rendering for your text.",
-        "bullet1": "Roman/Latin for Western languages",
-        "bullet2": "Arabic for Arabic script",
-        "bullet3": "Japanese, Korean, Chinese for Asian languages",
-        "bullet4": "Thai for Thai script"
-      },
-      "appearance": {
-        "title": "Appearance Settings",
-        "text": "Control how your watermark looks and blends with the document.",
-        "bullet1": "Rotation: -360° to 360° for angled watermarks",
-        "bullet2": "Opacity: 0-100% for transparency control",
-        "bullet3": "Lower opacity creates subtle watermarks"
-      },
-      "spacing": {
-        "title": "Spacing Control",
-        "text": "Adjust the spacing between repeated watermarks across the page.",
-        "bullet1": "Width spacing: Horizontal distance between watermarks",
-        "bullet2": "Height spacing: Vertical distance between watermarks",
-        "bullet3": "Higher values create more spread out patterns"
       }
     }
   },
