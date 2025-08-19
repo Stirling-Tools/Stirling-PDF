@@ -10,7 +10,6 @@
   pointer-events: auto;
   z-index: 9999;
   transition: opacity 100ms ease-out, transform 100ms ease-out;
-  min-width: 25rem;
   max-width: 50vh;
   max-height: 80vh;
   color: var(--text-primary);

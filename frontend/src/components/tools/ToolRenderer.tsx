@@ -26,7 +26,7 @@ const ToolRenderer = ({
 
   // Wrap lazy-loaded component with Suspense
   return (
-    <Suspense fallback={<ToolLoadingFallback toolName={selectedTool.name} />}>
+    <Suspense fallback={<ToolLoadingFallback toolName={selectedTool.name} />}> 
       <ToolComponent
         onPreviewFile={onPreviewFile}
         onComplete={onComplete}

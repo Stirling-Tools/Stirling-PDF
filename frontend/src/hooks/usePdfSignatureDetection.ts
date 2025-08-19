@@ -34,7 +34,7 @@ export const usePdfSignatureDetection = (files: File[]): PdfSignatureDetectionRe
               const page = await pdf.getPage(i);
               const annotations = await page.getAnnotations({ intent: 'display' });
 
-              annotations.forEach(annotation => {
+              annotations.forEach((annotation: any) => {
                 if (annotation.subtype === 'Widget' && annotation.fieldType === 'Sig') {
                   foundSignature = true;
                 }

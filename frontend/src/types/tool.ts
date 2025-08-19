@@ -34,7 +34,7 @@ export interface ToolResult {
 }
 
 export interface ToolConfiguration {
-  maxFiles: number;
+  maxFiles?: number;
   supportedFormats?: string[];
 }
 

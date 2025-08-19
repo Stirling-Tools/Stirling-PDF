@@ -18,7 +18,13 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
     if (stored && ['light', 'dark', 'rainbow'].includes(stored)) {
       return stored as ThemeMode;
     }
-    return initialTheme;
+    try {
+      // Fallback to OS preference if available
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return prefersDark ? 'dark' : initialTheme;
+    } catch {
+      return initialTheme;
+    }
   });
 
   // Track rapid toggles for easter egg

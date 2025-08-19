@@ -81,7 +81,7 @@
   --text-secondary: #4b5563;
   --text-muted: #6b7280;
   --border-subtle: #e5e7eb;
-  --border-default: #d1d5db;
+  --border-default: #E2E8F0;
   --border-strong: #9ca3af;
   --hover-bg: #f9fafb;
   --active-bg: #f3f4f6;
@@ -117,10 +117,30 @@
   --icon-inactive-bg: #9CA3AF;
   --icon-inactive-color: #FFFFFF;
 
+  /* New theme colors for text and icons */
+  --tools-text-and-icon-color: #374151;
+
+  /* Tool picker sticky header variables (light mode) */
+  --tool-header-bg: #DBEFFF;
+  --tool-header-border: #BEE2FF;
+  --tool-header-text: #1E88E5;
+  --tool-header-badge-bg: #C0DDFF;
+  --tool-header-badge-text: #004E99;
+
+  /* Subcategory title styling (light mode) */
+  --tool-subcategory-text-color: #9CA3AF; /* lighter text */
+  --tool-subcategory-rule-color: #E5E7EB; /* doubly lighter rule line */
   --accent-interactive: #4A90E2;
   --text-instruction: #4A90E2;
   --text-brand: var(--color-gray-700);
   --text-brand-accent: #DC2626;
+
+  /* Placeholder text colors */
+  --search-text-and-icon-color: #6B7382;
+
+  /* Tool panel search bar background colors */
+  --tool-panel-search-bg: #EFF1F4;
+  --tool-panel-search-border-bottom: #EFF1F4;
 
   /* container */
   --landing-paper-bg: var(--bg-surface);
@@ -177,7 +197,7 @@
   --bg-raised: #1F2329;
   --bg-muted: #1F2329;
   --bg-background: #2A2F36;
-  --bg-toolbar: #272A2E;
+  --bg-toolbar: #1F2329;
   --bg-file-manager: #1F2329;
   --bg-file-list: #2A2F36;
   --btn-open-file: #0A8BFF;
@@ -185,7 +205,7 @@
   --text-secondary: #d1d5db;
   --text-muted: #9ca3af;
   --border-subtle: #2A2F36;
-  --border-default: #374151;
+  --border-default: #3A4047;
   --border-strong: #4b5563;
   --hover-bg: #374151;
   --active-bg: #4b5563;
@@ -251,6 +271,27 @@
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
+
+  --tools-text-and-icon-color: #D0D6DC;
+
+  /* Tool picker sticky header variables (dark mode) */
+  --tool-header-bg: #2A2F36;
+  --tool-header-border: #3A4047;
+  --tool-header-text: #D0D6DC;
+  --tool-header-badge-bg: #4B525A;
+  --tool-header-badge-text: #FFFFFF;
+
+  /* Subcategory title styling (dark mode) */
+  --tool-subcategory-text-color: #9CA3AF; /* lighter text in dark mode as well */
+  --tool-subcategory-rule-color: #3A4047; /* doubly lighter (relative) line in dark */
+
+  /* Placeholder text colors (dark mode) */
+  --search-text-and-icon-color: #FFFFFF !important;
+
+  /* Tool panel search bar background colors (dark mode) */
+  --tool-panel-search-bg: #1F2329;
+  --tool-panel-search-border-bottom: #4B525A;
+
 }
 
 /* Dropzone drop state styling */
