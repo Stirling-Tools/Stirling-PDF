@@ -8,6 +8,7 @@ import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import LockIcon from "@mui/icons-material/Lock";
 import BrandingWatermarkIcon from "@mui/icons-material/BrandingWatermark";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { Tool, ToolDefinition, ToolRegistry } from "../types/tool";
 
@@ -123,6 +124,15 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     category: "security",
     description: "Remove password protection from PDF files",
     endpoints: ["remove-password"]
+  },
+  automate: {
+    id: "automate",
+    icon: <AutoFixHighIcon />,
+    component: React.lazy(() => import("../tools/Automate")),
+    maxFiles: -1,
+    category: "utility",
+    description: "Create and run automated workflows with multiple tools",
+    endpoints: ["handleData"] // Uses the existing pipeline endpoint
   },
 
 };

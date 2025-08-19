@@ -86,11 +86,21 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
 }, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle } = useToolWorkflow();
+  const { handleReaderToggle, handleToolSelect, selectedToolKey } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
+
+  // Sync activeButton with selectedToolKey
+  React.useEffect(() => {
+    if (selectedToolKey === 'automate') {
+      setActiveButton('automate');
+    } else if (selectedToolKey) {
+      // If any other tool is selected, default to 'tools' view
+      setActiveButton('tools');
+    }
+  }, [selectedToolKey]);
 
   const handleFilesButtonClick = () => {
     openFilesModal();
@@ -131,7 +141,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       size: 'lg',
       isRound: false,
       type: 'navigation',
-      onClick: () => setActiveButton('automate')
+      onClick: () => {
+        setActiveButton('automate');
+        handleToolSelect('automate');
+      }
     },
     {
       id: 'files',
