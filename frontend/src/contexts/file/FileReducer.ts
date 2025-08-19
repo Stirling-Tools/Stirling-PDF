@@ -15,6 +15,7 @@ export const initialFileContextState: FileContextState = {
     ids: [],
     byId: {}
   },
+  pinnedFiles: new Set(),
   ui: {
     selectedFileIds: [],
     selectedPageNumbers: [],
@@ -149,6 +150,66 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         ui: {
           ...state.ui,
           hasUnsavedChanges: action.payload.hasChanges
+        }
+      };
+    }
+    
+    case 'PIN_FILE': {
+      const { fileId } = action.payload;
+      const newPinnedFiles = new Set(state.pinnedFiles);
+      newPinnedFiles.add(fileId);
+      
+      return {
+        ...state,
+        pinnedFiles: newPinnedFiles
+      };
+    }
+    
+    case 'UNPIN_FILE': {
+      const { fileId } = action.payload;
+      const newPinnedFiles = new Set(state.pinnedFiles);
+      newPinnedFiles.delete(fileId);
+      
+      return {
+        ...state,
+        pinnedFiles: newPinnedFiles
+      };
+    }
+    
+    case 'CONSUME_FILES': {
+      const { inputFileIds, outputFileRecords } = action.payload;
+      
+      // Only remove unpinned input files
+      const unpinnedInputIds = inputFileIds.filter(id => !state.pinnedFiles.has(id));
+      const remainingIds = state.files.ids.filter(id => !unpinnedInputIds.includes(id));
+      
+      // Remove unpinned files from state
+      const newById = { ...state.files.byId };
+      unpinnedInputIds.forEach(id => {
+        delete newById[id];
+      });
+      
+      // Add output files
+      const outputIds: FileId[] = [];
+      outputFileRecords.forEach(record => {
+        if (!newById[record.id]) {
+          outputIds.push(record.id);
+          newById[record.id] = record;
+        }
+      });
+      
+      // Clear selections that reference removed files
+      const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !unpinnedInputIds.includes(id));
+      
+      return {
+        ...state,
+        files: {
+          ids: [...remainingIds, ...outputIds],
+          byId: newById
+        },
+        ui: {
+          ...state.ui,
+          selectedFileIds: validSelectedFileIds
         }
       };
     }

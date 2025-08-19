@@ -88,6 +88,36 @@ export function FileContextProvider({
     return consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch);
   }, []);
 
+  // Helper to find FileId from File object
+  const findFileId = useCallback((file: File): FileId | undefined => {
+    return Object.keys(stateRef.current.files.byId).find(id => {
+      const storedFile = filesRef.current.get(id);
+      return storedFile && 
+             storedFile.name === file.name && 
+             storedFile.size === file.size && 
+             storedFile.lastModified === file.lastModified;
+    });
+  }, []);
+
+  // File-to-ID wrapper functions for pinning
+  const pinFileWrapper = useCallback((file: File) => {
+    const fileId = findFileId(file);
+    if (fileId) {
+      baseActions.pinFile(fileId);
+    } else {
+      console.warn('File not found for pinning:', file.name);
+    }
+  }, [baseActions, findFileId]);
+
+  const unpinFileWrapper = useCallback((file: File) => {
+    const fileId = findFileId(file);
+    if (fileId) {
+      baseActions.unpinFile(fileId);
+    } else {
+      console.warn('File not found for unpinning:', file.name);
+    }
+  }, [baseActions, findFileId]);
+
   // Complete actions object
   const actions = useMemo<FileContextActions>(() => ({
     ...baseActions,
@@ -103,7 +133,9 @@ export function FileContextProvider({
       filesRef.current.clear();
       dispatch({ type: 'RESET_CONTEXT' });
     },
-    // Pinned files functionality - isFilePinned available in selectors
+    // Pinned files functionality with File object wrappers
+    pinFile: pinFileWrapper,
+    unpinFile: unpinFileWrapper,
     consumeFiles: consumeFilesWrapper,
     setHasUnsavedChanges,
     trackBlobUrl: lifecycleManager.trackBlobUrl,
@@ -118,7 +150,9 @@ export function FileContextProvider({
     addStoredFiles, 
     lifecycleManager,
     setHasUnsavedChanges,
-    consumeFilesWrapper
+    consumeFilesWrapper,
+    pinFileWrapper,
+    unpinFileWrapper
   ]);
 
   // Split context values to minimize re-renders

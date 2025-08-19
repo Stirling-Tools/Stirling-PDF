@@ -45,6 +45,35 @@ export function createFileSelectors(
         .filter(Boolean);
     },
     
+    // Pinned files selectors
+    getPinnedFileIds: () => {
+      return Array.from(stateRef.current.pinnedFiles);
+    },
+    
+    getPinnedFiles: () => {
+      return Array.from(stateRef.current.pinnedFiles)
+        .map(id => filesRef.current.get(id))
+        .filter(Boolean) as File[];
+    },
+    
+    getPinnedFileRecords: () => {
+      return Array.from(stateRef.current.pinnedFiles)
+        .map(id => stateRef.current.files.byId[id])
+        .filter(Boolean);
+    },
+    
+    isFilePinned: (file: File) => {
+      // Find FileId by matching File object properties
+      const fileId = Object.keys(stateRef.current.files.byId).find(id => {
+        const storedFile = filesRef.current.get(id);
+        return storedFile && 
+               storedFile.name === file.name && 
+               storedFile.size === file.size && 
+               storedFile.lastModified === file.lastModified;
+      });
+      return fileId ? stateRef.current.pinnedFiles.has(fileId) : false;
+    },
+    
     // Stable signature for effects - prevents unnecessary re-renders
     getFilesSignature: () => {
       return stateRef.current.files.ids

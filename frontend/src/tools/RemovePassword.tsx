@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useToolFileSelection } from "../contexts/FileContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -15,7 +14,6 @@ import { BaseToolProps } from "../types/tool";
 
 const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
 
   const removePasswordParams = useRemovePasswordParameters();
@@ -46,13 +44,11 @@ const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "removePassword");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     removePasswordOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("removePassword");
   };
 
   const hasFiles = selectedFiles.length > 0;

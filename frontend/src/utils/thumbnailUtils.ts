@@ -16,15 +16,15 @@ interface ColorScheme {
 }
 
 /**
- * Calculate thumbnail scale based on file size
+ * Calculate thumbnail scale based on file size (modern 2024 scaling)
  */
 export function calculateScaleFromFileSize(fileSize: number): number {
   const MB = 1024 * 1024;
-  if (fileSize < 1 * MB) return 0.6;
-  if (fileSize < 5 * MB) return 0.4;
-  if (fileSize < 15 * MB) return 0.3;
-  if (fileSize < 30 * MB) return 0.2;
-  return 0.15;
+  if (fileSize < 10 * MB) return 1.0;   // Full quality for small files
+  if (fileSize < 50 * MB) return 0.8;   // High quality for common file sizes
+  if (fileSize < 200 * MB) return 0.6;  // Good quality for typical large files
+  if (fileSize < 500 * MB) return 0.4;  // Readable quality for large but manageable files
+  return 0.3;  // Still usable quality, not tiny
 }
 
 /**
@@ -341,9 +341,21 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
   // Handle PDF files
   if (file.type.startsWith('application/pdf')) {
     const scale = calculateScaleFromFileSize(file.size);
+    
+    // Only read first 2MB for thumbnail generation to save memory
+    const chunkSize = 2 * 1024 * 1024; // 2MB
+    const chunk = file.slice(0, Math.min(chunkSize, file.size));
+    const arrayBuffer = await chunk.arrayBuffer();
+    
     try {
-      return await generatePdfThumbnail(file, scale);
+      return await generatePDFThumbnail(arrayBuffer, file, scale);
     } catch (error) {
+      if (error instanceof Error && error.name === 'InvalidPDFException') {
+        console.warn(`PDF structure issue for ${file.name} - using fallback thumbnail`);
+        // Try with full file instead of chunk
+        const fullArrayBuffer = await file.arrayBuffer();
+        return await generatePDFThumbnail(fullArrayBuffer, file, scale);
+      }
       return generatePlaceholderThumbnail(file);
     }
   }
@@ -369,15 +381,6 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
   }
 
   const scale = calculateScaleFromFileSize(file.size);
-  console.log(`Using scale ${scale} for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
-
-  // Only read first 2MB for thumbnail generation to save memory
-  const chunkSize = 2 * 1024 * 1024; // 2MB
-  const chunk = file.slice(0, Math.min(chunkSize, file.size));
-  const arrayBuffer = await chunk.arrayBuffer();
-
-  try {
-    return await generatePDFThumbnail(arrayBuffer, file, scale);
   
   try {
     const arrayBuffer = await file.arrayBuffer();
@@ -403,18 +406,13 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
     return { thumbnail, pageCount };
 
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === 'InvalidPDFException') {
-        console.warn(`PDF structure issue for ${file.name} - using fallback thumbnail`);
-        // Return a placeholder or try with full file instead of chunk
-        const fullArrayBuffer = await file.arrayBuffer();
-        return await generatePDFThumbnail(fullArrayBuffer, file, scale);
-      } else {
-        console.warn('Unknown error thrown. Failed to generate thumbnail for', file.name, error);
-        return undefined;
-      }
-    } else {
-      throw error; // Re-throw non-Error exceptions
+    if (error instanceof Error && error.name === "PasswordException") {
+      // Handle encrypted PDFs
+      const thumbnail = generateEncryptedPDFThumbnail(file);
+      return { thumbnail, pageCount: 1 };
     }
+    
+    const thumbnail = generatePlaceholderThumbnail(file);
+    return { thumbnail, pageCount: 1 };
   }
 }

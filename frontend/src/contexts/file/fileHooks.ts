@@ -144,14 +144,32 @@ export function useSelectedFiles(): { files: File[]; records: FileRecord[]; file
  * Used by tools for core file context functionality
  */
 export function useFileContext() {
+  const { state, selectors } = useFileState();
   const { actions } = useFileActions();
 
   return useMemo(() => ({
+    // Lifecycle management
     trackBlobUrl: actions.trackBlobUrl,
     trackPdfDocument: actions.trackPdfDocument,
     scheduleCleanup: actions.scheduleCleanup,
-    setUnsavedChanges: actions.setHasUnsavedChanges
-  }), [actions]);
+    setUnsavedChanges: actions.setHasUnsavedChanges,
+    
+    // File management
+    addFiles: actions.addFiles,
+    consumeFiles: actions.consumeFiles,
+    recordOperation: (fileId: string, operation: any) => {}, // TODO: Implement operation tracking
+    markOperationApplied: (fileId: string, operationId: string) => {}, // TODO: Implement operation tracking
+    markOperationFailed: (fileId: string, operationId: string, error: string) => {}, // TODO: Implement operation tracking
+    
+    // Pinned files
+    pinnedFiles: state.pinnedFiles,
+    pinFile: actions.pinFile,
+    unpinFile: actions.unpinFile,
+    isFilePinned: selectors.isFilePinned,
+    
+    // Active files
+    activeFiles: selectors.getFiles()
+  }), [state, selectors, actions]);
 }
 
 /**

@@ -213,6 +213,62 @@ export async function addFiles(
 }
 
 /**
+ * Consume files helper - replace unpinned input files with output files
+ */
+export async function consumeFiles(
+  inputFileIds: FileId[],
+  outputFiles: File[],
+  stateRef: React.MutableRefObject<FileContextState>,
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  dispatch: React.Dispatch<FileContextAction>
+): Promise<void> {
+  if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputFiles.length} output files`);
+  
+  // Process output files through the 'processed' path to generate thumbnails
+  const outputFileRecords = await Promise.all(
+    outputFiles.map(async (file) => {
+      const fileId = createFileId();
+      filesRef.current.set(fileId, file);
+      
+      // Generate thumbnail and page count for output file
+      let thumbnail: string | undefined;
+      let pageCount: number = 1;
+      
+      try {
+        if (DEBUG) console.log(`📄 consumeFiles: Generating thumbnail for output file ${file.name}`);
+        const result = await generateThumbnailWithMetadata(file);
+        thumbnail = result.thumbnail;
+        pageCount = result.pageCount;
+      } catch (error) {
+        if (DEBUG) console.warn(`📄 consumeFiles: Failed to generate thumbnail for output file ${file.name}:`, error);
+      }
+      
+      const record = toFileRecord(file, fileId);
+      if (thumbnail) {
+        record.thumbnailUrl = thumbnail;
+      }
+      
+      if (pageCount > 0) {
+        record.processedFile = createProcessedFile(pageCount, thumbnail);
+      }
+      
+      return record;
+    })
+  );
+  
+  // Dispatch the consume action
+  dispatch({ 
+    type: 'CONSUME_FILES', 
+    payload: { 
+      inputFileIds, 
+      outputFileRecords 
+    } 
+  });
+  
+  if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputFileRecords.length} outputs`);
+}
+
+/**
  * Action factory functions
  */
 export const createFileActions = (dispatch: React.Dispatch<FileContextAction>) => ({
@@ -221,5 +277,7 @@ export const createFileActions = (dispatch: React.Dispatch<FileContextAction>) =
   clearSelections: () => dispatch({ type: 'CLEAR_SELECTIONS' }),
   setProcessing: (isProcessing: boolean, progress = 0) => dispatch({ type: 'SET_PROCESSING', payload: { isProcessing, progress } }),
   setHasUnsavedChanges: (hasChanges: boolean) => dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } }),
+  pinFile: (fileId: FileId) => dispatch({ type: 'PIN_FILE', payload: { fileId } }),
+  unpinFile: (fileId: FileId) => dispatch({ type: 'UNPIN_FILE', payload: { fileId } }),
   resetContext: () => dispatch({ type: 'RESET_CONTEXT' })
 });

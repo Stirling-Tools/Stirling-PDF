@@ -17,7 +17,6 @@ import { BaseToolProps } from "../types/tool";
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedFiles } = useToolFileSelection();
-  // const setCurrentMode = (mode) => console.log('Navigate to:', mode); // TODO: Hook up to URL routing
 
   const [collapsedPermissions, setCollapsedPermissions] = useState(true);
 
@@ -50,7 +49,6 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "addPassword");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
