@@ -64,7 +64,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             Files.createDirectories(targetDir);
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
                 for (Path entry : stream) {
-                    Files.move(entry, targetDir.resolve(entry.getFileName()));
+                    Files.move(entry, targetDir.resolve(entry.getFileName()), StandardCopyOption.REPLACE_EXISTING);
                 }
             }
         } catch (IOException e) {
