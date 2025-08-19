@@ -54,10 +54,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         moveKeysToBackup();
     }
 
-    /**
-     * Move all key files from db/keys to backup/keys
-     * @deprecated
-     */
+    /** Move all key files from db/keys to backup/keys */
     @Deprecated(since = "2.0.0", forRemoval = true)
     private void moveKeysToBackup() {
         Path sourceDir = Paths.get(InstallationPathConfig.getConfigPath(), "db", "keys");

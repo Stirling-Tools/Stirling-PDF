@@ -52,14 +52,11 @@ public class DatabaseService implements DatabaseServiceInterface {
         moveBackupFiles();
     }
 
-    /**
-     * Move all backup files from db/backup to backup/db
-     *
-     * @deprecated
-     */
+    /** Move all backup files from db/backup to backup/db */
     @Deprecated(since = "2.0.0", forRemoval = true)
     private void moveBackupFiles() {
-        Path sourceDir = Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
+        Path sourceDir =
+                Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
         try {
             Files.createDirectories(BACKUP_DIR);
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
