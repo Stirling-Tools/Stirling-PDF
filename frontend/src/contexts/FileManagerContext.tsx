@@ -35,7 +35,8 @@ const FileManagerContext = createContext<FileManagerContextValue | null>(null);
 interface FileManagerProviderProps {
   children: React.ReactNode;
   recentFiles: FileMetadata[];
-  onFilesSelected: (files: FileMetadata[]) => void;
+  onFilesSelected: (files: FileMetadata[]) => void; // For selecting stored files
+  onNewFilesSelect: (files: File[]) => void; // For uploading new local files
   onClose: () => void;
   isFileSupported: (fileName: string) => boolean;
   isOpen: boolean;
@@ -49,6 +50,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   children,
   recentFiles,
   onFilesSelected,
+  onNewFilesSelect,
   onClose,
   isFileSupported,
   isOpen,
@@ -127,22 +129,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
       try {
-        // Create FileMetadata objects - FileContext will handle storage and ID assignment
-        const fileMetadatas = files.map(file => {
-          const url = URL.createObjectURL(file);
-          createdBlobUrls.current.add(url);
-
-          return {
-            id: `temp-${Date.now()}-${Math.random()}`, // Temporary ID until stored
-            name: file.name,
-            size: file.size,
-            lastModified: file.lastModified,
-            type: file.type,
-            thumbnail: undefined,
-          };
-        });
-
-        onFilesSelected(fileMetadatas);
+        // For local file uploads, pass File objects directly to FileContext
+        onNewFilesSelect(files);
         await refreshRecentFiles();
         onClose();
       } catch (error) {
@@ -150,7 +138,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       }
     }
     event.target.value = '';
-  }, [storeFile, onFilesSelected, refreshRecentFiles, onClose]);
+  }, [onNewFilesSelect, refreshRecentFiles, onClose]);
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {

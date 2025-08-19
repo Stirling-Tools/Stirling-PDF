@@ -14,7 +14,7 @@ import {
 import { FileMetadata } from '../../types/file';
 import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
 import { fileProcessingService } from '../../services/fileProcessingService';
-import { buildQuickKeySet } from './fileSelectors';
+import { buildQuickKeySet, buildQuickKeySetFromMetadata } from './fileSelectors';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -59,13 +59,20 @@ export async function addFiles(
   options: AddFileOptions,
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
-  dispatch: React.Dispatch<FileContextAction>
-): Promise<File[]> {
+  dispatch: React.Dispatch<FileContextAction>,
+  indexedDBMetadata?: Array<{ name: string; size: number; lastModified: number }>
+): Promise<Array<{ file: File; id: FileId; thumbnail?: string }>> {
   const fileRecords: FileRecord[] = [];
-  const addedFiles: File[] = [];
+  const addedFiles: Array<{ file: File; id: FileId; thumbnail?: string }> = [];
   
   // Build quickKey lookup from existing files for deduplication
   const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
+  
+  // Add IndexedDB quickKeys if metadata provided for comprehensive deduplication
+  if (indexedDBMetadata) {
+    const indexedDBQuickKeys = buildQuickKeySetFromMetadata(indexedDBMetadata);
+    indexedDBQuickKeys.forEach(key => existingQuickKeys.add(key));
+  }
   
   switch (kind) {
     case 'raw': {
@@ -112,7 +119,7 @@ export async function addFiles(
         
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
-        addedFiles.push(file);
+        addedFiles.push({ file, id: fileId, thumbnail });
         
         // Start background processing for validation only (we already have thumbnail and page count)
         fileProcessingService.processFile(file, fileId).then(result => {
@@ -159,7 +166,7 @@ export async function addFiles(
         
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
-        addedFiles.push(file);
+        addedFiles.push({ file, id: fileId, thumbnail });
       }
       break;
     }
@@ -197,7 +204,7 @@ export async function addFiles(
         
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
-        addedFiles.push(file);
+        addedFiles.push({ file, id: fileId, thumbnail: metadata.thumbnail });
       }
       break;
     }

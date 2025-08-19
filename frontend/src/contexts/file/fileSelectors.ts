@@ -93,7 +93,22 @@ export function createFileSelectors(
 export function buildQuickKeySet(fileRecords: Record<FileId, FileRecord>): Set<string> {
   const quickKeys = new Set<string>();
   Object.values(fileRecords).forEach(record => {
-    quickKeys.add(record.quickKey);
+    if (record.quickKey) {
+      quickKeys.add(record.quickKey);
+    }
+  });
+  return quickKeys;
+}
+
+/**
+ * Helper for building quickKey sets from IndexedDB metadata
+ */
+export function buildQuickKeySetFromMetadata(metadata: Array<{ name: string; size: number; lastModified: number }>): Set<string> {
+  const quickKeys = new Set<string>();
+  metadata.forEach(meta => {
+    // Format: name|size|lastModified (same as createQuickKey)
+    const quickKey = `${meta.name}|${meta.size}|${meta.lastModified}`;
+    quickKeys.add(quickKey);
   });
   return quickKeys;
 }

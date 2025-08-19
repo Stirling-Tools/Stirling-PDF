@@ -1,8 +1,12 @@
 /**
- * Enhanced file types for IndexedDB storage with UUID system
- * Extends File interface for compatibility with existing utilities
+ * File types for the new architecture
+ * FileContext uses pure File objects with separate ID tracking
  */
 
+/**
+ * @deprecated Use pure File objects with FileContext for ID management
+ * This interface exists for backward compatibility only
+ */
 export interface FileWithUrl extends File {
   id: string; // Required UUID from FileContext
   url?: string; // Blob URL for display
@@ -11,7 +15,8 @@ export interface FileWithUrl extends File {
 }
 
 /**
- * Metadata-only version for efficient recent files loading
+ * File metadata for efficient operations without loading full file data
+ * Used by IndexedDBContext and FileContext for lazy file loading
  */
 export interface FileMetadata {
   id: string;
@@ -20,6 +25,7 @@ export interface FileMetadata {
   size: number;
   lastModified: number;
   thumbnail?: string;
+  /** @deprecated Legacy compatibility - will be removed */
   storedInIndexedDB?: boolean;
 }
 

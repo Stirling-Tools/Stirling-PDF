@@ -1,83 +1,91 @@
 import { useState, useCallback } from 'react';
-import { fileStorage } from '../services/fileStorage';
+import { useIndexedDB } from '../contexts/IndexedDBContext';
 import { FileWithUrl, FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
+  const indexedDB = useIndexedDB();
 
   const convertToFile = useCallback(async (fileMetadata: FileMetadata): Promise<File> => {
-    // Always use ID - no fallback to names to prevent identity drift
-    if (!fileMetadata.id) {
-      throw new Error('File ID is required - cannot convert file without stable ID');
+    if (!indexedDB) {
+      throw new Error('IndexedDB context not available');
     }
-    const storedFile = await fileStorage.getFile(fileMetadata.id);
-    if (storedFile) {
-      const file = new File([storedFile.data], storedFile.name, {
-        type: storedFile.type,
-        lastModified: storedFile.lastModified
-      });
-      // NO FILE MUTATION - Return clean File, let FileContext manage ID
-      return file;
+    
+    // Try ID first (preferred)
+    if (fileMetadata.id) {
+      const file = await indexedDB.loadFile(fileMetadata.id);
+      if (file) {
+        return file;
+      }
     }
-
-    throw new Error('File not found in storage');
-  }, []);
+    throw new Error(`File not found in storage: ${fileMetadata.name} (ID: ${fileMetadata.id})`);
+  }, [indexedDB]);
 
   const loadRecentFiles = useCallback(async (): Promise<FileMetadata[]> => {
     setLoading(true);
     try {
+      if (!indexedDB) {
+        return [];
+      }
+      
       // Get metadata only (no file data) for performance
-      const storedFileMetadata = await fileStorage.getAllFileMetadata();
+      const storedFileMetadata = await indexedDB.loadAllMetadata();
       const sortedFiles = storedFileMetadata.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
       
-      // Convert StoredFile metadata to FileMetadata format
-      return sortedFiles.map(stored => ({
-        id: stored.id, // UUID from FileContext
-        name: stored.name,
-        type: stored.type,
-        size: stored.size,
-        lastModified: stored.lastModified,
-        thumbnail: stored.thumbnail,
-        storedInIndexedDB: true
-      }));
+      // Already in correct FileMetadata format
+      return sortedFiles;
     } catch (error) {
       console.error('Failed to load recent files:', error);
       return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [indexedDB]);
 
   const handleRemoveFile = useCallback(async (index: number, files: FileMetadata[], setFiles: (files: FileMetadata[]) => void) => {
     const file = files[index];
     if (!file.id) {
       throw new Error('File ID is required for removal');
     }
+    if (!indexedDB) {
+      throw new Error('IndexedDB context not available');
+    }
     try {
-      await fileStorage.deleteFile(file.id);
+      await indexedDB.deleteFile(file.id);
       setFiles(files.filter((_, i) => i !== index));
     } catch (error) {
       console.error('Failed to remove file:', error);
       throw error;
     }
-  }, []);
+  }, [indexedDB]);
 
   const storeFile = useCallback(async (file: File, fileId: string) => {
+    if (!indexedDB) {
+      throw new Error('IndexedDB context not available');
+    }
     try {
-      // Generate thumbnail for the file
-      const thumbnail = await generateThumbnailForFile(file);
+      // Store file with provided UUID from FileContext (thumbnail generated internally)
+      const metadata = await indexedDB.saveFile(file, fileId);
 
-      // Store file with provided UUID from FileContext
-      const storedFile = await fileStorage.storeFile(file, fileId, thumbnail);
-
-      // NO FILE MUTATION - Return StoredFile, FileContext manages mapping
-      return storedFile;
+      // Convert file to ArrayBuffer for StoredFile interface compatibility
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Return StoredFile format for compatibility with old API
+      return {
+        id: fileId,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified,
+        data: arrayBuffer,
+        thumbnail: metadata.thumbnail
+      };
     } catch (error) {
       console.error('Failed to store file:', error);
       throw error;
     }
-  }, []);
+  }, [indexedDB]);
 
   const createFileSelectionHandlers = useCallback((
     selectedFiles: string[],
@@ -134,12 +142,18 @@ export const useFileManager = () => {
   }, [convertToFile]);
 
   const touchFile = useCallback(async (id: string) => {
+    if (!indexedDB) {
+      console.warn('IndexedDB context not available for touch operation');
+      return;
+    }
     try {
-      await fileStorage.touchFile(id);
+      // Update access time - this will be handled by the cache in IndexedDBContext
+      // when the file is loaded, so we can just load it briefly to "touch" it
+      await indexedDB.loadFile(id);
     } catch (error) {
       console.error('Failed to touch file:', error);
     }
-  }, []);
+  }, [indexedDB]);
 
   return {
     loading,

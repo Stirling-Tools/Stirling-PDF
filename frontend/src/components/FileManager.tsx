@@ -154,6 +154,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
           <FileManagerProvider
             recentFiles={recentFiles}
             onFilesSelected={handleFilesSelected}
+            onNewFilesSelect={handleNewFileUpload}
             onClose={closeFilesModal}
             isFileSupported={isFileSupported}
             isOpen={isFilesModalOpen}

@@ -46,11 +46,12 @@ export interface FileRecord {
   size: number;
   type: string;
   lastModified: number;
-  quickKey: string; // Fast deduplication key: name|size|lastModified
+  quickKey?: string; // Fast deduplication key: name|size|lastModified
   thumbnailUrl?: string;
   blobUrl?: string;
-  createdAt: number;
+  createdAt?: number;
   processedFile?: ProcessedFileMetadata;
+  isPinned?: boolean;
   // Note: File object stored in provider ref, not in state
 }
 
@@ -218,9 +219,9 @@ export interface FileContextActions {
   addFiles: (files: File[]) => Promise<File[]>;
   addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<File[]>;
   addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => Promise<File[]>;
-  removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => void;
+  removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
-  clearAllFiles: () => void;
+  clearAllFiles: () => Promise<void>;
 
   // File pinning
   pinFile: (file: File) => void;
@@ -247,6 +248,9 @@ export interface FileContextActions {
   trackPdfDocument: (key: string, pdfDoc: any) => void;
   scheduleCleanup: (fileId: string, delay?: number) => void;
   cleanupFile: (fileId: string) => void;
+  
+  // Persistence operations
+  loadFromPersistence: () => Promise<void>;
 }
 
 // File selectors (separate from actions to avoid re-renders)

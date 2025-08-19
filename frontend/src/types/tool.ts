@@ -38,11 +38,6 @@ export interface ToolConfiguration {
   supportedFormats?: string[];
 }
 
-export interface ToolConfiguration {
-  maxFiles: number;
-  supportedFormats?: string[];
-}
-
 export interface Tool {
   id: string;
   name: string;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FileMetadata } from "../types/file";
-import { fileStorage } from "../services/fileStorage";
+import { useIndexedDB } from "../contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "../utils/thumbnailUtils";
 
 /**
@@ -28,6 +28,7 @@ export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
 } {
   const [thumb, setThumb] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const indexedDB = useIndexedDB();
 
   useEffect(() => {
     let cancelled = false;
@@ -44,38 +45,21 @@ export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
         return;
       }
 
-      // Second priority: generate thumbnail for any file type
+      // Second priority: generate thumbnail for files under 100MB
       if (file.size < 100 * 1024 * 1024 && !generating) {
         setGenerating(true);
         try {
           let fileObject: File;
 
-          // Handle IndexedDB files vs regular File objects
-          if (file.storedInIndexedDB && file.id) {
-            // For IndexedDB files, recreate File object from stored data
-            const storedFile = await fileStorage.getFile(file.id);
-            if (!storedFile) {
+          // Try to load file from IndexedDB using new context
+          if (file.id && indexedDB) {
+            const loadedFile = await indexedDB.loadFile(file.id);
+            if (!loadedFile) {
               throw new Error('File not found in IndexedDB');
             }
-            fileObject = new File([storedFile.data], storedFile.name, {
-              type: storedFile.type,
-              lastModified: storedFile.lastModified
-            });
-          } else if ((file as any /* Fix me */).file) {
-            // For FileWithUrl objects that have a File object
-            fileObject = (file as any /* Fix me */).file;
-          } else if (file.id) {
-            // Fallback: try to get from IndexedDB even if storedInIndexedDB flag is missing
-            const storedFile = await fileStorage.getFile(file.id);
-            if (!storedFile) {
-              throw new Error('File not found in IndexedDB and no File object available');
-            }
-            fileObject = new File([storedFile.data], storedFile.name, {
-              type: storedFile.type,
-              lastModified: storedFile.lastModified
-            });
+            fileObject = loadedFile;
           } else {
-            throw new Error('File object not available and no ID for IndexedDB lookup');
+            throw new Error('File ID not available or IndexedDB context not available');
           }
 
           // Use the universal thumbnail generator
@@ -92,14 +76,14 @@ export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
           if (!cancelled) setGenerating(false);
         }
       } else {
-        // Large files - generate placeholder
+        // Large files - no thumbnail
         setThumb(null);
       }
     }
 
     loadThumbnail();
     return () => { cancelled = true; };
-  }, [file, file?.thumbnail, file?.id]);
+  }, [file, file?.thumbnail, file?.id, indexedDB, generating]);
 
   return { thumbnail: thumb, isGenerating: generating };
 }
