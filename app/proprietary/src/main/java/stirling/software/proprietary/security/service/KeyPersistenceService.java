@@ -52,20 +52,23 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             ApplicationProperties applicationProperties, CacheManager cacheManager) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
         this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
-        moveKeysToBackup();
     }
 
     /** Move all key files from db/keys to backup/keys */
     @Deprecated(since = "2.0.0", forRemoval = true)
     private void moveKeysToBackup() {
-        Path sourceDir = Paths.get(InstallationPathConfig.getConfigPath(), "db", "keys");
-        Path targetDir = Paths.get(InstallationPathConfig.getPrivateKeyPath());
+        Path sourceDir =
+                Paths.get(InstallationPathConfig.getConfigPath(), "db", "keys").normalize();
+        Path targetDir = Paths.get(InstallationPathConfig.getPrivateKeyPath()).normalize();
 
         try {
             Files.createDirectories(targetDir);
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
                 for (Path entry : stream) {
-                    Files.move(entry, targetDir.resolve(entry.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+                    Files.move(
+                            entry,
+                            targetDir.resolve(entry.getFileName()),
+                            StandardCopyOption.REPLACE_EXISTING);
                 }
             }
         } catch (IOException e) {
@@ -80,6 +83,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         }
 
         try {
+            moveKeysToBackup();
             ensurePrivateKeyDirectoryExists();
             loadKeyPair();
         } catch (Exception e) {

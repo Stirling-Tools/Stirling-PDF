@@ -64,7 +64,10 @@ public class DatabaseService implements DatabaseServiceInterface {
                 for (Path entry : stream) {
                     if (entry.getFileName().toString().startsWith(BACKUP_PREFIX)
                             && entry.getFileName().toString().endsWith(SQL_SUFFIX)) {
-                        Files.move(entry, BACKUP_DIR.resolve(entry.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+                        Files.move(
+                                entry,
+                                BACKUP_DIR.resolve(entry.getFileName()),
+                                StandardCopyOption.REPLACE_EXISTING);
                     }
                 }
             }
