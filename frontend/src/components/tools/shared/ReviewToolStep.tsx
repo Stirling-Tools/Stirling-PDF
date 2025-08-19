@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -14,24 +14,32 @@ export interface ReviewToolStepProps<TParams = unknown> {
   onFileClick?: (file: File) => void;
 }
 
-export function createReviewToolStep<TParams = unknown>(
-  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
-  props: ReviewToolStepProps<TParams>
-): React.ReactElement {
+function ReviewStepContent<TParams = unknown>({ operation, onFileClick }: { operation: ToolOperationHook<TParams>; onFileClick?: (file: File) => void }) {
   const { t } = useTranslation();
-  const { operation } = props;
+  const stepRef = useRef<HTMLDivElement>(null);
 
   const previewFiles = operation.files?.map((file, index) => ({
     file,
     thumbnail: operation.thumbnails[index]
   })) || [];
 
-  return createStep(t("review", "Review"), {
-    isVisible: props.isVisible,
-    _excludeFromCount: true,
-    _noPadding: true
-  }, (
-    <Stack gap="sm" >
+  // Auto-scroll to bottom when content appears
+  useEffect(() => {
+    if (stepRef.current && (previewFiles.length > 0 || operation.downloadUrl || operation.errorMessage)) {
+      const scrollableContainer = stepRef.current.closest('[style*="overflow: auto"]') as HTMLElement;
+      if (scrollableContainer) {
+        setTimeout(() => {
+          scrollableContainer.scrollTo({
+            top: scrollableContainer.scrollHeight,
+            behavior: 'smooth'
+          });
+        }, 100); // Small delay to ensure content is rendered
+      }
+    }
+  }, [previewFiles.length, operation.downloadUrl, operation.errorMessage]);
+
+  return (
+    <Stack gap="sm" ref={stepRef}>
       <ErrorNotification
         error={operation.errorMessage}
         onClose={operation.clearError}
@@ -40,7 +48,7 @@ export function createReviewToolStep<TParams = unknown>(
       {previewFiles.length > 0 && (
         <ResultsPreview
           files={previewFiles}
-          onFileClick={props.onFileClick}
+          onFileClick={onFileClick}
           isGeneratingThumbnails={operation.isGeneratingThumbnails}
         />
       )}
@@ -61,5 +69,23 @@ export function createReviewToolStep<TParams = unknown>(
 
       <SuggestedToolsSection />
     </Stack>
+  );
+}
+
+export function createReviewToolStep<TParams = unknown>(
+  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
+  props: ReviewToolStepProps<TParams>
+): React.ReactElement {
+  const { t } = useTranslation();
+
+  return createStep(t("review", "Review"), {
+    isVisible: props.isVisible,
+    _excludeFromCount: true,
+    _noPadding: true
+  }, (
+    <ReviewStepContent 
+      operation={props.operation} 
+      onFileClick={props.onFileClick}
+    />
   ));
 }

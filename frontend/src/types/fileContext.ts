@@ -17,6 +17,7 @@ export type ModeType =
   | 'sanitize'
   | 'addPassword'
   | 'changePermissions'
+  | 'watermark'
   | 'removePassword';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
@@ -108,12 +109,12 @@ export interface FileContextActions {
   removeFiles: (fileIds: string[], deleteFromStorage?: boolean) => void;
   replaceFile: (oldFileId: string, newFile: File) => Promise<void>;
   clearAllFiles: () => void;
-  
+
   // File pinning
   pinFile: (file: File) => void;
   unpinFile: (file: File) => void;
   isFilePinned: (file: File) => boolean;
-  
+
   // File consumption (replace unpinned files with outputs)
   consumeFiles: (inputFiles: File[], outputFiles: File[]) => Promise<void>;
 
