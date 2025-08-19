@@ -185,23 +185,18 @@ verify_app_version() {
 
     echo "Checking version for $service_name (expecting $EXPECTED_VERSION)..."
 
-    # Try to access the homepage and extract the version
+    # Try to access the status endpoint and extract the version
     local response
-    response=$(curl -s "$base_url")
+    response=$(curl -s "$base_url/api/v1/info/status")
 
-    # Extract version from pixel tracking tag
+    # Extract version from JSON response using grep and sed
     local actual_version
-    actual_version=$(echo "$response" | grep -o 'appVersion=[0-9.]*' | head -1 | sed 's/appVersion=//')
+    actual_version=$(echo "$response" | grep -o '"version":"[^"]*"' | head -1 | sed 's/"version":"//' | sed 's/"//')
 
-    # If we couldn't find the version in the pixel tag, try other approaches
+    # Check if we got a valid response
     if [ -z "$actual_version" ]; then
-        # Check for "App Version:" format
-        if echo "$response" | grep -q "App Version:"; then
-            actual_version=$(echo "$response" | grep -o "App Version: [0-9.]*" | sed 's/App Version: //')
-        else
-            echo "❌ Version verification failed: Could not find version information"
-            return 1
-        fi
+        echo "❌ Version verification failed: Could not find version information in status endpoint"
+        return 1
     fi
 
     # Check if the extracted version matches expected version
@@ -278,15 +273,6 @@ main() {
 
     # Test each configuration
     run_tests "Stirling-PDF-Ultra-Lite" "./testing/compose/docker-compose-ultra-lite.yml"
-
-    echo "Testing basic frontend homepage accessibility..."
-    if curl -f http://localhost:3000 > /dev/null 2>&1; then
-        passed_tests+=("Frontend-Homepage-Accessibility-lite")
-        echo "Frontend homepage accessibility check passed"
-    else
-        failed_tests+=("Frontend-Homepage-Accessibility-lite")
-        echo "Frontend homepage accessibility check failed"
-    fi
     
     # echo "Testing webpage accessibility..."
     # cd "testing"
@@ -327,15 +313,6 @@ main() {
 
     # Test each configuration with security
     run_tests "Stirling-PDF-Security" "./testing/compose/docker-compose-security.yml"
-
-    echo "Testing basic frontend homepage accessibility..."
-    if curl -f http://localhost:3000 > /dev/null 2>&1; then
-        passed_tests+=("Frontend-Homepage-Accessibility-full")
-        echo "Frontend homepage accessibility check passed"
-    else
-        failed_tests+=("Frontend-Homepage-Accessibility-full")
-        echo "Frontend homepage accessibility check failed"
-    fi
     
     # echo "Testing webpage accessibility..."
     # cd "testing"

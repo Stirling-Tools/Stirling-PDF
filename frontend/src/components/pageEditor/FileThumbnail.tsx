@@ -4,9 +4,12 @@ import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import HistoryIcon from '@mui/icons-material/History';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import styles from './PageEditor.module.css';
 import FileOperationHistory from '../history/FileOperationHistory';
+import { useFileContext } from '../../contexts/FileContext';
 
 interface FileItem {
   id: string;
@@ -66,6 +69,10 @@ const FileThumbnail = ({
 }: FileThumbnailProps) => {
   const { t } = useTranslation();
   const [showHistory, setShowHistory] = useState(false);
+  const { pinnedFiles, pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
+
+  // Find the actual File object that corresponds to this FileItem
+  const actualFile = activeFiles.find(f => f.name === file.name && f.size === file.size);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -301,6 +308,32 @@ const FileThumbnail = ({
             </ActionIcon>
           </Tooltip>
 
+          {actualFile && (
+            <Tooltip label={isFilePinned(actualFile) ? "Unpin File" : "Pin File"}>
+              <ActionIcon
+                size="md"
+                variant="subtle"
+                c={isFilePinned(actualFile) ? "yellow" : "white"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isFilePinned(actualFile)) {
+                    unpinFile(actualFile);
+                    onSetStatus(`Unpinned ${file.name}`);
+                  } else {
+                    pinFile(actualFile);
+                    onSetStatus(`Pinned ${file.name}`);
+                  }
+                }}
+              >
+                {isFilePinned(actualFile) ? (
+                  <PushPinIcon style={{ fontSize: 20 }} />
+                ) : (
+                  <PushPinOutlinedIcon style={{ fontSize: 20 }} />
+                )}
+              </ActionIcon>
+            </Tooltip>
+          )}
+
           <Tooltip label="Close File">
             <ActionIcon
               size="md"
@@ -345,7 +378,7 @@ const FileThumbnail = ({
         onClose={() => setShowHistory(false)}
         title={`Operation History - ${file.name}`}
         size="lg"
-        scrollAreaComponent="div"
+        scrollAreaComponent={'div' as any}
       >
         <FileOperationHistory 
           fileId={file.name} 

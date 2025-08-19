@@ -1,30 +1,15 @@
 import { Stack, TextInput, Select, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { SPLIT_MODES, SPLIT_TYPES, type SplitMode, type SplitType } from '../../../constants/splitConstants';
-
-export interface SplitParameters {
-  pages: string;
-  hDiv: string;
-  vDiv: string;
-  merge: boolean;
-  splitType: SplitType | '';
-  splitValue: string;
-  bookmarkLevel: string;
-  includeMetadata: boolean;
-  allowDuplicates: boolean;
-}
+import { isSplitMode, SPLIT_MODES, SPLIT_TYPES } from '../../../constants/splitConstants';
+import { SplitParameters } from '../../../hooks/tools/split/useSplitParameters';
 
 export interface SplitSettingsProps {
-  mode: SplitMode | '';
-  onModeChange: (mode: SplitMode | '') => void;
   parameters: SplitParameters;
   onParameterChange: (parameter: keyof SplitParameters, value: string | boolean) => void;
   disabled?: boolean;
 }
 
 const SplitSettings = ({
-  mode,
-  onModeChange,
   parameters,
   onParameterChange,
   disabled = false
@@ -125,8 +110,8 @@ const SplitSettings = ({
       <Select
         label="Choose split method"
         placeholder="Select how to split the PDF"
-        value={mode}
-        onChange={(v) => v && onModeChange(v)}
+        value={parameters.mode}
+        onChange={(v) => isSplitMode(v) && onParameterChange('mode', v)}
         disabled={disabled}
         data={[
           { value: SPLIT_MODES.BY_PAGES, label: t("split.header", "Split by Pages") + " (e.g. 1,3,5-10)" },
@@ -137,10 +122,10 @@ const SplitSettings = ({
       />
 
       {/* Parameter Form */}
-      {mode === SPLIT_MODES.BY_PAGES && renderByPagesForm()}
-      {mode === SPLIT_MODES.BY_SECTIONS && renderBySectionsForm()}
-      {mode === SPLIT_MODES.BY_SIZE_OR_COUNT && renderBySizeOrCountForm()}
-      {mode === SPLIT_MODES.BY_CHAPTERS && renderByChaptersForm()}
+      {parameters.mode === SPLIT_MODES.BY_PAGES && renderByPagesForm()}
+      {parameters.mode === SPLIT_MODES.BY_SECTIONS && renderBySectionsForm()}
+      {parameters.mode === SPLIT_MODES.BY_SIZE_OR_COUNT && renderBySizeOrCountForm()}
+      {parameters.mode === SPLIT_MODES.BY_CHAPTERS && renderByChaptersForm()}
     </Stack>
   );
 }

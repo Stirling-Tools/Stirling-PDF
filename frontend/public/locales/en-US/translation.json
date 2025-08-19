@@ -35,10 +35,21 @@
   "true": "True",
   "false": "False",
   "unknown": "Unknown",
+  "app": {
+    "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+  },
   "save": "Save",
   "saveToBrowser": "Save to Browser",
+  "download": "Download",
+  "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
-  "filesSelected": "files selected",
+  "chooseFile": "Choose File",
+  "fileSelected": "Selected: {{filename}}",
+  "filesSelected": "{{count}} files selected",
+  "files": {
+    "title": "Files",
+    "placeholder": "Select a PDF file in the main view to get started"
+  },
   "noFavourites": "No favorites added",
   "downloadComplete": "Download Complete",
   "bored": "Bored Waiting?",
@@ -70,6 +81,9 @@
     "copyStack": "Copy Stack Trace",
     "githubSubmit": "GitHub - Submit a ticket",
     "discordSubmit": "Discord - Submit Support post"
+  },
+  "warning": {
+    "tooltipTitle": "Warning"
   },
   "delete": "Delete",
   "username": "Username",
@@ -115,6 +129,7 @@
   "page": "Page",
   "pages": "Pages",
   "loading": "Loading...",
+  "review": "Review",
   "addToDoc": "Add to Document",
   "reset": "Reset",
   "apply": "Apply",
@@ -347,7 +362,7 @@
       "title": "Rotate",
       "desc": "Easily rotate your PDFs."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Image to PDF",
       "desc": "Convert a image (PNG, JPEG, GIF) to PDF."
     },
@@ -371,7 +386,7 @@
       "title": "Change Permissions",
       "desc": "Change the permissions of your PDF document"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Remove",
       "desc": "Delete unwanted pages from your PDF document."
     },
@@ -379,13 +394,21 @@
       "title": "Add Password",
       "desc": "Encrypt your PDF document with a password."
     },
+    "changePermissions": {
+      "title": "Change Permissions",
+      "desc": "Change document restrictions and permissions."
+    },
     "removePassword": {
       "title": "Remove Password",
       "desc": "Remove password protection from your PDF document."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Compress",
       "desc": "Compress PDFs to reduce their file size."
+    },
+    "sanitize": {
+      "title": "Sanitize",
+      "desc": "Remove potentially harmful elements from PDF files."
     },
     "unlockPDFForms": {
       "title": "Unlock PDF Forms",
@@ -479,7 +502,7 @@
       "title": "Pipeline",
       "desc": "Run multiple actions on PDFs by defining pipeline scripts"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Add Page Numbers",
       "desc": "Add Page numbers throughout a document in a set location"
     },
@@ -487,7 +510,7 @@
       "title": "Auto Rename PDF File",
       "desc": "Auto renames a PDF file based on its detected header"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Adjust Colors/Contrast",
       "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
     },
@@ -499,7 +522,7 @@
       "title": "Auto Split Pages",
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sanitize",
       "desc": "Remove scripts and other elements from PDF files"
     },
@@ -523,11 +546,11 @@
       "title": "Get ALL Info on PDF",
       "desc": "Grabs any and all information possible on PDFs"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extract page(s)",
       "desc": "Extracts select pages from PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "Single Large Page",
       "desc": "Merges all PDF pages into one large single page"
     },
@@ -543,11 +566,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF to CSV",
       "desc": "Extracts Tables from a PDF converting it to CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Auto Split by Size/Count",
       "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
     },
@@ -563,11 +586,11 @@
       "title": "Add Stamp to PDF",
       "desc": "Add text or add image stamps at set locations"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Remove image",
       "desc": "Remove image from PDF to reduce file size"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
@@ -579,7 +602,7 @@
       "title": "API Documentation",
       "desc": "View API documentation and test endpoints"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }
@@ -695,29 +718,6 @@
     "upload": "Add image",
     "submit": "Add image"
   },
-  "watermark": {
-    "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
-    "title": "Add Watermark",
-    "header": "Add Watermark",
-    "customColor": "Custom Text Color",
-    "selectText": {
-      "1": "Select PDF to add watermark to:",
-      "2": "Watermark Text:",
-      "3": "Font Size:",
-      "4": "Rotation (0-360):",
-      "5": "Width Spacer (Space between each watermark horizontally):",
-      "6": "Height Spacer (Space between each watermark vertically):",
-      "7": "Opacity (0% - 100%):",
-      "8": "Watermark Type:",
-      "9": "Watermark Image:",
-      "10": "Convert PDF to PDF-Image"
-    },
-    "submit": "Add Watermark",
-    "type": {
-      "1": "Text",
-      "2": "Image"
-    }
-  },
   "permissions": {
     "tags": "read,write,edit,print",
     "title": "Change Permissions",
@@ -739,40 +739,6 @@
   },
   "removePages": {
     "tags": "Remove pages,delete pages"
-  },
-  "addPassword": {
-    "tags": "secure,security",
-    "title": "Add Password",
-    "header": "Add password (Encrypt)",
-    "selectText": {
-      "1": "Select PDF to encrypt",
-      "2": "User Password",
-      "3": "Encryption Key Length",
-      "4": "Higher values are stronger, but lower values have better compatibility.",
-      "5": "Permissions to set (Recommended to be used along with Owner password)",
-      "6": "Prevent assembly of document",
-      "7": "Prevent content extraction",
-      "8": "Prevent extraction for accessibility",
-      "9": "Prevent filling in form",
-      "10": "Prevent modification",
-      "11": "Prevent annotation modification",
-      "12": "Prevent printing",
-      "13": "Prevent printing different formats",
-      "14": "Owner Password",
-      "15": "Restricts what can be done with the document once it is opened (Not supported by all readers)",
-      "16": "Restricts the opening of the document itself"
-    },
-    "submit": "Encrypt"
-  },
-  "removePassword": {
-    "tags": "secure,Decrypt,security,unpassword,delete password",
-    "title": "Remove password",
-    "header": "Remove password (Decrypt)",
-    "selectText": {
-      "1": "Select PDF to Decrypt",
-      "2": "Password"
-    },
-    "submit": "Remove"
   },
   "compressPdfs": {
     "tags": "squish,small,tiny"
@@ -816,6 +782,7 @@
   "ocr": {
     "tags": "recognition,text,image,scan,read,identify,detection,editable",
     "title": "OCR / Scan Cleanup",
+    "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text.",
     "header": "Cleanup Scans / OCR (Optical Character Recognition)",
     "selectText": {
       "1": "Select languages that are to be detected within the PDF (Ones listed are the ones currently detected):",
@@ -1612,6 +1579,406 @@
     "pdfaOptions": "PDF/A Options",
     "outputFormat": "Output Format",
     "pdfaNote": "PDF/A-1b is more compatible, PDF/A-2b supports more features.",
-    "pdfaDigitalSignatureWarning": "The PDF contains a digital signature. This will be removed in the next step."
+    "pdfaDigitalSignatureWarning": "The PDF contains a digital signature. This will be removed in the next step.",
+    "sanitize": {
+      "submit": "Sanitize PDF",
+      "completed": "Sanitization completed successfully",
+      "error.generic": "Sanitization failed",
+      "error.failed": "An error occurred while sanitizing the PDF.",
+      "filenamePrefix": "sanitized",
+      "sanitizationResults": "Sanitization Results",
+      "steps": {
+        "files": "Files",
+        "settings": "Settings",
+        "results": "Results"
+      },
+      "files": {
+        "placeholder": "Select a PDF file in the main view to get started"
+      },
+      "options": {
+        "title": "Sanitization Options",
+        "note": "Select the elements you want to remove from the PDF. At least one option must be selected.",
+        "removeJavaScript": "Remove JavaScript",
+        "removeJavaScript.desc": "Remove JavaScript actions and scripts from the PDF",
+        "removeEmbeddedFiles": "Remove Embedded Files",
+        "removeEmbeddedFiles.desc": "Remove any files embedded within the PDF",
+        "removeXMPMetadata": "Remove XMP Metadata",
+        "removeXMPMetadata.desc": "Remove XMP metadata from the PDF",
+        "removeMetadata": "Remove Document Metadata",
+        "removeMetadata.desc": "Remove document information metadata (title, author, etc.)",
+        "removeLinks": "Remove Links",
+        "removeLinks.desc": "Remove external links and launch actions from the PDF",
+        "removeFonts": "Remove Fonts",
+        "removeFonts.desc": "Remove embedded fonts from the PDF"
+      }
+    }
+  },
+  "addPassword": {
+    "title": "Add Password",
+    "desc": "Encrypt your PDF document with a password.",
+    "completed": "Password protection applied",
+    "submit": "Encrypt",
+    "filenamePrefix": "encrypted",
+    "error": {
+      "failed": "An error occurred while encrypting the PDF."
+    },
+    "passwords": {
+      "title": "Passwords",
+      "stepTitle": "Passwords & Encryption",
+      "completed": "Passwords configured",
+      "user": {
+        "label": "User Password",
+        "placeholder": "Enter user password"
+      },
+      "owner": {
+        "label": "Owner Password",
+        "placeholder": "Enter owner password"
+      }
+    },
+    "permissions": {
+      "stepTitle": "Document Permissions"
+    },
+    "encryption": {
+      "keyLength": {
+        "label": "Encryption Key Length",
+        "40bit": "40-bit (Low)",
+        "128bit": "128-bit (Standard)",
+        "256bit": "256-bit (High)"
+      }
+    },
+    "results": {
+      "title": "Password Protected PDFs"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Password Protection Overview"
+      },
+      "passwords": {
+        "title": "Password Types",
+        "text": "User passwords restrict opening the document, while owner passwords control what can be done with the document once opened. You can set both or just one.",
+        "bullet1": "User Password: Required to open the PDF",
+        "bullet2": "Owner Password: Controls document permissions (not supported by all PDF viewers)"
+      },
+      "encryption": {
+        "title": "Encryption Levels",
+        "text": "Higher encryption levels provide better security but may not be supported by older PDF viewers.",
+        "bullet1": "40-bit: Basic security, compatible with older viewers",
+        "bullet2": "128-bit: Standard security, widely supported",
+        "bullet3": "256-bit: Maximum security, requires modern viewers"
+      },
+      "permissions": {
+        "title": "Change Permissions",
+        "text": "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
+      }
+    }
+  },
+  "changePermissions": {
+    "completed": "Permissions changed",
+    "submit": "Change Permissions",
+    "title": "Document Permissions",
+    "error": {
+      "failed": "An error occurred while changing PDF permissions."
+    },
+    "permissions": {
+      "preventAssembly": {
+        "label": "Prevent assembly of document"
+      },
+      "preventExtractContent": {
+        "label": "Prevent content extraction"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Prevent extraction for accessibility"
+      },
+      "preventFillInForm": {
+        "label": "Prevent filling in form"
+      },
+      "preventModify": {
+        "label": "Prevent modification"
+      },
+      "preventModifyAnnotations": {
+        "label": "Prevent annotation modification"
+      },
+      "preventPrinting": {
+        "label": "Prevent printing"
+      },
+      "preventPrintingFaithful": {
+        "label": "Prevent printing different formats"
+      }
+    },
+    "results": {
+      "title": "Modified PDFs"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Change Permissions"
+      },
+      "description": {
+        "text": "Changes document permissions, allowing/disallowing access to different features in PDF readers."
+      },
+      "warning": {
+        "text": "To make these permissions unchangeable, use the Add Password tool to set an owner password."
+      }
+    }
+  },
+  "watermark": {
+    "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
+    "title": "Add Watermark",
+    "desc": "Add text or image watermarks to PDF files",
+    "header": "Add Watermark",
+    "completed": "Watermark added",
+    "submit": "Add Watermark",
+    "filenamePrefix": "watermarked",
+    "error": {
+      "failed": "An error occurred while adding watermark to the PDF."
+    },
+    "watermarkType": {
+      "text": "Text",
+      "image": "Image"
+    },
+    "settings": {
+      "type": "Watermark Type",
+      "text": {
+        "label": "Watermark Text",
+        "placeholder": "Enter watermark text"
+      },
+      "image": {
+        "label": "Watermark Image",
+        "choose": "Choose Image",
+        "selected": "Selected: {{filename}}"
+      },
+      "fontSize": "Font Size",
+      "alphabet": "Font/Language",
+      "color": "Watermark Color",
+      "rotation": "Rotation (degrees)",
+      "opacity": "Opacity (%)",
+      "spacing": {
+        "horizontal": "Horizontal Spacing",
+        "vertical": "Vertical Spacing"
+      },
+      "convertToImage": "Flatten PDF pages to images"
+    },
+    "alphabet": {
+      "roman": "Roman/Latin",
+      "arabic": "Arabic",
+      "japanese": "Japanese",
+      "korean": "Korean",
+      "chinese": "Chinese",
+      "thai": "Thai"
+    },
+    "steps": {
+      "type": "Watermark Type",
+      "wording": "Wording",
+      "textStyle": "Style",
+      "file": "Watermark File",
+      "formatting": "Formatting"
+    },
+    "results": {
+      "title": "Watermark Results"
+    },
+    "tooltip": {
+      "language": {
+        "title": "Language Support",
+        "text": "Choose the appropriate language setting to ensure proper font rendering for your text."
+      },
+      "appearance": {
+        "title": "Appearance Settings",
+        "text": "Control how your watermark looks and blends with the document.",
+        "bullet1": "Rotation: -360° to 360° for angled watermarks",
+        "bullet2": "Opacity: 0-100% for transparency control",
+        "bullet3": "Lower opacity creates subtle watermarks"
+      },
+      "spacing": {
+        "title": "Spacing Control",
+        "text": "Adjust the spacing between repeated watermarks across the page.",
+        "bullet1": "Width spacing: Horizontal distance between watermarks",
+        "bullet2": "Height spacing: Vertical distance between watermarks",
+        "bullet3": "Higher values create more spread out patterns"
+      },
+      "type": {
+        "header": {
+          "title": "Watermark Type Selection"
+        },
+        "description": {
+          "title": "Choose Your Watermark",
+          "text": "Select between text or image watermarks based on your needs."
+        },
+        "text": {
+          "title": "Text Watermarks",
+          "text": "Perfect for adding copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colors.",
+          "bullet1": "Customizable fonts and languages",
+          "bullet2": "Adjustable colors and transparency",
+          "bullet3": "Ideal for legal or branding text"
+        },
+        "image": {
+          "title": "Image Watermarks",
+          "text": "Use logos, stamps, or any image as a watermark. Great for branding and visual identification.",
+          "bullet1": "Upload any image format",
+          "bullet2": "Maintains image quality",
+          "bullet3": "Perfect for logos and stamps"
+        }
+      },
+      "content": {
+        "header": {
+          "title": "Content Configuration"
+        },
+        "text": {
+          "title": "Text Settings",
+          "text": "Configure your text watermark appearance and language support.",
+          "bullet1": "Enter your watermark text",
+          "bullet2": "Adjust font size (8-72pt)",
+          "bullet3": "Select language/script support",
+          "bullet4": "Choose custom colors"
+        },
+        "language": {
+          "title": "Language Support",
+          "text": "Choose the appropriate language setting to ensure proper font rendering for your text.",
+          "bullet1": "Roman/Latin for Western languages",
+          "bullet2": "Arabic for Arabic script",
+          "bullet3": "Japanese, Korean, Chinese for Asian languages",
+          "bullet4": "Thai for Thai script"
+        }
+      },
+      "style": {
+        "header": {
+          "title": "Style & Positioning"
+        },
+        "appearance": {
+          "title": "Appearance Settings",
+          "text": "Control how your watermark looks and blends with the document.",
+          "bullet1": "Rotation: -360° to 360° for angled watermarks",
+          "bullet2": "Opacity: 0-100% for transparency control",
+          "bullet3": "Lower opacity creates subtle watermarks"
+        },
+        "spacing": {
+          "title": "Spacing Control",
+          "text": "Adjust the spacing between repeated watermarks across the page.",
+          "bullet1": "Width spacing: Horizontal distance between watermarks",
+          "bullet2": "Height spacing: Vertical distance between watermarks",
+          "bullet3": "Higher values create more spread out patterns"
+        }
+      },
+      "wording": {
+        "header": {
+          "title": "Text Content"
+        },
+        "text": {
+          "title": "Watermark Text",
+          "text": "Enter the text that will appear as your watermark across the document.",
+          "bullet1": "Keep it concise for better readability",
+          "bullet2": "Common examples: 'CONFIDENTIAL', 'DRAFT', company name",
+          "bullet3": "Emoji characters are not supported and will be filtered out"
+        }
+      },
+      "textStyle": {
+        "header": {
+          "title": "Text Style"
+        },
+        "language": {
+          "title": "Language Support",
+          "text": "Choose the appropriate language setting to ensure proper font rendering.",
+          "bullet1": "Roman/Latin for Western languages",
+          "bullet2": "Arabic for Arabic script",
+          "bullet3": "Japanese, Korean, Chinese for Asian languages",
+          "bullet4": "Thai for Thai script"
+        },
+        "color": {
+          "title": "Color Selection",
+          "text": "Choose a color that provides good contrast with your document content.",
+          "bullet1": "Light gray (#d3d3d3) for subtle watermarks",
+          "bullet2": "Black or dark colors for high contrast",
+          "bullet3": "Custom colors for branding purposes"
+        }
+      },
+      "file": {
+        "header": {
+          "title": "Image Upload"
+        },
+        "upload": {
+          "title": "Image Selection",
+          "text": "Upload an image file to use as your watermark.",
+          "bullet1": "Supports common formats: PNG, JPG, GIF, BMP",
+          "bullet2": "PNG with transparency works best",
+          "bullet3": "Higher resolution images maintain quality better"
+        },
+        "recommendations": {
+          "title": "Best Practices",
+          "text": "Tips for optimal image watermark results.",
+          "bullet1": "Use logos or stamps with transparent backgrounds",
+          "bullet2": "Simple designs work better than complex images",
+          "bullet3": "Consider the final document size when choosing resolution"
+        }
+      },
+      "formatting": {
+        "header": {
+          "title": "Formatting & Layout"
+        },
+        "size": {
+          "title": "Size Control",
+          "text": "Adjust the size of your watermark (text or image).",
+          "bullet1": "Larger sizes create more prominent watermarks"
+        },
+        "appearance": {
+          "title": "Appearance Settings",
+          "text": "Control how your watermark looks and blends with the document.",
+          "bullet1": "Rotation: -360° to 360° for angled watermarks",
+          "bullet2": "Opacity: 0-100% for transparency control",
+          "bullet3": "Lower opacity creates subtle watermarks"
+        },
+        "spacing": {
+          "title": "Spacing Control",
+          "text": "Adjust the spacing between repeated watermarks across the page.",
+          "bullet1": "Horizontal spacing: Distance between watermarks left to right",
+          "bullet2": "Vertical spacing: Distance between watermarks top to bottom",
+          "bullet3": "Higher values create more spread out patterns"
+        },
+        "security": {
+          "title": "Security Option",
+          "text": "Flatten PDF pages to images for enhanced security.",
+          "bullet1": "Prevents text selection and copying",
+          "bullet2": "Makes watermarks harder to remove",
+          "bullet3": "Results in larger file sizes",
+          "bullet4": "Best for sensitive or copyrighted content"
+        }
+      },
+      "advanced": {
+        "header": {
+          "title": "Advanced Options"
+        },
+        "conversion": {
+          "title": "PDF to Image Conversion",
+          "text": "Convert the final PDF to an image-based format for enhanced security.",
+          "bullet1": "Prevents text selection and copying",
+          "bullet2": "Makes watermarks harder to remove",
+          "bullet3": "Results in larger file sizes",
+          "bullet4": "Best for sensitive or copyrighted content"
+        },
+        "security": {
+          "title": "Security Considerations",
+          "text": "Image-based PDFs provide additional protection against unauthorized editing and content extraction."
+        }
+      }
+    }
+  },
+  "removePassword": {
+    "title": "Remove Password",
+    "desc": "Remove password protection from your PDF document.",
+    "tags": "secure,Decrypt,security,unpassword,delete password",
+    "password": {
+      "stepTitle": "Remove Password",
+      "label": "Current Password",
+      "placeholder": "Enter current password",
+      "completed": "Password configured"
+    },
+    "filenamePrefix": "decrypted",
+    "error": {
+      "failed": "An error occurred while removing the password from the PDF."
+    },
+    "tooltip": {
+      "description": "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
+    },
+    "submit": "Remove Password",
+    "results": {
+      "title": "Decrypted PDFs"
+    }
   }
 }

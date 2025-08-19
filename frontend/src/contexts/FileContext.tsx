@@ -3,9 +3,9 @@
  */
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
-import { 
-  FileContextValue, 
-  FileContextState, 
+import {
+  FileContextValue,
+  FileContextState,
   FileContextProviderProps,
   ModeType,
   ViewType,
@@ -35,6 +35,7 @@ const initialViewerConfig: ViewerConfig = {
 const initialState: FileContextState = {
   activeFiles: [],
   processedFiles: new Map(),
+  pinnedFiles: new Set(),
   currentMode: 'pageEditor',
   currentView: 'fileEditor', // Legacy field
   currentTool: null, // Legacy field
@@ -53,7 +54,7 @@ const initialState: FileContextState = {
 };
 
 // Action types
-type FileContextAction = 
+type FileContextAction =
   | { type: 'SET_ACTIVE_FILES'; payload: File[] }
   | { type: 'ADD_FILES'; payload: File[] }
   | { type: 'REMOVE_FILES'; payload: string[] }
@@ -77,6 +78,9 @@ type FileContextAction =
   | { type: 'SET_UNSAVED_CHANGES'; payload: boolean }
   | { type: 'SET_PENDING_NAVIGATION'; payload: (() => void) | null }
   | { type: 'SHOW_NAVIGATION_WARNING'; payload: boolean }
+  | { type: 'PIN_FILE'; payload: File }
+  | { type: 'UNPIN_FILE'; payload: File }
+  | { type: 'CONSUME_FILES'; payload: { inputFiles: File[]; outputFiles: File[] } }
   | { type: 'RESET_CONTEXT' }
   | { type: 'LOAD_STATE'; payload: Partial<FileContextState> };
 
@@ -100,7 +104,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
     case 'REMOVE_FILES':
       const remainingFiles = state.activeFiles.filter(file => {
         const fileId = getFileId(file);
-        return !action.payload.includes(fileId);
+        return !fileId || !action.payload.includes(fileId);
       });
       const safeSelectedFileIds = Array.isArray(state.selectedFileIds) ? state.selectedFileIds : [];
       return {
@@ -126,7 +130,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
     case 'SET_CURRENT_MODE':
       const coreViews = ['viewer', 'pageEditor', 'fileEditor'];
       const isToolMode = !coreViews.includes(action.payload);
-      
+
       return {
         ...state,
         currentMode: action.payload,
@@ -193,8 +197,8 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
       const existing = newHistory.get(action.payload.fileId);
       newHistory.set(action.payload.fileId, {
         fileId: action.payload.fileId,
-        pageOperations: existing ? 
-          [...existing.pageOperations, ...action.payload.operations] : 
+        pageOperations: existing ?
+          [...existing.pageOperations, ...action.payload.operations] :
           action.payload.operations,
         lastModified: Date.now()
       });
@@ -213,7 +217,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
       const { fileId, operation } = action.payload;
       const newOperationHistory = new Map(state.fileOperationHistory);
       const existingHistory = newOperationHistory.get(fileId);
-      
+
       if (existingHistory) {
         // Add operation to existing history
         newOperationHistory.set(fileId, {
@@ -231,7 +235,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
           lastModified: Date.now()
         });
       }
-      
+
       return {
         ...state,
         fileOperationHistory: newOperationHistory
@@ -240,10 +244,10 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
     case 'MARK_OPERATION_APPLIED':
       const appliedHistory = new Map(state.fileOperationHistory);
       const appliedFileHistory = appliedHistory.get(action.payload.fileId);
-      
+
       if (appliedFileHistory) {
-        const updatedOperations = appliedFileHistory.operations.map(op => 
-          op.id === action.payload.operationId 
+        const updatedOperations = appliedFileHistory.operations.map(op =>
+          op.id === action.payload.operationId
             ? { ...op, status: 'applied' as const }
             : op
         );
@@ -253,7 +257,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
           lastModified: Date.now()
         });
       }
-      
+
       return {
         ...state,
         fileOperationHistory: appliedHistory
@@ -262,12 +266,12 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
     case 'MARK_OPERATION_FAILED':
       const failedHistory = new Map(state.fileOperationHistory);
       const failedFileHistory = failedHistory.get(action.payload.fileId);
-      
+
       if (failedFileHistory) {
-        const updatedOperations = failedFileHistory.operations.map(op => 
-          op.id === action.payload.operationId 
-            ? { 
-                ...op, 
+        const updatedOperations = failedFileHistory.operations.map(op =>
+          op.id === action.payload.operationId
+            ? {
+                ...op,
                 status: 'failed' as const,
                 metadata: { ...op.metadata, error: action.payload.error }
               }
@@ -279,7 +283,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
           lastModified: Date.now()
         });
       }
-      
+
       return {
         ...state,
         fileOperationHistory: failedHistory
@@ -317,6 +321,43 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
         showNavigationWarning: action.payload
       };
 
+    case 'PIN_FILE':
+      return {
+        ...state,
+        pinnedFiles: new Set([...state.pinnedFiles, action.payload])
+      };
+
+    case 'UNPIN_FILE':
+      const newPinnedFiles = new Set(state.pinnedFiles);
+      newPinnedFiles.delete(action.payload);
+      return {
+        ...state,
+        pinnedFiles: newPinnedFiles
+      };
+
+    case 'CONSUME_FILES': {
+      const { inputFiles, outputFiles } = action.payload;
+      const unpinnedInputFiles = inputFiles.filter(file => !state.pinnedFiles.has(file));
+
+      // Remove unpinned input files and add output files
+      const newActiveFiles = [
+        ...state.activeFiles.filter(file => !unpinnedInputFiles.includes(file)),
+        ...outputFiles
+      ];
+
+      // Update processed files map - remove consumed files, keep pinned ones
+      const newProcessedFiles = new Map(state.processedFiles);
+      unpinnedInputFiles.forEach(file => {
+        newProcessedFiles.delete(file);
+      });
+
+      return {
+        ...state,
+        activeFiles: newActiveFiles,
+        processedFiles: newProcessedFiles
+      };
+    }
+
     case 'RESET_CONTEXT':
       return {
         ...initialState
@@ -337,19 +378,19 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
 const FileContext = createContext<FileContextValue | undefined>(undefined);
 
 // Provider component
-export function FileContextProvider({ 
-  children, 
+export function FileContextProvider({
+  children,
   enableUrlSync = true,
   enablePersistence = true,
   maxCacheSize = 1024 * 1024 * 1024 // 1GB
 }: FileContextProviderProps) {
   const [state, dispatch] = useReducer(fileContextReducer, initialState);
-  
+
   // Cleanup timers and refs
   const cleanupTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const blobUrls = useRef<Set<string>>(new Set());
   const pdfDocuments = useRef<Map<string, PDFDocument>>(new Map());
-  
+
   // Enhanced file processing hook
   const {
     processedFiles,
@@ -367,11 +408,11 @@ export function FileContextProvider({
   // Update processed files when they change
   useEffect(() => {
     dispatch({ type: 'SET_PROCESSED_FILES', payload: processedFiles });
-    dispatch({ 
-      type: 'SET_PROCESSING', 
-      payload: { 
-        isProcessing: globalProcessing, 
-        progress: processingProgress.overall 
+    dispatch({
+      type: 'SET_PROCESSING',
+      payload: {
+        isProcessing: globalProcessing,
+        progress: processingProgress.overall
       }
     });
   }, [processedFiles, globalProcessing, processingProgress.overall]);
@@ -397,7 +438,7 @@ export function FileContextProvider({
 
   const cleanupFile = useCallback(async (fileId: string) => {
     console.log('Cleaning up file:', fileId);
-    
+
     try {
       // Cancel any pending cleanup timer
       const timer = cleanupTimers.current.get(fileId);
@@ -425,7 +466,7 @@ export function FileContextProvider({
 
   const cleanupAllFiles = useCallback(() => {
     console.log('Cleaning up all files');
-    
+
     try {
       // Clear all timers
       cleanupTimers.current.forEach(timer => clearTimeout(timer));
@@ -460,9 +501,7 @@ export function FileContextProvider({
       thumbnailGenerationService.destroy();
 
       // Force garbage collection hint
-      if (typeof window !== 'undefined' && window.gc) {
-        setTimeout(() => window.gc(), 100);
-      }
+      setTimeout(() => window?.gc?.(), 100);
 
     } catch (error) {
       console.warn('Error during cleanup all files:', error);
@@ -486,31 +525,43 @@ export function FileContextProvider({
     const timer = setTimeout(() => {
       cleanupFile(fileId);
     }, delay);
-    
+
     cleanupTimers.current.set(fileId, timer);
   }, [cleanupFile]);
 
   // Action implementations
-  const addFiles = useCallback(async (files: File[]) => {
+  const addFiles = useCallback(async (files: File[]): Promise<File[]> => {
     dispatch({ type: 'ADD_FILES', payload: files });
-    
+
     // Auto-save to IndexedDB if persistence enabled
     if (enablePersistence) {
       for (const file of files) {
         try {
-          // Check if file already has an ID (already in IndexedDB)
+          // Check if file already has an explicit ID property (already in IndexedDB)
           const fileId = getFileId(file);
           if (!fileId) {
-            // File doesn't have ID, store it and get the ID
-            const storedFile = await fileStorage.storeFile(file);
-            // Add the ID to the file object
-            Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            // File doesn't have explicit ID, store it with thumbnail
+            try {
+              // Generate thumbnail for better recent files experience
+              const thumbnail = await (thumbnailGenerationService as any /* FIX ME */).generateThumbnail(file);
+              const storedFile = await fileStorage.storeFile(file, thumbnail);
+              // Add the ID to the file object
+              Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            } catch (thumbnailError) {
+              // If thumbnail generation fails, store without thumbnail
+              console.warn('Failed to generate thumbnail, storing without:', thumbnailError);
+              const storedFile = await fileStorage.storeFile(file);
+              Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            }
           }
         } catch (error) {
           console.error('Failed to store file:', error);
         }
       }
     }
+
+    // Return files with their IDs assigned
+    return files;
   }, [enablePersistence]);
 
   const removeFiles = useCallback((fileIds: string[], deleteFromStorage: boolean = true) => {
@@ -520,9 +571,9 @@ export function FileContextProvider({
       enhancedPDFProcessingService.cancelProcessing(fileId);
       cleanupFile(fileId);
     });
-    
+
     dispatch({ type: 'REMOVE_FILES', payload: fileIds });
-    
+
     // Remove from IndexedDB only if requested
     if (enablePersistence && deleteFromStorage) {
       fileIds.forEach(async (fileId) => {
@@ -545,10 +596,50 @@ export function FileContextProvider({
   const clearAllFiles = useCallback(() => {
     // Cleanup all memory before clearing files
     cleanupAllFiles();
-    
+
     dispatch({ type: 'SET_ACTIVE_FILES', payload: [] });
     dispatch({ type: 'CLEAR_SELECTIONS' });
   }, [cleanupAllFiles]);
+
+  // File pinning functions
+  const pinFile = useCallback((file: File) => {
+    dispatch({ type: 'PIN_FILE', payload: file });
+  }, []);
+
+  const unpinFile = useCallback((file: File) => {
+    dispatch({ type: 'UNPIN_FILE', payload: file });
+  }, []);
+
+  const isFilePinned = useCallback((file: File): boolean => {
+    return state.pinnedFiles.has(file);
+  }, [state.pinnedFiles]);
+
+  // File consumption function
+  const consumeFiles = useCallback(async (inputFiles: File[], outputFiles: File[]): Promise<void> => {
+    dispatch({ type: 'CONSUME_FILES', payload: { inputFiles, outputFiles } });
+
+    // Store new output files if persistence is enabled
+    if (enablePersistence) {
+      for (const file of outputFiles) {
+        try {
+          const fileId = getFileId(file);
+          if (!fileId) {
+            try {
+              const thumbnail = await (thumbnailGenerationService as any /* FIX ME */).generateThumbnail(file);
+              const storedFile = await fileStorage.storeFile(file, thumbnail);
+              Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            } catch (thumbnailError) {
+              console.warn('Failed to generate thumbnail, storing without:', thumbnailError);
+              const storedFile = await fileStorage.storeFile(file);
+              Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+            }
+          }
+        } catch (error) {
+          console.error('Failed to store output file:', error);
+        }
+      }
+    }
+  }, [enablePersistence, state.pinnedFiles]);
 
   // Navigation guard system functions
   const setHasUnsavedChanges = useCallback((hasChanges: boolean) => {
@@ -582,11 +673,11 @@ export function FileContextProvider({
   const setCurrentMode = useCallback((mode: ModeType) => {
     requestNavigation(() => {
       dispatch({ type: 'SET_CURRENT_MODE', payload: mode });
-      
+
       if (state.currentMode !== mode && state.activeFiles.length > 0) {
-        if (window.requestIdleCallback && typeof window !== 'undefined' && window.gc) {
+        if (window.requestIdleCallback) {
           window.requestIdleCallback(() => {
-            window.gc();
+            window.gc?.();
           }, { timeout: 5000 });
         }
       }
@@ -596,11 +687,11 @@ export function FileContextProvider({
   const setCurrentView = useCallback((view: ViewType) => {
     requestNavigation(() => {
       dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
-      
+
       if (state.currentView !== view && state.activeFiles.length > 0) {
-        if (window.requestIdleCallback && typeof window !== 'undefined' && window.gc) {
+        if (window.requestIdleCallback) {
           window.requestIdleCallback(() => {
-            window.gc();
+            window.gc?.();
           }, { timeout: 5000 });
         }
       }
@@ -630,8 +721,8 @@ export function FileContextProvider({
   }, []);
 
   const applyPageOperations = useCallback((fileId: string, operations: PageOperation[]) => {
-    dispatch({ 
-      type: 'ADD_PAGE_OPERATIONS', 
+    dispatch({
+      type: 'ADD_PAGE_OPERATIONS',
       payload: { fileId, operations }
     });
   }, []);
@@ -682,7 +773,7 @@ export function FileContextProvider({
   const getFileById = useCallback((fileId: string): File | undefined => {
     return state.activeFiles.find(file => {
       const actualFileId = getFileId(file);
-      return actualFileId === fileId;
+      return actualFileId && actualFileId === fileId;
     });
   }, [state.activeFiles]);
 
@@ -706,18 +797,18 @@ export function FileContextProvider({
   // Context persistence
   const saveContext = useCallback(async () => {
     if (!enablePersistence) return;
-    
+
     try {
       const contextData = {
         currentView: state.currentView,
         currentTool: state.currentTool,
         selectedFileIds: state.selectedFileIds,
-        selectedPageIds: state.selectedPageIds,
+        selectedPageNumbers: state.selectedPageNumbers,
         viewerConfig: state.viewerConfig,
         lastExportConfig: state.lastExportConfig,
         timestamp: Date.now()
       };
-      
+
       localStorage.setItem('fileContext', JSON.stringify(contextData));
     } catch (error) {
       console.error('Failed to save context:', error);
@@ -726,7 +817,7 @@ export function FileContextProvider({
 
   const loadContext = useCallback(async () => {
     if (!enablePersistence) return;
-    
+
     try {
       const saved = localStorage.getItem('fileContext');
       if (saved) {
@@ -767,12 +858,16 @@ export function FileContextProvider({
   const contextValue: FileContextValue = {
     // State
     ...state,
-    
+
     // Actions
     addFiles,
     removeFiles,
     replaceFile,
     clearAllFiles,
+    pinFile,
+    unpinFile,
+    isFilePinned,
+    consumeFiles,
     setCurrentMode,
     setCurrentView,
     setCurrentTool,
@@ -792,7 +887,7 @@ export function FileContextProvider({
     saveContext,
     loadContext,
     resetContext,
-    
+
     // Operation history management
     recordOperation,
     markOperationApplied,
@@ -800,13 +895,13 @@ export function FileContextProvider({
     getFileHistory,
     getAppliedOperations,
     clearFileHistory,
-    
+
     // Navigation guard system
     setHasUnsavedChanges,
     requestNavigation,
     confirmNavigation,
     cancelNavigation,
-    
+
     // Memory management
     trackBlobUrl,
     trackPdfDocument,
@@ -840,17 +935,17 @@ export function useCurrentFile() {
 }
 
 export function useFileSelection() {
-  const { 
-    selectedFileIds, 
-    selectedPageIds, 
-    setSelectedFiles, 
-    setSelectedPages, 
-    clearSelections 
+  const {
+    selectedFileIds,
+    selectedPageNumbers,
+    setSelectedFiles,
+    setSelectedPages,
+    clearSelections
   } = useFileContext();
-  
+
   return {
     selectedFileIds,
-    selectedPageIds,
+    selectedPageNumbers,
     setSelectedFiles,
     setSelectedPages,
     clearSelections

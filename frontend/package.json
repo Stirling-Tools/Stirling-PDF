@@ -34,8 +34,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "npx tsc --noEmit && vite",
+    "build": "npx tsc --noEmit && vite build",
     "preview": "vite preview",
     "generate-licenses": "node scripts/generate-licenses.js",
     "test": "vitest",
@@ -65,6 +65,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
+    "@types/node": "^24.2.1",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.5.0",

@@ -347,7 +347,7 @@
       "title": "旋转",
       "desc": "旋转 PDF。"
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "转换图像到 PDF",
       "desc": "将图像（PNG、JPEG、GIF）转换为 PDF。"
     },
@@ -371,7 +371,7 @@
       "title": "更改权限",
       "desc": "更改 PDF 文档的权限。"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "删除",
       "desc": "从 PDF 文档中删除不需要的页面。"
     },
@@ -383,7 +383,7 @@
       "title": "删除密码",
       "desc": "从 PDF 文档中移除密码保护。"
     },
-    "compressPdfs": {
+    "compress": {
       "title": "压缩",
       "desc": "压缩 PDF 文件以减小文件大小。"
     },
@@ -479,7 +479,7 @@
       "title": "流水线（高级版）",
       "desc": "通过定义流水线脚本在 PDF 上运行多个操作"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "添加页码",
       "desc": "在文档的指定位置添加页码"
     },
@@ -487,7 +487,7 @@
       "title": "自动重命名 PDF 文件",
       "desc": "根据检测到的标题自动对 PDF 文件进行重命名"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "调整颜色/对比度",
       "desc": "调整 PDF 的对比度、饱和度和亮度"
     },
@@ -499,7 +499,7 @@
       "title": "自动拆分页面",
       "desc": "使用物理扫描页面分割器 QR 代码自动拆分扫描的 PDF"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "清理",
       "desc": "从 PDF 文件中删除脚本和其他元素"
     },
@@ -523,11 +523,11 @@
       "title": "获取 PDF 的所有信息",
       "desc": "获取 PDF 的所有可能的信息"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "提取页面",
       "desc": "从 PDF 中提取选定的页面"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF 转单一大页",
       "desc": "将所有 PDF 页面合并为一个大的单页"
     },
@@ -543,11 +543,11 @@
       "title": "手动修订",
       "desc": "根据选定的文本、绘制的形状和/或选定的页面编辑PDF"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF 转 CSV",
       "desc": "从 PDF 中提取表格并将其转换为 CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "自动根据大小/数目拆分 PDF",
       "desc": "将单个 PDF 拆分为多个文档，基于大小、页数或文档数"
     },
@@ -563,11 +563,11 @@
       "title": "添加图章",
       "desc": "在指定位置添加文本或图片图章"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "删除图像",
       "desc": "删除图像减少 PDF 大小"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "按章节拆分 PDF",
       "desc": "根据其章节结构将 PDF 拆分为多个文件。"
     },
@@ -575,7 +575,7 @@
       "title": "验证 PDF 签名",
       "desc": "验证 PDF 文档中的数字签名和证书"
     },
-    "replaceColorPdf": {
+    "replace-color": {
       "title": "替换和反转颜色",
       "desc": "替换 PDF 中文本和背景的颜色，并将PDF全色反转以减小文件大小"
     }

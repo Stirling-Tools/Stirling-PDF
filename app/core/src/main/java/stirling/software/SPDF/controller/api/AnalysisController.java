@@ -1,7 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import stirling.software.common.annotations.AutoJobPostMapping;
-
 import java.io.IOException;
 import java.util.*;
 
@@ -20,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 

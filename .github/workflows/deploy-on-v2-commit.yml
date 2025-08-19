@@ -151,7 +151,8 @@ jobs:
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
-                SWAGGER_SERVER_URL: "http://${{ secrets.VPS_HOST }}:3000"
+                SWAGGER_SERVER_URL: "https://demo.stirlingpdf.cloud"
+                baseUrl: "https://demo.stirlingpdf.cloud"
               restart: on-failure:5
       
             frontend:
@@ -177,8 +178,8 @@ jobs:
             docker-compose down || true
             docker-compose pull
             docker-compose up -d
-            docker system prune -af --volumes
-            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
+            docker system prune -af --volumes || true
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
 
       - name: Cleanup temporary files

@@ -1,21 +1,37 @@
 import { useState, useEffect } from "react";
-import { getDocument } from "pdfjs-dist";
 import { FileWithUrl } from "../types/file";
+import { fileStorage } from "../services/fileStorage";
+import { generateThumbnailForFile } from "../utils/thumbnailUtils";
+
+/**
+ * Calculate optimal scale for thumbnail generation
+ * Ensures high quality while preventing oversized renders
+ */
+function calculateThumbnailScale(pageViewport: { width: number; height: number }): number {
+  const maxWidth = 400;  // Max thumbnail width
+  const maxHeight = 600; // Max thumbnail height
+
+  const scaleX = maxWidth / pageViewport.width;
+  const scaleY = maxHeight / pageViewport.height;
+
+  // Don't upscale, only downscale if needed
+  return Math.min(scaleX, scaleY, 1.0);
+}
 
 /**
  * Hook for IndexedDB-aware thumbnail loading
  * Handles thumbnail generation for files not in IndexedDB
  */
-export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): { 
-  thumbnail: string | null; 
-  isGenerating: boolean 
+export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
+  thumbnail: string | null;
+  isGenerating: boolean
 } {
   const [thumb, setThumb] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    
+
     async function loadThumbnail() {
       if (!file) {
         setThumb(null);
@@ -28,38 +44,55 @@ export function useIndexedDBThumbnail(file: FileWithUrl | undefined | null): {
         return;
       }
 
-      // Second priority: for IndexedDB files without stored thumbnails, just use placeholder
-      if (file.storedInIndexedDB && file.id) {
-        // Don't generate thumbnails for files loaded from IndexedDB - just use placeholder
-        setThumb(null);
-        return;
-      }
-      
-      // Third priority: generate from blob for regular files during upload (small files only)
-      if (!file.storedInIndexedDB && file.size < 50 * 1024 * 1024 && !generating) {
+      // Second priority: generate thumbnail for any file type
+      if (file.size < 100 * 1024 * 1024 && !generating) {
         setGenerating(true);
         try {
-          const arrayBuffer = await file.arrayBuffer();
-          const pdf = await getDocument({ data: arrayBuffer }).promise;
-          const page = await pdf.getPage(1);
-          const viewport = page.getViewport({ scale: 0.2 });
-          const canvas = document.createElement("canvas");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const context = canvas.getContext("2d");
-          if (context && !cancelled) {
-            await page.render({ canvasContext: context, viewport }).promise;
-            if (!cancelled) setThumb(canvas.toDataURL());
+          let fileObject: File;
+
+          // Handle IndexedDB files vs regular File objects
+          if (file.storedInIndexedDB && file.id) {
+            // For IndexedDB files, recreate File object from stored data
+            const storedFile = await fileStorage.getFile(file.id);
+            if (!storedFile) {
+              throw new Error('File not found in IndexedDB');
+            }
+            fileObject = new File([storedFile.data], storedFile.name, {
+              type: storedFile.type,
+              lastModified: storedFile.lastModified
+            });
+          } else if ((file as any /* Fix me */).file) {
+            // For FileWithUrl objects that have a File object
+            fileObject = (file as any /* Fix me */).file;
+          } else if (file.id) {
+            // Fallback: try to get from IndexedDB even if storedInIndexedDB flag is missing
+            const storedFile = await fileStorage.getFile(file.id);
+            if (!storedFile) {
+              throw new Error('File not found in IndexedDB and no File object available');
+            }
+            fileObject = new File([storedFile.data], storedFile.name, {
+              type: storedFile.type,
+              lastModified: storedFile.lastModified
+            });
+          } else {
+            throw new Error('File object not available and no ID for IndexedDB lookup');
           }
-          pdf.destroy(); // Clean up memory
+
+          // Use the universal thumbnail generator
+          const thumbnail = await generateThumbnailForFile(fileObject);
+          if (!cancelled && thumbnail) {
+            setThumb(thumbnail);
+          } else if (!cancelled) {
+            setThumb(null);
+          }
         } catch (error) {
-          console.warn('Failed to generate thumbnail for regular file', file.name, error);
+          console.warn('Failed to generate thumbnail for file', file.name, error);
           if (!cancelled) setThumb(null);
         } finally {
           if (!cancelled) setGenerating(false);
         }
       } else {
-        // Large files or files without proper conditions - show placeholder
+        // Large files - generate placeholder
         setThumb(null);
       }
     }

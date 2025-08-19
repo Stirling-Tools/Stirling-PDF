@@ -1,0 +1,91 @@
+import React, { useEffect, useRef } from 'react';
+import { Button, Stack, Text } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
+import DownloadIcon from '@mui/icons-material/Download';
+import ErrorNotification from './ErrorNotification';
+import ResultsPreview from './ResultsPreview';
+import { SuggestedToolsSection } from './SuggestedToolsSection';
+import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
+
+export interface ReviewToolStepProps<TParams = unknown> {
+  isVisible: boolean;
+  operation: ToolOperationHook<TParams>;
+  title?: string;
+  onFileClick?: (file: File) => void;
+}
+
+function ReviewStepContent<TParams = unknown>({ operation, onFileClick }: { operation: ToolOperationHook<TParams>; onFileClick?: (file: File) => void }) {
+  const { t } = useTranslation();
+  const stepRef = useRef<HTMLDivElement>(null);
+
+  const previewFiles = operation.files?.map((file, index) => ({
+    file,
+    thumbnail: operation.thumbnails[index]
+  })) || [];
+
+  // Auto-scroll to bottom when content appears
+  useEffect(() => {
+    if (stepRef.current && (previewFiles.length > 0 || operation.downloadUrl || operation.errorMessage)) {
+      const scrollableContainer = stepRef.current.closest('[style*="overflow: auto"]') as HTMLElement;
+      if (scrollableContainer) {
+        setTimeout(() => {
+          scrollableContainer.scrollTo({
+            top: scrollableContainer.scrollHeight,
+            behavior: 'smooth'
+          });
+        }, 100); // Small delay to ensure content is rendered
+      }
+    }
+  }, [previewFiles.length, operation.downloadUrl, operation.errorMessage]);
+
+  return (
+    <Stack gap="sm" ref={stepRef}>
+      <ErrorNotification
+        error={operation.errorMessage}
+        onClose={operation.clearError}
+      />
+
+      {previewFiles.length > 0 && (
+        <ResultsPreview
+          files={previewFiles}
+          onFileClick={onFileClick}
+          isGeneratingThumbnails={operation.isGeneratingThumbnails}
+        />
+      )}
+
+       {operation.downloadUrl && (
+        <Button
+          component="a"
+          href={operation.downloadUrl}
+          download={operation.downloadFilename}
+          leftSection={<DownloadIcon />}
+          color="blue"
+          fullWidth
+          mb="md"
+        >
+          {t("download", "Download")}
+        </Button>
+      )}
+
+      <SuggestedToolsSection />
+    </Stack>
+  );
+}
+
+export function createReviewToolStep<TParams = unknown>(
+  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
+  props: ReviewToolStepProps<TParams>
+): React.ReactElement {
+  const { t } = useTranslation();
+
+  return createStep(t("review", "Review"), {
+    isVisible: props.isVisible,
+    _excludeFromCount: true,
+    _noPadding: true
+  }, (
+    <ReviewStepContent 
+      operation={props.operation} 
+      onFileClick={props.onFileClick}
+    />
+  ));
+}

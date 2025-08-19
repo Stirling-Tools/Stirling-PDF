@@ -1,32 +1,21 @@
-import React, { useState } from "react";
-import { Box, Text, Stack, Button, TextInput, Group } from "@mantine/core";
+import React from "react";
+import { Box, Text, Stack, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ToolRegistry } from "../../types/tool";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
-  toolRegistry: ToolRegistry;
+  /** Pre-filtered tools to display */
+  filteredTools: [string, ToolRegistry[string]][];
 }
 
-const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps) => {
+const ToolPicker = ({ selectedToolKey, onSelect, filteredTools }: ToolPickerProps) => {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-
-  const filteredTools = Object.entries(toolRegistry).filter(([_, { name }]) =>
-    name.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
-    <Box >
-      <TextInput
-        placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
-        value={search}
-        onChange={(e) => setSearch(e.currentTarget.value)}
-        mb="md"
-        autoComplete="off"
-      />
-      <Stack  align="flex-start">
+    <Box>
+      <Stack align="flex-start">
         {filteredTools.length === 0 ? (
           <Text c="dimmed" size="sm">
             {t("toolPicker.noToolsFound", "No tools found")}

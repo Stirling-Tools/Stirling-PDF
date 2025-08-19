@@ -12,13 +12,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,7 +45,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
-@Controller
+// @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @Slf4j
 @Tag(name = "Account Security", description = "Account Security APIs")
 public class AccountWebController {
@@ -75,10 +72,13 @@ public class AccountWebController {
         this.teamRepository = teamRepository;
     }
 
-    @GetMapping("/login")
+    // @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
-        // If the user is already authenticated, redirect them to the home page.
-        if (authentication != null && authentication.isAuthenticated()) {
+        // If the user is already authenticated and it's not a logout scenario, redirect them to the
+        // home page.
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && request.getParameter("logout") == null) {
             return "redirect:/";
         }
 
@@ -184,7 +184,7 @@ public class AccountWebController {
                         errorOAuth = "login.relyingPartyRegistrationNotFound";
                 // Valid InResponseTo was not available from the validation context, unable to
                 // evaluate
-                case "invalid_in_response_to" -> errorOAuth = "login.invalid_in_response_to";
+                case "invalid_in_response_to" -> errorOAuth = "login.invalidInResponseTo";
                 case "not_authentication_provider_found" ->
                         errorOAuth = "login.not_authentication_provider_found";
             }
@@ -203,8 +203,8 @@ public class AccountWebController {
         return "login";
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/usage")
+    // @PreAuthorize("hasRole('ROLE_ADMIN')")
+    // @GetMapping("/usage")
     public String showUsage() {
         if (!runningEE) {
             return "error";
@@ -212,8 +212,8 @@ public class AccountWebController {
         return "usage";
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/adminSettings")
+    // @PreAuthorize("hasRole('ROLE_ADMIN')")
+    // @GetMapping("/adminSettings")
     public String showAddUserForm(
             HttpServletRequest request, Model model, Authentication authentication) {
         List<User> allUsers = userRepository.findAllWithTeam();
@@ -371,8 +371,8 @@ public class AccountWebController {
         return "adminSettings";
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @GetMapping("/account")
+    // @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    // @GetMapping("/account")
     public String account(HttpServletRequest request, Model model, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/";
@@ -436,8 +436,8 @@ public class AccountWebController {
         return "account";
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @GetMapping("/change-creds")
+    // @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    // @GetMapping("/change-creds")
     public String changeCreds(
             HttpServletRequest request, Model model, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
