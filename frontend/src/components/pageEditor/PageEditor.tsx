@@ -556,10 +556,34 @@ const PageEditor = ({
   // Enhanced draft save using centralized IndexedDB manager
   const saveDraftToIndexedDB = useCallback(async (doc: PDFDocument) => {
     const draftKey = `draft-${doc.id || 'merged'}`;
+    
+    // Convert PDF document to bytes for storage
+    const pdfBytes = await doc.save();
+    const originalFileNames = activeFileIds.map(id => selectors.getFileRecord(id)?.name).filter(Boolean);
+    
+    // Create a temporary file for thumbnail generation
+    const tempFile = new File([pdfBytes], `Draft - ${originalFileNames.join(', ') || 'Untitled'}.pdf`, {
+      type: 'application/pdf',
+      lastModified: Date.now()
+    });
+    
+    // Generate thumbnail for the draft
+    let thumbnail: string | undefined;
+    try {
+      const { generateThumbnailForFile } = await import('../../utils/thumbnailUtils');
+      thumbnail = await generateThumbnailForFile(tempFile);
+    } catch (error) {
+      console.warn('Failed to generate thumbnail for draft:', error);
+    }
+    
     const draftData = {
-      document: doc,
+      id: draftKey,
+      name: `Draft - ${originalFileNames.join(', ') || 'Untitled'}`,
+      pdfData: pdfBytes,
+      size: pdfBytes.length,
       timestamp: Date.now(),
-      originalFiles: activeFileIds.map(id => selectors.getFileRecord(id)?.name).filter(Boolean)
+      thumbnail,
+      originalFiles: originalFileNames
     };
 
     try {

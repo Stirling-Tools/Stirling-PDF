@@ -25,6 +25,9 @@ interface IndexedDBContextValue {
   
   // Utilities
   getStorageStats: () => Promise<{ used: number; available: number; fileCount: number }>;
+  
+  // Draft operations
+  loadAllDraftMetadata: () => Promise<FileMetadata[]>;
 }
 
 const IndexedDBContext = createContext<IndexedDBContextValue | null>(null);
@@ -56,6 +59,22 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   }, []);
 
   const saveFile = useCallback(async (file: File, fileId: FileId, existingThumbnail?: string): Promise<FileMetadata> => {
+    // DEBUG: Check original file before saving
+    if (DEBUG && file.type === 'application/pdf') {
+      try {
+        const { getDocument } = await import('pdfjs-dist');
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await getDocument({ data: arrayBuffer }).promise;
+        console.log(`🔍 Saving file to IndexedDB:`, {
+          name: file.name,
+          size: file.size,
+          pages: pdf.numPages
+        });
+      } catch (error) {
+        console.error(`🔍 Error validating file before save:`, error);
+      }
+    }
+    
     // Use existing thumbnail or generate new one
     const thumbnail = existingThumbnail || await generateThumbnailForFile(file);
     
@@ -98,6 +117,27 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       type: storedFile.type,
       lastModified: storedFile.lastModified
     });
+
+    // DEBUG: Check if file reconstruction is working
+    if (DEBUG && file.type === 'application/pdf') {
+      console.log(`🔍 File loaded from IndexedDB:`, {
+        name: file.name,
+        originalSize: storedFile.size,
+        reconstructedSize: file.size,
+        dataLength: storedFile.data.byteLength,
+        sizesMatch: storedFile.size === file.size
+      });
+      
+      // Quick PDF validation
+      try {
+        const { getDocument } = await import('pdfjs-dist');
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await getDocument({ data: arrayBuffer }).promise;
+        console.log(`🔍 PDF validation: ${pdf.numPages} pages in reconstructed file`);
+      } catch (error) {
+        console.error(`🔍 PDF reconstruction error:`, error);
+      }
+    }
 
     // Cache for future use with LRU eviction
     fileCache.current.set(fileId, { file, lastAccessed: Date.now() });
@@ -177,6 +217,38 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     return await fileStorage.getStorageStats();
   }, []);
 
+  const loadAllDraftMetadata = useCallback(async (): Promise<FileMetadata[]> => {
+    try {
+      const { indexedDBManager, DATABASE_CONFIGS } = await import('../services/indexedDBManager');
+      const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
+      
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['drafts'], 'readonly');
+        const store = transaction.objectStore('drafts');
+        const request = store.getAll();
+        
+        request.onsuccess = () => {
+          const drafts = request.result || [];
+          const draftMetadata: FileMetadata[] = drafts.map((draft: any) => ({
+            id: draft.id,
+            name: draft.name || `Draft ${draft.id}`,
+            type: 'application/pdf',
+            size: draft.size || 0,
+            lastModified: draft.timestamp || Date.now(),
+            thumbnail: draft.thumbnail,
+            isDraft: true
+          }));
+          resolve(draftMetadata);
+        };
+        
+        request.onerror = () => reject(request.error);
+      });
+    } catch (error) {
+      console.warn('Failed to load draft metadata:', error);
+      return [];
+    }
+  }, []);
+
   // No periodic cleanup needed - LRU eviction happens on-demand when cache fills
 
   const value: IndexedDBContextValue = {
@@ -187,7 +259,8 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     loadAllMetadata,
     deleteMultiple,
     clearAll,
-    getStorageStats
+    getStorageStats,
+    loadAllDraftMetadata
   };
 
   return (

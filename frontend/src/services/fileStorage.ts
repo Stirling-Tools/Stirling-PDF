@@ -156,7 +156,7 @@ class FileStorageService {
           }
           cursor.continue();
         } else {
-          console.log('Loaded metadata for', files.length, 'files without loading data');
+          // Metadata loaded efficiently without file data
           resolve(files);
         }
       };

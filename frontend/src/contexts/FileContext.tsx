@@ -208,48 +208,12 @@ function FileContextInner({
     dispatch
   }), [actions]);
 
-  // Load files from persistence on mount
-  useEffect(() => {
-    if (!enablePersistence || !indexedDB) return;
-    
-    const loadFromPersistence = async () => {
-      try {
-        // Load metadata to populate file list (actual File objects loaded on-demand)
-        const metadata = await indexedDB.loadAllMetadata();
-        if (metadata.length === 0) {
-          if (DEBUG) console.log('📄 No files found in persistence');
-          return;
-        }
-        
-        if (DEBUG) {
-          console.log(`📄 Loading ${metadata.length} files from persistence`);
-        }
-        
-        // Create FileRecords from metadata - File objects loaded when needed
-        const fileRecords = metadata.map(meta => ({
-          id: meta.id,
-          name: meta.name,
-          size: meta.size,
-          type: meta.type,
-          lastModified: meta.lastModified,
-          thumbnailUrl: meta.thumbnail,
-          isPinned: false,
-          createdAt: Date.now()
-        }));
-        
-        // Add to state so file manager can show them
-        dispatch({ 
-          type: 'ADD_FILES', 
-          payload: { fileRecords } 
-        });
-        
-      } catch (error) {
-        console.error('Failed to load files from persistence:', error);
-      }
-    };
-    
-    loadFromPersistence();
-  }, [enablePersistence, indexedDB]); // Only run when these change
+  // Persistence loading disabled - files only loaded on explicit user action
+  // useEffect(() => {
+  //   if (!enablePersistence || !indexedDB) return;
+  //   const loadFromPersistence = async () => { /* loading logic removed */ };
+  //   loadFromPersistence();
+  // }, [enablePersistence, indexedDB]);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Group, Box, Text, ActionIcon, Checkbox, Divider } from '@mantine/core';
+import { Group, Box, Text, ActionIcon, Checkbox, Divider, Badge } from '@mantine/core';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
@@ -64,7 +64,14 @@ const FileListItem: React.FC<FileListItemProps> = ({
           </Box>
        
           <Box style={{ flex: 1, minWidth: 0 }}>
-            <Text size="sm" fw={500} truncate>{file.name}</Text>
+            <Group gap="xs" align="center">
+              <Text size="sm" fw={500} truncate style={{ flex: 1 }}>{file.name}</Text>
+              {file.isDraft && (
+                <Badge size="xs" variant="light" color="orange">
+                  DRAFT
+                </Badge>
+              )}
+            </Group>
             <Text size="xs" c="dimmed">{getFileSize(file)} • {getFileDate(file)}</Text>
           </Box>
           
