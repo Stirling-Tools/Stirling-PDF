@@ -23,7 +23,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 1
@@ -114,7 +114,7 @@ jobs:
       - name: AI PR Title Analysis
         if: ${{ steps.actor.outputs.is_repo_dev == 'true' && steps.check_diff.outputs.is_empty == 'false' }}
         id: ai-title-analysis
-        uses: actions/ai-inference@0cbed4a10641c75090de5968e66d70eb4660f751 # v1.2.7
+        uses: actions/ai-inference@b81b2afb8390ee6839b494a404766bef6493c7d9 # v1.2.8
         with:
           system-prompt-file: ".github/config/system-prompt.txt"
           prompt: |
