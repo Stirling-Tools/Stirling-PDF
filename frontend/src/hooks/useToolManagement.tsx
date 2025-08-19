@@ -82,7 +82,6 @@ export const useToolManagement = (): ToolManagementResult => {
     selectedTool,
     toolSelectedFileIds,
     toolRegistry,
-
     selectTool,
     clearToolSelection,
     setToolSelectedFileIds,
