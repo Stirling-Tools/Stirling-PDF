@@ -9,7 +9,7 @@ import AddPassword from '../tools/AddPassword';
 import ChangePermissions from '../tools/ChangePermissions';
 import RemovePassword from '../tools/RemovePassword';
 import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
-
+import AddWatermark from '../tools/AddWatermark';
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -50,15 +50,17 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategory: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
         endpoints: ["add-password"]
-    },
+    },    
     "add-watermark": {
         icon: <span className="material-symbols-rounded">branding_watermark</span>,
         name: t("home.watermark.title", "Add Watermark"),
-        component: null,
+        component: AddWatermark,
         view: "format",
+        maxFiles: -1,
         description: t("home.watermark.desc", "Add a custom watermark to your PDF document."),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: SubcategoryId.DOCUMENT_SECURITY
+        subcategory: SubcategoryId.DOCUMENT_SECURITY,
+        endpoints: ["add-watermark"]
     },
     "add-stamp": {
         icon: <span className="material-symbols-rounded">approval</span>,
