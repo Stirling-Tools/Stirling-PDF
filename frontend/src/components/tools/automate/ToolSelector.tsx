@@ -10,9 +10,17 @@ interface ToolSelectorProps {
   onSelect: (toolKey: string) => void;
   excludeTools?: string[];
   toolRegistry: Record<string, ToolRegistryEntry>; // Pass registry as prop to break circular dependency
+  selectedValue?: string; // For showing current selection when editing existing tool
+  placeholder?: string; // Custom placeholder text
 }
 
-export default function ToolSelector({ onSelect, excludeTools = [], toolRegistry }: ToolSelectorProps) {
+export default function ToolSelector({ 
+  onSelect, 
+  excludeTools = [], 
+  toolRegistry, 
+  selectedValue,
+  placeholder
+}: ToolSelectorProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -83,6 +91,14 @@ export default function ToolSelector({ onSelect, excludeTools = [], toolRegistry
     }
   };
 
+  // Get display value for selected tool
+  const getDisplayValue = () => {
+    if (selectedValue && toolRegistry[selectedValue]) {
+      return toolRegistry[selectedValue].name;
+    }
+    return placeholder || t('automate.creation.tools.add', 'Add a tool...');
+  };
+
   return (
     <Menu 
       opened={opened} 
@@ -98,7 +114,8 @@ export default function ToolSelector({ onSelect, excludeTools = [], toolRegistry
             onChange={handleSearchChange}
             toolRegistry={filteredToolRegistry}
             mode="filter"
-            placeholder={t('automate.creation.tools.add', 'Add a tool...')}
+            placeholder={getDisplayValue()}
+            hideIcon={true}
           />
         </div>
       </Menu.Target>

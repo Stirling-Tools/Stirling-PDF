@@ -81,6 +81,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       {
         title: t('automate.stepTitle', 'Automations'),
         isVisible: true,
+        onCollapsedClick: ()=> setCurrentStep('selection'),
         content: currentStep === 'selection' ? renderCurrentStep() : null
       },
       {

@@ -13,6 +13,7 @@ interface ToolSearchProps {
   mode: 'filter' | 'dropdown';
   selectedToolKey?: string | null;
   placeholder?: string;
+  hideIcon?: boolean;
 }
 
 const ToolSearch = ({ 
@@ -22,7 +23,8 @@ const ToolSearch = ({
   onToolSelect, 
   mode = 'filter',
   selectedToolKey,
-  placeholder 
+  placeholder,
+  hideIcon = false
 }: ToolSearchProps) => {
   const { t } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -64,7 +66,7 @@ const ToolSearch = ({
         value={value}
         onChange={handleSearchChange}
         placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
-        icon={<span className="material-symbols-rounded">search</span>}
+        icon={hideIcon ? undefined : <span className="material-symbols-rounded">search</span>}
         autoComplete="off"
       />
     </div>
