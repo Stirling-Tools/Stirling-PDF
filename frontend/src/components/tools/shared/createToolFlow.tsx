@@ -49,6 +49,7 @@ export interface ToolFlowConfig {
   steps: MiddleStepConfig[];
   executeButton?: ExecuteButtonConfig;
   review: ReviewStepConfig;
+  forceStepNumbers?: boolean;
 }
 
 /**
@@ -60,7 +61,7 @@ export function createToolFlow(config: ToolFlowConfig) {
 
   return (
     <Stack gap="sm" p="sm" h="95vh" w="100%" style={{ overflow: 'auto' }}>
-      <ToolStepProvider>
+      <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>
         {/* Files Step */}
         {steps.createFilesStep({
           selectedFiles: config.files.selectedFiles,

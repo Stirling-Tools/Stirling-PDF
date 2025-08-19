@@ -44,6 +44,7 @@
   "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
   "fileSelected": "Selected: {{filename}}",
+  "chooseFile": "Choose File",
   "filesSelected": "{{count}} files selected",
   "files": {
     "title": "Files",
@@ -777,26 +778,180 @@
     "submit": "Add image"
   },
   "watermark": {
-    "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
     "title": "Add Watermark",
-    "header": "Add Watermark",
-    "customColor": "Custom Text Colour",
-    "selectText": {
-      "1": "Select PDF to add watermark to:",
-      "2": "Watermark Text:",
-      "3": "Font Size:",
-      "4": "Rotation (0-360):",
-      "5": "Width Spacer (Space between each watermark horizontally):",
-      "6": "Height Spacer (Space between each watermark vertically):",
-      "7": "Opacity (0% - 100%):",
-      "8": "Watermark Type:",
-      "9": "Watermark Image:",
-      "10": "Convert PDF to PDF-Image"
-    },
+    "desc": "Add text or image watermarks to PDF files",
+    "completed": "Watermark added",
     "submit": "Add Watermark",
-    "type": {
-      "1": "Text",
-      "2": "Image"
+    "filenamePrefix": "watermarked",
+    "error": {
+      "failed": "An error occurred while adding watermark to the PDF."
+    },
+    "watermarkType": {
+      "text": "Text",
+      "image": "Image"
+    },
+    "settings": {
+      "type": "Watermark Type",
+      "text": {
+        "label": "Watermark Text",
+        "placeholder": "Enter watermark text"
+      },
+      "image": {
+        "label": "Watermark Image",
+        "choose": "Choose Image",
+        "selected": "Selected: {{filename}}"
+      },
+      "fontSize": "Font Size",
+      "size": "Size",
+      "alphabet": "Font/Language",
+      "color": "Watermark Colour",
+      "rotation": "Rotation (degrees)",
+      "opacity": "Opacity (%)",
+      "spacing": {
+        "horizontal": "Horizontal Spacing",
+        "vertical": "Vertical Spacing"
+      },
+      "convertToImage": "Flatten PDF pages to images"
+    },
+    "alphabet": {
+      "roman": "Roman/Latin",
+      "arabic": "Arabic",
+      "japanese": "Japanese",
+      "korean": "Korean",
+      "chinese": "Chinese",
+      "thai": "Thai"
+    },
+    "steps": {
+      "type": "Watermark Type",
+      "wording": "Wording",
+      "textStyle": "Style",
+      "formatting": "Formatting",
+      "file": "Watermark File"
+    },
+    "results": {
+      "title": "Watermark Results"
+    },
+    "tooltip": {
+      "language": {
+        "title": "Language Support",
+        "text": "Choose the appropriate language setting to ensure proper font rendering for your text."
+      },
+      "appearance": {
+        "title": "Appearance Settings",
+        "text": "Control how your watermark looks and blends with the document.",
+        "bullet1": "Rotation: -360° to 360° for angled watermarks",
+        "bullet2": "Opacity: 0-100% for transparency control",
+        "bullet3": "Lower opacity creates subtle watermarks"
+      },
+      "spacing": {
+        "title": "Spacing Control",
+        "text": "Adjust the spacing between repeated watermarks across the page.",
+        "bullet1": "Width spacing: Horizontal distance between watermarks",
+        "bullet2": "Height spacing: Vertical distance between watermarks",
+        "bullet3": "Higher values create more spread out patterns"
+      },
+      "type": {
+        "header": {
+          "title": "Watermark Type Selection"
+        },
+        "description": {
+          "title": "Choose Your Watermark",
+          "text": "Select between text or image watermarks based on your needs."
+        },
+        "text": {
+          "title": "Text Watermarks",
+          "text": "Perfect for adding copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colours.",
+          "bullet1": "Customisable fonts and languages",
+          "bullet2": "Adjustable colours and transparency",
+          "bullet3": "Ideal for legal or branding text"
+        },
+        "image": {
+          "title": "Image Watermarks",
+          "text": "Use logos, stamps, or any image as a watermark. Great for branding and visual identification.",
+          "bullet1": "Upload any image format",
+          "bullet2": "Maintains image quality",
+          "bullet3": "Perfect for logos and stamps"
+        }
+      },
+      "wording": {
+        "header": {
+          "title": "Text Content"
+        },
+        "text": {
+          "title": "Watermark Text",
+          "text": "Enter the text that will appear as your watermark across the document.",
+          "bullet1": "Keep it concise for better readability",
+          "bullet2": "Common examples: 'CONFIDENTIAL', 'DRAFT', company name",
+          "bullet3": "Emoji characters are not supported and will be filtered out"
+        }
+      },
+      "textStyle": {
+        "header": {
+          "title": "Text Style"
+        },
+        "color": {
+          "title": "Colour Selection",
+          "text": "Choose a colour that provides good contrast with your document content.",
+          "bullet1": "Light grey (#d3d3d3) for subtle watermarks",
+          "bullet2": "Black or dark colours for high contrast",
+          "bullet3": "Custom colours for branding purposes"
+        },
+        "language": {
+          "title": "Language Support",
+          "text": "Choose the appropriate language setting to ensure proper font rendering."
+        }
+      },
+      "file": {
+        "header": {
+          "title": "Image Upload"
+        },
+        "upload": {
+          "title": "Image Selection",
+          "text": "Upload an image file to use as your watermark.",
+          "bullet1": "Supports common formats: PNG, JPG, GIF, BMP",
+          "bullet2": "PNG with transparency works best",
+          "bullet3": "Higher resolution images maintain quality better"
+        },
+        "recommendations": {
+          "title": "Best Practices",
+          "text": "Tips for optimal image watermark results.",
+          "bullet1": "Use logos or stamps with transparent backgrounds",
+          "bullet2": "Simple designs work better than complex images",
+          "bullet3": "Consider the final document size when choosing resolution"
+        }
+      },
+      "formatting": {
+        "header": {
+          "title": "Formatting & Layout"
+        },
+        "size": {
+          "title": "Size Control",
+          "text": "Adjust the size of your watermark (text or image).",
+          "bullet1": "Larger sizes create more prominent watermarks"
+        },
+        "appearance": {
+          "title": "Appearance Settings",
+          "text": "Control how your watermark looks and blends with the document.",
+          "bullet1": "Rotation: -360° to 360° for angled watermarks",
+          "bullet2": "Opacity: 0-100% for transparency control",
+          "bullet3": "Lower opacity creates subtle watermarks"
+        },
+        "spacing": {
+          "title": "Spacing Control",
+          "text": "Adjust the spacing between repeated watermarks across the page.",
+          "bullet1": "Horizontal spacing: Distance between watermarks left to right",
+          "bullet2": "Vertical spacing: Distance between watermarks top to bottom",
+          "bullet3": "Higher values create more spread out patterns"
+        },
+        "security": {
+          "title": "Security Option",
+          "text": "Convert the final PDF to an image-based format for enhanced security.",
+          "bullet1": "Prevents text selection and copying",
+          "bullet2": "Makes watermarks harder to remove",
+          "bullet3": "Results in larger file sizes",
+          "bullet4": "Best for sensitive or copyrighted content"
+        }
+      }
     }
   },
   "permissions": {
