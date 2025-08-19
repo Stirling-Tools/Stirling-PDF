@@ -248,9 +248,6 @@ export interface FileContextActions {
   trackPdfDocument: (key: string, pdfDoc: any) => void;
   scheduleCleanup: (fileId: string, delay?: number) => void;
   cleanupFile: (fileId: string) => void;
-  
-  // Persistence operations
-  loadFromPersistence: () => Promise<void>;
 }
 
 // File selectors (separate from actions to avoid re-renders)

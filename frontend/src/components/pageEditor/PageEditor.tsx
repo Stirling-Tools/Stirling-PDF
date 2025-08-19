@@ -375,7 +375,7 @@ const PageEditor = ({
         }
       );
 
-      console.log(`📸 PageEditor: Thumbnail generation completed for ${pageNumbers.length} pages`);
+      // Removed verbose logging - only log errors
     } catch (error) {
       console.error('PageEditor: Thumbnail generation failed:', error);
     }
@@ -399,7 +399,7 @@ const PageEditor = ({
       }
       
       if (chunkPageNumbers.length > 0) {
-        console.log(`📸 PageEditor: Background generating chunk: pages ${start}-${end} (${chunkPageNumbers.length} needed)`);
+        // Background thumbnail generation in progress (removed verbose logging)
         await generateThumbnailBatch(file, fileId, chunkPageNumbers);
         
         // Small delay between chunks to keep UI responsive

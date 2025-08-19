@@ -161,6 +161,17 @@ export function useFileContext() {
     markOperationApplied: (fileId: string, operationId: string) => {}, // TODO: Implement operation tracking
     markOperationFailed: (fileId: string, operationId: string, error: string) => {}, // TODO: Implement operation tracking
     
+    // File ID lookup
+    findFileId: (file: File) => {
+      return state.files.ids.find(id => {
+        const record = state.files.byId[id];
+        return record && 
+               record.name === file.name && 
+               record.size === file.size && 
+               record.lastModified === file.lastModified;
+      });
+    },
+    
     // Pinned files
     pinnedFiles: state.pinnedFiles,
     pinFile: actions.pinFile,
