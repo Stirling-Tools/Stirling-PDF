@@ -54,6 +54,7 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     setCurrentMode("merge");
   };
 
+  // TODO: Move to more general place so other tools can use it
   const sortFiles = useCallback((sortType: 'filename' | 'dateModified', ascending: boolean = true) => {
     setSelectedFiles(((prevFiles: File[]) => {
       const sortedFiles = [...prevFiles].sort((a, b) => {
