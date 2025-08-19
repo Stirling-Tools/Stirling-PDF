@@ -12,10 +12,9 @@ import {
 } from '@mantine/core';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SettingsIcon from '@mui/icons-material/Settings';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
+import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 import ToolConfigurationModal from './ToolConfigurationModal';
 import ToolSelector from './ToolSelector';
 
@@ -24,6 +23,7 @@ interface AutomationCreationProps {
   existingAutomation?: any;
   onBack: () => void;
   onComplete: (automation: any) => void;
+  toolRegistry: Record<string, ToolRegistryEntry>; // Pass registry as prop to break circular dependency
 }
 
 interface AutomationTool {
@@ -34,9 +34,8 @@ interface AutomationTool {
   parameters?: any;
 }
 
-export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete }: AutomationCreationProps) {
+export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry }: AutomationCreationProps) {
   const { t } = useTranslation();
-  const toolRegistry = useFlatToolRegistry();
 
   const [automationName, setAutomationName] = useState('');
   const [selectedTools, setSelectedTools] = useState<AutomationTool[]>([]);
@@ -157,6 +156,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
         <ToolSelector
           onSelect={addTool}
           excludeTools={['automate']}
+          toolRegistry={toolRegistry}
         />
 
         {/* Selected Tools */}

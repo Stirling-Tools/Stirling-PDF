@@ -1,4 +1,16 @@
-import { AddWatermarkParameters } from "../hooks/tools/addWatermark/useAddWatermarkParameters";
+export interface AddWatermarkParameters {
+  watermarkType?: 'text' | 'image';
+  watermarkText: string;
+  watermarkImage?: File;
+  fontSize: number; // Used for both text size and image size
+  rotation: number;
+  opacity: number;
+  widthSpacer: number;
+  heightSpacer: number;
+  alphabet: string;
+  customColor: string;
+  convertPDFToImage: boolean;
+}
 
 export interface AlphabetOption {
   value: string;

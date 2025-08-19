@@ -5,18 +5,17 @@ import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 import { useToolSections } from '../../../hooks/useToolSections';
 import { renderToolButtons } from '../shared/renderToolButtons';
 import ToolSearch from '../toolPicker/ToolSearch';
-import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
 
 interface ToolSelectorProps {
   onSelect: (toolKey: string) => void;
   excludeTools?: string[];
+  toolRegistry: Record<string, ToolRegistryEntry>; // Pass registry as prop to break circular dependency
 }
 
-export default function ToolSelector({ onSelect, excludeTools = [] }: ToolSelectorProps) {
+export default function ToolSelector({ onSelect, excludeTools = [], toolRegistry }: ToolSelectorProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const toolRegistry = useFlatToolRegistry();
 
   // Filter out excluded tools (like 'automate' itself)
   const baseFilteredTools = useMemo(() => {

@@ -7,6 +7,7 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo } fr
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { useFileContext } from './FileContext';
 
 // State interface
 interface ToolWorkflowState {
@@ -71,7 +72,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
   toolRegistry: any; // From useToolManagement
-  
+
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
   setLeftPanelView: (view: 'toolPicker' | 'toolContent') => void;
@@ -99,12 +100,13 @@ const ToolWorkflowContext = createContext<ToolWorkflowContextValue | undefined>(
 // Provider component
 interface ToolWorkflowProviderProps {
   children: React.ReactNode;
-  /** Handler for view changes (passed from parent) */
-  onViewChange?: (view: string) => void;
 }
 
-export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowProviderProps) {
+export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, initialState);
+
+  // File context for view changes
+  const { setCurrentView } = useFileContext();
 
   // Tool management hook
   const {
@@ -152,12 +154,12 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     }
 
     selectTool(toolId);
-    onViewChange?.('fileEditor');
+    setCurrentView('fileEditor');
     setLeftPanelView('toolContent');
     setReaderMode(false);
     // Clear search so the tool content becomes visible immediately
     setSearchQuery('');
-  }, [selectTool, onViewChange, setLeftPanelView, setReaderMode, setSearchQuery, clearToolSelection]);
+  }, [selectTool, setCurrentView, setLeftPanelView, setReaderMode, setSearchQuery, clearToolSelection]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
@@ -183,7 +185,7 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
   );
 
   // Simple context value with basic memoization
-  const contextValue = useMemo((): ToolWorkflowContextValue => ({
+  const contextValue : ToolWorkflowContextValue ={
     // State
     ...state,
     selectedToolKey,
@@ -208,7 +210,7 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     // Computed
     filteredTools,
     isPanelVisible,
-  }), [state, selectedToolKey, selectedTool, toolRegistry, filteredTools, isPanelVisible]);
+  };
 
   return (
     <ToolWorkflowContext.Provider value={contextValue}>
@@ -221,6 +223,40 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
 export function useToolWorkflow(): ToolWorkflowContextValue {
   const context = useContext(ToolWorkflowContext);
   if (!context) {
+    // During development hot reload, temporarily return a safe fallback
+    if (false && process.env.NODE_ENV === 'development') {
+      console.warn('ToolWorkflowContext temporarily unavailable during hot reload, using fallback');
+
+      // Return minimal safe fallback to prevent crashes
+      return {
+        state: {
+          sidebarsVisible: true,
+          leftPanelView: 'toolPicker',
+          readerMode: false,
+          previewFile: null,
+          pageEditorFunctions: null,
+          searchQuery: ''
+        },
+        selectedToolKey: null,
+        selectedTool: null,
+        toolRegistry: {},
+        filteredTools: [],
+        isPanelVisible: true,
+        setSidebarsVisible: () => {},
+        setLeftPanelView: () => {},
+        setReaderMode: () => {},
+        setPreviewFile: () => {},
+        setPageEditorFunctions: () => {},
+        setSearchQuery: () => {},
+        selectTool: () => {},
+        clearToolSelection: () => {},
+        handleToolSelect: () => {},
+        handleBackToTools: () => {},
+        handleReaderToggle: () => {}
+      } as ToolWorkflowContextValue;
+    }
+
+    console.error('ToolWorkflowContext not found. Current stack:', new Error().stack);
     throw new Error('useToolWorkflow must be used within a ToolWorkflowProvider');
   }
   return context;

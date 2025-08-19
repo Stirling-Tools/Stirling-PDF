@@ -14,8 +14,6 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningIcon from '@mui/icons-material/Warning';
-import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
-
 interface ToolConfigurationModalProps {
   opened: boolean;
   tool: {
@@ -30,7 +28,6 @@ interface ToolConfigurationModalProps {
 
 export default function ToolConfigurationModal({ opened, tool, onSave, onCancel }: ToolConfigurationModalProps) {
   const { t } = useTranslation();
-  const { toolRegistry } = useToolWorkflow();
   
   const [parameters, setParameters] = useState<any>({});
   const [isValid, setIsValid] = useState(true);

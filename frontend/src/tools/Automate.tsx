@@ -10,6 +10,7 @@ import ToolSequence from "../components/tools/automate/ToolSequence";
 
 import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperation";
 import { BaseToolProps } from "../types/tool";
+import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -20,6 +21,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const [stepData, setStepData] = useState<any>({});
 
   const automateOperation = useAutomateOperation();
+  const toolRegistry = useFlatToolRegistry();
 
   const handleStepChange = (data: any) => {
     setStepData(data);
@@ -51,6 +53,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             existingAutomation={stepData.automation}
             onBack={() => handleStepChange({ step: 'selection' })}
             onComplete={(automation: any) => handleStepChange({ step: 'sequence', automation })}
+            toolRegistry={toolRegistry}
           />
         );
 

@@ -1,20 +1,5 @@
 import { useState, useCallback } from 'react';
-import { defaultWatermarkParameters } from '../../../constants/addWatermarkConstants';
-
-export interface AddWatermarkParameters {
-  watermarkType?: 'text' | 'image';
-  watermarkText: string;
-  watermarkImage?: File;
-  fontSize: number; // Used for both text size and image size
-  rotation: number;
-  opacity: number;
-  widthSpacer: number;
-  heightSpacer: number;
-  alphabet: string;
-  customColor: string;
-  convertPDFToImage: boolean;
-}
-
+import { defaultWatermarkParameters, AddWatermarkParameters } from '../../../constants/addWatermarkConstants';
 
 export const useAddWatermarkParameters = () => {
   const [parameters, setParameters] = useState<AddWatermarkParameters>(defaultWatermarkParameters);

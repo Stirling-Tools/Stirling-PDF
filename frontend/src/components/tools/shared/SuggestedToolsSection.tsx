@@ -2,11 +2,14 @@ import React from 'react';
 import { Stack, Text, Divider, Card, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSuggestedTools } from '../../../hooks/useSuggestedTools';
+import { useToolNavigation } from '../../../contexts/ToolNavigationContext';
+
 export interface SuggestedToolsSectionProps {}
 
 export function SuggestedToolsSection(): React.ReactElement {
   const { t } = useTranslation();
-  const suggestedTools = useSuggestedTools();
+  const { handleToolSelect, selectedToolKey } = useToolNavigation();
+  const suggestedTools = useSuggestedTools(selectedToolKey, handleToolSelect);
 
   return (
     <Stack gap="md">

@@ -4,6 +4,7 @@ import { FileContextProvider } from "./contexts/FileContext";
 import { FilesModalProvider } from "./contexts/FilesModalContext";
 import { FileSelectionProvider } from "./contexts/FileSelectionContext";
 import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
+import { ToolNavigationProvider } from "./contexts/ToolNavigationContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
@@ -36,11 +37,13 @@ export default function App() {
           <FileContextProvider enableUrlSync={true} enablePersistence={true}>
             <FilesModalProvider>
               <FileSelectionProvider>
-                <ToolWorkflowProvider>
-                  <SidebarProvider>
-                    <HomePage />
-                  </SidebarProvider>
-                </ToolWorkflowProvider>
+                <ToolNavigationProvider>
+                  <ToolWorkflowProvider>
+                    <SidebarProvider>
+                      <HomePage />
+                    </SidebarProvider>
+                  </ToolWorkflowProvider>
+                </ToolNavigationProvider>
               </FileSelectionProvider>
             </FilesModalProvider>
           </FileContextProvider>

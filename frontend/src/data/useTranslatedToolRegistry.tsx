@@ -10,7 +10,6 @@ import ChangePermissions from '../tools/ChangePermissions';
 import RemovePassword from '../tools/RemovePassword';
 import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
-import Automate from '../tools/Automate';
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -336,7 +335,7 @@ export function useFlatToolRegistry(): ToolRegistry {
     "automate": {
         icon: <span className="material-symbols-rounded">automation</span>,
         name: t("home.automate.title", "Automate"),
-        component: Automate,
+        component: React.lazy(() => import('../tools/Automate')),
         view: "format",
         description: t("home.automate.desc", "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."),
         category: ToolCategory.ADVANCED_TOOLS,
