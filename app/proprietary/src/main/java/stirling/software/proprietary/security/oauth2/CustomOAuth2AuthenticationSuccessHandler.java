@@ -24,6 +24,9 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.util.RequestUriUtils;
+import stirling.software.proprietary.audit.AuditEventType;
+import stirling.software.proprietary.audit.AuditLevel;
+import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -39,6 +42,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private final JwtServiceInterface jwtService;
 
     @Override
+    @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
     public void onAuthenticationSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws ServletException, IOException {
