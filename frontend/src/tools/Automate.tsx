@@ -6,6 +6,7 @@ import { useToolFileSelection } from "../contexts/FileSelectionContext";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import AutomationSelection from "../components/tools/automate/AutomationSelection";
 import AutomationCreation from "../components/tools/automate/AutomationCreation";
+import ToolSequence from "../components/tools/automate/ToolSequence";
 
 import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperation";
 import { BaseToolProps } from "../types/tool";
@@ -15,7 +16,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { setCurrentMode } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
 
-  const [currentStep, setCurrentStep] = useState<'selection' | 'creation'>('selection');
+  const [currentStep, setCurrentStep] = useState<'selection' | 'creation' | 'sequence'>('selection');
   const [stepData, setStepData] = useState<any>({});
 
   const automateOperation = useAutomateOperation();
@@ -49,6 +50,15 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             mode={stepData.mode}
             existingAutomation={stepData.automation}
             onBack={() => handleStepChange({ step: 'selection' })}
+            onComplete={(automation: any) => handleStepChange({ step: 'sequence', automation })}
+          />
+        );
+
+      case 'sequence':
+        return (
+          <ToolSequence
+            automation={stepData.automation}
+            onBack={() => handleStepChange({ step: 'creation', mode: stepData.mode, automation: stepData.automation })}
             onComplete={handleComplete}
           />
         );
@@ -68,7 +78,12 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       {
         title: t('automate.stepTitle', 'Automations'),
         isVisible: true,
-        content: renderCurrentStep()
+        content: currentStep === 'selection' ? renderCurrentStep() : null
+      },
+      {
+        title: t('automate.sequenceTitle', 'Tool Sequence'),
+        isVisible: currentStep === 'creation' || currentStep === 'sequence',
+        content: currentStep === 'creation' || currentStep === 'sequence' ? renderCurrentStep() : null
       }
     ],
     review: {

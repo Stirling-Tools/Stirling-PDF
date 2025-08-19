@@ -1,31 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Button, 
-  Text, 
-  Title, 
-  Stack, 
-  Group, 
-  Select, 
-  TextInput, 
+import {
+  Button,
+  Text,
+  Title,
+  Stack,
+  Group,
+  TextInput,
   ActionIcon,
   Divider
 } from '@mantine/core';
-import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
+import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
 import ToolConfigurationModal from './ToolConfigurationModal';
-import AutomationEntry from './AutomationEntry';
+import ToolSelector from './ToolSelector';
 
 interface AutomationCreationProps {
   mode: 'custom' | 'suggested' | 'create';
   existingAutomation?: any;
   onBack: () => void;
-  onComplete: () => void;
+  onComplete: (automation: any) => void;
 }
 
 interface AutomationTool {
@@ -38,8 +36,8 @@ interface AutomationTool {
 
 export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete }: AutomationCreationProps) {
   const { t } = useTranslation();
-  const { toolRegistry } = useToolWorkflow();
-  
+  const toolRegistry = useFlatToolRegistry();
+
   const [automationName, setAutomationName] = useState('');
   const [selectedTools, setSelectedTools] = useState<AutomationTool[]>([]);
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -49,7 +47,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   useEffect(() => {
     if (mode === 'suggested' && existingAutomation) {
       setAutomationName(existingAutomation.name);
-      
+
       const tools = existingAutomation.operations.map((op: string) => ({
         id: `${op}-${Date.now()}`,
         operation: op,
@@ -57,7 +55,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
         configured: false,
         parameters: {}
       }));
-      
+
       setSelectedTools(tools);
     }
   }, [mode, existingAutomation]);
@@ -67,20 +65,8 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     return tool?.name || t(`tools.${operation}.name`, operation);
   };
 
-  const getAvailableTools = () => {
-    if (!toolRegistry) return [];
-    
-    return Object.entries(toolRegistry)
-      .filter(([key]) => key !== 'automate')
-      .map(([key, tool]) => ({
-        value: key,
-        label: (tool as any).name
-      }));
-  };
+  const addTool = (operation: string) => {
 
-  const addTool = (operation: string | null) => {
-    if (!operation) return;
-    
     const newTool: AutomationTool = {
       id: `${operation}-${Date.now()}`,
       operation,
@@ -88,7 +74,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       configured: false,
       parameters: {}
     };
-    
+
     setSelectedTools([...selectedTools, newTool]);
   };
 
@@ -143,7 +129,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     try {
       const { automationStorage } = await import('../../../services/automationStorage');
       await automationStorage.saveAutomation(automation);
-      onComplete();
+      onComplete(automation);
     } catch (error) {
       console.error('Error saving automation:', error);
     }
@@ -153,17 +139,10 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
   return (
     <div>
-      <Group justify="space-between" align="center" mb="md">
-        <Title order={3} size="h4" fw={600} style={{ color: 'var(--mantine-color-text)' }}>
-          {mode === 'create' 
-            ? t('automate.creation.title.create', 'Create Automation')
-            : t('automate.creation.title.configure', 'Configure Automation')
-          }
-        </Title>
-        <ActionIcon variant="subtle" onClick={onBack}>
-          <ArrowBackIcon />
-        </ActionIcon>
-      </Group>
+        <Text size="sm" mb="md" p="md"  style={{borderRadius:'var(--mantine-radius-md)', background: 'var(--color-gray-200)', color: 'var(--mantine-color-text)' }}>
+        {t("automate.creation.description", "Automations run tools sequentially. To get started, add tools in the order you want them to run.")}
+        </Text>
+      <Divider mb="md" />
 
       <Stack gap="md">
         {/* Automation Name */}
@@ -175,15 +154,9 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
         />
 
         {/* Add Tool Selector */}
-        <Select
-          placeholder={t('automate.creation.tools.add', 'Add a tool...')}
-          data={getAvailableTools()}
-          searchable
-          clearable
-          value={null}
-          onChange={addTool}
-          leftSection={<AddIcon />}
-          size="sm"
+        <ToolSelector
+          onSelect={addTool}
+          excludeTools={['automate']}
         />
 
         {/* Selected Tools */}
@@ -194,7 +167,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
                 <Text size="xs" c="dimmed" style={{ minWidth: '1rem', textAlign: 'center' }}>
                   {index + 1}
                 </Text>
-                
+
                 <div style={{ flex: 1 }}>
                   <Group justify="space-between" align="center">
                     <Group gap="xs" align="center">
@@ -207,7 +180,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
                         <CloseIcon style={{ fontSize: 14, color: 'orange' }} />
                       )}
                     </Group>
-                    
+
                     <Group gap="xs">
                       <ActionIcon
                         variant="subtle"
@@ -227,7 +200,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
                     </Group>
                   </Group>
                 </div>
-                
+
                 {index < selectedTools.length - 1 && (
                   <Text size="xs" c="dimmed">→</Text>
                 )}
