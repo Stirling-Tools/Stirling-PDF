@@ -14,7 +14,7 @@ export const useSingleLargePageOperation = () => {
 
   return useToolOperation<SingleLargePageParameters>({
     operationType: 'singleLargePage',
-    endpoint: '/api/v1/misc/pdf-to-single-page',
+    endpoint: '/api/v1/general/pdf-to-single-page',
     buildFormData,
     filePrefix: t('pdfToSinglePage.filenamePrefix', 'single_page') + '_',
     multiFileEndpoint: false,

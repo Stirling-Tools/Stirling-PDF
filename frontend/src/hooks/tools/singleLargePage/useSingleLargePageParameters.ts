@@ -1,8 +1,8 @@
-import { EmptyParameters } from '../../../types/parameters';
+import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface SingleLargePageParameters extends EmptyParameters {
-  // Extends EmptyParameters - ready for future parameter additions if needed
+export interface SingleLargePageParameters extends BaseParameters {
+  // Extends BaseParameters - ready for future parameter additions if needed
 }
 
 export const defaultParameters: SingleLargePageParameters = {
