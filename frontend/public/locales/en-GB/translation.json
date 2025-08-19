@@ -1596,7 +1596,18 @@
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
     "header": "PDF To Single Page",
-    "submit": "Convert To Single Page"
+    "submit": "Convert To Single Page",
+    "description": "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights.",
+    "filenamePrefix": "single_page",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst converting to single page."
+    },
+    "results": {
+      "title": "Single Page Results"
+    }
   },
   "pageExtracter": {
     "title": "Extract Pages",

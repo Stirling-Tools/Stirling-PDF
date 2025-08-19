@@ -11,6 +11,7 @@ import RemovePassword from '../tools/RemovePassword';
 import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
 import Repair from '../tools/Repair';
+import SingleLargePage from '../tools/SingleLargePage';
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -231,11 +232,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "single-large-page": {
         icon: <span className="material-symbols-rounded">looks_one</span>,
         name: t("home.PdfToSinglePage.title", "PDF to Single Large Page"),
-        component: null,
+        component: SingleLargePage,
         view: "format",
         description: t("home.PdfToSinglePage.desc", "Merges all PDF pages into one large single page"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: SubcategoryId.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["pdf-to-single-page"]
     },
     "add-attachments": {
         icon: <span className="material-symbols-rounded">attachment</span>,
