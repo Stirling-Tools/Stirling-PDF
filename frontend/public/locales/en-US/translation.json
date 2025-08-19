@@ -380,7 +380,7 @@
     },
     "watermark": {
       "title": "Add Watermark",
-      "desc": "Add text or image watermarks to PDF files"
+      "desc": "Add a custom watermark to your PDF document."
     },
     "permissions": {
       "title": "Change Permissions",

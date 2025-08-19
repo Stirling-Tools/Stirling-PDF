@@ -384,7 +384,7 @@
     },
     "watermark": {
       "title": "Add Watermark",
-      "desc": "Add text or image watermarks to PDF files"
+      "desc": "Add a custom watermark to your PDF document."
     },
     "permissions": {
       "title": "Change Permissions",
@@ -778,7 +778,7 @@
     "submit": "Add image"
   },
   "watermark": {
-    "title": "Add Watermark", 
+    "title": "Add Watermark",
     "desc": "Add text or image watermarks to PDF files",
     "completed": "Watermark added",
     "submit": "Add Watermark",
