@@ -75,7 +75,8 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     }) as any /* FIX ME: Parameter type is wrong on setSelectedFiles */);
   }, []);
 
-  const hasFiles = selectedFiles.length > 1; // Merge requires at least 2 files
+  const minFiles = 2; // Merging one file doesn't make sense
+  const hasFiles = selectedFiles.length >= minFiles;
   const hasResults = mergeOperation.files.length > 0 || mergeOperation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
 
@@ -84,6 +85,7 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       selectedFiles,
       isCollapsed: hasFiles && !hasResults,
       placeholder: "Select multiple PDF files to merge",
+      minFiles: minFiles,
     },
     steps: [
       {
