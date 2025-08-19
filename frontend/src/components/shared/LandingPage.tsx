@@ -33,7 +33,7 @@ const LandingPage = () => {
       {/* White PDF Page Background */}
       <Dropzone
         onDrop={handleFileDrop}
-        accept={["application/pdf", "application/zip", "application/x-zip-compressed"]}
+        accept={["*/*"] as any}
         multiple={true}
         className="w-4/5 flex items-center justify-center h-[95vh]"
         style={{
@@ -49,7 +49,7 @@ const LandingPage = () => {
         activateOnClick={false}
         styles={{
           root: {
-            '&[data-accept]': {
+            '&[dataAccept]': {
               backgroundColor: 'var(--landing-drop-paper-bg)',
             },
           },
@@ -116,7 +116,7 @@ const LandingPage = () => {
             >
               <AddIcon className="text-[var(--accent-interactive)]" />
               <span>
-                {t('fileUpload.addFiles', 'Add Files')}
+                {t('fileUpload.uploadFiles', 'Upload Files')}
               </span>
             </Button>
 
@@ -125,7 +125,7 @@ const LandingPage = () => {
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".pdf,.zip"
+              accept="*/*"
               onChange={handleFileSelect}
               style={{ display: 'none' }}
             />
@@ -137,7 +137,7 @@ const LandingPage = () => {
             className="text-[var(--accent-interactive)]"
             style={{ fontSize: '.8rem' }}
           >
-            {t('fileUpload.dragFilesInOrClick', 'Drag files in or click "Add Files" to browse')}
+            {t('fileUpload.dropFilesHere', 'Drop files here or click to upload')}
           </span>
         </div>
       </Dropzone>

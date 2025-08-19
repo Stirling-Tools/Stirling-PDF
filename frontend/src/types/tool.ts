@@ -15,9 +15,7 @@ export interface ToolStepConfig {
   type: ToolStepType;
   title: string;
   isVisible: boolean;
-  isCompleted: boolean;
   isCollapsed?: boolean;
-  completedMessage?: string;
   onCollapsedClick?: () => void;
 }
 

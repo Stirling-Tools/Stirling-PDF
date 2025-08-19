@@ -46,7 +46,6 @@ public class ConvertMarkdownToPdf {
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
-
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =

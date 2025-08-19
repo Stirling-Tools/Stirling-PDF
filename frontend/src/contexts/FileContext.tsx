@@ -26,7 +26,7 @@ import {
 // Import modular components
 import { fileContextReducer, initialFileContextState } from './file/FileReducer';
 import { createFileSelectors } from './file/fileSelectors';
-import { addFiles, createFileActions } from './file/fileActions';
+import { addFiles, consumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 
@@ -62,6 +62,7 @@ export function FileContextProvider({
 
   // Navigation management removed - moved to NavigationContext
 
+  // Navigation guard system functions
   const setHasUnsavedChanges = useCallback((hasChanges: boolean) => {
     dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
   }, []);
@@ -82,6 +83,11 @@ export function FileContextProvider({
   // Action creators
   const baseActions = useMemo(() => createFileActions(dispatch), []);
 
+  // Helper functions for pinned files
+  const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<void> => {
+    return consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch);
+  }, []);
+
   // Complete actions object
   const actions = useMemo<FileContextActions>(() => ({
     ...baseActions,
@@ -97,6 +103,8 @@ export function FileContextProvider({
       filesRef.current.clear();
       dispatch({ type: 'RESET_CONTEXT' });
     },
+    // Pinned files functionality - isFilePinned available in selectors
+    consumeFiles: consumeFilesWrapper,
     setHasUnsavedChanges,
     trackBlobUrl: lifecycleManager.trackBlobUrl,
     trackPdfDocument: lifecycleManager.trackPdfDocument,
@@ -109,7 +117,8 @@ export function FileContextProvider({
     addProcessedFiles, 
     addStoredFiles, 
     lifecycleManager,
-    setHasUnsavedChanges
+    setHasUnsavedChanges,
+    consumeFilesWrapper
   ]);
 
   // Split context values to minimize re-renders

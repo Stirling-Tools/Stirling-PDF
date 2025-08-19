@@ -115,7 +115,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
       className="overflow-hidden p-0"
       withCloseButton={false}
       styles={{
-        content: { 
+        content: {
           position: 'relative',
           margin: isMobile ? '1rem' : '2rem'
         },
@@ -123,12 +123,12 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
         header: { display: 'none' }
       }}
     >
-      <div style={{ 
-        position: 'relative', 
-        height: modalHeight, 
-        width: modalWidth, 
-        maxWidth: modalMaxWidth, 
-        maxHeight: modalMaxHeight, 
+      <div style={{
+        position: 'relative',
+        height: modalHeight,
+        width: modalWidth,
+        maxWidth: modalMaxWidth,
+        maxHeight: modalMaxHeight,
         minWidth: modalMinWidth,
         margin: '0 auto',
         overflow: 'hidden'
@@ -137,11 +137,11 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
           onDrop={handleNewFileUpload}
           onDragEnter={() => setIsDragging(true)}
           onDragLeave={() => setIsDragging(false)}
-          accept={["*/*"]}
+          accept={["*/*"] as any}
           multiple={true}
           activateOnClick={false}
-          style={{ 
-            height: '100%', 
+          style={{
+            height: '100%',
             width: '100%',
             border: 'none',
             borderRadius: '30px',
@@ -165,7 +165,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             {isMobile ? <MobileLayout /> : <DesktopLayout />}
           </FileManagerProvider>
         </Dropzone>
-        
+
         <DragOverlay isVisible={isDragging} />
       </div>
     </Modal>

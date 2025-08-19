@@ -1,18 +1,13 @@
 import { useCallback } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
-import { useFileActions } from '../../../contexts/FileContext';
+import { useFileContext } from '../../../contexts/FileContext';
 import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { createOperation } from '../../../utils/toolOperationTracker';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
-
-export interface ValidationResult {
-  valid: boolean;
-  errors?: string[];
-}
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -109,16 +104,12 @@ export const useToolOperation = <TParams = void>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { actions: fileActions } = useFileActions();
-  // Legacy compatibility - these functions might not be needed in the new architecture
-  const recordOperation = (_fileId?: string, _operation?: any) => {}; // Placeholder
-  const markOperationApplied = (_fileId?: string, _operationId?: string) => {}; // Placeholder
-  const markOperationFailed = (_fileId?: string, _operationId?: string, _errorMessage?: string) => {}; // Placeholder
+  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
-  const { generateThumbnails, generateThumbnailsWithMetadata, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles } = useToolResources();
+  const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles } = useToolResources();
 
   const executeOperation = useCallback(async (
     params: TParams,
@@ -156,37 +147,30 @@ export const useToolOperation = <TParams = void>(
         // Use explicit multiFileEndpoint flag to determine processing approach
         if (config.multiFileEndpoint) {
           // Multi-file processing - single API call with all files
-          console.log(`🚀 useToolOperation: Multi-file processing for ${config.operationType} with ${validFiles.length} files`);
           actions.setStatus('Processing files...');
           const formData = (config.buildFormData as (params: TParams, files: File[]) => FormData)(params, validFiles);
           const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
-          console.log(`🚀 Calling endpoint: ${endpoint}`);
 
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
-          console.log(`🚀 Received response: ${response.data.size} bytes, type: ${response.data.type}`);
 
           // Multi-file responses are typically ZIP files that need extraction
           if (config.responseHandler) {
-            console.log(`🚀 Using custom responseHandler for ${config.operationType}`);
             // Use custom responseHandler for multi-file (handles ZIP extraction)
             processedFiles = await config.responseHandler(response.data, validFiles);
           } else {
-            console.log(`🚀 Using default ZIP extraction for ${config.operationType}`);
             // Default: assume ZIP response for multi-file endpoints
             processedFiles = await extractZipFiles(response.data);
-            
+
             if (processedFiles.length === 0) {
-              console.log(`🚀 ZIP extraction failed, trying generic fallback`);
               // Try the generic extraction as fallback
               processedFiles = await extractAllZipFiles(response.data);
-              console.log(`🚀 Generic fallback extracted ${processedFiles.length} files`);
             }
           }
         } else {
           // Individual file processing - separate API call per file
           const apiCallsConfig: ApiCallsConfig<TParams> = {
             endpoint: config.endpoint,
-            buildFormData: (file: File, params: TParams) => (config.buildFormData as (params: TParams, file: File) => FormData /* FIX ME */)(params, file),
+            buildFormData: config.buildFormData as (params: TParams, file: File) => FormData,
             filePrefix: config.filePrefix,
             responseHandler: config.responseHandler
           };
@@ -201,35 +185,21 @@ export const useToolOperation = <TParams = void>(
       }
 
       if (processedFiles.length > 0) {
-        console.log(`🚀 useToolOperation: Processing complete. ${processedFiles.length} files ready for thumbnails:`, 
-          processedFiles.map((f, i) => `[${i}]: ${f.name} (${f.type}, ${f.size} bytes)`));
         actions.setFiles(processedFiles);
 
-        // Generate thumbnails with metadata and download URL concurrently
+        // Generate thumbnails and download URL concurrently
         actions.setGeneratingThumbnails(true);
-        const [thumbnailResults, downloadInfo] = await Promise.all([
-          generateThumbnailsWithMetadata(processedFiles),
+        const [thumbnails, downloadInfo] = await Promise.all([
+          generateThumbnails(processedFiles),
           createDownloadInfo(processedFiles, config.operationType)
         ]);
         actions.setGeneratingThumbnails(false);
 
-        // Extract thumbnails for tool state and page counts for context
-        const thumbnails = thumbnailResults.map(r => r.thumbnail || '');
-        const pageCounts = thumbnailResults.map(r => r.pageCount);
-
-        console.log(`⚡ useToolOperation: Generated ${thumbnails.length} thumbnails with page counts for ${config.operationType}:`, 
-          thumbnailResults.map((r, i) => `[${i}]: ${r.thumbnail ? 'PRESENT' : 'MISSING'} (${r.pageCount} pages)`));
         actions.setThumbnails(thumbnails);
         actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
 
-        // Add to file context WITH pre-existing thumbnails AND page counts to avoid duplicate processing
-        const filesWithMetadata = processedFiles.map((file, index) => ({
-          file,
-          thumbnail: thumbnails[index] || undefined,
-          pageCount: pageCounts[index] || undefined
-        }));
-        console.log(`📄 useToolOperation: Adding ${filesWithMetadata.length} processed files with pre-existing thumbnails and page counts to context`);
-        await fileActions.addProcessedFiles(filesWithMetadata);
+        // Consume input files and add output files (will replace unpinned inputs)
+        await consumeFiles(validFiles, processedFiles);
 
         markOperationApplied(fileId, operationId);
       }
@@ -243,7 +213,7 @@ export const useToolOperation = <TParams = void>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, processFiles, generateThumbnailsWithMetadata, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles, fileActions.addProcessedFiles]);
+  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();

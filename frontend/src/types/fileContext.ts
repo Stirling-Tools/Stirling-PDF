@@ -6,6 +6,20 @@ import { ProcessedFile } from './processing';
 import { PDFDocument, PDFPage, PageOperation } from './pageEditor';
 import { FileMetadata } from './file';
 
+export type ModeType =
+  | 'viewer'
+  | 'pageEditor'
+  | 'fileEditor'
+  | 'merge'
+  | 'split'
+  | 'compress'
+  | 'ocr'
+  | 'convert'
+  | 'sanitize'
+  | 'addPassword'
+  | 'changePermissions'
+  | 'watermark'
+  | 'removePassword';
 
 // Normalized state types
 export type FileId = string;
@@ -162,6 +176,9 @@ export interface FileContextState {
     byId: Record<FileId, FileRecord>;
   };
   
+  // Pinned files - files that won't be consumed by tools  
+  pinnedFiles: Set<FileId>;
+  
   // UI state - file-related UI state only
   ui: {
     selectedFileIds: FileId[];
@@ -178,6 +195,11 @@ export type FileContextAction =
   | { type: 'ADD_FILES'; payload: { fileRecords: FileRecord[] } }
   | { type: 'REMOVE_FILES'; payload: { fileIds: FileId[] } }
   | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<FileRecord> } }
+  
+  // Pinned files actions
+  | { type: 'PIN_FILE'; payload: { fileId: FileId } }
+  | { type: 'UNPIN_FILE'; payload: { fileId: FileId } }
+  | { type: 'CONSUME_FILES'; payload: { inputFileIds: FileId[]; outputFileRecords: FileRecord[] } }
   
   // UI actions  
   | { type: 'SET_SELECTED_FILES'; payload: { fileIds: FileId[] } }
@@ -200,7 +222,12 @@ export interface FileContextActions {
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   clearAllFiles: () => void;
 
+  // File pinning
+  pinFile: (file: File) => void;
+  unpinFile: (file: File) => void;
 
+  // File consumption (replace unpinned files with outputs)
+  consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<void>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
@@ -236,6 +263,12 @@ export interface FileContextSelectors {
   getAllFileIds: () => FileId[];
   getSelectedFiles: () => File[];
   getSelectedFileRecords: () => FileRecord[];
+  
+  // Pinned files selectors
+  getPinnedFileIds: () => FileId[];
+  getPinnedFiles: () => File[];
+  getPinnedFileRecords: () => FileRecord[];
+  isFilePinned: (file: File) => boolean;
   
   // Stable signature for effect dependencies
   getFilesSignature: () => string;

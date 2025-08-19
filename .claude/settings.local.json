@@ -12,7 +12,8 @@
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
       "Bash(node:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
