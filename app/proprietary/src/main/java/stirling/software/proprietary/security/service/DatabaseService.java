@@ -58,6 +58,12 @@ public class DatabaseService implements DatabaseServiceInterface {
     private void moveBackupFiles() {
         Path sourceDir =
                 Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
+
+        if (!Files.exists(sourceDir)) {
+            log.info("Source directory does not exist: {}", sourceDir);
+            return;
+        }
+
         try {
             Files.createDirectories(BACKUP_DIR);
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {

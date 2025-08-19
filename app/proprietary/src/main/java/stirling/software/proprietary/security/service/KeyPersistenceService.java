@@ -59,6 +59,12 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     private void moveKeysToBackup() {
         Path sourceDir =
                 Paths.get(InstallationPathConfig.getConfigPath(), "db", "keys").normalize();
+
+        if (!Files.exists(sourceDir)) {
+            log.info("Source directory does not exist: {}", sourceDir);
+            return;
+        }
+
         Path targetDir = Paths.get(InstallationPathConfig.getPrivateKeyPath()).normalize();
 
         try {
