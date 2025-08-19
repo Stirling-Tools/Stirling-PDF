@@ -11,6 +11,7 @@ import RemovePassword from '../tools/RemovePassword';
 import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
 import Repair from '../tools/Repair';
+import UnlockPdfForms from '../tools/UnlockPdfForms';
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -95,11 +96,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "unlock-pdf-forms": {
         icon: <span className="material-symbols-rounded">preview_off</span>,
         name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
-        component: null,
+        component: UnlockPdfForms,
         view: "security",
         description: t("home.unlockPDFForms.desc", "Remove read-only property of form fields in a PDF document."),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: SubcategoryId.DOCUMENT_SECURITY
+        subcategory: SubcategoryId.DOCUMENT_SECURITY,
+        maxFiles: -1,
+        endpoints: ["unlock-pdf-forms"]
     },
     "manage-certificates": {
         icon: <span className="material-symbols-rounded">license</span>,
