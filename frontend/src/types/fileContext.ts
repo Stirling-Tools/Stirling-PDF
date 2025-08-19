@@ -18,7 +18,8 @@ export type ModeType =
   | 'addPassword'
   | 'changePermissions'
   | 'watermark'
-  | 'removePassword';
+  | 'removePassword'
+  | 'repair';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 
