@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.service;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -43,17 +43,36 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     public static final String KEY_SUFFIX = ".key";
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
-    private final CacheManager cacheManager;
     private final Cache verifyingKeyCache;
 
     private volatile JwtVerificationKey activeKey;
 
-    @Autowired
     public KeyPersistenceService(
             ApplicationProperties applicationProperties, CacheManager cacheManager) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
-        this.cacheManager = cacheManager;
         this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
+        moveKeysToBackup();
+    }
+
+    /**
+     * Move all key files from db/keys to backup/keys
+     * @deprecated
+     */
+    @Deprecated(since = "2.0.0", forRemoval = true)
+    private void moveKeysToBackup() {
+        Path sourceDir = Paths.get(InstallationPathConfig.getConfigPath(), "db", "keys");
+        Path targetDir = Paths.get(InstallationPathConfig.getPrivateKeyPath());
+
+        try {
+            Files.createDirectories(targetDir);
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
+                for (Path entry : stream) {
+                    Files.move(entry, targetDir.resolve(entry.getFileName()));
+                }
+            }
+        } catch (IOException e) {
+            log.error("Error moving key files to backup: {}", e.getMessage(), e);
+        }
     }
 
     @PostConstruct
@@ -159,7 +178,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                 nativeCache.asMap().size());
 
         return nativeCache.asMap().values().stream()
-                .filter(value -> value instanceof JwtVerificationKey)
+                .filter(JwtVerificationKey.class::isInstance)
                 .map(value -> (JwtVerificationKey) value)
                 .filter(
                         key -> {
@@ -233,6 +252,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
 
+    @Override
     public PublicKey decodePublicKey(String encodedKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] keyBytes = Base64.getDecoder().decode(encodedKey);
