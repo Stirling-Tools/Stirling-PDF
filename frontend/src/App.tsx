@@ -1,26 +1,29 @@
-import React, { Suspense } from 'react';
-import { RainbowThemeProvider } from './components/shared/RainbowThemeProvider';
-import { FileContextProvider } from './contexts/FileContext';
-import { FilesModalProvider } from './contexts/FilesModalContext';
-import { FileSelectionProvider } from './contexts/FileSelectionContext';
-import { ToolWorkflowProvider } from './contexts/ToolWorkflowContext';
-import { SidebarProvider } from './contexts/SidebarContext';
-import HomePage from './pages/HomePage';
+import React, { Suspense } from "react";
+import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
+import { FileContextProvider } from "./contexts/FileContext";
+import { FilesModalProvider } from "./contexts/FilesModalContext";
+import { FileSelectionProvider } from "./contexts/FileSelectionContext";
+import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
+import { SidebarProvider } from "./contexts/SidebarContext";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
+import HomePage from "./pages/HomePage";
 
 // Import global styles
-import './styles/tailwind.css';
-import './index.css';
+import "./styles/tailwind.css";
+import "./index.css";
 
 // Loading component for i18next suspense
 const LoadingFallback = () => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    fontSize: '18px',
-    color: '#666'
-  }}>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+      fontSize: "18px",
+      color: "#666",
+    }}
+  >
     Loading...
   </div>
 );
@@ -29,17 +32,19 @@ export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <RainbowThemeProvider>
-        <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-          <FilesModalProvider>
-            <FileSelectionProvider>
-              <ToolWorkflowProvider>
-                <SidebarProvider>
-                  <HomePage />
-                </SidebarProvider>
-              </ToolWorkflowProvider>
-            </FileSelectionProvider>
-          </FilesModalProvider>
-        </FileContextProvider>
+        <ErrorBoundary>
+          <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+            <FilesModalProvider>
+              <FileSelectionProvider>
+                <ToolWorkflowProvider>
+                  <SidebarProvider>
+                    <HomePage />
+                  </SidebarProvider>
+                </ToolWorkflowProvider>
+              </FileSelectionProvider>
+            </FilesModalProvider>
+          </FileContextProvider>
+        </ErrorBoundary>
       </RainbowThemeProvider>
     </Suspense>
   );
