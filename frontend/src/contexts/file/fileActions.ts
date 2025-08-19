@@ -59,20 +59,13 @@ export async function addFiles(
   options: AddFileOptions,
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
-  dispatch: React.Dispatch<FileContextAction>,
-  indexedDBMetadata?: Array<{ name: string; size: number; lastModified: number }>
+  dispatch: React.Dispatch<FileContextAction>
 ): Promise<Array<{ file: File; id: FileId; thumbnail?: string }>> {
   const fileRecords: FileRecord[] = [];
   const addedFiles: Array<{ file: File; id: FileId; thumbnail?: string }> = [];
   
   // Build quickKey lookup from existing files for deduplication
   const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
-  
-  // Add IndexedDB quickKeys if metadata provided for comprehensive deduplication
-  if (indexedDBMetadata) {
-    const indexedDBQuickKeys = buildQuickKeySetFromMetadata(indexedDBMetadata);
-    indexedDBQuickKeys.forEach(key => existingQuickKeys.add(key));
-  }
   
   switch (kind) {
     case 'raw': {

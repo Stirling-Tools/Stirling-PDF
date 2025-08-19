@@ -74,18 +74,7 @@ function FileContextInner({
 
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[]): Promise<File[]> => {
-    // Get IndexedDB metadata for comprehensive deduplication
-    let indexedDBMetadata: Array<{ name: string; size: number; lastModified: number }> | undefined;
-    if (indexedDB && enablePersistence) {
-      try {
-        const metadata = await indexedDB.loadAllMetadata();
-        indexedDBMetadata = metadata.map(m => ({ name: m.name, size: m.size, lastModified: m.lastModified }));
-      } catch (error) {
-        console.warn('Failed to load IndexedDB metadata for deduplication:', error);
-      }
-    }
-    
-    const addedFilesWithIds = await addFiles('raw', { files }, stateRef, filesRef, dispatch, indexedDBMetadata);
+    const addedFilesWithIds = await addFiles('raw', { files }, stateRef, filesRef, dispatch);
     
     // Persist to IndexedDB if enabled - pass existing thumbnail to prevent double generation
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
@@ -193,12 +182,37 @@ function FileContextInner({
     trackPdfDocument: lifecycleManager.trackPdfDocument,
     cleanupFile: (fileId: string) => lifecycleManager.cleanupFile(fileId, stateRef),
     scheduleCleanup: (fileId: string, delay?: number) => 
-      lifecycleManager.scheduleCleanup(fileId, delay, stateRef),
+      lifecycleManager.scheduleCleanup(fileId, delay, stateRef)
+  }), [
+    baseActions, 
+    addRawFiles, 
+    addProcessedFiles, 
+    addStoredFiles, 
+    lifecycleManager,
+    setHasUnsavedChanges,
+    consumeFilesWrapper,
+    pinFileWrapper,
+    unpinFileWrapper,
+    indexedDB,
+    enablePersistence
+  ]);
+
+  // Split context values to minimize re-renders
+  const stateValue = useMemo<FileContextStateValue>(() => ({
+    state,
+    selectors
+  }), [state, selectors]);
+
+  const actionsValue = useMemo<FileContextActionsValue>(() => ({
+    actions,
+    dispatch
+  }), [actions]);
+
+  // Load files from persistence on mount
+  useEffect(() => {
+    if (!enablePersistence || !indexedDB) return;
     
-    // Persistence operations - load file list from IndexedDB
-    loadFromPersistence: async () => {
-      if (!indexedDB || !enablePersistence) return;
-      
+    const loadFromPersistence = async () => {
       try {
         // Load metadata to populate file list (actual File objects loaded on-demand)
         const metadata = await indexedDB.loadAllMetadata();
@@ -232,38 +246,10 @@ function FileContextInner({
       } catch (error) {
         console.error('Failed to load files from persistence:', error);
       }
-    }
-  }), [
-    baseActions, 
-    addRawFiles, 
-    addProcessedFiles, 
-    addStoredFiles, 
-    lifecycleManager,
-    setHasUnsavedChanges,
-    consumeFilesWrapper,
-    pinFileWrapper,
-    unpinFileWrapper,
-    indexedDB,
-    enablePersistence
-  ]);
-
-  // Split context values to minimize re-renders
-  const stateValue = useMemo<FileContextStateValue>(() => ({
-    state,
-    selectors
-  }), [state, selectors]);
-
-  const actionsValue = useMemo<FileContextActionsValue>(() => ({
-    actions,
-    dispatch
-  }), [actions]);
-
-  // Load files from persistence on mount
-  useEffect(() => {
-    if (enablePersistence && indexedDB) {
-      actions.loadFromPersistence();
-    }
-  }, [enablePersistence, indexedDB]); // Only run once on mount
+    };
+    
+    loadFromPersistence();
+  }, [enablePersistence, indexedDB]); // Only run when these change
 
   // Cleanup on unmount
   useEffect(() => {
