@@ -20,7 +20,7 @@
               </svg>
               <span class="tool-header-text" th:text="#{autoRedact.header}"></span>
             </div>
-            <form th:action="@{'api/v1/security/auto-redact'}" method="post" enctype="multipart/form-data">
+            <form enctype="multipart/form-data" id="autoRedactForm" method="post" th:action="@{'api/v1/security/auto-redact'}">
               <div class="mb-3">
                 <input type="file" class="form-control" id="fileInput" name="fileInput" required
                   accept="application/pdf">
@@ -53,13 +53,42 @@
 
               <script>
                 function handleColorChange(selectedValue) {
+                  const container = document.getElementById('customColorContainer');
+                  const input = document.getElementById('customColor');
                   if (selectedValue === "custom") {
-                    document.getElementById('customColorContainer').style.display = 'block';
+                    container.style.display = 'block';
+                    if (!input.value) {
+                      input.value = '#000000';
+                    }
                   } else {
-                    document.getElementById('customColorContainer').style.display = 'none';
-                    document.getElementById('customColor').value = selectedValue;
+                    container.style.display = 'none';
+                    input.value = selectedValue;
                   }
                 }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                  const redactionModeSelect = document.getElementById('redactionMode');
+                  const aggressiveModeHidden = document.getElementById('aggressiveMode');
+                  const convertToImageCheckbox = document.getElementById('convertPDFToImage');
+                  const defaultColor = document.getElementById('defaultColor');
+
+                  redactionModeSelect.addEventListener('change', function () {
+                    const mode = redactionModeSelect.value;
+                    aggressiveModeHidden.value = (mode === 'aggressive') ? 'true' : 'false';
+                    if (mode === 'visual') {
+                      convertToImageCheckbox.checked = true;
+                    }
+                  });
+
+                  if (defaultColor) {
+                    handleColorChange(defaultColor.value);
+                  }
+
+                  aggressiveModeHidden.value = (redactionModeSelect.value === 'aggressive') ? 'true' : 'false';
+                  if (redactionModeSelect.value === 'visual') {
+                    convertToImageCheckbox.checked = true;
+                  }
+                });
               </script>
               <div class="mb-3 form-check">
                 <input type="checkbox" id="useRegex" name="useRegex">
@@ -81,6 +110,21 @@
                 <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage" checked>
                 <label for="convertPDFToImage" th:text="#{autoRedact.convertPDFToImageLabel}"></label>
               </div>
+
+              <div class="mb-3">
+                <label class="form-label" for="redactionMode" th:text="#{autoRedact.redactionModeLabel}">Redaction Mode</label>
+                <select class="form-control" id="redactionMode" name="redactionMode">
+                  <option th:text="#{autoRedact.redactionMode.moderate}" value="moderate">Moderate - Smart text removal with
+                    fallback
+                  </option>
+                  <option th:text="#{autoRedact.redactionMode.visual}" value="visual">Visual - Black boxes only</option>
+                  <option th:text="#{autoRedact.redactionMode.aggressive}" value="aggressive">Aggressive - Force text removal
+                  </option>
+                </select>
+              </div>
+
+              <!-- Keep for backward compatibility -->
+              <input id="aggressiveMode" name="aggressiveMode" type="hidden" value="false">
 
               <button type="submit" id="submitBtn" class="btn btn-primary"
                 th:text="#{autoRedact.submitButton}"></button>
