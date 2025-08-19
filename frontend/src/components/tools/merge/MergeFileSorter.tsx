@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-import { Group, Button, Text, ActionIcon, Stack } from '@mantine/core';
+import { Group, Button, Text, ActionIcon, Stack, Select } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import SortIcon from '@mui/icons-material/Sort';
-import SortByAlphaIcon from '@mui/icons-material/SortByAlpha';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
@@ -18,54 +15,61 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
   disabled = false,
 }) => {
   const { t } = useTranslation();
+  const [sortType, setSortType] = useState<'filename' | 'dateModified'>('filename');
   const [ascending, setAscending] = useState(true);
 
-  const sortButtons = [
-    {
-      key: 'filename' as const,
-      icon: <SortByAlphaIcon/>,
-      label: t('merge.sortBy.filename', 'Sort by Filename'),
-    },
-    {
-      key: 'dateModified' as const,
-      icon: <AccessTimeIcon/>,
-      label: t('merge.sortBy.dateModified', 'Sort by Date Modified'),
-    },
+  const sortOptions = [
+    { value: 'filename', label: t('merge.sortBy.filename', 'File Name') },
+    { value: 'dateModified', label: t('merge.sortBy.dateModified', 'Date Modified') },
   ];
 
-  const handleSortDirectionToggle = () => {
+  const handleSort = () => {
+    onSortFiles(sortType, ascending);
+  };
+
+  const handleDirectionToggle = () => {
     setAscending(!ascending);
   };
 
   return (
     <Stack gap="xs">
       <Text size="sm" fw={500}>
-        {t('merge.sortBy.description', "Files will be merged in the order they're selected. Drag to reorder or use the buttons below to sort.")}
+        {t('merge.sortBy.description', "Files will be merged in the order they're selected. Drag to reorder or sort below.")}
       </Text>
-      <Group gap="xs">
-        {sortButtons.map(({ key, icon, label }) => (
-          <Button
-            key={key}
-            variant="light"
-            size="xs"
-            leftSection={icon}
-            onClick={() => onSortFiles(key, ascending)}
+      <Stack gap="xs">
+        <Group gap="xs" align="end" justify="space-between">
+          <Select
+            data={sortOptions}
+            value={sortType}
+            onChange={(value) => setSortType(value as 'filename' | 'dateModified')}
             disabled={disabled}
-          >
-            {label}
-          </Button>
-        ))}
+            label={t('merge.sortBy.label', 'Sort By')}
+            size='xs'
+            style={{ flex: 1 }}
+          />
 
-        <ActionIcon
+          <ActionIcon
+            variant="light"
+            size="md"
+            onClick={handleDirectionToggle}
+            disabled={disabled}
+            title={ascending ? t('merge.sortBy.ascending', 'Ascending') : t('merge.sortBy.descending', 'Descending')}
+          >
+            {ascending ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+          </ActionIcon>
+        </Group>
+
+        <Button
           variant="light"
-          size="sm"
-          onClick={handleSortDirectionToggle}
+          size="xs"
+          leftSection={<SortIcon />}
+          onClick={handleSort}
           disabled={disabled}
-          title={ascending ? t('merge.sortBy.ascending', 'Ascending') : t('merge.sortBy.descending', 'Descending')}
+          fullWidth
         >
-          {ascending ? <ArrowUpwardIcon/> : <ArrowDownwardIcon/>}
-        </ActionIcon>
-      </Group>
+          {t('merge.sortBy.sort', 'Sort')}
+        </Button>
+      </Stack>
     </Stack>
   );
 };
