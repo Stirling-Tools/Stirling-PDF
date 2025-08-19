@@ -1,10 +1,9 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileContext } from "../contexts/FileContext";
-import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
-import { ToolWorkflowProvider, useToolWorkflow } from "../contexts/ToolWorkflowContext";
+import { useFileSelection } from "../contexts/FileSelectionContext";
+import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
-import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
+import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { getBaseUrl } from "../constants/app";
 
@@ -14,7 +13,7 @@ import QuickAccessBar from "../components/shared/QuickAccessBar";
 import FileManager from "../components/FileManager";
 
 
-function HomePageContent() {
+export default function HomePage() {
   const { t } = useTranslation();
   const {
     sidebarRefs,
@@ -62,18 +61,5 @@ function HomePageContent() {
       <Workbench />
       <FileManager selectedTool={selectedTool as any /* FIX ME */} />
     </Group>
-  );
-}
-
-export default function HomePage() {
-  const { setCurrentView } = useFileContext();
-  return (
-    <FileSelectionProvider>
-      <ToolWorkflowProvider onViewChange={setCurrentView as any /* FIX ME */}>
-        <SidebarProvider>
-          <HomePageContent />
-        </SidebarProvider>
-      </ToolWorkflowProvider>
-    </FileSelectionProvider>
   );
 }

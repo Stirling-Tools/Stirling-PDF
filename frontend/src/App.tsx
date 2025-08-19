@@ -2,6 +2,9 @@ import React, { Suspense } from 'react';
 import { RainbowThemeProvider } from './components/shared/RainbowThemeProvider';
 import { FileContextProvider } from './contexts/FileContext';
 import { FilesModalProvider } from './contexts/FilesModalContext';
+import { FileSelectionProvider } from './contexts/FileSelectionContext';
+import { ToolWorkflowProvider } from './contexts/ToolWorkflowContext';
+import { SidebarProvider } from './contexts/SidebarContext';
 import HomePage from './pages/HomePage';
 
 // Import global styles
@@ -28,7 +31,13 @@ export default function App() {
       <RainbowThemeProvider>
         <FileContextProvider enableUrlSync={true} enablePersistence={true}>
           <FilesModalProvider>
-            <HomePage />
+            <FileSelectionProvider>
+              <ToolWorkflowProvider>
+                <SidebarProvider>
+                  <HomePage />
+                </SidebarProvider>
+              </ToolWorkflowProvider>
+            </FileSelectionProvider>
           </FilesModalProvider>
         </FileContextProvider>
       </RainbowThemeProvider>
