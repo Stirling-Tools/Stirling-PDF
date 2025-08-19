@@ -17,7 +17,8 @@ const buildFormData = (parameters: MergeParameters, files: File[]): FormData => 
 };
 
 const mergeResponseHandler: ResponseHandler = (blob: Blob, originalFiles: File[]): File[] => {
-  return [new File([blob], 'merged.pdf', { type: 'application/pdf' })];
+  const filename = `merged_${originalFiles[0].name}`
+  return [new File([blob], filename, { type: 'application/pdf' })];
 };
 
 export const useMergeOperation = () => {
