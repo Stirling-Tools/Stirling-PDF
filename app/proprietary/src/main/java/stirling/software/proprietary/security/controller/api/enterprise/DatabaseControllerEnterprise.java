@@ -72,14 +72,12 @@ public class DatabaseControllerEnterprise {
                         .map(p -> p.getLeft().getFileName())
                         .toList();
 
+        log.info("Deleted backup files: {}", deleted);
         if (!failed.isEmpty()) {
             log.warn("Some backup files could not be deleted: {}", failed);
             return ResponseEntity.status(HttpStatus.MULTI_STATUS) // 207
                     .body(new DeleteAllResult(deleted, failed, "partialFailure"));
         }
-
-        log.info("Deleted backup files: {}", deleted);
-        log.info("Failed to delete backup files: {}", failed);
         DeleteAllResult result = new DeleteAllResult(deleted, failed, "ok");
         log.debug(
                 "DeleteAllResult: deleted={}, failed={}, status={}",
