@@ -9,7 +9,7 @@ const buildFormData = (parameters: MergeParameters, files: File[]): FormData => 
   files.forEach((file) => {
     formData.append("fileInput", file);
   });
-  formData.append("sortType", parameters.mergeOrder);
+  formData.append("sortType", "orderProvided"); // Always use orderProvided since UI handles sorting
   formData.append("removeCertSign", parameters.removeDigitalSignature.toString());
   formData.append("generateToc", parameters.generateTableOfContents.toString());
 

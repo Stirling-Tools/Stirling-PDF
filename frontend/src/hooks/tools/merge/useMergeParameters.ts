@@ -1,13 +1,11 @@
 import { useState, useCallback } from 'react';
 
 export interface MergeParameters {
-  mergeOrder: 'orderProvided' | 'byFileName' | 'byDateModified' | 'byDateCreated' | 'byPDFTitle';
   removeDigitalSignature: boolean;
   generateTableOfContents: boolean;
 }
 
 export const defaultMergeParameters: MergeParameters = {
-  mergeOrder: 'orderProvided',
   removeDigitalSignature: false,
   generateTableOfContents: false,
 };

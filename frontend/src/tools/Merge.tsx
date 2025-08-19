@@ -1,11 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useToolFileSelection, useFileSelectionActions } from "../contexts/FileSelectionContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import MergeSettings from "../components/tools/merge/MergeSettings";
+import MergeFileSorter from "../components/tools/merge/MergeFileSorter";
 
 import { useMergeParameters } from "../hooks/tools/merge/useMergeParameters";
 import { useMergeOperation } from "../hooks/tools/merge/useMergeOperation";
@@ -15,6 +16,7 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { setCurrentMode } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
+  const { setSelectedFiles } = useFileSelectionActions();
 
   const mergeParams = useMergeParameters();
   const mergeOperation = useMergeOperation();
@@ -52,6 +54,27 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     setCurrentMode("merge");
   };
 
+  const sortFiles = useCallback((sortType: 'filename' | 'dateModified', ascending: boolean = true) => {
+    setSelectedFiles(((prevFiles: File[]) => {
+      const sortedFiles = [...prevFiles].sort((a, b) => {
+        let comparison = 0;
+
+        switch (sortType) {
+          case 'filename':
+            comparison = a.name.localeCompare(b.name);
+            break;
+          case 'dateModified':
+            comparison = a.lastModified - b.lastModified;
+            break;
+        }
+
+        return ascending ? comparison : -comparison;
+      });
+
+      return sortedFiles;
+    }) as any /* FIX ME: Parameter type is wrong on setSelectedFiles */);
+  }, []);
+
   const hasFiles = selectedFiles.length > 1; // Merge requires at least 2 files
   const hasResults = mergeOperation.files.length > 0 || mergeOperation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
@@ -63,6 +86,16 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       placeholder: "Select multiple PDF files to merge",
     },
     steps: [
+      {
+        title: "Sort Files",
+        isCollapsed: settingsCollapsed,
+        content: (
+          <MergeFileSorter
+            onSortFiles={sortFiles}
+            disabled={!hasFiles || endpointLoading}
+          />
+        ),
+      },
       {
         title: "Settings",
         isCollapsed: settingsCollapsed,
