@@ -1011,7 +1011,49 @@
     "submit": "Change"
   },
   "removePages": {
-    "tags": "Remove pages,delete pages"
+    "tags": "Remove pages,delete pages",
+    "title": "Remove Pages",
+    "pageNumbers": "Pages to Remove",
+    "pageNumbersPlaceholder": "e.g. 1,3,5-7",
+    "pageNumbersHelp": "Enter page numbers separated by commas, or ranges like 1-5. Example: 1,3,5-7",
+    "filenamePrefix": "pages_removed",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "settings": {
+      "title": "Page Selection"
+    },
+    "error": {
+      "failed": "An error occurred whilst removing pages."
+    },
+    "results": {
+      "title": "Page Removal Results"
+    },
+    "submit": "Remove Pages"
+  },
+  "pageSelection": {
+    "tooltip": {
+      "header": {
+        "title": "Page Selection Guide"
+      },
+      "basic": {
+        "title": "Basic Usage",
+        "text": "Select specific pages from your PDF document using simple syntax.",
+        "bullet1": "Individual pages: 1,3,5",
+        "bullet2": "Page ranges: 3-6 or 10-15",
+        "bullet3": "All pages: all"
+      },
+      "advanced": {
+        "title": "Advanced Features"
+      },
+      "tips": {
+        "title": "Tips",
+        "text": "Keep these guidelines in mind:",
+        "bullet1": "Page numbers start from 1 (not 0)",
+        "bullet2": "Spaces are automatically removed",
+        "bullet3": "Invalid expressions are ignored"
+      }
+    }
   },
   "compressPdfs": {
     "tags": "squish,small,tiny"
@@ -1020,7 +1062,18 @@
     "tags": "remove,delete,form,field,readonly",
     "title": "Remove Read-Only from Form Fields",
     "header": "Unlock PDF Forms",
-    "submit": "Remove"
+    "submit": "Unlock Forms",
+    "description": "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable.",
+    "filenamePrefix": "unlocked_forms",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst unlocking PDF forms."
+    },
+    "results": {
+      "title": "Unlocked Forms Results"
+    }
   },
   "changeMetadata": {
     "tags": "Title,author,date,creation,time,publisher,producer,stats",
@@ -1188,7 +1241,18 @@
     "tags": "fix,restore,correction,recover",
     "title": "Repair",
     "header": "Repair PDFs",
-    "submit": "Repair"
+    "submit": "Repair",
+    "description": "This tool will attempt to repair corrupted or damaged PDF files. No additional settings are required.",
+    "filenamePrefix": "repaired",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst repairing the PDF."
+    },
+    "results": {
+      "title": "Repair Results"
+    }
   },
   "removeBlanks": {
     "tags": "cleanup,streamline,non-content,organize",
@@ -1257,7 +1321,18 @@
     "title": "Remove Certificate Signature",
     "header": "Remove the digital certificate from the PDF",
     "selectPDF": "Select a PDF file:",
-    "submit": "Remove Signature"
+    "submit": "Remove Signature",
+    "description": "This tool will remove digital certificate signatures from your PDF document.",
+    "filenamePrefix": "unsigned",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst removing certificate signatures."
+    },
+    "results": {
+      "title": "Certificate Removal Results"
+    }
   },
   "pageLayout": {
     "tags": "merge,composite,single-view,organize",
@@ -1585,7 +1660,18 @@
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
     "header": "PDF To Single Page",
-    "submit": "Convert To Single Page"
+    "submit": "Convert To Single Page",
+    "description": "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights.",
+    "filenamePrefix": "single_page",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst converting to single page."
+    },
+    "results": {
+      "title": "Single Page Results"
+    }
   },
   "pageExtracter": {
     "title": "Extract Pages",
@@ -1945,7 +2031,14 @@
     "fileSize": "Size",
     "fileVersion": "Version",
     "totalSelected": "Total Selected",
-    "dropFilesHere": "Drop files here"
+    "dropFilesHere": "Drop files here",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "deleteSelected": "Delete Selected",
+    "downloadSelected": "Download Selected",
+    "selectedCount": "{{count}} selected",
+    "download": "Download",
+    "delete": "Delete"
   },
   "storage": {
     "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",

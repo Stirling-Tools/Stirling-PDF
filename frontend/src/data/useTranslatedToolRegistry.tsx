@@ -10,6 +10,12 @@ import ChangePermissions from '../tools/ChangePermissions';
 import RemovePassword from '../tools/RemovePassword';
 import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
+import Repair from '../tools/Repair';
+import SingleLargePage from '../tools/SingleLargePage';
+import UnlockPdfForms from '../tools/UnlockPdfForms';
+import RemoveCertificateSign from '../tools/RemoveCertificateSign';
+
+
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -94,11 +100,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "unlock-pdf-forms": {
         icon: <span className="material-symbols-rounded">preview_off</span>,
         name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
-        component: null,
+        component: UnlockPdfForms,
         view: "security",
         description: t("home.unlockPDFForms.desc", "Remove read-only property of form fields in a PDF document."),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: SubcategoryId.DOCUMENT_SECURITY
+        subcategory: SubcategoryId.DOCUMENT_SECURITY,
+        maxFiles: -1,
+        endpoints: ["unlock-pdf-forms"]
     },
     "manage-certificates": {
         icon: <span className="material-symbols-rounded">license</span>,
@@ -230,11 +238,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "single-large-page": {
         icon: <span className="material-symbols-rounded">looks_one</span>,
         name: t("home.PdfToSinglePage.title", "PDF to Single Large Page"),
-        component: null,
+        component: SingleLargePage,
         view: "format",
         description: t("home.PdfToSinglePage.desc", "Merges all PDF pages into one large single page"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: SubcategoryId.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["pdf-to-single-page"]
     },
     "add-attachments": {
         icon: <span className="material-symbols-rounded">attachment</span>,
@@ -322,11 +332,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "remove-certificate-sign": {
         icon: <span className="material-symbols-rounded">remove_moderator</span>,
         name: t("home.removeCertSign.title", "Remove Certificate Signatures"),
-        component: null,
+        component: RemoveCertificateSign,
         view: "security",
         description: t("home.removeCertSign.desc", "Remove digital signatures from PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: SubcategoryId.REMOVAL
+        subcategory: SubcategoryId.REMOVAL,
+        maxFiles: -1,
+        endpoints: ["remove-certificate-sign"]
     },
 
 
@@ -386,11 +398,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "repair": {
         icon: <span className="material-symbols-rounded">build</span>,
         name: t("home.repair.title", "Repair"),
-        component: null,
+        component: Repair,
         view: "format",
         description: t("home.repair.desc", "Repair corrupted or damaged PDF files"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: SubcategoryId.ADVANCED_FORMATTING
+        subcategory: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["repair"]
     },
     "detect-split-scanned-photos": {
         icon: <span className="material-symbols-rounded">scanner</span>,
