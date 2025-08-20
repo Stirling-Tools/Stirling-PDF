@@ -10,11 +10,10 @@ import { fileStorage, StoredFile } from '../services/fileStorage';
 import { FileId } from '../types/fileContext';
 import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
-import { pdfWorkerManager } from '../services/pdfWorkerManager';
 
 interface IndexedDBContextValue {
   // Core CRUD operations
-  saveFile: (file: File, fileId: FileId, thumbnail?: string) => Promise<FileMetadata>;
+  saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<FileMetadata>;
   loadFile: (fileId: FileId) => Promise<File | null>;
   loadMetadata: (fileId: FileId) => Promise<FileMetadata | null>;
   deleteFile: (fileId: FileId) => Promise<void>;
@@ -26,9 +25,6 @@ interface IndexedDBContextValue {
   
   // Utilities
   getStorageStats: () => Promise<{ used: number; available: number; fileCount: number }>;
-  
-  // Draft operations
-  loadAllDraftMetadata: () => Promise<FileMetadata[]>;
 }
 
 const IndexedDBContext = createContext<IndexedDBContextValue | null>(null);
@@ -60,44 +56,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   }, []);
 
   const saveFile = useCallback(async (file: File, fileId: FileId, existingThumbnail?: string): Promise<FileMetadata> => {
-    // Check for duplicate at IndexedDB level before saving
-    const quickKey = `${file.name}|${file.size}|${file.lastModified}`;
-    const existingFiles = await fileStorage.getAllFileMetadata();
-    const duplicate = existingFiles.find(stored => 
-      `${stored.name}|${stored.size}|${stored.lastModified}` === quickKey
-    );
-    
-    if (duplicate) {
-      if (DEBUG) console.log(`🔍 SAVE: Skipping IndexedDB duplicate - using existing record:`, duplicate.name);
-      // Return the existing file's metadata instead of saving duplicate
-      return {
-        id: duplicate.id,
-        name: duplicate.name,
-        type: duplicate.type,
-        size: duplicate.size,
-        lastModified: duplicate.lastModified,
-        thumbnail: duplicate.thumbnail
-      };
-    }
-    
-    // DEBUG: Check original file before saving
-    if (DEBUG && file.type === 'application/pdf') {
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
-        console.log(`🔍 BEFORE SAVE - Original file:`, {
-          name: file.name,
-          size: file.size,
-          arrayBufferSize: arrayBuffer.byteLength,
-          pages: pdf.numPages
-        });
-        pdfWorkerManager.destroyDocument(pdf);
-      } catch (error) {
-        console.error(`🔍 Error validating file before save:`, error);
-      }
-    }
-    
-    // Use existing thumbnail or generate new one
+    // Use existing thumbnail or generate new one if none provided
     const thumbnail = existingThumbnail || await generateThumbnailForFile(file);
     
     // Store in IndexedDB
@@ -127,39 +86,15 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       return cached.file;
     }
 
-    // Load from IndexedDB using the internal fileStorage (which wraps indexedDBManager)
+    // Load from IndexedDB
     const storedFile = await fileStorage.getFile(fileId);
-    if (!storedFile) {
-      if (DEBUG) console.log(`📁 File not found in IndexedDB: ${fileId}`);
-      return null;
-    }
+    if (!storedFile) return null;
 
     // Reconstruct File object
     const file = new File([storedFile.data], storedFile.name, {
       type: storedFile.type,
       lastModified: storedFile.lastModified
     });
-
-    // DEBUG: Check if file reconstruction is working
-    if (DEBUG && file.type === 'application/pdf') {
-      console.log(`🔍 AFTER LOAD - Reconstructed file:`, {
-        name: file.name,
-        originalSize: storedFile.size,
-        reconstructedSize: file.size,
-        dataLength: storedFile.data.byteLength,
-        sizesMatch: storedFile.size === file.size
-      });
-      
-      // Quick PDF validation
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
-        console.log(`🔍 AFTER LOAD - PDF validation: ${pdf.numPages} pages in reconstructed file`);
-        pdfWorkerManager.destroyDocument(pdf);
-      } catch (error) {
-        console.error(`🔍 AFTER LOAD - PDF reconstruction error:`, error);
-      }
-    }
 
     // Cache for future use with LRU eviction
     fileCache.current.set(fileId, { file, lastAccessed: Date.now() });
@@ -239,40 +174,6 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     return await fileStorage.getStorageStats();
   }, []);
 
-  const loadAllDraftMetadata = useCallback(async (): Promise<FileMetadata[]> => {
-    try {
-      const { indexedDBManager, DATABASE_CONFIGS } = await import('../services/indexedDBManager');
-      const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
-      
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(['drafts'], 'readonly');
-        const store = transaction.objectStore('drafts');
-        const request = store.getAll();
-        
-        request.onsuccess = () => {
-          const drafts = request.result || [];
-          const draftMetadata: FileMetadata[] = drafts.map((draft: any) => ({
-            id: draft.id,
-            name: draft.name || `Draft ${draft.id}`,
-            type: 'application/pdf',
-            size: draft.size || 0,
-            lastModified: draft.timestamp || Date.now(),
-            thumbnail: draft.thumbnail,
-            isDraft: true
-          }));
-          resolve(draftMetadata);
-        };
-        
-        request.onerror = () => reject(request.error);
-      });
-    } catch (error) {
-      console.warn('Failed to load draft metadata:', error);
-      return [];
-    }
-  }, []);
-
-  // No periodic cleanup needed - LRU eviction happens on-demand when cache fills
-
   const value: IndexedDBContextValue = {
     saveFile,
     loadFile,
@@ -281,8 +182,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     loadAllMetadata,
     deleteMultiple,
     clearAll,
-    getStorageStats,
-    loadAllDraftMetadata
+    getStorageStats
   };
 
   return (

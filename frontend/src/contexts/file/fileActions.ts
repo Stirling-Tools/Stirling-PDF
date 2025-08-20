@@ -217,7 +217,7 @@ export async function addFiles(
           try {
             if (DEBUG) console.log(`📄 addFiles(stored): Generating PDF metadata for stored file ${file.name}`);
             
-            // Use PDF worker manager directly for page count (avoids fileProcessingService conflicts)
+            // Get page count from PDF
             const arrayBuffer = await file.arrayBuffer();
             const { pdfWorkerManager } = await import('../../services/pdfWorkerManager');
             const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
@@ -243,7 +243,6 @@ export async function addFiles(
         fileRecords.push(record);
         addedFiles.push({ file, id: fileId, thumbnail: metadata.thumbnail });
         
-        // Note: No background fileProcessingService call for stored files - we already processed them above
       }
       break;
     }

@@ -25,7 +25,7 @@ import {
 
 // Import modular components
 import { fileContextReducer, initialFileContextState } from './file/FileReducer';
-import { createFileSelectors, buildQuickKeySetFromMetadata } from './file/fileSelectors';
+import { createFileSelectors } from './file/fileSelectors';
 import { addFiles, consumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
@@ -76,7 +76,7 @@ function FileContextInner({
   const addRawFiles = useCallback(async (files: File[]): Promise<File[]> => {
     const addedFilesWithIds = await addFiles('raw', { files }, stateRef, filesRef, dispatch, lifecycleManager);
     
-    // Persist to IndexedDB if enabled - pass existing thumbnail to prevent double generation
+    // Persist to IndexedDB if enabled
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
       await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
         try {
