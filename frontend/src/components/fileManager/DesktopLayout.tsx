@@ -4,6 +4,7 @@ import FileSourceButtons from './FileSourceButtons';
 import FileDetails from './FileDetails';
 import SearchInput from './SearchInput';
 import FileListArea from './FileListArea';
+import FileActions from './FileActions';
 import HiddenFileInput from './HiddenFileInput';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
 
@@ -45,12 +46,20 @@ const DesktopLayout: React.FC = () => {
           overflow: 'hidden'
         }}>
           {activeSource === 'recent' && (
-            <div style={{ 
-              flexShrink: 0,
-              borderBottom: '1px solid var(--mantine-color-gray-3)'
-            }}>
-              <SearchInput />
-            </div>
+            <>
+              <div style={{ 
+                flexShrink: 0,
+                borderBottom: '1px solid var(--mantine-color-gray-3)'
+              }}>
+                <SearchInput />
+              </div>
+              <div style={{ 
+                flexShrink: 0,
+                borderBottom: '1px solid var(--mantine-color-gray-3)'
+              }}>
+                <FileActions />
+              </div>
+            </>
           )}
           
           <div style={{ flex: 1, minHeight: 0 }}>

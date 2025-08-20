@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { FileWithUrl } from '../types/file';
-import { StoredFile } from '../services/fileStorage';
+import { StoredFile, fileStorage } from '../services/fileStorage';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
@@ -21,6 +21,10 @@ interface FileManagerContextValue {
   onOpenFiles: () => void;
   onSearchChange: (value: string) => void;
   onFileInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSelectAll: () => void;
+  onDeleteSelected: () => void;
+  onDownloadSelected: () => void;
+  onDownloadSingle: (file: FileWithUrl) => void;
 
   // External props
   recentFiles: FileWithUrl[];
@@ -152,6 +156,140 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     event.target.value = '';
   }, [storeFile, onFilesSelected, refreshRecentFiles, onClose]);
 
+  const handleSelectAll = useCallback(() => {
+    const allFilesSelected = filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length;
+    if (allFilesSelected) {
+      // Deselect all
+      setSelectedFileIds([]);
+    } else {
+      // Select all filtered files
+      setSelectedFileIds(filteredFiles.map(file => file.id || file.name));
+    }
+  }, [filteredFiles, selectedFileIds]);
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedFileIds.length === 0) return;
+
+    try {
+      // Get files to delete based on current filtered view
+      const filesToDelete = filteredFiles.filter(file => 
+        selectedFileIds.includes(file.id || file.name)
+      );
+
+      // Delete files from storage
+      for (const file of filesToDelete) {
+        const lookupKey = file.id || file.name;
+        await fileStorage.deleteFile(lookupKey);
+      }
+
+      // Clear selection
+      setSelectedFileIds([]);
+
+      // Refresh the file list
+      await refreshRecentFiles();
+    } catch (error) {
+      console.error('Failed to delete selected files:', error);
+    }
+  }, [selectedFileIds, filteredFiles, refreshRecentFiles]);
+
+  const handleDownloadSelected = useCallback(async () => {
+    if (selectedFileIds.length === 0) return;
+
+    try {
+      // Get selected files
+      const selectedFilesToDownload = filteredFiles.filter(file => 
+        selectedFileIds.includes(file.id || file.name)
+      );
+
+      if (selectedFilesToDownload.length === 1) {
+        // Single file download
+        const fileWithUrl = selectedFilesToDownload[0];
+        const lookupKey = fileWithUrl.id || fileWithUrl.name;
+        const storedFile = await fileStorage.getFile(lookupKey);
+        
+        if (storedFile) {
+          const blob = new Blob([storedFile.data], { type: storedFile.type });
+          const url = URL.createObjectURL(blob);
+          
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = storedFile.name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Clean up the blob URL
+          URL.revokeObjectURL(url);
+        }
+      } else if (selectedFilesToDownload.length > 1) {
+        // Multiple files - create ZIP download
+        const { zipFileService } = await import('../services/zipFileService');
+        
+        // Convert stored files to File objects
+        const files: File[] = [];
+        for (const fileWithUrl of selectedFilesToDownload) {
+          const lookupKey = fileWithUrl.id || fileWithUrl.name;
+          const storedFile = await fileStorage.getFile(lookupKey);
+          
+          if (storedFile) {
+            const file = new File([storedFile.data], storedFile.name, {
+              type: storedFile.type,
+              lastModified: storedFile.lastModified
+            });
+            files.push(file);
+          }
+        }
+        
+        if (files.length > 0) {
+          // Create ZIP file
+          const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+          const zipFilename = `selected-files-${timestamp}.zip`;
+          
+          const { zipFile } = await zipFileService.createZipFromFiles(files, zipFilename);
+          
+          // Download the ZIP file
+          const url = URL.createObjectURL(zipFile);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = zipFilename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Clean up the blob URL
+          URL.revokeObjectURL(url);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to download selected files:', error);
+    }
+  }, [selectedFileIds, filteredFiles]);
+
+  const handleDownloadSingle = useCallback(async (file: FileWithUrl) => {
+    try {
+      const lookupKey = file.id || file.name;
+      const storedFile = await fileStorage.getFile(lookupKey);
+      
+      if (storedFile) {
+        const blob = new Blob([storedFile.data], { type: storedFile.type });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = storedFile.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Failed to download file:', error);
+    }
+  }, []);
+
+
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
     return () => {
@@ -190,6 +328,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onOpenFiles: handleOpenFiles,
     onSearchChange: handleSearchChange,
     onFileInputChange: handleFileInputChange,
+    onSelectAll: handleSelectAll,
+    onDeleteSelected: handleDeleteSelected,
+    onDownloadSelected: handleDownloadSelected,
+    onDownloadSingle: handleDownloadSingle,
 
     // External props
     recentFiles,

@@ -23,6 +23,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     onFileSelect,
     onFileRemove,
     onFileDoubleClick,
+    onDownloadSingle,
     isFileSupported,
   } = useFileManagerContext();
   const { t } = useTranslation();
@@ -57,6 +58,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
                 isSupported={isFileSupported(file.name)}
                 onSelect={() => onFileSelect(file)}
                 onRemove={() => onFileRemove(index)}
+                onDownload={() => onDownloadSingle(file)}
                 onDoubleClick={() => onFileDoubleClick(file)}
               />
             ))
