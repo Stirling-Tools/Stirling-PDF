@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
@@ -53,7 +52,6 @@ public class JwtService implements JwtServiceInterface {
     private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;
 
-    @Autowired
     public JwtService(
             @Qualifier("v2Enabled") boolean v2Enabled,
             KeyPersistenceServiceInterface keyPersistenceService) {
@@ -155,7 +153,8 @@ public class JwtService implements JwtServiceInterface {
                     keyPair = specificKeyPair.get();
                 } else {
                     log.warn(
-                            "Key ID {} not found in keystore, token may have been signed with an expired key",
+                            "Key ID {} not found in keystore, token may have been signed with an"
+                                    + " expired key",
                             keyId);
 
                     if (keyId.equals(keyPersistenceService.getActiveKey().getKeyId())) {
