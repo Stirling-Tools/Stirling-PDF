@@ -6,7 +6,7 @@ import { useToolFileSelection } from "../contexts/FileSelectionContext";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import AutomationSelection from "../components/tools/automate/AutomationSelection";
 import AutomationCreation, { AutomationMode } from "../components/tools/automate/AutomationCreation";
-import ToolSequence from "../components/tools/automate/ToolSequence";
+import AutomationRun from "../components/tools/automate/AutomationRun";
 
 import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperation";
 import { BaseToolProps } from "../types/tool";
@@ -18,11 +18,12 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { setCurrentMode } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
 
-  const [currentStep, setCurrentStep] = useState<'selection' | 'creation' | 'sequence'>('selection');
+  const [currentStep, setCurrentStep] = useState<'selection' | 'creation' | 'run'>('selection');
   const [stepData, setStepData] = useState<any>({});
 
   const automateOperation = useAutomateOperation();
   const toolRegistry = useFlatToolRegistry();
+  const hasResults = automateOperation.files.length > 0 || automateOperation.downloadUrl !== null;
   const { savedAutomations, deleteAutomation } = useSavedAutomations();
 
   const handleStepChange = (data: any) => {
@@ -44,7 +45,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <AutomationSelection
             savedAutomations={savedAutomations}
             onCreateNew={() => handleStepChange({ step: 'creation', mode: AutomationMode.CREATE })}
-            onRun={(automation: any) => handleStepChange({ step: 'sequence', automation })}
+            onRun={(automation: any) => handleStepChange({ step: 'run', automation })}
             onEdit={(automation: any) => handleStepChange({ step: 'creation', mode: AutomationMode.EDIT, automation })}
             onDelete={async (automation: any) => {
               try {
@@ -63,16 +64,16 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             mode={stepData.mode}
             existingAutomation={stepData.automation}
             onBack={() => handleStepChange({ step: 'selection' })}
-            onComplete={(automation: any) => handleStepChange({ step: 'sequence', automation })}
+            onComplete={() => handleStepChange({ step: 'selection' })}
             toolRegistry={toolRegistry}
           />
         );
 
-      case 'sequence':
+      case 'run':
         return (
-          <ToolSequence
+          <AutomationRun
             automation={stepData.automation}
-            onBack={() => handleStepChange({ step: 'creation', mode: stepData.mode, automation: stepData.automation })}
+            onBack={() => handleStepChange({ step: 'selection'})}
             onComplete={handleComplete}
           />
         );
@@ -85,24 +86,33 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   return createToolFlow({
     files: {
       selectedFiles: [],
-      isCollapsed: true, // Hide files step for automate tool
-      placeholder: t('automate.filesHidden', 'Files will be selected during automation execution')
+      isCollapsed: hasResults, // Hide files step for automate tool
     },
     steps: [
       {
-        title: t('automate.stepTitle', 'Automations'),
+        title: t('automate.selection.title', 'Automation Selection'),
         isVisible: true,
-        onCollapsedClick: ()=> setCurrentStep('selection'),
+        isCollapsed: currentStep !== 'selection',
+        onCollapsedClick: () => setCurrentStep('selection'),
         content: currentStep === 'selection' ? renderCurrentStep() : null
       },
       {
-        title: t('automate.sequenceTitle', 'Tool Sequence'),
-        isVisible: currentStep === 'creation' || currentStep === 'sequence',
-        content: currentStep === 'creation' || currentStep === 'sequence' ? renderCurrentStep() : null
+        title: stepData.mode === AutomationMode.EDIT
+          ? t('automate.creation.editTitle', 'Edit Automation')
+          : t('automate.creation.createTitle', 'Create Automation'),
+        isVisible: currentStep === 'creation',
+        isCollapsed: false,
+        content: currentStep === 'creation' ? renderCurrentStep() : null
+      },
+      {
+        title: t('automate.run.title', 'Run Automation'),
+        isVisible: currentStep === 'run',
+        isCollapsed: false,
+        content: currentStep === 'run' ? renderCurrentStep() : null
       }
     ],
     review: {
-      isVisible: false, // Hide review step for automate tool
+      isVisible: hasResults, // Hide review step for automate tool
       operation: automateOperation,
       title: t('automate.reviewTitle', 'Automation Results')
     }

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Button, 
-  Text, 
-  Title, 
-  Stack, 
-  Group, 
+import {
+  Button,
+  Text,
+  Title,
+  Stack,
+  Group,
   ActionIcon,
   Progress,
   Card,
@@ -17,7 +17,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import ErrorIcon from '@mui/icons-material/Error';
 import { useFileContext } from '../../../contexts/FileContext';
 
-interface ToolSequenceProps {
+interface AutomationRunProps {
   automation: any;
   onBack: () => void;
   onComplete: () => void;
@@ -31,7 +31,7 @@ interface ExecutionStep {
   error?: string;
 }
 
-export default function ToolSequence({ automation, onBack, onComplete }: ToolSequenceProps) {
+export default function AutomationRun({ automation, onBack, onComplete }: AutomationRunProps) {
   const { t } = useTranslation();
   const { activeFiles } = useFileContext();
   const [isExecuting, setIsExecuting] = useState(false);
@@ -63,28 +63,28 @@ export default function ToolSequence({ automation, onBack, onComplete }: ToolSeq
     try {
       for (let i = 0; i < executionSteps.length; i++) {
         setCurrentStepIndex(i);
-        
+
         // Update step status to running
-        setExecutionSteps(prev => prev.map((step, idx) => 
+        setExecutionSteps(prev => prev.map((step, idx) =>
           idx === i ? { ...step, status: 'running' } : step
         ));
 
         // Simulate step execution (replace with actual tool execution)
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         // Update step status to completed
-        setExecutionSteps(prev => prev.map((step, idx) => 
+        setExecutionSteps(prev => prev.map((step, idx) =>
           idx === i ? { ...step, status: 'completed' } : step
         ));
       }
 
       setCurrentStepIndex(-1);
       setIsExecuting(false);
-      
+
       // All steps completed - show success
     } catch (error) {
       // Handle error
-      setExecutionSteps(prev => prev.map((step, idx) => 
+      setExecutionSteps(prev => prev.map((step, idx) =>
         idx === currentStepIndex ? { ...step, status: 'error', error: error?.toString() } : step
       ));
       setIsExecuting(false);
@@ -114,15 +114,6 @@ export default function ToolSequence({ automation, onBack, onComplete }: ToolSeq
 
   return (
     <div>
-      <Group justify="space-between" align="center" mb="md">
-        <Title order={3} size="h4" fw={600} style={{ color: 'var(--mantine-color-text)' }}>
-          {t('automate.sequence.title', 'Tool Sequence')}
-        </Title>
-        <ActionIcon variant="subtle" onClick={onBack}>
-          <ArrowBackIcon />
-        </ActionIcon>
-      </Group>
-
       <Stack gap="md">
         {/* Automation Info */}
         <Card padding="md" withBorder>
@@ -145,9 +136,9 @@ export default function ToolSequence({ automation, onBack, onComplete }: ToolSeq
         {isExecuting && (
           <div>
             <Text size="sm" mb="xs">
-              {t('automate.sequence.progress', 'Progress: {{current}}/{{total}}', { 
-                current: currentStepIndex + 1, 
-                total: executionSteps.length 
+              {t('automate.sequence.progress', 'Progress: {{current}}/{{total}}', {
+                current: currentStepIndex + 1,
+                total: executionSteps.length
               })}
             </Text>
             <Progress value={getProgress()} size="lg" />
@@ -161,11 +152,11 @@ export default function ToolSequence({ automation, onBack, onComplete }: ToolSeq
               <Text size="xs" c="dimmed" style={{ minWidth: '1rem', textAlign: 'center' }}>
                 {index + 1}
               </Text>
-              
+
               {getStepIcon(step)}
-              
+
               <div style={{ flex: 1 }}>
-                <Text size="sm" style={{ 
+                <Text size="sm" style={{
                   color: step.status === 'running' ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-text)',
                   fontWeight: step.status === 'running' ? 500 : 400
                 }}>
@@ -189,8 +180,8 @@ export default function ToolSequence({ automation, onBack, onComplete }: ToolSeq
             disabled={isExecuting || !activeFiles || activeFiles.length === 0}
             loading={isExecuting}
           >
-            {isExecuting 
-              ? t('automate.sequence.running', 'Running Automation...') 
+            {isExecuting
+              ? t('automate.sequence.running', 'Running Automation...')
               : t('automate.sequence.run', 'Run Automation')
             }
           </Button>
