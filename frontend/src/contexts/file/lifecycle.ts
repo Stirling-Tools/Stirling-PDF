@@ -144,11 +144,14 @@ export class FileLifecycleManager {
     if (stateRef) {
       const record = stateRef.current.files.byId[fileId];
       if (record) {
-        // Revoke blob URLs from file record
+        // Defer revocation of thumbnail blob URLs to prevent image loading race conditions
         if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
           try {
-            URL.revokeObjectURL(record.thumbnailUrl);
-            if (DEBUG) console.log(`🗂️ Revoked thumbnail blob URL for file: ${fileId}`);
+            // Add a small delay to ensure images have time to load
+            setTimeout(() => {
+              URL.revokeObjectURL(record.thumbnailUrl);
+              if (DEBUG) console.log(`🗂️ Revoked thumbnail blob URL for file: ${fileId}`);
+            }, 1000); // 1 second delay
           } catch (error) {
             if (DEBUG) console.warn('Error revoking thumbnail URL:', error);
           }
@@ -156,20 +159,27 @@ export class FileLifecycleManager {
         
         if (record.blobUrl && record.blobUrl.startsWith('blob:')) {
           try {
-            URL.revokeObjectURL(record.blobUrl);
-            if (DEBUG) console.log(`🗂️ Revoked file blob URL for file: ${fileId}`);
+            // Add a small delay to ensure any pending operations complete
+            setTimeout(() => {
+              URL.revokeObjectURL(record.blobUrl);
+              if (DEBUG) console.log(`🗂️ Revoked file blob URL for file: ${fileId}`);
+            }, 1000); // 1 second delay
           } catch (error) {
             if (DEBUG) console.warn('Error revoking file URL:', error);
           }
         }
         
-        // Clean up processed file thumbnails
+        // Clean up processed file thumbnails with delay
         if (record.processedFile?.pages) {
           record.processedFile.pages.forEach((page: ProcessedFilePage, index: number) => {
             if (page.thumbnail && page.thumbnail.startsWith('blob:')) {
               try {
-                URL.revokeObjectURL(page.thumbnail);
-                if (DEBUG) console.log(`🗂️ Revoked page ${index} thumbnail for file: ${fileId}`);
+                const thumbnailUrl = page.thumbnail;
+                // Add delay for page thumbnails too
+                setTimeout(() => {
+                  URL.revokeObjectURL(thumbnailUrl);
+                  if (DEBUG) console.log(`🗂️ Revoked page ${index} thumbnail for file: ${fileId}`);
+                }, 1000); // 1 second delay
               } catch (error) {
                 if (DEBUG) console.warn('Error revoking page thumbnail URL:', error);
               }

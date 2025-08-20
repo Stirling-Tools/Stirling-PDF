@@ -201,6 +201,11 @@ const FileThumbnail = ({
             src={file.thumbnail}
             alt={file.name}
             draggable={false}
+            onError={(e) => {
+              // Hide broken image if blob URL was revoked
+              const img = e.target as HTMLImageElement;
+              img.style.display = 'none';
+            }}
             style={{
               maxWidth: '100%',
               maxHeight: '100%',
@@ -210,20 +215,22 @@ const FileThumbnail = ({
           />
         </div>
 
-        {/* Page count badge */}
-        <Badge
-          size="sm"
-          variant="filled"
-          color="blue"
-          style={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
-            zIndex: 3,
-          }}
-        >
-          {file.pageCount} {file.pageCount === 1 ? 'page' : 'pages'}
-        </Badge>
+        {/* Page count badge - only show for PDFs */}
+        {file.pageCount > 0 && (
+          <Badge
+            size="sm"
+            variant="filled"
+            color="blue"
+            style={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              zIndex: 3,
+            }}
+          >
+            {file.pageCount} {file.pageCount === 1 ? 'page' : 'pages'}
+          </Badge>
+        )}
 
         {/* Unsupported badge */}
         {!isSupported && (

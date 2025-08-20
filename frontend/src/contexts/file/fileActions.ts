@@ -92,14 +92,28 @@ export async function addFiles(
         let thumbnail: string | undefined;
         let pageCount: number = 1;
         
-        try {
-          if (DEBUG) console.log(`📄 Generating immediate thumbnail and metadata for ${file.name}`);
-          const result = await generateThumbnailWithMetadata(file);
-          thumbnail = result.thumbnail;
-          pageCount = result.pageCount;
-          if (DEBUG) console.log(`📄 Generated immediate metadata for ${file.name}: ${pageCount} pages, thumbnail: ${!!thumbnail}`);
-        } catch (error) {
-          if (DEBUG) console.warn(`📄 Failed to generate immediate metadata for ${file.name}:`, error);
+        // Route based on file type - PDFs through full metadata pipeline, non-PDFs through simple path
+        if (file.type.startsWith('application/pdf')) {
+          try {
+            if (DEBUG) console.log(`📄 Generating PDF metadata for ${file.name}`);
+            const result = await generateThumbnailWithMetadata(file);
+            thumbnail = result.thumbnail;
+            pageCount = result.pageCount;
+            if (DEBUG) console.log(`📄 Generated PDF metadata for ${file.name}: ${pageCount} pages, thumbnail: ${!!thumbnail}`);
+          } catch (error) {
+            if (DEBUG) console.warn(`📄 Failed to generate PDF metadata for ${file.name}:`, error);
+          }
+        } else {
+          // Non-PDF files: simple thumbnail generation, no page count
+          try {
+            if (DEBUG) console.log(`📄 Generating simple thumbnail for non-PDF file ${file.name}`);
+            const { generateThumbnailForFile } = await import('../../utils/thumbnailUtils');
+            thumbnail = await generateThumbnailForFile(file);
+            pageCount = 0; // Non-PDFs have no page count
+            if (DEBUG) console.log(`📄 Generated simple thumbnail for ${file.name}: no page count, thumbnail: ${!!thumbnail}`);
+          } catch (error) {
+            if (DEBUG) console.warn(`📄 Failed to generate simple thumbnail for ${file.name}:`, error);
+          }
         }
         
         // Create record with immediate thumbnail and page metadata
@@ -198,22 +212,28 @@ export async function addFiles(
           }
         }
         
-        // Generate processedFile metadata for stored files using PDF worker manager
-        // This ensures stored files have proper page information and avoids cancellation conflicts
+        // Generate processedFile metadata for stored files
         let pageCount: number = 1;
-        try {
-          if (DEBUG) console.log(`📄 addFiles(stored): Generating metadata for stored file ${file.name}`);
-          
-          // Use PDF worker manager directly for page count (avoids fileProcessingService conflicts)
-          const arrayBuffer = await file.arrayBuffer();
-          const { pdfWorkerManager } = await import('../../services/pdfWorkerManager');
-          const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
-          pageCount = pdf.numPages;
-          pdfWorkerManager.destroyDocument(pdf);
-          
-          if (DEBUG) console.log(`📄 addFiles(stored): Found ${pageCount} pages in stored file ${file.name}`);
-        } catch (error) {
-          if (DEBUG) console.warn(`📄 addFiles(stored): Failed to generate metadata for ${file.name}:`, error);
+        
+        // Only process PDFs through PDF worker manager, non-PDFs have no page count
+        if (file.type.startsWith('application/pdf')) {
+          try {
+            if (DEBUG) console.log(`📄 addFiles(stored): Generating PDF metadata for stored file ${file.name}`);
+            
+            // Use PDF worker manager directly for page count (avoids fileProcessingService conflicts)
+            const arrayBuffer = await file.arrayBuffer();
+            const { pdfWorkerManager } = await import('../../services/pdfWorkerManager');
+            const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
+            pageCount = pdf.numPages;
+            pdfWorkerManager.destroyDocument(pdf);
+            
+            if (DEBUG) console.log(`📄 addFiles(stored): Found ${pageCount} pages in PDF ${file.name}`);
+          } catch (error) {
+            if (DEBUG) console.warn(`📄 addFiles(stored): Failed to generate PDF metadata for ${file.name}:`, error);
+          }
+        } else {
+          pageCount = 0; // Non-PDFs have no page count
+          if (DEBUG) console.log(`📄 addFiles(stored): Non-PDF file ${file.name}, no page count`);
         }
         
         // Create processedFile metadata with correct page count

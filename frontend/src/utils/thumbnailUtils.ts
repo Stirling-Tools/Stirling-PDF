@@ -368,10 +368,10 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
  * Generate thumbnail and extract page count for a PDF file
  */
 export async function generateThumbnailWithMetadata(file: File): Promise<ThumbnailWithMetadata> {
-  // Non-PDF files default to 1 page
+  // Non-PDF files have no page count
   if (!file.type.startsWith('application/pdf')) {
     const thumbnail = await generateThumbnailForFile(file);
-    return { thumbnail, pageCount: 1 };
+    return { thumbnail, pageCount: 0 };
   }
 
   // Skip very large files
