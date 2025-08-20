@@ -11,6 +11,7 @@ import RemovePassword from '../tools/RemovePassword';
 import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
 import Repair from '../tools/Repair';
+import DeletePages from '../tools/DeletePages';
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -275,11 +276,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "remove": {
         icon: <span className="material-symbols-rounded">delete</span>,
         name: t("home.removePages.title", "Remove Pages"),
-        component: null,
+        component: DeletePages,
         view: "remove",
         description: t("home.removePages.desc", "Remove specific pages from a PDF document"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: SubcategoryId.REMOVAL
+        subcategory: SubcategoryId.REMOVAL,
+        maxFiles: -1,
+        endpoints: ["remove-pages"]
     },
     "remove-blank-pages": {
         icon: <span className="material-symbols-rounded">scan_delete</span>,
