@@ -20,6 +20,6 @@ export const useAutoRenameOperation = () => {
     filePrefix: '', // Not used when preserveBackendFilename is true
     multiFileEndpoint: false,
     preserveBackendFilename: true, // Use filename from backend response headers
-    getErrorMessage: createStandardErrorHandler(t('autoRename.error.failed', 'An error occurred while auto-renaming the PDF.'))
+    getErrorMessage: createStandardErrorHandler(t('auto-rename.error.failed', 'An error occurred while auto-renaming the PDF.'))
   });
 };

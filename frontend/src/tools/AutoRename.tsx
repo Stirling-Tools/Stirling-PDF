@@ -34,7 +34,7 @@ const AutoRename = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : t("autoRename.error.failed", "Auto-rename operation failed"));
+        onError(error instanceof Error ? error.message : t("auto-rename.error.failed", "Auto-rename operation failed"));
       }
     }
   };
@@ -58,11 +58,11 @@ const AutoRename = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     files: {
       selectedFiles,
       isCollapsed: hasFiles || hasResults,
-      placeholder: t("autoRename.files.placeholder", "Select a PDF file in the main view to get started"),
+      placeholder: t("auto-rename.files.placeholder", "Select a PDF file in the main view to get started"),
     },
     steps: [],
     executeButton: {
-      text: t("autoRename.submit", "Auto-Rename"),
+      text: t("auto-rename.submit", "Auto Rename"),
       isVisible: !hasResults,
       loadingText: t("loading"),
       onClick: handleAutoRename,
@@ -71,7 +71,7 @@ const AutoRename = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     review: {
       isVisible: hasResults,
       operation: autoRenameOperation,
-      title: t("autoRename.results.title", "Auto-Rename Results"),
+      title: t("auto-rename.results.title", "Auto-Rename Results"),
       onFileClick: handleThumbnailClick,
     },
   });
