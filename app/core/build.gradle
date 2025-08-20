@@ -114,11 +114,6 @@ sourceSets {
     }
     test {
         java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
-                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
-                exclude 'stirling/software/proprietary/security/**'
-            }
             if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
                 exclude 'stirling/software/SPDF/UI/impl/**'
             }
