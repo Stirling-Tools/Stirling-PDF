@@ -99,6 +99,21 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
       };
     }
     
+    case 'REORDER_FILES': {
+      const { orderedFileIds } = action.payload;
+      
+      // Validate that all IDs exist in current state
+      const validIds = orderedFileIds.filter(id => state.files.byId[id]);
+      
+      return {
+        ...state,
+        files: {
+          ...state.files,
+          ids: validIds
+        }
+      };
+    }
+    
     case 'SET_SELECTED_FILES': {
       const { fileIds } = action.payload;
       return {

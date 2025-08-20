@@ -1,5 +1,5 @@
 /**
- * New performant file hooks - Clean API without legacy compatibility
+ * Performant file hooks - Clean API using FileContext
  */
 
 import { useContext, useMemo } from 'react';
@@ -79,7 +79,8 @@ export function useFileManagement() {
     addFiles: actions.addFiles,
     removeFiles: actions.removeFiles,
     clearAllFiles: actions.clearAllFiles,
-    updateFileRecord: actions.updateFileRecord
+    updateFileRecord: actions.updateFileRecord,
+    reorderFiles: actions.reorderFiles
   }), [actions]);
 }
 
@@ -156,9 +157,9 @@ export function useFileContext() {
     // File management
     addFiles: actions.addFiles,
     consumeFiles: actions.consumeFiles,
-    recordOperation: (fileId: string, operation: any) => {}, // TODO: Implement operation tracking
-    markOperationApplied: (fileId: string, operationId: string) => {}, // TODO: Implement operation tracking
-    markOperationFailed: (fileId: string, operationId: string, error: string) => {}, // TODO: Implement operation tracking
+    recordOperation: (fileId: string, operation: any) => {}, // Operation tracking not implemented
+    markOperationApplied: (fileId: string, operationId: string) => {}, // Operation tracking not implemented  
+    markOperationFailed: (fileId: string, operationId: string, error: string) => {}, // Operation tracking not implemented
     
     // File ID lookup
     findFileId: (file: File) => {
@@ -241,16 +242,12 @@ export function useProcessedFiles() {
       );
       return !!record?.processedFile;
     },
-    set: () => {
-      console.warn('processedFiles.set is deprecated - use FileRecord updates instead');
-    }
+    // Removed deprecated set method
   }), [state.files.byId, state.files.ids.length]);
   
   return useMemo(() => ({
     processedFiles: compatibilityMap,
     getProcessedFile: (file: File) => compatibilityMap.get(file),
-    updateProcessedFile: () => {
-      console.warn('updateProcessedFile is deprecated - processed files are now stored in FileRecord');
-    }
+    // Removed deprecated updateProcessedFile method
   }), [compatibilityMap]);
 }

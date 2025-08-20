@@ -26,8 +26,6 @@ export interface FileMetadata {
   lastModified: number;
   thumbnail?: string;
   isDraft?: boolean; // Marks files as draft versions
-  /** @deprecated Legacy compatibility - will be removed */
-  storedInIndexedDB?: boolean;
 }
 
 export interface StorageConfig {

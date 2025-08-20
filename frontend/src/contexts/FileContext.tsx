@@ -159,6 +159,9 @@ function FileContextInner({
     },
     updateFileRecord: (fileId: FileId, updates: Partial<FileRecord>) => 
       lifecycleManager.updateFileRecord(fileId, updates, stateRef),
+    reorderFiles: (orderedFileIds: FileId[]) => {
+      dispatch({ type: 'REORDER_FILES', payload: { orderedFileIds } });
+    },
     clearAllFiles: async () => {
       lifecycleManager.cleanupAllFiles();
       filesRef.current.clear();

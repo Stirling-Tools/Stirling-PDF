@@ -196,6 +196,7 @@ export type FileContextAction =
   | { type: 'ADD_FILES'; payload: { fileRecords: FileRecord[] } }
   | { type: 'REMOVE_FILES'; payload: { fileIds: FileId[] } }
   | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<FileRecord> } }
+  | { type: 'REORDER_FILES'; payload: { orderedFileIds: FileId[] } }
   
   // Pinned files actions
   | { type: 'PIN_FILE'; payload: { fileId: FileId } }
@@ -221,6 +222,7 @@ export interface FileContextActions {
   addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => Promise<File[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
+  reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
 
   // File pinning
