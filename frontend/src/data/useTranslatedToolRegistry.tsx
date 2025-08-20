@@ -14,6 +14,7 @@ import Repair from '../tools/Repair';
 import SingleLargePage from '../tools/SingleLargePage';
 import UnlockPdfForms from '../tools/UnlockPdfForms';
 import RemoveCertificateSign from '../tools/RemoveCertificateSign';
+import AutoRename from '../tools/AutoRename';
 
 
 
@@ -356,11 +357,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "auto-rename-pdf-file": {
         icon: <span className="material-symbols-rounded">match_word</span>,
         name: t("home.auto-rename.title", "Auto Rename PDF File"),
-        component: null,
+        component: AutoRename,
         view: "format",
         description: t("home.auto-rename.desc", "Automatically rename PDF files based on their content"),
         category: ToolCategory.ADVANCED_TOOLS,
-        subcategory: SubcategoryId.AUTOMATION
+        subcategory: SubcategoryId.AUTOMATION,
+        maxFiles: -1,
+        endpoints: ["auto-rename"]
     },
     "auto-split-pages": {
         icon: <span className="material-symbols-rounded">split_scene_right</span>,

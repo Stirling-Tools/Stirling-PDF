@@ -49,6 +49,13 @@ export interface ToolOperationConfig<TParams = void> {
    */
   multiFileEndpoint?: boolean;
 
+  /**
+   * Whether to preserve the filename provided by the backend in response headers.
+   * When true, ignores filePrefix and uses the filename from Content-Disposition header.
+   * Useful for tools like auto-rename where the backend determines the final filename.
+   */
+  preserveBackendFilename?: boolean;
+
   /** How to handle API responses (e.g., ZIP extraction, single file response) */
   responseHandler?: ResponseHandler;
 
@@ -172,7 +179,8 @@ export const useToolOperation = <TParams = void>(
             endpoint: config.endpoint,
             buildFormData: config.buildFormData as (params: TParams, file: File) => FormData,
             filePrefix: config.filePrefix,
-            responseHandler: config.responseHandler
+            responseHandler: config.responseHandler,
+            preserveBackendFilename: config.preserveBackendFilename
           };
           processedFiles = await processFiles(
             params,

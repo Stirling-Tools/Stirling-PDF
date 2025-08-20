@@ -1045,6 +1045,25 @@
     "header": "Auto Rename PDF",
     "submit": "Auto Rename"
   },
+  "autoRename": {
+    "title": "Auto Rename PDF File",
+    "description": "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text.",
+    "submit": "Auto Rename",
+    "settings": {
+      "title": "Auto-Rename Settings",
+      "useFirstTextAsFallback": "Use first text as fallback",
+      "useFirstTextAsFallbackDesc": "If no suitable title is found, use the first text in the document"
+    },
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred while auto-renaming the PDF."
+    },
+    "results": {
+      "title": "Auto-Rename Results"
+    }
+  },
   "adjust-contrast": {
     "tags": "color-correction,tune,modify,enhance"
   },

@@ -22,7 +22,8 @@ export type ModeType =
   | 'single-large-page'
   | 'repair'
   | 'unlockPdfForms'
-  | 'removeCertificateSign';
+  | 'removeCertificateSign'
+  | 'auto-rename-pdf-file';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 
