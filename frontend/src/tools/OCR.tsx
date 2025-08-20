@@ -11,7 +11,7 @@ import AdvancedOCRSettings from "../components/tools/ocr/AdvancedOCRSettings";
 
 import { useOCRParameters } from "../hooks/tools/ocr/useOCRParameters";
 import { useOCROperation } from "../hooks/tools/ocr/useOCROperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useOCRTips } from "../components/tooltips/useOCRTips";
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -136,4 +136,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default OCR;
+// Static method to get the operation hook for automation
+OCR.tool = () => useOCROperation;
+
+export default OCR as ToolComponent;

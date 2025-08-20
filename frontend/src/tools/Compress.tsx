@@ -8,9 +8,9 @@ import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import CompressSettings from "../components/tools/compress/CompressSettings";
 
-import { useCompressParameters } from "../hooks/tools/compress/useCompressParameters";
+import { useCompressParameters, initialParameters } from "../hooks/tools/compress/useCompressParameters";
 import { useCompressOperation } from "../hooks/tools/compress/useCompressOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useCompressTips } from "../components/tooltips/useCompressTips";
 
 const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -95,4 +95,12 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default Compress;
+// Static method to get the operation hook for automation
+Compress.tool = () => useCompressOperation;
+
+// Static method to get default parameters for automation
+Compress.getDefaultParameters = () => {
+  return initialParameters;
+};
+
+export default Compress as ToolComponent;

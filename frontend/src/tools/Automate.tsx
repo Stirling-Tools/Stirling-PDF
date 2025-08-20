@@ -76,6 +76,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             automation={stepData.automation}
             onBack={() => handleStepChange({ step: 'selection'})}
             onComplete={handleComplete}
+            automateOperation={automateOperation}
           />
         );
 
@@ -103,7 +104,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       isCollapsed: currentStep !== 'selection',
       onCollapsedClick: () => setCurrentStep('selection')
     }, currentStep === 'selection' ? renderCurrentStep() : null),
-    
+
     createStep(stepData.mode === AutomationMode.EDIT
       ? t('automate.creation.editTitle', 'Edit Automation')
       : t('automate.creation.createTitle', 'Create Automation'), {
@@ -132,7 +133,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     },
     steps: automationSteps,
     review: {
-      isVisible: hasResults,
+      isVisible: true,
       operation: automateOperation,
       title: t('automate.reviewTitle', 'Automation Results')
     }

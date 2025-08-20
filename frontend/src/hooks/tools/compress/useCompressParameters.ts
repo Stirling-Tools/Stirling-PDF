@@ -9,7 +9,7 @@ export interface CompressParametersHook {
   getEndpointName: () => string;
 }
 
-const initialParameters: CompressParameters = {
+export const initialParameters: CompressParameters = {
   compressionLevel: 5,
   grayscale: false,
   expectedSize: '',

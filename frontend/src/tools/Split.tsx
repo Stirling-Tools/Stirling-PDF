@@ -9,7 +9,7 @@ import SplitSettings from "../components/tools/split/SplitSettings";
 
 import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
 import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -92,4 +92,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default Split;
+// Static method to get the operation hook for automation
+Split.tool = () => useSplitOperation;
+
+export default Split as ToolComponent;

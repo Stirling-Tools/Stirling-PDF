@@ -8,7 +8,7 @@ import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import { useSingleLargePageParameters } from "../hooks/tools/singleLargePage/useSingleLargePageParameters";
 import { useSingleLargePageOperation } from "../hooks/tools/singleLargePage/useSingleLargePageOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const SingleLargePage = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -77,4 +77,7 @@ const SingleLargePage = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
   });
 };
 
-export default SingleLargePage;
+// Static method to get the operation hook for automation
+SingleLargePage.tool = () => useSingleLargePageOperation;
+
+export default SingleLargePage as ToolComponent;

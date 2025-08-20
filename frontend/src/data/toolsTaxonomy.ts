@@ -1,5 +1,6 @@
 import { type TFunction } from 'i18next';
 import React from 'react';
+import { ToolOperationHook } from '../hooks/tools/shared/useToolOperation';
 
 export enum SubcategoryId {
 	SIGNING = 'signing',
@@ -34,6 +35,8 @@ export type ToolRegistryEntry = {
 	endpoints?: string[];
 	link?: string;
 	type?: string;
+	// Hook for automation execution
+	operationHook?: () => ToolOperationHook<any>;
 }
 
 export type ToolRegistry = Record<string, ToolRegistryEntry>;

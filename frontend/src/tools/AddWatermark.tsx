@@ -21,7 +21,7 @@ import {
   useWatermarkFileTips,
   useWatermarkFormattingTips,
 } from "../components/tooltips/useWatermarkTips";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -209,4 +209,7 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
   });
 };
 
-export default AddWatermark;
+// Static method to get the operation hook for automation
+AddWatermark.tool = () => useAddWatermarkOperation;
+
+export default AddWatermark as ToolComponent;

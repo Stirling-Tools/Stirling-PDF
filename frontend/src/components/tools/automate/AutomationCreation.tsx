@@ -257,12 +257,24 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
                             key={`tool-selector-${tool.id}`}
                             onSelect={(newOperation) => {
                               const updatedTools = [...selectedTools];
+                              
+                              // Get default parameters from the tool
+                              let defaultParams = {};
+                              const tool = toolRegistry?.[newOperation];
+                              if (tool?.component && (tool.component as any).getDefaultParameters) {
+                                try {
+                                  defaultParams = (tool.component as any).getDefaultParameters();
+                                } catch (error) {
+                                  console.warn(`Failed to get default parameters for ${newOperation}:`, error);
+                                }
+                              }
+                              
                               updatedTools[index] = {
                                 ...updatedTools[index],
                                 operation: newOperation,
                                 name: getToolName(newOperation),
                                 configured: false,
-                                parameters: {}
+                                parameters: defaultParams
                               };
                               setSelectedTools(updatedTools);
                             }}

@@ -10,7 +10,7 @@ import ConvertSettings from "../components/tools/convert/ConvertSettings";
 
 import { useConvertParameters } from "../hooks/tools/convert/useConvertParameters";
 import { useConvertOperation } from "../hooks/tools/convert/useConvertOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -133,4 +133,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default Convert;
+// Static method to get the operation hook for automation
+Convert.tool = () => useConvertOperation;
+
+export default Convert as ToolComponent;

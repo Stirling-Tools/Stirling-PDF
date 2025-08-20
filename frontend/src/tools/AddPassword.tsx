@@ -9,11 +9,11 @@ import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 
-import { useAddPasswordParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
+import { useAddPasswordParameters, defaultParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
 import { useAddPasswordOperation } from "../hooks/tools/addPassword/useAddPasswordOperation";
 import { useAddPasswordTips } from "../components/tooltips/useAddPasswordTips";
 import { useAddPasswordPermissionsTips } from "../components/tooltips/useAddPasswordPermissionsTips";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -114,4 +114,12 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default AddPassword;
+// Static method to get the operation hook for automation
+AddPassword.tool = () => useAddPasswordOperation;
+
+// Static method to get default parameters for automation
+AddPassword.getDefaultParameters = () => {
+  return defaultParameters;
+};
+
+export default AddPassword as ToolComponent;

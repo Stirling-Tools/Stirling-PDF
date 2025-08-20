@@ -8,7 +8,7 @@ import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
 
 import { useSanitizeParameters } from "../hooks/tools/sanitize/useSanitizeParameters";
 import { useSanitizeOperation } from "../hooks/tools/sanitize/useSanitizeOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useFileContext } from "../contexts/FileContext";
 
 const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -93,4 +93,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default Sanitize;
+// Static method to get the operation hook for automation
+Sanitize.tool = () => useSanitizeOperation;
+
+export default Sanitize as ToolComponent;

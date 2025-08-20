@@ -16,11 +16,14 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorIcon from '@mui/icons-material/Error';
 import { useFileContext } from '../../../contexts/FileContext';
+import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
+import { executeAutomationSequence } from '../../../utils/automationExecutor';
 
 interface AutomationRunProps {
   automation: any;
   onBack: () => void;
   onComplete: () => void;
+  automateOperation?: any; // Add the operation hook to store results
 }
 
 interface ExecutionStep {
@@ -31,25 +34,34 @@ interface ExecutionStep {
   error?: string;
 }
 
-export default function AutomationRun({ automation, onBack, onComplete }: AutomationRunProps) {
+export default function AutomationRun({ automation, onBack, onComplete, automateOperation }: AutomationRunProps) {
   const { t } = useTranslation();
-  const { activeFiles } = useFileContext();
+  const { activeFiles, consumeFiles } = useFileContext();
+  const toolRegistry = useFlatToolRegistry();
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+  const [currentFiles, setCurrentFiles] = useState<File[]>([]);
 
   // Initialize execution steps from automation
   React.useEffect(() => {
     if (automation?.operations) {
-      const steps = automation.operations.map((op: any, index: number) => ({
-        id: `${op.operation}-${index}`,
-        operation: op.operation,
-        name: op.operation, // You might want to get the display name from tool registry
-        status: 'pending' as const
-      }));
+      const steps = automation.operations.map((op: any, index: number) => {
+        const tool = toolRegistry[op.operation];
+        return {
+          id: `${op.operation}-${index}`,
+          operation: op.operation,
+          name: tool?.name || op.operation,
+          status: 'pending' as const
+        };
+      });
       setExecutionSteps(steps);
     }
-  }, [automation]);
+    // Initialize current files with active files
+    if (activeFiles) {
+      setCurrentFiles([...activeFiles]);
+    }
+  }, [automation, toolRegistry, activeFiles]);
 
   const executeAutomation = async () => {
     if (!activeFiles || activeFiles.length === 0) {
@@ -61,33 +73,52 @@ export default function AutomationRun({ automation, onBack, onComplete }: Automa
     setCurrentStepIndex(0);
 
     try {
-      for (let i = 0; i < executionSteps.length; i++) {
-        setCurrentStepIndex(i);
+      // Execute the automation sequence using the new executor
+      const finalResults = await executeAutomationSequence(
+        automation,
+        activeFiles,
+        (stepIndex: number, operationName: string) => {
+          // Step started
+          setCurrentStepIndex(stepIndex);
+          setExecutionSteps(prev => prev.map((step, idx) =>
+            idx === stepIndex ? { ...step, status: 'running' } : step
+          ));
+        },
+        (stepIndex: number, resultFiles: File[]) => {
+          // Step completed
+          setExecutionSteps(prev => prev.map((step, idx) =>
+            idx === stepIndex ? { ...step, status: 'completed' } : step
+          ));
+          setCurrentFiles(resultFiles);
+        },
+        (stepIndex: number, error: string) => {
+          // Step failed
+          setExecutionSteps(prev => prev.map((step, idx) =>
+            idx === stepIndex ? { ...step, status: 'error', error } : step
+          ));
+        }
+      );
 
-        // Update step status to running
-        setExecutionSteps(prev => prev.map((step, idx) =>
-          idx === i ? { ...step, status: 'running' } : step
-        ));
-
-        // Simulate step execution (replace with actual tool execution)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Update step status to completed
-        setExecutionSteps(prev => prev.map((step, idx) =>
-          idx === i ? { ...step, status: 'completed' } : step
-        ));
-      }
-
+      // All steps completed successfully
       setCurrentStepIndex(-1);
       setIsExecuting(false);
+      setCurrentFiles(finalResults);
+      
+      // Properly integrate results with FileContext
+      if (finalResults.length > 0) {
+        console.log(`🎨 Integrating ${finalResults.length} result files with FileContext`);
+        
+        // Use FileContext's consumeFiles to properly add results
+        // This replaces input files with output files (like other tools do)
+        await consumeFiles(activeFiles, finalResults);
+        
+        console.log(`✅ Successfully integrated automation results with FileContext`);
+      }
 
-      // All steps completed - show success
-    } catch (error) {
-      // Handle error
-      setExecutionSteps(prev => prev.map((step, idx) =>
-        idx === currentStepIndex ? { ...step, status: 'error', error: error?.toString() } : step
-      ));
+    } catch (error: any) {
+      console.error('Automation execution failed:', error);
       setIsExecuting(false);
+      setCurrentStepIndex(-1);
     }
   };
 

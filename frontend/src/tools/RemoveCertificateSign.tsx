@@ -8,7 +8,7 @@ import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import { useRemoveCertificateSignParameters } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
 import { useRemoveCertificateSignOperation } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const RemoveCertificateSign = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -77,4 +77,7 @@ const RemoveCertificateSign = ({ onPreviewFile, onComplete, onError }: BaseToolP
   });
 };
 
-export default RemoveCertificateSign;
+// Static method to get the operation hook for automation
+RemoveCertificateSign.tool = () => useRemoveCertificateSignOperation;
+
+export default RemoveCertificateSign as ToolComponent;
