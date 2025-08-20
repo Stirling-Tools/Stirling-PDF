@@ -2,8 +2,6 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Text, Checkbox, Tooltip, ActionIcon, Badge } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/Close';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import PreviewIcon from '@mui/icons-material/Preview';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
@@ -289,40 +287,6 @@ const FileThumbnail = ({
             whiteSpace: 'nowrap'
           }}
         >
-          {!toolMode && isSupported && (
-            <>
-              <Tooltip label="View File">
-                <ActionIcon
-                  size="md"
-                  variant="subtle"
-                  c="white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewFile(file.id);
-                    onSetStatus(`Opened ${file.name}`);
-                  }}
-                >
-                  <VisibilityIcon style={{ fontSize: 20 }} />
-                </ActionIcon>
-              </Tooltip>
-
-            </>
-          )}
-
-          <Tooltip label="Preview File">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewFile(file.id);
-                onSetStatus(`Opening preview for ${file.name}`);
-              }}
-            >
-              <PreviewIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
 
           {actualFile && (
             <Tooltip label={isFilePinned(actualFile) ? "Unpin File" : "Pin File"}>
