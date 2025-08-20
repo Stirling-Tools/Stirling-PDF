@@ -2095,7 +2095,14 @@
     "fileSize": "Size",
     "fileVersion": "Version",
     "totalSelected": "Total Selected",
-    "dropFilesHere": "Drop files here"
+    "dropFilesHere": "Drop files here",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "deleteSelected": "Delete Selected",
+    "downloadSelected": "Download Selected",
+    "selectedCount": "{{count}} selected",
+    "download": "Download",
+    "delete": "Delete"
   },
   "storage": {
     "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",

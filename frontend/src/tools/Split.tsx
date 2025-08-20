@@ -54,13 +54,12 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = splitOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles || hasResults;
   const settingsCollapsed = !hasFiles || hasResults;
 
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: filesCollapsed,
+      isCollapsed: hasResults,
       placeholder: "Select a PDF file in the main view to get started",
     },
     steps: [
