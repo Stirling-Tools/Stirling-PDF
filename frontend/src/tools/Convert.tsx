@@ -97,7 +97,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: filesCollapsed,
+      isCollapsed: hasResults,
       placeholder: t("convert.selectFilesPlaceholder", "Select files in the main view to get started"),
     },
     steps: [
