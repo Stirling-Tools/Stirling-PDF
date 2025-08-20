@@ -19,9 +19,9 @@ import RemoveCertificateSign from '../tools/RemoveCertificateSign';
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
-    const { t } = useTranslation();
-    
-    return {
+  const { t } = useTranslation();
+
+  const allTools: ToolRegistry = {
     // Signing
 
     "certSign": {
@@ -56,7 +56,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategory: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
         endpoints: ["add-password"]
-    },    
+    },
     "add-watermark": {
         icon: <span className="material-symbols-rounded">branding_watermark</span>,
         name: t("home.watermark.title", "Add Watermark"),
@@ -148,8 +148,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.VERIFICATION
     },
-    
-    
+
+
     // Document Review
 
     "read": {
@@ -205,7 +205,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         component: null,
         view: "pageEditor",
         description: t("home.reorganizePages.desc", "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."),
-        category: ToolCategory.STANDARD_TOOLS, 
+        category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.PAGE_FORMATTING
     },
     "adjust-page-size-scale": {
@@ -616,5 +616,13 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.RECOMMENDED_TOOLS,
         subcategory: SubcategoryId.GENERAL
     },
-    };
+  };
+
+  const filteredTools = Object.keys(allTools)
+    .filter(key => allTools[key].component !== null || allTools[key].link)
+    .reduce((obj, key) => {
+      obj[key] = allTools[key];
+      return obj;
+    }, {} as ToolRegistry);
+  return filteredTools;
 }
