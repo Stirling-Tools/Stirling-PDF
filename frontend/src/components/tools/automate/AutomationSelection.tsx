@@ -5,17 +5,23 @@ import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AutomationEntry from "./AutomationEntry";
 import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSuggestedAutomations";
-import { useSavedAutomations } from "../../../hooks/tools/automate/useSavedAutomations";
 
 interface AutomationSelectionProps {
-  onSelectCustom: () => void;
-  onSelectSuggested: (automation: any) => void;
+  savedAutomations: any[];
   onCreateNew: () => void;
+  onRun: (automation: any) => void;
+  onEdit: (automation: any) => void;
+  onDelete: (automation: any) => void;
 }
 
-export default function AutomationSelection({ onSelectCustom, onSelectSuggested, onCreateNew }: AutomationSelectionProps) {
+export default function AutomationSelection({ 
+  savedAutomations,
+  onCreateNew, 
+  onRun, 
+  onEdit, 
+  onDelete 
+}: AutomationSelectionProps) {
   const { t } = useTranslation();
-  const { savedAutomations } = useSavedAutomations();
   const suggestedAutomations = useSuggestedAutomations();
 
   return (
@@ -39,7 +45,10 @@ export default function AutomationSelection({ onSelectCustom, onSelectSuggested,
           title={automation.name}
           badgeIcon={SettingsIcon}
           operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
-          onClick={() => onSelectCustom()}
+          onClick={() => onRun(automation)}
+          showMenu={true}
+          onEdit={() => onEdit(automation)}
+          onDelete={() => onDelete(automation)}
         />
       ))}
       <Divider pb='sm' />
@@ -55,7 +64,7 @@ export default function AutomationSelection({ onSelectCustom, onSelectSuggested,
               key={automation.id}
               badgeIcon={automation.icon}
               operations={automation.operations}
-              onClick={() => onSelectSuggested(automation)}
+              onClick={() => onRun(automation)}
             />
           ))}
         </Stack>

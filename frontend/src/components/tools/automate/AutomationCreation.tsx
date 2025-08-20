@@ -22,8 +22,14 @@ import ToolConfigurationModal from './ToolConfigurationModal';
 import ToolSelector from './ToolSelector';
 import AutomationEntry from './AutomationEntry';
 
+export enum AutomationMode {
+  CREATE = 'create',
+  EDIT = 'edit',
+  SUGGESTED = 'suggested'
+}
+
 interface AutomationCreationProps {
-  mode: 'custom' | 'suggested' | 'create';
+  mode: AutomationMode;
   existingAutomation?: any;
   onBack: () => void;
   onComplete: (automation: any) => void;
@@ -49,19 +55,24 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
   // Initialize based on mode and existing automation
   useEffect(() => {
-    if (mode === 'suggested' && existingAutomation) {
-      setAutomationName(existingAutomation.name);
+    if ((mode === AutomationMode.SUGGESTED || mode === AutomationMode.EDIT) && existingAutomation) {
+      setAutomationName(existingAutomation.name || '');
 
-      const tools = existingAutomation.operations.map((op: string) => ({
-        id: `${op}-${Date.now()}`,
-        operation: op,
-        name: getToolName(op),
-        configured: false,
-        parameters: {}
-      }));
+      // Handle both string array (suggested) and object array (custom) operations
+      const operations = existingAutomation.operations || [];
+      const tools = operations.map((op: any, index: number) => {
+        const operation = typeof op === 'string' ? op : op.operation;
+        return {
+          id: `${operation}-${Date.now()}-${index}`,
+          operation: operation,
+          name: getToolName(operation),
+          configured: mode === AutomationMode.EDIT ? true : (typeof op === 'object' ? op.configured || false : false),
+          parameters: typeof op === 'object' ? op.parameters || {} : {}
+        };
+      });
 
       setSelectedTools(tools);
-    } else if (mode === 'create' && selectedTools.length === 0) {
+    } else if (mode === AutomationMode.CREATE && selectedTools.length === 0) {
       // Initialize with 2 empty tools for new automation
       const defaultTools = [
         {
@@ -217,60 +228,72 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
                     style={{
                       border: '1px solid var(--mantine-color-gray-2)',
                       borderRadius: 'var(--mantine-radius-sm)',
-                      backgroundColor: 'white'
+                      position: 'relative',
+                      padding: 'var(--mantine-spacing-xs)'
                     }}
                   >
-                    <Group gap="xs" align="center" wrap="nowrap" style={{ width: '100%' }}>
+                    {/* Delete X in top right */}
+                    <ActionIcon
+                      variant="subtle"
+                      size="xs"
+                      onClick={() => removeTool(index)}
+                      title={t('automate.creation.tools.remove', 'Remove tool')}
+                      style={{
+                        position: 'absolute',
+                        top: '4px',
+                        right: '4px',
+                        zIndex: 1,
+                        color: 'var(--mantine-color-gray-6)'
+                      }}
+                    >
+                      <CloseIcon style={{ fontSize: 12 }} />
+                    </ActionIcon>
 
-                      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                        {/* Tool Selection Dropdown */}
-                        <ToolSelector
-                          key={`tool-selector-${tool.id}`}
-                          onSelect={(newOperation) => {
-                            const updatedTools = [...selectedTools];
-                            updatedTools[index] = {
-                              ...updatedTools[index],
-                              operation: newOperation,
-                              name: getToolName(newOperation),
-                              configured: false,
-                              parameters: {}
-                            };
-                            setSelectedTools(updatedTools);
-                          }}
-                          excludeTools={['automate']}
-                          toolRegistry={toolRegistry}
-                          selectedValue={tool.operation}
-                          placeholder={tool.name}
-                        />
-                      </div>
+                    <div style={{ paddingRight: '1.25rem' }}>
+                      {/* Tool Selection Dropdown with inline settings cog */}
+                      <Group gap="xs" align="center" wrap="nowrap">
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <ToolSelector
+                            key={`tool-selector-${tool.id}`}
+                            onSelect={(newOperation) => {
+                              const updatedTools = [...selectedTools];
+                              updatedTools[index] = {
+                                ...updatedTools[index],
+                                operation: newOperation,
+                                name: getToolName(newOperation),
+                                configured: false,
+                                parameters: {}
+                              };
+                              setSelectedTools(updatedTools);
+                            }}
+                            excludeTools={['automate']}
+                            toolRegistry={toolRegistry}
+                            selectedValue={tool.operation}
+                            placeholder={tool.name}
+                          />
+                        </div>
 
-                      <Group gap="xs" style={{ flexShrink: 0 }}>
-                        {tool.configured ? (
-                          <CheckIcon style={{ fontSize: 14, color: 'green' }} />
-                        ) : (
-                          <CloseIcon style={{ fontSize: 14, color: 'orange' }} />
+                        {/* Settings cog - only show if tool is selected, aligned right */}
+                        {tool.operation && (
+                          <ActionIcon
+                            variant="subtle"
+                            size="sm"
+                            onClick={() => configureTool(index)}
+                            title={t('automate.creation.tools.configure', 'Configure tool')}
+                            style={{ color: 'var(--mantine-color-gray-6)' }}
+                          >
+                            <SettingsIcon style={{ fontSize: 16 }} />
+                          </ActionIcon>
                         )}
-
-                        <ActionIcon
-                          variant="subtle"
-                          size="sm"
-                          onClick={() => configureTool(index)}
-                          title={t('automate.creation.tools.configure', 'Configure tool')}
-                        >
-                          <SettingsIcon style={{ fontSize: 16 }} />
-                        </ActionIcon>
-
-                        <ActionIcon
-                          variant="subtle"
-                          size="sm"
-                          color="red"
-                          onClick={() => removeTool(index)}
-                          title={t('automate.creation.tools.remove', 'Remove tool')}
-                        >
-                          <DeleteIcon style={{ fontSize: 16 }} />
-                        </ActionIcon>
                       </Group>
-                    </Group>
+
+                      {/* Configuration status underneath */}
+                      {tool.operation && !tool.configured && (
+                        <Text pl="md" size="xs" c="dimmed" mt="xs">
+                          {t('automate.creation.tools.notConfigured', "! Not Configured")}
+                        </Text>
+                      )}
+                    </div>
                   </div>
 
                   {index < selectedTools.length - 1 && (

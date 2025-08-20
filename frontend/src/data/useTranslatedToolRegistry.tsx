@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
@@ -21,7 +21,7 @@ import RemoveCertificateSign from '../tools/RemoveCertificateSign';
 export function useFlatToolRegistry(): ToolRegistry {
     const { t } = useTranslation();
     
-    return {
+    return useMemo(() => ({
     // Signing
 
     "certSign": {
@@ -618,5 +618,5 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.RECOMMENDED_TOOLS,
         subcategory: SubcategoryId.GENERAL
     },
-    };
+    }), [t]);
 }

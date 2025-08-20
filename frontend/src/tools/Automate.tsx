@@ -5,12 +5,13 @@ import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import AutomationSelection from "../components/tools/automate/AutomationSelection";
-import AutomationCreation from "../components/tools/automate/AutomationCreation";
+import AutomationCreation, { AutomationMode } from "../components/tools/automate/AutomationCreation";
 import ToolSequence from "../components/tools/automate/ToolSequence";
 
 import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperation";
 import { BaseToolProps } from "../types/tool";
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
+import { useSavedAutomations } from "../hooks/tools/automate/useSavedAutomations";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -22,6 +23,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const automateOperation = useAutomateOperation();
   const toolRegistry = useFlatToolRegistry();
+  const { savedAutomations, deleteAutomation } = useSavedAutomations();
 
   const handleStepChange = (data: any) => {
     setStepData(data);
@@ -40,9 +42,18 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       case 'selection':
         return (
           <AutomationSelection
-            onSelectCustom={() => handleStepChange({ step: 'creation', mode: 'custom' })}
-            onSelectSuggested={(automation: any) => handleStepChange({ step: 'creation', mode: 'suggested', automation })}
-            onCreateNew={() => handleStepChange({ step: 'creation', mode: 'create' })}
+            savedAutomations={savedAutomations}
+            onCreateNew={() => handleStepChange({ step: 'creation', mode: AutomationMode.CREATE })}
+            onRun={(automation: any) => handleStepChange({ step: 'sequence', automation })}
+            onEdit={(automation: any) => handleStepChange({ step: 'creation', mode: AutomationMode.EDIT, automation })}
+            onDelete={async (automation: any) => {
+              try {
+                await deleteAutomation(automation.id);
+              } catch (error) {
+                console.error('Failed to delete automation:', error);
+                onError?.(`Failed to delete automation: ${automation.name}`);
+              }
+            }}
           />
         );
 

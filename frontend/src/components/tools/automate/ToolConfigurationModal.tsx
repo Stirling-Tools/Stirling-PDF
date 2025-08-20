@@ -128,10 +128,10 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel 
     if (tool.parameters) {
       setParameters(tool.parameters);
     } else if (parameterHook) {
-      // If we have a parameter hook, use it to get default values
+      // If we have a parameter module, use its default parameters
       try {
-        const defaultParams = parameterHook();
-        setParameters(defaultParams.parameters || {});
+        const defaultParams = parameterHook.defaultParameters || {};
+        setParameters(defaultParams);
       } catch (error) {
         console.warn(`Error getting default parameters for ${tool.operation}:`, error);
         setParameters({});
