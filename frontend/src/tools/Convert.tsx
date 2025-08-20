@@ -34,7 +34,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = convertOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles;
   const settingsCollapsed = hasResults;
 
   useEffect(() => {
