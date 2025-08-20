@@ -10,6 +10,7 @@ import { fileStorage, StoredFile } from '../services/fileStorage';
 import { FileId } from '../types/fileContext';
 import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+import { pdfWorkerManager } from '../services/pdfWorkerManager';
 
 interface IndexedDBContextValue {
   // Core CRUD operations
@@ -82,16 +83,15 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     // DEBUG: Check original file before saving
     if (DEBUG && file.type === 'application/pdf') {
       try {
-        const { getDocument } = await import('pdfjs-dist');
         const arrayBuffer = await file.arrayBuffer();
-        const pdf = await getDocument({ data: arrayBuffer }).promise;
+        const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
         console.log(`🔍 BEFORE SAVE - Original file:`, {
           name: file.name,
           size: file.size,
           arrayBufferSize: arrayBuffer.byteLength,
           pages: pdf.numPages
         });
-        pdf.destroy();
+        pdfWorkerManager.destroyDocument(pdf);
       } catch (error) {
         console.error(`🔍 Error validating file before save:`, error);
       }
@@ -152,11 +152,10 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       
       // Quick PDF validation
       try {
-        const { getDocument } = await import('pdfjs-dist');
         const arrayBuffer = await file.arrayBuffer();
-        const pdf = await getDocument({ data: arrayBuffer }).promise;
+        const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
         console.log(`🔍 AFTER LOAD - PDF validation: ${pdf.numPages} pages in reconstructed file`);
-        pdf.destroy();
+        pdfWorkerManager.destroyDocument(pdf);
       } catch (error) {
         console.error(`🔍 AFTER LOAD - PDF reconstruction error:`, error);
       }

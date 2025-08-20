@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme, ActionIcon, Box, Tabs } from "@mantine/core";
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import { useTranslation } from "react-i18next";
+import { pdfWorkerManager } from "../../services/pdfWorkerManager";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -16,7 +16,6 @@ import SkeletonLoader from '../shared/SkeletonLoader';
 import { useFileState, useFileActions, useCurrentFile, useProcessedFiles } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 
-GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
 // Lazy loading page image component
 interface LazyPageImageProps {
@@ -399,7 +398,7 @@ const Viewer = ({
           throw new Error('No valid PDF source available');
         }
 
-        const pdf = await getDocument(pdfData).promise;
+        const pdf = await pdfWorkerManager.createDocument(pdfData);
         pdfDocRef.current = pdf;
         setNumPages(pdf.numPages);
         if (!cancelled) {
@@ -420,6 +419,11 @@ const Viewer = ({
       cancelled = true;
       // Stop any ongoing preloading
       preloadingRef.current = false;
+      // Cleanup PDF document using worker manager
+      if (pdfDocRef.current) {
+        pdfWorkerManager.destroyDocument(pdfDocRef.current);
+        pdfDocRef.current = null;
+      }
       // Cleanup ArrayBuffer reference to help garbage collection
       currentArrayBufferRef.current = null;
     };

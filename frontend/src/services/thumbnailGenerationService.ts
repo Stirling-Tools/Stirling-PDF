@@ -60,8 +60,12 @@ export class ThumbnailGenerationService {
       this.evictLeastRecentlyUsedPDF();
     }
 
-    const { getDocument } = await import('pdfjs-dist');
-    const pdf = await getDocument({ data: pdfArrayBuffer }).promise;
+    // Use centralized worker manager instead of direct getDocument
+    const pdf = await pdfWorkerManager.createDocument(pdfArrayBuffer, {
+      disableAutoFetch: true,
+      disableStream: true,
+      stopAtErrors: false
+    });
 
     this.pdfDocumentCache.set(fileId, {
       pdf,
@@ -98,7 +102,7 @@ export class ThumbnailGenerationService {
     }
 
     if (oldestEntry) {
-      oldestEntry[1].pdf.destroy(); // Clean up PDF worker
+      pdfWorkerManager.destroyDocument(oldestEntry[1].pdf); // Use worker manager for cleanup
       this.pdfDocumentCache.delete(oldestEntry[0]);
     }
   }
@@ -257,9 +261,9 @@ export class ThumbnailGenerationService {
   }
 
   clearPDFCache(): void {
-    // Destroy all cached PDF documents
+    // Destroy all cached PDF documents using worker manager
     for (const [, cached] of this.pdfDocumentCache) {
-      cached.pdf.destroy();
+      pdfWorkerManager.destroyDocument(cached.pdf);
     }
     this.pdfDocumentCache.clear();
   }
@@ -267,7 +271,7 @@ export class ThumbnailGenerationService {
   clearPDFCacheForFile(fileId: string): void {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
-      cached.pdf.destroy();
+      pdfWorkerManager.destroyDocument(cached.pdf);
       this.pdfDocumentCache.delete(fileId);
     }
   }

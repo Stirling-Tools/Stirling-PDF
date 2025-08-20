@@ -1,4 +1,4 @@
-import { getDocument } from "pdfjs-dist";
+import { pdfWorkerManager } from '../services/pdfWorkerManager';
 
 export interface ThumbnailWithMetadata {
   thumbnail: string | undefined;
@@ -303,16 +303,15 @@ function formatFileSize(bytes: number): string {
 
 async function generatePDFThumbnail(arrayBuffer: ArrayBuffer, file: File, scale: number): Promise<string> {
   try {
-    const pdf = await getDocument({
-      data: arrayBuffer,
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
       disableAutoFetch: true,
       disableStream: true
-    }).promise;
+    });
 
     const thumbnail = await generateStandardPDFThumbnail(pdf, scale);
 
-    // Immediately clean up memory after thumbnail generation
-    pdf.destroy();
+    // Immediately clean up memory after thumbnail generation using worker manager
+    pdfWorkerManager.destroyDocument(pdf);
     return thumbnail;
   } catch (error) {
     if (error instanceof Error) {
@@ -385,7 +384,7 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
   
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     
     const pageCount = pdf.numPages;
     const page = await pdf.getPage(1);
@@ -396,14 +395,14 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
     const context = canvas.getContext("2d");
 
     if (!context) {
-      pdf.destroy();
+      pdfWorkerManager.destroyDocument(pdf);
       throw new Error('Could not get canvas context');
     }
 
     await page.render({ canvasContext: context, viewport }).promise;
     const thumbnail = canvas.toDataURL();
     
-    pdf.destroy();
+    pdfWorkerManager.destroyDocument(pdf);
     return { thumbnail, pageCount };
 
   } catch (error) {

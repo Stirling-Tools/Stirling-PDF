@@ -39,9 +39,10 @@ class PDFWorkerManager {
 
   /**
    * Create a PDF document with proper lifecycle management
+   * Supports ArrayBuffer, Uint8Array, URL string, or {data: ArrayBuffer} object
    */
   async createDocument(
-    data: ArrayBuffer | Uint8Array,
+    data: ArrayBuffer | Uint8Array | string | { data: ArrayBuffer },
     options: {
       disableAutoFetch?: boolean;
       disableStream?: boolean;
@@ -55,13 +56,33 @@ class PDFWorkerManager {
       await this.waitForAvailableWorker();
     }
 
-    const loadingTask = getDocument({
-      data,
-      disableAutoFetch: options.disableAutoFetch ?? true,
-      disableStream: options.disableStream ?? true,
-      stopAtErrors: options.stopAtErrors ?? false,
-      verbosity: options.verbosity ?? 0
-    });
+    // Normalize input data to PDF.js format
+    let pdfData: any;
+    if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+      pdfData = { data };
+    } else if (typeof data === 'string') {
+      pdfData = data; // URL string
+    } else if (data && typeof data === 'object' && 'data' in data) {
+      pdfData = data; // Already in {data: ArrayBuffer} format
+    } else {
+      pdfData = data; // Pass through as-is
+    }
+
+    const loadingTask = getDocument(
+      typeof pdfData === 'string' ? {
+        url: pdfData,
+        disableAutoFetch: options.disableAutoFetch ?? true,
+        disableStream: options.disableStream ?? true,
+        stopAtErrors: options.stopAtErrors ?? false,
+        verbosity: options.verbosity ?? 0
+      } : {
+        ...pdfData,
+        disableAutoFetch: options.disableAutoFetch ?? true,
+        disableStream: options.disableStream ?? true,
+        stopAtErrors: options.stopAtErrors ?? false,
+        verbosity: options.verbosity ?? 0
+      }
+    );
 
     try {
       const pdf = await loadingTask.promise;

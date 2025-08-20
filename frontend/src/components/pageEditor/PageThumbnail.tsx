@@ -13,12 +13,6 @@ import { Command } from '../../hooks/useUndoRedo';
 import { useFileState } from '../../contexts/FileContext';
 import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
 import styles from './PageEditor.module.css';
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-
-// Ensure PDF.js worker is available
-if (!GlobalWorkerOptions.workerSrc) {
-  GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
-}
 
 interface PageThumbnailProps {
   page: PDFPage;
