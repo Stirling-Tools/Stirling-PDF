@@ -6,7 +6,7 @@ import {
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useToolFileSelection, useProcessedFiles, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
+import { useToolFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
 import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
@@ -46,7 +46,6 @@ const FileEditor = ({
   // Use optimized FileContext hooks
   const { state, selectors } = useFileState();
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
-  const processedFiles = useProcessedFiles(); // Now gets real processed files
   
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeFiles = useMemo(() => selectors.getFiles(), [selectors.getFilesSignature()]);
@@ -63,7 +62,7 @@ const FileEditor = ({
   selectedFileIdsRef.current = selectedFileIds;
   actionsRef.current = actions;
   
-  // Legacy compatibility for existing code - now actually updates context (completely stable)
+  // Wrapper for context file selection updates (stable)
   const setContextSelectedFiles = useCallback((fileIds: string[] | ((prev: string[]) => string[])) => {
     if (typeof fileIds === 'function') {
       // Handle callback pattern - get current state from ref

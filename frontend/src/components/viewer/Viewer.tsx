@@ -13,7 +13,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useLocalStorage } from "@mantine/hooks";
 import { fileStorage } from "../../services/fileStorage";
 import SkeletonLoader from '../shared/SkeletonLoader';
-import { useFileState, useFileActions, useCurrentFile, useProcessedFiles } from "../../contexts/FileContext";
+import { useFileState, useFileActions, useCurrentFile } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 
 
@@ -152,11 +152,9 @@ const Viewer = ({
   const { selectors } = useFileState();
   const { actions } = useFileActions();
   const currentFile = useCurrentFile();
-  const processedFiles = useProcessedFiles();
   
-  // Map legacy functions
   const getCurrentFile = () => currentFile.file;
-  const getCurrentProcessedFile = () => currentFile.file ? processedFiles.getProcessedFile(currentFile.file) : undefined;
+  const getCurrentProcessedFile = () => currentFile.record?.processedFile || undefined;
   const clearAllFiles = actions.clearAllFiles;
   const addFiles = actions.addFiles;
   const activeFiles = selectors.getFiles();

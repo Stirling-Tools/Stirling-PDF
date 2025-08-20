@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useIndexedDB } from '../contexts/IndexedDBContext';
-import { FileWithUrl, FileMetadata } from '../types/file';
+import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 
 export const useFileManager = () => {

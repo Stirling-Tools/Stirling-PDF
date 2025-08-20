@@ -80,15 +80,10 @@ export function createQuickKey(file: File): string {
   return `${file.name}|${file.size}|${file.lastModified}`;
 }
 
-// Legacy support - now just delegates to createFileId
-export function createStableFileId(file: File): FileId {
-  // Don't mutate File objects - always return new UUID
-  return createFileId();
-}
 
 
 export function toFileRecord(file: File, id?: FileId): FileRecord {
-  const fileId = id || createStableFileId(file);
+  const fileId = id || createFileId();
   return {
     id: fileId,
     name: file.name,

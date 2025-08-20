@@ -218,36 +218,3 @@ export function useToolFileSelection() {
   ]);
 }
 
-/**
- * Hook for processed files (compatibility with old FileContext)
- * Provides access to files with their processed metadata
- */
-export function useProcessedFiles() {
-  const { state, selectors } = useFileState();
-  
-  // Create a Map-like interface for backward compatibility
-  const compatibilityMap = useMemo(() => ({
-    size: state.files.ids.length,
-    get: (file: File) => {
-      // Find file record by matching File object properties
-      const record = Object.values(state.files.byId).find(r => 
-        r.name === file.name && r.size === file.size && r.lastModified === file.lastModified
-      );
-      return record?.processedFile || null;
-    },
-    has: (file: File) => {
-      // Find file record by matching File object properties
-      const record = Object.values(state.files.byId).find(r => 
-        r.name === file.name && r.size === file.size && r.lastModified === file.lastModified
-      );
-      return !!record?.processedFile;
-    },
-    // Removed deprecated set method
-  }), [state.files.byId, state.files.ids.length]);
-  
-  return useMemo(() => ({
-    processedFiles: compatibilityMap,
-    getProcessedFile: (file: File) => compatibilityMap.get(file),
-    // Removed deprecated updateProcessedFile method
-  }), [compatibilityMap]);
-}

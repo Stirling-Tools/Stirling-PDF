@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 interface FilePickerModalProps {
   opened: boolean;
   onClose: () => void;
-  storedFiles: any[]; // Files from storage (FileWithUrl format)
+  storedFiles: any[]; // Files from storage (various formats supported)
   onSelectFiles: (selectedFiles: File[]) => void;
 }
 

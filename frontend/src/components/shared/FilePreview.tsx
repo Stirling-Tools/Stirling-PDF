@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mantine/core';
-import { FileWithUrl, FileMetadata } from '../../types/file';
+import { FileMetadata } from '../../types/file';
 import DocumentThumbnail from './filePreview/DocumentThumbnail';
 import DocumentStack from './filePreview/DocumentStack';
 import HoverOverlay from './filePreview/HoverOverlay';
@@ -8,7 +8,7 @@ import NavigationArrows from './filePreview/NavigationArrows';
 
 export interface FilePreviewProps {
   // Core file data
-  file: File | FileWithUrl | FileMetadata | null;
+  file: File | FileMetadata | null;
   thumbnail?: string | null;
   
   // Optional features
@@ -21,7 +21,7 @@ export interface FilePreviewProps {
   isAnimating?: boolean;
   
   // Event handlers
-  onFileClick?: (file: File | FileWithUrl | FileMetadata | null) => void;
+  onFileClick?: (file: File | FileMetadata | null) => void;
   onPrevious?: () => void;
   onNext?: () => void;
 }

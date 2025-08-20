@@ -6,12 +6,13 @@ import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 
-import { FileWithUrl } from "../../types/file";
+import { FileRecord } from "../../types/fileContext";
 import { getFileSize, getFileDate } from "../../utils/fileUtils";
 import { useIndexedDBThumbnail } from "../../hooks/useIndexedDBThumbnail";
 
 interface FileCardProps {
-  file: FileWithUrl;
+  file: File;
+  record?: FileRecord;
   onRemove: () => void;
   onDoubleClick?: () => void;
   onView?: () => void;
@@ -21,9 +22,12 @@ interface FileCardProps {
   isSupported?: boolean; // Whether the file format is supported by the current tool
 }
 
-const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, onSelect, isSupported = true }: FileCardProps) => {
+const FileCard = ({ file, record, onRemove, onDoubleClick, onView, onEdit, isSelected, onSelect, isSupported = true }: FileCardProps) => {
   const { t } = useTranslation();
-  const { thumbnail: thumb, isGenerating } = useIndexedDBThumbnail(file);
+  // Use record thumbnail if available, otherwise fall back to IndexedDB lookup
+  const fileMetadata = record ? { id: record.id, name: file.name, type: file.type, size: file.size, lastModified: file.lastModified } : null;
+  const { thumbnail: indexedDBThumb, isGenerating } = useIndexedDBThumbnail(fileMetadata);
+  const thumb = record?.thumbnailUrl || indexedDBThumb;
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -173,7 +177,7 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
           <Badge color="blue" variant="light" size="sm">
             {getFileDate(file)}
           </Badge>
-          {file.storedInIndexedDB && (
+          {record?.id && (
             <Badge
               color="green"
               variant="light"

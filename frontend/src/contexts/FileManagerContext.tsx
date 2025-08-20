@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { FileWithUrl, FileMetadata } from '../types/file';
+import { FileMetadata } from '../types/file';
 import { StoredFile } from '../services/fileStorage';
 
 // Type for the context value - now contains everything directly

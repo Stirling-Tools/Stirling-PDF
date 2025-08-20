@@ -276,6 +276,5 @@ export {
   useSelectedFiles,
   // Primary API hooks for tools
   useFileContext,
-  useToolFileSelection,
-  useProcessedFiles
+  useToolFileSelection
 } from './file/fileHooks';

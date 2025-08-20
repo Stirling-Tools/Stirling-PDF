@@ -3,16 +3,6 @@
  * FileContext uses pure File objects with separate ID tracking
  */
 
-/**
- * @deprecated Use pure File objects with FileContext for ID management
- * This interface exists for backward compatibility only
- */
-export interface FileWithUrl extends File {
-  id: string; // Required UUID from FileContext
-  url?: string; // Blob URL for display
-  thumbnail?: string;
-  storedInIndexedDB?: boolean;
-}
 
 /**
  * File metadata for efficient operations without loading full file data
