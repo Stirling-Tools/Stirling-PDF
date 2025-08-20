@@ -1052,6 +1052,18 @@
     },
     "results": {
       "title": "Auto-Rename Results"
+    },
+    "tooltip": {
+      "header": {
+        "title": "How Auto-Rename Works"
+      },
+      "howItWorks": {
+        "title": "Smart Renaming",
+        "text": "Automatically finds the best title from your PDF content and uses it as the filename.",
+        "bullet1": "Looks for text that appears to be a title or heading",
+        "bullet2": "Creates a clean, valid filename from the detected title",
+        "bullet3": "Keeps the original name if no suitable title is found"
+      }
     }
   },
   "adjust-contrast": {
