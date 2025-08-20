@@ -12,6 +12,8 @@ import { SubcategoryId, ToolCategory, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
 import Repair from '../tools/Repair';
 import UnlockPdfForms from '../tools/UnlockPdfForms';
+import RemoveCertificateSign from '../tools/RemoveCertificateSign';
+
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -326,11 +328,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "remove-certificate-sign": {
         icon: <span className="material-symbols-rounded">remove_moderator</span>,
         name: t("home.removeCertSign.title", "Remove Certificate Signatures"),
-        component: null,
+        component: RemoveCertificateSign,
         view: "security",
         description: t("home.removeCertSign.desc", "Remove digital signatures from PDF documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: SubcategoryId.REMOVAL
+        subcategory: SubcategoryId.REMOVAL,
+        maxFiles: -1,
+        endpoints: ["remove-certificate-sign"]
     },
 
 
