@@ -74,7 +74,7 @@ function FileContextInner({
 
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[]): Promise<File[]> => {
-    const addedFilesWithIds = await addFiles('raw', { files }, stateRef, filesRef, dispatch);
+    const addedFilesWithIds = await addFiles('raw', { files }, stateRef, filesRef, dispatch, lifecycleManager);
     
     // Persist to IndexedDB if enabled - pass existing thumbnail to prevent double generation
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
@@ -91,12 +91,12 @@ function FileContextInner({
   }, [indexedDB, enablePersistence]);
 
   const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<File[]> => {
-    const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch);
+    const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch, lifecycleManager);
     return result.map(({ file }) => file);
   }, []);
 
   const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>): Promise<File[]> => {
-    const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch);
+    const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
     return result.map(({ file }) => file);
   }, []);
 
@@ -179,7 +179,6 @@ function FileContextInner({
     consumeFiles: consumeFilesWrapper,
     setHasUnsavedChanges,
     trackBlobUrl: lifecycleManager.trackBlobUrl,
-    trackPdfDocument: lifecycleManager.trackPdfDocument,
     cleanupFile: (fileId: string) => lifecycleManager.cleanupFile(fileId, stateRef),
     scheduleCleanup: (fileId: string, delay?: number) => 
       lifecycleManager.scheduleCleanup(fileId, delay, stateRef)

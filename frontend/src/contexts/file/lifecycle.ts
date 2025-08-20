@@ -12,7 +12,6 @@ const DEBUG = process.env.NODE_ENV === 'development';
 export class FileLifecycleManager {
   private cleanupTimers = new Map<string, number>();
   private blobUrls = new Set<string>();
-  private pdfDocuments = new Map<string, any>();
   private fileGenerations = new Map<string, number>(); // Generation tokens to prevent stale cleanup
 
   constructor(
@@ -33,24 +32,6 @@ export class FileLifecycleManager {
     }
   };
 
-  /**
-   * Track PDF documents for cleanup
-   */
-  trackPdfDocument = (key: string, pdfDoc: any): void => {
-    // Clean up existing PDF document if present
-    const existing = this.pdfDocuments.get(key);
-    if (existing && typeof existing.destroy === 'function') {
-      try {
-        existing.destroy();
-        if (DEBUG) console.log(`🗂️ Destroyed existing PDF document for key: ${key}`);
-      } catch (error) {
-        if (DEBUG) console.warn('Error destroying existing PDF document:', error);
-      }
-    }
-    
-    this.pdfDocuments.set(key, pdfDoc);
-    if (DEBUG) console.log(`🗂️ Tracking PDF document for key: ${key}`);
-  };
 
   /**
    * Clean up resources for a specific file (with stateRef access for complete cleanup)
@@ -70,19 +51,6 @@ export class FileLifecycleManager {
    */
   cleanupAllFiles = (): void => {
     if (DEBUG) console.log('🗂️ Cleaning up all files and resources');
-    
-    // Clean up all PDF documents
-    this.pdfDocuments.forEach((pdfDoc, key) => {
-      if (pdfDoc && typeof pdfDoc.destroy === 'function') {
-        try {
-          pdfDoc.destroy();
-          if (DEBUG) console.log(`🗂️ Destroyed PDF document for key: ${key}`);
-        } catch (error) {
-          if (DEBUG) console.warn(`Error destroying PDF document for key ${key}:`, error);
-        }
-      }
-    });
-    this.pdfDocuments.clear();
     
     // Revoke all blob URLs
     this.blobUrls.forEach(url => {
@@ -162,22 +130,6 @@ export class FileLifecycleManager {
     // Remove from files ref
     this.filesRef.current.delete(fileId);
     
-    // Clean up PDF documents (scan all keys that start with fileId)
-    const keysToDelete: string[] = [];
-    this.pdfDocuments.forEach((pdfDoc, key) => {
-      if (key === fileId || key.startsWith(`${fileId}:`)) {
-        if (pdfDoc && typeof pdfDoc.destroy === 'function') {
-          try {
-            pdfDoc.destroy();
-            keysToDelete.push(key);
-            if (DEBUG) console.log(`🗂️ Destroyed PDF document for key: ${key}`);
-          } catch (error) {
-            if (DEBUG) console.warn(`Error destroying PDF document for key ${key}:`, error);
-          }
-        }
-      }
-    });
-    keysToDelete.forEach(key => this.pdfDocuments.delete(key));
     
     // Cancel cleanup timer and generation
     const timer = this.cleanupTimers.get(fileId);

@@ -13,6 +13,7 @@ import {
 } from '../../types/fileContext';
 import { FileMetadata } from '../../types/file';
 import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
+import { FileLifecycleManager } from './lifecycle';
 import { fileProcessingService } from '../../services/fileProcessingService';
 import { buildQuickKeySet, buildQuickKeySetFromMetadata } from './fileSelectors';
 
@@ -59,7 +60,8 @@ export async function addFiles(
   options: AddFileOptions,
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
-  dispatch: React.Dispatch<FileContextAction>
+  dispatch: React.Dispatch<FileContextAction>,
+  lifecycleManager: FileLifecycleManager
 ): Promise<Array<{ file: File; id: FileId; thumbnail?: string }>> {
   const fileRecords: FileRecord[] = [];
   const addedFiles: Array<{ file: File; id: FileId; thumbnail?: string }> = [];
@@ -104,6 +106,10 @@ export async function addFiles(
         const record = toFileRecord(file, fileId);
         if (thumbnail) {
           record.thumbnailUrl = thumbnail;
+          // Track blob URLs for cleanup (images return blob URLs that need revocation)
+          if (thumbnail.startsWith('blob:')) {
+            lifecycleManager.trackBlobUrl(thumbnail);
+          }
         }
         
         // Create initial processedFile metadata with page count
@@ -140,6 +146,10 @@ export async function addFiles(
         const record = toFileRecord(file, fileId);
         if (thumbnail) {
           record.thumbnailUrl = thumbnail;
+          // Track blob URLs for cleanup (images return blob URLs that need revocation)
+          if (thumbnail.startsWith('blob:')) {
+            lifecycleManager.trackBlobUrl(thumbnail);
+          }
         }
         
         // Create processedFile with provided metadata
@@ -182,6 +192,10 @@ export async function addFiles(
         // Restore metadata from storage
         if (metadata.thumbnail) {
           record.thumbnailUrl = metadata.thumbnail;
+          // Track blob URLs for cleanup (images return blob URLs that need revocation)
+          if (metadata.thumbnail.startsWith('blob:')) {
+            lifecycleManager.trackBlobUrl(metadata.thumbnail);
+          }
         }
         
         // Generate processedFile metadata for stored files using PDF worker manager

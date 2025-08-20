@@ -333,7 +333,7 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
     return generatePlaceholderThumbnail(file);
   }
 
-  // Handle image files
+  // Handle image files - creates blob URL that needs cleanup by caller
   if (file.type.startsWith('image/')) {
     return URL.createObjectURL(file);
   }

@@ -23,6 +23,15 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({ files, setDownloadUrl, pa
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("merge-pdfs");
 
+  // Cleanup blob URL when component unmounts or new URL is set
+  useEffect(() => {
+    return () => {
+      if (downloadUrl && downloadUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(downloadUrl);
+      }
+    };
+  }, [downloadUrl]);
+
   useEffect(() => {
     setSelectedFiles(files.map(() => true));
   }, [files]);
@@ -67,6 +76,12 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({ files, setDownloadUrl, pa
       }
 
       const blob = await response.blob();
+      
+      // Clean up previous blob URL before setting new one
+      if (downloadUrl && downloadUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(downloadUrl);
+      }
+      
       const url = URL.createObjectURL(blob);
       setDownloadUrl(url);
       setLocalDownloadUrl(url);

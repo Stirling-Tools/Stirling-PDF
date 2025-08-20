@@ -182,42 +182,44 @@ export class EnhancedPDFProcessingService {
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
-    const totalPages = pdf.numPages;
+    
+    try {
+      const totalPages = pdf.numPages;
 
-    state.progress = 10;
-    this.notifyListeners();
+      state.progress = 10;
+      this.notifyListeners();
 
-    const pages: PDFPage[] = [];
+      const pages: PDFPage[] = [];
 
-    for (let i = 1; i <= totalPages; i++) {
-      // Check for cancellation
-      if (state.cancellationToken?.signal.aborted) {
-        pdfWorkerManager.destroyDocument(pdf);
-        throw new Error('Processing cancelled');
+      for (let i = 1; i <= totalPages; i++) {
+        // Check for cancellation
+        if (state.cancellationToken?.signal.aborted) {
+          throw new Error('Processing cancelled');
+        }
+
+        const page = await pdf.getPage(i);
+        const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
+
+        pages.push({
+          id: `${file.name}-page-${i}`,
+          pageNumber: i,
+          thumbnail,
+          rotation: 0,
+          selected: false
+        });
+
+        // Update progress
+        state.progress = 10 + (i / totalPages) * 85;
+        state.currentPage = i;
+        this.notifyListeners();
       }
 
-      const page = await pdf.getPage(i);
-      const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
-
-      pages.push({
-        id: `${file.name}-page-${i}`,
-        pageNumber: i,
-        thumbnail,
-        rotation: 0,
-        selected: false
-      });
-
-      // Update progress
-      state.progress = 10 + (i / totalPages) * 85;
-      state.currentPage = i;
+      return this.createProcessedFile(file, pages, totalPages);
+    } finally {
+      pdfWorkerManager.destroyDocument(pdf);
+      state.progress = 100;
       this.notifyListeners();
     }
-
-    pdfWorkerManager.destroyDocument(pdf);
-    state.progress = 100;
-    this.notifyListeners();
-
-    return this.createProcessedFile(file, pages, totalPages);
   }
 
   /**

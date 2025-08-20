@@ -245,7 +245,6 @@ export interface FileContextActions {
   
   // Resource management
   trackBlobUrl: (url: string) => void;
-  trackPdfDocument: (key: string, pdfDoc: any) => void;
   scheduleCleanup: (fileId: string, delay?: number) => void;
   cleanupFile: (fileId: string) => void;
 }

@@ -150,7 +150,6 @@ export function useFileContext() {
   return useMemo(() => ({
     // Lifecycle management
     trackBlobUrl: actions.trackBlobUrl,
-    trackPdfDocument: actions.trackPdfDocument,
     scheduleCleanup: actions.scheduleCleanup,
     setUnsavedChanges: actions.setHasUnsavedChanges,
     
