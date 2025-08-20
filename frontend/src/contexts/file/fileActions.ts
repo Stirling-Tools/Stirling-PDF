@@ -135,10 +135,7 @@ export async function addFiles(
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
-        
-        // Note: No background fileProcessingService call needed - we already have immediate thumbnail and page count
-        // This avoids cancellation conflicts with cleanup operations
-      }
+        }
       break;
     }
     

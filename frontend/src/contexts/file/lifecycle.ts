@@ -26,9 +26,6 @@ export class FileLifecycleManager {
     // Only track actual blob URLs to avoid trying to revoke other schemes
     if (url.startsWith('blob:')) {
       this.blobUrls.add(url);
-      if (DEBUG) console.log(`🗂️ Tracking blob URL: ${url.substring(0, 50)}...`);
-    } else {
-      if (DEBUG) console.warn(`🗂️ Attempted to track non-blob URL: ${url.substring(0, 50)}...`);
     }
   };
 
@@ -37,8 +34,6 @@ export class FileLifecycleManager {
    * Clean up resources for a specific file (with stateRef access for complete cleanup)
    */
   cleanupFile = (fileId: string, stateRef?: React.MutableRefObject<any>): void => {
-    if (DEBUG) console.log(`🗂️ Cleaning up resources for file: ${fileId}`);
-    
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
     
@@ -50,15 +45,12 @@ export class FileLifecycleManager {
    * Clean up all files and resources
    */
   cleanupAllFiles = (): void => {
-    if (DEBUG) console.log('🗂️ Cleaning up all files and resources');
-    
     // Revoke all blob URLs
     this.blobUrls.forEach(url => {
       try {
         URL.revokeObjectURL(url);
-        if (DEBUG) console.log(`🗂️ Revoked blob URL: ${url.substring(0, 50)}...`);
       } catch (error) {
-        if (DEBUG) console.warn('Error revoking blob URL:', error);
+        // Ignore revocation errors
       }
     });
     this.blobUrls.clear();
@@ -70,8 +62,6 @@ export class FileLifecycleManager {
     
     // Clear files ref
     this.filesRef.current.clear();
-    
-    if (DEBUG) console.log('🗂️ All resources cleaned up');
   };
 
   /**
@@ -105,15 +95,12 @@ export class FileLifecycleManager {
     }, delay);
 
     this.cleanupTimers.set(fileId, timer);
-    if (DEBUG) console.log(`🗂️ Scheduled cleanup for file ${fileId} in ${delay}ms (gen ${currentGen})`);
   };
 
   /**
    * Remove a file immediately with complete resource cleanup
    */
   removeFiles = (fileIds: FileId[], stateRef?: React.MutableRefObject<any>): void => {
-    if (DEBUG) console.log(`🗂️ Removing ${fileIds.length} files immediately`);
-    
     fileIds.forEach(fileId => {
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
@@ -130,13 +117,11 @@ export class FileLifecycleManager {
     // Remove from files ref
     this.filesRef.current.delete(fileId);
     
-    
     // Cancel cleanup timer and generation
     const timer = this.cleanupTimers.get(fileId);
     if (timer) {
       clearTimeout(timer);
       this.cleanupTimers.delete(fileId);
-      if (DEBUG) console.log(`🗂️ Cancelled cleanup timer for file: ${fileId}`);
     }
     this.fileGenerations.delete(fileId);
     
@@ -144,44 +129,31 @@ export class FileLifecycleManager {
     if (stateRef) {
       const record = stateRef.current.files.byId[fileId];
       if (record) {
-        // Defer revocation of thumbnail blob URLs to prevent image loading race conditions
+        // Clean up thumbnail blob URLs
         if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
           try {
-            // Add a small delay to ensure images have time to load
-            setTimeout(() => {
-              URL.revokeObjectURL(record.thumbnailUrl);
-              if (DEBUG) console.log(`🗂️ Revoked thumbnail blob URL for file: ${fileId}`);
-            }, 1000); // 1 second delay
+            URL.revokeObjectURL(record.thumbnailUrl);
           } catch (error) {
-            if (DEBUG) console.warn('Error revoking thumbnail URL:', error);
+            // Ignore revocation errors
           }
         }
         
         if (record.blobUrl && record.blobUrl.startsWith('blob:')) {
           try {
-            // Add a small delay to ensure any pending operations complete
-            setTimeout(() => {
-              URL.revokeObjectURL(record.blobUrl);
-              if (DEBUG) console.log(`🗂️ Revoked file blob URL for file: ${fileId}`);
-            }, 1000); // 1 second delay
+            URL.revokeObjectURL(record.blobUrl);
           } catch (error) {
-            if (DEBUG) console.warn('Error revoking file URL:', error);
+            // Ignore revocation errors
           }
         }
         
-        // Clean up processed file thumbnails with delay
+        // Clean up processed file thumbnails
         if (record.processedFile?.pages) {
           record.processedFile.pages.forEach((page: ProcessedFilePage, index: number) => {
             if (page.thumbnail && page.thumbnail.startsWith('blob:')) {
               try {
-                const thumbnailUrl = page.thumbnail;
-                // Add delay for page thumbnails too
-                setTimeout(() => {
-                  URL.revokeObjectURL(thumbnailUrl);
-                  if (DEBUG) console.log(`🗂️ Revoked page ${index} thumbnail for file: ${fileId}`);
-                }, 1000); // 1 second delay
+                URL.revokeObjectURL(page.thumbnail);
               } catch (error) {
-                if (DEBUG) console.warn('Error revoking page thumbnail URL:', error);
+                // Ignore revocation errors
               }
             }
           });
@@ -213,7 +185,6 @@ export class FileLifecycleManager {
    * Cleanup on unmount
    */
   destroy = (): void => {
-    if (DEBUG) console.log('🗂️ FileLifecycleManager destroying - cleaning up all resources');
     this.cleanupAllFiles();
   };
 }
