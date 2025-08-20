@@ -16,7 +16,6 @@ import { BaseToolProps } from "../types/tool";
 const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { actions } = useNavigationActions();
-  const setCurrentMode = actions.setMode;
   const { selectedFiles } = useToolFileSelection();
 
   const changePermissionsParams = useChangePermissionsParameters();
@@ -49,13 +48,13 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "changePermissions");
-    setCurrentMode("viewer");
+    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {
     changePermissionsOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("changePermissions");
+    actions.setMode("changePermissions");
   };
 
   const hasFiles = selectedFiles.length > 0;

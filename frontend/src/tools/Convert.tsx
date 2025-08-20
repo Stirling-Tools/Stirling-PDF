@@ -17,7 +17,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectors } = useFileState();
   const { actions } = useNavigationActions();
-  const setCurrentMode = actions.setMode;
   const activeFiles = selectors.getFiles();
   const { selectedFiles } = useToolFileSelection();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -89,13 +88,13 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "convert");
-    setCurrentMode("viewer");
+    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {
     convertOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("convert");
+    actions.setMode("convert");
   };
 
   return createToolFlow({

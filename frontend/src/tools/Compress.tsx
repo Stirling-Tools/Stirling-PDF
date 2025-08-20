@@ -16,7 +16,6 @@ import { useCompressTips } from "../components/tooltips/useCompressTips";
 const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { actions } = useNavigationActions();
-  const setCurrentMode = actions.setMode;
   const { selectedFiles } = useToolFileSelection();
 
   const compressParams = useCompressParameters();
@@ -47,13 +46,13 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "compress");
-    setCurrentMode("viewer");
+    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {
     compressOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("compress");
+    actions.setMode("compress");
   };
 
   const hasFiles = selectedFiles.length > 0;

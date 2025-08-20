@@ -14,7 +14,6 @@ import { BaseToolProps } from "../types/tool";
 const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { actions } = useNavigationActions();
-  const setCurrentMode = actions.setMode;
   const { selectedFiles } = useToolFileSelection();
 
   const splitParams = useSplitParameters();
@@ -43,13 +42,13 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "split");
-    setCurrentMode("viewer");
+    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {
     splitOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("split");
+    actions.setMode("split");
   };
 
   const hasFiles = selectedFiles.length > 0;

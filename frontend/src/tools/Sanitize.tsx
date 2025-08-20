@@ -16,7 +16,6 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const { selectedFiles } = useToolFileSelection();
   const { actions } = useNavigationActions();
-  const setCurrentMode = actions.setMode;
 
   const sanitizeParams = useSanitizeParameters();
   const sanitizeOperation = useSanitizeOperation();
@@ -45,13 +44,13 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleSettingsReset = () => {
     sanitizeOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("sanitize");
+    actions.setMode("sanitize");
   };
 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "sanitize");
-    setCurrentMode("viewer");
+    actions.setMode("viewer");
   };
 
   const hasFiles = selectedFiles.length > 0;

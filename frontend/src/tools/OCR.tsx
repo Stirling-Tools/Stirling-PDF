@@ -17,7 +17,6 @@ import { useOCRTips } from "../components/tooltips/useOCRTips";
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { actions } = useNavigationActions();
-  const setCurrentMode = actions.setMode;
   const { selectedFiles } = useToolFileSelection();
 
   const ocrParams = useOCRParameters();
@@ -67,13 +66,13 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "ocr");
-    setCurrentMode("viewer");
+    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {
     ocrOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("ocr");
+    actions.setMode("ocr");
   };
 
   const settingsCollapsed = expandedStep !== "settings";

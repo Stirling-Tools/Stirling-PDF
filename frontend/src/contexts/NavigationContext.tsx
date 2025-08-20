@@ -20,6 +20,8 @@ export type ModeType =
   | 'ocr' 
   | 'convert' 
   | 'addPassword' 
+  | 'addWatermark'
+  | 'removePassword'
   | 'changePermissions' 
   | 'sanitize';
 
