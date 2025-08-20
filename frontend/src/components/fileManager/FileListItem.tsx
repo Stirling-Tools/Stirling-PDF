@@ -40,7 +40,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
         p="sm"
         style={{
           cursor: 'pointer',
-          backgroundColor: isSelected ? 'var(--mantine-color-gray-0)' : (shouldShowHovered ? 'var(--mantine-color-gray-0)' : 'var(--bg-file-list)'),
+          backgroundColor: isSelected ? 'var(--mantine-color-gray-1)' : (shouldShowHovered ? 'var(--mantine-color-gray-1)' : 'var(--bg-file-list)'),
           opacity: isSupported ? 1 : 0.5,
           transition: 'background-color 0.15s ease',
           userSelect: 'none',
