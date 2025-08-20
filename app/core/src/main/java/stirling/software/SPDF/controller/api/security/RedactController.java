@@ -53,12 +53,12 @@ public class RedactController {
             throws IOException {
         byte[] pdfContent = redactionService.redactPDF(request);
         return WebResponseUtils.bytesToWebResponse(
-            pdfContent,
-            removeFileExtension(
-                Objects.requireNonNull(
-                    Filenames.toSimpleFileName(
-                        request.getFileInput().getOriginalFilename())))
-                + "_redacted.pdf");
+                pdfContent,
+                removeFileExtension(
+                                Objects.requireNonNull(
+                                        Filenames.toSimpleFileName(
+                                                request.getFileInput().getOriginalFilename())))
+                        + "_redacted.pdf");
     }
 
     @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
@@ -69,14 +69,14 @@ public class RedactController {
                             + "Users can provide text patterns to redact, with options for regex and whole word matching. "
                             + "Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request)
-        throws IOException {
+            throws IOException {
         byte[] pdfContent = redactionService.redactPdf(request);
         return WebResponseUtils.bytesToWebResponse(
-            pdfContent,
-            removeFileExtension(
-                Objects.requireNonNull(
-                    Filenames.toSimpleFileName(
-                        request.getFileInput().getOriginalFilename())))
-                + "_redacted.pdf");
+                pdfContent,
+                removeFileExtension(
+                                Objects.requireNonNull(
+                                        Filenames.toSimpleFileName(
+                                                request.getFileInput().getOriginalFilename())))
+                        + "_redacted.pdf");
     }
 }

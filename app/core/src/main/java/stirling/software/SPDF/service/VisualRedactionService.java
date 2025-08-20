@@ -27,7 +27,7 @@ class VisualRedactionService implements RedactionModeStrategy {
 
         try (PDDocument document = pdfDocumentFactory.load(request.getFileInput())) {
             Map<Integer, List<PDFText>> allFound =
-                RedactionService.findTextToRedact(document, listOfText, useRegex, wholeWord);
+                    RedactionService.findTextToRedact(document, listOfText, useRegex, wholeWord);
             if (allFound.isEmpty()) {
                 try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                     document.save(baos);
@@ -35,16 +35,16 @@ class VisualRedactionService implements RedactionModeStrategy {
                 }
             }
             String effectiveColor =
-                (request.getRedactColor() == null || request.getRedactColor().isBlank())
-                    ? "#000000"
-                    : request.getRedactColor();
+                    (request.getRedactColor() == null || request.getRedactColor().isBlank())
+                            ? "#000000"
+                            : request.getRedactColor();
             return RedactionService.finalizeRedaction(
-                document,
-                allFound,
-                effectiveColor,
-                request.getCustomPadding(),
-                request.getConvertPDFToImage(),
-                false);
+                    document,
+                    allFound,
+                    effectiveColor,
+                    request.getCustomPadding(),
+                    request.getConvertPDFToImage(),
+                    false);
         }
     }
 }

@@ -65,15 +65,16 @@ public class RedactionService {
     private static final int FONT_SCALE_FACTOR = 1000;
     private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
     private static final COSString EMPTY_COS_STRING = new COSString("");
+    private static final int MAX_SWEEPS = 3;
     private static final ThreadLocal<Boolean> AGGRESSIVE_MODE =
-        ThreadLocal.withInitial(() -> Boolean.FALSE);
+            ThreadLocal.withInitial(() -> Boolean.FALSE);
     private static final ThreadLocal<Map<Integer, List<AggressiveSegMatch>>> AGGR_SEG_MATCHES =
-        new ThreadLocal<>();
+            new ThreadLocal<>();
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private static void redactAreas(
-        List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
-        throws IOException {
+            List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
+            throws IOException {
         if (redactionAreas == null || redactionAreas.isEmpty()) {
             return;
         }
@@ -81,16 +82,16 @@ public class RedactionService {
         Map<Integer, List<RedactionArea>> redactionsByPage = new HashMap<>();
         for (RedactionArea redactionArea : redactionAreas) {
             if (redactionArea.getPage() == null
-                || redactionArea.getPage() <= 0
-                || redactionArea.getHeight() == null
-                || redactionArea.getHeight() <= 0.0D
-                || redactionArea.getWidth() == null
-                || redactionArea.getWidth() <= 0.0D) {
+                    || redactionArea.getPage() <= 0
+                    || redactionArea.getHeight() == null
+                    || redactionArea.getHeight() <= 0.0D
+                    || redactionArea.getWidth() == null
+                    || redactionArea.getWidth() <= 0.0D) {
                 continue;
             }
             redactionsByPage
-                .computeIfAbsent(redactionArea.getPage(), k -> new ArrayList<>())
-                .add(redactionArea);
+                    .computeIfAbsent(redactionArea.getPage(), k -> new ArrayList<>())
+                    .add(redactionArea);
         }
 
         for (Map.Entry<Integer, List<RedactionArea>> entry : redactionsByPage.entrySet()) {
@@ -102,8 +103,8 @@ public class RedactionService {
             PDPage page = allPages.get(pageNumber - 1);
 
             try (PDPageContentStream contentStream =
-                     new PDPageContentStream(
-                         document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                    new PDPageContentStream(
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 contentStream.saveGraphicsState();
                 for (RedactionArea redactionArea : areasForPage) {
                     Color redactColor = decodeOrDefault(redactionArea.getColor());
@@ -122,16 +123,16 @@ public class RedactionService {
     }
 
     private static void redactPages(
-        ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages)
-        throws IOException {
+            ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages)
+            throws IOException {
         Color redactColor = decodeOrDefault(request.getPageRedactionColor());
         List<Integer> pageNumbers = getPageNumbers(request, allPages.getCount());
 
         for (Integer pageNumber : pageNumbers) {
             PDPage page = allPages.get(pageNumber);
             try (PDPageContentStream contentStream =
-                     new PDPageContentStream(
-                         document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                    new PDPageContentStream(
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 contentStream.setNonStrokingColor(redactColor);
                 PDRectangle box = page.getBBox();
                 contentStream.addRect(0, 0, box.getWidth(), box.getHeight());
@@ -155,7 +156,7 @@ public class RedactionService {
     private static List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
         String pageNumbersInput = request.getPageNumbers();
         String[] parts =
-            (pageNumbersInput != null) ? PAGE_SPLIT.split(pageNumbersInput) : new String[0];
+                (pageNumbersInput != null) ? PAGE_SPLIT.split(pageNumbersInput) : new String[0];
         List<Integer> pageNumbers = new ArrayList<>();
         if (parts.length == 0 || parts[0].isEmpty()) {
             return pageNumbers;
@@ -188,8 +189,8 @@ public class RedactionService {
     }
 
     private static void redactFoundText(
-        PDDocument document, List<PDFText> blocks, float customPadding, Color redactColor)
-        throws IOException {
+            PDDocument document, List<PDFText> blocks, float customPadding, Color redactColor)
+            throws IOException {
         var allPages = document.getDocumentCatalog().getPages();
         Map<Integer, List<PDFText>> blocksByPage = new HashMap<>();
         for (PDFText block : blocks) {
@@ -203,22 +204,22 @@ public class RedactionService {
             PDPage page = allPages.get(pageIndex);
             List<PDFText> pageBlocks = entry.getValue();
             try (PDPageContentStream cs =
-                     new PDPageContentStream(
-                         document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                    new PDPageContentStream(
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 cs.saveGraphicsState();
                 try {
                     cs.setNonStrokingColor(redactColor);
                     PDRectangle pageBox = page.getBBox();
                     for (PDFText b : pageBlocks) {
                         float padding =
-                            (b.getY2() - b.getY1()) * DEFAULT_TEXT_PADDING_MULTIPLIER
-                                + customPadding;
+                                (b.getY2() - b.getY1()) * DEFAULT_TEXT_PADDING_MULTIPLIER
+                                        + customPadding;
                         float width = b.getX2() - b.getX1();
                         cs.addRect(
-                            b.getX1(),
-                            pageBox.getHeight() - b.getY2() - padding,
-                            width,
-                            b.getY2() - b.getY1() + 2 * padding);
+                                b.getX1(),
+                                pageBox.getHeight() - b.getY2() - padding,
+                                width,
+                                b.getY2() - b.getY1() + 2 * padding);
                     }
                     cs.fill();
                 } finally {
@@ -229,7 +230,7 @@ public class RedactionService {
     }
 
     static void writeFilteredContentStream(PDDocument document, PDPage page, List<Object> tokens)
-        throws IOException {
+            throws IOException {
         PDStream newStream = new PDStream(document);
         try (var out = newStream.createOutputStream()) {
             new ContentStreamWriter(out).writeTokens(tokens);
@@ -242,11 +243,11 @@ public class RedactionService {
     }
 
     private static boolean pageStillContainsTargets(
-        PDDocument document,
-        int pageIndex,
-        Set<String> targetWords,
-        boolean useRegex,
-        boolean wholeWordSearch) {
+            PDDocument document,
+            int pageIndex,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch) {
         try {
             for (String term : targetWords) {
                 if (term == null || term.isBlank()) {
@@ -268,8 +269,28 @@ public class RedactionService {
         return false;
     }
 
+    private static boolean documentStillContainsTargets(
+            PDDocument document,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch) {
+        try {
+            int idx = -1;
+            for (int i = 0; i < document.getNumberOfPages(); i++) {
+                idx++;
+                if (pageStillContainsTargets(
+                        document, idx, targetWords, useRegex, wholeWordSearch)) {
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {
+            return true;
+        }
+        return false;
+    }
+
     public static Map<Integer, List<PDFText>> findTextToRedact(
-        PDDocument document, String[] listOfText, boolean useRegex, boolean wholeWordSearch) {
+            PDDocument document, String[] listOfText, boolean useRegex, boolean wholeWordSearch) {
         Map<Integer, List<PDFText>> allFoundTextsByPage = new HashMap<>();
         for (String text : listOfText) {
             String t = text.trim();
@@ -281,8 +302,8 @@ public class RedactionService {
                 finder.getText(document);
                 for (PDFText found : finder.getFoundTexts()) {
                     allFoundTextsByPage
-                        .computeIfAbsent(found.getPageIndex(), k -> new ArrayList<>())
-                        .add(found);
+                            .computeIfAbsent(found.getPageIndex(), k -> new ArrayList<>())
+                            .add(found);
                 }
             } catch (Exception ignored) {
             }
@@ -291,13 +312,13 @@ public class RedactionService {
     }
 
     public static byte[] finalizeRedaction(
-        PDDocument document,
-        Map<Integer, List<PDFText>> allFoundTextsByPage,
-        String colorString,
-        float customPadding,
-        Boolean convertToImage,
-        boolean isTextRemovalMode)
-        throws IOException {
+            PDDocument document,
+            Map<Integer, List<PDFText>> allFoundTextsByPage,
+            String colorString,
+            float customPadding,
+            Boolean convertToImage,
+            boolean isTextRemovalMode)
+            throws IOException {
         List<PDFText> allFoundTexts = new ArrayList<>();
         for (List<PDFText> pageTexts : allFoundTextsByPage.values()) {
             allFoundTexts.addAll(pageTexts);
@@ -370,25 +391,25 @@ public class RedactionService {
     }
 
     private static List<MatchRange> findAllMatches(
-        String completeText,
-        Set<String> targetWords,
-        boolean useRegex,
-        boolean wholeWordSearch) {
+            String completeText,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch) {
         List<Pattern> patterns =
-            TextFinderUtils.createOptimizedSearchPatterns(
-                targetWords, useRegex, wholeWordSearch);
+                TextFinderUtils.createOptimizedSearchPatterns(
+                        targetWords, useRegex, wholeWordSearch);
         return patterns.stream()
-            .flatMap(
-                pattern -> {
-                    try {
-                        return pattern.matcher(completeText).results();
-                    } catch (Exception e) {
-                        return java.util.stream.Stream.empty();
-                    }
-                })
-            .map(mr -> new MatchRange(mr.start(), mr.end()))
-            .sorted(Comparator.comparingInt(MatchRange::getStartPos))
-            .collect(Collectors.toList());
+                .flatMap(
+                        pattern -> {
+                            try {
+                                return pattern.matcher(completeText).results();
+                            } catch (Exception e) {
+                                return java.util.stream.Stream.empty();
+                            }
+                        })
+                .map(mr -> new MatchRange(mr.start(), mr.end()))
+                .sorted(Comparator.comparingInt(MatchRange::getStartPos))
+                .collect(Collectors.toList());
     }
 
     private static DecodedMapping buildDecodeMapping(PDFont font, byte[] bytes) {
@@ -450,7 +471,7 @@ public class RedactionService {
     }
 
     private static COSString redactCosStringByDecodedRanges(
-        PDFont font, COSString cosString, List<AggressiveSegMatch> decRanges) {
+            PDFont font, COSString cosString, List<AggressiveSegMatch> decRanges) {
         try {
             byte[] bytes = cosString.getBytes();
             DecodedMapping dm = buildDecodeMapping(font, bytes);
@@ -483,7 +504,7 @@ public class RedactionService {
     }
 
     private static COSArray redactTJArrayByDecodedRanges(
-        PDFont font, COSArray originalArray, List<AggressiveSegMatch> decRanges) {
+            PDFont font, COSArray originalArray, List<AggressiveSegMatch> decRanges) {
         try {
             COSArray newArray = new COSArray();
             int decodedCursor = 0;
@@ -508,8 +529,8 @@ public class RedactionService {
                             int byteStart = dm.charByteStart[localStart];
                             int byteEnd = dm.charByteEnd[localEnd - 1];
                             for (int bi = Math.max(0, byteStart);
-                                 bi < Math.min(bytes.length, byteEnd);
-                                 bi++) {
+                                    bi < Math.min(bytes.length, byteEnd);
+                                    bi++) {
                                 delete[bi] = true;
                             }
                         }
@@ -570,7 +591,7 @@ public class RedactionService {
     private static float calculateFallbackWidth(PDFont font, String text) {
         try {
             if (font.getFontDescriptor() != null
-                && font.getFontDescriptor().getFontBoundingBox() != null) {
+                    && font.getFontDescriptor().getFontBoundingBox() != null) {
                 PDRectangle bbox = font.getFontDescriptor().getFontBoundingBox();
                 float avgCharWidth = bbox.getWidth() * 0.6f;
                 return text.length() * avgCharWidth;
@@ -600,8 +621,8 @@ public class RedactionService {
             if (t instanceof Operator op) {
                 String name = op.getName();
                 if (("Tj".equals(name) || "'".equals(name) || "\"".equals(name))
-                    && i > 0
-                    && newTokens.get(i - 1) instanceof COSString) {
+                        && i > 0
+                        && newTokens.get(i - 1) instanceof COSString) {
                     newTokens.set(i - 1, EMPTY_COS_STRING);
                     modifications++;
                 } else if ("TJ".equals(name) && i > 0 && newTokens.get(i - 1) instanceof COSArray) {
@@ -660,8 +681,8 @@ public class RedactionService {
     }
 
     private static void writeRedactedContentToXObject(
-        PDDocument document, PDFormXObject formXObject, List<Object> redactedTokens)
-        throws IOException {
+            PDDocument document, PDFormXObject formXObject, List<Object> redactedTokens)
+            throws IOException {
         var cosStream = formXObject.getCOSObject();
         try (var out = cosStream.createOutputStream()) {
             new ContentStreamWriter(out).writeTokens(redactedTokens);
@@ -697,11 +718,11 @@ public class RedactionService {
             mode = "moderate";
         }
         RedactionModeStrategy strategy =
-            switch (mode.toLowerCase()) {
-                case "visual" -> new VisualRedactionService(pdfDocumentFactory, this);
-                case "aggressive" -> new AggressiveRedactionService(pdfDocumentFactory, this);
-                default -> new ModerateRedactionService(pdfDocumentFactory, this);
-            };
+                switch (mode.toLowerCase()) {
+                    case "visual" -> new VisualRedactionService(pdfDocumentFactory, this);
+                    case "aggressive" -> new AggressiveRedactionService(pdfDocumentFactory, this);
+                    default -> new ModerateRedactionService(pdfDocumentFactory, this);
+                };
         return strategy.redact(request);
     }
 
@@ -721,7 +742,7 @@ public class RedactionService {
     }
 
     String createPlaceholderWithWidth(
-        String originalWord, float targetWidth, PDFont font, float fontSize) {
+            String originalWord, float targetWidth, PDFont font, float fontSize) {
         if (originalWord == null || originalWord.isEmpty()) {
             return originalWord;
         }
@@ -741,8 +762,8 @@ public class RedactionService {
             }
             int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
             int maxSpaces =
-                Math.max(
-                    originalWord.length() * 2, Math.round(targetWidth / spaceWidth * 1.5f));
+                    Math.max(
+                            originalWord.length() * 2, Math.round(targetWidth / spaceWidth * 1.5f));
             return " ".repeat(Math.min(spaceCount, maxSpaces));
         } catch (Exception e) {
             return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
@@ -750,7 +771,7 @@ public class RedactionService {
     }
 
     private String createSubsetFontPlaceholder(
-        String originalWord, float targetWidth, PDFont font, float fontSize) {
+            String originalWord, float targetWidth, PDFont font, float fontSize) {
         try {
             return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
         } catch (Exception e) {
@@ -759,7 +780,7 @@ public class RedactionService {
     }
 
     private String createAlternativePlaceholder(
-        String originalWord, float targetWidth, PDFont font, float fontSize) {
+            String originalWord, float targetWidth, PDFont font, float fontSize) {
         try {
             String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
             if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
@@ -794,52 +815,69 @@ public class RedactionService {
     }
 
     public void performTextReplacementAggressive(
-        PDDocument document,
-        Map<Integer, List<PDFText>> allFoundTextsByPage,
-        String[] listOfText,
-        boolean useRegex,
-        boolean wholeWordSearchBool) {
+            PDDocument document,
+            Map<Integer, List<PDFText>> allFoundTextsByPage,
+            String[] listOfText,
+            boolean useRegex,
+            boolean wholeWordSearchBool) {
         if (allFoundTextsByPage.isEmpty()) {
             return;
         }
         Set<String> allSearchTerms =
-            Arrays.stream(listOfText)
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toSet());
+                Arrays.stream(listOfText)
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .collect(Collectors.toSet());
         AGGRESSIVE_MODE.set(Boolean.TRUE);
         try {
-            int pageIndex = -1;
-            for (PDPage page : document.getPages()) {
-                pageIndex++;
-                try {
-                    AGGR_SEG_MATCHES.remove();
-                    List<Object> filtered =
-                        createTokensWithoutTargetText(
-                            document, page, allSearchTerms, useRegex, wholeWordSearchBool);
-                    writeFilteredContentStream(document, page, filtered);
-                    boolean residual =
-                        pageStillContainsTargets(
-                            document,
-                            pageIndex,
-                            allSearchTerms,
-                            useRegex,
-                            wholeWordSearchBool);
-                    if (residual) {
-                        try {
-                            var sem = wipeAllSemanticTextInTokens(filtered);
-                            filtered = sem.tokens;
-                            PDResources res = page.getResources();
-                            if (res != null) {
-                                wipeAllSemanticTextInProperties(res);
-                                wipeAllTextInXObjects(document, res);
-                                wipeAllTextInPatterns(document, res);
+            for (int sweep = 0; sweep < MAX_SWEEPS; sweep++) {
+                boolean anyResidual = false;
+                int pageIndex = -1;
+                for (PDPage page : document.getPages()) {
+                    pageIndex++;
+                    try {
+                        AGGR_SEG_MATCHES.remove();
+                        List<Object> filtered =
+                                createTokensWithoutTargetText(
+                                        document,
+                                        page,
+                                        allSearchTerms,
+                                        useRegex,
+                                        wholeWordSearchBool);
+                        writeFilteredContentStream(document, page, filtered);
+                        boolean residual =
+                                pageStillContainsTargets(
+                                        document,
+                                        pageIndex,
+                                        allSearchTerms,
+                                        useRegex,
+                                        wholeWordSearchBool);
+                        if (residual) {
+                            anyResidual = true;
+                            try {
+                                var sem = wipeAllSemanticTextInTokens(filtered);
+                                filtered = sem.tokens;
+                                PDResources res = page.getResources();
+                                if (res != null) {
+                                    wipeAllSemanticTextInProperties(res);
+                                    wipeAllTextInXObjects(document, res);
+                                    wipeAllTextInPatterns(document, res);
+                                }
+                                writeFilteredContentStream(document, page, filtered);
+                            } catch (Exception ignored) {
                             }
-                            writeFilteredContentStream(document, page, filtered);
-                        } catch (Exception ignored) {
                         }
+                    } catch (Exception ignored) {
                     }
-                } catch (Exception ignored) {
+                }
+                // If no residuals detected in this sweep, stop early
+                if (!anyResidual) {
+                    break;
+                }
+                // As a safety, if nothing left in the doc, stop
+                if (!documentStillContainsTargets(
+                        document, allSearchTerms, useRegex, wholeWordSearchBool)) {
+                    break;
                 }
             }
         } finally {
@@ -848,25 +886,32 @@ public class RedactionService {
     }
 
     public boolean performTextReplacement(
-        PDDocument document,
-        Map<Integer, List<PDFText>> allFoundTextsByPage,
-        String[] listOfText,
-        boolean useRegex,
-        boolean wholeWordSearchBool) {
+            PDDocument document,
+            Map<Integer, List<PDFText>> allFoundTextsByPage,
+            String[] listOfText,
+            boolean useRegex,
+            boolean wholeWordSearchBool) {
         if (allFoundTextsByPage.isEmpty()) {
             return false;
         }
         try {
             Set<String> allSearchTerms =
-                Arrays.stream(listOfText)
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .collect(Collectors.toSet());
-            for (PDPage page : document.getPages()) {
-                List<Object> filtered =
-                    createTokensWithoutTargetText(
-                        document, page, allSearchTerms, useRegex, wholeWordSearchBool);
-                writeFilteredContentStream(document, page, filtered);
+                    Arrays.stream(listOfText)
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .collect(Collectors.toSet());
+            for (int sweep = 0; sweep < MAX_SWEEPS; sweep++) {
+                for (PDPage page : document.getPages()) {
+                    List<Object> filtered =
+                            createTokensWithoutTargetText(
+                                    document, page, allSearchTerms, useRegex, wholeWordSearchBool);
+                    writeFilteredContentStream(document, page, filtered);
+                }
+                // Stop early if nothing remains
+                if (!documentStillContainsTargets(
+                        document, allSearchTerms, useRegex, wholeWordSearchBool)) {
+                    break;
+                }
             }
             return false;
         } catch (Exception e) {
@@ -875,12 +920,12 @@ public class RedactionService {
     }
 
     List<Object> createTokensWithoutTargetText(
-        PDDocument document,
-        PDPage page,
-        Set<String> targetWords,
-        boolean useRegex,
-        boolean wholeWordSearch)
-        throws IOException {
+            PDDocument document,
+            PDPage page,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch)
+            throws IOException {
         PDFStreamParser parser = new PDFStreamParser(page);
         List<Object> tokens = new ArrayList<>();
         Object tk;
@@ -894,22 +939,22 @@ public class RedactionService {
             processPageXObjects(document, resources, targetWords, useRegex, wholeWordSearch);
         }
         List<TextSegment> textSegments =
-            extractTextSegments(page, tokens, Boolean.TRUE.equals(AGGRESSIVE_MODE.get()));
+                extractTextSegments(page, tokens, Boolean.TRUE.equals(AGGRESSIVE_MODE.get()));
         String completeText = buildCompleteText(textSegments);
         List<MatchRange> matches =
-            Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
-                ? findAllMatchesAggressive(
-                textSegments, tokens, targetWords, useRegex, wholeWordSearch)
-                : findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
+                Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
+                        ? findAllMatchesAggressive(
+                                textSegments, tokens, targetWords, useRegex, wholeWordSearch)
+                        : findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
         return applyRedactionsToTokens(tokens, textSegments, matches);
     }
 
     private void processPageXObjects(
-        PDDocument document,
-        PDResources resources,
-        Set<String> targetWords,
-        boolean useRegex,
-        boolean wholeWordSearch) {
+            PDDocument document,
+            PDResources resources,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch) {
         for (COSName xobjName : resources.getXObjectNames()) {
             try {
                 PDXObject xobj = resources.getXObject(xobjName);
@@ -922,7 +967,7 @@ public class RedactionService {
     }
 
     private List<TextSegment> extractTextSegments(
-        PDPage page, List<Object> tokens, boolean aggressive) {
+            PDPage page, List<Object> tokens, boolean aggressive) {
         List<TextSegment> segments = extractTextSegmentsEnhanced(page, tokens, aggressive);
         if (segments.isEmpty()) {
             segments = extractTextSegmentsFallback(page, tokens, aggressive);
@@ -931,7 +976,7 @@ public class RedactionService {
     }
 
     private List<TextSegment> extractTextSegmentsEnhanced(
-        PDPage page, List<Object> tokens, boolean aggressive) {
+            PDPage page, List<Object> tokens, boolean aggressive) {
         List<TextSegment> segments = new ArrayList<>();
         int currentTextPos = 0;
         GraphicsState gs = new GraphicsState();
@@ -955,19 +1000,19 @@ public class RedactionService {
                     String textContent = extractTextFromToken(tokens.get(i - 1), opName);
                     if (!textContent.isEmpty()) {
                         if (aggressive
-                            && gs.font != null
-                            && tokens.get(i - 1) instanceof COSString cs) {
+                                && gs.font != null
+                                && tokens.get(i - 1) instanceof COSString cs) {
                             TextDecodingHelper.tryDecodeWithFontEnhanced(gs.font, cs);
                         }
                         segments.add(
-                            new TextSegment(
-                                i - 1,
-                                opName,
-                                textContent,
-                                currentTextPos,
-                                currentTextPos + textContent.length(),
-                                gs.font,
-                                gs.fontSize));
+                                new TextSegment(
+                                        i - 1,
+                                        opName,
+                                        textContent,
+                                        currentTextPos,
+                                        currentTextPos + textContent.length(),
+                                        gs.font,
+                                        gs.fontSize));
                         currentTextPos += textContent.length();
                     }
                 }
@@ -977,7 +1022,7 @@ public class RedactionService {
     }
 
     private List<TextSegment> extractTextSegmentsFallback(
-        PDPage page, List<Object> tokens, boolean aggressive) {
+            PDPage page, List<Object> tokens, boolean aggressive) {
         List<TextSegment> segments = new ArrayList<>();
         int currentTextPos = 0;
         GraphicsState gs = new GraphicsState();
@@ -1001,14 +1046,14 @@ public class RedactionService {
                     String textContent = extractTextFromToken(tokens.get(i - 1), opName);
                     if (!textContent.isEmpty()) {
                         segments.add(
-                            new TextSegment(
-                                i - 1,
-                                opName,
-                                textContent,
-                                currentTextPos,
-                                currentTextPos + textContent.length(),
-                                gs.font,
-                                gs.fontSize));
+                                new TextSegment(
+                                        i - 1,
+                                        opName,
+                                        textContent,
+                                        currentTextPos,
+                                        currentTextPos + textContent.length(),
+                                        gs.font,
+                                        gs.fontSize));
                         currentTextPos += textContent.length();
                     }
                 }
@@ -1026,21 +1071,21 @@ public class RedactionService {
     }
 
     private List<MatchRange> findAllMatchesAggressive(
-        List<TextSegment> segments,
-        List<Object> tokens,
-        Set<String> targetWords,
-        boolean useRegex,
-        boolean wholeWordSearch) {
+            List<TextSegment> segments,
+            List<Object> tokens,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch) {
         List<Pattern> patterns =
-            TextFinderUtils.createOptimizedSearchPatterns(
-                targetWords, useRegex, wholeWordSearch);
+                TextFinderUtils.createOptimizedSearchPatterns(
+                        targetWords, useRegex, wholeWordSearch);
         List<MatchRange> result = new ArrayList<>();
         Map<Integer, List<AggressiveSegMatch>> perSegMatches = new HashMap<>();
         try {
             String completeText = buildCompleteText(segments);
             if (!completeText.isEmpty()) {
                 List<MatchRange> global =
-                    findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
+                        findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
                 if (!global.isEmpty()) {
                     result.addAll(global);
                 } else if (!useRegex && !targetWords.isEmpty()) {
@@ -1067,9 +1112,9 @@ public class RedactionService {
             try {
                 Object tok = tokens.get(seg.getTokenIndex());
                 if (("Tj".equals(seg.getOperatorName())
-                    || "'".equals(seg.getOperatorName())
-                    || "\"".equals(seg.getOperatorName()))
-                    && tok instanceof COSString cs) {
+                                || "'".equals(seg.getOperatorName())
+                                || "\"".equals(seg.getOperatorName()))
+                        && tok instanceof COSString cs) {
                     decoded = TextDecodingHelper.tryDecodeWithFont(seg.getFont(), cs);
                 } else if ("TJ".equals(seg.getOperatorName()) && tok instanceof COSArray arr) {
                     StringBuilder sb = new StringBuilder();
@@ -1096,8 +1141,8 @@ public class RedactionService {
         String decodedComplete = decodedCompleteSb.toString();
         if (!decodedComplete.isEmpty()) {
             List<Pattern> patternsDec =
-                TextFinderUtils.createOptimizedSearchPatterns(
-                    targetWords, useRegex, wholeWordSearch);
+                    TextFinderUtils.createOptimizedSearchPatterns(
+                            targetWords, useRegex, wholeWordSearch);
             for (Pattern p : patternsDec) {
                 try {
                     var m = p.matcher(decodedComplete);
@@ -1113,8 +1158,8 @@ public class RedactionService {
                                 int localStart = ovStart - sStart;
                                 int localEnd = ovEnd - sStart;
                                 perSegMatches
-                                    .computeIfAbsent(sIdx, k -> new ArrayList<>())
-                                    .add(new AggressiveSegMatch(sIdx, localStart, localEnd));
+                                        .computeIfAbsent(sIdx, k -> new ArrayList<>())
+                                        .add(new AggressiveSegMatch(sIdx, localStart, localEnd));
                                 TextSegment seg = segments.get(sIdx);
                                 int mappedStart = seg.getStartPos();
                                 int mappedEnd = Math.min(seg.getEndPos(), seg.getStartPos() + 1);
@@ -1142,8 +1187,8 @@ public class RedactionService {
                                 int localStart = ovStart - sStart;
                                 int localEnd = ovEnd - sStart;
                                 perSegMatches
-                                    .computeIfAbsent(sIdx, k -> new ArrayList<>())
-                                    .add(new AggressiveSegMatch(sIdx, localStart, localEnd));
+                                        .computeIfAbsent(sIdx, k -> new ArrayList<>())
+                                        .add(new AggressiveSegMatch(sIdx, localStart, localEnd));
                                 TextSegment seg = segments.get(sIdx);
                                 int mappedStart = seg.getStartPos();
                                 int mappedEnd = Math.min(seg.getEndPos(), seg.getStartPos() + 1);
@@ -1166,7 +1211,7 @@ public class RedactionService {
             try {
                 Object tok = tokens.get(seg.getTokenIndex());
                 if (("Tj".equals(seg.getOperatorName()) || "'".equals(seg.getOperatorName()))
-                    && tok instanceof COSString cs) {
+                        && tok instanceof COSString cs) {
                     decoded = TextDecodingHelper.tryDecodeWithFont(seg.getFont(), cs);
                 } else if ("TJ".equals(seg.getOperatorName()) && tok instanceof COSArray arr) {
                     StringBuilder sb = new StringBuilder();
@@ -1204,12 +1249,12 @@ public class RedactionService {
                         while (idx >= 0) {
                             int origStart = nm.map[idx];
                             int origEnd =
-                                nm.map[Math.min(idx + normWord.length() - 1, nm.map.length - 1)]
-                                    + 1;
+                                    nm.map[Math.min(idx + normWord.length() - 1, nm.map.length - 1)]
+                                            + 1;
                             result.add(
-                                new MatchRange(
-                                    seg.getStartPos() + origStart,
-                                    seg.getStartPos() + origEnd));
+                                    new MatchRange(
+                                            seg.getStartPos() + origStart,
+                                            seg.getStartPos() + origEnd));
                             idx = nm.norm.indexOf(normWord, idx + 1);
                         }
                     }
@@ -1221,17 +1266,17 @@ public class RedactionService {
     }
 
     private List<Object> applyRedactionsToTokens(
-        List<Object> tokens, List<TextSegment> textSegments, List<MatchRange> matches) {
+            List<Object> tokens, List<TextSegment> textSegments, List<MatchRange> matches) {
         List<Object> newTokens = new ArrayList<>(tokens);
         if (Boolean.TRUE.equals(AGGRESSIVE_MODE.get())) {
             Map<Integer, List<AggressiveSegMatch>> perSeg = AGGR_SEG_MATCHES.get();
             if (perSeg != null && !perSeg.isEmpty()) {
                 List<Integer> segIndices = new ArrayList<>(perSeg.keySet());
                 segIndices.sort(
-                    (a, b) ->
-                        Integer.compare(
-                            textSegments.get(b).getTokenIndex(),
-                            textSegments.get(a).getTokenIndex()));
+                        (a, b) ->
+                                Integer.compare(
+                                        textSegments.get(b).getTokenIndex(),
+                                        textSegments.get(a).getTokenIndex()));
                 for (Integer segIndex : segIndices) {
                     TextSegment segment = textSegments.get(segIndex);
                     List<AggressiveSegMatch> segMatches = perSeg.getOrDefault(segIndex, List.of());
@@ -1241,13 +1286,13 @@ public class RedactionService {
                     Object token = newTokens.get(segment.getTokenIndex());
                     String opName = segment.getOperatorName();
                     if (("Tj".equals(opName) || "'".equals(opName) || "\"".equals(opName))
-                        && token instanceof COSString cs) {
+                            && token instanceof COSString cs) {
                         COSString redacted =
-                            redactCosStringByDecodedRanges(segment.getFont(), cs, segMatches);
+                                redactCosStringByDecodedRanges(segment.getFont(), cs, segMatches);
                         newTokens.set(segment.getTokenIndex(), redacted);
                     } else if ("TJ".equals(opName) && token instanceof COSArray arr) {
                         COSArray redacted =
-                            redactTJArrayByDecodedRanges(segment.getFont(), arr, segMatches);
+                                redactTJArrayByDecodedRanges(segment.getFont(), arr, segMatches);
                         newTokens.set(segment.getTokenIndex(), redacted);
                     }
                 }
@@ -1282,10 +1327,10 @@ public class RedactionService {
         tasks.sort((a, b) -> Integer.compare(b.segment.tokenIndex, a.segment.tokenIndex));
         for (ModificationTask task : tasks) {
             List<MatchRange> segmentMatches =
-                matchesBySegment.getOrDefault(
-                    textSegments.indexOf(task.segment), Collections.emptyList());
+                    matchesBySegment.getOrDefault(
+                            textSegments.indexOf(task.segment), Collections.emptyList());
             modifyTokenForRedaction(
-                newTokens, task.segment, task.newText, task.adjustment, segmentMatches);
+                    newTokens, task.segment, task.newText, task.adjustment, segmentMatches);
         }
         return newTokens;
     }
@@ -1293,8 +1338,8 @@ public class RedactionService {
     private String applyRedactionsToSegmentText(TextSegment segment, List<MatchRange> matches) {
         String text = segment.getText();
         if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
-            && segment.getFont() != null
-            && !TextEncodingHelper.isTextSegmentRemovable(segment.getFont(), text)) {
+                && segment.getFont() != null
+                && !TextEncodingHelper.isTextSegmentRemovable(segment.getFont(), text)) {
             return text;
         }
 
@@ -1305,9 +1350,9 @@ public class RedactionService {
             if (segmentStart < text.length() && segmentEnd > segmentStart) {
                 String originalPart = text.substring(segmentStart, segmentEnd);
                 if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
-                    && segment.getFont() != null
-                    && !TextEncodingHelper.isTextSegmentRemovable(
-                    segment.getFont(), originalPart)) {
+                        && segment.getFont() != null
+                        && !TextEncodingHelper.isTextSegmentRemovable(
+                                segment.getFont(), originalPart)) {
                     continue;
                 }
 
@@ -1317,18 +1362,18 @@ public class RedactionService {
                     float originalWidth = 0;
                     if (segment.getFont() != null && segment.getFontSize() > 0) {
                         originalWidth =
-                            safeGetStringWidth(segment.getFont(), originalPart)
-                                / FONT_SCALE_FACTOR
-                                * segment.getFontSize();
+                                safeGetStringWidth(segment.getFont(), originalPart)
+                                        / FONT_SCALE_FACTOR
+                                        * segment.getFontSize();
                     }
                     String placeholder =
-                        (originalWidth > 0)
-                            ? createPlaceholderWithWidth(
-                            originalPart,
-                            originalWidth,
-                            segment.getFont(),
-                            segment.getFontSize())
-                            : createPlaceholderWithFont(originalPart, segment.getFont());
+                            (originalWidth > 0)
+                                    ? createPlaceholderWithWidth(
+                                            originalPart,
+                                            originalWidth,
+                                            segment.getFont(),
+                                            segment.getFontSize())
+                                    : createPlaceholderWithFont(originalPart, segment.getFont());
                     result.replace(segmentStart, segmentEnd, placeholder);
                 }
             }
@@ -1360,7 +1405,7 @@ public class RedactionService {
             }
             String fontName = segment.getFont().getName();
             if (fontName != null
-                && (fontName.contains("HOEPAP") || TextEncodingHelper.isFontSubset(fontName))) {
+                    && (fontName.contains("HOEPAP") || TextEncodingHelper.isFontSubset(fontName))) {
                 return 0;
             }
             float totalOriginal = 0;
@@ -1372,15 +1417,15 @@ public class RedactionService {
                 if (segStart < text.length() && segEnd > segStart) {
                     String originalPart = text.substring(segStart, segEnd);
                     float originalWidth =
-                        safeGetStringWidth(segment.getFont(), originalPart)
-                            / FONT_SCALE_FACTOR
-                            * segment.getFontSize();
+                            safeGetStringWidth(segment.getFont(), originalPart)
+                                    / FONT_SCALE_FACTOR
+                                    * segment.getFontSize();
                     String placeholderPart =
-                        createPlaceholderWithWidth(
-                            originalPart,
-                            originalWidth,
-                            segment.getFont(),
-                            segment.getFontSize());
+                            createPlaceholderWithWidth(
+                                    originalPart,
+                                    originalWidth,
+                                    segment.getFont(),
+                                    segment.getFontSize());
                     float origUnits = safeGetStringWidth(segment.getFont(), originalPart);
                     float placeUnits = safeGetStringWidth(segment.getFont(), placeholderPart);
                     float orig = (origUnits / FONT_SCALE_FACTOR) * segment.getFontSize();
@@ -1391,9 +1436,9 @@ public class RedactionService {
             }
             float adjustment = totalOriginal - totalPlaceholder;
             float maxReasonable =
-                Math.max(
-                    segment.getText().length() * segment.getFontSize() * 2,
-                    totalOriginal * 1.5f);
+                    Math.max(
+                            segment.getText().length() * segment.getFontSize() * 2,
+                            totalOriginal * 1.5f);
             return (Math.abs(adjustment) > maxReasonable) ? 0 : adjustment;
         } catch (Exception ex) {
             return 0;
@@ -1401,11 +1446,11 @@ public class RedactionService {
     }
 
     private void modifyTokenForRedaction(
-        List<Object> tokens,
-        TextSegment segment,
-        String newText,
-        float adjustment,
-        List<MatchRange> matches) {
+            List<Object> tokens,
+            TextSegment segment,
+            String newText,
+            float adjustment,
+            List<MatchRange> matches) {
         if (segment.getTokenIndex() < 0 || segment.getTokenIndex() >= tokens.size()) {
             return;
         }
@@ -1413,11 +1458,11 @@ public class RedactionService {
         String operatorName = segment.getOperatorName();
         try {
             if (("Tj".equals(operatorName) || "'".equals(operatorName) || "\"".equals(operatorName))
-                && token instanceof COSString) {
+                    && token instanceof COSString) {
                 if (Math.abs(adjustment) < PRECISION_THRESHOLD) {
                     tokens.set(
-                        segment.getTokenIndex(),
-                        newText.isEmpty() ? EMPTY_COS_STRING : new COSString(newText));
+                            segment.getTokenIndex(),
+                            newText.isEmpty() ? EMPTY_COS_STRING : new COSString(newText));
                 } else {
                     COSArray newArray = new COSArray();
                     newArray.add(new COSString(newText));
@@ -1428,8 +1473,8 @@ public class RedactionService {
                     tokens.set(segment.getTokenIndex(), newArray);
                     int operatorIndex = segment.getTokenIndex() + 1;
                     if (operatorIndex < tokens.size()
-                        && tokens.get(operatorIndex) instanceof Operator op
-                        && op.getName().equals(operatorName)) {
+                            && tokens.get(operatorIndex) instanceof Operator op
+                            && op.getName().equals(operatorName)) {
                         tokens.set(operatorIndex, Operator.getOperator("TJ"));
                     }
                 }
@@ -1442,7 +1487,7 @@ public class RedactionService {
     }
 
     private COSArray createRedactedTJArray(
-        COSArray originalArray, TextSegment segment, List<MatchRange> matches) {
+            COSArray originalArray, TextSegment segment, List<MatchRange> matches) {
         try {
             COSArray newArray = new COSArray();
             int textOffsetInSegment = 0;
@@ -1450,9 +1495,9 @@ public class RedactionService {
                 if (element instanceof COSString cosString) {
                     String originalText = cosString.getString();
                     if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
-                        && segment.getFont() != null
-                        && !TextEncodingHelper.isTextSegmentRemovable(
-                        segment.getFont(), originalText)) {
+                            && segment.getFont() != null
+                            && !TextEncodingHelper.isTextSegmentRemovable(
+                                    segment.getFont(), originalText)) {
                         newArray.add(element);
                         textOffsetInSegment += originalText.length();
                         continue;
@@ -1469,72 +1514,76 @@ public class RedactionService {
                             int redactionStartInString = overlapStart - stringStartInPage;
                             int redactionEndInString = overlapEnd - stringStartInPage;
                             if (redactionStartInString >= 0
-                                && redactionEndInString <= originalText.length()) {
+                                    && redactionEndInString <= originalText.length()) {
                                 String originalPart =
-                                    originalText.substring(
-                                        redactionStartInString, redactionEndInString);
-                                if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get()) && segment.getFont() != null
+                                        originalText.substring(
+                                                redactionStartInString, redactionEndInString);
+                                if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
+                                        && segment.getFont() != null
                                         && !TextEncodingHelper.isTextSegmentRemovable(
-                                        segment.getFont(), originalPart)) {
-                                        continue;
-                                    }
+                                                segment.getFont(), originalPart)) {
+                                    continue;
+                                }
 
                                 modified = true;
                                 if (Boolean.TRUE.equals(AGGRESSIVE_MODE.get())) {
                                     newText.replace(
-                                        redactionStartInString, redactionEndInString, "");
+                                            redactionStartInString, redactionEndInString, "");
                                 } else {
                                     float originalWidth = 0;
                                     if (segment.getFont() != null && segment.getFontSize() > 0) {
                                         try {
                                             originalWidth =
-                                                safeGetStringWidth(
-                                                    segment.getFont(), originalPart)
-                                                    / FONT_SCALE_FACTOR
-                                                    * segment.getFontSize();
+                                                    safeGetStringWidth(
+                                                                    segment.getFont(), originalPart)
+                                                            / FONT_SCALE_FACTOR
+                                                            * segment.getFontSize();
                                         } catch (Exception ignored) {
                                         }
                                     }
                                     String placeholder =
-                                        (originalWidth > 0)
-                                            ? createPlaceholderWithWidth(
-                                            originalPart,
-                                            originalWidth,
-                                            segment.getFont(),
-                                            segment.getFontSize())
-                                            : createPlaceholderWithFont(
-                                            originalPart, segment.getFont());
+                                            (originalWidth > 0)
+                                                    ? createPlaceholderWithWidth(
+                                                            originalPart,
+                                                            originalWidth,
+                                                            segment.getFont(),
+                                                            segment.getFontSize())
+                                                    : createPlaceholderWithFont(
+                                                            originalPart, segment.getFont());
                                     newText.replace(
-                                        redactionStartInString,
-                                        redactionEndInString,
-                                        placeholder);
+                                            redactionStartInString,
+                                            redactionEndInString,
+                                            placeholder);
                                 }
                             }
                         }
                     }
                     String modifiedString = newText.toString();
                     newArray.add(new COSString(modifiedString));
-                    if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get()) && modified && segment.getFont() != null && segment.getFontSize() > 0) {
-                            try {
-                                float originalWidth =
+                    if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
+                            && modified
+                            && segment.getFont() != null
+                            && segment.getFontSize() > 0) {
+                        try {
+                            float originalWidth =
                                     safeGetStringWidth(segment.getFont(), originalText)
-                                        / FONT_SCALE_FACTOR
-                                        * segment.getFontSize();
-                                float modifiedWidth =
+                                            / FONT_SCALE_FACTOR
+                                            * segment.getFontSize();
+                            float modifiedWidth =
                                     safeGetStringWidth(segment.getFont(), modifiedString)
-                                        / FONT_SCALE_FACTOR
-                                        * segment.getFontSize();
-                                float adjustment = originalWidth - modifiedWidth;
-                                if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
-                                    float kerning =
+                                            / FONT_SCALE_FACTOR
+                                            * segment.getFontSize();
+                            float adjustment = originalWidth - modifiedWidth;
+                            if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
+                                float kerning =
                                         (-adjustment / segment.getFontSize())
-                                            * FONT_SCALE_FACTOR
-                                            * 1.10f;
-                                    newArray.add(new COSFloat(kerning));
-                                }
-                            } catch (Exception ignored) {
+                                                * FONT_SCALE_FACTOR
+                                                * 1.10f;
+                                newArray.add(new COSFloat(kerning));
                             }
+                        } catch (Exception ignored) {
                         }
+                    }
 
                     textOffsetInSegment += originalText.length();
                 } else {
@@ -1643,7 +1692,7 @@ public class RedactionService {
     }
 
     private int wipeAllTextInFormXObject(PDDocument document, PDFormXObject formXObject)
-        throws IOException {
+            throws IOException {
         int modifications = 0;
         try {
             PDResources res = formXObject.getResources();
@@ -1674,8 +1723,8 @@ public class RedactionService {
                 try {
                     var pattern = resources.getPattern(patName);
                     if (pattern
-                        instanceof
-                        org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern tiling) {
+                            instanceof
+                            org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern tiling) {
                         PDResources patRes = tiling.getResources();
                         if (patRes != null) {
                             wipeAllTextInResources(document, patRes);
@@ -1741,9 +1790,9 @@ public class RedactionService {
     }
 
     private void writeRedactedContentToPattern(
-        org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern pattern,
-        List<Object> redactedTokens)
-        throws IOException {
+            org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern pattern,
+            List<Object> redactedTokens)
+            throws IOException {
         var contentStream = pattern.getContentStream();
         try (var out = contentStream.createOutputStream()) {
             new ContentStreamWriter(out).writeTokens(redactedTokens);
@@ -1751,11 +1800,11 @@ public class RedactionService {
     }
 
     private void processFormXObject(
-        PDDocument document,
-        PDFormXObject formXObject,
-        Set<String> targetWords,
-        boolean useRegex,
-        boolean wholeWordSearch) {
+            PDDocument document,
+            PDFormXObject formXObject,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch) {
         try {
             PDResources xobjResources = formXObject.getResources();
             if (xobjResources == null) {
@@ -1765,7 +1814,7 @@ public class RedactionService {
                 PDXObject nestedXObj = xobjResources.getXObject(xobjName);
                 if (nestedXObj instanceof PDFormXObject nestedFormXObj) {
                     processFormXObject(
-                        document, nestedFormXObj, targetWords, useRegex, wholeWordSearch);
+                            document, nestedFormXObj, targetWords, useRegex, wholeWordSearch);
                 }
             }
             PDFStreamParser parser = new PDFStreamParser(formXObject);
@@ -1777,13 +1826,13 @@ public class RedactionService {
             List<TextSegment> textSegments = extractTextSegmentsFromXObject(xobjResources, tokens);
             String completeText = buildCompleteText(textSegments);
             List<MatchRange> matches =
-                Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
-                    ? findAllMatchesAggressive(
-                    textSegments, tokens, targetWords, useRegex, wholeWordSearch)
-                    : findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
+                    Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
+                            ? findAllMatchesAggressive(
+                                    textSegments, tokens, targetWords, useRegex, wholeWordSearch)
+                            : findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
             if (!matches.isEmpty()) {
                 List<Object> redactedTokens =
-                    applyRedactionsToTokens(tokens, textSegments, matches);
+                        applyRedactionsToTokens(tokens, textSegments, matches);
                 writeRedactedContentToXObject(document, formXObject, redactedTokens);
             } else if (Boolean.TRUE.equals(AGGRESSIVE_MODE.get()) && !completeText.isEmpty()) {
                 WipeResult wr = wipeAllTextShowingOperators(tokens);
@@ -1794,7 +1843,7 @@ public class RedactionService {
     }
 
     private List<TextSegment> extractTextSegmentsFromXObject(
-        PDResources resources, List<Object> tokens) {
+            PDResources resources, List<Object> tokens) {
         List<TextSegment> segments = new ArrayList<>();
         int currentTextPos = 0;
         GraphicsState gs = new GraphicsState();
@@ -1817,14 +1866,14 @@ public class RedactionService {
                     String textContent = extractTextFromToken(tokens.get(i - 1), opName);
                     if (!textContent.isEmpty()) {
                         segments.add(
-                            new TextSegment(
-                                i - 1,
-                                opName,
-                                textContent,
-                                currentTextPos,
-                                currentTextPos + textContent.length(),
-                                gs.font,
-                                gs.fontSize));
+                                new TextSegment(
+                                        i - 1,
+                                        opName,
+                                        textContent,
+                                        currentTextPos,
+                                        currentTextPos + textContent.length(),
+                                        gs.font,
+                                        gs.fontSize));
                         currentTextPos += textContent.length();
                     }
                 }
@@ -1847,8 +1896,7 @@ public class RedactionService {
         private PDFont font = null;
         private float fontSize = 0;
 
-        public GraphicsState() {
-        }
+        public GraphicsState() {}
     }
 
     @Data

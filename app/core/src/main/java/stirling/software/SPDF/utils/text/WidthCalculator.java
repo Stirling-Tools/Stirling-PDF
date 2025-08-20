@@ -1,9 +1,9 @@
 package stirling.software.SPDF.utils.text;
 
-import lombok.experimental.UtilityClass;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -44,8 +44,7 @@ public class WidthCalculator {
         }
     }
 
-    private float calculateWidthWithCharacterIteration(
-        PDFont font, String text, float fontSize) {
+    private float calculateWidthWithCharacterIteration(PDFont font, String text, float fontSize) {
         try {
             float totalWidth = 0;
 

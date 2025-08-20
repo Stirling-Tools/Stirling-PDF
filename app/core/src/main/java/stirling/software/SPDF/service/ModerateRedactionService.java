@@ -32,7 +32,7 @@ class ModerateRedactionService implements RedactionModeStrategy {
         try {
             doc = pdfDocumentFactory.load(request.getFileInput());
             Map<Integer, List<PDFText>> allFound =
-                RedactionService.findTextToRedact(doc, listOfText, useRegex, wholeWord);
+                    RedactionService.findTextToRedact(doc, listOfText, useRegex, wholeWord);
             if (allFound.isEmpty()) {
                 try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                     doc.save(baos);
@@ -40,31 +40,31 @@ class ModerateRedactionService implements RedactionModeStrategy {
                 }
             }
             boolean fallbackToBoxOnly =
-                helper.performTextReplacement(doc, allFound, listOfText, useRegex, wholeWord);
+                    helper.performTextReplacement(doc, allFound, listOfText, useRegex, wholeWord);
             String effectiveColor =
-                (request.getRedactColor() == null || request.getRedactColor().isBlank())
-                    ? "#000000"
-                    : request.getRedactColor();
+                    (request.getRedactColor() == null || request.getRedactColor().isBlank())
+                            ? "#000000"
+                            : request.getRedactColor();
             if (fallbackToBoxOnly) {
                 fallback = pdfDocumentFactory.load(request.getFileInput());
                 allFound =
-                    RedactionService.findTextToRedact(
-                        fallback, listOfText, useRegex, wholeWord);
+                        RedactionService.findTextToRedact(
+                                fallback, listOfText, useRegex, wholeWord);
                 return RedactionService.finalizeRedaction(
-                    fallback,
+                        fallback,
+                        allFound,
+                        effectiveColor,
+                        request.getCustomPadding(),
+                        request.getConvertPDFToImage(),
+                        false);
+            }
+            return RedactionService.finalizeRedaction(
+                    doc,
                     allFound,
                     effectiveColor,
                     request.getCustomPadding(),
                     request.getConvertPDFToImage(),
                     false);
-            }
-            return RedactionService.finalizeRedaction(
-                doc,
-                allFound,
-                effectiveColor,
-                request.getCustomPadding(),
-                request.getConvertPDFToImage(),
-                false);
         } catch (Exception e) {
             throw new IOException("Moderate redaction failed: " + e.getMessage(), e);
         } finally {

@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import lombok.experimental.UtilityClass;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
-
-import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @UtilityClass
@@ -57,7 +57,7 @@ public class TextFinderUtils {
     }
 
     public List<Pattern> createOptimizedSearchPatterns(
-        Set<String> searchTerms, boolean useRegex, boolean wholeWordSearch) {
+            Set<String> searchTerms, boolean useRegex, boolean wholeWordSearch) {
         List<Pattern> patterns = new ArrayList<>();
 
         for (String term : searchTerms) {

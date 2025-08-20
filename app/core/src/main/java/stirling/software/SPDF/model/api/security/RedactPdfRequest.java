@@ -48,9 +48,9 @@ public class RedactPdfRequest extends PDFFile {
     private Boolean convertPDFToImage;
 
     @Schema(
-        description = "Redaction mode: moderate, visual, or aggressive",
-        defaultValue = "moderate",
-        allowableValues = {"moderate", "visual", "aggressive"},
-        requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            description = "Redaction mode: moderate, visual, or aggressive",
+            defaultValue = "moderate",
+            allowableValues = {"moderate", "visual", "aggressive"},
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String redactionMode;
 }

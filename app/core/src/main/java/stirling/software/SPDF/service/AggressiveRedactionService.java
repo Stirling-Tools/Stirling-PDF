@@ -17,7 +17,7 @@ class AggressiveRedactionService implements RedactionModeStrategy {
     private final RedactionService helper;
 
     AggressiveRedactionService(
-        CustomPDFDocumentFactory pdfDocumentFactory, RedactionService helper) {
+            CustomPDFDocumentFactory pdfDocumentFactory, RedactionService helper) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.helper = helper;
     }
@@ -33,7 +33,7 @@ class AggressiveRedactionService implements RedactionModeStrategy {
         try {
             doc = pdfDocumentFactory.load(request.getFileInput());
             Map<Integer, List<PDFText>> allFound =
-                RedactionService.findTextToRedact(doc, listOfText, useRegex, wholeWord);
+                    RedactionService.findTextToRedact(doc, listOfText, useRegex, wholeWord);
             if (allFound.isEmpty()) {
                 try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                     doc.save(baos);
@@ -42,31 +42,31 @@ class AggressiveRedactionService implements RedactionModeStrategy {
             }
             helper.performTextReplacementAggressive(doc, allFound, listOfText, useRegex, wholeWord);
             Map<Integer, List<PDFText>> residual =
-                RedactionService.findTextToRedact(doc, listOfText, useRegex, wholeWord);
+                    RedactionService.findTextToRedact(doc, listOfText, useRegex, wholeWord);
             boolean residualExists = residual.values().stream().mapToInt(List::size).sum() > 0;
             String effectiveColor =
-                (request.getRedactColor() == null || request.getRedactColor().isBlank())
-                    ? "#000000"
-                    : request.getRedactColor();
+                    (request.getRedactColor() == null || request.getRedactColor().isBlank())
+                            ? "#000000"
+                            : request.getRedactColor();
             if (residualExists) {
                 fb = pdfDocumentFactory.load(request.getFileInput());
                 Map<Integer, List<PDFText>> fbFound =
-                    RedactionService.findTextToRedact(fb, listOfText, useRegex, wholeWord);
+                        RedactionService.findTextToRedact(fb, listOfText, useRegex, wholeWord);
                 return RedactionService.finalizeRedaction(
-                    fb,
-                    fbFound,
-                    effectiveColor,
-                    request.getCustomPadding(), /*force*/
-                    true,
-                    false);
+                        fb,
+                        fbFound,
+                        effectiveColor,
+                        request.getCustomPadding(), /*force*/
+                        true,
+                        false);
             }
             return RedactionService.finalizeRedaction(
-                doc,
-                allFound,
-                request.getRedactColor(),
-                request.getCustomPadding(),
-                request.getConvertPDFToImage(), /*text removal*/
-                true);
+                    doc,
+                    allFound,
+                    request.getRedactColor(),
+                    request.getCustomPadding(),
+                    request.getConvertPDFToImage(), /*text removal*/
+                    true);
         } catch (Exception e) {
             throw new IOException("Aggressive redaction failed: " + e.getMessage(), e);
         } finally {

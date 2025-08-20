@@ -1,16 +1,16 @@
 package stirling.software.SPDF.utils.text;
 
-import lombok.experimental.UtilityClass;
-import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
-
-import lombok.extern.slf4j.Slf4j;
-
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
+
+import org.apache.pdfbox.cos.COSString;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @UtilityClass
@@ -34,8 +34,8 @@ public class TextDecodingHelper {
 
             String basicDecoded = tryDecodeWithFont(font, cosString);
             if (basicDecoded != null
-                && !basicDecoded.contains("?")
-                && !basicDecoded.trim().isEmpty()) {
+                    && !basicDecoded.contains("?")
+                    && !basicDecoded.trim().isEmpty()) {
                 return;
             }
 
@@ -89,8 +89,7 @@ public class TextDecodingHelper {
         } catch (Exception ignored) {
         }
 
-        if (charStr == null
-            && font instanceof PDType0Font type0Font) {
+        if (charStr == null && font instanceof PDType0Font type0Font) {
             try {
                 int cid = (bytes.length > 1) ? ((bytes[0] & 0xFF) << 8) | (bytes[1] & 0xFF) : code;
                 charStr = type0Font.toUnicode(cid);
@@ -129,12 +128,12 @@ public class TextDecodingHelper {
             if (fontName != null) {
                 String lowerName = fontName.toLowerCase();
                 if (lowerName.contains("cjk")
-                    || lowerName.contains("gb")
-                    || lowerName.contains("jp")) {
+                        || lowerName.contains("gb")
+                        || lowerName.contains("jp")) {
                     // Basic CJK fallback (expand with a lookup table if needed)
                     if (code >= 0x4E00 && code <= 0x9FFF) {
                         return String.valueOf(
-                            (char) code); // Unicode Basic Multilingual Plane for CJK
+                                (char) code); // Unicode Basic Multilingual Plane for CJK
                     }
                 }
             }
@@ -143,8 +142,7 @@ public class TextDecodingHelper {
             try {
                 if (bytes.length >= 2) {
                     ByteBuffer buffer = ByteBuffer.wrap(bytes);
-                    CharsetDecoder decoder =
-                        StandardCharsets.UTF_16BE.newDecoder();
+                    CharsetDecoder decoder = StandardCharsets.UTF_16BE.newDecoder();
                     CharBuffer charBuffer = decoder.decode(buffer);
                     return charBuffer.toString();
                 }
