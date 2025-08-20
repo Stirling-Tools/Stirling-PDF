@@ -19,7 +19,8 @@ export type ModeType =
   | 'changePermissions'
   | 'watermark'
   | 'removePassword'
-  | 'repair';
+  | 'repair'
+  | 'removeCertificateSign';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 

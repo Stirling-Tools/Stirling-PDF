@@ -1268,7 +1268,18 @@
     "title": "Remove Certificate Signature",
     "header": "Remove the digital certificate from the PDF",
     "selectPDF": "Select a PDF file:",
-    "submit": "Remove Signature"
+    "submit": "Remove Signature",
+    "description": "This tool will remove digital certificate signatures from your PDF document.",
+    "filenamePrefix": "unsigned",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst removing certificate signatures."
+    },
+    "results": {
+      "title": "Certificate Removal Results"
+    }
   },
   "pageLayout": {
     "tags": "merge,composite,single-view,organize",
