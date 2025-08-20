@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { FileWithUrl } from '../types/file';
 import { StoredFile, fileStorage } from '../services/fileStorage';
+import { downloadFiles } from '../utils/downloadUtils';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
@@ -11,11 +12,12 @@ interface FileManagerContextValue {
   selectedFiles: FileWithUrl[];
   filteredFiles: FileWithUrl[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
+  selectedFilesSet: Set<string>;
 
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
   onLocalFileClick: () => void;
-  onFileSelect: (file: FileWithUrl) => void;
+  onFileSelect: (file: FileWithUrl, index: number, shiftKey?: boolean) => void;
   onFileRemove: (index: number) => void;
   onFileDoubleClick: (file: FileWithUrl) => void;
   onOpenFiles: () => void;
@@ -64,22 +66,29 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
 
   // Computed values (with null safety)
-  const selectedFiles = (recentFiles || []).filter(file => selectedFileIds.includes(file.id || file.name));
-  const filteredFiles = (recentFiles || []).filter(file =>
-    file.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const selectedFilesSet = new Set(selectedFileIds);
+  
+  const selectedFiles = selectedFileIds.length === 0 ? [] : 
+    (recentFiles || []).filter(file => selectedFilesSet.has(file.id || file.name));
+  
+  const filteredFiles = !searchTerm ? recentFiles || [] :
+    (recentFiles || []).filter(file =>
+      file.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   const handleSourceChange = useCallback((source: 'recent' | 'local' | 'drive') => {
     setActiveSource(source);
     if (source !== 'recent') {
       setSelectedFileIds([]);
       setSearchTerm('');
+      setLastClickedIndex(null);
     }
   }, []);
 
@@ -87,19 +96,46 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileSelect = useCallback((file: FileWithUrl) => {
-    setSelectedFileIds(prev => {
-      if (file.id) {
-        if (prev.includes(file.id)) {
-          return prev.filter(id => id !== file.id);
-        } else {
-          return [...prev, file.id];
+  const handleFileSelect = useCallback((file: FileWithUrl, currentIndex: number, shiftKey?: boolean) => {
+    const fileId = file.id || file.name;
+    if (!fileId) return;
+    
+    if (shiftKey && lastClickedIndex !== null) {
+      // Range selection with shift-click
+      const startIndex = Math.min(lastClickedIndex, currentIndex);
+      const endIndex = Math.max(lastClickedIndex, currentIndex);
+      
+      setSelectedFileIds(prev => {
+        const selectedSet = new Set(prev);
+        
+        // Add all files in the range to selection
+        for (let i = startIndex; i <= endIndex; i++) {
+          const rangeFileId = filteredFiles[i]?.id || filteredFiles[i]?.name;
+          if (rangeFileId) {
+            selectedSet.add(rangeFileId);
+          }
         }
-      } else {
-        return prev;
-      }
-    });
-  }, []);
+        
+        return Array.from(selectedSet);
+      });
+    } else {
+      // Normal click behavior - optimized with Set for O(1) lookup
+      setSelectedFileIds(prev => {
+        const selectedSet = new Set(prev);
+        
+        if (selectedSet.has(fileId)) {
+          selectedSet.delete(fileId);
+        } else {
+          selectedSet.add(fileId);
+        }
+        
+        return Array.from(selectedSet);
+      });
+      
+      // Update last clicked index for future range selections
+      setLastClickedIndex(currentIndex);
+    }
+  }, [filteredFiles, lastClickedIndex]);
 
   const handleFileRemove = useCallback((index: number) => {
     const fileToRemove = filteredFiles[index];
@@ -161,9 +197,11 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (allFilesSelected) {
       // Deselect all
       setSelectedFileIds([]);
+      setLastClickedIndex(null);
     } else {
       // Select all filtered files
       setSelectedFileIds(filteredFiles.map(file => file.id || file.name));
+      setLastClickedIndex(null);
     }
   }, [filteredFiles, selectedFileIds]);
 
@@ -192,6 +230,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [selectedFileIds, filteredFiles, refreshRecentFiles]);
 
+
   const handleDownloadSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;
 
@@ -201,65 +240,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         selectedFileIds.includes(file.id || file.name)
       );
 
-      if (selectedFilesToDownload.length === 1) {
-        // Single file download
-        const fileWithUrl = selectedFilesToDownload[0];
-        const lookupKey = fileWithUrl.id || fileWithUrl.name;
-        const storedFile = await fileStorage.getFile(lookupKey);
-        
-        if (storedFile) {
-          const blob = new Blob([storedFile.data], { type: storedFile.type });
-          const url = URL.createObjectURL(blob);
-          
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = storedFile.name;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          
-          // Clean up the blob URL
-          URL.revokeObjectURL(url);
-        }
-      } else if (selectedFilesToDownload.length > 1) {
-        // Multiple files - create ZIP download
-        const { zipFileService } = await import('../services/zipFileService');
-        
-        // Convert stored files to File objects
-        const files: File[] = [];
-        for (const fileWithUrl of selectedFilesToDownload) {
-          const lookupKey = fileWithUrl.id || fileWithUrl.name;
-          const storedFile = await fileStorage.getFile(lookupKey);
-          
-          if (storedFile) {
-            const file = new File([storedFile.data], storedFile.name, {
-              type: storedFile.type,
-              lastModified: storedFile.lastModified
-            });
-            files.push(file);
-          }
-        }
-        
-        if (files.length > 0) {
-          // Create ZIP file
-          const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-          const zipFilename = `selected-files-${timestamp}.zip`;
-          
-          const { zipFile } = await zipFileService.createZipFromFiles(files, zipFilename);
-          
-          // Download the ZIP file
-          const url = URL.createObjectURL(zipFile);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = zipFilename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          
-          // Clean up the blob URL
-          URL.revokeObjectURL(url);
-        }
-      }
+      // Use generic download utility
+      await downloadFiles(selectedFilesToDownload, {
+        zipFilename: `selected-files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.zip`
+      });
     } catch (error) {
       console.error('Failed to download selected files:', error);
     }
@@ -267,23 +251,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
   const handleDownloadSingle = useCallback(async (file: FileWithUrl) => {
     try {
-      const lookupKey = file.id || file.name;
-      const storedFile = await fileStorage.getFile(lookupKey);
-      
-      if (storedFile) {
-        const blob = new Blob([storedFile.data], { type: storedFile.type });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = storedFile.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Clean up the blob URL
-        URL.revokeObjectURL(url);
-      }
+      await downloadFiles([file]);
     } catch (error) {
       console.error('Failed to download file:', error);
     }
@@ -307,6 +275,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       setActiveSource('recent');
       setSelectedFileIds([]);
       setSearchTerm('');
+      setLastClickedIndex(null);
     }
   }, [isOpen]);
 
@@ -318,6 +287,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     selectedFiles,
     filteredFiles,
     fileInputRef,
+    selectedFilesSet,
 
     // Handlers
     onSourceChange: handleSourceChange,

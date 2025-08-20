@@ -11,18 +11,18 @@ interface FileListItemProps {
   file: FileWithUrl;
   isSelected: boolean;
   isSupported: boolean;
-  onSelect: () => void;
+  onSelect: (shiftKey?: boolean) => void;
   onRemove: () => void;
   onDownload?: () => void;
   onDoubleClick?: () => void;
   isLast?: boolean;
 }
 
-const FileListItem: React.FC<FileListItemProps> = ({ 
-  file, 
-  isSelected, 
-  isSupported, 
-  onSelect, 
+const FileListItem: React.FC<FileListItemProps> = ({
+  file,
+  isSelected,
+  isSupported,
+  onSelect,
   onRemove,
   onDownload,
   onDoubleClick
@@ -30,21 +30,25 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
-  
+
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
 
   return (
     <>
-      <Box 
-        p="sm" 
-        style={{ 
+      <Box
+        p="sm"
+        style={{
           cursor: 'pointer',
           backgroundColor: isSelected ? 'var(--mantine-color-gray-0)' : (shouldShowHovered ? 'var(--mantine-color-gray-0)' : 'var(--bg-file-list)'),
           opacity: isSupported ? 1 : 0.5,
-          transition: 'background-color 0.15s ease'
+          transition: 'background-color 0.15s ease',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          MozUserSelect: 'none',
+          msUserSelect: 'none'
         }}
-        onClick={onSelect}
+        onClick={(e) => onSelect(e.shiftKey)}
         onDoubleClick={onDoubleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -64,22 +68,22 @@ const FileListItem: React.FC<FileListItemProps> = ({
               }}
             />
           </Box>
-       
+
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" fw={500} truncate>{file.name}</Text>
             <Text size="xs" c="dimmed">{getFileSize(file)} • {getFileDate(file)}</Text>
           </Box>
-          
+
           {/* Three dots menu - fades in/out on hover */}
-          <Menu 
-            position="bottom-end" 
+          <Menu
+            position="bottom-end"
             withinPortal
             onOpen={() => setIsMenuOpen(true)}
             onClose={() => setIsMenuOpen(false)}
           >
             <Menu.Target>
-              <ActionIcon 
-                variant="subtle" 
+              <ActionIcon
+                variant="subtle"
                 c="dimmed"
                 size="md"
                 onClick={(e) => e.stopPropagation()}
@@ -93,7 +97,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                 <MoreVertIcon style={{ fontSize: 20 }} />
               </ActionIcon>
             </Menu.Target>
-            
+
             <Menu.Dropdown>
               {onDownload && (
                 <Menu.Item
