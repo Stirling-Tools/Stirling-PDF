@@ -46,6 +46,7 @@ import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
+import stirling.software.SPDF.utils.text.TextDecodingHelper;
 import stirling.software.SPDF.utils.text.TextEncodingHelper;
 import stirling.software.SPDF.utils.text.TextFinderUtils;
 import stirling.software.SPDF.utils.text.WidthCalculator;
@@ -337,48 +338,7 @@ public class RedactionService {
         }
     }
 
-    private static String tryDecodeWithFontEnhanced(PDFont font, COSString cosString) {
-        try {
-            if (font == null || cosString == null) {
-                return null;
-            }
-            byte[] bytes = cosString.getBytes();
-            if (bytes.length == 0) {
-                return "";
-            }
-            String basicDecoded = tryDecodeWithFont(font, cosString);
-            if (basicDecoded != null && !basicDecoded.contains("?")) {
-                return basicDecoded;
-            }
-            StringBuilder out = new StringBuilder();
-            for (byte aByte : bytes) {
-                int code = aByte & 0xFF;
-                String charStr = null;
-                try {
-                    charStr = font.toUnicode(code);
-                } catch (Exception ignored) {
-                }
-                if (charStr == null && font.getName() != null && font.getName().contains("+")) {
-                    charStr = mapSubsetCharacter(code);
-                }
-
-                out.append(charStr != null ? charStr : "");
-            }
-            return out.toString();
-        } catch (Exception e) {
-            return tryDecodeWithFont(font, cosString);
-        }
-    }
-
-    private static String mapSubsetCharacter(int code) {
-        if (code >= 32 && code <= 126) {
-            return String.valueOf((char) code);
-        }
-        if (code >= 160 && code <= 255) {
-            return String.valueOf((char) (code - 128));
-        }
-        return null;
-    }
+    // Local decoding helpers removed in favor of TextDecodingHelper
 
     private static String normalizeForFuzzy(String s) {
         if (s == null) {
@@ -630,71 +590,6 @@ public class RedactionService {
 
     private static float calculateConservativeWidth(PDFont font, String text) {
         return text.length() * 500f;
-    }
-
-    private static String tryDecodeWithFont(PDFont font, COSString cosString) {
-        try {
-            if (font == null || cosString == null) {
-                return null;
-            }
-            byte[] bytes = cosString.getBytes();
-            if (bytes.length == 0) {
-                return "";
-            }
-            boolean anyMapped = false;
-            StringBuilder out = new StringBuilder();
-            for (byte b : bytes) {
-                int code = b & 0xFF;
-                String uni = null;
-                try {
-                    uni = font.toUnicode(code);
-                } catch (Exception ignored) {
-                }
-                if (uni != null) {
-                    out.append(uni);
-                    anyMapped = true;
-                } else {
-                    out.append('?');
-                }
-            }
-            if (anyMapped) {
-                return out.toString();
-            }
-            out.setLength(0);
-            anyMapped = false;
-            for (int i = 0; i < bytes.length; ) {
-                int b1 = bytes[i] & 0xFF;
-                String u1 = null;
-                try {
-                    u1 = font.toUnicode(b1);
-                } catch (Exception ignored) {
-                }
-                if (i + 1 < bytes.length) {
-                    int b2 = bytes[i + 1] & 0xFF;
-                    int code = (b1 << 8) | b2;
-                    String u2 = null;
-                    try {
-                        u2 = font.toUnicode(code);
-                    } catch (Exception ignored) {
-                    }
-                    if (u2 != null) {
-                        out.append(u2);
-                        i += 2;
-                        anyMapped = true;
-                        continue;
-                    }
-                }
-                if (u1 != null) {
-                    out.append(u1);
-                } else {
-                    out.append('?');
-                }
-                i += 1;
-            }
-            return anyMapped ? out.toString() : null;
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private static WipeResult wipeAllTextShowingOperators(List<Object> tokens) {
@@ -1062,7 +957,7 @@ public class RedactionService {
                         if (aggressive
                             && gs.font != null
                             && tokens.get(i - 1) instanceof COSString cs) {
-                            tryDecodeWithFontEnhanced(gs.font, cs);
+                            TextDecodingHelper.tryDecodeWithFontEnhanced(gs.font, cs);
                         }
                         segments.add(
                             new TextSegment(
@@ -1175,12 +1070,12 @@ public class RedactionService {
                     || "'".equals(seg.getOperatorName())
                     || "\"".equals(seg.getOperatorName()))
                     && tok instanceof COSString cs) {
-                    decoded = tryDecodeWithFont(seg.getFont(), cs);
+                    decoded = TextDecodingHelper.tryDecodeWithFont(seg.getFont(), cs);
                 } else if ("TJ".equals(seg.getOperatorName()) && tok instanceof COSArray arr) {
                     StringBuilder sb = new StringBuilder();
                     for (COSBase el : arr) {
                         if (el instanceof COSString s) {
-                            String d = tryDecodeWithFont(seg.getFont(), s);
+                            String d = TextDecodingHelper.tryDecodeWithFont(seg.getFont(), s);
                             sb.append(d != null ? d : s.getString());
                         }
                     }
@@ -1272,12 +1167,12 @@ public class RedactionService {
                 Object tok = tokens.get(seg.getTokenIndex());
                 if (("Tj".equals(seg.getOperatorName()) || "'".equals(seg.getOperatorName()))
                     && tok instanceof COSString cs) {
-                    decoded = tryDecodeWithFont(seg.getFont(), cs);
+                    decoded = TextDecodingHelper.tryDecodeWithFont(seg.getFont(), cs);
                 } else if ("TJ".equals(seg.getOperatorName()) && tok instanceof COSArray arr) {
                     StringBuilder sb = new StringBuilder();
                     for (COSBase el : arr) {
                         if (el instanceof COSString s) {
-                            String d = tryDecodeWithFont(seg.getFont(), s);
+                            String d = TextDecodingHelper.tryDecodeWithFont(seg.getFont(), s);
                             sb.append(d != null ? d : s.getString());
                         }
                     }
@@ -1715,7 +1610,7 @@ public class RedactionService {
     }
 
     private int wipeAllTextInResources(PDDocument document, PDResources resources) {
-        int totalMods = 0;
+        int totalMods = 0; // aggregated but currently not returned to caller
         try {
             totalMods += wipeAllSemanticTextInProperties(resources);
             for (COSName xobjName : resources.getXObjectNames()) {
@@ -1776,7 +1671,6 @@ public class RedactionService {
     }
 
     private void wipeAllTextInPatterns(PDDocument document, PDResources resources) {
-        int totalMods = 0;
         try {
             for (COSName patName : resources.getPatternNames()) {
                 try {
@@ -1786,7 +1680,7 @@ public class RedactionService {
                         org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern tiling) {
                         PDResources patRes = tiling.getResources();
                         if (patRes != null) {
-                            totalMods += wipeAllTextInResources(document, patRes);
+                            wipeAllTextInResources(document, patRes);
                         }
                         PDFStreamParser parser = new PDFStreamParser(tiling);
                         List<Object> tokens = new ArrayList<>();
@@ -1795,9 +1689,7 @@ public class RedactionService {
                             tokens.add(token);
                         }
                         WipeResult wrText = wipeAllTextShowingOperators(tokens);
-                        totalMods += wrText.modifications;
                         WipeResult wrSem = wipeAllSemanticTextInTokens(wrText.tokens);
-                        totalMods += wrSem.modifications;
                         if (wrText.modifications > 0 || wrSem.modifications > 0) {
                             writeRedactedContentToPattern(tiling, wrSem.tokens);
                         }
@@ -1809,6 +1701,7 @@ public class RedactionService {
         }
     }
 
+    @SuppressWarnings("unused")
     private int wipeAllTextInAnnotations(PDDocument document, PDPage page) {
         int totalMods = 0;
         try {
