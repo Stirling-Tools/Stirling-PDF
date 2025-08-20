@@ -3,7 +3,7 @@ repositories {
 }
 
 ext {
-    jwtVersion = '0.12.6'
+    jwtVersion = '0.12.7'
 }
 
 bootRun {
