@@ -27,29 +27,6 @@ export function calculateScaleFromFileSize(fileSize: number): number {
   return 0.3;  // Still usable quality, not tiny
 }
 
-/**
- * Get file type color scheme
- */
-function getFileTypeColor(extension: string): { bg: string; text: string; icon: string } {
-  const ext = extension.toLowerCase();
-  
-  const colorMap: Record<string, { bg: string; text: string; icon: string }> = {
-    pdf: { bg: '#ff4444', text: '#ffffff', icon: '📄' },
-    doc: { bg: '#2196f3', text: '#ffffff', icon: '📝' },
-    docx: { bg: '#2196f3', text: '#ffffff', icon: '📝' },
-    xls: { bg: '#4caf50', text: '#ffffff', icon: '📊' },
-    xlsx: { bg: '#4caf50', text: '#ffffff', icon: '📊' },
-    ppt: { bg: '#ff9800', text: '#ffffff', icon: '📈' },
-    pptx: { bg: '#ff9800', text: '#ffffff', icon: '📈' },
-    txt: { bg: '#607d8b', text: '#ffffff', icon: '📃' },
-    rtf: { bg: '#795548', text: '#ffffff', icon: '📃' },
-    odt: { bg: '#3f51b5', text: '#ffffff', icon: '📝' },
-    ods: { bg: '#009688', text: '#ffffff', icon: '📊' },
-    odp: { bg: '#e91e63', text: '#ffffff', icon: '📈' }
-  };
-
-  return colorMap[ext] || { bg: '#9e9e9e', text: '#ffffff', icon: '📄' };
-}
 
 /**
  * Generate encrypted PDF thumbnail with lock icon
@@ -152,16 +129,40 @@ function getFileTypeColorScheme(extension: string): ColorScheme {
     'PDF': { bgTop: '#FF6B6B20', bgBottom: '#FF6B6B10', border: '#FF6B6B40', icon: '#FF6B6B', badge: '#FF6B6B', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'DOC': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'DOCX': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'ODT': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'TXT': { bgTop: '#95A5A620', bgBottom: '#95A5A610', border: '#95A5A640', icon: '#95A5A6', badge: '#95A5A6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'RTF': { bgTop: '#95A5A620', bgBottom: '#95A5A610', border: '#95A5A640', icon: '#95A5A6', badge: '#95A5A6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
 
     // Spreadsheets
     'XLS': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'XLSX': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'ODS': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'CSV': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
 
     // Presentations
     'PPT': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'PPTX': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'ODP': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+
+    // Images
+    'JPG': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'JPEG': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'PNG': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'GIF': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'BMP': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'TIFF': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'WEBP': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'SVG': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+
+    // Web
+    'HTML': { bgTop: '#FD79A820', bgBottom: '#FD79A810', border: '#FD79A840', icon: '#FD79A8', badge: '#FD79A8', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'XML': { bgTop: '#FD79A820', bgBottom: '#FD79A810', border: '#FD79A840', icon: '#FD79A8', badge: '#FD79A8', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+
+    // Text/Markup
+    'MD': { bgTop: '#6C5CE720', bgBottom: '#6C5CE710', border: '#6C5CE740', icon: '#6C5CE7', badge: '#6C5CE7', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+
+    // Email
+    'EML': { bgTop: '#A29BFE20', bgBottom: '#A29BFE10', border: '#A29BFE40', icon: '#A29BFE', badge: '#A29BFE', textPrimary: '#FFFFFF', textSecondary: '#666666' },
 
     // Archives
     'ZIP': { bgTop: '#9B59B620', bgBottom: '#9B59B610', border: '#9B59B640', icon: '#9B59B6', badge: '#9B59B6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
