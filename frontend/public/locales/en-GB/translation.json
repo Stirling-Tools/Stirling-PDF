@@ -625,6 +625,70 @@
     "reorganizePages": {
       "title": "Reorganize Pages",
       "desc": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
+    },
+    "extractPage": {
+      "title": "Extract Pages",
+      "desc": "Extract specific pages from a PDF document"
+    },
+    "removePages": {
+      "title": "Remove Pages",
+      "desc": "Remove specific pages from a PDF document"
+    },
+    "removeImagePdf": {
+      "title": "Remove Image",
+      "desc": "Remove images from PDF documents"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Auto Split by Size/Count",
+      "desc": "Automatically split PDFs by file size or page count"
+    },
+    "adjust-contrast": {
+      "title": "Adjust Colours/Contrast",
+      "desc": "Adjust colours and contrast of PDF documents"
+    },
+    "replaceColorPdf": {
+      "title": "Replace & Invert Colour",
+      "desc": "Replace or invert colours in PDF documents"
+    },
+    "devApi": {
+      "title": "API",
+      "desc": "Link to API documentation"
+    },
+    "devFolderScanning": {
+      "title": "Automated Folder Scanning",
+      "desc": "Link to automated folder scanning guide"
+    },
+    "devSsoGuide": {
+      "title": "SSO Guide",
+      "desc": "Link to SSO guide"
+    },
+    "devAirgapped": {
+      "title": "Air-gapped Setup",
+      "desc": "Link to air-gapped setup guide"
+    },
+    "compressPdfs": {
+      "title": "Compress",
+      "desc": "Compress PDFs to reduce their file size."
+    },
+    "addPassword": {
+      "title": "Add Password",
+      "desc": "Add password protection and restrictions to PDF files"
+    },
+    "add-watermark": {
+      "title": "Add Watermark",
+      "desc": "Add a custom watermark to your PDF document."
+    },
+    "sanitize": {
+      "title": "Sanitise",
+      "desc": "Remove potentially harmful elements from PDF files"
+    },
+    "changePermissions": {
+      "title": "Change Permissions",
+      "desc": "Change document restrictions and permissions"
+    },
+    "add-page-numbers": {
+      "title": "Add Page Numbers",
+      "desc": "Add Page numbers throughout a document in a set location"
     }
   },
   "viewPdf": {

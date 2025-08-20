@@ -48,8 +48,8 @@ export const useToolManagement = (): ToolManagementResult => {
         const baseTool = baseRegistry[toolKey as keyof typeof baseRegistry];
         availableToolRegistry[toolKey] = {
           ...baseTool,
-          name: t(baseTool.name),
-          description: t(baseTool.description)
+          name: baseTool.name,
+          description: baseTool.description,
         };
       }
     });
