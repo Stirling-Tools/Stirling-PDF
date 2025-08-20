@@ -1,20 +1,27 @@
 package stirling.software.SPDF.utils.text;
 
+import lombok.experimental.UtilityClass;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
+
 @Slf4j
+@UtilityClass
 public class TextDecodingHelper {
 
-    private static final int ASCII_LOWER_BOUND = 32;
-    private static final int ASCII_UPPER_BOUND = 126;
-    private static final int EXTENDED_ASCII_LOWER_BOUND = 160;
-    private static final int EXTENDED_ASCII_UPPER_BOUND = 255;
+    private final int ASCII_LOWER_BOUND = 32;
+    private final int ASCII_UPPER_BOUND = 126;
+    private final int EXTENDED_ASCII_LOWER_BOUND = 160;
+    private final int EXTENDED_ASCII_UPPER_BOUND = 255;
 
-    public static void tryDecodeWithFontEnhanced(PDFont font, COSString cosString) {
+    public void tryDecodeWithFontEnhanced(PDFont font, COSString cosString) {
         if (font == null || cosString == null) {
             return;
         }
@@ -39,12 +46,11 @@ public class TextDecodingHelper {
             try {
                 tryDecodeWithFont(font, cosString);
             } catch (Exception fallbackException) {
-                // Ultimate fallback: return hex representation for analysis
             }
         }
     }
 
-    public static String decodeCharactersEnhanced(PDFont font, byte[] bytes) {
+    public String decodeCharactersEnhanced(PDFont font, byte[] bytes) {
         StringBuilder out = new StringBuilder();
         boolean hasValidCharacters = false;
         int i = 0;
@@ -52,7 +58,6 @@ public class TextDecodingHelper {
             int code = bytes[i] & 0xFF;
             String charStr = decodeSingleCharacter(font, code, bytes);
 
-            // Heuristic for multi-byte: if high byte, try combining with next
             if (charStr == null && code >= 128 && i + 1 < bytes.length) {
                 int combinedCode = (code << 8) | (bytes[i + 1] & 0xFF);
                 charStr = decodeSingleCharacter(font, combinedCode, bytes);
@@ -76,7 +81,7 @@ public class TextDecodingHelper {
         return hasValidCharacters ? result : null;
     }
 
-    public static String decodeSingleCharacter(PDFont font, int code, byte[] bytes) {
+    public String decodeSingleCharacter(PDFont font, int code, byte[] bytes) {
         String charStr = null;
 
         try {
@@ -84,11 +89,9 @@ public class TextDecodingHelper {
         } catch (Exception ignored) {
         }
 
-        // Enhanced CID Font and Composite Font Handling
         if (charStr == null
-            && font instanceof org.apache.pdfbox.pdmodel.font.PDType0Font type0Font) {
+            && font instanceof PDType0Font type0Font) {
             try {
-                // Attempt CID-specific decoding for multi-byte codes
                 int cid = (bytes.length > 1) ? ((bytes[0] & 0xFF) << 8) | (bytes[1] & 0xFF) : code;
                 charStr = type0Font.toUnicode(cid);
                 log.debug("CID decoding successful for code {}: {}", cid, charStr);
@@ -108,7 +111,7 @@ public class TextDecodingHelper {
         return charStr;
     }
 
-    public static String fallbackCharacterMapping(int code, byte[] bytes, PDFont font) {
+    public String fallbackCharacterMapping(int code, byte[] bytes, PDFont font) {
         try {
             if (font instanceof PDType0Font && bytes.length > 1) {
                 return null;
@@ -139,10 +142,10 @@ public class TextDecodingHelper {
             // Fallback to UTF-8/16 decoding attempt for unknown encodings
             try {
                 if (bytes.length >= 2) {
-                    java.nio.ByteBuffer buffer = java.nio.ByteBuffer.wrap(bytes);
-                    java.nio.charset.CharsetDecoder decoder =
-                        java.nio.charset.StandardCharsets.UTF_16BE.newDecoder();
-                    java.nio.CharBuffer charBuffer = decoder.decode(buffer);
+                    ByteBuffer buffer = ByteBuffer.wrap(bytes);
+                    CharsetDecoder decoder =
+                        StandardCharsets.UTF_16BE.newDecoder();
+                    CharBuffer charBuffer = decoder.decode(buffer);
                     return charBuffer.toString();
                 }
             } catch (Exception e) {
@@ -155,7 +158,7 @@ public class TextDecodingHelper {
         }
     }
 
-    public static String mapSubsetCharacter(int code) {
+    public String mapSubsetCharacter(int code) {
         if (code >= ASCII_LOWER_BOUND && code <= ASCII_UPPER_BOUND) {
             return String.valueOf((char) code);
         }
@@ -165,7 +168,7 @@ public class TextDecodingHelper {
         return null;
     }
 
-    public static String tryDecodeWithFont(PDFont font, COSString cosString) {
+    public String tryDecodeWithFont(PDFont font, COSString cosString) {
         try {
             if (font == null || cosString == null) {
                 return null;
@@ -194,7 +197,6 @@ public class TextDecodingHelper {
                 return out.toString();
             }
             out.setLength(0);
-            anyMapped = false;
             for (int i = 0; i < bytes.length; ) {
                 int b1 = bytes[i] & 0xFF;
                 String u1 = null;

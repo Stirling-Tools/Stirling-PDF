@@ -2,6 +2,7 @@ package stirling.software.SPDF.utils.text;
 
 import java.io.IOException;
 
+import lombok.experimental.UtilityClass;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDSimpleFont;
 import org.apache.pdfbox.pdmodel.font.encoding.DictionaryEncoding;
@@ -10,9 +11,10 @@ import org.apache.pdfbox.pdmodel.font.encoding.Encoding;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@UtilityClass
 public class TextEncodingHelper {
 
-    public static boolean canEncodeCharacters(PDFont font, String text) {
+    public boolean canEncodeCharacters(PDFont font, String text) {
         if (font == null || text == null || text.isEmpty()) {
             return false;
         }
@@ -51,7 +53,7 @@ public class TextEncodingHelper {
         }
     }
 
-    private static boolean validateAsCodePointArray(PDFont font, String text) {
+    private boolean validateAsCodePointArray(PDFont font, String text) {
         int totalCodePoints = 0;
         int successfulCodePoints = 0;
 
@@ -112,7 +114,7 @@ public class TextEncodingHelper {
         return isAcceptable;
     }
 
-    public static boolean isTextSegmentRemovable(PDFont font, String text) {
+    public boolean isTextSegmentRemovable(PDFont font, String text) {
         if (font == null || text == null || text.isEmpty()) {
             return false;
         }
@@ -145,7 +147,7 @@ public class TextEncodingHelper {
         return isTextFullyRemovable(font, text);
     }
 
-    public static boolean isTextFullyRemovable(PDFont font, String text) {
+    public boolean isTextFullyRemovable(PDFont font, String text) {
         if (font == null || text == null || text.isEmpty()) {
             return false;
         }
@@ -213,7 +215,7 @@ public class TextEncodingHelper {
         }
     }
 
-    private static boolean isSimpleCharacter(String text) {
+    private boolean isSimpleCharacter(String text) {
         if (text == null || text.isEmpty()) {
             return false;
         }
@@ -241,7 +243,7 @@ public class TextEncodingHelper {
         return true;
     }
 
-    public static boolean hasCustomEncoding(PDFont font) {
+    public boolean hasCustomEncoding(PDFont font) {
         try {
             if (font instanceof PDSimpleFont simpleFont) {
                 try {
@@ -294,7 +296,7 @@ public class TextEncodingHelper {
         }
     }
 
-    public static boolean fontSupportsCharacter(PDFont font, String character) {
+    public boolean fontSupportsCharacter(PDFont font, String character) {
         if (font == null || character == null || character.isEmpty()) {
             return false;
         }
@@ -318,14 +320,14 @@ public class TextEncodingHelper {
         }
     }
 
-    public static boolean isFontSubset(String fontName) {
+    public boolean isFontSubset(String fontName) {
         if (fontName == null) {
             return false;
         }
         return fontName.matches("^[A-Z]{6}\\+.*");
     }
 
-    public static boolean canCalculateBasicWidths(PDFont font) {
+    public boolean canCalculateBasicWidths(PDFont font) {
         try {
             float spaceWidth = font.getStringWidth(" ");
             if (spaceWidth <= 0) {

@@ -1473,13 +1473,12 @@ public class RedactionService {
                                 String originalPart =
                                     originalText.substring(
                                         redactionStartInString, redactionEndInString);
-                                if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())) {
-                                    if (segment.getFont() != null
+                                if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get()) && segment.getFont() != null
                                         && !TextEncodingHelper.isTextSegmentRemovable(
                                         segment.getFont(), originalPart)) {
                                         continue;
                                     }
-                                }
+
                                 modified = true;
                                 if (Boolean.TRUE.equals(AGGRESSIVE_MODE.get())) {
                                     newText.replace(
@@ -1515,8 +1514,7 @@ public class RedactionService {
                     }
                     String modifiedString = newText.toString();
                     newArray.add(new COSString(modifiedString));
-                    if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())) {
-                        if (modified && segment.getFont() != null && segment.getFontSize() > 0) {
+                    if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get()) && modified && segment.getFont() != null && segment.getFontSize() > 0) {
                             try {
                                 float originalWidth =
                                     safeGetStringWidth(segment.getFont(), originalText)
@@ -1537,7 +1535,7 @@ public class RedactionService {
                             } catch (Exception ignored) {
                             }
                         }
-                    }
+
                     textOffsetInSegment += originalText.length();
                 } else {
                     newArray.add(element);

@@ -1,16 +1,18 @@
 package stirling.software.SPDF.utils.text;
 
+import lombok.experimental.UtilityClass;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@UtilityClass
 public class WidthCalculator {
 
-    private static final int FONT_SCALE_FACTOR = 1000;
+    private final int FONT_SCALE_FACTOR = 1000;
 
-    public static float calculateAccurateWidth(PDFont font, String text, float fontSize) {
+    public float calculateAccurateWidth(PDFont font, String text, float fontSize) {
         if (font == null || text == null || text.isEmpty() || fontSize <= 0) {
             return 0;
         }
@@ -42,8 +44,8 @@ public class WidthCalculator {
         }
     }
 
-    private static float calculateWidthWithCharacterIteration(
-            PDFont font, String text, float fontSize) {
+    private float calculateWidthWithCharacterIteration(
+        PDFont font, String text, float fontSize) {
         try {
             float totalWidth = 0;
 
@@ -81,7 +83,7 @@ public class WidthCalculator {
         }
     }
 
-    private static float calculateFallbackWidth(PDFont font, String text, float fontSize) {
+    private float calculateFallbackWidth(PDFont font, String text, float fontSize) {
         try {
             if (font.getFontDescriptor() != null
                     && font.getFontDescriptor().getFontBoundingBox() != null) {
@@ -111,7 +113,7 @@ public class WidthCalculator {
         }
     }
 
-    public static boolean isWidthCalculationReliable(PDFont font) {
+    public boolean isWidthCalculationReliable(PDFont font) {
         if (font == null) {
             return false;
         }

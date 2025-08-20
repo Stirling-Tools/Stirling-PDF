@@ -5,15 +5,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import lombok.experimental.UtilityClass;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 
 @Slf4j
+@UtilityClass
 public class TextFinderUtils {
 
-    public static boolean validateFontReliability(org.apache.pdfbox.pdmodel.font.PDFont font) {
+    public boolean validateFontReliability(PDFont font) {
         if (font == null) {
             return false;
         }
@@ -53,8 +56,8 @@ public class TextFinderUtils {
         return false;
     }
 
-    public static List<Pattern> createOptimizedSearchPatterns(
-            Set<String> searchTerms, boolean useRegex, boolean wholeWordSearch) {
+    public List<Pattern> createOptimizedSearchPatterns(
+        Set<String> searchTerms, boolean useRegex, boolean wholeWordSearch) {
         List<Pattern> patterns = new ArrayList<>();
 
         for (String term : searchTerms) {
@@ -84,7 +87,7 @@ public class TextFinderUtils {
         return patterns;
     }
 
-    private static String applyWordBoundaries(String originalTerm, String patternString) {
+    private String applyWordBoundaries(String originalTerm, String patternString) {
         if (originalTerm.length() == 1 && Character.isDigit(originalTerm.charAt(0))) {
             return "(?<![\\w])" + patternString + "(?![\\w])";
         } else if (originalTerm.length() == 1) {
@@ -94,7 +97,7 @@ public class TextFinderUtils {
         }
     }
 
-    public static boolean hasProblematicFonts(PDPage page) {
+    public boolean hasProblematicFonts(PDPage page) {
         if (page == null) {
             return false;
         }
