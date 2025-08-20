@@ -64,7 +64,7 @@ export class ThumbnailGenerationService {
     
     const allResults: ThumbnailResult[] = [];
     let completed = 0;
-    const batchSize = 5; // Small batches for UI responsiveness
+    const batchSize = 3; // Smaller batches for better UI responsiveness
     
     // Process pages in small batches
     for (let i = 0; i < pageNumbers.length; i += batchSize) {

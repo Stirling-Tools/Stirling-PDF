@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Box } from '@mantine/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
@@ -31,15 +31,56 @@ const DragDropGrid = <T extends DragDropItem>({
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
   
-  
-  // Grid configuration
-  const ITEMS_PER_ROW = 4;
+  // Responsive grid configuration
+  const [itemsPerRow, setItemsPerRow] = useState(4);
+  const ITEM_WIDTH = 320; // 20rem (page width)
+  const ITEM_GAP = 24; // 1.5rem gap between items
   const ITEM_HEIGHT = 340; // 20rem + gap
   const OVERSCAN = items.length > 1000 ? 8 : 4; // More overscan for large documents
   
+  // Calculate items per row based on container width
+  const calculateItemsPerRow = useCallback(() => {
+    if (!containerRef.current) return 4; // Default fallback
+    
+    const containerWidth = containerRef.current.offsetWidth;
+    if (containerWidth === 0) return 4; // Container not measured yet
+    
+    // Calculate how many items fit: (width - gap) / (itemWidth + gap)
+    const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
+    const itemWithGap = ITEM_WIDTH + ITEM_GAP;
+    const calculated = Math.floor(availableWidth / itemWithGap);
+    
+    return Math.max(1, calculated); // At least 1 item per row
+  }, []);
+  
+  // Update items per row when container resizes
+  useEffect(() => {
+    const updateLayout = () => {
+      const newItemsPerRow = calculateItemsPerRow();
+      setItemsPerRow(newItemsPerRow);
+    };
+    
+    // Initial calculation
+    updateLayout();
+    
+    // Listen for window resize
+    window.addEventListener('resize', updateLayout);
+    
+    // Use ResizeObserver for container size changes
+    const resizeObserver = new ResizeObserver(updateLayout);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', updateLayout);
+      resizeObserver.disconnect();
+    };
+  }, [calculateItemsPerRow]);
+  
   // Virtualization with react-virtual library
   const rowVirtualizer = useVirtualizer({
-    count: Math.ceil(items.length / ITEMS_PER_ROW),
+    count: Math.ceil(items.length / itemsPerRow),
     getScrollElement: () => containerRef.current?.closest('[data-scrolling-container]') as Element,
     estimateSize: () => ITEM_HEIGHT,
     overscan: OVERSCAN,
@@ -64,8 +105,8 @@ const DragDropGrid = <T extends DragDropItem>({
         }}
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-          const startIndex = virtualRow.index * ITEMS_PER_ROW;
-          const endIndex = Math.min(startIndex + ITEMS_PER_ROW, items.length);
+          const startIndex = virtualRow.index * itemsPerRow;
+          const endIndex = Math.min(startIndex + itemsPerRow, items.length);
           const rowItems = items.slice(startIndex, endIndex);
           
           return (

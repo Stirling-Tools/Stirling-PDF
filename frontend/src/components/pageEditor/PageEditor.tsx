@@ -1179,7 +1179,7 @@ const PageEditor = ({
       )}
 
       {showLoading && (
-        <Box p="md" pt="xl">
+        <Box p={0}>
           <SkeletonLoader type="controls" />
 
 
@@ -1215,7 +1215,7 @@ const PageEditor = ({
       )}
 
       {displayDocument && (
-        <Box p="md" pt="xl">
+        <Box p={0}>
           {/* Enhanced Processing Status */}
           {globalProcessing && processingProgress < 100 && (
             <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>

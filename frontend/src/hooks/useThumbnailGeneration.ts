@@ -19,7 +19,7 @@ let batchTimer: number | null = null;
 const activeRequests = new Map<string, Promise<string | null>>();
 
 // Batch processing configuration
-const BATCH_SIZE = 50; // Process thumbnails in batches of 50
+const BATCH_SIZE = 20; // Process thumbnails in batches of 20 for better UI responsiveness
 const BATCH_DELAY = 100; // Wait 100ms to collect requests before processing
 const PRIORITY_BATCH_DELAY = 50; // Faster processing for the first batch (visible pages)
 
