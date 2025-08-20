@@ -812,7 +812,18 @@
     "tags": "remove,delete,form,field,readonly",
     "title": "Remove Read-Only from Form Fields",
     "header": "Unlock PDF Forms",
-    "submit": "Remove"
+    "submit": "Unlock Forms",
+    "description": "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable.",
+    "filenamePrefix": "unlocked_forms",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred while unlocking PDF forms."
+    },
+    "results": {
+      "title": "Unlocked Forms Results"
+    }
   },
   "changeMetadata": {
     "tags": "Title,author,date,creation,time,publisher,producer,stats",
@@ -1060,7 +1071,18 @@
     "title": "Remove Certificate Signature",
     "header": "Remove the digital certificate from the PDF",
     "selectPDF": "Select a PDF file:",
-    "submit": "Remove Signature"
+    "submit": "Remove Signature",
+    "description": "This tool will remove digital certificate signatures from your PDF document.",
+    "filenamePrefix": "unsigned",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred while removing certificate signatures."
+    },
+    "results": {
+      "title": "Certificate Removal Results"
+    }
   },
   "pageLayout": {
     "tags": "merge,composite,single-view,organize",
@@ -1388,7 +1410,18 @@
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
     "header": "PDF To Single Page",
-    "submit": "Convert To Single Page"
+    "submit": "Convert To Single Page",
+    "description": "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights.",
+    "filenamePrefix": "single_page",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred while converting to single page."
+    },
+    "results": {
+      "title": "Single Page Results"
+    }
   },
   "pageExtracter": {
     "title": "Extract Pages",
