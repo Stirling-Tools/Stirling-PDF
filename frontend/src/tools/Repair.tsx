@@ -57,7 +57,7 @@ const Repair = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: hasFiles || hasResults,
+      isCollapsed: hasResults,
       placeholder: t("repair.files.placeholder", "Select a PDF file in the main view to get started"),
     },
     steps: [],

@@ -189,7 +189,7 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: hasFiles || hasResults,
+      isCollapsed: hasResults,
     },
     steps: getSteps(),
     executeButton: {

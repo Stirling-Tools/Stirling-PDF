@@ -1,5 +1,6 @@
-import React from 'react';
-import { Text } from '@mantine/core';
+import React from "react";
+import { Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 export interface FileStatusIndicatorProps {
   selectedFiles?: File[];
@@ -8,20 +9,25 @@ export interface FileStatusIndicatorProps {
 
 const FileStatusIndicator = ({
   selectedFiles = [],
-  placeholder = "Select a PDF file in the main view to get started"
+  placeholder,
 }: FileStatusIndicatorProps) => {
+  const { t } = useTranslation();
+  const defaultPlaceholder = placeholder || t("files.placeholder", "Select a PDF file in the main view to get started");
   
   // Only show content when no files are selected
   if (selectedFiles.length === 0) {
     return (
       <Text size="sm" c="dimmed">
-        {placeholder}
+        {defaultPlaceholder}
       </Text>
     );
   }
 
-  // Return nothing when files are selected
-  return null;
-}
+  return (
+   <Text size="sm" c="dimmed" style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
+        ✓ {selectedFiles.length === 1 ? t("fileSelected", "Selected: {{filename}}", { filename: selectedFiles[0]?.name }) : t("filesSelected", "{{count}} files selected", { count: selectedFiles.length })}
+    </Text>
+  );
+};
 
 export default FileStatusIndicator;
