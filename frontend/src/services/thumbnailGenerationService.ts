@@ -2,6 +2,8 @@
  * High-performance thumbnail generation service using main thread processing
  */
 
+import { pdfWorkerManager } from './pdfWorkerManager';
+
 interface ThumbnailResult {
   pageNumber: number;
   thumbnail: string;
@@ -22,20 +24,90 @@ interface CachedThumbnail {
   sizeBytes: number;
 }
 
+interface CachedPDFDocument {
+  pdf: any; // PDFDocumentProxy from pdfjs-dist
+  lastUsed: number;
+  refCount: number;
+}
+
 export class ThumbnailGenerationService {
   // Session-based thumbnail cache
   private thumbnailCache = new Map<string, CachedThumbnail>();
   private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
   private currentCacheSize = 0;
 
+  // PDF document cache to reuse PDF instances and avoid creating multiple workers
+  private pdfDocumentCache = new Map<string, CachedPDFDocument>();
+  private maxPdfCacheSize = 10; // Keep up to 10 PDF documents cached
+
   constructor(private maxWorkers: number = 3) {
     // PDF rendering requires DOM access, so we use optimized main thread processing
+  }
+
+  /**
+   * Get or create a cached PDF document
+   */
+  private async getCachedPDFDocument(fileId: string, pdfArrayBuffer: ArrayBuffer): Promise<any> {
+    const cached = this.pdfDocumentCache.get(fileId);
+    if (cached) {
+      cached.lastUsed = Date.now();
+      cached.refCount++;
+      return cached.pdf;
+    }
+
+    // Evict old PDFs if cache is full
+    while (this.pdfDocumentCache.size >= this.maxPdfCacheSize) {
+      this.evictLeastRecentlyUsedPDF();
+    }
+
+    const { getDocument } = await import('pdfjs-dist');
+    const pdf = await getDocument({ data: pdfArrayBuffer }).promise;
+
+    this.pdfDocumentCache.set(fileId, {
+      pdf,
+      lastUsed: Date.now(),
+      refCount: 1
+    });
+
+    return pdf;
+  }
+
+  /**
+   * Release a reference to a cached PDF document
+   */
+  private releasePDFDocument(fileId: string): void {
+    const cached = this.pdfDocumentCache.get(fileId);
+    if (cached) {
+      cached.refCount--;
+      // Don't destroy immediately - keep in cache for potential reuse
+    }
+  }
+
+  /**
+   * Evict the least recently used PDF document
+   */
+  private evictLeastRecentlyUsedPDF(): void {
+    let oldestEntry: [string, CachedPDFDocument] | null = null;
+    let oldestTime = Date.now();
+
+    for (const [key, value] of this.pdfDocumentCache.entries()) {
+      if (value.lastUsed < oldestTime && value.refCount === 0) {
+        oldestTime = value.lastUsed;
+        oldestEntry = [key, value];
+      }
+    }
+
+    if (oldestEntry) {
+      oldestEntry[1].pdf.destroy(); // Clean up PDF worker
+      this.pdfDocumentCache.delete(oldestEntry[0]);
+    }
   }
 
   /**
    * Generate thumbnails for multiple pages using main thread processing
    */
   async generateThumbnails(
+    fileId: string,
     pdfArrayBuffer: ArrayBuffer,
     pageNumbers: number[],
     options: ThumbnailGenerationOptions = {},
@@ -46,21 +118,21 @@ export class ThumbnailGenerationService {
       quality = 0.8
     } = options;
 
-    return await this.generateThumbnailsMainThread(pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
+    return await this.generateThumbnailsMainThread(fileId, pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
   }
 
   /**
    * Main thread thumbnail generation with batching for UI responsiveness
    */
   private async generateThumbnailsMainThread(
+    fileId: string,
     pdfArrayBuffer: ArrayBuffer,
     pageNumbers: number[],
     scale: number,
     quality: number,
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
-    const { getDocument } = await import('pdfjs-dist');
-    const pdf = await getDocument({ data: pdfArrayBuffer }).promise;
+    const pdf = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
     
     const allResults: ThumbnailResult[] = [];
     let completed = 0;
@@ -116,7 +188,8 @@ export class ThumbnailGenerationService {
       await new Promise(resolve => setTimeout(resolve, 1));
     }
     
-    await pdf.destroy();
+    // Release reference to PDF document (don't destroy - keep in cache)
+    this.releasePDFDocument(fileId);
     return allResults;
   }
 
@@ -183,8 +256,25 @@ export class ThumbnailGenerationService {
     this.currentCacheSize = 0;
   }
 
+  clearPDFCache(): void {
+    // Destroy all cached PDF documents
+    for (const [, cached] of this.pdfDocumentCache) {
+      cached.pdf.destroy();
+    }
+    this.pdfDocumentCache.clear();
+  }
+
+  clearPDFCacheForFile(fileId: string): void {
+    const cached = this.pdfDocumentCache.get(fileId);
+    if (cached) {
+      cached.pdf.destroy();
+      this.pdfDocumentCache.delete(fileId);
+    }
+  }
+
   destroy(): void {
     this.clearCache();
+    this.clearPDFCache();
   }
 }
 

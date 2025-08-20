@@ -354,6 +354,7 @@ const PageEditor = ({
 
       // Start parallel thumbnail generation WITHOUT blocking the main thread
       await generateThumbnails(
+        fileId, // Add fileId as first parameter
         arrayBuffer,
         pageNumbers,
         {
@@ -363,10 +364,10 @@ const PageEditor = ({
           parallelBatches: 3 // Use 3 Web Workers in parallel
         },
         // Progress callback for thumbnail updates
-        (progress) => {
+        (progress: { completed: number; total: number; thumbnails: Array<{ pageNumber: number; thumbnail: string }> }) => {
           // Batch process thumbnails to reduce main thread work
           requestAnimationFrame(() => {
-            progress.thumbnails.forEach(({ pageNumber, thumbnail }) => {
+            progress.thumbnails.forEach(({ pageNumber, thumbnail }: { pageNumber: number; thumbnail: string }) => {
               // Use stable fileId for cache key
               const pageId = `${fileId}-page-${pageNumber}`;
               addThumbnailToCache(pageId, thumbnail);

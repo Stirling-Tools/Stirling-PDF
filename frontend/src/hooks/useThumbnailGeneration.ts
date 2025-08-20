@@ -70,7 +70,11 @@ async function processRequestQueue() {
           
           console.log(`📸 Batch generating ${requests.length} thumbnails for pages: ${pageNumbers.slice(0, 5).join(', ')}${pageNumbers.length > 5 ? '...' : ''}`);
           
+          // Use file name as fileId for PDF document caching
+          const fileId = file.name + '_' + file.size + '_' + file.lastModified;
+          
           const results = await thumbnailGenerationService.generateThumbnails(
+            fileId,
             arrayBuffer,
             pageNumbers,
             { scale: 1.0, quality: 0.8, batchSize: BATCH_SIZE },
@@ -111,6 +115,7 @@ async function processRequestQueue() {
  */
 export function useThumbnailGeneration() {
   const generateThumbnails = useCallback(async (
+    fileId: string,
     pdfArrayBuffer: ArrayBuffer,
     pageNumbers: number[],
     options: {
@@ -122,6 +127,7 @@ export function useThumbnailGeneration() {
     onProgress?: (progress: { completed: number; total: number; thumbnails: any[] }) => void
   ) => {
     return thumbnailGenerationService.generateThumbnails(
+      fileId,
       pdfArrayBuffer,
       pageNumbers,
       options,
@@ -158,6 +164,10 @@ export function useThumbnailGeneration() {
     isProcessingQueue = false;
     
     thumbnailGenerationService.destroy();
+  }, []);
+
+  const clearPDFCacheForFile = useCallback((fileId: string) => {
+    thumbnailGenerationService.clearPDFCacheForFile(fileId);
   }, []);
 
   const requestThumbnail = useCallback(async (
@@ -223,6 +233,7 @@ export function useThumbnailGeneration() {
     getCacheStats,
     stopGeneration,
     destroyThumbnails,
+    clearPDFCacheForFile,
     requestThumbnail
   };
 }
