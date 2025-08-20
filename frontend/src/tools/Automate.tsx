@@ -4,6 +4,7 @@ import { useFileContext } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
+import { createFilesToolStep } from "../components/tools/shared/filesToolStep";
 import AutomationSelection from "../components/tools/automate/AutomationSelection";
 import AutomationCreation, { AutomationMode } from "../components/tools/automate/AutomationCreation";
 import AutomationRun from "../components/tools/automate/AutomationRun";
@@ -83,36 +84,55 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     }
   };
 
+  const createStep = (title: string, props: any, content?: React.ReactNode) => ({
+    title,
+    ...props,
+    content
+  });
+
+  // Always create files step to avoid conditional hook calls
+  const filesStep = createFilesToolStep(createStep, {
+    selectedFiles,
+    isCollapsed: hasResults,
+    placeholder: t('automate.files.placeholder', 'Select files to process with this automation')
+  });
+
+  const automationSteps = [
+    createStep(t('automate.selection.title', 'Automation Selection'), {
+      isVisible: true,
+      isCollapsed: currentStep !== 'selection',
+      onCollapsedClick: () => setCurrentStep('selection')
+    }, currentStep === 'selection' ? renderCurrentStep() : null),
+    
+    createStep(stepData.mode === AutomationMode.EDIT
+      ? t('automate.creation.editTitle', 'Edit Automation')
+      : t('automate.creation.createTitle', 'Create Automation'), {
+      isVisible: currentStep === 'creation',
+      isCollapsed: false
+    }, currentStep === 'creation' ? renderCurrentStep() : null),
+
+    // Files step - only visible during run mode
+    {
+      ...filesStep,
+      isVisible: currentStep === 'run'
+    },
+
+    // Run step
+    createStep(t('automate.run.title', 'Run Automation'), {
+      isVisible: currentStep === 'run',
+      isCollapsed: false
+    }, currentStep === 'run' ? renderCurrentStep() : null)
+  ];
+
   return createToolFlow({
     files: {
-      selectedFiles: [],
-      isCollapsed: hasResults, // Hide files step for automate tool
+      selectedFiles: currentStep === 'run' ? selectedFiles : [],
+      isCollapsed: currentStep !== 'run' || hasResults,
+      isVisible: false, // Hide the default files step since we add our own
     },
-    steps: [
-      {
-        title: t('automate.selection.title', 'Automation Selection'),
-        isVisible: true,
-        isCollapsed: currentStep !== 'selection',
-        onCollapsedClick: () => setCurrentStep('selection'),
-        content: currentStep === 'selection' ? renderCurrentStep() : null
-      },
-      {
-        title: stepData.mode === AutomationMode.EDIT
-          ? t('automate.creation.editTitle', 'Edit Automation')
-          : t('automate.creation.createTitle', 'Create Automation'),
-        isVisible: currentStep === 'creation',
-        isCollapsed: false,
-        content: currentStep === 'creation' ? renderCurrentStep() : null
-      },
-      {
-        title: t('automate.run.title', 'Run Automation'),
-        isVisible: currentStep === 'run',
-        isCollapsed: false,
-        content: currentStep === 'run' ? renderCurrentStep() : null
-      }
-    ],
+    steps: automationSteps,
     review: {
-      isVisible: hasResults, // Hide review step for automate tool
+      isVisible: hasResults,
       operation: automateOperation,
       title: t('automate.reviewTitle', 'Automation Results')
     }

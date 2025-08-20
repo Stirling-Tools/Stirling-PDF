@@ -125,13 +125,6 @@ export default function AutomationRun({ automation, onBack, onComplete }: Automa
           </Text>
         </Card>
 
-        {/* File Selection Warning */}
-        {(!activeFiles || activeFiles.length === 0) && (
-          <Alert color="orange" title={t('automate.sequence.noFiles', 'No Files Selected')}>
-            {t('automate.sequence.noFilesDesc', 'Please select files to process before running the automation.')}
-          </Alert>
-        )}
-
         {/* Progress Bar */}
         {isExecuting && (
           <div>
