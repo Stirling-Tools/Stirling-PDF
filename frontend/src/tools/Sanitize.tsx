@@ -50,7 +50,6 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "sanitize");
-    actions.setMode("viewer");
   };
 
   const hasFiles = selectedFiles.length > 0;

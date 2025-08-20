@@ -88,7 +88,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "convert");
-    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {

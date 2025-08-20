@@ -46,7 +46,6 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "compress");
-    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {

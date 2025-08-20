@@ -42,7 +42,6 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "split");
-    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {

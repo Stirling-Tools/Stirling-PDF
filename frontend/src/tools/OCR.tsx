@@ -66,7 +66,6 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "ocr");
-    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {
