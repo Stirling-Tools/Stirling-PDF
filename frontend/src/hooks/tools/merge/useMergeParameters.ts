@@ -1,37 +1,21 @@
-import { useState, useCallback } from 'react';
+import { BaseParameters } from '../../../types/parameters';
+import { BaseParametersHook, useBaseParameters } from '../shared/useBaseParameters';
 
-export interface MergeParameters {
+export interface MergeParameters extends BaseParameters {
   removeDigitalSignature: boolean;
   generateTableOfContents: boolean;
-}
+};
 
-export const defaultMergeParameters: MergeParameters = {
+export const defaultParameters: MergeParameters = {
   removeDigitalSignature: false,
   generateTableOfContents: false,
 };
 
-export const useMergeParameters = () => {
-  const [parameters, setParameters] = useState<MergeParameters>(defaultMergeParameters);
+export type MergeParametersHook = BaseParametersHook<MergeParameters>;
 
-  const updateParameter = useCallback(<K extends keyof MergeParameters>(
-    key: K,
-    value: MergeParameters[K]
-  ) => {
-    setParameters(prev => ({ ...prev, [key]: value }));
-  }, []);
-
-  const validateParameters = useCallback((): boolean => {
-    return true; // Merge has no required parameters
-  }, []);
-
-  const resetParameters = useCallback(() => {
-    setParameters(defaultMergeParameters);
-  }, []);
-
-  return {
-    parameters,
-    updateParameter,
-    validateParameters,
-    resetParameters,
-  };
+export const useMergeParameters = (): MergeParametersHook => {
+  return useBaseParameters({
+    defaultParameters,
+    endpointName: "merge-pdfs",
+  });
 };

@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useMergeParameters, defaultMergeParameters } from './useMergeParameters';
+import { useMergeParameters, defaultParameters } from './useMergeParameters';
 
 describe('useMergeParameters', () => {
   test('should initialize with default parameters', () => {
     const { result } = renderHook(() => useMergeParameters());
 
-    expect(result.current.parameters).toStrictEqual(defaultMergeParameters);
+    expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
 
   test.each([
@@ -41,7 +41,7 @@ describe('useMergeParameters', () => {
       result.current.resetParameters();
     });
 
-    expect(result.current.parameters).toStrictEqual(defaultMergeParameters);
+    expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
 
   test('should validate parameters correctly - always returns true', () => {
