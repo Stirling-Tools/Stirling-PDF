@@ -4,8 +4,9 @@
  * Called when files are added to FileContext, before any view sees them
  */
 
-import { getDocument } from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+import { pdfWorkerManager } from './pdfWorkerManager';
 
 export interface ProcessedFileMetadata {
   totalPages: number;
@@ -90,17 +91,16 @@ class FileProcessingService {
         
         // Discover page count using PDF.js (most accurate)
         try {
-          const pdfDoc = await getDocument({
-            data: arrayBuffer,
+          const pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
             disableAutoFetch: true,
             disableStream: true
-          }).promise;
+          });
 
           totalPages = pdfDoc.numPages;
           console.log(`📁 FileProcessingService: PDF.js discovered ${totalPages} pages for ${file.name}`);
 
           // Clean up immediately
-          pdfDoc.destroy();
+          pdfWorkerManager.destroyDocument(pdfDoc);
           
           // Check for cancellation after PDF.js processing
           if (abortController.signal.aborted) {
@@ -203,6 +203,15 @@ class FileProcessingService {
       console.log(`📁 FileProcessingService: Cancelled processing for ${fileId}`);
     });
     console.log(`📁 FileProcessingService: Cancelled ${this.processingCache.size} processing operations`);
+  }
+
+  /**
+   * Emergency cleanup - cancel all processing and destroy workers
+   */
+  emergencyCleanup(): void {
+    this.cancelAllProcessing();
+    this.clearCache();
+    pdfWorkerManager.destroyAllDocuments();
   }
 }
 

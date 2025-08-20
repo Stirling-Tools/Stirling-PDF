@@ -18,6 +18,10 @@ import {
   ToggleSplitCommand
 } from "../../commands/pageCommands";
 import { pdfExportService } from "../../services/pdfExportService";
+import { enhancedPDFProcessingService } from "../../services/enhancedPDFProcessingService";
+import { fileProcessingService } from "../../services/fileProcessingService";
+import { pdfProcessingService } from "../../services/pdfProcessingService";
+import { pdfWorkerManager } from "../../services/pdfWorkerManager";
 import { useThumbnailGeneration } from "../../hooks/useThumbnailGeneration";
 import { calculateScaleFromFileSize } from "../../utils/thumbnailUtils";
 import { fileStorage } from "../../services/fileStorage";
@@ -421,12 +425,21 @@ const PageEditor = ({
   // Cleanup thumbnail generation when component unmounts
   useEffect(() => {
     return () => {
-      // Stop any ongoing thumbnail generation
+      // Stop all PDF.js background processing on unmount
       if (stopGeneration) {
         stopGeneration();
       }
+      if (destroyThumbnails) {
+        destroyThumbnails();
+      }
+      // Stop all processing services and destroy workers
+      enhancedPDFProcessingService.emergencyCleanup();
+      fileProcessingService.emergencyCleanup();
+      pdfProcessingService.clearAll();
+      // Final emergency cleanup of all workers
+      pdfWorkerManager.emergencyCleanup();
     };
-  }, [stopGeneration]);
+  }, [stopGeneration, destroyThumbnails]);
 
   // Clear selections when files change - use stable signature
   useEffect(() => {
@@ -557,37 +570,35 @@ const PageEditor = ({
   const saveDraftToIndexedDB = useCallback(async (doc: PDFDocument) => {
     const draftKey = `draft-${doc.id || 'merged'}`;
     
-    // Convert PDF document to bytes for storage
-    const pdfBytes = await doc.save();
-    const originalFileNames = activeFileIds.map(id => selectors.getFileRecord(id)?.name).filter(Boolean);
-    
-    // Create a temporary file for thumbnail generation
-    const tempFile = new File([pdfBytes], `Draft - ${originalFileNames.join(', ') || 'Untitled'}.pdf`, {
-      type: 'application/pdf',
-      lastModified: Date.now()
-    });
-    
-    // Generate thumbnail for the draft
-    let thumbnail: string | undefined;
     try {
-      const { generateThumbnailForFile } = await import('../../utils/thumbnailUtils');
-      thumbnail = await generateThumbnailForFile(tempFile);
-    } catch (error) {
-      console.warn('Failed to generate thumbnail for draft:', error);
-    }
-    
-    const draftData = {
-      id: draftKey,
-      name: `Draft - ${originalFileNames.join(', ') || 'Untitled'}`,
-      pdfData: pdfBytes,
-      size: pdfBytes.length,
-      timestamp: Date.now(),
-      thumbnail,
-      originalFiles: originalFileNames
-    };
+      // Export the current document state as PDF bytes
+      const exportedFile = await pdfExportService.exportPDF(doc, []);
+      const pdfBytes = 'blob' in exportedFile ? await exportedFile.blob.arrayBuffer() : await exportedFile.blobs[0].arrayBuffer();
+      const originalFileNames = activeFileIds.map(id => selectors.getFileRecord(id)?.name).filter(Boolean);
+      
+      // Generate thumbnail for the draft
+      let thumbnail: string | undefined;
+      try {
+        const { generateThumbnailForFile } = await import('../../utils/thumbnailUtils');
+        const blob = 'blob' in exportedFile ? exportedFile.blob : exportedFile.blobs[0];
+        const filename = 'filename' in exportedFile ? exportedFile.filename : exportedFile.filenames[0];
+        const file = new File([blob], filename, { type: 'application/pdf' });
+        thumbnail = await generateThumbnailForFile(file);
+      } catch (error) {
+        console.warn('Failed to generate thumbnail for draft:', error);
+      }
+      
+      const draftData = {
+        id: draftKey,
+        name: `Draft - ${originalFileNames.join(', ') || 'Untitled'}`,
+        pdfData: pdfBytes,
+        size: pdfBytes.byteLength,
+        timestamp: Date.now(),
+        thumbnail,
+        originalFiles: originalFileNames
+      };
 
-    try {
-      // Use centralized IndexedDB manager
+      // Use centralized IndexedDB manager  
       const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
       const transaction = db.transaction('drafts', 'readwrite');
       const store = transaction.objectStore('drafts');
@@ -956,10 +967,27 @@ const PageEditor = ({
   }, [redo]);
 
   const closePdf = useCallback(() => {
-    // Use actions from context
-    actions.clearAllFiles();
+    // Stop all PDF.js background processing immediately
+    if (stopGeneration) {
+      stopGeneration();
+    }
+    if (destroyThumbnails) {
+      destroyThumbnails();
+    }
+    // Stop enhanced PDF processing and destroy workers
+    enhancedPDFProcessingService.emergencyCleanup();
+    // Stop file processing service and destroy workers
+    fileProcessingService.emergencyCleanup();
+    // Stop PDF processing service
+    pdfProcessingService.clearAll();
+    // Emergency cleanup - destroy all PDF workers
+    pdfWorkerManager.emergencyCleanup();
+    
+    // Clear files from memory only (preserves files in storage/recent files)
+    const allFileIds = selectors.getAllFileIds();
+    actions.removeFiles(allFileIds, false); // false = don't delete from storage
     actions.setSelectedPages([]);
-  }, [actions]);
+  }, [actions, selectors, stopGeneration, destroyThumbnails]);
 
   // PageEditorControls needs onExportSelected and onExportAll
   const onExportSelected = useCallback(() => showExportPreview(true), [showExportPreview]);
@@ -1102,10 +1130,8 @@ const PageEditor = ({
       }
 
 
-      // Clean up draft if component unmounts with unsaved changes
-      if (hasUnsavedChanges) {
-        cleanupDraft();
-      }
+      // Note: We intentionally do NOT clean up drafts on unmount
+      // Drafts should persist when navigating away so users can resume later
     };
   }, [hasUnsavedChanges, cleanupDraft]);
 

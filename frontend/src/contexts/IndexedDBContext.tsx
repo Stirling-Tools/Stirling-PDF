@@ -59,17 +59,39 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   }, []);
 
   const saveFile = useCallback(async (file: File, fileId: FileId, existingThumbnail?: string): Promise<FileMetadata> => {
+    // Check for duplicate at IndexedDB level before saving
+    const quickKey = `${file.name}|${file.size}|${file.lastModified}`;
+    const existingFiles = await fileStorage.getAllFileMetadata();
+    const duplicate = existingFiles.find(stored => 
+      `${stored.name}|${stored.size}|${stored.lastModified}` === quickKey
+    );
+    
+    if (duplicate) {
+      if (DEBUG) console.log(`🔍 SAVE: Skipping IndexedDB duplicate - using existing record:`, duplicate.name);
+      // Return the existing file's metadata instead of saving duplicate
+      return {
+        id: duplicate.id,
+        name: duplicate.name,
+        type: duplicate.type,
+        size: duplicate.size,
+        lastModified: duplicate.lastModified,
+        thumbnail: duplicate.thumbnail
+      };
+    }
+    
     // DEBUG: Check original file before saving
     if (DEBUG && file.type === 'application/pdf') {
       try {
         const { getDocument } = await import('pdfjs-dist');
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await getDocument({ data: arrayBuffer }).promise;
-        console.log(`🔍 Saving file to IndexedDB:`, {
+        console.log(`🔍 BEFORE SAVE - Original file:`, {
           name: file.name,
           size: file.size,
+          arrayBufferSize: arrayBuffer.byteLength,
           pages: pdf.numPages
         });
+        pdf.destroy();
       } catch (error) {
         console.error(`🔍 Error validating file before save:`, error);
       }
@@ -120,7 +142,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
     // DEBUG: Check if file reconstruction is working
     if (DEBUG && file.type === 'application/pdf') {
-      console.log(`🔍 File loaded from IndexedDB:`, {
+      console.log(`🔍 AFTER LOAD - Reconstructed file:`, {
         name: file.name,
         originalSize: storedFile.size,
         reconstructedSize: file.size,
@@ -133,9 +155,10 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
         const { getDocument } = await import('pdfjs-dist');
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await getDocument({ data: arrayBuffer }).promise;
-        console.log(`🔍 PDF validation: ${pdf.numPages} pages in reconstructed file`);
+        console.log(`🔍 AFTER LOAD - PDF validation: ${pdf.numPages} pages in reconstructed file`);
+        pdf.destroy();
       } catch (error) {
-        console.error(`🔍 PDF reconstruction error:`, error);
+        console.error(`🔍 AFTER LOAD - PDF reconstruction error:`, error);
       }
     }
 

@@ -66,6 +66,7 @@ export async function addFiles(
   
   // Build quickKey lookup from existing files for deduplication
   const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
+  if (DEBUG) console.log(`📄 addFiles(${kind}): Existing quickKeys for deduplication:`, Array.from(existingQuickKeys));
   
   switch (kind) {
     case 'raw': {
@@ -77,9 +78,10 @@ export async function addFiles(
         
         // Soft deduplication: Check if file already exists by metadata
         if (existingQuickKeys.has(quickKey)) {
-          if (DEBUG) console.log(`📄 Skipping duplicate file: ${file.name} (already exists)`);
+          if (DEBUG) console.log(`📄 Skipping duplicate file: ${file.name} (quickKey: ${quickKey})`);
           continue;
         }
+        if (DEBUG) console.log(`📄 Adding new file: ${file.name} (quickKey: ${quickKey})`);
         
         const fileId = createFileId();
         filesRef.current.set(fileId, file);
@@ -114,19 +116,8 @@ export async function addFiles(
         fileRecords.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
         
-        // Start background processing for validation only (we already have thumbnail and page count)
-        fileProcessingService.processFile(file, fileId).then(result => {
-          // Only update if file still exists in context
-          if (filesRef.current.has(fileId)) {
-            if (result.success && result.metadata) {
-              // Only log if page count differs from our immediate calculation
-              const initialPageCount = pageCount;
-              if (result.metadata.totalPages !== initialPageCount) {
-                if (DEBUG) console.log(`📄 Background processing found different page count for ${file.name}: ${result.metadata.totalPages} vs immediate ${initialPageCount}`);
-              }
-            }
-          }
-        });
+        // Note: No background fileProcessingService call needed - we already have immediate thumbnail and page count
+        // This avoids cancellation conflicts with cleanup operations
       }
       break;
     }
@@ -172,9 +163,10 @@ export async function addFiles(
         const quickKey = createQuickKey(file);
         
         if (existingQuickKeys.has(quickKey)) {
-          if (DEBUG) console.log(`📄 Skipping duplicate stored file: ${file.name}`);
+          if (DEBUG) console.log(`📄 Skipping duplicate stored file: ${file.name} (quickKey: ${quickKey})`);
           continue;
         }
+        if (DEBUG) console.log(`📄 Adding stored file: ${file.name} (quickKey: ${quickKey})`);
         
         // Try to preserve original ID, but generate new if it conflicts
         let fileId = originalId;
@@ -192,12 +184,35 @@ export async function addFiles(
           record.thumbnailUrl = metadata.thumbnail;
         }
         
-        // Note: For stored files, processedFile will be restored from FileRecord if it exists
-        // The metadata here is just basic file info, not processed file data
+        // Generate processedFile metadata for stored files using PDF worker manager
+        // This ensures stored files have proper page information and avoids cancellation conflicts
+        let pageCount: number = 1;
+        try {
+          if (DEBUG) console.log(`📄 addFiles(stored): Generating metadata for stored file ${file.name}`);
+          
+          // Use PDF worker manager directly for page count (avoids fileProcessingService conflicts)
+          const arrayBuffer = await file.arrayBuffer();
+          const { pdfWorkerManager } = await import('../../services/pdfWorkerManager');
+          const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
+          pageCount = pdf.numPages;
+          pdfWorkerManager.destroyDocument(pdf);
+          
+          if (DEBUG) console.log(`📄 addFiles(stored): Found ${pageCount} pages in stored file ${file.name}`);
+        } catch (error) {
+          if (DEBUG) console.warn(`📄 addFiles(stored): Failed to generate metadata for ${file.name}:`, error);
+        }
+        
+        // Create processedFile metadata with correct page count
+        if (pageCount > 0) {
+          record.processedFile = createProcessedFile(pageCount, metadata.thumbnail);
+          if (DEBUG) console.log(`📄 addFiles(stored): Created processedFile metadata for ${file.name} with ${pageCount} pages`);
+        }
         
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
         addedFiles.push({ file, id: fileId, thumbnail: metadata.thumbnail });
+        
+        // Note: No background fileProcessingService call for stored files - we already processed them above
       }
       break;
     }

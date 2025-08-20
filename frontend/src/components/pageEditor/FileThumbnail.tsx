@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Text, Checkbox, Tooltip, ActionIcon, Badge } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/Close';
@@ -7,6 +7,7 @@ import PreviewIcon from '@mui/icons-material/Preview';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import styles from './PageEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
 
@@ -25,20 +26,11 @@ interface FileThumbnailProps {
   totalFiles: number;
   selectedFiles: string[];
   selectionMode: boolean;
-  draggedFile: string | null;
-  dropTarget: string | null;
-  isAnimating: boolean;
-  fileRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  onDragStart: (fileId: string) => void;
-  onDragEnd: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragEnter: (fileId: string) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent, fileId: string) => void;
   onToggleFile: (fileId: string) => void;
   onDeleteFile: (fileId: string) => void;
   onViewFile: (fileId: string) => void;
   onSetStatus: (status: string) => void;
+  onReorderFiles?: (sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => void;
   toolMode?: boolean;
   isSupported?: boolean;
 }
@@ -49,25 +41,20 @@ const FileThumbnail = ({
   totalFiles,
   selectedFiles,
   selectionMode,
-  draggedFile,
-  dropTarget,
-  isAnimating,
-  fileRefs,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragEnter,
-  onDragLeave,
-  onDrop,
   onToggleFile,
   onDeleteFile,
   onViewFile,
   onSetStatus,
+  onReorderFiles,
   toolMode = false,
   isSupported = true,
 }: FileThumbnailProps) => {
   const { t } = useTranslation();
   const { pinnedFiles, pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
+  
+  // Drag and drop state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragElementRef = useRef<HTMLDivElement | null>(null);
 
   // Find the actual File object that corresponds to this FileItem
   const actualFile = activeFiles.find(f => f.name === file.name && f.size === file.size);
@@ -80,18 +67,59 @@ const FileThumbnail = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  // Memoize ref callback to prevent infinite loop
-  const refCallback = useCallback((el: HTMLDivElement | null) => {
-    if (el) {
-      fileRefs.current.set(file.id, el);
-    } else {
-      fileRefs.current.delete(file.id);
-    }
-  }, [file.id, fileRefs]);
+  // Setup drag and drop using @atlaskit/pragmatic-drag-and-drop
+  const fileElementRef = useCallback((element: HTMLDivElement | null) => {
+    if (!element) return;
+    
+    dragElementRef.current = element;
+    
+    const dragCleanup = draggable({
+      element,
+      getInitialData: () => ({
+        type: 'file',
+        fileId: file.id,
+        fileName: file.name,
+        selectedFiles: selectionMode && selectedFiles.includes(file.id) 
+          ? selectedFiles 
+          : [file.id]
+      }),
+      onDragStart: () => {
+        setIsDragging(true);
+      },
+      onDrop: () => {
+        setIsDragging(false);
+      }
+    });
+    
+    const dropCleanup = dropTargetForElements({
+      element,
+      getData: () => ({
+        type: 'file',
+        fileId: file.id
+      }),
+      canDrop: ({ source }) => {
+        const sourceData = source.data;
+        return sourceData.type === 'file' && sourceData.fileId !== file.id;
+      },
+      onDrop: ({ source }) => {
+        const sourceData = source.data;
+        if (sourceData.type === 'file' && onReorderFiles) {
+          const sourceFileId = sourceData.fileId as string;
+          const selectedFileIds = sourceData.selectedFiles as string[];
+          onReorderFiles(sourceFileId, file.id, selectedFileIds);
+        }
+      }
+    });
+
+    return () => {
+      dragCleanup();
+      dropCleanup();
+    };
+  }, [file.id, file.name, selectionMode, selectedFiles, onReorderFiles]);
 
   return (
     <div
-      ref={refCallback}
+      ref={fileElementRef}
       data-file-id={file.id}
       data-testid="file-thumbnail"
       className={`
@@ -110,26 +138,12 @@ const FileThumbnail = ({
         ${selectionMode
           ? 'bg-white hover:bg-gray-50'
           : 'bg-white hover:bg-gray-50'}
-        ${draggedFile === file.id ? 'opacity-50 scale-95' : ''}
+        ${isDragging ? 'opacity-50 scale-95' : ''}
       `}
       style={{
-        transform: (() => {
-          if (!isAnimating && draggedFile && file.id !== draggedFile && dropTarget === file.id) {
-            return 'translateX(20px)';
-          }
-          return 'translateX(0)';
-        })(),
-        transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out',
-        opacity: isSupported ? 1 : 0.5,
+        opacity: isSupported ? (isDragging ? 0.5 : 1) : 0.5,
         filter: isSupported ? 'none' : 'grayscale(50%)'
       }}
-      draggable
-      onDragStart={() => onDragStart(file.id)}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      onDragEnter={() => onDragEnter(file.id)}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, file.id)}
     >
       {selectionMode && (
         <div
@@ -188,6 +202,7 @@ const FileThumbnail = ({
           <img
             src={file.thumbnail}
             alt={file.name}
+            draggable={false}
             style={{
               maxWidth: '100%',
               maxHeight: '100%',

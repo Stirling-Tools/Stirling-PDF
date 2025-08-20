@@ -14,7 +14,6 @@ import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
 import styles from '../pageEditor/PageEditor.module.css';
 import FileThumbnail from '../pageEditor/FileThumbnail';
-import DragDropGrid from '../pageEditor/DragDropGrid';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
 
@@ -110,11 +109,6 @@ const FileEditor = ({
       setSelectionMode(true);
     }
   }, [toolMode]);
-  const [draggedFile, setDraggedFile] = useState<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<string | null>(null);
-  const [multiFileDrag, setMultiFileDrag] = useState<{fileIds: string[], count: number} | null>(null);
-  const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
   const [conversionProgress, setConversionProgress] = useState(0);
   const [zipExtractionProgress, setZipExtractionProgress] = useState<{
@@ -130,7 +124,6 @@ const FileEditor = ({
     extractedCount: 0,
     totalFiles: 0
   });
-  const fileRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const lastActiveFilesRef = useRef<string[]>([]);
   const lastProcessedFilesRef = useRef<number>(0);
 
@@ -452,113 +445,57 @@ const FileEditor = ({
     });
   }, [setContextSelectedFiles]);
 
-
-  // Drag and drop handlers
-  const handleDragStart = useCallback((fileId: string) => {
-    setDraggedFile(fileId);
-
-    if (selectionMode && localSelectedIds.includes(fileId) && localSelectedIds.length > 1) {
-      setMultiFileDrag({
-        fileIds: localSelectedIds,
-        count: localSelectedIds.length
-      });
-    } else {
-      setMultiFileDrag(null);
-    }
-  }, [selectionMode, localSelectedIds]);
-
-  const handleDragEnd = useCallback(() => {
-    setDraggedFile(null);
-    setDropTarget(null);
-    setMultiFileDrag(null);
-    setDragPosition(null);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-
-    if (!draggedFile) return;
-
-    if (multiFileDrag) {
-      setDragPosition({ x: e.clientX, y: e.clientY });
-    }
-
-    const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
-    if (!elementUnderCursor) return;
-
-    const fileContainer = elementUnderCursor.closest('[data-file-id]');
-    if (fileContainer) {
-      const fileId = fileContainer.getAttribute('data-file-id');
-      if (fileId && fileId !== draggedFile) {
-        setDropTarget(fileId);
-        return;
+  // File reordering handler for drag and drop
+  const handleReorderFiles = useCallback((sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => {
+    setFiles(prevFiles => {
+      const newFiles = [...prevFiles];
+      
+      // Find original source and target indices
+      const sourceIndex = newFiles.findIndex(f => f.id === sourceFileId);
+      const targetIndex = newFiles.findIndex(f => f.id === targetFileId);
+      
+      if (sourceIndex === -1 || targetIndex === -1) {
+        console.warn('Could not find source or target file for reordering');
+        return prevFiles;
       }
-    }
 
-    const endZone = elementUnderCursor.closest('[data-drop-zone="end"]');
-    if (endZone) {
-      setDropTarget('end');
-      return;
-    }
+      // Handle multi-file selection reordering
+      const filesToMove = selectedFileIds.length > 1 
+        ? selectedFileIds.map(id => newFiles.find(f => f.id === id)!).filter(Boolean)
+        : [newFiles[sourceIndex]];
 
-    setDropTarget(null);
-  }, [draggedFile, multiFileDrag]);
+      // Calculate the correct target position before removing files
+      let insertIndex = targetIndex;
+      
+      // If we're moving forward (right), we need to adjust for the files we're removing
+      const sourceIndices = filesToMove.map(f => newFiles.findIndex(nf => nf.id === f.id));
+      const minSourceIndex = Math.min(...sourceIndices);
+      
+      if (minSourceIndex < targetIndex) {
+        // Moving forward: target moves left by the number of files we're removing before it
+        const filesBeforeTarget = sourceIndices.filter(idx => idx < targetIndex).length;
+        insertIndex = targetIndex - filesBeforeTarget + 1; // +1 to insert after target
+      }
 
-  const handleDragEnter = useCallback((fileId: string) => {
-    if (draggedFile && fileId !== draggedFile) {
-      setDropTarget(fileId);
-    }
-  }, [draggedFile]);
+      // Remove files to move from their current positions (in reverse order to maintain indices)
+      sourceIndices
+        .sort((a, b) => b - a) // Sort descending to remove from end first
+        .forEach(index => {
+          newFiles.splice(index, 1);
+        });
 
-  const handleDragLeave = useCallback(() => {
-    // Let dragover handle this
-  }, []);
+      // Insert files at the calculated position
+      newFiles.splice(insertIndex, 0, ...filesToMove);
 
-  const handleDrop = useCallback((e: React.DragEvent, targetFileId: string | 'end') => {
-    e.preventDefault();
-    if (!draggedFile || draggedFile === targetFileId) return;
+      // Update status
+      const moveCount = filesToMove.length;
+      setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
 
-    let targetIndex: number;
-    if (targetFileId === 'end') {
-      targetIndex = files.length;
-    } else {
-      targetIndex = files.findIndex(f => f.id === targetFileId);
-      if (targetIndex === -1) return;
-    }
-
-    const filesToMove = selectionMode && localSelectedIds.includes(draggedFile)
-      ? localSelectedIds
-      : [draggedFile];
-
-    // Update the local files state and sync with activeFiles
-    setFiles(prev => {
-      const newFiles = [...prev];
-      const movedFiles = filesToMove.map(id => newFiles.find(f => f.id === id)!).filter(Boolean);
-
-      // Remove moved files
-      filesToMove.forEach(id => {
-        const index = newFiles.findIndex(f => f.id === id);
-        if (index !== -1) newFiles.splice(index, 1);
-      });
-
-      // Insert at target position
-      newFiles.splice(targetIndex, 0, ...movedFiles);
-
-      // TODO: Update context with reordered files (need to implement file reordering in context)
-      // For now, just return the reordered local state
       return newFiles;
     });
+  }, [setStatus]);
 
-    const moveCount = multiFileDrag ? multiFileDrag.count : 1;
-    setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
 
-  }, [draggedFile, files, selectionMode, localSelectedIds, multiFileDrag]);
-
-  const handleEndZoneDragEnter = useCallback(() => {
-    if (draggedFile) {
-      setDropTarget('end');
-    }
-  }, [draggedFile]);
 
   // File operations using context
   const handleDeleteFile = useCallback((fileId: string) => {
@@ -751,7 +688,15 @@ const FileEditor = ({
             <SkeletonLoader type="fileGrid" count={6} />
           </Box>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', padding: '1rem' }}>
+          <div 
+            style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+              gap: '1.5rem', 
+              padding: '1rem',
+              pointerEvents: 'auto'
+            }}
+          >
             {files.map((file, index) => (
               <FileThumbnail
                 key={file.id}
@@ -760,20 +705,11 @@ const FileEditor = ({
                 totalFiles={files.length}
                 selectedFiles={localSelectedIds}
                 selectionMode={selectionMode}
-                draggedFile={draggedFile}
-                dropTarget={dropTarget}
-                isAnimating={isAnimating}
-                fileRefs={fileRefs}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
                 onToggleFile={toggleFile}
                 onDeleteFile={handleDeleteFile}
                 onViewFile={handleViewFile}
                 onSetStatus={setStatus}
+                onReorderFiles={handleReorderFiles}
                 toolMode={toolMode}
                 isSupported={isFileSupported(file.name)}
               />

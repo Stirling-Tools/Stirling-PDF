@@ -1,12 +1,10 @@
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist';
 import { ProcessedFile, ProcessingState, PDFPage, ProcessingStrategy, ProcessingConfig, ProcessingMetrics } from '../types/processing';
 import { ProcessingCache } from './processingCache';
 import { FileHasher } from '../utils/fileHash';
 import { FileAnalyzer } from './fileAnalyzer';
 import { ProcessingErrorHandler } from './processingErrorHandler';
-
-// Set up PDF.js worker
-GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+import { pdfWorkerManager } from './pdfWorkerManager';
 
 export class EnhancedPDFProcessingService {
   private static instance: EnhancedPDFProcessingService;
@@ -183,7 +181,7 @@ export class EnhancedPDFProcessingService {
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
 
     state.progress = 10;
@@ -194,7 +192,7 @@ export class EnhancedPDFProcessingService {
     for (let i = 1; i <= totalPages; i++) {
       // Check for cancellation
       if (state.cancellationToken?.signal.aborted) {
-        pdf.destroy();
+        pdfWorkerManager.destroyDocument(pdf);
         throw new Error('Processing cancelled');
       }
 
@@ -215,7 +213,7 @@ export class EnhancedPDFProcessingService {
       this.notifyListeners();
     }
 
-    pdf.destroy();
+    pdfWorkerManager.destroyDocument(pdf);
     state.progress = 100;
     this.notifyListeners();
 
@@ -231,7 +229,7 @@ export class EnhancedPDFProcessingService {
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
 
     state.progress = 10;
@@ -243,7 +241,7 @@ export class EnhancedPDFProcessingService {
     // Process priority pages first
     for (let i = 1; i <= priorityCount; i++) {
       if (state.cancellationToken?.signal.aborted) {
-        pdf.destroy();
+        pdfWorkerManager.destroyDocument(pdf);
         throw new Error('Processing cancelled');
       }
 
@@ -274,7 +272,7 @@ export class EnhancedPDFProcessingService {
       });
     }
 
-    pdf.destroy();
+    pdfWorkerManager.destroyDocument(pdf);
     state.progress = 100;
     this.notifyListeners();
 
@@ -290,7 +288,7 @@ export class EnhancedPDFProcessingService {
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
 
     state.progress = 10;
@@ -305,7 +303,7 @@ export class EnhancedPDFProcessingService {
 
     for (let i = 1; i <= firstChunkEnd; i++) {
       if (state.cancellationToken?.signal.aborted) {
-        pdf.destroy();
+        pdfWorkerManager.destroyDocument(pdf);
         throw new Error('Processing cancelled');
       }
 
@@ -342,7 +340,7 @@ export class EnhancedPDFProcessingService {
       });
     }
 
-    pdf.destroy();
+    pdfWorkerManager.destroyDocument(pdf);
     state.progress = 100;
     this.notifyListeners();
 
@@ -358,7 +356,7 @@ export class EnhancedPDFProcessingService {
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
 
     state.progress = 50;
@@ -376,7 +374,7 @@ export class EnhancedPDFProcessingService {
       });
     }
 
-    pdf.destroy();
+    pdfWorkerManager.destroyDocument(pdf);
     state.progress = 100;
     this.notifyListeners();
 
@@ -539,6 +537,15 @@ export class EnhancedPDFProcessingService {
     this.cache.clear();
     this.processing.clear();
     this.notifyListeners();
+  }
+
+  /**
+   * Emergency cleanup - destroy all PDF workers
+   */
+  emergencyCleanup(): void {
+    this.clearAllProcessing();
+    this.clearAll();
+    pdfWorkerManager.destroyAllDocuments();
   }
 }
 
