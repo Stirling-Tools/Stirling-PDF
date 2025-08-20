@@ -20,6 +20,7 @@ export type ModeType =
   | 'watermark'
   | 'removePassword'
   | 'repair'
+  | 'unlockPdfForms'
   | 'removeCertificateSign';
 
 export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
