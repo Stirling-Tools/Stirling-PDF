@@ -15,7 +15,7 @@ import SingleLargePage from '../tools/SingleLargePage';
 import UnlockPdfForms from '../tools/UnlockPdfForms';
 import RemoveCertificateSign from '../tools/RemoveCertificateSign';
 
-
+const showPlaceholderTools = false; // For development purposes. Allows seeing the full list of tools, even if they're unimplemented
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -618,11 +618,15 @@ export function useFlatToolRegistry(): ToolRegistry {
     },
   };
 
-  const filteredTools = Object.keys(allTools)
-    .filter(key => allTools[key].component !== null || allTools[key].link)
-    .reduce((obj, key) => {
-      obj[key] = allTools[key];
-      return obj;
-    }, {} as ToolRegistry);
-  return filteredTools;
+  if (showPlaceholderTools) {
+    return allTools;
+  } else {
+    const filteredTools = Object.keys(allTools)
+      .filter(key => allTools[key].component !== null || allTools[key].link)
+      .reduce((obj, key) => {
+        obj[key] = allTools[key];
+        return obj;
+      }, {} as ToolRegistry);
+    return filteredTools;
+  }
 }
