@@ -999,7 +999,7 @@ public class RedactionService {
                     }
                 }
                 if (isTextShowingOperator(opName) && i > 0) {
-                    String textContent = extractTextFromToken(tokens.get(i - 1), opName);
+                    String textContent = extractTextFromToken(tokens.get(i - 1), opName, gs.font);
                     if (!textContent.isEmpty()) {
                         if (aggressive
                                 && gs.font != null
@@ -1045,7 +1045,7 @@ public class RedactionService {
                     }
                 }
                 if (isTextShowingOperator(opName) && i > 0) {
-                    String textContent = extractTextFromToken(tokens.get(i - 1), opName);
+                    String textContent = extractTextFromToken(tokens.get(i - 1), opName, gs.font);
                     if (!textContent.isEmpty()) {
                         segments.add(
                                 new TextSegment(
@@ -1752,63 +1752,316 @@ public class RedactionService {
     }
 
     private String extractTextFromToken(Object token, String operatorName) {
-        return switch (operatorName) {
-            case "Tj", "'", "\"" -> {
-                if (token instanceof COSString cosString) {
-                    yield cosString.getString();
-                }
-                yield "";
-            }
-            case "TJ" -> {
-                if (token instanceof COSArray cosArray) {
-                    StringBuilder sb = new StringBuilder();
-                    for (COSBase element : cosArray) {
-                        if (element instanceof COSString cosString) {
-                            sb.append(cosString.getString());
-                        }
-                    }
-                    yield sb.toString();
-                }
-                yield "";
-            }
-            default -> "";
-        };
+        return extractTextFromToken(token, operatorName, null);
     }
 
-    private WipeResult wipeAllSemanticTextInTokens(List<Object> tokens) {
-        List<Object> newTokens = new ArrayList<>(tokens);
-        int modifications = 0;
-        for (int i = 0; i < newTokens.size(); i++) {
-            Object t = newTokens.get(i);
-            if (t instanceof Operator op) {
-                String name = op.getName();
-                if ("BDC".equals(name) && i > 0) {
-                    Object maybeDict = newTokens.get(i - 1);
-                    if (maybeDict instanceof COSDictionary dict) {
-                        boolean changed = false;
-                        if (dict.containsKey(COSName.getPDFName("ActualText"))) {
-                            dict.removeItem(COSName.getPDFName("ActualText"));
-                            changed = true;
-                        }
-                        if (dict.containsKey(COSName.getPDFName("Alt"))) {
-                            dict.removeItem(COSName.getPDFName("Alt"));
-                            changed = true;
-                        }
-                        if (dict.containsKey(COSName.getPDFName("TU"))) {
-                            dict.removeItem(COSName.getPDFName("TU"));
-                            changed = true;
-                        }
-                        if (changed) {
-                            modifications++;
-                        }
-                    }
+    private String extractTextFromToken(Object token, String operatorName, PDFont currentFont) {
+        if (token == null || operatorName == null) {
+            return "";
+        }
+
+        try {
+            return switch (operatorName) {
+                case "Tj" -> handleTjOperator(token, currentFont);
+                case "'" -> handleSingleQuoteOperator(token, currentFont);
+                case "\"" -> handleDoubleQuoteOperator(token, currentFont);
+                case "TJ" -> handleTJOperator(token, currentFont);
+                default -> "";
+            };
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to extract text from token for operator {}: {}",
+                    operatorName,
+                    e.getMessage());
+            return "";
+        }
+    }
+
+    private String handleTjOperator(Object token, PDFont font) {
+        if (token instanceof COSString cosString) {
+            return extractStringWithFallbacks(cosString, font);
+        }
+        return "";
+    }
+
+    private String handleSingleQuoteOperator(Object token, PDFont font) {
+        if (token instanceof COSString cosString) {
+            return "\n" + extractStringWithFallbacks(cosString, font);
+        }
+        return "\n";
+    }
+
+    private String handleDoubleQuoteOperator(Object token, PDFont font) {
+        if (token instanceof COSString cosString) {
+            return "\n" + extractStringWithFallbacks(cosString, font);
+        }
+        return "\n";
+    }
+
+    private String handleTJOperator(Object token, PDFont font) {
+        if (!(token instanceof COSArray cosArray)) {
+            return "";
+        }
+
+        StringBuilder textBuilder = new StringBuilder();
+
+        for (COSBase element : cosArray) {
+            if (element instanceof COSString cosString) {
+                String extractedText = extractStringWithFallbacks(cosString, font);
+                textBuilder.append(extractedText);
+
+            } else if (element instanceof COSNumber cosNumber) {
+                double displacement = cosNumber.floatValue();
+
+                if (displacement < -100.0) {
+                    textBuilder.append(" "); // Add space for significant gaps
                 }
             }
         }
+
+        return textBuilder.toString();
+    }
+
+    private String extractStringWithFallbacks(COSString cosString, PDFont font) {
+        if (cosString == null) {
+            return "";
+        }
+
+        try {
+            String text = cosString.getString();
+
+            if (text != null && !text.trim().isEmpty() && !isGibberish(text)) {
+                return text;
+            }
+
+            // Fallback 1: Try enhanced font-based decoding if available
+            if (font != null) {
+                String fontBasedText = tryFontBasedExtraction(cosString, font);
+                if (fontBasedText != null && !isGibberish(fontBasedText)) {
+                    log.debug("Used font-based fallback extraction");
+                    return fontBasedText;
+                }
+            }
+
+            // Fallback 2: Try different encoding interpretations
+            String encodingFallback = tryEncodingFallbacks(cosString);
+            if (encodingFallback != null && !isGibberish(encodingFallback)) {
+                log.debug("Used encoding fallback extraction");
+                return encodingFallback;
+            }
+
+            // Fallback 3: Return original with sanitization
+            return sanitizeText(text != null ? text : "");
+
+        } catch (Exception e) {
+            log.debug("All extraction methods failed for COSString: {}", e.getMessage());
+            return "\uFFFD"; // Unicode replacement character
+        }
+    }
+
+    private String tryFontBasedExtraction(COSString cosString, PDFont font) {
+        try {
+            byte[] bytes = cosString.getBytes();
+            if (bytes.length == 0) return "";
+
+            StringBuilder result = new StringBuilder();
+            for (byte b : bytes) {
+                int code = b & 0xFF;
+                try {
+                    String unicode = font.toUnicode(code);
+                    if (unicode != null && !unicode.isEmpty()) {
+                        result.append(unicode);
+                    } else {
+                        result.append("\uFFFD");
+                    }
+                } catch (Exception e) {
+                    result.append("\uFFFD");
+                }
+            }
+            return result.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String tryEncodingFallbacks(COSString cosString) {
+        try {
+            byte[] bytes = cosString.getBytes();
+            if (bytes.length == 0) return "";
+
+            String[] encodings = {"UTF-8", "UTF-16BE", "UTF-16LE", "ISO-8859-1", "Windows-1252"};
+
+            for (String encoding : encodings) {
+                try {
+                    if (bytes.length >= 2) {
+                        if ((bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
+                            return new String(bytes, 2, bytes.length - 2, "UTF-16BE");
+                        } else if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
+                            return new String(bytes, 2, bytes.length - 2, "UTF-16LE");
+                        }
+                    }
+
+                    String decoded = new String(bytes, encoding);
+                    if (!isGibberish(decoded)) {
+                        return decoded;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        } catch (Exception e) {
+        }
+        return null;
+    }
+
+    private boolean isGibberish(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return true;
+        }
+
+        int questionMarks = 0;
+        int replacementChars = 0;
+        int totalChars = text.length();
+
+        for (char c : text.toCharArray()) {
+            if (c == '?') questionMarks++;
+            if (c == '\uFFFD') replacementChars++;
+        }
+
+        double problematicRatio = (double) (questionMarks + replacementChars) / totalChars;
+        return problematicRatio > 0.3;
+    }
+
+    private String sanitizeText(String text) {
+        if (text == null) return "";
+
+        StringBuilder sanitized = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            if (Character.isISOControl(c) && c != '\n' && c != '\t' && c != '\r') {
+                sanitized.append('\uFFFD');
+            } else {
+                sanitized.append(c);
+            }
+        }
+        return sanitized.toString();
+    }
+
+    private WipeResult wipeAllSemanticTextInTokens(List<Object> tokens) {
+        return wipeAllSemanticTextInTokens(
+                tokens, true); // Default to removing TU for backward compatibility
+    }
+
+    private WipeResult wipeAllSemanticTextInTokens(List<Object> tokens, boolean removeTU) {
+        if (tokens == null || tokens.isEmpty()) {
+            log.warn("Empty or null token list; no modifications made");
+            WipeResult res = new WipeResult();
+            res.tokens = new ArrayList<>();
+            res.modifications = 0;
+            return res;
+        }
+
+        List<Object> newTokens = deepCopyTokens(tokens);
+        int modifications = processSemanticTokens(newTokens, removeTU);
+
         WipeResult res = new WipeResult();
         res.tokens = newTokens;
         res.modifications = modifications;
         return res;
+    }
+
+    private int processSemanticTokens(List<Object> tokens, boolean removeTU) {
+        int modifications = 0;
+        java.util.Stack<Integer> markedContentStack =
+                new java.util.Stack<>(); // Track nesting for correctness
+
+        for (int i = 0; i < tokens.size(); i++) {
+            Object t = tokens.get(i);
+            if (t instanceof Operator op) {
+                String name = op.getName();
+
+                // Handle BDC (with dictionary) and BMC (without, for completeness)
+                if ("BDC".equals(name) || "BMC".equals(name)) {
+                    markedContentStack.push(i); // Track start for nesting validation
+
+                    if ("BDC".equals(name) && i > 0) {
+                        Object prev = tokens.get(i - 1);
+                        if (prev instanceof COSDictionary dict) {
+                            boolean changed = removeSemanticProperties(dict, removeTU);
+                            if (changed) {
+                                modifications++;
+                                log.debug(
+                                        "Removed semantic properties from dictionary at index {}",
+                                        i - 1);
+                            }
+                        } else {
+                            log.warn("BDC at index {} lacks preceding COSDictionary; skipping", i);
+                        }
+                    }
+                } else if ("EMC".equals(name)) {
+                    if (markedContentStack.isEmpty()) {
+                        log.warn(
+                                "Unmatched EMC at index {}; potential malformed content stream", i);
+                    } else {
+                        markedContentStack.pop(); // Validate pairing
+                    }
+                }
+            }
+        }
+
+        if (!markedContentStack.isEmpty()) {
+            log.warn(
+                    "Unmatched marked content starts: {} (potential nesting issues)",
+                    markedContentStack.size());
+        }
+
+        return modifications;
+    }
+
+    private boolean removeSemanticProperties(COSDictionary dict, boolean removeTU) {
+        boolean changed = false;
+        COSName actualText = COSName.getPDFName("ActualText");
+        COSName alt = COSName.getPDFName("Alt");
+        COSName tu = COSName.getPDFName("TU");
+
+        if (dict.containsKey(actualText)) {
+            dict.removeItem(actualText);
+            changed = true;
+        }
+        if (dict.containsKey(alt)) {
+            dict.removeItem(alt);
+            changed = true;
+        }
+        if (removeTU && dict.containsKey(tu)) {
+            dict.removeItem(tu);
+            changed = true;
+            log.info("Removed non-standard TU property (confirm if needed for your PDFs)");
+        }
+
+        return changed;
+    }
+
+    private List<Object> deepCopyTokens(List<Object> original) {
+        List<Object> copy = new ArrayList<>(original.size());
+        for (Object obj : original) {
+            if (obj instanceof COSDictionary dict) {
+                COSDictionary newDict = new COSDictionary();
+                for (COSName key : dict.keySet()) {
+                    newDict.setItem(key, dict.getDictionaryObject(key));
+                }
+                copy.add(newDict);
+            } else if (obj instanceof List<?> nestedList
+                    && !nestedList.isEmpty()
+                    && nestedList.get(0) instanceof Object) {
+                try {
+                    List<Object> objectList = (List<Object>) nestedList;
+                    copy.add(deepCopyTokens(objectList));
+                } catch (ClassCastException e) {
+                    copy.add(obj); // Fallback to shallow copy if cast fails
+                }
+            } else {
+                copy.add(obj); // Shallow copy for primitives/operators
+            }
+        }
+        return copy;
     }
 
     private int wipeAllTextInResources(PDDocument document, PDResources resources) {
@@ -2018,7 +2271,7 @@ public class RedactionService {
                     }
                 }
                 if (isTextShowingOperator(opName) && i > 0) {
-                    String textContent = extractTextFromToken(tokens.get(i - 1), opName);
+                    String textContent = extractTextFromToken(tokens.get(i - 1), opName, gs.font);
                     if (!textContent.isEmpty()) {
                         segments.add(
                                 new TextSegment(
