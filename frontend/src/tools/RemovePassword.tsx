@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useToolFileSelection } from "../contexts/FileContext";
+import { useFileSelection } from "../contexts/FileContext";
 import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
@@ -16,7 +16,7 @@ import { BaseToolProps } from "../types/tool";
 const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { actions } = useNavigationActions();
-  const { selectedFiles } = useToolFileSelection();
+  const { selectedFiles } = useFileSelection();
 
   const removePasswordParams = useRemovePasswordParameters();
   const removePasswordOperation = useRemovePasswordOperation();

@@ -6,7 +6,7 @@ import {
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useToolFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
+import { useFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
 import { useNavigationActions } from '../../contexts/NavigationContext';
 import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
@@ -58,26 +58,8 @@ const FileEditor = ({
   const { actions } = useFileActions();
   const { actions: navActions } = useNavigationActions();
   
-  // Proper context-based file selection updater
-  const setContextSelectedFiles = useCallback((fileIds: string[] | ((prev: string[]) => string[])) => {
-    if (typeof fileIds === 'function') {
-      // Handle callback pattern with current state
-      const result = fileIds(selectedFileIds);
-      actions.setSelectedFiles(result);
-    } else {
-      // Handle direct array pattern
-      actions.setSelectedFiles(fileIds);
-    }
-  }, [selectedFileIds, actions.setSelectedFiles]);
-  
-
-  // Get tool file selection context (replaces FileSelectionContext)
-  const { 
-    selectedFiles: toolSelectedFiles, 
-    setSelectedFiles: setToolSelectedFiles, 
-    maxFiles, 
-    isToolMode 
-  } = useToolFileSelection();
+  // Get file selection context
+  const { setSelectedFiles } = useFileSelection();
 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -271,10 +253,10 @@ const FileEditor = ({
   }, [addFiles]);
 
   const selectAll = useCallback(() => {
-    setContextSelectedFiles(activeFileRecords.map(r => r.id)); // Use FileRecord IDs directly
-  }, [activeFileRecords, setContextSelectedFiles]);
+    setSelectedFiles(activeFileRecords.map(r => r.id)); // Use FileRecord IDs directly
+  }, [activeFileRecords, setSelectedFiles]);
 
-  const deselectAll = useCallback(() => setContextSelectedFiles([]), [setContextSelectedFiles]);
+  const deselectAll = useCallback(() => setSelectedFiles([]), [setSelectedFiles]);
 
   const closeAllFiles = useCallback(() => {
     if (activeFileRecords.length === 0) return;
@@ -284,8 +266,8 @@ const FileEditor = ({
     removeFiles(allFileIds, false); // false = keep in storage
     
     // Clear selections
-    setContextSelectedFiles([]);
-  }, [activeFileRecords, removeFiles, setContextSelectedFiles]);
+    setSelectedFiles([]);
+  }, [activeFileRecords, removeFiles, setSelectedFiles]);
 
   const toggleFile = useCallback((fileId: string) => {
     const currentSelectedIds = contextSelectedIdsRef.current;
@@ -303,36 +285,34 @@ const FileEditor = ({
       newSelection = currentSelectedIds.filter(id => id !== contextFileId);
     } else {
       // Add file to selection
-      if (maxFiles === 1) {
+      // In tool mode, typically allow multiple files unless specified otherwise
+      const maxAllowed = toolMode ? 10 : Infinity; // Default max for tools
+      
+      if (maxAllowed === 1) {
         newSelection = [contextFileId];
       } else {
         // Check if we've hit the selection limit
-        if (maxFiles > 1 && currentSelectedIds.length >= maxFiles) {
-          setStatus(`Maximum ${maxFiles} files can be selected`);
+        if (maxAllowed > 1 && currentSelectedIds.length >= maxAllowed) {
+          setStatus(`Maximum ${maxAllowed} files can be selected`);
           return;
         }
         newSelection = [...currentSelectedIds, contextFileId];
       }
     }
 
-    // Update context
-    setContextSelectedFiles(newSelection);
-
-    // Update tool selection context if in tool mode
-    if (isToolMode || toolMode) {
-      setToolSelectedFiles(newSelection);
-    }
-  }, [setContextSelectedFiles, maxFiles, setStatus, isToolMode, toolMode, setToolSelectedFiles, activeFileRecords]);
+    // Update context (this automatically updates tool selection since they use the same action)
+    setSelectedFiles(newSelection);
+  }, [setSelectedFiles, toolMode, setStatus, activeFileRecords]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
       const newMode = !prev;
       if (!newMode) {
-        setContextSelectedFiles([]);
+        setSelectedFiles([]);
       }
       return newMode;
     });
-  }, [setContextSelectedFiles]);
+  }, [setSelectedFiles]);
 
   // File reordering handler for drag and drop
   const handleReorderFiles = useCallback((sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => {
@@ -422,21 +402,19 @@ const FileEditor = ({
       removeFiles([contextFileId], false);
 
       // Remove from context selections
-      setContextSelectedFiles((prev: string[]) => {
-        const safePrev = Array.isArray(prev) ? prev : [];
-        return safePrev.filter(id => id !== contextFileId);
-      });
+      const currentSelected = selectedFileIds.filter(id => id !== contextFileId);
+      setSelectedFiles(currentSelected);
     }
-  }, [activeFileRecords, selectors, removeFiles, setContextSelectedFiles]);
+  }, [activeFileRecords, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
 
   const handleViewFile = useCallback((fileId: string) => {
     const record = activeFileRecords.find(r => r.id === fileId);
     if (record) {
       // Set the file as selected in context and switch to viewer for preview
-      setContextSelectedFiles([fileId]);
+      setSelectedFiles([fileId]);
       navActions.setMode('viewer');
     }
-  }, [activeFileRecords, setContextSelectedFiles, navActions.setMode]);
+  }, [activeFileRecords, setSelectedFiles, navActions.setMode]);
 
   const handleMergeFromHere = useCallback((fileId: string) => {
     const startIndex = activeFileRecords.findIndex(r => r.id === fileId);

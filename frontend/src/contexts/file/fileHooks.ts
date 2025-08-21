@@ -51,16 +51,23 @@ export function useCurrentFile(): { file?: File; record?: FileRecord } {
  * Hook for file selection state and actions
  */
 export function useFileSelection() {
-  const { state } = useFileState();
+  const { state, selectors } = useFileState();
   const { actions } = useFileActions();
 
+  // Memoize selected files to avoid recreating arrays
+  const selectedFiles = useMemo(() => {
+    return selectors.getSelectedFiles();
+  }, [state.ui.selectedFileIds, selectors]);
+
   return useMemo(() => ({
+    selectedFiles,
     selectedFileIds: state.ui.selectedFileIds,
     selectedPageNumbers: state.ui.selectedPageNumbers,
     setSelectedFiles: actions.setSelectedFiles,
     setSelectedPages: actions.setSelectedPages,
     clearSelections: actions.clearSelections
   }), [
+    selectedFiles,
     state.ui.selectedFileIds,
     state.ui.selectedPageNumbers,
     actions.setSelectedFiles,
@@ -183,38 +190,4 @@ export function useFileContext() {
   }), [state, selectors, actions]);
 }
 
-/**
- * Primary API hook for tool file selection workflow
- * Used by tools for managing file selection and tool-specific operations
- */
-export function useToolFileSelection() {
-  const { state, selectors } = useFileState();
-  const { actions } = useFileActions();
-
-  // Memoize selected files to avoid recreating arrays
-  const selectedFiles = useMemo(() => {
-    return selectors.getSelectedFiles();
-  }, [state.ui.selectedFileIds, selectors]);
-
-  return useMemo(() => ({
-    selectedFiles,
-    selectedFileIds: state.ui.selectedFileIds,
-    selectedPageNumbers: state.ui.selectedPageNumbers,
-    setSelectedFiles: actions.setSelectedFiles,
-    setSelectedPages: actions.setSelectedPages,
-    clearSelections: actions.clearSelections,
-    // Tool workflow properties
-    maxFiles: 10, // Default value for tools
-    isToolMode: true,
-    setMaxFiles: (maxFiles: number) => { /* Tool-specific - can be implemented if needed */ },
-    setIsToolMode: (isToolMode: boolean) => { /* Tool-specific - can be implemented if needed */ }
-  }), [
-    selectedFiles,
-    state.ui.selectedFileIds,
-    state.ui.selectedPageNumbers,
-    actions.setSelectedFiles,
-    actions.setSelectedPages,
-    actions.clearSelections
-  ]);
-}
 

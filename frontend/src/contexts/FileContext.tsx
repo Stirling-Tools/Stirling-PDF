@@ -7,7 +7,7 @@
  * Key hooks:
  * - useFileState() - access file state and UI state
  * - useFileActions() - file operations (add/remove/update)  
- * - useToolFileSelection() - for tool components
+ * - useFileSelection() - for file selection state and actions
  * 
  * Memory management handled by FileLifecycleManager (PDF.js cleanup, blob URL revocation).
  */
@@ -275,6 +275,5 @@ export {
   useAllFiles,
   useSelectedFiles,
   // Primary API hooks for tools
-  useFileContext,
-  useToolFileSelection
+  useFileContext
 } from './file/fileHooks';

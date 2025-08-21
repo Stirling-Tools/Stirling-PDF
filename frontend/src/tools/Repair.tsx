@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
 import { useNavigationActions } from "../contexts/NavigationContext";
-import { useToolFileSelection } from "../contexts/file/fileHooks";
+import { useFileSelection } from "../contexts/file/fileHooks";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -14,7 +14,7 @@ import { BaseToolProps } from "../types/tool";
 const Repair = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { actions } = useNavigationActions();
-  const { selectedFiles } = useToolFileSelection();
+  const { selectedFiles } = useFileSelection();
 
   const repairParams = useRepairParameters();
   const repairOperation = useRepairOperation();

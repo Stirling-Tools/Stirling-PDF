@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileState } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileContext";
+import { useFileState, useFileSelection } from "../contexts/FileContext";
 import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
@@ -18,7 +17,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { selectors } = useFileState();
   const { actions } = useNavigationActions();
   const activeFiles = selectors.getFiles();
-  const { selectedFiles } = useToolFileSelection();
+  const { selectedFiles } = useFileSelection();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const convertParams = useConvertParameters();
@@ -49,7 +48,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         convertParams.resetParameters();
       }
     }
-  }, [selectedFiles, activeFiles]);
+  }, [selectedFiles, activeFiles, convertParams.analyzeFileTypes, convertParams.resetParameters]);
 
   useEffect(() => {
     // Only clear results if we're not currently processing and parameters changed

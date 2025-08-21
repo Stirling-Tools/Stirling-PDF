@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import { isImageFormat, isWebFormat } from "../../../utils/convertUtils";
 import { getConversionEndpoints } from "../../../data/toolsTaxonomy";
-import { useToolFileSelection } from "../../../contexts/FileContext";
+import { useFileSelection } from "../../../contexts/FileContext";
 import { useFileState } from "../../../contexts/FileContext";
 import { detectFileExtension } from "../../../utils/fileUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
@@ -41,7 +41,7 @@ const ConvertSettings = ({
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
-  const { setSelectedFiles } = useToolFileSelection();
+  const { setSelectedFiles } = useFileSelection();
   const { state, selectors } = useFileState();
   const activeFiles = state.files.ids;
 
