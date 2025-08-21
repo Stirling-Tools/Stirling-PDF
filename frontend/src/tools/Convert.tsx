@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useFileState, useFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -14,8 +14,10 @@ import { BaseToolProps } from "../types/tool";
 
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode, activeFiles } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
+  const { selectors } = useFileState();
+  const { actions } = useNavigationActions();
+  const activeFiles = selectors.getFiles();
+  const { selectedFiles } = useFileSelection();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const convertParams = useConvertParameters();
@@ -46,7 +48,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         convertParams.resetParameters();
       }
     }
-  }, [selectedFiles, activeFiles]);
+  }, [selectedFiles, activeFiles, convertParams.analyzeFileTypes, convertParams.resetParameters]);
 
   useEffect(() => {
     // Only clear results if we're not currently processing and parameters changed
@@ -84,13 +86,11 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "convert");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     convertOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("convert");
   };
 
   return createToolFlow({

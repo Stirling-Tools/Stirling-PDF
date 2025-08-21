@@ -1,7 +1,10 @@
 /**
  * IndexedDB File Storage Service
  * Provides high-capacity file storage for PDF processing
+ * Now uses centralized IndexedDB manager
  */
+
+import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
 
 export interface StoredFile {
   id: string;
@@ -22,75 +25,26 @@ export interface StorageStats {
 }
 
 class FileStorageService {
-  private dbName = 'stirling-pdf-files';
-  private dbVersion = 2; // Increment version to force schema update
-  private storeName = 'files';
-  private db: IDBDatabase | null = null;
-  private initPromise: Promise<void> | null = null;
+  private readonly dbConfig = DATABASE_CONFIGS.FILES;
+  private readonly storeName = 'files';
 
   /**
-   * Initialize the IndexedDB database (singleton pattern)
+   * Get database connection using centralized manager
    */
-  async init(): Promise<void> {
-    if (this.db) {
-      return Promise.resolve();
-    }
-
-    if (this.initPromise) {
-      return this.initPromise;
-    }
-
-    this.initPromise = new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.dbVersion);
-
-      request.onerror = () => {
-        this.initPromise = null;
-        reject(request.error);
-      };
-
-      request.onsuccess = () => {
-        this.db = request.result;
-        console.log('IndexedDB connection established');
-        resolve();
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const oldVersion = (event as any).oldVersion;
-
-        console.log('IndexedDB upgrade needed from version', oldVersion, 'to', this.dbVersion);
-
-        // Only recreate object store if it doesn't exist or if upgrading from version < 2
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
-          store.createIndex('name', 'name', { unique: false });
-          store.createIndex('lastModified', 'lastModified', { unique: false });
-          console.log('IndexedDB object store created with keyPath: id');
-        } else if (oldVersion < 2) {
-          // Only delete and recreate if upgrading from version 1 to 2
-          db.deleteObjectStore(this.storeName);
-          const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
-          store.createIndex('name', 'name', { unique: false });
-          store.createIndex('lastModified', 'lastModified', { unique: false });
-          console.log('IndexedDB object store recreated with keyPath: id (version upgrade)');
-        }
-      };
-    });
-
-    return this.initPromise;
+  private async getDatabase(): Promise<IDBDatabase> {
+    return indexedDBManager.openDatabase(this.dbConfig);
   }
 
   /**
-   * Store a file in IndexedDB
+   * Store a file in IndexedDB with external UUID
    */
-  async storeFile(file: File, thumbnail?: string): Promise<StoredFile> {
-    if (!this.db) await this.init();
+  async storeFile(file: File, fileId: string, thumbnail?: string): Promise<StoredFile> {
+    const db = await this.getDatabase();
 
-    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const arrayBuffer = await file.arrayBuffer();
 
     const storedFile: StoredFile = {
-      id,
+      id: fileId, // Use provided UUID
       name: file.name,
       type: file.type,
       size: file.size,
@@ -101,13 +55,13 @@ class FileStorageService {
 
     return new Promise((resolve, reject) => {
       try {
-        const transaction = this.db!.transaction([this.storeName], 'readwrite');
+        const transaction = db.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);
 
         // Debug logging
         console.log('Object store keyPath:', store.keyPath);
-        console.log('Storing file:', {
-          id: storedFile.id,
+        console.log('Storing file with UUID:', {
+          id: storedFile.id, // Now a UUID from FileContext
           name: storedFile.name,
           hasData: !!storedFile.data,
           dataSize: storedFile.data.byteLength
@@ -135,10 +89,10 @@ class FileStorageService {
    * Retrieve a file from IndexedDB
    */
   async getFile(id: string): Promise<StoredFile | null> {
-    if (!this.db) await this.init();
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
 
@@ -151,10 +105,10 @@ class FileStorageService {
    * Get all stored files (WARNING: loads all data into memory)
    */
   async getAllFiles(): Promise<StoredFile[]> {
-    if (!this.db) await this.init();
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const request = store.getAll();
 
@@ -176,10 +130,10 @@ class FileStorageService {
    * Get metadata of all stored files (without loading data into memory)
    */
   async getAllFileMetadata(): Promise<Omit<StoredFile, 'data'>[]> {
-    if (!this.db) await this.init();
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const request = store.openCursor();
       const files: Omit<StoredFile, 'data'>[] = [];
@@ -202,7 +156,7 @@ class FileStorageService {
           }
           cursor.continue();
         } else {
-          console.log('Loaded metadata for', files.length, 'files without loading data');
+          // Metadata loaded efficiently without file data
           resolve(files);
         }
       };
@@ -213,10 +167,10 @@ class FileStorageService {
    * Delete a file from IndexedDB
    */
   async deleteFile(id: string): Promise<void> {
-    if (!this.db) await this.init();
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
       const request = store.delete(id);
 
@@ -229,9 +183,9 @@ class FileStorageService {
    * Update the lastModified timestamp of a file (for most recently used sorting)
    */
   async touchFile(id: string): Promise<boolean> {
-    if (!this.db) await this.init();
+    const db = await this.getDatabase();
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
       
       const getRequest = store.get(id);
@@ -255,10 +209,10 @@ class FileStorageService {
    * Clear all stored files
    */
   async clearAll(): Promise<void> {
-    if (!this.db) await this.init();
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
       const request = store.clear();
 
@@ -271,8 +225,6 @@ class FileStorageService {
    * Get storage statistics (only our IndexedDB usage)
    */
   async getStorageStats(): Promise<StorageStats> {
-    if (!this.db) await this.init();
-
     let used = 0;
     let available = 0;
     let quota: number | undefined;
@@ -315,10 +267,10 @@ class FileStorageService {
    * Get file count quickly without loading metadata
    */
   async getFileCount(): Promise<number> {
-    if (!this.db) await this.init();
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const request = store.count();
 
@@ -365,9 +317,9 @@ class FileStorageService {
     // Also check our specific database with different versions
     for (let version = 1; version <= 3; version++) {
       try {
-        console.log(`Trying to open ${this.dbName} version ${version}...`);
+        console.log(`Trying to open ${this.dbConfig.name} version ${version}...`);
         const db = await new Promise<IDBDatabase>((resolve, reject) => {
-          const request = indexedDB.open(this.dbName, version);
+          const request = indexedDB.open(this.dbConfig.name, version);
           request.onsuccess = () => resolve(request.result);
           request.onerror = () => reject(request.error);
           request.onupgradeneeded = () => {
@@ -400,10 +352,10 @@ class FileStorageService {
    * Debug method to check what's actually in the database
    */
   async debugDatabaseContents(): Promise<void> {
-    if (!this.db) await this.init();
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
 
       // First try getAll to see if there's anything
@@ -460,7 +412,8 @@ class FileStorageService {
   }
 
   /**
-   * Convert StoredFile back to File object for compatibility
+   * Convert StoredFile back to pure File object without mutations
+   * Returns a clean File object - use FileContext.addStoredFiles() for proper metadata handling
    */
   createFileFromStored(storedFile: StoredFile): File {
     if (!storedFile || !storedFile.data) {
@@ -477,11 +430,24 @@ class FileStorageService {
       lastModified: storedFile.lastModified
     });
 
-    // Add custom properties for compatibility
-    Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
-    Object.defineProperty(file, 'thumbnail', { value: storedFile.thumbnail, writable: false });
-
+    // Use FileContext.addStoredFiles() to properly associate with metadata
     return file;
+  }
+
+  /**
+   * Convert StoredFile to the format expected by FileContext.addStoredFiles()
+   * This is the recommended way to load stored files into FileContext
+   */
+  createFileWithMetadata(storedFile: StoredFile): { file: File; originalId: string; metadata: { thumbnail?: string } } {
+    const file = this.createFileFromStored(storedFile);
+    
+    return {
+      file,
+      originalId: storedFile.id,
+      metadata: {
+        thumbnail: storedFile.thumbnail
+      }
+    };
   }
 
   /**
@@ -527,11 +493,11 @@ class FileStorageService {
    * Update thumbnail for an existing file
    */
   async updateThumbnail(id: string, thumbnail: string): Promise<boolean> {
-    if (!this.db) await this.init();
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
       try {
-        const transaction = this.db!.transaction([this.storeName], 'readwrite');
+        const transaction = db.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);
         const getRequest = store.get(id);
 

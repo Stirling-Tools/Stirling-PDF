@@ -1,12 +1,21 @@
 /**
- * Enhanced file types for IndexedDB storage
+ * File types for the new architecture
+ * FileContext uses pure File objects with separate ID tracking
  */
 
-export interface FileWithUrl extends File {
-  id?: string;
-  url?: string;
+
+/**
+ * File metadata for efficient operations without loading full file data
+ * Used by IndexedDBContext and FileContext for lazy file loading
+ */
+export interface FileMetadata {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  lastModified: number;
   thumbnail?: string;
-  storedInIndexedDB?: boolean;
+  isDraft?: boolean; // Marks files as draft versions
 }
 
 export interface StorageConfig {

@@ -7,6 +7,7 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo } fr
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { useToolWorkflowUrlSync } from '../hooks/useUrlSync';
 
 // State interface
 interface ToolWorkflowState {
@@ -101,9 +102,11 @@ interface ToolWorkflowProviderProps {
   children: React.ReactNode;
   /** Handler for view changes (passed from parent) */
   onViewChange?: (view: string) => void;
+  /** Enable URL synchronization for tool selection */
+  enableUrlSync?: boolean;
 }
 
-export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowProviderProps) {
+export function ToolWorkflowProvider({ children, onViewChange, enableUrlSync = true }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, initialState);
 
   // Tool management hook
@@ -181,6 +184,9 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     state.sidebarsVisible && !state.readerMode,
     [state.sidebarsVisible, state.readerMode]
   );
+
+  // Enable URL synchronization for tool selection
+  useToolWorkflowUrlSync(selectedToolKey, selectTool, clearToolSelection, enableUrlSync);
 
   // Simple context value with basic memoization
   const contextValue = useMemo((): ToolWorkflowContextValue => ({

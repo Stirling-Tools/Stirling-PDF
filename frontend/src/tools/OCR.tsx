@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -16,8 +16,8 @@ import { useOCRTips } from "../components/tooltips/useOCRTips";
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
+  const { actions } = useNavigationActions();
+  const { selectedFiles } = useFileSelection();
 
   const ocrParams = useOCRParameters();
   const ocrOperation = useOCROperation();
@@ -66,13 +66,11 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "ocr");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     ocrOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("ocr");
   };
 
   const settingsCollapsed = expandedStep !== "settings";

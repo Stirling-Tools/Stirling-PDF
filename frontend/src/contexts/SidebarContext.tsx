@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef } from 'react';
+import React, { createContext, useContext, useState, useRef, useMemo } from 'react';
 import { SidebarState, SidebarRefs, SidebarContextValue, SidebarProviderProps } from '../types/sidebar';
 
 const SidebarContext = createContext<SidebarContextValue | undefined>(undefined);
@@ -12,24 +12,24 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
 
-  const sidebarState: SidebarState = {
+  const sidebarState: SidebarState = useMemo(() => ({
     sidebarsVisible,
     leftPanelView,
     readerMode,
-  };
+  }), [sidebarsVisible, leftPanelView, readerMode]);
 
-  const sidebarRefs: SidebarRefs = {
+  const sidebarRefs: SidebarRefs = useMemo(() => ({
     quickAccessRef,
     toolPanelRef,
-  };
+  }), [quickAccessRef, toolPanelRef]);
 
-  const contextValue: SidebarContextValue = {
+  const contextValue: SidebarContextValue = useMemo(() => ({
     sidebarState,
     sidebarRefs,
     setSidebarsVisible,
     setLeftPanelView,
     setReaderMode,
-  };
+  }), [sidebarState, sidebarRefs, setSidebarsVisible, setLeftPanelView, setReaderMode]);
 
   return (
     <SidebarContext.Provider value={contextValue}>

@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -15,8 +15,8 @@ import { useCompressTips } from "../components/tooltips/useCompressTips";
 
 const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
+  const { actions } = useNavigationActions();
+  const { selectedFiles } = useFileSelection();
 
   const compressParams = useCompressParameters();
   const compressOperation = useCompressOperation();
@@ -46,13 +46,12 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "compress");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     compressOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("compress");
+    actions.setMode("compress");
   };
 
   const hasFiles = selectedFiles.length > 0;

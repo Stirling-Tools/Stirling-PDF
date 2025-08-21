@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useFileHandler } from '../hooks/useFileHandler';
+import { FileMetadata } from '../types/file';
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;
@@ -7,6 +8,7 @@ interface FilesModalContextType {
   closeFilesModal: () => void;
   onFileSelect: (file: File) => void;
   onFilesSelect: (files: File[]) => void;
+  onStoredFilesSelect: (filesWithMetadata: Array<{ file: File; originalId: string; metadata: FileMetadata }>) => void;
   onModalClose?: () => void;
   setOnModalClose: (callback: () => void) => void;
 }
@@ -14,7 +16,7 @@ interface FilesModalContextType {
 const FilesModalContext = createContext<FilesModalContextType | null>(null);
 
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { addToActiveFiles, addMultipleFiles } = useFileHandler();
+  const { addToActiveFiles, addMultipleFiles, addStoredFiles } = useFileHandler();
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
 
@@ -37,19 +39,34 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     closeFilesModal();
   }, [addMultipleFiles, closeFilesModal]);
 
+  const handleStoredFilesSelect = useCallback((filesWithMetadata: Array<{ file: File; originalId: string; metadata: FileMetadata }>) => {
+    addStoredFiles(filesWithMetadata);
+    closeFilesModal();
+  }, [addStoredFiles, closeFilesModal]);
+
   const setModalCloseCallback = useCallback((callback: () => void) => {
     setOnModalClose(() => callback);
   }, []);
 
-  const contextValue: FilesModalContextType = {
+  const contextValue: FilesModalContextType = useMemo(() => ({
     isFilesModalOpen,
     openFilesModal,
     closeFilesModal,
     onFileSelect: handleFileSelect,
     onFilesSelect: handleFilesSelect,
+    onStoredFilesSelect: handleStoredFilesSelect,
     onModalClose,
     setOnModalClose: setModalCloseCallback,
-  };
+  }), [
+    isFilesModalOpen,
+    openFilesModal,
+    closeFilesModal,
+    handleFileSelect,
+    handleFilesSelect,
+    handleStoredFilesSelect,
+    onModalClose,
+    setModalCloseCallback,
+  ]);
 
   return (
     <FilesModalContext.Provider value={contextValue}>

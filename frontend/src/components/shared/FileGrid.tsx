@@ -4,14 +4,14 @@ import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
 import FileCard from "./FileCard";
-import { FileWithUrl } from "../../types/file";
+import { FileRecord } from "../../types/fileContext";
 
 interface FileGridProps {
-  files: FileWithUrl[];
+  files: Array<{ file: File; record?: FileRecord }>;
   onRemove?: (index: number) => void;
-  onDoubleClick?: (file: FileWithUrl) => void;
-  onView?: (file: FileWithUrl) => void;
-  onEdit?: (file: FileWithUrl) => void;
+  onDoubleClick?: (item: { file: File; record?: FileRecord }) => void;
+  onView?: (item: { file: File; record?: FileRecord }) => void;
+  onEdit?: (item: { file: File; record?: FileRecord }) => void;
   onSelect?: (fileId: string) => void;
   selectedFiles?: string[];
   showSearch?: boolean;
@@ -46,19 +46,19 @@ const FileGrid = ({
   const [sortBy, setSortBy] = useState<SortOption>('date');
 
   // Filter files based on search term
-  const filteredFiles = files.filter(file =>
-    file.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredFiles = files.filter(item =>
+    item.file.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Sort files
   const sortedFiles = [...filteredFiles].sort((a, b) => {
     switch (sortBy) {
       case 'date':
-        return (b.lastModified || 0) - (a.lastModified || 0);
+        return (b.file.lastModified || 0) - (a.file.lastModified || 0);
       case 'name':
-        return a.name.localeCompare(b.name);
+        return a.file.name.localeCompare(b.file.name);
       case 'size':
-        return (b.size || 0) - (a.size || 0);
+        return (b.file.size || 0) - (a.file.size || 0);
       default:
         return 0;
     }
@@ -122,18 +122,19 @@ const FileGrid = ({
         h="30rem" 
         style={{ overflowY: "auto", width: "100%" }}
       >
-        {displayFiles.map((file, idx) => {
-          const fileId = file.id || file.name;
-          const originalIdx = files.findIndex(f => (f.id || f.name) === fileId);
-          const supported = isFileSupported ? isFileSupported(file.name) : true;
+        {displayFiles.map((item, idx) => {
+          const fileId = item.record?.id || item.file.name;
+          const originalIdx = files.findIndex(f => (f.record?.id || f.file.name) === fileId);
+          const supported = isFileSupported ? isFileSupported(item.file.name) : true;
           return (
             <FileCard
               key={fileId + idx}
-              file={file}
+              file={item.file}
+              record={item.record}
               onRemove={onRemove ? () => onRemove(originalIdx) : () => {}}
-              onDoubleClick={onDoubleClick && supported ? () => onDoubleClick(file) : undefined}
-              onView={onView && supported ? () => onView(file) : undefined}
-              onEdit={onEdit && supported ? () => onEdit(file) : undefined}
+              onDoubleClick={onDoubleClick && supported ? () => onDoubleClick(item) : undefined}
+              onView={onView && supported ? () => onView(item) : undefined}
+              onEdit={onEdit && supported ? () => onEdit(item) : undefined}
               isSelected={selectedFiles.includes(fileId)}
               onSelect={onSelect && supported ? () => onSelect(fileId) : undefined}
               isSupported={supported}

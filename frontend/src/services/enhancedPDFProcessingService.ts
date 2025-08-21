@@ -1,12 +1,10 @@
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist';
 import { ProcessedFile, ProcessingState, PDFPage, ProcessingStrategy, ProcessingConfig, ProcessingMetrics } from '../types/processing';
 import { ProcessingCache } from './processingCache';
 import { FileHasher } from '../utils/fileHash';
 import { FileAnalyzer } from './fileAnalyzer';
 import { ProcessingErrorHandler } from './processingErrorHandler';
-
-// Set up PDF.js worker
-GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+import { pdfWorkerManager } from './pdfWorkerManager';
 
 export class EnhancedPDFProcessingService {
   private static instance: EnhancedPDFProcessingService;
@@ -183,43 +181,45 @@ export class EnhancedPDFProcessingService {
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
-    const totalPages = pdf.numPages;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
+    
+    try {
+      const totalPages = pdf.numPages;
 
-    state.progress = 10;
-    this.notifyListeners();
+      state.progress = 10;
+      this.notifyListeners();
 
-    const pages: PDFPage[] = [];
+      const pages: PDFPage[] = [];
 
-    for (let i = 1; i <= totalPages; i++) {
-      // Check for cancellation
-      if (state.cancellationToken?.signal.aborted) {
-        pdf.destroy();
-        throw new Error('Processing cancelled');
+      for (let i = 1; i <= totalPages; i++) {
+        // Check for cancellation
+        if (state.cancellationToken?.signal.aborted) {
+          throw new Error('Processing cancelled');
+        }
+
+        const page = await pdf.getPage(i);
+        const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
+
+        pages.push({
+          id: `${file.name}-page-${i}`,
+          pageNumber: i,
+          thumbnail,
+          rotation: 0,
+          selected: false
+        });
+
+        // Update progress
+        state.progress = 10 + (i / totalPages) * 85;
+        state.currentPage = i;
+        this.notifyListeners();
       }
 
-      const page = await pdf.getPage(i);
-      const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
-
-      pages.push({
-        id: `${file.name}-page-${i}`,
-        pageNumber: i,
-        thumbnail,
-        rotation: 0,
-        selected: false
-      });
-
-      // Update progress
-      state.progress = 10 + (i / totalPages) * 85;
-      state.currentPage = i;
+      return this.createProcessedFile(file, pages, totalPages);
+    } finally {
+      pdfWorkerManager.destroyDocument(pdf);
+      state.progress = 100;
       this.notifyListeners();
     }
-
-    pdf.destroy();
-    state.progress = 100;
-    this.notifyListeners();
-
-    return this.createProcessedFile(file, pages, totalPages);
   }
 
   /**
@@ -231,7 +231,7 @@ export class EnhancedPDFProcessingService {
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
 
     state.progress = 10;
@@ -243,7 +243,7 @@ export class EnhancedPDFProcessingService {
     // Process priority pages first
     for (let i = 1; i <= priorityCount; i++) {
       if (state.cancellationToken?.signal.aborted) {
-        pdf.destroy();
+        pdfWorkerManager.destroyDocument(pdf);
         throw new Error('Processing cancelled');
       }
 
@@ -274,7 +274,7 @@ export class EnhancedPDFProcessingService {
       });
     }
 
-    pdf.destroy();
+    pdfWorkerManager.destroyDocument(pdf);
     state.progress = 100;
     this.notifyListeners();
 
@@ -290,7 +290,7 @@ export class EnhancedPDFProcessingService {
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
 
     state.progress = 10;
@@ -305,7 +305,7 @@ export class EnhancedPDFProcessingService {
 
     for (let i = 1; i <= firstChunkEnd; i++) {
       if (state.cancellationToken?.signal.aborted) {
-        pdf.destroy();
+        pdfWorkerManager.destroyDocument(pdf);
         throw new Error('Processing cancelled');
       }
 
@@ -342,7 +342,7 @@ export class EnhancedPDFProcessingService {
       });
     }
 
-    pdf.destroy();
+    pdfWorkerManager.destroyDocument(pdf);
     state.progress = 100;
     this.notifyListeners();
 
@@ -358,7 +358,7 @@ export class EnhancedPDFProcessingService {
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
 
     state.progress = 50;
@@ -376,7 +376,7 @@ export class EnhancedPDFProcessingService {
       });
     }
 
-    pdf.destroy();
+    pdfWorkerManager.destroyDocument(pdf);
     state.progress = 100;
     this.notifyListeners();
 
@@ -519,7 +519,10 @@ export class EnhancedPDFProcessingService {
     this.notifyListeners();
 
     // Force memory cleanup hint
-    setTimeout(() => window?.gc?.(), 100);
+    if (typeof window !== 'undefined' && window.gc) {
+      let gc = window.gc;
+      setTimeout(() => gc(), 100);
+    }
   }
 
   /**
@@ -536,6 +539,15 @@ export class EnhancedPDFProcessingService {
     this.cache.clear();
     this.processing.clear();
     this.notifyListeners();
+  }
+
+  /**
+   * Emergency cleanup - destroy all PDF workers
+   */
+  emergencyCleanup(): void {
+    this.clearAllProcessing();
+    this.clearAll();
+    pdfWorkerManager.destroyAllDocuments();
   }
 }
 

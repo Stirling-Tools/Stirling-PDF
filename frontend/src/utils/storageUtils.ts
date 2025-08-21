@@ -1,5 +1,4 @@
 import { StorageStats } from "../services/fileStorage";
-import { FileWithUrl } from "../types/file";
 
 /**
  * Storage operation types for incremental updates
@@ -12,7 +11,7 @@ export type StorageOperation = 'add' | 'remove' | 'clear';
 export function updateStorageStatsIncremental(
   currentStats: StorageStats,
   operation: StorageOperation,
-  files: FileWithUrl[] = []
+  files: File[] = []
 ): StorageStats {
   const filesSizeTotal = files.reduce((total, file) => total + file.size, 0);
   

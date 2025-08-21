@@ -2,10 +2,10 @@ import React from 'react';
 import { Stack, Card, Box, Text, Badge, Group, Divider, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { detectFileExtension, getFileSize } from '../../utils/fileUtils';
-import { FileWithUrl } from '../../types/file';
+import { FileMetadata } from '../../types/file';
 
 interface FileInfoCardProps {
-  currentFile: FileWithUrl | null;
+  currentFile: FileMetadata | null;
   modalHeight: string;
 }
 
