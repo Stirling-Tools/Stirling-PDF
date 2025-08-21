@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { BaseParameters } from '../../../types/parameters';
+import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface SanitizeParameters {
+export interface SanitizeParameters extends BaseParameters {
   removeJavaScript: boolean;
   removeEmbeddedFiles: boolean;
   removeXMPMetadata: boolean;
@@ -18,36 +19,14 @@ export const defaultParameters: SanitizeParameters = {
   removeFonts: false,
 };
 
-export const useSanitizeParameters = () => {
-  const [parameters, setParameters] = useState<SanitizeParameters>(defaultParameters);
+export type SanitizeParametersHook = BaseParametersHook<SanitizeParameters>;
 
-  const updateParameter = useCallback(<K extends keyof SanitizeParameters>(
-    key: K,
-    value: SanitizeParameters[K]
-  ) => {
-    setParameters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  }, []);
-
-  const resetParameters = useCallback(() => {
-    setParameters(defaultParameters);
-  }, []);
-
-  const validateParameters = useCallback(() => {
-    return Object.values(parameters).some(value => value === true);
-  }, [parameters]);
-
-  const getEndpointName = () => {
-    return 'sanitize-pdf'
-  };
-
-  return {
-    parameters,
-    updateParameter,
-    resetParameters,
-    validateParameters,
-    getEndpointName,
-  };
+export const useSanitizeParameters = (): SanitizeParametersHook => {
+  return useBaseParameters({
+    defaultParameters,
+    endpointName: 'sanitize-pdf',
+    validateFn: (params) => {
+      return Object.values(params).some(value => value === true);
+    },
+  });
 };

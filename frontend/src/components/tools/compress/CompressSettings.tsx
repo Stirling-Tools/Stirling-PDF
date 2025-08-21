@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Stack, Text, NumberInput, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { CompressParameters } from "../../../hooks/tools/compress/useCompressOperation";
+import { CompressParameters } from "../../../hooks/tools/compress/useCompressParameters";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;

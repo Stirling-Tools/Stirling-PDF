@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { OCRParameters } from '../../../components/tools/ocr/OCRSettings';
+import { OCRParameters } from './useOCRParameters';
 import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { useToolResources } from '../shared/useToolResources';

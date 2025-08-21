@@ -1,15 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
+import { useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-
-export interface CompressParameters {
-  compressionLevel: number;
-  grayscale: boolean;
-  expectedSize: string;
-  compressionMethod: 'quality' | 'filesize';
-  fileSizeValue: string;
-  fileSizeUnit: 'KB' | 'MB';
-}
+import { CompressParameters } from './useCompressParameters';
 
 const buildFormData = (parameters: CompressParameters, file: File): FormData => {
   const formData = new FormData();

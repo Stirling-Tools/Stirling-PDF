@@ -1,49 +1,22 @@
-import { useState } from 'react';
+import { BaseParameters } from '../../../types/parameters';
+import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface RemovePasswordParameters {
+export interface RemovePasswordParameters extends BaseParameters {
   password: string;
 }
 
-export interface RemovePasswordParametersHook {
-  parameters: RemovePasswordParameters;
-  updateParameter: <K extends keyof RemovePasswordParameters>(parameter: K, value: RemovePasswordParameters[K]) => void;
-  resetParameters: () => void;
-  validateParameters: () => boolean;
-  getEndpointName: () => string;
-}
+export type RemovePasswordParametersHook = BaseParametersHook<RemovePasswordParameters>;
 
 export const defaultParameters: RemovePasswordParameters = {
   password: '',
 };
 
 export const useRemovePasswordParameters = (): RemovePasswordParametersHook => {
-  const [parameters, setParameters] = useState<RemovePasswordParameters>(defaultParameters);
-
-  const updateParameter = <K extends keyof RemovePasswordParameters>(parameter: K, value: RemovePasswordParameters[K]) => {
-    setParameters(prev => ({
-       ...prev,
-       [parameter]: value,
-      })
-    );
-  };
-
-  const resetParameters = () => {
-    setParameters(defaultParameters);
-  };
-
-  const validateParameters = () => {
-    return parameters.password !== '';
-  };
-
-  const getEndpointName = () => {
-    return 'remove-password';
-  };
-
-  return {
-    parameters,
-    updateParameter,
-    resetParameters,
-    validateParameters,
-    getEndpointName,
-  };
+  return useBaseParameters({
+    defaultParameters,
+    endpointName: 'remove-password',
+    validateFn: (params) => {
+      return params.password !== '';
+    },
+  });
 };
