@@ -30,10 +30,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(addPasswordParams.getEndpointName());
 
-  // Set URL mode when component loads
-  useEffect(() => {
-    actions.setMode("addPassword");
-  }, [actions]);
+
 
   useEffect(() => {
     addPasswordOperation.resetResults();

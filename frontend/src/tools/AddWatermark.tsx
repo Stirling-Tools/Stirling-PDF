@@ -43,10 +43,6 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-watermark");
 
-  // Set URL mode when component loads
-  useEffect(() => {
-    actions.setMode("addWatermark");
-  }, [actions]);
 
   useEffect(() => {
     watermarkOperation.resetResults();

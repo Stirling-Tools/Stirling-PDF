@@ -25,10 +25,6 @@ const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(removePasswordParams.getEndpointName());
 
-  // Set URL mode when component loads
-  useEffect(() => {
-    actions.setMode("removePassword");
-  }, [actions]);
 
   useEffect(() => {
     removePasswordOperation.resetResults();
