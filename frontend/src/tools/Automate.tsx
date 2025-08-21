@@ -4,7 +4,7 @@ import { useFileContext } from "../contexts/FileContext";
 import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { createFilesToolStep } from "../components/tools/shared/filesToolStep";
+import { createFilesToolStep } from "../components/tools/shared/FilesToolStep";
 import AutomationSelection from "../components/tools/automate/AutomationSelection";
 import AutomationCreation, { AutomationMode } from "../components/tools/automate/AutomationCreation";
 import AutomationRun from "../components/tools/automate/AutomationRun";
@@ -133,7 +133,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     },
     steps: automationSteps,
     review: {
-      isVisible: true,
+      isVisible: hasResults,
       operation: automateOperation,
       title: t('automate.reviewTitle', 'Automation Results')
     }

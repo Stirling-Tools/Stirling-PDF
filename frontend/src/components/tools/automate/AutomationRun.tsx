@@ -103,15 +103,15 @@ export default function AutomationRun({ automation, onBack, onComplete, automate
       setCurrentStepIndex(-1);
       setIsExecuting(false);
       setCurrentFiles(finalResults);
-      
+
       // Properly integrate results with FileContext
       if (finalResults.length > 0) {
         console.log(`🎨 Integrating ${finalResults.length} result files with FileContext`);
-        
+
         // Use FileContext's consumeFiles to properly add results
         // This replaces input files with output files (like other tools do)
         await consumeFiles(activeFiles, finalResults);
-        
+
         console.log(`✅ Successfully integrated automation results with FileContext`);
       }
 

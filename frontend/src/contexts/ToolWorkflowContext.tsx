@@ -229,14 +229,12 @@ export function useToolWorkflow(): ToolWorkflowContextValue {
 
       // Return minimal safe fallback to prevent crashes
       return {
-        state: {
-          sidebarsVisible: true,
-          leftPanelView: 'toolPicker',
-          readerMode: false,
-          previewFile: null,
-          pageEditorFunctions: null,
-          searchQuery: ''
-        },
+        sidebarsVisible: true,
+        leftPanelView: 'toolPicker',
+        readerMode: false,
+        previewFile: null,
+        pageEditorFunctions: null,
+        searchQuery: '',
         selectedToolKey: null,
         selectedTool: null,
         toolRegistry: {},

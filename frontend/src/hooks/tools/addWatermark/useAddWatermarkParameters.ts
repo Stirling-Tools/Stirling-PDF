@@ -46,3 +46,4 @@ export const useAddWatermarkParameters = (): AddWatermarkParametersHook => {
     },
   });
 };
+

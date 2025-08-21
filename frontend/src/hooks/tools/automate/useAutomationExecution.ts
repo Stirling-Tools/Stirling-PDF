@@ -49,7 +49,7 @@ export const useAutomationExecution = () => {
 
     // Initialize operation hooks for all tools in the automation
     const hooks: Record<string, any> = {};
-    steps.forEach((step) => {
+    steps.forEach((step: ExecutionStep) => {
       const tool = toolRegistry[step.operation];
       if (tool?.component) {
         const toolComponent = tool.component as ToolComponent;

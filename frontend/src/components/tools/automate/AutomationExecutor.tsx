@@ -39,7 +39,7 @@ export const AutomationExecutor: React.FC<AutomationExecutorProps> = ({
       const tool = toolRegistry[op.operation];
       if (tool?.component) {
         const toolComponent = tool.component as ToolComponent;
-        if (toolComponent.tool) {
+        if ('tool' in toolComponent) {
           // We still can't call the hook here dynamically
           // This approach also won't work
         }
@@ -79,7 +79,7 @@ export const AutomationExecutor: React.FC<AutomationExecutorProps> = ({
         }
 
         const toolComponent = tool.component as ToolComponent;
-        if (!toolComponent.tool) {
+        if (!('tool' in toolComponent)) {
           throw new Error(`Tool ${operation.operation} does not support automation`);
         }
 

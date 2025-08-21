@@ -106,7 +106,7 @@ export default function AutomationEntry({
         <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
           {renderContent()}
         </div>
-        
+
         {showMenu && (
           <Menu
             position="bottom-end"
@@ -140,7 +140,7 @@ export default function AutomationEntry({
                     onEdit();
                   }}
                 >
-                  {t('common.edit', 'Edit')}
+                  {t('edit', 'Edit')}
                 </Menu.Item>
               )}
               {onDelete && (
@@ -151,7 +151,7 @@ export default function AutomationEntry({
                     onDelete();
                   }}
                 >
-                  {t('common.delete', 'Delete')}
+                  {t('delete', 'Delete')}
                 </Menu.Item>
               )}
             </Menu.Dropdown>

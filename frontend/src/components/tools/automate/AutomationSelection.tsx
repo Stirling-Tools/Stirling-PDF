@@ -44,7 +44,7 @@ export default function AutomationSelection({
           key={automation.id}
           title={automation.name}
           badgeIcon={SettingsIcon}
-          operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
+          operations={automation.operations.map((op: any) => typeof op === 'string' ? op : op.operation)}
           onClick={() => onRun(automation)}
           showMenu={true}
           onEdit={() => onEdit(automation)}
