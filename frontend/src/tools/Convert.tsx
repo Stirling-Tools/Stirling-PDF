@@ -34,7 +34,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = convertOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles;
   const settingsCollapsed = hasResults;
 
   useEffect(() => {
@@ -97,7 +96,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: filesCollapsed,
+      isCollapsed: hasResults,
       placeholder: t("convert.selectFilesPlaceholder", "Select files in the main view to get started"),
     },
     steps: [
