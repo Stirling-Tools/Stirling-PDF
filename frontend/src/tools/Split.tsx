@@ -92,7 +92,4 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-// Static method to get the operation hook for automation
-Split.tool = () => useSplitOperation;
-
 export default Split as ToolComponent;

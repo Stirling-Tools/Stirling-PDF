@@ -25,14 +25,28 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const automateOperation = useAutomateOperation();
   const toolRegistry = useFlatToolRegistry();
   const hasResults = automateOperation.files.length > 0 || automateOperation.downloadUrl !== null;
-  const { savedAutomations, deleteAutomation } = useSavedAutomations();
+  const { savedAutomations, deleteAutomation, refreshAutomations } = useSavedAutomations();
 
   const handleStepChange = (data: any) => {
+    // If navigating away from run step, reset automation results
+    if (currentStep === 'run' && data.step !== 'run') {
+      automateOperation.resetResults();
+    }
+    
+    // If navigating to run step with a different automation, reset results
+    if (data.step === 'run' && data.automation && 
+        stepData.automation && data.automation.id !== stepData.automation.id) {
+      automateOperation.resetResults();
+    }
+    
     setStepData(data);
     setCurrentStep(data.step);
   };
 
   const handleComplete = () => {
+    // Reset automation results when completing
+    automateOperation.resetResults();
+    
     // Reset to selection step
     setCurrentStep('selection');
     setStepData({});
@@ -65,7 +79,10 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             mode={stepData.mode}
             existingAutomation={stepData.automation}
             onBack={() => handleStepChange({ step: 'selection' })}
-            onComplete={() => handleStepChange({ step: 'selection' })}
+            onComplete={() => {
+              refreshAutomations();
+              handleStepChange({ step: 'selection' });
+            }}
             toolRegistry={toolRegistry}
           />
         );

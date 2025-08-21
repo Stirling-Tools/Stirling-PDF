@@ -99,6 +99,14 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     return tool?.name || t(`tools.${operation}.name`, operation);
   };
 
+  const getToolDefaultParameters = (operation: string): any => {
+    const config = toolRegistry[operation]?.operationConfig;
+    if (config?.defaultParameters) {
+      return { ...config.defaultParameters }; // Return a copy to avoid mutations
+    }
+    return {};
+  };
+
   const addTool = (operation: string) => {
 
     const newTool: AutomationTool = {
@@ -106,7 +114,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       operation,
       name: getToolName(operation),
       configured: false,
-      parameters: {}
+      parameters: getToolDefaultParameters(operation)
     };
 
     setSelectedTools([...selectedTools, newTool]);
@@ -259,15 +267,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
                               const updatedTools = [...selectedTools];
                               
                               // Get default parameters from the tool
-                              let defaultParams = {};
-                              const tool = toolRegistry?.[newOperation];
-                              if (tool?.component && (tool.component as any).getDefaultParameters) {
-                                try {
-                                  defaultParams = (tool.component as any).getDefaultParameters();
-                                } catch (error) {
-                                  console.warn(`Failed to get default parameters for ${newOperation}:`, error);
-                                }
-                              }
+                              const defaultParams = getToolDefaultParameters(newOperation);
                               
                               updatedTools[index] = {
                                 ...updatedTools[index],
@@ -370,6 +370,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
           tool={currentConfigTool}
           onSave={handleToolConfigSave}
           onCancel={handleToolConfigCancel}
+          toolRegistry={toolRegistry}
         />
       )}
 

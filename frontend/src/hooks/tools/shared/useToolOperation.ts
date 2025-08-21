@@ -61,6 +61,9 @@ export interface ToolOperationConfig<TParams = void> {
 
   /** Extract user-friendly error messages from API errors */
   getErrorMessage?: (error: any) => string;
+
+  /** Default parameter values for automation */
+  defaultParameters?: TParams;
 }
 
 /**

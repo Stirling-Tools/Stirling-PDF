@@ -1,7 +1,8 @@
 import { type TFunction } from 'i18next';
 import React from 'react';
-import { ToolOperationHook } from '../hooks/tools/shared/useToolOperation';
+import { ToolOperationHook, ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
 import { BaseToolProps } from '../types/tool';
+import { BaseParameters } from '../types/parameters';
 
 export enum SubcategoryId {
 	SIGNING = 'signing',
@@ -36,8 +37,10 @@ export type ToolRegistryEntry = {
 	endpoints?: string[];
 	link?: string;
 	type?: string;
-	// Hook for automation execution
-	operationHook?: () => ToolOperationHook<any>;
+	// Operation configuration for automation
+	operationConfig?: ToolOperationConfig<any>;
+	// Settings component for automation configuration
+	settingsComponent?: React.ComponentType<any>;
 }
 
 export type ToolRegistry = Record<string, ToolRegistryEntry>;

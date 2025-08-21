@@ -1,24 +1,22 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Text, Stack, Group, Progress, Card } from "@mantine/core";
+import { Button, Text, Stack, Group, Card, Progress } from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
-import ErrorIcon from "@mui/icons-material/Error";
 import { useFileSelection } from "../../../contexts/FileSelectionContext";
 import { useFlatToolRegistry } from "../../../data/useTranslatedToolRegistry";
-import { executeAutomationSequence } from "../../../utils/automationExecutor";
 
 interface AutomationRunProps {
   automation: any;
   onComplete: () => void;
-  automateOperation?: any; // Add the operation hook to store results
+  automateOperation?: any;
 }
 
 interface ExecutionStep {
   id: string;
   operation: string;
   name: string;
-  status: "pending" | "running" | "completed" | "error";
+  status: 'pending' | 'running' | 'completed' | 'error';
   error?: string;
 }
 
@@ -26,9 +24,14 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
   const toolRegistry = useFlatToolRegistry();
-  const [isExecuting, setIsExecuting] = useState(false);
+  
+  // Progress tracking state
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+  
+  // Use the operation hook's loading state
+  const isExecuting = automateOperation?.isLoading || false;
+  const hasResults = automateOperation?.files.length > 0 || automateOperation?.downloadUrl !== null;
 
   // Initialize execution steps from automation
   React.useEffect(() => {
@@ -39,16 +42,25 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           id: `${op.operation}-${index}`,
           operation: op.operation,
           name: tool?.name || op.operation,
-          status: "pending" as const,
+          status: 'pending' as const
         };
       });
       setExecutionSteps(steps);
+      setCurrentStepIndex(-1);
     }
-  }, [automation]); // Remove toolRegistry from dependencies to prevent infinite loops
+  }, [automation, toolRegistry]);
+
+  // Cleanup when component unmounts
+  React.useEffect(() => {
+    return () => {
+      // Reset progress state when component unmounts
+      setExecutionSteps([]);
+      setCurrentStepIndex(-1);
+    };
+  }, []);
 
   const executeAutomation = async () => {
     if (!selectedFiles || selectedFiles.length === 0) {
-      // Show error - need files to execute automation
       return;
     }
 
@@ -57,59 +69,74 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
       return;
     }
 
-    setIsExecuting(true);
+    // Reset progress tracking
     setCurrentStepIndex(0);
+    setExecutionSteps(prev => prev.map(step => ({ ...step, status: 'pending' as const, error: undefined })));
 
     try {
       // Use the automateOperation.executeOperation to handle file consumption properly
       await automateOperation.executeOperation(
-        { automationConfig: automation },
+        { 
+          automationConfig: automation,
+          onStepStart: (stepIndex: number, operationName: string) => {
+            setCurrentStepIndex(stepIndex);
+            setExecutionSteps(prev => prev.map((step, idx) =>
+              idx === stepIndex ? { ...step, status: 'running' as const } : step
+            ));
+          },
+          onStepComplete: (stepIndex: number, resultFiles: File[]) => {
+            setExecutionSteps(prev => prev.map((step, idx) =>
+              idx === stepIndex ? { ...step, status: 'completed' as const } : step
+            ));
+          },
+          onStepError: (stepIndex: number, error: string) => {
+            setExecutionSteps(prev => prev.map((step, idx) =>
+              idx === stepIndex ? { ...step, status: 'error' as const, error } : step
+            ));
+          }
+        },
         selectedFiles
       );
-
-      // All steps completed successfully
+      
+      // Mark all as completed and reset current step
       setCurrentStepIndex(-1);
-      setIsExecuting(false);
-
       console.log(`✅ Automation completed successfully`);
     } catch (error: any) {
       console.error("Automation execution failed:", error);
-      setIsExecuting(false);
       setCurrentStepIndex(-1);
-    }
-  };
-
-  const getStepIcon = (step: ExecutionStep) => {
-    switch (step.status) {
-      case "completed":
-        return <CheckIcon style={{ fontSize: 16, color: "green" }} />;
-      case "error":
-        return <ErrorIcon style={{ fontSize: 16, color: "red" }} />;
-      case "running":
-        return (
-          <div
-            style={{
-              width: 16,
-              height: 16,
-              border: "2px solid #ccc",
-              borderTop: "2px solid #007bff",
-              borderRadius: "50%",
-              animation: "spin 1s linear infinite",
-            }}
-          />
-        );
-      default:
-        return <div style={{ width: 16, height: 16, border: "2px solid #ccc", borderRadius: "50%" }} />;
     }
   };
 
   const getProgress = () => {
-    const completedSteps = executionSteps.filter((step) => step.status === "completed").length;
+    if (executionSteps.length === 0) return 0;
+    const completedSteps = executionSteps.filter(step => step.status === 'completed').length;
     return (completedSteps / executionSteps.length) * 100;
   };
 
-  const allStepsCompleted = executionSteps.every((step) => step.status === "completed");
-  const hasErrors = executionSteps.some((step) => step.status === "error");
+  const getStepIcon = (step: ExecutionStep) => {
+    switch (step.status) {
+      case 'completed':
+        return <CheckIcon style={{ fontSize: 16, color: 'green' }} />;
+      case 'error':
+        return <span style={{ fontSize: 16, color: 'red' }}>✕</span>;
+      case 'running':
+        return <div style={{ 
+          width: 16, 
+          height: 16, 
+          border: '2px solid #ccc', 
+          borderTop: '2px solid #007bff', 
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite' 
+        }} />;
+      default:
+        return <div style={{ 
+          width: 16, 
+          height: 16, 
+          border: '2px solid #ccc', 
+          borderRadius: '50%' 
+        }} />;
+    }
+  };
 
   return (
     <div>
@@ -128,10 +155,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
         {isExecuting && (
           <div>
             <Text size="sm" mb="xs">
-              {t("automate.sequence.progress", "Progress: {{current}}/{{total}}", {
-                current: currentStepIndex + 1,
-                total: executionSteps.length,
-              })}
+              Progress: {currentStepIndex + 1}/{executionSteps.length}
             </Text>
             <Progress value={getProgress()} size="lg" />
           </div>
@@ -148,11 +172,11 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
               {getStepIcon(step)}
 
               <div style={{ flex: 1 }}>
-                <Text
-                  size="sm"
+                <Text 
+                  size="sm" 
                   style={{
-                    color: step.status === "running" ? "var(--mantine-color-blue-6)" : "var(--mantine-color-text)",
-                    fontWeight: step.status === "running" ? 500 : 400,
+                    color: step.status === 'running' ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-text)',
+                    fontWeight: step.status === 'running' ? 500 : 400
                   }}
                 >
                   {step.name}
@@ -179,6 +203,12 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
               ? t("automate.sequence.running", "Running Automation...")
               : t("automate.sequence.run", "Run Automation")}
           </Button>
+
+          {hasResults && (
+            <Button variant="light" onClick={onComplete}>
+              {t("automate.sequence.finish", "Finish")}
+            </Button>
+          )}
         </Group>
       </Stack>
 

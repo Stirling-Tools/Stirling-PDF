@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { SplitParameters } from './useSplitParameters';
+import { SplitParameters, defaultParameters } from './useSplitParameters';
 import { SPLIT_MODES } from '../../../constants/splitConstants';
 
-
-const buildFormData = (parameters: SplitParameters, selectedFiles: File[]): FormData => {
+// Static functions that can be used by both the hook and automation executor
+export const buildSplitFormData = (parameters: SplitParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
 
   selectedFiles.forEach(file => {
@@ -40,7 +40,7 @@ const buildFormData = (parameters: SplitParameters, selectedFiles: File[]): Form
   return formData;
 };
 
-const getEndpoint = (parameters: SplitParameters): string => {
+export const getSplitEndpoint = (parameters: SplitParameters): string => {
   switch (parameters.mode) {
     case SPLIT_MODES.BY_PAGES:
       return "/api/v1/general/split-pages";
@@ -55,15 +55,21 @@ const getEndpoint = (parameters: SplitParameters): string => {
   }
 };
 
+// Static configuration object
+export const splitOperationConfig = {
+  operationType: 'splitPdf',
+  endpoint: getSplitEndpoint,
+  buildFormData: buildSplitFormData,
+  filePrefix: 'split_',
+  multiFileEndpoint: true, // Single API call with all files
+  defaultParameters,
+} as const;
+
 export const useSplitOperation = () => {
   const { t } = useTranslation();
 
   return useToolOperation<SplitParameters>({
-    operationType: 'split',
-    endpoint: (params) => getEndpoint(params),
-    buildFormData: buildFormData, // Multi-file signature: (params, selectedFiles) => FormData
-    filePrefix: 'split_',
-    multiFileEndpoint: true, // Single API call with all files
+    ...splitOperationConfig,
     getErrorMessage: createStandardErrorHandler(t('split.error.failed', 'An error occurred while splitting the PDF.'))
   });
 };

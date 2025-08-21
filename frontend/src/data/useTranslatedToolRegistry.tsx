@@ -14,6 +14,12 @@ import Repair from '../tools/Repair';
 import SingleLargePage from '../tools/SingleLargePage';
 import UnlockPdfForms from '../tools/UnlockPdfForms';
 import RemoveCertificateSign from '../tools/RemoveCertificateSign';
+import { compressOperationConfig } from '../hooks/tools/compress/useCompressOperation';
+import { splitOperationConfig } from '../hooks/tools/split/useSplitOperation';
+import { addPasswordOperationConfig } from '../hooks/tools/addPassword/useAddPasswordOperation';
+import CompressSettings from '../components/tools/compress/CompressSettings';
+import SplitSettings from '../components/tools/split/SplitSettings';
+import AddPasswordSettings from '../components/tools/addPassword/AddPasswordSettings';
 
 const showPlaceholderTools = false; // For development purposes. Allows seeing the full list of tools, even if they're unimplemented
 
@@ -56,7 +62,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
-        endpoints: ["add-password"]
+        endpoints: ["add-password"],
+        operationConfig: addPasswordOperationConfig,
+        settingsComponent: AddPasswordSettings
     },
     "watermark": {
         icon: <span className="material-symbols-rounded">branding_watermark</span>,
@@ -198,7 +206,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "split",
         description: t("home.split.desc", "Split PDFs into multiple documents"),
         category: ToolCategory.STANDARD_TOOLS,
-        subcategory: SubcategoryId.PAGE_FORMATTING
+        subcategory: SubcategoryId.PAGE_FORMATTING,
+        operationConfig: splitOperationConfig,
+        settingsComponent: SplitSettings
     },
     "reorganize-pages": {
         icon: <span className="material-symbols-rounded">move_down</span>,
@@ -534,7 +544,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.compress.desc", "Compress PDFs to reduce their file size."),
         category: ToolCategory.RECOMMENDED_TOOLS,
         subcategory: SubcategoryId.GENERAL,
-        maxFiles: -1
+        maxFiles: -1,
+        operationConfig: compressOperationConfig,
+        settingsComponent: CompressSettings
     },
     "convert": {
         icon: <span className="material-symbols-rounded">sync_alt</span>,

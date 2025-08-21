@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Modal, 
-  Title, 
-  Button, 
-  Group, 
+import {
+  Modal,
+  Title,
+  Button,
+  Group,
   Stack,
   Text,
-  Alert,
-  Loader
+  Alert
 } from '@mantine/core';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningIcon from '@mui/icons-material/Warning';
+import { ToolRegistry } from '../../../data/toolsTaxonomy';
 interface ToolConfigurationModalProps {
   opened: boolean;
   tool: {
@@ -24,136 +24,31 @@ interface ToolConfigurationModalProps {
   };
   onSave: (parameters: any) => void;
   onCancel: () => void;
+  toolRegistry: ToolRegistry;
 }
 
-export default function ToolConfigurationModal({ opened, tool, onSave, onCancel }: ToolConfigurationModalProps) {
+export default function ToolConfigurationModal({ opened, tool, onSave, onCancel, toolRegistry }: ToolConfigurationModalProps) {
   const { t } = useTranslation();
-  
+
   const [parameters, setParameters] = useState<any>({});
   const [isValid, setIsValid] = useState(true);
-  const [SettingsComponent, setSettingsComponent] = useState<React.ComponentType<any> | null>(null);
-  const [parameterHook, setParameterHook] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  // Dynamically load the settings component and parameter hook based on tool
-  useEffect(() => {
-    const loadToolComponents = async () => {
-      setLoading(true);
-      
-      try {
-        let settingsModule, parameterModule;
-        
-        switch (tool.operation) {
-          case 'compress':
-            [settingsModule, parameterModule] = await Promise.all([
-              import('../compress/CompressSettings'),
-              import('../../../hooks/tools/compress/useCompressParameters')
-            ]);
-            break;
-            
-          case 'split':
-            [settingsModule, parameterModule] = await Promise.all([
-              import('../split/SplitSettings'),
-              import('../../../hooks/tools/split/useSplitParameters')
-            ]);
-            break;
-            
-          case 'addPassword':
-            [settingsModule, parameterModule] = await Promise.all([
-              import('../addPassword/AddPasswordSettings'),
-              import('../../../hooks/tools/addPassword/useAddPasswordParameters')
-            ]);
-            break;
-            
-          case 'removePassword':
-            [settingsModule, parameterModule] = await Promise.all([
-              import('../removePassword/RemovePasswordSettings'),
-              import('../../../hooks/tools/removePassword/useRemovePasswordParameters')
-            ]);
-            break;
-            
-          case 'changePermissions':
-            [settingsModule, parameterModule] = await Promise.all([
-              import('../changePermissions/ChangePermissionsSettings'),
-              import('../../../hooks/tools/changePermissions/useChangePermissionsParameters')
-            ]);
-            break;
-            
-          case 'sanitize':
-            [settingsModule, parameterModule] = await Promise.all([
-              import('../sanitize/SanitizeSettings'),
-              import('../../../hooks/tools/sanitize/useSanitizeParameters')
-            ]);
-            break;
-            
-          case 'ocr':
-            [settingsModule, parameterModule] = await Promise.all([
-              import('../ocr/OCRSettings'),
-              import('../../../hooks/tools/ocr/useOCRParameters')
-            ]);
-            break;
-            
-          case 'convert':
-            [settingsModule, parameterModule] = await Promise.all([
-              import('../convert/ConvertSettings'),
-              import('../../../hooks/tools/convert/useConvertParameters')
-            ]);
-            break;
-            
-          default:
-            setSettingsComponent(null);
-            setParameterHook(null);
-            setLoading(false);
-            return;
-        }
-        
-        setSettingsComponent(() => settingsModule.default);
-        setParameterHook(() => parameterModule);
-      } catch (error) {
-        console.error(`Error loading components for ${tool.operation}:`, error);
-        setSettingsComponent(null);
-        setParameterHook(null);
-      }
-      
-      setLoading(false);
-    };
-    
-    if (opened && tool.operation) {
-      loadToolComponents();
-    }
-  }, [opened, tool.operation]);
+  // Get tool info from registry
+  const toolInfo = toolRegistry[tool.operation];
+  const SettingsComponent = toolInfo?.settingsComponent;
 
-  // Initialize parameters from tool or use defaults from hook
+  // Initialize parameters from tool (which should contain defaults from registry)
   useEffect(() => {
     if (tool.parameters) {
       setParameters(tool.parameters);
-    } else if (parameterHook) {
-      // If we have a parameter module, use its default parameters
-      try {
-        const defaultParams = parameterHook.defaultParameters || {};
-        setParameters(defaultParams);
-      } catch (error) {
-        console.warn(`Error getting default parameters for ${tool.operation}:`, error);
-        setParameters({});
-      }
     } else {
+      // Fallback to empty parameters if none provided
       setParameters({});
     }
-  }, [tool.parameters, parameterHook, tool.operation]);
+  }, [tool.parameters, tool.operation]);
 
   // Render the settings component
   const renderToolSettings = () => {
-    if (loading) {
-      return (
-        <Stack align="center" gap="md" py="xl">
-          <Loader size="md" />
-          <Text size="sm" c="dimmed">
-            {t('automate.config.loading', 'Loading tool configuration...')}
-          </Text>
-        </Stack>
-      );
-    }
-    
     if (!SettingsComponent) {
       return (
         <Alert icon={<WarningIcon />} color="orange">

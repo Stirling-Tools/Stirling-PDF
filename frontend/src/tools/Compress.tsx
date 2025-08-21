@@ -95,10 +95,5 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-// Static method to get the operation hook for automation
-Compress.tool = () => useCompressOperation;
-
-// Static method to get default parameters for automation
-Compress.getDefaultParameters = () => useCompressParameters();
 
 export default Compress as ToolComponent;

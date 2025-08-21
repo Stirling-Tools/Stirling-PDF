@@ -114,12 +114,4 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-// Static method to get the operation hook for automation
-AddPassword.tool = () => useAddPasswordOperation;
-
-// Static method to get default parameters for automation
-AddPassword.getDefaultParameters = () => {
-  return defaultParameters;
-};
-
 export default AddPassword as ToolComponent;

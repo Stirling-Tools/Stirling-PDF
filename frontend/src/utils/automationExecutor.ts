@@ -1,76 +1,31 @@
 import axios from 'axios';
-
-// Tool operation configurations extracted from the hook implementations
-const TOOL_CONFIGS: Record<string, any> = {
-  'compressPdfs': {
-    endpoint: '/api/v1/misc/compress-pdf',
-    multiFileEndpoint: false,
-    buildFormData: (parameters: any, file: File): FormData => {
-      const formData = new FormData();
-      formData.append("fileInput", file);
-
-      if (parameters.compressionMethod === 'quality') {
-        formData.append("optimizeLevel", parameters.compressionLevel?.toString() || '1');
-      } else {
-        const fileSize = parameters.fileSizeValue ? `${parameters.fileSizeValue}${parameters.fileSizeUnit}` : '';
-        if (fileSize) {
-          formData.append("expectedOutputSize", fileSize);
-        }
-      }
-
-      formData.append("grayscale", parameters.grayscale?.toString() || 'false');
-      return formData;
-    }
-  },
-
-  'split': {
-    endpoint: (parameters: any): string => {
-      // Simplified endpoint selection - you'd need the full logic from useSplitOperation
-      return "/api/v1/general/split-pages";
-    },
-    multiFileEndpoint: true,
-    buildFormData: (parameters: any, files: File[]): FormData => {
-      const formData = new FormData();
-      files.forEach(file => {
-        formData.append("fileInput", file);
-      });
-      
-      // Add split parameters - simplified version
-      if (parameters.pages) {
-        formData.append("pageNumbers", parameters.pages);
-      }
-      
-      return formData;
-    }
-  },
-
-  'addPassword': {
-    endpoint: '/api/v1/security/add-password',
-    multiFileEndpoint: false,
-    buildFormData: (parameters: any, file: File): FormData => {
-      const formData = new FormData();
-      formData.append("fileInput", file);
-      
-      if (parameters.password) {
-        formData.append("password", parameters.password);
-      }
-      
-      // Add other password parameters as needed
-      return formData;
-    }
-  }
-
-  // TODO: Add configurations for other tools
-};
+import { ToolRegistry } from '../data/toolsTaxonomy';
+import { zipFileService } from '../services/zipFileService';
 
 /**
  * Extract zip files from response blob
  */
 const extractZipFiles = async (blob: Blob): Promise<File[]> => {
-  // This would need the actual zip extraction logic from the codebase
-  // For now, create a single file from the blob
-  const file = new File([blob], `result_${Date.now()}.pdf`, { type: 'application/pdf' });
-  return [file];
+  try {
+    // Convert blob to File for the zip service
+    const zipFile = new File([blob], `response_${Date.now()}.zip`, { type: 'application/zip' });
+    
+    // Extract PDF files from the ZIP
+    const result = await zipFileService.extractPdfFiles(zipFile);
+    
+    if (!result.success || result.extractedFiles.length === 0) {
+      console.error('ZIP extraction failed:', result.errors);
+      throw new Error(`ZIP extraction failed: ${result.errors.join(', ')}`);
+    }
+    
+    console.log(`📦 Extracted ${result.extractedFiles.length} files from ZIP`);
+    return result.extractedFiles;
+  } catch (error) {
+    console.error('Failed to extract ZIP files:', error);
+    // Fallback: treat as single PDF file
+    const file = new File([blob], `result_${Date.now()}.pdf`, { type: 'application/pdf' });
+    return [file];
+  }
 };
 
 /**
@@ -79,11 +34,12 @@ const extractZipFiles = async (blob: Blob): Promise<File[]> => {
 export const executeToolOperation = async (
   operationName: string, 
   parameters: any, 
-  files: File[]
+  files: File[],
+  toolRegistry: ToolRegistry
 ): Promise<File[]> => {
   console.log(`🔧 Executing tool: ${operationName}`, { parameters, fileCount: files.length });
   
-  const config = TOOL_CONFIGS[operationName];
+  const config = toolRegistry[operationName]?.operationConfig;
   if (!config) {
     console.error(`❌ Tool operation not supported: ${operationName}`);
     throw new Error(`Tool operation not supported: ${operationName}`);
@@ -99,7 +55,7 @@ export const executeToolOperation = async (
         : config.endpoint;
       
       console.log(`🌐 Making multi-file request to: ${endpoint}`);
-      const formData = config.buildFormData(parameters, files);
+      const formData = (config.buildFormData as (params: any, files: File[]) => FormData)(parameters, files);
       console.log(`📤 FormData entries:`, Array.from(formData.entries()));
       
       const response = await axios.post(endpoint, formData, { 
@@ -126,7 +82,7 @@ export const executeToolOperation = async (
           : config.endpoint;
         
         console.log(`🌐 Making single-file request ${i+1}/${files.length} to: ${endpoint} for file: ${file.name}`);
-        const formData = config.buildFormData(parameters, file);
+        const formData = (config.buildFormData as (params: any, file: File) => FormData)(parameters, file);
         console.log(`📤 FormData entries:`, Array.from(formData.entries()));
         
         const response = await axios.post(endpoint, formData, { 
@@ -162,6 +118,7 @@ export const executeToolOperation = async (
 export const executeAutomationSequence = async (
   automation: any, 
   initialFiles: File[],
+  toolRegistry: ToolRegistry,
   onStepStart?: (stepIndex: number, operationName: string) => void,
   onStepComplete?: (stepIndex: number, resultFiles: File[]) => void,
   onStepError?: (stepIndex: number, error: string) => void
@@ -189,7 +146,8 @@ export const executeAutomationSequence = async (
       const resultFiles = await executeToolOperation(
         operation.operation, 
         operation.parameters || {}, 
-        currentFiles
+        currentFiles,
+        toolRegistry
       );
       
       console.log(`✅ Step ${i + 1} completed: ${resultFiles.length} result files`);
