@@ -88,6 +88,8 @@ export const useToolState = () => {
   }, []);
 
   const setThumbnails = useCallback((thumbnails: string[]) => {
+    console.log(`🔧 useToolState.setThumbnails: Setting ${thumbnails.length} thumbnails:`, 
+      thumbnails.map((t, i) => `[${i}]: ${t ? 'PRESENT' : 'MISSING'}`));
     dispatch({ type: 'SET_THUMBNAILS', payload: thumbnails });
   }, []);
 

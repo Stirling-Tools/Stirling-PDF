@@ -52,9 +52,9 @@ const FileListArea: React.FC<FileListAreaProps> = ({
           ) : (
             filteredFiles.map((file, index) => (
               <FileListItem
-                key={file.id || file.name}
+                key={file.id}
                 file={file}
-                isSelected={selectedFilesSet.has(file.id || file.name)}
+                isSelected={selectedFilesSet.has(file.id)}
                 isSupported={isFileSupported(file.name)}
                 onSelect={(shiftKey) => onFileSelect(file, index, shiftKey)}
                 onRemove={() => onFileRemove(index)}

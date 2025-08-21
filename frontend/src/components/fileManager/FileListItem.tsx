@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu } from '@mantine/core';
+import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
-import { FileWithUrl } from '../../types/file';
+import { FileMetadata } from '../../types/file';
 
 interface FileListItemProps {
-  file: FileWithUrl;
+  file: FileMetadata;
   isSelected: boolean;
   isSupported: boolean;
   onSelect: (shiftKey?: boolean) => void;
@@ -70,7 +70,14 @@ const FileListItem: React.FC<FileListItemProps> = ({
           </Box>
 
           <Box style={{ flex: 1, minWidth: 0 }}>
-            <Text size="sm" fw={500} truncate>{file.name}</Text>
+            <Group gap="xs" align="center">
+              <Text size="sm" fw={500} truncate style={{ flex: 1 }}>{file.name}</Text>
+              {file.isDraft && (
+                <Badge size="xs" variant="light" color="orange">
+                  DRAFT
+                </Badge>
+              )}
+            </Group>
             <Text size="xs" c="dimmed">{getFileSize(file)} • {getFileDate(file)}</Text>
           </Box>
 

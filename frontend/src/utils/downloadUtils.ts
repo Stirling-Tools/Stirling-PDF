@@ -1,4 +1,4 @@
-import { FileWithUrl } from '../types/file';
+import { FileMetadata } from '../types/file';
 import { fileStorage } from '../services/fileStorage';
 import { zipFileService } from '../services/zipFileService';
 
@@ -26,8 +26,8 @@ export function downloadBlob(blob: Blob, filename: string): void {
  * @param file - The file object with storage information
  * @throws Error if file cannot be retrieved from storage
  */
-export async function downloadFileFromStorage(file: FileWithUrl): Promise<void> {
-  const lookupKey = file.id || file.name;
+export async function downloadFileFromStorage(file: FileMetadata): Promise<void> {
+  const lookupKey = file.id;
   const storedFile = await fileStorage.getFile(lookupKey);
   
   if (!storedFile) {
@@ -42,7 +42,7 @@ export async function downloadFileFromStorage(file: FileWithUrl): Promise<void> 
  * Downloads multiple files as individual downloads
  * @param files - Array of files to download
  */
-export async function downloadMultipleFiles(files: FileWithUrl[]): Promise<void> {
+export async function downloadMultipleFiles(files: FileMetadata[]): Promise<void> {
   for (const file of files) {
     await downloadFileFromStorage(file);
   }
@@ -53,7 +53,7 @@ export async function downloadMultipleFiles(files: FileWithUrl[]): Promise<void>
  * @param files - Array of files to include in ZIP
  * @param zipFilename - Optional custom ZIP filename (defaults to timestamped name)
  */
-export async function downloadFilesAsZip(files: FileWithUrl[], zipFilename?: string): Promise<void> {
+export async function downloadFilesAsZip(files: FileMetadata[], zipFilename?: string): Promise<void> {
   if (files.length === 0) {
     throw new Error('No files provided for ZIP download');
   }
@@ -61,7 +61,7 @@ export async function downloadFilesAsZip(files: FileWithUrl[], zipFilename?: str
   // Convert stored files to File objects
   const fileObjects: File[] = [];
   for (const fileWithUrl of files) {
-    const lookupKey = fileWithUrl.id || fileWithUrl.name;
+    const lookupKey = fileWithUrl.id;
     const storedFile = await fileStorage.getFile(lookupKey);
     
     if (storedFile) {
@@ -94,7 +94,7 @@ export async function downloadFilesAsZip(files: FileWithUrl[], zipFilename?: str
  * @param options - Download options
  */
 export async function downloadFiles(
-  files: FileWithUrl[], 
+  files: FileMetadata[], 
   options: {
     forceZip?: boolean;
     zipFilename?: string;

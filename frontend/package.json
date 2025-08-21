@@ -5,6 +5,7 @@
   "license": "SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE",
   "proxy": "http://localhost:8080",
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^1.7.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mantine/core": "^8.0.1",
@@ -13,6 +14,7 @@
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
     "@tailwindcss/postcss": "^4.1.8",
+    "@tanstack/react-virtual": "^3.13.12",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",

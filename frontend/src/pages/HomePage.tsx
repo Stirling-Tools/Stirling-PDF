@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileContext } from "../contexts/FileContext";
-import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
+import { useFileActions, useFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 import { ToolWorkflowProvider, useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
@@ -22,7 +22,7 @@ function HomePageContent() {
 
   const { quickAccessRef } = sidebarRefs;
 
-  const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
+  const { setSelectedFiles } = useFileSelection();
 
   const { selectedTool, selectedToolKey } = useToolWorkflow();
 
@@ -38,17 +38,7 @@ function HomePageContent() {
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
   });
 
-  // Update file selection context when tool changes
-  useEffect(() => {
-    if (selectedTool) {
-      setMaxFiles(selectedTool.maxFiles ?? -1);
-      setIsToolMode(true);
-    } else {
-      setMaxFiles(-1);
-      setIsToolMode(false);
-      setSelectedFiles([]);
-    }
-  }, [selectedTool, setMaxFiles, setIsToolMode, setSelectedFiles]);
+  // Note: File selection limits are now handled directly by individual tools
 
   return (
     <Group
@@ -65,15 +55,23 @@ function HomePageContent() {
   );
 }
 
-export default function HomePage() {
-  const { setCurrentView } = useFileContext();
+function HomePageWithProviders() {
+  const { actions } = useNavigationActions();
+  
+  // Wrapper to convert string to ModeType
+  const handleViewChange = (view: string) => {
+    actions.setMode(view as any); // ToolWorkflowContext should validate this
+  };
+  
   return (
-    <FileSelectionProvider>
-      <ToolWorkflowProvider onViewChange={setCurrentView as any /* FIX ME */}>
-        <SidebarProvider>
-          <HomePageContent />
-        </SidebarProvider>
-      </ToolWorkflowProvider>
-    </FileSelectionProvider>
+    <ToolWorkflowProvider onViewChange={handleViewChange}>
+      <SidebarProvider>
+        <HomePageContent />
+      </SidebarProvider>
+    </ToolWorkflowProvider>
   );
+}
+
+export default function HomePage() {
+  return <HomePageWithProviders />;
 }
