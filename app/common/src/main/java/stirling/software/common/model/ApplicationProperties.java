@@ -589,7 +589,7 @@ public class ApplicationProperties {
 
                 @Data
                 public static class Imports {
-                    private boolean successful = true;
+                    private boolean successful = false;
                     private boolean failed = false;
                 }
             }
