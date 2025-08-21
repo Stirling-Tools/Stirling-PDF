@@ -41,6 +41,7 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
@@ -55,6 +56,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.PdfUtils;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class RedactionService {
 
@@ -1383,18 +1385,32 @@ public class RedactionService {
 
     private float safeGetStringWidth(PDFont font, String text) {
         if (font == null || text == null || text.isEmpty()) {
-            return 0;
+            return 0f;
         }
-        if (!WidthCalculator.isWidthCalculationReliable(font)) {
-            return calculateConservativeWidth(font, text);
-        }
-        if (!TextEncodingHelper.canEncodeCharacters(font, text)) {
-            return calculateCharacterBasedWidth(font, text);
-        }
+
         try {
+            if (!WidthCalculator.isWidthCalculationReliable(font)) {
+                log.debug("Font width calculation not reliable, using conservative approach");
+                return calculateConservativeWidth(font, text);
+            }
+
+            if (!TextEncodingHelper.canEncodeCharacters(font, text)) {
+                log.debug("Font cannot encode characters, using character-based calculation");
+                return calculateCharacterBasedWidth(font, text);
+            }
+
             return font.getStringWidth(text);
+
         } catch (Exception e) {
-            return calculateFallbackWidth(font, text);
+            log.debug("Standard width calculation failed, trying fallback: {}", e.getMessage());
+            try {
+                return calculateFallbackWidth(font, text);
+            } catch (Exception e2) {
+                log.debug(
+                        "Fallback width calculation failed, using conservative: {}",
+                        e2.getMessage());
+                return calculateConservativeWidth(font, text);
+            }
         }
     }
 
@@ -1488,111 +1504,250 @@ public class RedactionService {
 
     private COSArray createRedactedTJArray(
             COSArray originalArray, TextSegment segment, List<MatchRange> matches) {
+
+        if (originalArray == null || segment == null || matches == null) {
+            log.warn("Invalid input parameters for redaction");
+            return originalArray != null ? originalArray : new COSArray();
+        }
+
+        // Validate critical inputs
+        if (matches.isEmpty()) {
+            return originalArray;
+        }
+
+        if (segment.getStartPos() < 0) {
+            log.warn("Invalid segment start position: {}", segment.getStartPos());
+            return originalArray;
+        }
+
+        log.debug(
+                "Processing redaction: segment={}, matches={}, aggressive={}",
+                segment,
+                matches.size(),
+                AGGRESSIVE_MODE.get());
+
         try {
             COSArray newArray = new COSArray();
             int textOffsetInSegment = 0;
+
             for (COSBase element : originalArray) {
                 if (element instanceof COSString cosString) {
-                    String originalText = cosString.getString();
-                    if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
-                            && segment.getFont() != null
-                            && !TextEncodingHelper.isTextSegmentRemovable(
-                                    segment.getFont(), originalText)) {
+                    try {
+                        processStringElement(
+                                cosString, segment, matches, newArray, textOffsetInSegment);
+                        textOffsetInSegment += getActualStringLength(cosString, segment.getFont());
+                    } catch (Exception e) {
+                        log.error("Failed to process string element: {}", e.getMessage(), e);
                         newArray.add(element);
-                        textOffsetInSegment += originalText.length();
-                        continue;
+                        textOffsetInSegment += getActualStringLength(cosString, segment.getFont());
                     }
-
-                    StringBuilder newText = new StringBuilder(originalText);
-                    boolean modified = false;
-                    for (MatchRange match : matches) {
-                        int stringStartInPage = segment.getStartPos() + textOffsetInSegment;
-                        int stringEndInPage = stringStartInPage + originalText.length();
-                        int overlapStart = Math.max(match.getStartPos(), stringStartInPage);
-                        int overlapEnd = Math.min(match.getEndPos(), stringEndInPage);
-                        if (overlapStart < overlapEnd) {
-                            int redactionStartInString = overlapStart - stringStartInPage;
-                            int redactionEndInString = overlapEnd - stringStartInPage;
-                            if (redactionStartInString >= 0
-                                    && redactionEndInString <= originalText.length()) {
-                                String originalPart =
-                                        originalText.substring(
-                                                redactionStartInString, redactionEndInString);
-                                if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
-                                        && segment.getFont() != null
-                                        && !TextEncodingHelper.isTextSegmentRemovable(
-                                                segment.getFont(), originalPart)) {
-                                    continue;
-                                }
-
-                                modified = true;
-                                if (Boolean.TRUE.equals(AGGRESSIVE_MODE.get())) {
-                                    newText.replace(
-                                            redactionStartInString, redactionEndInString, "");
-                                } else {
-                                    float originalWidth = 0;
-                                    if (segment.getFont() != null && segment.getFontSize() > 0) {
-                                        try {
-                                            originalWidth =
-                                                    safeGetStringWidth(
-                                                                    segment.getFont(), originalPart)
-                                                            / FONT_SCALE_FACTOR
-                                                            * segment.getFontSize();
-                                        } catch (Exception ignored) {
-                                        }
-                                    }
-                                    String placeholder =
-                                            (originalWidth > 0)
-                                                    ? createPlaceholderWithWidth(
-                                                            originalPart,
-                                                            originalWidth,
-                                                            segment.getFont(),
-                                                            segment.getFontSize())
-                                                    : createPlaceholderWithFont(
-                                                            originalPart, segment.getFont());
-                                    newText.replace(
-                                            redactionStartInString,
-                                            redactionEndInString,
-                                            placeholder);
-                                }
-                            }
-                        }
-                    }
-                    String modifiedString = newText.toString();
-                    newArray.add(new COSString(modifiedString));
-                    if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
-                            && modified
-                            && segment.getFont() != null
-                            && segment.getFontSize() > 0) {
-                        try {
-                            float originalWidth =
-                                    safeGetStringWidth(segment.getFont(), originalText)
-                                            / FONT_SCALE_FACTOR
-                                            * segment.getFontSize();
-                            float modifiedWidth =
-                                    safeGetStringWidth(segment.getFont(), modifiedString)
-                                            / FONT_SCALE_FACTOR
-                                            * segment.getFontSize();
-                            float adjustment = originalWidth - modifiedWidth;
-                            if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
-                                float kerning =
-                                        (-adjustment / segment.getFontSize())
-                                                * FONT_SCALE_FACTOR
-                                                * 1.10f;
-                                newArray.add(new COSFloat(kerning));
-                            }
-                        } catch (Exception ignored) {
-                        }
-                    }
-
-                    textOffsetInSegment += originalText.length();
                 } else {
                     newArray.add(element);
                 }
             }
             return newArray;
+
         } catch (Exception e) {
+            log.error("Critical failure in redaction process: {}", e.getMessage(), e);
             return originalArray;
+        }
+    }
+
+    private int getActualStringLength(COSString cosString, PDFont font) {
+        try {
+            if (font == null) {
+                return cosString.getString().length();
+            }
+
+            String decodedText = TextDecodingHelper.tryDecodeWithFont(font, cosString);
+            if (decodedText != null) {
+                return decodedText.length();
+            }
+
+            return cosString.getString().length();
+
+        } catch (Exception e) {
+            log.debug("Failed to get actual string length, using basic length: {}", e.getMessage());
+            return cosString.getString().length();
+        }
+    }
+
+    private void processStringElement(
+            COSString cosString,
+            TextSegment segment,
+            List<MatchRange> matches,
+            COSArray newArray,
+            int textOffsetInSegment)
+            throws Exception {
+
+        String originalText = getDecodedString(cosString, segment.getFont());
+
+        if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
+                && segment.getFont() != null
+                && !TextEncodingHelper.isTextSegmentRemovable(segment.getFont(), originalText)) {
+            newArray.add(cosString); // Keep original COSString to preserve encoding
+            return;
+        }
+
+        StringBuilder newText = new StringBuilder(originalText);
+        boolean modified = false;
+
+        // Sort matches by start position to process them in order
+        List<MatchRange> sortedMatches =
+                matches.stream()
+                        .sorted(Comparator.comparingInt(MatchRange::getStartPos))
+                        .collect(Collectors.toList());
+
+        int cumulativeOffset = 0; // Track cumulative text changes
+
+        for (MatchRange match : sortedMatches) {
+            int stringStartInPage = segment.getStartPos() + textOffsetInSegment;
+            int stringEndInPage = stringStartInPage + originalText.length();
+            int overlapStart = Math.max(match.getStartPos(), stringStartInPage);
+            int overlapEnd = Math.min(match.getEndPos(), stringEndInPage);
+
+            if (overlapStart < overlapEnd) {
+                int redactionStartInString =
+                        Math.max(0, overlapStart - stringStartInPage - cumulativeOffset);
+                int redactionEndInString =
+                        Math.min(
+                                newText.length(),
+                                overlapEnd - stringStartInPage - cumulativeOffset);
+
+                if (redactionStartInString >= 0
+                        && redactionEndInString <= newText.length()
+                        && redactionStartInString < redactionEndInString) {
+
+                    String originalPart =
+                            originalText.substring(
+                                    overlapStart - stringStartInPage,
+                                    overlapEnd - stringStartInPage);
+
+                    if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())
+                            && segment.getFont() != null
+                            && !TextEncodingHelper.isTextSegmentRemovable(
+                                    segment.getFont(), originalPart)) {
+                        continue;
+                    }
+
+                    modified = true;
+                    String replacement = "";
+
+                    if (!Boolean.TRUE.equals(AGGRESSIVE_MODE.get())) {
+                        replacement = createSafeReplacement(originalPart, segment);
+                    }
+
+                    newText.replace(redactionStartInString, redactionEndInString, replacement);
+                    cumulativeOffset +=
+                            (redactionEndInString - redactionStartInString) - replacement.length();
+                }
+            }
+        }
+
+        String modifiedString = newText.toString();
+        COSString newCosString = createCompatibleCOSString(modifiedString, cosString);
+        newArray.add(newCosString);
+
+        if (modified && !Boolean.TRUE.equals(AGGRESSIVE_MODE.get())) {
+            addSpacingAdjustment(newArray, segment, originalText, modifiedString);
+        }
+    }
+
+    private String getDecodedString(COSString cosString, PDFont font) {
+        try {
+            String decoded = TextDecodingHelper.tryDecodeWithFont(font, cosString);
+            if (decoded != null && !decoded.trim().isEmpty()) {
+                return decoded;
+            }
+
+            return cosString.getString();
+
+        } catch (Exception e) {
+            log.debug("Failed to decode string, using raw string: {}", e.getMessage());
+            return cosString.getString();
+        }
+    }
+
+    private String createSafeReplacement(String originalPart, TextSegment segment) {
+        try {
+            if (segment.getFont() != null && segment.getFontSize() > 0) {
+                float originalWidth =
+                        calculateSafeWidth(originalPart, segment.getFont(), segment.getFontSize());
+
+                if (originalWidth > 0) {
+                    return createPlaceholderWithWidth(
+                            originalPart, originalWidth, segment.getFont(), segment.getFontSize());
+                }
+            }
+
+            return createPlaceholderWithFont(originalPart, segment.getFont());
+
+        } catch (Exception e) {
+            log.debug("Failed to create replacement, using simple placeholder: {}", e.getMessage());
+            return " ".repeat(Math.max(1, originalPart.length()));
+        }
+    }
+
+    private float calculateSafeWidth(String text, PDFont font, float fontSize) {
+        try {
+            if (font != null && fontSize > 0) {
+                float width = safeGetStringWidth(font, text);
+                return (width / FONT_SCALE_FACTOR) * fontSize;
+            }
+        } catch (Exception e) {
+            log.debug("Width calculation failed: {}", e.getMessage());
+        }
+        return 0f;
+    }
+
+    private COSString createCompatibleCOSString(String text, COSString original) {
+        try {
+            COSString newString = new COSString(text);
+
+            if (original.getBytes().length != original.getString().length()) {
+                try {
+                    byte[] originalBytes = original.getBytes();
+                    if (originalBytes.length > 0) {
+                        newString =
+                                new COSString(
+                                        text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                } catch (Exception e) {
+                    log.debug("Failed to preserve encoding: {}", e.getMessage());
+                }
+            }
+
+            return newString;
+
+        } catch (Exception e) {
+            log.debug("Failed to create compatible COSString: {}", e.getMessage());
+            return new COSString(text);
+        }
+    }
+
+    private void addSpacingAdjustment(
+            COSArray newArray, TextSegment segment, String originalText, String modifiedText) {
+        try {
+            if (segment.getFont() == null || segment.getFontSize() <= 0) {
+                return;
+            }
+
+            float originalWidth =
+                    calculateSafeWidth(originalText, segment.getFont(), segment.getFontSize());
+            float modifiedWidth =
+                    calculateSafeWidth(modifiedText, segment.getFont(), segment.getFontSize());
+            float adjustment = originalWidth - modifiedWidth;
+
+            if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
+                float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR * 1.10f;
+
+                if (Math.abs(kerning) < 1000) { // Reasonable threshold
+                    newArray.add(new COSFloat(kerning));
+                }
+            }
+
+        } catch (Exception e) {
+            log.debug("Failed to add spacing adjustment: {}", e.getMessage());
         }
     }
 
