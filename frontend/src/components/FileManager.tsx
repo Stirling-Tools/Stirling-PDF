@@ -43,7 +43,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
 
   const handleFilesSelected = useCallback(async (files: FileMetadata[]) => {
     try {
-      // NEW: Use stored files flow that preserves original IDs
+      // Use stored files flow that preserves original IDs
       const filesWithMetadata = await Promise.all(
         files.map(async (metadata) => ({
           file: await convertToFile(metadata),

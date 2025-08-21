@@ -16,7 +16,7 @@ export const useFileHandler = () => {
     await actions.addFiles(files);
   }, [actions.addFiles]);
 
-  // NEW: Add stored files preserving their original IDs to prevent session duplicates
+  // Add stored files preserving their original IDs to prevent session duplicates
   const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: string; metadata: FileMetadata }>) => {
     // Filter out files that already exist with the same ID (exact match)
     const newFiles = filesWithMetadata.filter(({ originalId }) => {

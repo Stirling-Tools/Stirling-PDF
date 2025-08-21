@@ -7,6 +7,7 @@ import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useToolFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
+import { useNavigationActions } from '../../contexts/NavigationContext';
 import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
@@ -55,28 +56,20 @@ const FileEditor = ({
   
   // Get the real context actions
   const { actions } = useFileActions();
+  const { actions: navActions } = useNavigationActions();
   
-  // Create a stable ref to access current selected files and actions without dependency
-  const selectedFileIdsRef = useRef<string[]>([]);
-  const actionsRef = useRef(actions);
-  selectedFileIdsRef.current = selectedFileIds;
-  actionsRef.current = actions;
-  
-  // Wrapper for context file selection updates (stable)
+  // Proper context-based file selection updater
   const setContextSelectedFiles = useCallback((fileIds: string[] | ((prev: string[]) => string[])) => {
     if (typeof fileIds === 'function') {
-      // Handle callback pattern - get current state from ref
-      const result = fileIds(selectedFileIdsRef.current);
-      actionsRef.current.setSelectedFiles(result);
+      // Handle callback pattern with current state
+      const result = fileIds(selectedFileIds);
+      actions.setSelectedFiles(result);
     } else {
       // Handle direct array pattern
-      actionsRef.current.setSelectedFiles(fileIds);
+      actions.setSelectedFiles(fileIds);
     }
-  }, []); // No dependencies at all - completely stable
+  }, [selectedFileIds, actions.setSelectedFiles]);
   
-  const setCurrentView = (mode: any) => {
-    // Will be handled by parent component actions
-  };
 
   // Get tool file selection context (replaces FileSelectionContext)
   const { 
@@ -286,8 +279,9 @@ const FileEditor = ({
   const closeAllFiles = useCallback(() => {
     if (activeFileRecords.length === 0) return;
 
-    
     // Remove all files from context but keep in storage
+    const allFileIds = activeFileRecords.map(record => record.id);
+    removeFiles(allFileIds, false); // false = keep in storage
     
     // Clear selections
     setContextSelectedFiles([]);
@@ -440,9 +434,9 @@ const FileEditor = ({
     if (record) {
       // Set the file as selected in context and switch to viewer for preview
       setContextSelectedFiles([fileId]);
-      setCurrentView('viewer');
+      navActions.setMode('viewer');
     }
-  }, [activeFileRecords, setContextSelectedFiles, setCurrentView]);
+  }, [activeFileRecords, setContextSelectedFiles, navActions.setMode]);
 
   const handleMergeFromHere = useCallback((fileId: string) => {
     const startIndex = activeFileRecords.findIndex(r => r.id === fileId);
@@ -495,10 +489,14 @@ const FileEditor = ({
 
         <Box p="md" pt="xl">
           <Group mb="md">
-            {showBulkActions && !toolMode && (
+            {toolMode && (
               <>
                 <Button onClick={selectAll} variant="light">Select All</Button>
                 <Button onClick={deselectAll} variant="light">Deselect All</Button>
+              </>
+            )}
+            {showBulkActions && !toolMode && (
+              <>
                 <Button onClick={closeAllFiles} variant="light" color="orange">
                   Close All
                 </Button>
