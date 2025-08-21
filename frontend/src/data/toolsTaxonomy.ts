@@ -1,6 +1,7 @@
 import { type TFunction } from 'i18next';
 import React from 'react';
 import { ToolOperationHook } from '../hooks/tools/shared/useToolOperation';
+import { BaseToolProps } from '../types/tool';
 
 export enum SubcategoryId {
 	SIGNING = 'signing',
@@ -25,7 +26,7 @@ export enum ToolCategory {
 export type ToolRegistryEntry = {
 	icon: React.ReactNode;
 	name: string;
-	component: React.ComponentType<any> | null;
+	component: React.ComponentType<BaseToolProps> | null;
 	view: 'sign' | 'security' | 'format' | 'extract' | 'view' | 'merge' | 'pageEditor' | 'convert' | 'redact' | 'split' | 'convert' | 'remove' | 'compress' | 'external';
 	description: string;
 	category: ToolCategory;
