@@ -57,11 +57,14 @@ export default function AutomationRun({ automation, onBack, onComplete, automate
       });
       setExecutionSteps(steps);
     }
-    // Initialize current files with active files
-    if (activeFiles) {
+  }, [automation]); // Remove toolRegistry from dependencies to prevent infinite loops
+
+  // Initialize current files with active files (separate effect)
+  React.useEffect(() => {
+    if (activeFiles && activeFiles.length > 0) {
       setCurrentFiles([...activeFiles]);
     }
-  }, [automation, toolRegistry, activeFiles]);
+  }, [activeFiles?.length]); // Only depend on length to avoid infinite loops
 
   const executeAutomation = async () => {
     if (!activeFiles || activeFiles.length === 0) {
