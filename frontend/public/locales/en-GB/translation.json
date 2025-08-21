@@ -366,14 +366,6 @@
       "title": "Convert",
       "desc": "Convert files between different formats"
     },
-    "imageToPDF": {
-      "title": "Image to PDF",
-      "desc": "Convert a image (PNG, JPEG, GIF) to PDF."
-    },
-    "pdfToImage": {
-      "title": "PDF to Image",
-      "desc": "Convert a PDF to a image. (PNG, JPEG, GIF)"
-    },
     "pdfOrganiser": {
       "title": "Organise",
       "desc": "Remove/Rearrange pages in any order"
@@ -389,14 +381,6 @@
     "watermark": {
       "title": "Add Watermark",
       "desc": "Add a custom watermark to your PDF document."
-    },
-    "permissions": {
-      "title": "Change Permissions",
-      "desc": "Change the permissions of your PDF document"
-    },
-    "pageRemover": {
-      "title": "Remove",
-      "desc": "Delete unwanted pages from your PDF document."
     },
     "removePassword": {
       "title": "Remove Password",
@@ -414,10 +398,6 @@
       "title": "Change Metadata",
       "desc": "Change/Remove/Add metadata from a PDF document"
     },
-    "fileToPDF": {
-      "title": "Convert file to PDF",
-      "desc": "Convert nearly any file to PDF (DOCX, PNG, XLS, PPT, TXT and more)"
-    },
     "ocr": {
       "title": "OCR / Cleanup scans",
       "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
@@ -425,30 +405,6 @@
     "extractImages": {
       "title": "Extract Images",
       "desc": "Extracts all images from a PDF and saves them to zip"
-    },
-    "pdfToPDFA": {
-      "title": "PDF to PDF/A",
-      "desc": "Convert PDF to PDF/A for long-term storage"
-    },
-    "PDFToWord": {
-      "title": "PDF to Word",
-      "desc": "Convert PDF to Word formats (DOC, DOCX and ODT)"
-    },
-    "PDFToPresentation": {
-      "title": "PDF to Presentation",
-      "desc": "Convert PDF to Presentation formats (PPT, PPTX and ODP)"
-    },
-    "PDFToText": {
-      "title": "PDF to RTF (Text)",
-      "desc": "Convert PDF to Text or RTF format"
-    },
-    "PDFToHTML": {
-      "title": "PDF to HTML",
-      "desc": "Convert PDF to HTML format"
-    },
-    "PDFToXML": {
-      "title": "PDF to XML",
-      "desc": "Convert PDF to XML format"
     },
     "ScannerImageSplit": {
       "title": "Detect/Split Scanned photos",
@@ -518,33 +474,13 @@
       "title": "Auto Split Pages",
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
-    "sanitizePdf": {
+    "sanitize": {
       "title": "Sanitise",
-      "desc": "Remove scripts and other elements from PDF files"
-    },
-    "URLToPDF": {
-      "title": "URL/Website To PDF",
-      "desc": "Converts any http(s)URL to PDF"
-    },
-    "HTMLToPDF": {
-      "title": "HTML to PDF",
-      "desc": "Converts any HTML file or zip to PDF"
-    },
-    "MarkdownToPDF": {
-      "title": "Markdown to PDF",
-      "desc": "Converts any Markdown file to PDF"
-    },
-    "PDFToMarkdown": {
-      "title": "PDF to Markdown",
-      "desc": "Converts any PDF to Markdown"
+      "desc": "Remove potentially harmful elements from PDF files"
     },
     "getPdfInfo": {
       "title": "Get ALL Info on PDF",
       "desc": "Grabs any and all information possible on PDFs"
-    },
-    "pageExtracter": {
-      "title": "Extract page(s)",
-      "desc": "Extracts select pages from PDF"
     },
     "pdfToSinglePage": {
       "title": "PDF to Single Large Page",
@@ -561,14 +497,6 @@
     "redact": {
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
-    },
-    "PDFToCSV": {
-      "title": "PDF to CSV",
-      "desc": "Extracts Tables from a PDF converting it to CSV"
-    },
-    "split-by-size-or-count": {
-      "title": "Auto Split by Size/Count",
-      "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
     },
     "overlay-pdfs": {
       "title": "Overlay PDFs",
@@ -626,7 +554,7 @@
       "title": "Reorganize Pages",
       "desc": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
     },
-    "extractPage": {
+    "extractPages": {
       "title": "Extract Pages",
       "desc": "Extract specific pages from a PDF document"
     },
@@ -666,29 +594,13 @@
       "title": "Air-gapped Setup",
       "desc": "Link to air-gapped setup guide"
     },
-    "compressPdfs": {
-      "title": "Compress",
-      "desc": "Compress PDFs to reduce their file size."
-    },
     "addPassword": {
       "title": "Add Password",
       "desc": "Add password protection and restrictions to PDF files"
     },
-    "add-watermark": {
-      "title": "Add Watermark",
-      "desc": "Add a custom watermark to your PDF document."
-    },
-    "sanitize": {
-      "title": "Sanitise",
-      "desc": "Remove potentially harmful elements from PDF files"
-    },
     "changePermissions": {
       "title": "Change Permissions",
       "desc": "Change document restrictions and permissions"
-    },
-    "add-page-numbers": {
-      "title": "Add Page Numbers",
-      "desc": "Add Page numbers throughout a document in a set location"
     }
   },
   "viewPdf": {

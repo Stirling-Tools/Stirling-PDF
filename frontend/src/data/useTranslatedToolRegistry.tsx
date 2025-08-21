@@ -57,7 +57,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["add-password"]
     },
-    "add-watermark": {
+    "watermark": {
         icon: <span className="material-symbols-rounded">branding_watermark</span>,
         name: t("home.watermark.title", "Add Watermark"),
         component: AddWatermark,
@@ -217,12 +217,12 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.PAGE_FORMATTING
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
         icon: <span className="material-symbols-rounded">123</span>,
-        name: t("home.add-page-numbers.title", "Add Page Numbers"),
+        name: t("home.addPageNumbers.title", "Add Page Numbers"),
         component: null,
         view: "format",
-        description: t("home.add-page-numbers.desc", "Add Page numbers throughout a document in a set location"),
+        description: t("home.addPageNumbers.desc", "Add Page numbers throughout a document in a set location"),
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.PAGE_FORMATTING
     },
@@ -259,12 +259,12 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Extraction
 
-    "extract-pages": {
+    "extractPages": {
         icon: <span className="material-symbols-rounded">upload</span>,
-        name: t("home.extractPage.title", "Extract Pages"),
+        name: t("home.extractPages.title", "Extract Pages"),
         component: null,
         view: "extract",
-        description: t("home.extractPage.desc", "Extract specific pages from a PDF document"),
+        description: t("home.extractPages.desc", "Extract specific pages from a PDF document"),
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.EXTRACTION
     },
@@ -281,7 +281,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Removal
 
-    "remove": {
+    "removePages": {
         icon: <span className="material-symbols-rounded">delete</span>,
         name: t("home.removePages.title", "Remove Pages"),
         component: null,
@@ -384,12 +384,12 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Advanced Formatting
 
-    "adjust-colors-contrast": {
+    "adjustContrast": {
         icon: <span className="material-symbols-rounded">palette</span>,
-        name: t("home.adjust-contrast.title", "Adjust Colors/Contrast"),
+        name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
         component: null,
         view: "format",
-        description: t("home.adjust-contrast.desc", "Adjust colors and contrast of PDF documents"),
+        description: t("home.adjustContrast.desc", "Adjust colors and contrast of PDF documents"),
         category: ToolCategory.ADVANCED_TOOLS,
         subcategory: SubcategoryId.ADVANCED_FORMATTING
     },
@@ -523,22 +523,22 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.RECOMMENDED_TOOLS,
         subcategory: SubcategoryId.GENERAL
     },
-    "compressPdfs": {
+    "compress": {
         icon: <span className="material-symbols-rounded">zoom_in_map</span>,
-        name: t("home.compressPdfs.title", "Compress"),
+        name: t("home.compress.title", "Compress"),
         component: CompressPdfPanel,
         view: "compress",
-        description: t("home.compressPdfs.desc", "Compress PDFs to reduce their file size."),
+        description: t("home.compress.desc", "Compress PDFs to reduce their file size."),
         category: ToolCategory.RECOMMENDED_TOOLS,
         subcategory: SubcategoryId.GENERAL,
         maxFiles: -1
     },
     "convert": {
         icon: <span className="material-symbols-rounded">sync_alt</span>,
-        name: t("home.fileToPDF.title", "Convert"),
+        name: t("home.convert.title", "Convert"),
         component: ConvertPanel,
         view: "convert",
-        description: t("home.fileToPDF.desc", "Convert files to and from PDF format"),
+        description: t("home.convert.desc", "Convert files to and from PDF format"),
         category: ToolCategory.RECOMMENDED_TOOLS,
         subcategory: SubcategoryId.GENERAL,
         maxFiles: -1,
