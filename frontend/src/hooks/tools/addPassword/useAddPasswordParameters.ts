@@ -1,7 +1,8 @@
-import { useState } from 'react';
 import { ChangePermissionsParameters, ChangePermissionsParametersHook, useChangePermissionsParameters } from '../changePermissions/useChangePermissionsParameters';
+import { BaseParameters } from '../../../types/parameters';
+import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface AddPasswordParameters {
+export interface AddPasswordParameters extends BaseParameters {
   password: string;
   ownerPassword: string;
   keyLength: number;
@@ -11,14 +12,9 @@ export interface AddPasswordFullParameters extends AddPasswordParameters {
   permissions: ChangePermissionsParameters;
 }
 
-export interface AddPasswordParametersHook {
+export interface AddPasswordParametersHook extends BaseParametersHook<AddPasswordParameters> {
   fullParameters: AddPasswordFullParameters;
-  parameters: AddPasswordParameters;
   permissions: ChangePermissionsParametersHook;
-  updateParameter: <K extends keyof AddPasswordParameters>(parameter: K, value: AddPasswordParameters[K]) => void;
-  resetParameters: () => void;
-  validateParameters: () => boolean;
-  getEndpointName: () => string;
 }
 
 export const defaultParameters: AddPasswordParameters = {
@@ -28,42 +24,31 @@ export const defaultParameters: AddPasswordParameters = {
 };
 
 export const useAddPasswordParameters = (): AddPasswordParametersHook => {
-  const [parameters, setParameters] = useState<AddPasswordParameters>(defaultParameters);
   const permissions = useChangePermissionsParameters();
+
+  const baseHook = useBaseParameters({
+    defaultParameters,
+    endpointName: 'add-password',
+    validateFn: () => {
+      // No required parameters for Add Password. Defer to permissions validation.
+      return permissions.validateParameters();
+    },
+  });
+
   const fullParameters: AddPasswordFullParameters = {
-    ...parameters,
+    ...baseHook.parameters,
     permissions: permissions.parameters,
   };
 
-  const updateParameter = <K extends keyof AddPasswordParameters>(parameter: K, value: AddPasswordParameters[K]) => {
-    setParameters(prev => ({
-       ...prev,
-       [parameter]: value,
-      })
-    );
-  };
-
   const resetParameters = () => {
-    setParameters(defaultParameters);
+    baseHook.resetParameters();
     permissions.resetParameters();
   };
 
-  const validateParameters = () => {
-    // No required parameters for Add Password. Defer to permissions validation.
-    return permissions.validateParameters();
-  };
-
-  const getEndpointName = () => {
-    return 'add-password';
-  };
-
   return {
+    ...baseHook,
     fullParameters,
-    parameters,
     permissions,
-    updateParameter,
     resetParameters,
-    validateParameters,
-    getEndpointName,
   };
 };
