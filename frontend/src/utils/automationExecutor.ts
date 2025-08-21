@@ -48,6 +48,14 @@ export const executeToolOperation = async (
   console.log(`📋 Using config:`, config);
 
   try {
+    // Check if tool uses custom processor (like Convert tool)
+    if (config.customProcessor) {
+      console.log(`🎯 Using custom processor for ${config.operationType}`);
+      const resultFiles = await config.customProcessor(parameters, files);
+      console.log(`✅ Custom processor returned ${resultFiles.length} files`);
+      return resultFiles;
+    }
+
     if (config.multiFileEndpoint) {
       // Multi-file processing - single API call with all files
       const endpoint = typeof config.endpoint === 'function' 

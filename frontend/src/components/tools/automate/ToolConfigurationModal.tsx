@@ -14,6 +14,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningIcon from '@mui/icons-material/Warning';
 import { ToolRegistry } from '../../../data/toolsTaxonomy';
+import { getAvailableToExtensions } from '../../../utils/convertUtils';
 interface ToolConfigurationModalProps {
   opened: boolean;
   tool: {
@@ -56,6 +57,21 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
             {t('automate.config.noSettings', 'This tool does not have configurable settings.')}
           </Text>
         </Alert>
+      );
+    }
+
+    // Special handling for ConvertSettings which needs additional props
+    if (tool.operation === 'convert') {
+      return (
+        <SettingsComponent
+          parameters={parameters}
+          onParameterChange={(key: string, value: any) => {
+            setParameters((prev: any) => ({ ...prev, [key]: value }));
+          }}
+          getAvailableToExtensions={getAvailableToExtensions}
+          selectedFiles={[]}
+          disabled={false}
+        />
       );
     }
 

@@ -622,7 +622,8 @@ export function useFlatToolRegistry(): ToolRegistry {
             // Other
             "dbf", "fods", "vsd", "vor", "vor3", "vor4", "uop", "pct", "ps", "pdf"
         ],
-        operationConfig: convertOperationConfig
+        operationConfig: convertOperationConfig,
+        settingsComponent: ConvertSettings
     },
     "mergePdfs": {
         icon: <span className="material-symbols-rounded">library_add</span>,

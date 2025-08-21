@@ -8,7 +8,7 @@ import {
   type OutputOption,
   type FitOption
 } from '../../../constants/convertConstants';
-import { getEndpointName as getEndpointNameUtil, getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
+import { getEndpointName as getEndpointNameUtil, getEndpointUrl, isImageFormat, isWebFormat, getAvailableToExtensions as getAvailableToExtensionsUtil } from '../../../utils/convertUtils';
 import { detectFileExtension as detectFileExtensionUtil } from '../../../utils/fileUtils';
 import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
@@ -152,30 +152,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
     return getEndpointUrl(fromExtension, toExtension);
   };
 
-  const getAvailableToExtensions = (fromExtension: string) => {
-    if (!fromExtension) return [];
-
-    // Handle dynamic format identifiers (file-<extension>)
-    if (fromExtension.startsWith('file-')) {
-      // Dynamic format - use 'any' conversion options (file-to-pdf)
-      const supportedExtensions = CONVERSION_MATRIX['any'] || [];
-      return TO_FORMAT_OPTIONS.filter(option =>
-        supportedExtensions.includes(option.value)
-      );
-    }
-
-    let supportedExtensions = CONVERSION_MATRIX[fromExtension] || [];
-
-    // If no explicit conversion exists, but file-to-pdf might be available,
-    // fall back to 'any' conversion (which converts unknown files to PDF via file-to-pdf)
-    if (supportedExtensions.length === 0 && fromExtension !== 'any') {
-      supportedExtensions = CONVERSION_MATRIX['any'] || [];
-    }
-
-    return TO_FORMAT_OPTIONS.filter(option =>
-      supportedExtensions.includes(option.value)
-    );
-  };
+  const getAvailableToExtensions = getAvailableToExtensionsUtil;
 
 
   const analyzeFileTypes = (files: Array<{name: string}>) => {
