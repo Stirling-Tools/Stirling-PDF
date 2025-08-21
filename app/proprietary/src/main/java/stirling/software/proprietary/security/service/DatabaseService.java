@@ -367,7 +367,7 @@ public class DatabaseService implements DatabaseServiceInterface {
 
             if (!verifyBackup(scriptPath)) {
                 log.error("Backup verification failed for: {}", scriptPath);
-                return;
+                throw new IllegalArgumentException("Backup verification failed for: " + scriptPath);
             }
 
             String query = "RUNSCRIPT from ?;";
