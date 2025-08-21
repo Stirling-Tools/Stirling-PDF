@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Text, Button, Group, Stack } from '@mantine/core';
-import { useFileContext } from '../../contexts/FileContext';
+import { useNavigationGuard } from '../../contexts/NavigationContext';
 
 interface NavigationWarningModalProps {
   onApplyAndContinue?: () => Promise<void>;
@@ -11,13 +11,13 @@ const NavigationWarningModal = ({
   onApplyAndContinue,
   onExportAndContinue
 }: NavigationWarningModalProps) => {
-  const { 
-    showNavigationWarning, 
+  const {
+    showNavigationWarning,
     hasUnsavedChanges,
-    confirmNavigation, 
     cancelNavigation,
+    confirmNavigation,
     setHasUnsavedChanges
-  } = useFileContext();
+  } = useNavigationGuard();
 
   const handleKeepWorking = () => {
     cancelNavigation();

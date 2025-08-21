@@ -1,9 +1,6 @@
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import { ProcessedFile, ProcessingState, PDFPage } from '../types/processing';
 import { ProcessingCache } from './processingCache';
-
-// Set up PDF.js worker
-GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+import { pdfWorkerManager } from './pdfWorkerManager';
 
 export class PDFProcessingService {
   private static instance: PDFProcessingService;
@@ -96,7 +93,7 @@ export class PDFProcessingService {
     onProgress: (progress: number) => void
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
 
     onProgress(10); // PDF loaded
@@ -129,7 +126,7 @@ export class PDFProcessingService {
       onProgress(progress);
     }
 
-    pdf.destroy();
+    pdfWorkerManager.destroyDocument(pdf);
     onProgress(100);
 
     return {

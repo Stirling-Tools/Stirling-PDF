@@ -2,7 +2,8 @@ import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
+import { useFileSelection } from "../contexts/file/fileHooks";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -12,8 +13,8 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const UnlockPdfForms = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
+  const { actions } = useNavigationActions();
+  const { selectedFiles } = useFileSelection();
 
   const unlockPdfFormsParams = useUnlockPdfFormsParameters();
   const unlockPdfFormsOperation = useUnlockPdfFormsOperation();
@@ -42,13 +43,12 @@ const UnlockPdfForms = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "unlockPdfForms");
-    setCurrentMode("viewer");
+    actions.setMode("viewer");
   };
 
   const handleSettingsReset = () => {
     unlockPdfFormsOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("unlockPdfForms");
   };
 
   const hasFiles = selectedFiles.length > 0;

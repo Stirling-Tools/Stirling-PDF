@@ -12,6 +12,7 @@ import { getEndpointName as getEndpointNameUtil, getEndpointUrl, isImageFormat, 
 import { detectFileExtension as detectFileExtensionUtil } from '../../../utils/fileUtils';
 import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
+import { useCallback, useMemo } from 'react';
 
 export interface ConvertParameters extends BaseParameters {
   fromExtension: string;
@@ -121,11 +122,13 @@ const getEndpointName = (params: ConvertParameters): string => {
 };
 
 export const useConvertParameters = (): ConvertParametersHook => {
-  const baseHook = useBaseParameters({
+  const config = useMemo(() => ({
     defaultParameters,
     endpointName: getEndpointName,
     validateFn: validateParameters,
-  });
+  }), []);
+  
+  const baseHook = useBaseParameters(config);
 
   const getEndpoint = () => {
     const { fromExtension, toExtension, isSmartDetection, smartDetectionType } = baseHook.parameters;
@@ -155,15 +158,22 @@ export const useConvertParameters = (): ConvertParametersHook => {
   const getAvailableToExtensions = getAvailableToExtensionsUtil;
 
 
-  const analyzeFileTypes = (files: Array<{name: string}>) => {
+  const analyzeFileTypes = useCallback((files: Array<{name: string}>) => {
     if (files.length === 0) {
       // No files - only reset smart detection, keep user's format choices
-      baseHook.setParameters(prev => ({
-        ...prev,
-        isSmartDetection: false,
-        smartDetectionType: 'none'
-        // Don't reset fromExtension and toExtension - let user keep their choices
-      }));
+      baseHook.setParameters(prev => {
+        // Only update if something actually changed
+        if (prev.isSmartDetection === false && prev.smartDetectionType === 'none') {
+          return prev; // No change needed
+        }
+        
+        return {
+          ...prev,
+          isSmartDetection: false,
+          smartDetectionType: 'none'
+          // Don't reset fromExtension and toExtension - let user keep their choices
+        };
+      });
       return;
     }
 
@@ -198,13 +208,25 @@ export const useConvertParameters = (): ConvertParametersHook => {
           newToExtension = availableTargets.length === 1 ? availableTargets[0] : '';
         }
 
-        return {
+        const newState = {
           ...prev,
           isSmartDetection: false,
-          smartDetectionType: 'none',
+          smartDetectionType: 'none' as const,
           fromExtension: fromExt,
           toExtension: newToExtension
         };
+
+        // Only update if something actually changed
+        if (
+          prev.isSmartDetection === newState.isSmartDetection &&
+          prev.smartDetectionType === newState.smartDetectionType &&
+          prev.fromExtension === newState.fromExtension &&
+          prev.toExtension === newState.toExtension
+        ) {
+          return prev; // Return the same object to prevent re-render
+        }
+
+        return newState;
       });
       return;
     }
@@ -239,13 +261,25 @@ export const useConvertParameters = (): ConvertParametersHook => {
           newToExtension = availableTargets.length === 1 ? availableTargets[0] : '';
         }
 
-        return {
+        const newState = {
           ...prev,
           isSmartDetection: false,
-          smartDetectionType: 'none',
+          smartDetectionType: 'none' as const,
           fromExtension: fromExt,
           toExtension: newToExtension
         };
+
+        // Only update if something actually changed
+        if (
+          prev.isSmartDetection === newState.isSmartDetection &&
+          prev.smartDetectionType === newState.smartDetectionType &&
+          prev.fromExtension === newState.fromExtension &&
+          prev.toExtension === newState.toExtension
+        ) {
+          return prev; // Return the same object to prevent re-render
+        }
+
+        return newState;
       });
     } else {
       // Mixed file types
@@ -254,34 +288,64 @@ export const useConvertParameters = (): ConvertParametersHook => {
 
       if (allImages) {
         // All files are images - use image-to-pdf conversion
-        baseHook.setParameters(prev => ({
-          ...prev,
-          isSmartDetection: true,
-          smartDetectionType: 'images',
-          fromExtension: 'image',
-          toExtension: 'pdf'
-        }));
+        baseHook.setParameters(prev => {
+          // Only update if something actually changed
+          if (prev.isSmartDetection === true && 
+              prev.smartDetectionType === 'images' && 
+              prev.fromExtension === 'image' && 
+              prev.toExtension === 'pdf') {
+            return prev; // No change needed
+          }
+          
+          return {
+            ...prev,
+            isSmartDetection: true,
+            smartDetectionType: 'images',
+            fromExtension: 'image',
+            toExtension: 'pdf'
+          };
+        });
       } else if (allWeb) {
         // All files are web files - use html-to-pdf conversion
-        baseHook.setParameters(prev => ({
-          ...prev,
-          isSmartDetection: true,
-          smartDetectionType: 'web',
-          fromExtension: 'html',
-          toExtension: 'pdf'
-        }));
+        baseHook.setParameters(prev => {
+          // Only update if something actually changed
+          if (prev.isSmartDetection === true && 
+              prev.smartDetectionType === 'web' && 
+              prev.fromExtension === 'html' && 
+              prev.toExtension === 'pdf') {
+            return prev; // No change needed
+          }
+          
+          return {
+            ...prev,
+            isSmartDetection: true,
+            smartDetectionType: 'web',
+            fromExtension: 'html',
+            toExtension: 'pdf'
+          };
+        });
       } else {
         // Mixed non-image types - use file-to-pdf conversion
-        baseHook.setParameters(prev => ({
-          ...prev,
-          isSmartDetection: true,
-          smartDetectionType: 'mixed',
-          fromExtension: 'any',
-          toExtension: 'pdf'
-        }));
+        baseHook.setParameters(prev => {
+          // Only update if something actually changed
+          if (prev.isSmartDetection === true && 
+              prev.smartDetectionType === 'mixed' && 
+              prev.fromExtension === 'any' && 
+              prev.toExtension === 'pdf') {
+            return prev; // No change needed
+          }
+          
+          return {
+            ...prev,
+            isSmartDetection: true,
+            smartDetectionType: 'mixed',
+            fromExtension: 'any',
+            toExtension: 'pdf'
+          };
+        });
       }
     }
-  };
+  }, [baseHook.setParameters]);
 
   return {
     ...baseHook,

@@ -7,7 +7,8 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo } fr
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry } from '../data/toolsTaxonomy';
-import { useFileContext } from './FileContext';
+import { useToolWorkflowUrlSync } from '../hooks/useUrlSync';
+import { useNavigationActions } from './NavigationContext';
 
 // State interface
 interface ToolWorkflowState {
@@ -106,7 +107,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, initialState);
 
   // File context for view changes
-  const { setCurrentView } = useFileContext();
+  const { actions } = useNavigationActions();
+    // Wrapper to convert string to ModeType
+  const handleViewChange = (view: string) => {
+    actions.setMode(view as any); // ToolWorkflowContext should validate this
+  };
 
   // Tool management hook
   const {
@@ -154,12 +159,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }
 
     selectTool(toolId);
-    setCurrentView('fileEditor');
+    handleViewChange('fileEditor' as any); // ToolWorkflowContext should validate this
     setLeftPanelView('toolContent');
     setReaderMode(false);
     // Clear search so the tool content becomes visible immediately
     setSearchQuery('');
-  }, [selectTool, setCurrentView, setLeftPanelView, setReaderMode, setSearchQuery, clearToolSelection]);
+  }, [selectTool, handleViewChange, setLeftPanelView, setReaderMode, setSearchQuery, clearToolSelection]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
@@ -183,6 +188,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     state.sidebarsVisible && !state.readerMode,
     [state.sidebarsVisible, state.readerMode]
   );
+
+  // Enable URL synchronization for tool selection
+  useToolWorkflowUrlSync(selectedToolKey, selectTool, clearToolSelection, true);
 
   // Simple context value with basic memoization
   const contextValue : ToolWorkflowContextValue ={

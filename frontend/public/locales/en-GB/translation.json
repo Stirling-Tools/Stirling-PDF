@@ -1968,7 +1968,9 @@
     "uploadFiles": "Upload Files",
     "noFilesInStorage": "No files available in storage. Upload some files first.",
     "selectFromStorage": "Select from Storage",
-    "backToTools": "Back to Tools"
+    "backToTools": "Back to Tools",
+    "addFiles": "Add Files",
+    "dragFilesInOrClick": "Drag files in or click \"Add Files\" to browse"
   },
   "fileManager": {
     "title": "Upload PDF Files",

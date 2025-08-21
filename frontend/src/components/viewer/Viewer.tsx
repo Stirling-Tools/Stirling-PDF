@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme, ActionIcon, Box, Tabs } from "@mantine/core";
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import { useTranslation } from "react-i18next";
+import { pdfWorkerManager } from "../../services/pdfWorkerManager";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -13,10 +13,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useLocalStorage } from "@mantine/hooks";
 import { fileStorage } from "../../services/fileStorage";
 import SkeletonLoader from '../shared/SkeletonLoader';
-import { useFileContext } from "../../contexts/FileContext";
+import { useFileState, useFileActions, useCurrentFile } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 
-GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
 // Lazy loading page image component
 interface LazyPageImageProps {
@@ -150,7 +149,15 @@ const Viewer = ({
   const theme = useMantineTheme();
 
   // Get current file from FileContext
-  const { getCurrentFile, getCurrentProcessedFile, clearAllFiles, addFiles, activeFiles } = useFileContext();
+  const { selectors } = useFileState();
+  const { actions } = useFileActions();
+  const currentFile = useCurrentFile();
+  
+  const getCurrentFile = () => currentFile.file;
+  const getCurrentProcessedFile = () => currentFile.record?.processedFile || undefined;
+  const clearAllFiles = actions.clearAllFiles;
+  const addFiles = actions.addFiles;
+  const activeFiles = selectors.getFiles();
 
   // Tab management for multiple files
   const [activeTab, setActiveTab] = useState<string>("0");
@@ -171,6 +178,10 @@ const Viewer = ({
   const [zoom, setZoom] = useState(1); // 1 = 100%
   const pageRefs = useRef<(HTMLImageElement | null)[]>([]);
 
+  // Memoize setPageRef to prevent infinite re-renders
+  const setPageRef = useCallback((index: number, ref: HTMLImageElement | null) => {
+    pageRefs.current[index] = ref;
+  }, []);
 
   // Get files with URLs for tabs - we'll need to create these individually
   const file0WithUrl = useFileWithUrl(activeFiles[0]);
@@ -385,7 +396,7 @@ const Viewer = ({
           throw new Error('No valid PDF source available');
         }
 
-        const pdf = await getDocument(pdfData).promise;
+        const pdf = await pdfWorkerManager.createDocument(pdfData);
         pdfDocRef.current = pdf;
         setNumPages(pdf.numPages);
         if (!cancelled) {
@@ -406,6 +417,11 @@ const Viewer = ({
       cancelled = true;
       // Stop any ongoing preloading
       preloadingRef.current = false;
+      // Cleanup PDF document using worker manager
+      if (pdfDocRef.current) {
+        pdfWorkerManager.destroyDocument(pdfDocRef.current);
+        pdfDocRef.current = null;
+      }
       // Cleanup ArrayBuffer reference to help garbage collection
       currentArrayBufferRef.current = null;
     };
@@ -461,7 +477,7 @@ const Viewer = ({
             >
               <Tabs value={activeTab} onChange={(value) => handleTabChange(value || "0")}>
                 <Tabs.List>
-                  {activeFiles.map((file, index) => (
+                  {activeFiles.map((file: any, index: number) => (
                     <Tabs.Tab key={index} value={index.toString()}>
                       {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name}
                     </Tabs.Tab>
@@ -494,7 +510,7 @@ const Viewer = ({
                       isFirst={i === 0}
                       renderPage={renderPage}
                       pageImages={pageImages}
-                      setPageRef={(index, ref) => { pageRefs.current[index] = ref; }}
+                      setPageRef={setPageRef}
                     />
                     {i * 2 + 1 < numPages && (
                       <LazyPageImage
@@ -504,7 +520,7 @@ const Viewer = ({
                         isFirst={i === 0}
                         renderPage={renderPage}
                         pageImages={pageImages}
-                        setPageRef={(index, ref) => { pageRefs.current[index] = ref; }}
+                        setPageRef={setPageRef}
                       />
                     )}
                   </Group>
@@ -518,7 +534,7 @@ const Viewer = ({
                     isFirst={idx === 0}
                     renderPage={renderPage}
                     pageImages={pageImages}
-                    setPageRef={(index, ref) => { pageRefs.current[index] = ref; }}
+                    setPageRef={setPageRef}
                   />
                 ))}
           </Stack>

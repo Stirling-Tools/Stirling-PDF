@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
-import { FileWithUrl } from '../types/file';
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { FileMetadata } from '../types/file';
 import { StoredFile, fileStorage } from '../services/fileStorage';
 import { downloadFiles } from '../utils/downloadUtils';
 
@@ -9,27 +9,27 @@ interface FileManagerContextValue {
   activeSource: 'recent' | 'local' | 'drive';
   selectedFileIds: string[];
   searchTerm: string;
-  selectedFiles: FileWithUrl[];
-  filteredFiles: FileWithUrl[];
+  selectedFiles: FileMetadata[];
+  filteredFiles: FileMetadata[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   selectedFilesSet: Set<string>;
 
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
   onLocalFileClick: () => void;
-  onFileSelect: (file: FileWithUrl, index: number, shiftKey?: boolean) => void;
+  onFileSelect: (file: FileMetadata, index: number, shiftKey?: boolean) => void;
   onFileRemove: (index: number) => void;
-  onFileDoubleClick: (file: FileWithUrl) => void;
+  onFileDoubleClick: (file: FileMetadata) => void;
   onOpenFiles: () => void;
   onSearchChange: (value: string) => void;
   onFileInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectAll: () => void;
   onDeleteSelected: () => void;
   onDownloadSelected: () => void;
-  onDownloadSingle: (file: FileWithUrl) => void;
+  onDownloadSingle: (file: FileMetadata) => void;
 
   // External props
-  recentFiles: FileWithUrl[];
+  recentFiles: FileMetadata[];
   isFileSupported: (fileName: string) => boolean;
   modalHeight: string;
 }
@@ -40,14 +40,14 @@ const FileManagerContext = createContext<FileManagerContextValue | null>(null);
 // Provider component props
 interface FileManagerProviderProps {
   children: React.ReactNode;
-  recentFiles: FileWithUrl[];
-  onFilesSelected: (files: FileWithUrl[]) => void;
+  recentFiles: FileMetadata[];
+  onFilesSelected: (files: FileMetadata[]) => void; // For selecting stored files
+  onNewFilesSelect: (files: File[]) => void; // For uploading new local files
   onClose: () => void;
   isFileSupported: (fileName: string) => boolean;
   isOpen: boolean;
   onFileRemove: (index: number) => void;
   modalHeight: string;
-  storeFile: (file: File) => Promise<StoredFile>;
   refreshRecentFiles: () => Promise<void>;
 }
 
@@ -55,12 +55,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   children,
   recentFiles,
   onFilesSelected,
+  onNewFilesSelect,
   onClose,
   isFileSupported,
   isOpen,
   onFileRemove,
   modalHeight,
-  storeFile,
   refreshRecentFiles,
 }) => {
   const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
@@ -76,7 +76,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const selectedFilesSet = new Set(selectedFileIds);
   
   const selectedFiles = selectedFileIds.length === 0 ? [] : 
-    (recentFiles || []).filter(file => selectedFilesSet.has(file.id || file.name));
+    (recentFiles || []).filter(file => selectedFilesSet.has(file.id));
   
   const filteredFiles = !searchTerm ? recentFiles || [] :
     (recentFiles || []).filter(file =>
@@ -96,8 +96,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileSelect = useCallback((file: FileWithUrl, currentIndex: number, shiftKey?: boolean) => {
-    const fileId = file.id || file.name;
+  const handleFileSelect = useCallback((file: FileMetadata, currentIndex: number, shiftKey?: boolean) => {
+    const fileId = file.id;
     if (!fileId) return;
     
     if (shiftKey && lastClickedIndex !== null) {
@@ -110,7 +110,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         
         // Add all files in the range to selection
         for (let i = startIndex; i <= endIndex; i++) {
-          const rangeFileId = filteredFiles[i]?.id || filteredFiles[i]?.name;
+          const rangeFileId = filteredFiles[i]?.id;
           if (rangeFileId) {
             selectedSet.add(rangeFileId);
           }
@@ -145,7 +145,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onFileRemove(index);
   }, [filteredFiles, onFileRemove]);
 
-  const handleFileDoubleClick = useCallback((file: FileWithUrl) => {
+  const handleFileDoubleClick = useCallback((file: FileMetadata) => {
     if (isFileSupported(file.name)) {
       onFilesSelected([file]);
       onClose();
@@ -167,22 +167,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
       try {
-        // Create FileWithUrl objects - FileContext will handle storage and ID assignment
-        const fileWithUrls = files.map(file => {
-          const url = URL.createObjectURL(file);
-          createdBlobUrls.current.add(url);
-
-          return {
-            // No ID assigned here - FileContext will handle storage and ID assignment
-            name: file.name,
-            file,
-            url,
-            size: file.size,
-            lastModified: file.lastModified,
-          };
-        });
-
-        onFilesSelected(fileWithUrls as any /* FIX ME */);
+        // For local file uploads, pass File objects directly to FileContext
+        onNewFilesSelect(files);
         await refreshRecentFiles();
         onClose();
       } catch (error) {
@@ -190,7 +176,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       }
     }
     event.target.value = '';
-  }, [storeFile, onFilesSelected, refreshRecentFiles, onClose]);
+  }, [onNewFilesSelect, refreshRecentFiles, onClose]);
 
   const handleSelectAll = useCallback(() => {
     const allFilesSelected = filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length;
@@ -200,7 +186,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       setLastClickedIndex(null);
     } else {
       // Select all filtered files
-      setSelectedFileIds(filteredFiles.map(file => file.id || file.name));
+      setSelectedFileIds(filteredFiles.map(file => file.id).filter(Boolean));
       setLastClickedIndex(null);
     }
   }, [filteredFiles, selectedFileIds]);
@@ -211,13 +197,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     try {
       // Get files to delete based on current filtered view
       const filesToDelete = filteredFiles.filter(file => 
-        selectedFileIds.includes(file.id || file.name)
+        selectedFileIds.includes(file.id)
       );
 
       // Delete files from storage
       for (const file of filesToDelete) {
-        const lookupKey = file.id || file.name;
-        await fileStorage.deleteFile(lookupKey);
+        await fileStorage.deleteFile(file.id);
       }
 
       // Clear selection
@@ -237,7 +222,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     try {
       // Get selected files
       const selectedFilesToDownload = filteredFiles.filter(file => 
-        selectedFileIds.includes(file.id || file.name)
+        selectedFileIds.includes(file.id)
       );
 
       // Use generic download utility
@@ -249,7 +234,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [selectedFileIds, filteredFiles]);
 
-  const handleDownloadSingle = useCallback(async (file: FileWithUrl) => {
+  const handleDownloadSingle = useCallback(async (file: FileMetadata) => {
     try {
       await downloadFiles([file]);
     } catch (error) {
@@ -279,7 +264,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [isOpen]);
 
-  const contextValue: FileManagerContextValue = {
+  const contextValue: FileManagerContextValue = useMemo(() => ({
     // State
     activeSource,
     selectedFileIds,
@@ -307,7 +292,28 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     recentFiles,
     isFileSupported,
     modalHeight,
-  };
+  }), [
+    activeSource,
+    selectedFileIds,
+    searchTerm,
+    selectedFiles,
+    filteredFiles,
+    fileInputRef,
+    handleSourceChange,
+    handleLocalFileClick,
+    handleFileSelect,
+    handleFileRemove,
+    handleFileDoubleClick,
+    handleOpenFiles,
+    handleSearchChange,
+    handleFileInputChange,
+    handleSelectAll,
+    handleDeleteSelected,
+    handleDownloadSelected,
+    recentFiles,
+    isFileSupported,
+    modalHeight,
+  ]);
 
   return (
     <FileManagerContext.Provider value={contextValue}>

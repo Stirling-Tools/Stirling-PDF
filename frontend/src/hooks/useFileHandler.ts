@@ -1,27 +1,38 @@
 import { useCallback } from 'react';
-import { useFileContext } from '../contexts/FileContext';
+import { useFileState, useFileActions } from '../contexts/FileContext';
+import { FileMetadata } from '../types/file';
 
 export const useFileHandler = () => {
-  const { activeFiles, addFiles } = useFileContext();
+  const { state } = useFileState(); // Still needed for addStoredFiles
+  const { actions } = useFileActions();
 
   const addToActiveFiles = useCallback(async (file: File) => {
-    const exists = activeFiles.some(f => f.name === file.name && f.size === file.size);
-    if (!exists) {
-      await addFiles([file]);
-    }
-  }, [activeFiles, addFiles]);
+    // Let FileContext handle deduplication with quickKey logic
+    await actions.addFiles([file]);
+  }, [actions.addFiles]);
 
   const addMultipleFiles = useCallback(async (files: File[]) => {
-    const newFiles = files.filter(file => 
-      !activeFiles.some(f => f.name === file.name && f.size === file.size)
-    );
+    // Let FileContext handle deduplication with quickKey logic
+    await actions.addFiles(files);
+  }, [actions.addFiles]);
+
+  // Add stored files preserving their original IDs to prevent session duplicates
+  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: string; metadata: FileMetadata }>) => {
+    // Filter out files that already exist with the same ID (exact match)
+    const newFiles = filesWithMetadata.filter(({ originalId }) => {
+      return state.files.byId[originalId] === undefined;
+    });
+    
     if (newFiles.length > 0) {
-      await addFiles(newFiles);
+      await actions.addStoredFiles(newFiles);
     }
-  }, [activeFiles, addFiles]);
+    
+    console.log(`📁 Added ${newFiles.length} stored files (${filesWithMetadata.length - newFiles.length} skipped as duplicates)`);
+  }, [state.files.byId, actions.addStoredFiles]);
 
   return {
     addToActiveFiles,
     addMultipleFiles,
+    addStoredFiles,
   };
 };

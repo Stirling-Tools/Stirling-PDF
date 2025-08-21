@@ -1,4 +1,9 @@
-import { getDocument } from "pdfjs-dist";
+import { pdfWorkerManager } from '../services/pdfWorkerManager';
+
+export interface ThumbnailWithMetadata {
+  thumbnail: string; // Always returns a thumbnail (placeholder if needed)
+  pageCount: number;
+}
 
 interface ColorScheme {
   bgTop: string;
@@ -11,18 +16,17 @@ interface ColorScheme {
 }
 
 /**
- * Calculate thumbnail scale based on file size
- * Smaller files get higher quality, larger files get lower quality
+ * Calculate thumbnail scale based on file size (modern 2024 scaling)
  */
 export function calculateScaleFromFileSize(fileSize: number): number {
   const MB = 1024 * 1024;
-
-  if (fileSize < 1 * MB) return 0.6;      // < 1MB: High quality
-  if (fileSize < 5 * MB) return 0.4;      // 1-5MB: Medium-high quality
-  if (fileSize < 15 * MB) return 0.3;     // 5-15MB: Medium quality
-  if (fileSize < 30 * MB) return 0.2;     // 15-30MB: Low-medium quality
-  return 0.15;                            // 30MB+: Low quality
+  if (fileSize < 10 * MB) return 1.0;   // Full quality for small files
+  if (fileSize < 50 * MB) return 0.8;   // High quality for common file sizes
+  if (fileSize < 200 * MB) return 0.6;  // Good quality for typical large files
+  if (fileSize < 500 * MB) return 0.4;  // Readable quality for large but manageable files
+  return 0.3;  // Still usable quality, not tiny
 }
+
 
 /**
  * Generate encrypted PDF thumbnail with lock icon
@@ -125,16 +129,40 @@ function getFileTypeColorScheme(extension: string): ColorScheme {
     'PDF': { bgTop: '#FF6B6B20', bgBottom: '#FF6B6B10', border: '#FF6B6B40', icon: '#FF6B6B', badge: '#FF6B6B', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'DOC': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'DOCX': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'ODT': { bgTop: '#4ECDC420', bgBottom: '#4ECDC410', border: '#4ECDC440', icon: '#4ECDC4', badge: '#4ECDC4', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'TXT': { bgTop: '#95A5A620', bgBottom: '#95A5A610', border: '#95A5A640', icon: '#95A5A6', badge: '#95A5A6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'RTF': { bgTop: '#95A5A620', bgBottom: '#95A5A610', border: '#95A5A640', icon: '#95A5A6', badge: '#95A5A6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
 
     // Spreadsheets
     'XLS': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'XLSX': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'ODS': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'CSV': { bgTop: '#2ECC7120', bgBottom: '#2ECC7110', border: '#2ECC7140', icon: '#2ECC71', badge: '#2ECC71', textPrimary: '#FFFFFF', textSecondary: '#666666' },
 
     // Presentations
     'PPT': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
     'PPTX': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'ODP': { bgTop: '#E67E2220', bgBottom: '#E67E2210', border: '#E67E2240', icon: '#E67E22', badge: '#E67E22', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+
+    // Images
+    'JPG': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'JPEG': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'PNG': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'GIF': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'BMP': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'TIFF': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'WEBP': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'SVG': { bgTop: '#FF9F4320', bgBottom: '#FF9F4310', border: '#FF9F4340', icon: '#FF9F43', badge: '#FF9F43', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+
+    // Web
+    'HTML': { bgTop: '#FD79A820', bgBottom: '#FD79A810', border: '#FD79A840', icon: '#FD79A8', badge: '#FD79A8', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+    'XML': { bgTop: '#FD79A820', bgBottom: '#FD79A810', border: '#FD79A840', icon: '#FD79A8', badge: '#FD79A8', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+
+    // Text/Markup
+    'MD': { bgTop: '#6C5CE720', bgBottom: '#6C5CE710', border: '#6C5CE740', icon: '#6C5CE7', badge: '#6C5CE7', textPrimary: '#FFFFFF', textSecondary: '#666666' },
+
+    // Email
+    'EML': { bgTop: '#A29BFE20', bgBottom: '#A29BFE10', border: '#A29BFE40', icon: '#A29BFE', badge: '#A29BFE', textPrimary: '#FFFFFF', textSecondary: '#666666' },
 
     // Archives
     'ZIP': { bgTop: '#9B59B620', bgBottom: '#9B59B610', border: '#9B59B640', icon: '#9B59B6', badge: '#9B59B6', textPrimary: '#FFFFFF', textSecondary: '#666666' },
@@ -275,16 +303,15 @@ function formatFileSize(bytes: number): string {
 
 async function generatePDFThumbnail(arrayBuffer: ArrayBuffer, file: File, scale: number): Promise<string> {
   try {
-    const pdf = await getDocument({
-      data: arrayBuffer,
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
       disableAutoFetch: true,
       disableStream: true
-    }).promise;
+    });
 
     const thumbnail = await generateStandardPDFThumbnail(pdf, scale);
 
-    // Immediately clean up memory after thumbnail generation
-    pdf.destroy();
+    // Immediately clean up memory after thumbnail generation using worker manager
+    pdfWorkerManager.destroyDocument(pdf);
     return thumbnail;
   } catch (error) {
     if (error instanceof Error) {
@@ -298,52 +325,105 @@ async function generatePDFThumbnail(arrayBuffer: ArrayBuffer, file: File, scale:
 }
 
 /**
- * Generate thumbnail for any file type
- * Returns base64 data URL or undefined if generation fails
+ * Generate thumbnail for any file type - always returns a thumbnail (placeholder if needed)
  */
-export async function generateThumbnailForFile(file: File): Promise<string | undefined> {
-  // Skip thumbnail generation for very large files to avoid memory issues
-  if (file.size >= 100 * 1024 * 1024) { // 100MB limit
-    console.log('Skipping thumbnail generation for large file:', file.name);
+export async function generateThumbnailForFile(file: File): Promise<string> {
+  // Skip very large files
+  if (file.size >= 100 * 1024 * 1024) {
     return generatePlaceholderThumbnail(file);
   }
 
-  // Handle image files - use original file directly
+  // Handle image files - convert to data URL for persistence
   if (file.type.startsWith('image/')) {
-    return URL.createObjectURL(file);
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
   }
 
   // Handle PDF files
-  if (!file.type.startsWith('application/pdf')) {
-    console.log('File is not a PDF or image, generating placeholder:', file.name);
-    return generatePlaceholderThumbnail(file);
+  if (file.type.startsWith('application/pdf')) {
+    const scale = calculateScaleFromFileSize(file.size);
+    
+    // Only read first 2MB for thumbnail generation to save memory
+    const chunkSize = 2 * 1024 * 1024; // 2MB
+    const chunk = file.slice(0, Math.min(chunkSize, file.size));
+    const arrayBuffer = await chunk.arrayBuffer();
+    
+    try {
+      return await generatePDFThumbnail(arrayBuffer, file, scale);
+    } catch (error) {
+      if (error instanceof Error && error.name === 'InvalidPDFException') {
+        console.warn(`PDF structure issue for ${file.name} - trying with full file`);
+        try {
+          // Try with full file instead of chunk
+          const fullArrayBuffer = await file.arrayBuffer();
+          return await generatePDFThumbnail(fullArrayBuffer, file, scale);
+        } catch (fullFileError) {
+          console.warn(`Full file PDF processing also failed for ${file.name} - using placeholder`);
+          return generatePlaceholderThumbnail(file);
+        }
+      }
+      console.warn(`PDF processing failed for ${file.name} - using placeholder:`, error);
+      return generatePlaceholderThumbnail(file);
+    }
   }
 
-  // Calculate quality scale based on file size
-  console.log('Generating thumbnail for', file.name);
+  // All other files get placeholder
+  return generatePlaceholderThumbnail(file);
+}
+
+/**
+ * Generate thumbnail and extract page count for a PDF file - always returns a valid thumbnail
+ */
+export async function generateThumbnailWithMetadata(file: File): Promise<ThumbnailWithMetadata> {
+  // Non-PDF files have no page count
+  if (!file.type.startsWith('application/pdf')) {
+    const thumbnail = await generateThumbnailForFile(file);
+    return { thumbnail, pageCount: 0 };
+  }
+
+  // Skip very large files
+  if (file.size >= 100 * 1024 * 1024) {
+    const thumbnail = generatePlaceholderThumbnail(file);
+    return { thumbnail, pageCount: 1 };
+  }
+
   const scale = calculateScaleFromFileSize(file.size);
-  console.log(`Using scale ${scale} for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
-
-  // Only read first 2MB for thumbnail generation to save memory
-  const chunkSize = 2 * 1024 * 1024; // 2MB
-  const chunk = file.slice(0, Math.min(chunkSize, file.size));
-  const arrayBuffer = await chunk.arrayBuffer();
-
+  
   try {
-    return await generatePDFThumbnail(arrayBuffer, file, scale);
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === 'InvalidPDFException') {
-        console.warn(`PDF structure issue for ${file.name} - using fallback thumbnail`);
-        // Return a placeholder or try with full file instead of chunk
-        const fullArrayBuffer = await file.arrayBuffer();
-        return await generatePDFThumbnail(fullArrayBuffer, file, scale);
-      } else {
-        console.warn('Unknown error thrown. Failed to generate thumbnail for', file.name, error);
-        return undefined;
-      }
-    } else {
-      throw error; // Re-throw non-Error exceptions
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
+    
+    const pageCount = pdf.numPages;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      pdfWorkerManager.destroyDocument(pdf);
+      throw new Error('Could not get canvas context');
     }
+
+    await page.render({ canvasContext: context, viewport }).promise;
+    const thumbnail = canvas.toDataURL();
+    
+    pdfWorkerManager.destroyDocument(pdf);
+    return { thumbnail, pageCount };
+
+  } catch (error) {
+    if (error instanceof Error && error.name === "PasswordException") {
+      // Handle encrypted PDFs
+      const thumbnail = generateEncryptedPDFThumbnail(file);
+      return { thumbnail, pageCount: 1 };
+    }
+    
+    const thumbnail = generatePlaceholderThumbnail(file);
+    return { thumbnail, pageCount: 1 };
   }
 }

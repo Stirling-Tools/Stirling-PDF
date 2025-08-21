@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "../contexts/FileSelectionContext";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { useSidebarContext } from "../contexts/SidebarContext";
@@ -21,8 +20,6 @@ export default function HomePage() {
 
   const { quickAccessRef } = sidebarRefs;
 
-  const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
-
   const { selectedTool, selectedToolKey } = useToolWorkflow();
 
   const baseUrl = getBaseUrl();
@@ -37,17 +34,7 @@ export default function HomePage() {
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
   });
 
-  // Update file selection context when tool changes
-  useEffect(() => {
-    if (selectedTool) {
-      setMaxFiles(selectedTool.maxFiles ?? -1);
-      setIsToolMode(true);
-    } else {
-      setMaxFiles(-1);
-      setIsToolMode(false);
-      setSelectedFiles([]);
-    }
-  }, [selectedTool, setMaxFiles, setIsToolMode, setSelectedFiles]);
+  // Note: File selection limits are now handled directly by individual tools
 
   return (
     <Group

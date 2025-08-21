@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Modal } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { FileWithUrl } from '../types/file';
+import { FileMetadata } from '../types/file';
 import { useFileManager } from '../hooks/useFileManager';
 import { useFilesModalContext } from '../contexts/FilesModalContext';
+import { createFileId } from '../types/fileContext';
 import { Tool } from '../types/tool';
 import MobileLayout from './fileManager/MobileLayout';
 import DesktopLayout from './fileManager/DesktopLayout';
@@ -15,12 +16,18 @@ interface FileManagerProps {
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
-  const { isFilesModalOpen, closeFilesModal, onFilesSelect } = useFilesModalContext();
-  const [recentFiles, setRecentFiles] = useState<FileWithUrl[]>([]);
+  const { isFilesModalOpen, closeFilesModal, onFilesSelect, onStoredFilesSelect } = useFilesModalContext();
+  const [recentFiles, setRecentFiles] = useState<FileMetadata[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile } = useFileManager();
+
+  // Wrapper for storeFile that generates UUID
+  const storeFileWithId = useCallback(async (file: File) => {
+    const fileId = createFileId(); // Generate UUID for storage
+    return await storeFile(file, fileId);
+  }, [storeFile]);
 
   // File management handlers
   const isFileSupported = useCallback((fileName: string) => {
@@ -34,18 +41,21 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
     setRecentFiles(files);
   }, [loadRecentFiles]);
 
-  const handleFilesSelected = useCallback(async (files: FileWithUrl[]) => {
+  const handleFilesSelected = useCallback(async (files: FileMetadata[]) => {
     try {
-      const fileObjects = await Promise.all(
-        files.map(async (fileWithUrl) => {
-          return await convertToFile(fileWithUrl);
-        })
+      // Use stored files flow that preserves original IDs
+      const filesWithMetadata = await Promise.all(
+        files.map(async (metadata) => ({
+          file: await convertToFile(metadata),
+          originalId: metadata.id,
+          metadata
+        }))
       );
-      onFilesSelect(fileObjects);
+      onStoredFilesSelect(filesWithMetadata);
     } catch (error) {
       console.error('Failed to process selected files:', error);
     }
-  }, [convertToFile, onFilesSelect]);
+  }, [convertToFile, onStoredFilesSelect]);
 
   const handleNewFileUpload = useCallback(async (files: File[]) => {
     if (files.length > 0) {
@@ -82,14 +92,11 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   // Cleanup any blob URLs when component unmounts
   useEffect(() => {
     return () => {
-      // Clean up blob URLs from recent files
-      recentFiles.forEach(file => {
-        if (file.url && file.url.startsWith('blob:')) {
-          URL.revokeObjectURL(file.url);
-        }
-      });
+      // FileMetadata doesn't have blob URLs, so no cleanup needed
+      // Blob URLs are managed by FileContext and tool operations
+      console.log('FileManager unmounting - FileContext handles blob URL cleanup');
     };
-  }, [recentFiles]);
+  }, []);
 
   // Modal size constants for consistent scaling
   const modalHeight = '80vh';
@@ -130,7 +137,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
           onDrop={handleNewFileUpload}
           onDragEnter={() => setIsDragging(true)}
           onDragLeave={() => setIsDragging(false)}
-          accept={["*/*"] as any}
+          accept={{}}
           multiple={true}
           activateOnClick={false}
           style={{
@@ -147,12 +154,12 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
           <FileManagerProvider
             recentFiles={recentFiles}
             onFilesSelected={handleFilesSelected}
+            onNewFilesSelect={handleNewFileUpload}
             onClose={closeFilesModal}
             isFileSupported={isFileSupported}
             isOpen={isFilesModalOpen}
             onFileRemove={handleRemoveFileByIndex}
             modalHeight={modalHeight}
-            storeFile={storeFile}
             refreshRecentFiles={refreshRecentFiles}
           >
             {isMobile ? <MobileLayout /> : <DesktopLayout />}

@@ -283,7 +283,7 @@ export const mantineTheme = createTheme({
         },
         control: {
           color: 'var(--text-secondary)',
-          '[dataActive]': {
+          '[data-active]': {
             backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
             boxShadow: 'var(--shadow-sm)',
