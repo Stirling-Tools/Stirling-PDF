@@ -1,7 +1,7 @@
 import { pdfWorkerManager } from '../services/pdfWorkerManager';
 
 export interface ThumbnailWithMetadata {
-  thumbnail: string | undefined;
+  thumbnail: string; // Always returns a thumbnail (placeholder if needed)
   pageCount: number;
 }
 
@@ -325,9 +325,9 @@ async function generatePDFThumbnail(arrayBuffer: ArrayBuffer, file: File, scale:
 }
 
 /**
- * Generate thumbnail for any file type
+ * Generate thumbnail for any file type - always returns a thumbnail (placeholder if needed)
  */
-export async function generateThumbnailForFile(file: File): Promise<string | undefined> {
+export async function generateThumbnailForFile(file: File): Promise<string> {
   // Skip very large files
   if (file.size >= 100 * 1024 * 1024) {
     return generatePlaceholderThumbnail(file);
@@ -351,11 +351,17 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
       return await generatePDFThumbnail(arrayBuffer, file, scale);
     } catch (error) {
       if (error instanceof Error && error.name === 'InvalidPDFException') {
-        console.warn(`PDF structure issue for ${file.name} - using fallback thumbnail`);
-        // Try with full file instead of chunk
-        const fullArrayBuffer = await file.arrayBuffer();
-        return await generatePDFThumbnail(fullArrayBuffer, file, scale);
+        console.warn(`PDF structure issue for ${file.name} - trying with full file`);
+        try {
+          // Try with full file instead of chunk
+          const fullArrayBuffer = await file.arrayBuffer();
+          return await generatePDFThumbnail(fullArrayBuffer, file, scale);
+        } catch (fullFileError) {
+          console.warn(`Full file PDF processing also failed for ${file.name} - using placeholder`);
+          return generatePlaceholderThumbnail(file);
+        }
       }
+      console.warn(`PDF processing failed for ${file.name} - using placeholder:`, error);
       return generatePlaceholderThumbnail(file);
     }
   }
@@ -365,7 +371,7 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
 }
 
 /**
- * Generate thumbnail and extract page count for a PDF file
+ * Generate thumbnail and extract page count for a PDF file - always returns a valid thumbnail
  */
 export async function generateThumbnailWithMetadata(file: File): Promise<ThumbnailWithMetadata> {
   // Non-PDF files have no page count

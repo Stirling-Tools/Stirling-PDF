@@ -117,6 +117,19 @@ export class ThumbnailGenerationService {
     options: ThumbnailGenerationOptions = {},
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
+    // Input validation
+    if (!fileId || typeof fileId !== 'string' || fileId.trim() === '') {
+      throw new Error('generateThumbnails: fileId must be a non-empty string');
+    }
+    
+    if (!pdfArrayBuffer || pdfArrayBuffer.byteLength === 0) {
+      throw new Error('generateThumbnails: pdfArrayBuffer must not be empty');
+    }
+    
+    if (!pageNumbers || pageNumbers.length === 0) {
+      throw new Error('generateThumbnails: pageNumbers must not be empty');
+    }
+
     const {
       scale = 0.2,
       quality = 0.8

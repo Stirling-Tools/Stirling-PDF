@@ -64,10 +64,8 @@ export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
 
           // Use the universal thumbnail generator
           const thumbnail = await generateThumbnailForFile(fileObject);
-          if (!cancelled && thumbnail) {
+          if (!cancelled) {
             setThumb(thumbnail);
-          } else if (!cancelled) {
-            setThumb(null);
           }
         } catch (error) {
           console.warn('Failed to generate thumbnail for file', file.name, error);

@@ -20,6 +20,40 @@ import { buildQuickKeySet, buildQuickKeySetFromMetadata } from './fileSelectors'
 const DEBUG = process.env.NODE_ENV === 'development';
 
 /**
+ * Simple mutex to prevent race conditions in addFiles
+ */
+class SimpleMutex {
+  private locked = false;
+  private queue: Array<() => void> = [];
+
+  async lock(): Promise<void> {
+    if (!this.locked) {
+      this.locked = true;
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve) => {
+      this.queue.push(() => {
+        this.locked = true;
+        resolve();
+      });
+    });
+  }
+
+  unlock(): void {
+    if (this.queue.length > 0) {
+      const next = this.queue.shift()!;
+      next();
+    } else {
+      this.locked = false;
+    }
+  }
+}
+
+// Global mutex for addFiles operations
+const addFilesMutex = new SimpleMutex();
+
+/**
  * Helper to create ProcessedFile metadata structure
  */
 export function createProcessedFile(pageCount: number, thumbnail?: string) {
@@ -63,6 +97,10 @@ export async function addFiles(
   dispatch: React.Dispatch<FileContextAction>,
   lifecycleManager: FileLifecycleManager
 ): Promise<Array<{ file: File; id: FileId; thumbnail?: string }>> {
+  // Acquire mutex to prevent race conditions
+  await addFilesMutex.lock();
+  
+  try {
   const fileRecords: FileRecord[] = [];
   const addedFiles: Array<{ file: File; id: FileId; thumbnail?: string }> = [];
   
@@ -99,7 +137,7 @@ export async function addFiles(
             const result = await generateThumbnailWithMetadata(file);
             thumbnail = result.thumbnail;
             pageCount = result.pageCount;
-            if (DEBUG) console.log(`📄 Generated PDF metadata for ${file.name}: ${pageCount} pages, thumbnail: ${!!thumbnail}`);
+            if (DEBUG) console.log(`📄 Generated PDF metadata for ${file.name}: ${pageCount} pages, thumbnail: SUCCESS`);
           } catch (error) {
             if (DEBUG) console.warn(`📄 Failed to generate PDF metadata for ${file.name}:`, error);
           }
@@ -110,7 +148,7 @@ export async function addFiles(
             const { generateThumbnailForFile } = await import('../../utils/thumbnailUtils');
             thumbnail = await generateThumbnailForFile(file);
             pageCount = 0; // Non-PDFs have no page count
-            if (DEBUG) console.log(`📄 Generated simple thumbnail for ${file.name}: no page count, thumbnail: ${!!thumbnail}`);
+            if (DEBUG) console.log(`📄 Generated simple thumbnail for ${file.name}: no page count, thumbnail: SUCCESS`);
           } catch (error) {
             if (DEBUG) console.warn(`📄 Failed to generate simple thumbnail for ${file.name}:`, error);
           }
@@ -255,6 +293,10 @@ export async function addFiles(
   }
   
   return addedFiles;
+  } finally {
+    // Always release mutex even if error occurs
+    addFilesMutex.unlock();
+  }
 }
 
 /**

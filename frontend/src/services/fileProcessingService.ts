@@ -107,18 +107,8 @@ class FileProcessingService {
             throw new Error('Processing cancelled');
           }
         } catch (pdfError) {
-          console.warn(`📁 FileProcessingService: PDF.js failed for ${file.name}, trying fallback:`, pdfError);
-          
-          // Fallback to text analysis (reuse same arrayBuffer)
-          try {
-            const text = new TextDecoder('latin1').decode(arrayBuffer);
-            const pageMatches = text.match(/\/Type\s*\/Page[^s]/g);
-            totalPages = pageMatches ? pageMatches.length : 1;
-            console.log(`📁 FileProcessingService: Text analysis discovered ${totalPages} pages for ${file.name}`);
-          } catch (textError) {
-            console.warn(`📁 FileProcessingService: Text analysis also failed for ${file.name}:`, textError);
-            totalPages = 1;
-          }
+          console.warn(`📁 FileProcessingService: PDF.js failed for ${file.name}, setting pages to 0:`, pdfError);
+          totalPages = 0; // Unknown page count - UI will hide page count display
         }
       }
 

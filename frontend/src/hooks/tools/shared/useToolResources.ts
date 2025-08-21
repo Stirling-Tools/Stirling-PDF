@@ -50,13 +50,8 @@ export const useToolResources = () => {
       try {
         console.log(`🖼️ Generating thumbnail for: ${file.name} (${file.type}, ${file.size} bytes)`);
         const thumbnail = await generateThumbnailForFile(file);
-        console.log(`🖼️ Generated thumbnail for ${file.name}:`, thumbnail ? 'SUCCESS' : 'FAILED (no thumbnail returned)');
-        if (thumbnail) {
-          thumbnails.push(thumbnail);
-        } else {
-          console.warn(`🖼️ No thumbnail returned for ${file.name}`);
-          thumbnails.push('');
-        }
+        console.log(`🖼️ Generated thumbnail for ${file.name}: SUCCESS`);
+        thumbnails.push(thumbnail);
       } catch (error) {
         console.warn(`🖼️ Failed to generate thumbnail for ${file.name}:`, error);
         thumbnails.push('');
@@ -74,9 +69,7 @@ export const useToolResources = () => {
       try {
         console.log(`🖼️ Generating thumbnail with metadata for: ${file.name} (${file.type}, ${file.size} bytes)`);
         const result = await generateThumbnailWithMetadata(file);
-        console.log(`🖼️ Generated thumbnail with metadata for ${file.name}:`, 
-          result.thumbnail ? 'SUCCESS' : 'FAILED (no thumbnail)', 
-          `${result.pageCount} pages`);
+        console.log(`🖼️ Generated thumbnail with metadata for ${file.name}: SUCCESS, ${result.pageCount} pages`);
         results.push(result);
       } catch (error) {
         console.warn(`🖼️ Failed to generate thumbnail with metadata for ${file.name}:`, error);
@@ -84,7 +77,7 @@ export const useToolResources = () => {
       }
     }
 
-    console.log(`🖼️ useToolResources.generateThumbnailsWithMetadata: Complete. Generated ${results.filter(r => r.thumbnail).length}/${files.length} thumbnails with metadata`);
+    console.log(`🖼️ useToolResources.generateThumbnailsWithMetadata: Complete. Generated ${results.length}/${files.length} thumbnails with metadata`);
     return results;
   }, []);
 
