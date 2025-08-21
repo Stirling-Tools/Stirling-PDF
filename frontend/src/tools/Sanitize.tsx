@@ -54,13 +54,12 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = sanitizeOperation.files.length > 0;
-  const filesCollapsed = hasFiles || hasResults;
   const settingsCollapsed = !hasFiles || hasResults;
 
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: filesCollapsed,
+      isCollapsed: hasResults,
       placeholder: t("sanitize.files.placeholder", "Select a PDF file in the main view to get started"),
     },
     steps: [

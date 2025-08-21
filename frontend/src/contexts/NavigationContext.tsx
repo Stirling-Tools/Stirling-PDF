@@ -9,21 +9,25 @@ import { useNavigationUrlSync } from '../hooks/useUrlSync';
  * maintain clear separation of concerns.
  */
 
-// Navigation mode types
-export type ModeType = 
-  | 'viewer' 
-  | 'pageEditor' 
-  | 'fileEditor' 
-  | 'merge' 
-  | 'split' 
-  | 'compress' 
-  | 'ocr' 
-  | 'convert' 
-  | 'addPassword' 
+// Navigation mode types - complete list to match fileContext.ts
+export type ModeType =
+  | 'viewer'
+  | 'pageEditor'
+  | 'fileEditor'
+  | 'merge'
+  | 'split'
+  | 'compress'
+  | 'ocr'
+  | 'convert'
+  | 'sanitize'
+  | 'addPassword'
+  | 'changePermissions'
   | 'addWatermark'
   | 'removePassword'
-  | 'changePermissions' 
-  | 'sanitize';
+  | 'single-large-page'
+  | 'repair'
+  | 'unlockPdfForms'
+  | 'removeCertificateSign';
 
 // Navigation state
 interface NavigationState {

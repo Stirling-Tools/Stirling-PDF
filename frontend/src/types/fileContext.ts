@@ -18,8 +18,12 @@ export type ModeType =
   | 'sanitize'
   | 'addPassword'
   | 'changePermissions'
-  | 'watermark'
-  | 'removePassword';
+  | 'addWatermark'
+  | 'removePassword'
+  | 'single-large-page'
+  | 'repair'
+  | 'unlockPdfForms'
+  | 'removeCertificateSign';
 
 // Normalized state types
 export type FileId = string;

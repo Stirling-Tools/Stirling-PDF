@@ -61,14 +61,11 @@ export const useFileManager = () => {
         return [];
       }
       
-      // Load both regular files and drafts
-      const [storedFileMetadata, draftMetadata] = await Promise.all([
-        indexedDB.loadAllMetadata(),
-        indexedDB.loadAllDraftMetadata()
-      ]);
+      // Load regular files metadata only
+      const storedFileMetadata = await indexedDB.loadAllMetadata();
       
-      // Combine and sort by last modified
-      const allFiles = [...storedFileMetadata, ...draftMetadata];
+      // For now, only regular files - drafts will be handled separately in the future
+      const allFiles = storedFileMetadata;
       const sortedFiles = allFiles.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
       
       return sortedFiles;

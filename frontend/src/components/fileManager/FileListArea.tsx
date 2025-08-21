@@ -19,22 +19,23 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     activeSource,
     recentFiles,
     filteredFiles,
-    selectedFileIds,
+    selectedFilesSet,
     onFileSelect,
     onFileRemove,
     onFileDoubleClick,
+    onDownloadSingle,
     isFileSupported,
   } = useFileManagerContext();
   const { t } = useTranslation();
 
   if (activeSource === 'recent') {
     return (
-      <ScrollArea 
+      <ScrollArea
         h={scrollAreaHeight}
-        style={{ 
+        style={{
           ...scrollAreaStyle
         }}
-        type="always" 
+        type="always"
         scrollbarSize={8}
       >
         <Stack gap={0}>
@@ -51,12 +52,13 @@ const FileListArea: React.FC<FileListAreaProps> = ({
           ) : (
             filteredFiles.map((file, index) => (
               <FileListItem
-                key={file.id || file.name}
+                key={file.id}
                 file={file}
-                isSelected={selectedFileIds.includes(file.id || file.name)}
+                isSelected={selectedFilesSet.has(file.id)}
                 isSupported={isFileSupported(file.name)}
-                onSelect={() => onFileSelect(file)}
+                onSelect={(shiftKey) => onFileSelect(file, index, shiftKey)}
                 onRemove={() => onFileRemove(index)}
+                onDownload={() => onDownloadSingle(file)}
                 onDoubleClick={() => onFileDoubleClick(file)}
               />
             ))

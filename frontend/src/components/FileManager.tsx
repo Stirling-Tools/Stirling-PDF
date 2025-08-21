@@ -160,7 +160,6 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             isOpen={isFilesModalOpen}
             onFileRemove={handleRemoveFileByIndex}
             modalHeight={modalHeight}
-            storeFile={storeFileWithId}
             refreshRecentFiles={refreshRecentFiles}
           >
             {isMobile ? <MobileLayout /> : <DesktopLayout />}

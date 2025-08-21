@@ -48,7 +48,7 @@ const FilePickerModal = ({
   };
 
   const selectAll = () => {
-    setSelectedFileIds(storedFiles.map(f => f.id || f.name));
+    setSelectedFileIds(storedFiles.map(f => f.id).filter(Boolean));
   };
 
   const selectNone = () => {
@@ -57,7 +57,7 @@ const FilePickerModal = ({
 
   const handleConfirm = async () => {
     const selectedFiles = storedFiles.filter(f => 
-      selectedFileIds.includes(f.id || f.name)
+      selectedFileIds.includes(f.id)
     );
     
     // Convert stored files to File objects
@@ -154,7 +154,7 @@ const FilePickerModal = ({
             <ScrollArea.Autosize mah={400}>
               <SimpleGrid cols={2} spacing="md">
                 {storedFiles.map((file) => {
-                  const fileId = file.id || file.name;
+                  const fileId = file.id;
                   const isSelected = selectedFileIds.includes(fileId);
                   
                   return (
