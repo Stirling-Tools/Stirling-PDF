@@ -77,9 +77,7 @@ const FileThumbnail = ({
         type: 'file',
         fileId: file.id,
         fileName: file.name,
-        selectedFiles: selectionMode && selectedFiles.includes(file.id) 
-          ? selectedFiles 
-          : [file.id]
+        selectedFiles: [file.id]  // Always drag only this file, ignore selection state
       }),
       onDragStart: () => {
         setIsDragging(true);
