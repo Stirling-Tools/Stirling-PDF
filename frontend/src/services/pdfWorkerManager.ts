@@ -194,7 +194,7 @@ class PDFWorkerManager {
    * Set maximum concurrent workers
    */
   setMaxWorkers(max: number): void {
-    this.maxWorkers = Math.max(1, Math.min(max, 10)); // Between 1-10 workers
+    this.maxWorkers = Math.max(1, Math.min(max, 15)); // Between 1-15 workers for multi-file support
     console.log(`🏭 Max workers set to ${this.maxWorkers}`);
   }
 }

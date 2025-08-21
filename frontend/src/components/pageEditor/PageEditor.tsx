@@ -123,95 +123,116 @@ const PageEditor = ({
             .map(id => (selectors.getFileRecord(id)?.name ?? 'file').replace(/\.pdf$/i, ''))
             .join(' + ');
 
-    // Get pages from processed file data
-    const processedFile = primaryFileRecord.processedFile;
+    // Debug logging for merged document creation
+    console.log(`🎬 PageEditor: Building merged document for ${name} with ${activeFileIds.length} files`);
     
-    // Debug logging for processed file data
-    console.log(`🎬 PageEditor: Building document for ${name}`);
-    console.log(`🎬 ProcessedFile exists:`, !!processedFile);
-    console.log(`🎬 ProcessedFile pages:`, processedFile?.pages?.length || 0);
-    console.log(`🎬 ProcessedFile totalPages:`, processedFile?.totalPages || 'unknown');
-    if (processedFile?.pages) {
-      console.log(`🎬 Pages structure:`, processedFile.pages.map(p => ({ pageNumber: p.pageNumber || 'unknown', hasThumbnail: !!p.thumbnail })));
-    }
-    console.log(`🎬 Will use ${(processedFile?.pages?.length || 0) > 0 ? 'PROCESSED' : 'FALLBACK'} pages`);
-    
-    // Convert processed pages to PageEditor format or create placeholders from metadata
+    // Collect pages from ALL active files, not just the primary file
     let pages: PDFPage[] = [];
+    let totalPageCount = 0;
     
-    if (processedFile?.pages && processedFile.pages.length > 0) {
-      // Use fully processed pages with thumbnails
-      pages = processedFile.pages.map((page, index) => {
-        const pageId = `${primaryFileId}-page-${index + 1}`;
-        // Try multiple sources for thumbnails in order of preference:
-        // 1. Processed data thumbnail
-        // 2. Cached thumbnail from previous generation
-        // 3. For page 1: FileRecord's thumbnailUrl (from FileProcessingService)
-        let thumbnail = page.thumbnail || null;
-        const cachedThumbnail = getThumbnailFromCache(pageId);
-        if (!thumbnail && cachedThumbnail) {
-          thumbnail = cachedThumbnail;
-          console.log(`📸 PageEditor: Using cached thumbnail for page ${index + 1} (${pageId})`);
-        }
-        if (!thumbnail && index === 0) {
-          // For page 1, use the thumbnail from FileProcessingService
-          thumbnail = primaryFileRecord.thumbnailUrl || null;
-          if (thumbnail) {
-            addThumbnailToCache(pageId, thumbnail);
-            console.log(`📸 PageEditor: Using FileProcessingService thumbnail for page 1 (${pageId})`);
+    activeFileIds.forEach((fileId, fileIndex) => {
+      const fileRecord = selectors.getFileRecord(fileId);
+      if (!fileRecord) {
+        console.warn(`🎬 PageEditor: No record found for file ${fileId}`);
+        return;
+      }
+      
+      const processedFile = fileRecord.processedFile;
+      console.log(`🎬 PageEditor: Processing file ${fileIndex + 1}/${activeFileIds.length} (${fileRecord.name})`);
+      console.log(`🎬 ProcessedFile exists:`, !!processedFile);
+      console.log(`🎬 ProcessedFile pages:`, processedFile?.pages?.length || 0);
+      console.log(`🎬 ProcessedFile totalPages:`, processedFile?.totalPages || 'unknown');
+      
+      let filePages: PDFPage[] = [];
+      
+      if (processedFile?.pages && processedFile.pages.length > 0) {
+        // Use fully processed pages with thumbnails
+        filePages = processedFile.pages.map((page, pageIndex) => {
+          const pageId = `${fileId}-page-${pageIndex + 1}`;
+          const globalPageNumber = totalPageCount + pageIndex + 1;
+          
+          // Try multiple sources for thumbnails in order of preference:
+          // 1. Processed data thumbnail
+          // 2. Cached thumbnail from previous generation
+          // 3. For page 1: FileRecord's thumbnailUrl (from FileProcessingService)
+          let thumbnail = page.thumbnail || null;
+          const cachedThumbnail = getThumbnailFromCache(pageId);
+          if (!thumbnail && cachedThumbnail) {
+            thumbnail = cachedThumbnail;
+            console.log(`📸 PageEditor: Using cached thumbnail for ${fileRecord.name} page ${pageIndex + 1} (${pageId})`);
           }
-        }
-        
-        return {
-          id: pageId,
-          pageNumber: index + 1,
-          thumbnail,
-          rotation: page.rotation || 0,
-          selected: false,
-          splitBefore: page.splitBefore || false,
-        };
-      });
-    } else if (processedFile?.totalPages && processedFile.totalPages > 0) {
-      // Create placeholder pages from metadata while thumbnails are being generated
-      console.log(`🎬 PageEditor: Creating ${processedFile.totalPages} placeholder pages from metadata`);
-      pages = Array.from({ length: processedFile.totalPages }, (_, index) => {
-        const pageId = `${primaryFileId}-page-${index + 1}`;
-        
-        // Check for existing cached thumbnail
-        let thumbnail = getThumbnailFromCache(pageId) || null;
-        
-        // For page 1, try to use the FileRecord thumbnail
-        if (!thumbnail && index === 0) {
-          thumbnail = primaryFileRecord.thumbnailUrl || null;
-          if (thumbnail) {
-            addThumbnailToCache(pageId, thumbnail);
-            console.log(`📸 PageEditor: Using FileProcessingService thumbnail for placeholder page 1 (${pageId})`);
+          if (!thumbnail && pageIndex === 0) {
+            // For page 1 of each file, use the thumbnail from FileProcessingService
+            thumbnail = fileRecord.thumbnailUrl || null;
+            if (thumbnail) {
+              addThumbnailToCache(pageId, thumbnail);
+              console.log(`📸 PageEditor: Using FileProcessingService thumbnail for ${fileRecord.name} page 1 (${pageId})`);
+            }
           }
-        }
+          
+          return {
+            id: pageId,
+            pageNumber: globalPageNumber,
+            thumbnail,
+            rotation: page.rotation || 0,
+            selected: false,
+            splitBefore: page.splitBefore || false,
+          };
+        });
         
-        return {
+        totalPageCount += processedFile.pages.length;
+      } else if (processedFile?.totalPages && processedFile.totalPages > 0) {
+        // Create placeholder pages from metadata while thumbnails are being generated
+        console.log(`🎬 PageEditor: Creating ${processedFile.totalPages} placeholder pages for ${fileRecord.name} from metadata`);
+        filePages = Array.from({ length: processedFile.totalPages }, (_, pageIndex) => {
+          const pageId = `${fileId}-page-${pageIndex + 1}`;
+          const globalPageNumber = totalPageCount + pageIndex + 1;
+          
+          // Check for existing cached thumbnail
+          let thumbnail = getThumbnailFromCache(pageId) || null;
+          
+          // For page 1 of each file, try to use the FileRecord thumbnail
+          if (!thumbnail && pageIndex === 0) {
+            thumbnail = fileRecord.thumbnailUrl || null;
+            if (thumbnail) {
+              addThumbnailToCache(pageId, thumbnail);
+              console.log(`📸 PageEditor: Using FileProcessingService thumbnail for ${fileRecord.name} placeholder page 1 (${pageId})`);
+            }
+          }
+          
+          return {
+            id: pageId,
+            pageNumber: globalPageNumber,
+            thumbnail, // Will be null initially, populated by PageThumbnail components
+            rotation: 0,
+            selected: false,
+            splitBefore: false,
+          };
+        });
+        
+        totalPageCount += processedFile.totalPages;
+      } else {
+        // Ultimate fallback - single page while we wait for metadata
+        const pageId = `${fileId}-page-1`;
+        const globalPageNumber = totalPageCount + 1;
+        filePages = [{
           id: pageId,
-          pageNumber: index + 1,
-          thumbnail, // Will be null initially, populated by PageThumbnail components
+          pageNumber: globalPageNumber,
+          thumbnail: getThumbnailFromCache(pageId) || fileRecord.thumbnailUrl || null,
           rotation: 0,
           selected: false,
           splitBefore: false,
-        };
-      });
-    } else {
-      // Ultimate fallback - single page while we wait for metadata
-      pages = [{
-        id: `${primaryFileId}-page-1`,
-        pageNumber: 1,
-        thumbnail: getThumbnailFromCache(`${primaryFileId}-page-1`) || primaryFileRecord.thumbnailUrl || null,
-        rotation: 0,
-        selected: false,
-        splitBefore: false,
-      }];
-    }
+        }];
+        
+        totalPageCount += 1;
+      }
+      
+      pages.push(...filePages);
+    });
+
+    console.log(`🎬 PageEditor: Created merged document with ${pages.length} total pages from ${activeFileIds.length} files`);
 
     // Create document with determined pages
-
     return {
       id: activeFileIds.length === 1 ? (primaryFileId ?? 'unknown') : `merged:${filesSignature}`,
       name,
@@ -220,7 +241,7 @@ const PageEditor = ({
       totalPages: pages.length,
       destroy: () => {} // Optional cleanup function
     };
-  }, [filesSignature, primaryFileId, primaryFileRecord]);
+  }, [filesSignature, activeFileIds, selectors, getThumbnailFromCache, addThumbnailToCache]);
 
 
   // Display document: Use edited version if exists, otherwise original
@@ -286,74 +307,20 @@ const PageEditor = ({
 
   // Simple cache-first thumbnail generation (no complex detection needed)
 
-  // Lazy thumbnail generation - only generate when needed, with intelligent batching
-  const generateMissingThumbnails = useCallback(async () => {
-    if (!mergedPdfDocument || !primaryFileId || activeFileIds.length !== 1) {
-      return;
-    }
-
-    const file = selectors.getFile(primaryFileId);
-    if (!file) return;
-    
-    const totalPages = mergedPdfDocument.totalPages;
-    if (totalPages <= 1) return; // Only page 1, nothing to generate
-    
-    // For very large documents (2000+ pages), be much more conservative
-    const isVeryLargeDocument = totalPages > 2000;
-    
-    if (isVeryLargeDocument) {
-      console.log(`📸 PageEditor: Very large document (${totalPages} pages) - using minimal thumbnail generation`);
-      // For very large docs, only generate the next visible batch (pages 2-25) to avoid UI blocking
-      const pageNumbersToGenerate = [];
-      for (let pageNum = 2; pageNum <= Math.min(25, totalPages); pageNum++) {
-        const pageId = `${primaryFileId}-page-${pageNum}`;
-        if (!getThumbnailFromCache(pageId)) {
-          pageNumbersToGenerate.push(pageNum);
-        }
-      }
-      
-      if (pageNumbersToGenerate.length > 0) {
-        console.log(`📸 PageEditor: Generating initial batch for large doc: pages [${pageNumbersToGenerate.join(', ')}]`);
-        await generateThumbnailBatch(file, primaryFileId, pageNumbersToGenerate);
-      }
-      
-      // Schedule remaining thumbnails with delay to avoid blocking
-      setTimeout(() => {
-        generateRemainingThumbnailsLazily(file, primaryFileId, totalPages, 26);
-      }, 2000); // 2 second delay before starting background generation
-      
-      return;
-    }
-    
-    // For smaller documents, check which pages 2+ need thumbnails
-    const pageNumbersToGenerate = [];
-    for (let pageNum = 2; pageNum <= totalPages; pageNum++) {
-      const pageId = `${primaryFileId}-page-${pageNum}`;
-      if (!getThumbnailFromCache(pageId)) {
-        pageNumbersToGenerate.push(pageNum);
-      }
-    }
-
-    if (pageNumbersToGenerate.length === 0) {
-      console.log(`📸 PageEditor: All pages 2+ already cached, skipping generation`);
-      return;
-    }
-
-    console.log(`📸 PageEditor: Generating thumbnails for pages: [${pageNumbersToGenerate.slice(0, 5).join(', ')}${pageNumbersToGenerate.length > 5 ? '...' : ''}]`);
-    await generateThumbnailBatch(file, primaryFileId, pageNumbersToGenerate);
-  }, [mergedPdfDocument, primaryFileId, activeFileIds, selectors]);
-
   // Helper function to generate thumbnails in batches
   const generateThumbnailBatch = useCallback(async (file: File, fileId: string, pageNumbers: number[]) => {
+    console.log(`📸 PageEditor: Starting thumbnail batch for ${file.name}, pages: [${pageNumbers.join(', ')}]`);
+    
     try {
       // Load PDF array buffer for Web Workers
       const arrayBuffer = await file.arrayBuffer();
+      console.log(`📸 PageEditor: Loaded array buffer for ${file.name} (${arrayBuffer.byteLength} bytes)`);
 
       // Calculate quality scale based on file size
       const scale = calculateScaleFromFileSize(selectors.getFileRecord(fileId)?.size || 0);
 
       // Start parallel thumbnail generation WITHOUT blocking the main thread
-      await generateThumbnails(
+      const results = await generateThumbnails(
         fileId, // Add fileId as first parameter
         arrayBuffer,
         pageNumbers,
@@ -365,12 +332,15 @@ const PageEditor = ({
         },
         // Progress callback for thumbnail updates
         (progress: { completed: number; total: number; thumbnails: Array<{ pageNumber: number; thumbnail: string }> }) => {
+          console.log(`📸 PageEditor: Progress update - ${progress.completed}/${progress.total} completed, ${progress.thumbnails.length} new thumbnails`);
+          
           // Batch process thumbnails to reduce main thread work
           requestAnimationFrame(() => {
             progress.thumbnails.forEach(({ pageNumber, thumbnail }: { pageNumber: number; thumbnail: string }) => {
               // Use stable fileId for cache key
               const pageId = `${fileId}-page-${pageNumber}`;
               addThumbnailToCache(pageId, thumbnail);
+              console.log(`📸 PageEditor: Cached thumbnail for ${pageId}`);
 
               // Don't update context state - thumbnails stay in cache only
               // This eliminates per-page context rerenders
@@ -380,9 +350,9 @@ const PageEditor = ({
         }
       );
 
-      // Removed verbose logging - only log errors
+      console.log(`📸 PageEditor: Thumbnail batch completed for ${file.name}. Generated ${results.length} thumbnails`);
     } catch (error) {
-      console.error('PageEditor: Thumbnail generation failed:', error);
+      console.error(`PageEditor: Thumbnail generation failed for ${file.name}:`, error);
     }
   }, [generateThumbnails, addThumbnailToCache, selectors]);
 
@@ -415,6 +385,80 @@ const PageEditor = ({
     console.log(`📸 PageEditor: Background thumbnail generation completed for ${totalPages} pages`);
   }, [getThumbnailFromCache, generateThumbnailBatch]);
 
+  // Lazy thumbnail generation - only generate when needed, with intelligent batching for all files
+  const generateMissingThumbnails = useCallback(async () => {
+    if (!mergedPdfDocument || activeFileIds.length === 0) {
+      return;
+    }
+
+    const totalPages = mergedPdfDocument.totalPages;
+    if (totalPages <= activeFileIds.length) return; // Only page 1 per file, nothing to generate
+    
+    // Set a high worker limit for multi-file processing
+    // Each file may need multiple PDF document instances for parallel page processing
+    const neededWorkers = Math.min(activeFileIds.length * 3, 12); // Allow 3 workers per file, cap at 12
+    pdfWorkerManager.setMaxWorkers(neededWorkers);
+    console.log(`📸 PageEditor: Set worker limit to ${neededWorkers} for ${activeFileIds.length} files`);
+    
+    // For very large documents (2000+ pages), be much more conservative
+    const isVeryLargeDocument = totalPages > 2000;
+    
+    console.log(`📸 PageEditor: Generating thumbnails for ${activeFileIds.length} files with ${totalPages} total pages`);
+    
+    // Process files strictly sequentially to avoid PDF document contention
+    // Each file will use its own PDF document instance from the cache
+    for (const fileId of activeFileIds) {
+      const file = selectors.getFile(fileId);
+      const fileRecord = selectors.getFileRecord(fileId);
+      
+      if (!file || !fileRecord?.processedFile) continue;
+      
+      const fileTotalPages = fileRecord.processedFile.totalPages || fileRecord.processedFile.pages?.length || 1;
+      if (fileTotalPages <= 1) continue; // Only page 1 for this file, skip
+      
+      if (isVeryLargeDocument) {
+        console.log(`📸 PageEditor: Very large document (${totalPages} pages) - using minimal thumbnail generation for ${fileRecord.name}`);
+        // For very large docs, only generate the next visible batch (pages 2-25) per file to avoid UI blocking
+        const pageNumbersToGenerate = [];
+        for (let pageNum = 2; pageNum <= Math.min(25, fileTotalPages); pageNum++) {
+          const pageId = `${fileId}-page-${pageNum}`;
+          if (!getThumbnailFromCache(pageId)) {
+            pageNumbersToGenerate.push(pageNum);
+          }
+        }
+        
+        if (pageNumbersToGenerate.length > 0) {
+          console.log(`📸 PageEditor: Generating initial batch for ${fileRecord.name}: pages [${pageNumbersToGenerate.join(', ')}]`);
+          await generateThumbnailBatch(file, fileId, pageNumbersToGenerate);
+        }
+        
+        // Schedule remaining thumbnails with delay to avoid blocking
+        setTimeout(() => {
+          generateRemainingThumbnailsLazily(file, fileId, fileTotalPages, 26);
+        }, 2000); // 2 second delay before starting background generation
+      } else {
+        // For smaller documents, check which pages 2+ need thumbnails for this file
+        const pageNumbersToGenerate = [];
+        for (let pageNum = 2; pageNum <= fileTotalPages; pageNum++) {
+          const pageId = `${fileId}-page-${pageNum}`;
+          if (!getThumbnailFromCache(pageId)) {
+            pageNumbersToGenerate.push(pageNum);
+          }
+        }
+
+        if (pageNumbersToGenerate.length > 0) {
+          console.log(`📸 PageEditor: Generating thumbnails for ${fileRecord.name}: [${pageNumbersToGenerate.slice(0, 5).join(', ')}${pageNumbersToGenerate.length > 5 ? '...' : ''}]`);
+          await generateThumbnailBatch(file, fileId, pageNumbersToGenerate);
+        }
+      }
+      
+      // Delay between files to ensure proper sequential processing and worker cleanup
+      if (activeFileIds.length > 1) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Increased delay
+      }
+    }
+  }, [mergedPdfDocument, activeFileIds, selectors, getThumbnailFromCache, generateThumbnailBatch, generateRemainingThumbnailsLazily]);
+
   // Simple useEffect - just generate missing thumbnails when document is ready
   useEffect(() => {
     if (mergedPdfDocument && mergedPdfDocument.totalPages > 1) {
@@ -437,7 +481,8 @@ const PageEditor = ({
       enhancedPDFProcessingService.emergencyCleanup();
       fileProcessingService.emergencyCleanup();
       pdfProcessingService.clearAll();
-      // Final emergency cleanup of all workers
+      // Reset worker limit to default and cleanup
+      pdfWorkerManager.setMaxWorkers(3); // Reset to conservative default
       pdfWorkerManager.emergencyCleanup();
     };
   }, [stopGeneration, destroyThumbnails]);
