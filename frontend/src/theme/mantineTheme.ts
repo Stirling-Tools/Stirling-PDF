@@ -148,10 +148,10 @@ export const mantineTheme = createTheme({
         },
         option: {
           color: 'var(--text-primary)',
-          '&[dataHovered]': {
+          '&[data-hovered]': {
             backgroundColor: 'var(--hover-bg)',
           },
-          '&[dataSelected]': {
+          '&[data-selected]': {
             backgroundColor: 'var(--color-primary-100)',
             color: 'var(--color-primary-900)',
           },
@@ -181,10 +181,10 @@ export const mantineTheme = createTheme({
         },
         option: {
           color: 'var(--text-primary)',
-          '&[dataHovered]': {
+          '&[data-hovered]': {
             backgroundColor: 'var(--hover-bg)',
           },
-          '&[dataSelected]': {
+          '&[data-selected]': {
             backgroundColor: 'var(--color-primary-100)',
             color: 'var(--color-primary-900)',
           },
@@ -283,7 +283,7 @@ export const mantineTheme = createTheme({
         },
         control: {
           color: 'var(--text-secondary)',
-          '[dataActive]': {
+          '[data-active]': {
             backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
             boxShadow: 'var(--shadow-sm)',
