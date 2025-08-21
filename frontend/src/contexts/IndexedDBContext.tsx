@@ -25,6 +25,7 @@ interface IndexedDBContextValue {
   
   // Utilities
   getStorageStats: () => Promise<{ used: number; available: number; fileCount: number }>;
+  updateThumbnail: (fileId: FileId, thumbnail: string) => Promise<boolean>;
 }
 
 const IndexedDBContext = createContext<IndexedDBContextValue | null>(null);
@@ -174,6 +175,10 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     return await fileStorage.getStorageStats();
   }, []);
 
+  const updateThumbnail = useCallback(async (fileId: FileId, thumbnail: string): Promise<boolean> => {
+    return await fileStorage.updateThumbnail(fileId, thumbnail);
+  }, []);
+
   const value: IndexedDBContextValue = {
     saveFile,
     loadFile,
@@ -182,7 +187,8 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     loadAllMetadata,
     deleteMultiple,
     clearAll,
-    getStorageStats
+    getStorageStats,
+    updateThumbnail
   };
 
   return (

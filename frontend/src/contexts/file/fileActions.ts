@@ -238,15 +238,6 @@ export async function addFiles(
         
         const record = toFileRecord(file, fileId);
         
-        // Restore metadata from storage
-        if (metadata.thumbnail) {
-          record.thumbnailUrl = metadata.thumbnail;
-          // Track blob URLs for cleanup (images return blob URLs that need revocation)
-          if (metadata.thumbnail.startsWith('blob:')) {
-            lifecycleManager.trackBlobUrl(metadata.thumbnail);
-          }
-        }
-        
         // Generate processedFile metadata for stored files
         let pageCount: number = 1;
         
@@ -269,6 +260,15 @@ export async function addFiles(
         } else {
           pageCount = 0; // Non-PDFs have no page count
           if (DEBUG) console.log(`📄 addFiles(stored): Non-PDF file ${file.name}, no page count`);
+        }
+        
+        // Restore metadata from storage
+        if (metadata.thumbnail) {
+          record.thumbnailUrl = metadata.thumbnail;
+          // Track blob URLs for cleanup (images return blob URLs that need revocation)
+          if (metadata.thumbnail.startsWith('blob:')) {
+            lifecycleManager.trackBlobUrl(metadata.thumbnail);
+          }
         }
         
         // Create processedFile metadata with correct page count

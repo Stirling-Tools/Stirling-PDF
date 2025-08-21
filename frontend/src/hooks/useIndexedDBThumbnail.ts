@@ -66,6 +66,15 @@ export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
           const thumbnail = await generateThumbnailForFile(fileObject);
           if (!cancelled) {
             setThumb(thumbnail);
+            
+            // Save thumbnail to IndexedDB for persistence
+            if (file.id && indexedDB && thumbnail) {
+              try {
+                await indexedDB.updateThumbnail(file.id, thumbnail);
+              } catch (error) {
+                console.warn('Failed to save thumbnail to IndexedDB:', error);
+              }
+            }
           }
         } catch (error) {
           console.warn('Failed to generate thumbnail for file', file.name, error);

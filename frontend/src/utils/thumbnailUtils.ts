@@ -333,9 +333,14 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
     return generatePlaceholderThumbnail(file);
   }
 
-  // Handle image files - creates blob URL that needs cleanup by caller
+  // Handle image files - convert to data URL for persistence
   if (file.type.startsWith('image/')) {
-    return URL.createObjectURL(file);
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
   }
 
   // Handle PDF files
