@@ -71,7 +71,6 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleSettingsReset = () => {
     ocrOperation.resetResults();
     onPreviewFile?.(null);
-    actions.setMode("ocr");
   };
 
   const settingsCollapsed = expandedStep !== "settings";

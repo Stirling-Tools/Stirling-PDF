@@ -49,7 +49,6 @@ const Repair = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleSettingsReset = () => {
     repairOperation.resetResults();
     onPreviewFile?.(null);
-    actions.setMode("repair");
   };
 
   const hasFiles = selectedFiles.length > 0;

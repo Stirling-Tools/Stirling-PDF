@@ -49,7 +49,6 @@ const UnlockPdfForms = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   const handleSettingsReset = () => {
     unlockPdfFormsOperation.resetResults();
     onPreviewFile?.(null);
-    actions.setMode("unlockPdfForms");
   };
 
   const hasFiles = selectedFiles.length > 0;

@@ -49,7 +49,6 @@ const RemoveCertificateSign = ({ onPreviewFile, onComplete, onError }: BaseToolP
   const handleSettingsReset = () => {
     removeCertificateSignOperation.resetResults();
     onPreviewFile?.(null);
-    actions.setMode("removeCertificateSign");
   };
 
   const hasFiles = selectedFiles.length > 0;

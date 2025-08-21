@@ -92,7 +92,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleSettingsReset = () => {
     convertOperation.resetResults();
     onPreviewFile?.(null);
-    actions.setMode("convert");
   };
 
   return createToolFlow({

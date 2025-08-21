@@ -53,7 +53,6 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
   const handleSettingsReset = () => {
     changePermissionsOperation.resetResults();
     onPreviewFile?.(null);
-    actions.setMode("changePermissions");
   };
 
   const hasFiles = selectedFiles.length > 0;

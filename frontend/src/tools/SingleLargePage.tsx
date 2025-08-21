@@ -49,7 +49,6 @@ const SingleLargePage = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
   const handleSettingsReset = () => {
     singleLargePageOperation.resetResults();
     onPreviewFile?.(null);
-    actions.setMode("single-large-page");
   };
 
   const hasFiles = selectedFiles.length > 0;
