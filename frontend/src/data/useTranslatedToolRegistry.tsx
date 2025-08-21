@@ -21,7 +21,8 @@ const showPlaceholderTools = false; // For development purposes. Allows seeing t
 export function useFlatToolRegistry(): ToolRegistry {
   const { t } = useTranslation();
 
-  const allTools: ToolRegistry = {
+  return useMemo(() => {
+    const allTools: ToolRegistry = {
     // Signing
 
     "certSign": {
@@ -620,15 +621,16 @@ export function useFlatToolRegistry(): ToolRegistry {
     },
   };
 
-  if (showPlaceholderTools) {
-    return allTools;
-  } else {
-    const filteredTools = Object.keys(allTools)
-      .filter(key => allTools[key].component !== null || allTools[key].link)
-      .reduce((obj, key) => {
-        obj[key] = allTools[key];
-        return obj;
-      }, {} as ToolRegistry);
-    return filteredTools;
-  }
+    if (showPlaceholderTools) {
+      return allTools;
+    } else {
+      const filteredTools = Object.keys(allTools)
+        .filter(key => allTools[key].component !== null || allTools[key].link)
+        .reduce((obj, key) => {
+          obj[key] = allTools[key];
+          return obj;
+        }, {} as ToolRegistry);
+      return filteredTools;
+    }
+  }, [t]); // Only re-compute when translations change
 }

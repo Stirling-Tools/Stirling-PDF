@@ -74,7 +74,6 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         return (
           <AutomationRun
             automation={stepData.automation}
-            onBack={() => handleStepChange({ step: 'selection'})}
             onComplete={handleComplete}
             automateOperation={automateOperation}
           />
@@ -121,7 +120,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     // Run step
     createStep(t('automate.run.title', 'Run Automation'), {
       isVisible: currentStep === 'run',
-      isCollapsed: false
+      isCollapsed: hasResults,
     }, currentStep === 'run' ? renderCurrentStep() : null)
   ];
 
