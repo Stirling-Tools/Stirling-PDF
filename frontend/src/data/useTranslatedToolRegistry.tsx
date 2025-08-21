@@ -17,9 +17,27 @@ import RemoveCertificateSign from '../tools/RemoveCertificateSign';
 import { compressOperationConfig } from '../hooks/tools/compress/useCompressOperation';
 import { splitOperationConfig } from '../hooks/tools/split/useSplitOperation';
 import { addPasswordOperationConfig } from '../hooks/tools/addPassword/useAddPasswordOperation';
+import { removePasswordOperationConfig } from '../hooks/tools/removePassword/useRemovePasswordOperation';
+import { sanitizeOperationConfig } from '../hooks/tools/sanitize/useSanitizeOperation';
+import { repairOperationConfig } from '../hooks/tools/repair/useRepairOperation';
+import { addWatermarkOperationConfig } from '../hooks/tools/addWatermark/useAddWatermarkOperation';
+import { unlockPdfFormsOperationConfig } from '../hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation';
+import { singleLargePageOperationConfig } from '../hooks/tools/singleLargePage/useSingleLargePageOperation';
+import { ocrOperationConfig } from '../hooks/tools/ocr/useOCROperation';
+import { convertOperationConfig } from '../hooks/tools/convert/useConvertOperation';
+import { removeCertificateSignOperationConfig } from '../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation';
+import { changePermissionsOperationConfig } from '../hooks/tools/changePermissions/useChangePermissionsOperation';
 import CompressSettings from '../components/tools/compress/CompressSettings';
 import SplitSettings from '../components/tools/split/SplitSettings';
 import AddPasswordSettings from '../components/tools/addPassword/AddPasswordSettings';
+import RemovePasswordSettings from '../components/tools/removePassword/RemovePasswordSettings';
+import SanitizeSettings from '../components/tools/sanitize/SanitizeSettings';
+import RepairSettings from '../components/tools/repair/RepairSettings';
+import UnlockPdfFormsSettings from '../components/tools/unlockPdfForms/UnlockPdfFormsSettings';
+import AddWatermarkSingleStepSettings from '../components/tools/addWatermark/AddWatermarkSingleStepSettings';
+import OCRSettings from '../components/tools/ocr/OCRSettings';
+import ConvertSettings from '../components/tools/convert/ConvertSettings';
+import ChangePermissionsSettings from '../components/tools/changePermissions/ChangePermissionsSettings';
 
 const showPlaceholderTools = false; // For development purposes. Allows seeing the full list of tools, even if they're unimplemented
 
@@ -75,7 +93,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.watermark.desc", "Add a custom watermark to your PDF document."),
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.DOCUMENT_SECURITY,
-        endpoints: ["add-watermark"]
+        endpoints: ["add-watermark"],
+        operationConfig: addWatermarkOperationConfig,
+        settingsComponent: AddWatermarkSingleStepSettings
     },
     "add-stamp": {
         icon: <span className="material-symbols-rounded">approval</span>,
@@ -95,7 +115,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.DOCUMENT_SECURITY,
         description: t("home.sanitize.desc", "Remove potentially harmful elements from PDF files"),
-        endpoints: ["sanitize-pdf"]
+        endpoints: ["sanitize-pdf"],
+        operationConfig: sanitizeOperationConfig,
+        settingsComponent: SanitizeSettings
     },
     "flatten": {
         icon: <span className="material-symbols-rounded">layers_clear</span>,
@@ -115,7 +137,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
-        endpoints: ["unlock-pdf-forms"]
+        endpoints: ["unlock-pdf-forms"],
+        operationConfig: unlockPdfFormsOperationConfig,
+        settingsComponent: UnlockPdfFormsSettings
     },
     "manage-certificates": {
         icon: <span className="material-symbols-rounded">license</span>,
@@ -135,7 +159,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
-        endpoints: ["add-password"]
+        endpoints: ["add-password"],
+        operationConfig: changePermissionsOperationConfig,
+        settingsComponent: ChangePermissionsSettings
     },
     // Verification
 
@@ -255,7 +281,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
-        endpoints: ["pdf-to-single-page"]
+        endpoints: ["pdf-to-single-page"],
+        operationConfig: singleLargePageOperationConfig
     },
     "add-attachments": {
         icon: <span className="material-symbols-rounded">attachment</span>,
@@ -338,7 +365,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategory: SubcategoryId.REMOVAL,
         endpoints: ["remove-password"],
         maxFiles: -1,
-
+        operationConfig: removePasswordOperationConfig,
+        settingsComponent: RemovePasswordSettings
     },
     "remove-certificate-sign": {
         icon: <span className="material-symbols-rounded">remove_moderator</span>,
@@ -349,7 +377,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.STANDARD_TOOLS,
         subcategory: SubcategoryId.REMOVAL,
         maxFiles: -1,
-        endpoints: ["remove-certificate-sign"]
+        endpoints: ["remove-certificate-sign"],
+        operationConfig: removeCertificateSignOperationConfig
     },
 
 
@@ -415,7 +444,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         category: ToolCategory.ADVANCED_TOOLS,
         subcategory: SubcategoryId.ADVANCED_FORMATTING,
         maxFiles: -1,
-        endpoints: ["repair"]
+        endpoints: ["repair"],
+        operationConfig: repairOperationConfig,
+        settingsComponent: RepairSettings
     },
     "detect-split-scanned-photos": {
         icon: <span className="material-symbols-rounded">scanner</span>,
@@ -590,7 +621,8 @@ export function useFlatToolRegistry(): ToolRegistry {
             "zip",
             // Other
             "dbf", "fods", "vsd", "vor", "vor3", "vor4", "uop", "pct", "ps", "pdf"
-        ]
+        ],
+        operationConfig: convertOperationConfig
     },
     "mergePdfs": {
         icon: <span className="material-symbols-rounded">library_add</span>,
@@ -620,7 +652,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.ocr.desc", "Extract text from scanned PDFs using Optical Character Recognition"),
         category: ToolCategory.RECOMMENDED_TOOLS,
         subcategory: SubcategoryId.GENERAL,
-        maxFiles: -1
+        maxFiles: -1,
+        operationConfig: ocrOperationConfig,
+        settingsComponent: OCRSettings
     },
     "redact": {
         icon: <span className="material-symbols-rounded">visibility_off</span>,

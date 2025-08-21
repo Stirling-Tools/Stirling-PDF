@@ -46,7 +46,7 @@ export interface ConvertParametersHook extends BaseParametersHook<ConvertParamet
   analyzeFileTypes: (files: Array<{name: string}>) => void;
 }
 
-const defaultParameters: ConvertParameters = {
+export const defaultParameters: ConvertParameters = {
   fromExtension: '',
   toExtension: '',
   imageOptions: {
