@@ -44,7 +44,6 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleSettingsReset = () => {
     sanitizeOperation.resetResults();
     onPreviewFile?.(null);
-    actions.setMode("sanitize");
   };
 
   const handleThumbnailClick = (file: File) => {
