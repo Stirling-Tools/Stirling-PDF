@@ -20,12 +20,12 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { ToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
+import { SingleFileToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
 
 describe('useRemovePasswordOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
 
-  const getToolConfig = (): ToolOperationConfig<RemovePasswordParameters> => mockUseToolOperation.mock.calls[0][0];
+  const getToolConfig = () => mockUseToolOperation.mock.calls[0][0] as SingleFileToolOperationConfig<RemovePasswordParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -91,7 +91,7 @@ describe('useRemovePasswordOperation', () => {
   });
 
   test.each([
-    { property: 'multiFileEndpoint' as const, expectedValue: false },
+    { property: 'toolType' as const, expectedValue: 'singleFile' },
     { property: 'endpoint' as const, expectedValue: '/api/v1/security/remove-password' },
     { property: 'filePrefix' as const, expectedValue: 'translated-removePassword.filenamePrefix_' },
     { property: 'operationType' as const, expectedValue: 'removePassword' }

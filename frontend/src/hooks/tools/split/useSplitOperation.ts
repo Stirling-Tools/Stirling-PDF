@@ -59,11 +59,11 @@ export const useSplitOperation = () => {
   const { t } = useTranslation();
 
   return useToolOperation<SplitParameters>({
+    toolType: 'multiFile',
+    buildFormData,
     operationType: 'split',
     endpoint: (params) => getEndpoint(params),
-    buildFormData: buildFormData, // Multi-file signature: (params, selectedFiles) => FormData
     filePrefix: 'split_',
-    multiFileEndpoint: true, // Single API call with all files
     getErrorMessage: createStandardErrorHandler(t('split.error.failed', 'An error occurred while splitting the PDF.'))
   });
 };

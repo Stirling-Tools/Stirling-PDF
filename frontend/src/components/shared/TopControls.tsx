@@ -10,6 +10,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import { Group } from "@mantine/core";
+import { isViewType, ViewType } from "../../types/fileContext";
 
 // This will be created inside the component to access switchingTo
 const createViewOptions = (switchingTo: string | null) => [
@@ -52,8 +53,8 @@ const createViewOptions = (switchingTo: string | null) => [
 ];
 
 interface TopControlsProps {
-  currentView: string;
-  setCurrentView: (view: string) => void;
+  currentView: ViewType;
+  setCurrentView: (view: ViewType) => void;
   selectedToolKey?: string | null;
 }
 
@@ -67,7 +68,7 @@ const TopControls = ({
 
   const isToolSelected = selectedToolKey !== null;
 
-  const handleViewChange = useCallback((view: string) => {
+  const handleViewChange = useCallback((view: ViewType) => {
     // Show immediate feedback
     setSwitchingTo(view);
 
@@ -119,7 +120,7 @@ const TopControls = ({
             <SegmentedControl
               data={createViewOptions(switchingTo)}
               value={currentView}
-              onChange={handleViewChange}
+              onChange={(value) => isViewType(value) && handleViewChange}
               color="blue"
               radius="xl"
               size="md"

@@ -129,11 +129,10 @@ export const useConvertOperation = () => {
   }, [t]);
 
   return useToolOperation<ConvertParameters>({
-    operationType: 'convert',
-    endpoint: '', // Not used with customProcessor but required
-    buildFormData, // Not used with customProcessor but required
-    filePrefix: 'converted_',
+    toolType: 'custom',
     customProcessor: customConvertProcessor, // Convert handles its own routing
+    operationType: 'convert',
+    filePrefix: 'converted_',
     getErrorMessage: (error) => {
       if (error.response?.data && typeof error.response.data === 'string') {
         return error.response.data;
@@ -142,6 +141,6 @@ export const useConvertOperation = () => {
         return error.message;
       }
       return t("convert.errorConversion", "An error occurred while converting the file.");
-    }
+    },
   });
 };

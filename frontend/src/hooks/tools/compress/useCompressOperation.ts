@@ -25,11 +25,11 @@ export const useCompressOperation = () => {
   const { t } = useTranslation();
 
   return useToolOperation<CompressParameters>({
+    toolType: 'singleFile',
+    buildFormData,
     operationType: 'compress',
     endpoint: '/api/v1/misc/compress-pdf',
-    buildFormData,
     filePrefix: 'compressed_',
-    multiFileEndpoint: false, // Individual API calls per file
     getErrorMessage: createStandardErrorHandler(t('compress.error.failed', 'An error occurred while compressing the PDF.'))
   });
 };

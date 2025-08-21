@@ -25,13 +25,13 @@ export const useChangePermissionsOperation = () => {
   };
 
   return useToolOperation({
+    toolType: 'singleFile',
+    buildFormData,
     operationType: 'changePermissions',
     endpoint: '/api/v1/security/add-password', // Change Permissions is a fake endpoint for the Add Password tool
-    buildFormData,
     filePrefix: 'permissions_',
-    multiFileEndpoint: false,
     getErrorMessage: createStandardErrorHandler(
       t('changePermissions.error.failed', 'An error occurred while changing PDF permissions.')
-    )
+    ),
   });
 };

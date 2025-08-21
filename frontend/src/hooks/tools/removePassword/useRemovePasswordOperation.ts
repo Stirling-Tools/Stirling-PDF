@@ -14,11 +14,11 @@ export const useRemovePasswordOperation = () => {
   };
 
   return useToolOperation<RemovePasswordParameters>({
+    toolType: 'singleFile',
+    buildFormData,
     operationType: 'removePassword',
     endpoint: '/api/v1/security/remove-password',
-    buildFormData,
     filePrefix: t('removePassword.filenamePrefix', 'decrypted') + '_',
-    multiFileEndpoint: false,
     getErrorMessage: createStandardErrorHandler(t('removePassword.error.failed', 'An error occurred while removing the password from the PDF.'))
   });
 };

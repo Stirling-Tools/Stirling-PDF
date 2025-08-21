@@ -96,11 +96,11 @@ export const useOCROperation = () => {
   }, [t, extractZipFiles]);
 
   const ocrConfig: ToolOperationConfig<OCRParameters> = {
+    toolType: 'singleFile',
+    buildFormData,
     operationType: 'ocr',
     endpoint: '/api/v1/misc/ocr-pdf',
-    buildFormData,
     filePrefix: 'ocr_',
-    multiFileEndpoint: false, // Process files individually
     responseHandler, // use shared flow
     getErrorMessage: (error) =>
       error.message?.includes('OCR tools') && error.message?.includes('not installed')

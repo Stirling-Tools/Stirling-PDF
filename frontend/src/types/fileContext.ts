@@ -24,7 +24,17 @@ export type ModeType =
   | 'unlockPdfForms'
   | 'removeCertificateSign';
 
-export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
+const VIEW_TYPES = [
+  'viewer',
+  'pageEditor',
+  'fileEditor',
+] as const;
+
+export type ViewType = typeof VIEW_TYPES[number];
+
+export const isViewType = (value: string): value is ViewType => {
+  return VIEW_TYPES.includes(value as ViewType);
+}
 
 export type ToolType = 'merge' | 'split' | 'compress' | 'ocr' | 'convert' | 'sanitize';
 

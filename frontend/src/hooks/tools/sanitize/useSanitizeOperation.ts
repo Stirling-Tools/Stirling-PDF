@@ -22,11 +22,11 @@ export const useSanitizeOperation = () => {
   const { t } = useTranslation();
 
   return useToolOperation<SanitizeParameters>({
+    toolType: 'singleFile',
+    buildFormData,
     operationType: 'sanitize',
     endpoint: '/api/v1/security/sanitize-pdf',
-    buildFormData,
     filePrefix: t('sanitize.filenamePrefix', 'sanitized') + '_',
-    multiFileEndpoint: false, // Individual API calls per file
     getErrorMessage: createStandardErrorHandler(t('sanitize.error.failed', 'An error occurred while sanitising the PDF.'))
   });
 };
