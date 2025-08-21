@@ -52,8 +52,8 @@ export const buildOCRFormData = (parameters: OCRParameters, file: File): FormDat
   return formData;
 };
 
-// Static response handler for OCR - can be used by automation executor
-export const ocrResponseHandler = async (blob: Blob, originalFiles: File[], extractZipFiles: (blob: Blob) => Promise<{ success: boolean; extractedFiles: File[]; errors: string[] }>): Promise<File[]> => {
+// Static response handler for OCR - can be used by automation executor  
+export const ocrResponseHandler = async (blob: Blob, originalFiles: File[], extractZipFiles: (blob: Blob) => Promise<File[]>): Promise<File[]> => {
   const headBuf = await blob.slice(0, 8).arrayBuffer();
   const head = new TextDecoder().decode(new Uint8Array(headBuf));
 
@@ -61,8 +61,8 @@ export const ocrResponseHandler = async (blob: Blob, originalFiles: File[], extr
   if (head.startsWith('PK')) {
     const base = stripExt(originalFiles[0].name);
     try {
-      const result = await extractZipFiles(blob);
-      if (result.success && result.extractedFiles.length > 0) return result.extractedFiles;
+      const extractedFiles = await extractZipFiles(blob);
+      if (extractedFiles.length > 0) return extractedFiles;
     } catch { /* ignore and try local extractor */ }
     try {
       const local = await extractZipFile(blob); // local fallback
@@ -108,7 +108,9 @@ export const useOCROperation = () => {
 
   // OCR-specific parsing: ZIP (sidecar) vs PDF vs HTML error
   const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
-    return ocrResponseHandler(blob, originalFiles, extractZipFiles);
+    // extractZipFiles from useToolResources already returns File[] directly
+    const simpleExtractZipFiles = extractZipFiles;
+    return ocrResponseHandler(blob, originalFiles, simpleExtractZipFiles);
   }, [extractZipFiles]);
 
   const ocrConfig: ToolOperationConfig<OCRParameters> = {

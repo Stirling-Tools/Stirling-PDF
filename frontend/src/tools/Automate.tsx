@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useFileSelection } from "../contexts/FileContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import { createFilesToolStep } from "../components/tools/shared/FilesToolStep";
@@ -16,8 +16,7 @@ import { useSavedAutomations } from "../hooks/tools/automate/useSavedAutomations
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
+  const { selectedFiles } = useFileSelection();
 
   const [currentStep, setCurrentStep] = useState<'selection' | 'creation' | 'run'>('selection');
   const [stepData, setStepData] = useState<any>({});

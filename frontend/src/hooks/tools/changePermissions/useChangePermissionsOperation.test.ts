@@ -25,7 +25,7 @@ import { ToolOperationConfig, ToolOperationHook, useToolOperation } from '../sha
 describe('useChangePermissionsOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
 
-  const getToolConfig = (): ToolOperationConfig<ChangePermissionsParameters> => mockUseToolOperation.mock.calls[0][0];
+  const getToolConfig = (): ToolOperationConfig<ChangePermissionsParameters> => mockUseToolOperation.mock.calls[0][0] as ToolOperationConfig<ChangePermissionsParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button, Text, Stack, Group, Card, Progress } from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
-import { useFileSelection } from "../../../contexts/FileSelectionContext";
+import { useFileSelection } from "../../../contexts/FileContext";
 import { useFlatToolRegistry } from "../../../data/useTranslatedToolRegistry";
 
 interface AutomationRunProps {
