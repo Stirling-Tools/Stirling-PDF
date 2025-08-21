@@ -1,33 +1,35 @@
 import React, { useMemo, useRef, useLayoutEffect, useState } from "react";
 import { Box, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ToolRegistryEntry } from "../../data/toolsTaxonomy";
+import { getSubcategoryLabel, ToolId, ToolRegistryEntry } from "../../data/toolsTaxonomy";
 import ToolButton from "./toolPicker/ToolButton";
 import "./toolPicker/ToolPicker.css";
-import { useToolSections } from "../../hooks/useToolSections";
+import { SubcategoryGroup, useToolSections } from "../../hooks/useToolSections";
 import SubcategoryHeader from "./shared/SubcategoryHeader";
 import NoToolsFound from "./shared/NoToolsFound";
+import { TFunction } from "i18next";
 
 interface ToolPickerProps {
-  selectedToolKey: string | null;
-  onSelect: (id: string) => void;
-  filteredTools: [string, ToolRegistryEntry][];
+  selectedToolKey: ToolId | null;
+  onSelect: (id: ToolId) => void;
+  filteredTools: [ToolId, ToolRegistryEntry][];
   isSearching?: boolean;
 }
 
 // Helper function to render tool buttons for a subcategory
 const renderToolButtons = (
-  subcategory: any,
-  selectedToolKey: string | null,
-  onSelect: (id: string) => void,
+  t: TFunction,
+  subcategory: SubcategoryGroup,
+  selectedToolKey: ToolId | null,
+  onSelect: (id: ToolId) => void,
   showSubcategoryHeader: boolean = true
 ) => (
-  <Box key={subcategory.subcategory} w="100%">
+  <Box key={subcategory.subcategoryId} w="100%">
     {showSubcategoryHeader && (
-      <SubcategoryHeader label={subcategory.subcategory} />
+      <SubcategoryHeader label={getSubcategoryLabel(t, subcategory.subcategoryId)} />
     )}
     <Stack gap="xs">
-      {subcategory.tools.map(({ id, tool }: { id: string; tool: any }) => (
+      {subcategory.tools.map(({ id, tool }) => (
         <ToolButton
           key={id}
           id={id}
@@ -69,11 +71,11 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const { sections: visibleSections } = useToolSections(filteredTools);
 
   const quickSection = useMemo(
-    () => visibleSections.find(s => (s as any).key === 'quick'),
+    () => visibleSections.find(s => s.key === 'quick'),
     [visibleSections]
   );
   const allSection = useMemo(
-    () => visibleSections.find(s => (s as any).key === 'all'),
+    () => visibleSections.find(s => s.key === 'all'),
     [visibleSections]
   );
 
@@ -120,7 +122,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             {searchGroups.length === 0 ? (
               <NoToolsFound />
             ) : (
-              searchGroups.map(group => renderToolButtons(group, selectedToolKey, onSelect))
+              searchGroups.map(group => renderToolButtons(t, group, selectedToolKey, onSelect))
             )}
           </Stack>
         ) : (
@@ -164,8 +166,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={quickAccessRef} w="100%">
               <Stack p="sm" gap="xs">
-                {quickSection?.subcategories.map(sc => 
-                  renderToolButtons(sc, selectedToolKey, onSelect, false)
+                {quickSection?.subcategories.map(sc =>
+                  renderToolButtons(t, sc, selectedToolKey, onSelect, false)
                 )}
               </Stack>
             </Box>
@@ -210,8 +212,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
-                {allSection?.subcategories.map(sc => 
-                  renderToolButtons(sc, selectedToolKey, onSelect, true)
+                {allSection?.subcategories.map(sc =>
+                  renderToolButtons(t, sc, selectedToolKey, onSelect, true)
                 )}
               </Stack>
             </Box>

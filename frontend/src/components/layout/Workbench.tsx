@@ -14,6 +14,7 @@ import PageEditorControls from '../pageEditor/PageEditorControls';
 import Viewer from '../viewer/Viewer';
 import ToolRenderer from '../tools/ToolRenderer';
 import LandingPage from '../shared/LandingPage';
+import { ToolId } from '../../data/toolsTaxonomy';
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -42,15 +43,15 @@ export default function Workbench() {
   const handlePreviewClose = () => {
     setPreviewFile(null);
     const previousMode = sessionStorage.getItem('previousMode');
-    if (previousMode === 'split') {
+    if (previousMode === ToolId.SPLIT_PDF) {
       // Use context's handleToolSelect which coordinates tool selection and view changes
-      handleToolSelect('split');
+      handleToolSelect(ToolId.SPLIT_PDF);
       sessionStorage.removeItem('previousMode');
-    } else if (previousMode === 'compress') {
-      handleToolSelect('compress');
+    } else if (previousMode === ToolId.COMPRESS) {
+      handleToolSelect(ToolId.COMPRESS);
       sessionStorage.removeItem('previousMode');
-    } else if (previousMode === 'convert') {
-      handleToolSelect('convert');
+    } else if (previousMode === ToolId.CONVERT) {
+      handleToolSelect(ToolId.CONVERT);
       sessionStorage.removeItem('previousMode');
     } else {
       setCurrentView('fileEditor');

@@ -1,22 +1,22 @@
 import React from "react";
 import { Button } from "@mantine/core";
 import { Tooltip } from "../../shared/Tooltip";
-import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
+import { ToolId, ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import FitText from "../../shared/FitText";
 
 interface ToolButtonProps {
-  id: string;
+  id: ToolId;
   tool: ToolRegistryEntry;
   isSelected: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: ToolId) => void;
 }
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect }) => {
-  const handleClick = (id: string) => {
+  const handleClick = (id: ToolId) => {
     if (tool.link) {
-      // Open external link in new tab 
+      // Open external link in new tab
       window.open(tool.link, '_blank', 'noopener,noreferrer');
-      return; 
+      return;
     }
     // Normal tool selection
     onSelect(id);
@@ -47,4 +47,4 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
   );
 };
 
-export default ToolButton; 
+export default ToolButton;

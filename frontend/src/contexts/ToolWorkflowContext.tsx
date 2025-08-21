@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
-import { ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { ToolId, ToolRegistryEntry } from '../data/toolsTaxonomy';
 import { useToolWorkflowUrlSync } from '../hooks/useUrlSync';
 
 // State interface
@@ -69,10 +69,10 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
 // Context value interface
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
-  selectedToolKey: string | null;
+  selectedToolKey: ToolId | null;
   selectedTool: ToolRegistryEntry | null;
   toolRegistry: any; // From useToolManagement
-  
+
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
   setLeftPanelView: (view: 'toolPicker' | 'toolContent') => void;
@@ -82,16 +82,16 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setSearchQuery: (query: string) => void;
 
   // Tool Actions
-  selectTool: (toolId: string) => void;
+  selectTool: (toolId: ToolId) => void;
   clearToolSelection: () => void;
 
   // Workflow Actions (compound actions)
-  handleToolSelect: (toolId: string) => void;
+  handleToolSelect: (toolId: ToolId) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: [string, ToolRegistryEntry][]; // Filtered by search
+  filteredTools: [ToolId, ToolRegistryEntry][]; // Filtered by search
   isPanelVisible: boolean;
 }
 
@@ -144,9 +144,9 @@ export function ToolWorkflowProvider({ children, onViewChange, enableUrlSync = t
   }, []);
 
   // Workflow actions (compound actions that coordinate multiple state changes)
-  const handleToolSelect = useCallback((toolId: string) => {
+  const handleToolSelect = useCallback((toolId: ToolId) => {
     // Special-case: if tool is a dedicated reader tool, enter reader mode and do not go to toolContent
-    if (toolId === 'read' || toolId === 'view-pdf') {
+    if (toolId === ToolId.READ) {
       setReaderMode(true);
       setLeftPanelView('toolPicker');
       clearToolSelection();
@@ -175,7 +175,7 @@ export function ToolWorkflowProvider({ children, onViewChange, enableUrlSync = t
   // Filter tools based on search query
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    return Object.entries(toolRegistry).filter(([_, { name }]) =>
+    return (Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]).filter(([_, { name }]) =>
       name.toLowerCase().includes(state.searchQuery.toLowerCase())
     );
   }, [toolRegistry, state.searchQuery]);

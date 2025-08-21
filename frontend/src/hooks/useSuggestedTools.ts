@@ -7,9 +7,10 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import CropIcon from '@mui/icons-material/Crop';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
+import { ToolId } from '../data/toolsTaxonomy';
 
 export interface SuggestedTool {
-  name: string;
+  id: ToolId;
   title: string;
   icon: React.ComponentType<any>;
   navigate: () => void;
@@ -17,27 +18,27 @@ export interface SuggestedTool {
 
 const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
   {
-    name: 'compress',
+    id: ToolId.COMPRESS,
     title: 'Compress',
     icon: CompressIcon
   },
   {
-    name: 'convert',
+    id: ToolId.CONVERT,
     title: 'Convert',
     icon: SwapHorizIcon
   },
   {
-    name: 'sanitize',
+    id: ToolId.SANITIZE,
     title: 'Sanitize',
     icon: CleaningServicesIcon
   },
   {
-    name: 'split',
+    id: ToolId.SPLIT_PDF,
     title: 'Split',
     icon: CropIcon
   },
   {
-    name: 'ocr',
+    id: ToolId.OCR,
     title: 'OCR',
     icon: TextFieldsIcon
   }
@@ -48,12 +49,12 @@ export function useSuggestedTools(): SuggestedTool[] {
 
   return useMemo(() => {
     // Filter out the current tool
-    const filteredTools = ALL_SUGGESTED_TOOLS.filter(tool => tool.name !== selectedToolKey);
-    
+    const filteredTools = ALL_SUGGESTED_TOOLS.filter(tool => tool.id !== selectedToolKey);
+
     // Add navigation function to each tool
     return filteredTools.map(tool => ({
       ...tool,
-      navigate: () => handleToolSelect(tool.name)
+      navigate: () => handleToolSelect(tool.id)
     }));
   }, [selectedToolKey, handleToolSelect]);
 }

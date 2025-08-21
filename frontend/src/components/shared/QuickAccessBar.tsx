@@ -13,11 +13,12 @@ import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
-import { 
-  isNavButtonActive, 
-  getNavButtonStyle, 
+import {
+  isNavButtonActive,
+  getNavButtonStyle,
   getActiveNavButton,
 } from './quickAccessBar/QuickAccessBar';
+import { ToolId } from "../../data/toolsTaxonomy";
 
 const QuickAccessBar = forwardRef<HTMLDivElement>(({
 }, ref) => {
@@ -39,23 +40,23 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     openFilesModal();
   };
 
-  
+
   const buttonConfigs: ButtonConfig[] = [
     {
-      id: 'read',
+      id: ToolId.READ,
       name: t("quickAccess.read", "Read"),
       icon: <MenuBookIcon sx={{ fontSize: "1.5rem" }} />,
       size: 'lg',
       isRound: false,
       type: 'navigation',
       onClick: () => {
-        setActiveButton('read');
+        setActiveButton(ToolId.READ);
         handleBackToTools();
         handleReaderToggle();
       }
     },
     {
-      id: 'sign',
+      id: ToolId.SIGN,
       name: t("quickAccess.sign", "Sign"),
       icon:
         <span className="material-symbols-rounded font-size-20">
@@ -66,11 +67,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       type: 'navigation',
       onClick: () => {
         setActiveButton('sign');
-        handleToolSelect('sign');
+        handleToolSelect(ToolId.SIGN);
       }
     },
     {
-      id: 'automate',
+      id: ToolId.AUTOMATE,
       name: t("quickAccess.automate", "Automate"),
       icon:
         <span className="material-symbols-rounded font-size-20">
@@ -80,8 +81,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       isRound: false,
       type: 'navigation',
       onClick: () => {
-        setActiveButton('automate');
-        handleToolSelect('automate');
+        setActiveButton(ToolId.AUTOMATE);
+        handleToolSelect(ToolId.AUTOMATE);
       }
     },
     {

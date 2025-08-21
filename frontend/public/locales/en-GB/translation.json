@@ -1925,6 +1925,11 @@
     "noToolsFound": "No tools found",
     "allTools": "ALL TOOLS",
     "quickAccess": "QUICK ACCESS",
+    "categories": {
+      "standardTools": "Standard Tools",
+      "advancedTools": "Advanced Tools",
+      "recommendedTools": "Recommended Tools"
+    },
     "subcategories": {
       "signing": "Signing",
       "documentSecurity": "Document Security",
