@@ -10,6 +10,7 @@ import ChangePermissions from '../tools/ChangePermissions';
 import RemovePassword from '../tools/RemovePassword';
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
+import Merge from '../tools/Merge';
 import Repair from '../tools/Repair';
 import SingleLargePage from '../tools/SingleLargePage';
 import UnlockPdfForms from '../tools/UnlockPdfForms';
@@ -27,6 +28,7 @@ import { ocrOperationConfig } from '../hooks/tools/ocr/useOCROperation';
 import { convertOperationConfig } from '../hooks/tools/convert/useConvertOperation';
 import { removeCertificateSignOperationConfig } from '../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation';
 import { changePermissionsOperationConfig } from '../hooks/tools/changePermissions/useChangePermissionsOperation';
+import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
 import CompressSettings from '../components/tools/compress/CompressSettings';
 import SplitSettings from '../components/tools/split/SplitSettings';
 import AddPasswordSettings from '../components/tools/addPassword/AddPasswordSettings';
@@ -38,6 +40,7 @@ import AddWatermarkSingleStepSettings from '../components/tools/addWatermark/Add
 import OCRSettings from '../components/tools/ocr/OCRSettings';
 import ConvertSettings from '../components/tools/convert/ConvertSettings';
 import ChangePermissionsSettings from '../components/tools/changePermissions/ChangePermissionsSettings';
+import MergeSettings from '../components/tools/merge/MergeSettings';
 
 const showPlaceholderTools = false; // For development purposes. Allows seeing the full list of tools, even if they're unimplemented
 
@@ -628,12 +631,15 @@ export function useFlatToolRegistry(): ToolRegistry {
     "mergePdfs": {
         icon: <span className="material-symbols-rounded">library_add</span>,
         name: t("home.merge.title", "Merge"),
-        component: null,
+        component: Merge,
         view: "merge",
         description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: -1
+        maxFiles: -1,
+        endpoints: ["merge-pdfs"],
+        operationConfig: mergeOperationConfig,
+        settingsComponent: MergeSettings
     },
     "multi-tool": {
         icon: <span className="material-symbols-rounded">dashboard_customize</span>,

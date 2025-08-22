@@ -637,11 +637,21 @@
   "merge": {
     "tags": "merge,Page operations,Back end,server side",
     "title": "Merge",
-    "header": "Merge multiple PDFs (2+)",
-    "sortByName": "Sort by name",
-    "sortByDate": "Sort by date",
-    "removeCertSign": "Remove digital signature in the merged file?",
-    "submit": "Merge"
+    "removeDigitalSignature": "Remove digital signature in the merged file?",
+    "generateTableOfContents": "Generate table of contents in the merged file?",
+    "submit": "Merge",
+    "sortBy": {
+      "description": "Files will be merged in the order they're selected. Drag to reorder or sort below.",
+      "label": "Sort By",
+      "filename": "File Name",
+      "dateModified": "Date Modified",
+      "ascending": "Ascending",
+      "descending": "Descending",
+      "sort": "Sort"
+    },
+    "error": {
+      "failed": "An error occurred while merging the PDFs."
+    }
   },
   "split": {
     "tags": "Page operations,divide,Multi Page,cut,server side",

@@ -5,17 +5,19 @@ import { useTranslation } from "react-i18next";
 export interface FileStatusIndicatorProps {
   selectedFiles?: File[];
   placeholder?: string;
+  minFiles?: number;
 }
 
 const FileStatusIndicator = ({
   selectedFiles = [],
   placeholder,
+  minFiles = 1,
 }: FileStatusIndicatorProps) => {
-  const { t } = useTranslation();
+const { t } = useTranslation();
   const defaultPlaceholder = placeholder || t("files.placeholder", "Select a PDF file in the main view to get started");
-  
+
   // Only show content when no files are selected
-  if (selectedFiles.length === 0) {
+  if (selectedFiles.length < minFiles) {
     return (
       <Text size="sm" c="dimmed">
         {defaultPlaceholder}
