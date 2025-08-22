@@ -75,6 +75,10 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         );
 
       case 'creation':
+        if (!stepData.mode) {
+          console.error('Creation mode is undefined');
+          return null;
+        }
         return (
           <AutomationCreation
             mode={stepData.mode}
@@ -89,6 +93,10 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         );
 
       case 'run':
+        if (!stepData.automation) {
+          console.error('Automation config is undefined');
+          return null;
+        }
         return (
           <AutomationRun
             automation={stepData.automation}

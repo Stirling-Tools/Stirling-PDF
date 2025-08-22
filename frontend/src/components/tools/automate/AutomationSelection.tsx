@@ -64,7 +64,7 @@ export default function AutomationSelection({
             <AutomationEntry
               key={automation.id}
               badgeIcon={automation.icon}
-              operations={automation.operations}
+              operations={automation.operations.map(op => op.operation)}
               onClick={() => onRun(automation)}
             />
           ))}

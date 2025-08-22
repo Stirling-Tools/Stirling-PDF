@@ -38,7 +38,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           id: `${op.operation}-${index}`,
           operation: op.operation,
           name: tool?.name || op.operation,
-          status: EXECUTION_STATUS.PENDING as const
+          status: EXECUTION_STATUS.PENDING
         };
       });
       setExecutionSteps(steps);
@@ -69,7 +69,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
 
     // Reset progress tracking
     setCurrentStepIndex(0);
-    setExecutionSteps(prev => prev.map(step => ({ ...step, status: EXECUTION_STATUS.PENDING as const, error: undefined })));
+    setExecutionSteps(prev => prev.map(step => ({ ...step, status: EXECUTION_STATUS.PENDING, error: undefined })));
 
     try {
       // Use the automateOperation.executeOperation to handle file consumption properly
@@ -79,17 +79,17 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           onStepStart: (stepIndex: number, operationName: string) => {
             setCurrentStepIndex(stepIndex);
             setExecutionSteps(prev => prev.map((step, idx) =>
-              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.RUNNING as const } : step
+              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.RUNNING } : step
             ));
           },
           onStepComplete: (stepIndex: number, resultFiles: File[]) => {
             setExecutionSteps(prev => prev.map((step, idx) =>
-              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.COMPLETED as const } : step
+              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.COMPLETED } : step
             ));
           },
           onStepError: (stepIndex: number, error: string) => {
             setExecutionSteps(prev => prev.map((step, idx) =>
-              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.ERROR as const, error } : step
+              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.ERROR, error } : step
             ));
           }
         },

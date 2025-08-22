@@ -57,7 +57,10 @@ export enum AutomationMode {
 export interface SuggestedAutomation {
   id: string;
   name: string;
-  operations: string[];
+  description?: string;
+  operations: AutomationOperation[];
+  createdAt: string;
+  updatedAt: string;
   icon: any; // MUI Icon component
 }
 

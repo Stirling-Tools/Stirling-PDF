@@ -41,7 +41,7 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
           id: `${operation}-${Date.now()}-${index}`,
           operation: operation,
           name: getToolName(operation),
-          configured: mode === AutomationMode.EDIT ? true : (typeof op === 'object' ? op.configured || false : false),
+          configured: mode === AutomationMode.EDIT ? true : false,
           parameters: typeof op === 'object' ? op.parameters || {} : {}
         };
       });
