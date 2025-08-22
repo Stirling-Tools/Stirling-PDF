@@ -25,7 +25,7 @@ import { ToolOperationConfig, ToolOperationHook, useToolOperation } from '../sha
 describe('useChangePermissionsOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
 
-  const getToolConfig = (): ToolOperationConfig<ChangePermissionsParameters> => mockUseToolOperation.mock.calls[0][0];
+  const getToolConfig = (): ToolOperationConfig<ChangePermissionsParameters> => mockUseToolOperation.mock.calls[0][0] as ToolOperationConfig<ChangePermissionsParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -109,7 +109,7 @@ describe('useChangePermissionsOperation', () => {
     { property: 'multiFileEndpoint' as const, expectedValue: false },
     { property: 'endpoint' as const, expectedValue: '/api/v1/security/add-password' },
     { property: 'filePrefix' as const, expectedValue: 'permissions_' },
-    { property: 'operationType' as const, expectedValue: 'changePermissions' }
+    { property: 'operationType' as const, expectedValue: 'change-permissions' }
   ])('should configure $property correctly', ({ property, expectedValue }) => {
     renderHook(() => useChangePermissionsOperation());
 

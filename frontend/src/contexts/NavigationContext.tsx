@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { useNavigationUrlSync } from '../hooks/useUrlSync';
+import { ModeType, isValidMode, getDefaultMode } from '../types/navigation';
 
 /**
  * NavigationContext - Complete navigation management system
@@ -9,32 +10,13 @@ import { useNavigationUrlSync } from '../hooks/useUrlSync';
  * maintain clear separation of concerns.
  */
 
-// Navigation mode types - complete list to match fileContext.ts
-export type ModeType =
-  | 'viewer'
-  | 'pageEditor'
-  | 'fileEditor'
-  | 'merge'
-  | 'split'
-  | 'compress'
-  | 'ocr'
-  | 'convert'
-  | 'sanitize'
-  | 'addPassword'
-  | 'changePermissions'
-  | 'addWatermark'
-  | 'removePassword'
-  | 'single-large-page'
-  | 'repair'
-  | 'unlockPdfForms'
-  | 'removeCertificateSign';
-
 // Navigation state
 interface NavigationState {
   currentMode: ModeType;
   hasUnsavedChanges: boolean;
   pendingNavigation: (() => void) | null;
   showNavigationWarning: boolean;
+  selectedToolKey: string | null; // Add tool selection to navigation state
 }
 
 // Navigation actions
@@ -42,7 +24,8 @@ type NavigationAction =
   | { type: 'SET_MODE'; payload: { mode: ModeType } }
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
   | { type: 'SET_PENDING_NAVIGATION'; payload: { navigationFn: (() => void) | null } }
-  | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } };
+  | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } }
+  | { type: 'SET_SELECTED_TOOL'; payload: { toolKey: string | null } };
 
 // Navigation reducer
 const navigationReducer = (state: NavigationState, action: NavigationAction): NavigationState => {
@@ -59,6 +42,9 @@ const navigationReducer = (state: NavigationState, action: NavigationAction): Na
     case 'SHOW_NAVIGATION_WARNING':
       return { ...state, showNavigationWarning: action.payload.show };
     
+    case 'SET_SELECTED_TOOL':
+      return { ...state, selectedToolKey: action.payload.toolKey };
+    
     default:
       return state;
   }
@@ -66,10 +52,11 @@ const navigationReducer = (state: NavigationState, action: NavigationAction): Na
 
 // Initial state
 const initialState: NavigationState = {
-  currentMode: 'pageEditor',
+  currentMode: getDefaultMode(),
   hasUnsavedChanges: false,
   pendingNavigation: null,
-  showNavigationWarning: false
+  showNavigationWarning: false,
+  selectedToolKey: null
 };
 
 // Navigation context actions interface
@@ -80,6 +67,9 @@ export interface NavigationContextActions {
   requestNavigation: (navigationFn: () => void) => void;
   confirmNavigation: () => void;
   cancelNavigation: () => void;
+  selectTool: (toolKey: string) => void;
+  clearToolSelection: () => void;
+  handleToolSelect: (toolId: string) => void;
 }
 
 // Split context values
@@ -88,6 +78,7 @@ export interface NavigationContextStateValue {
   hasUnsavedChanges: boolean;
   pendingNavigation: (() => void) | null;
   showNavigationWarning: boolean;
+  selectedToolKey: string | null;
 }
 
 export interface NavigationContextActionsValue {
@@ -145,6 +136,31 @@ export const NavigationProvider: React.FC<{
       // Clear navigation without executing
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: false } });
+    }, []),
+
+    selectTool: useCallback((toolKey: string) => {
+      dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey } });
+    }, []),
+
+    clearToolSelection: useCallback(() => {
+      dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: null } });
+    }, []),
+
+    handleToolSelect: useCallback((toolId: string) => {
+      // Handle special cases
+      if (toolId === 'allTools') {
+        dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: null } });
+        return;
+      }
+
+      // Special-case: if tool is a dedicated reader tool, enter reader mode
+      if (toolId === 'read' || toolId === 'view-pdf') {
+        dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: null } });
+        return;
+      }
+
+      dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: toolId } });
+      dispatch({ type: 'SET_MODE', payload: { mode: 'fileEditor' as ModeType } });
     }, [])
   };
 
@@ -152,7 +168,8 @@ export const NavigationProvider: React.FC<{
     currentMode: state.currentMode,
     hasUnsavedChanges: state.hasUnsavedChanges,
     pendingNavigation: state.pendingNavigation,
-    showNavigationWarning: state.showNavigationWarning
+    showNavigationWarning: state.showNavigationWarning,
+    selectedToolKey: state.selectedToolKey
   };
 
   const actionsValue: NavigationContextActionsValue = {
@@ -212,16 +229,8 @@ export const useNavigationGuard = () => {
   };
 };
 
-// Utility functions for mode handling
-export const isValidMode = (mode: string): mode is ModeType => {
-  const validModes: ModeType[] = [
-    'viewer', 'pageEditor', 'fileEditor', 'merge', 'split', 
-    'compress', 'ocr', 'convert', 'addPassword', 'changePermissions', 'sanitize'
-  ];
-  return validModes.includes(mode as ModeType);
-};
-
-export const getDefaultMode = (): ModeType => 'pageEditor';
+// Re-export utility functions from types for backward compatibility
+export { isValidMode, getDefaultMode, type ModeType } from '../types/navigation';
 
 // TODO: This will be expanded for URL-based routing system
 // - URL parsing utilities

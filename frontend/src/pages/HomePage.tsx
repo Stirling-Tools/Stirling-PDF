@@ -1,10 +1,8 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileActions, useFileSelection } from "../contexts/FileContext";
-import { useNavigationActions } from "../contexts/NavigationContext";
-import { ToolWorkflowProvider, useToolWorkflow } from "../contexts/ToolWorkflowContext";
+import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
-import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
+import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { getBaseUrl } from "../constants/app";
 
@@ -13,18 +11,15 @@ import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import RightRail from "../components/shared/RightRail";
 import FileManager from "../components/FileManager";
-import { RightRailProvider } from "../contexts/RightRailContext";
 
 
-function HomePageContent() {
+export default function HomePage() {
   const { t } = useTranslation();
   const {
     sidebarRefs,
   } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
-
-  const { setSelectedFiles } = useFileSelection();
 
   const { selectedTool, selectedToolKey } = useToolWorkflow();
 
@@ -56,27 +51,4 @@ function HomePageContent() {
       <FileManager selectedTool={selectedTool as any /* FIX ME */} />
     </Group>
   );
-}
-
-function HomePageWithProviders() {
-  const { actions } = useNavigationActions();
-  
-  // Wrapper to convert string to ModeType
-  const handleViewChange = (view: string) => {
-    actions.setMode(view as any); // ToolWorkflowContext should validate this
-  };
-  
-  return (
-    <ToolWorkflowProvider onViewChange={handleViewChange}>
-      <SidebarProvider>
-      <RightRailProvider>
-        <HomePageContent />
-        </RightRailProvider>
-      </SidebarProvider>
-    </ToolWorkflowProvider>
-  );
-}
-
-export default function HomePage() {
-  return <HomePageWithProviders />;
 }

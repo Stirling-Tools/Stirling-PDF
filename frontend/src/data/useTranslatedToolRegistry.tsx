@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
@@ -13,6 +14,30 @@ import Repair from '../tools/Repair';
 import SingleLargePage from '../tools/SingleLargePage';
 import UnlockPdfForms from '../tools/UnlockPdfForms';
 import RemoveCertificateSign from '../tools/RemoveCertificateSign';
+import { compressOperationConfig } from '../hooks/tools/compress/useCompressOperation';
+import { splitOperationConfig } from '../hooks/tools/split/useSplitOperation';
+import { addPasswordOperationConfig } from '../hooks/tools/addPassword/useAddPasswordOperation';
+import { removePasswordOperationConfig } from '../hooks/tools/removePassword/useRemovePasswordOperation';
+import { sanitizeOperationConfig } from '../hooks/tools/sanitize/useSanitizeOperation';
+import { repairOperationConfig } from '../hooks/tools/repair/useRepairOperation';
+import { addWatermarkOperationConfig } from '../hooks/tools/addWatermark/useAddWatermarkOperation';
+import { unlockPdfFormsOperationConfig } from '../hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation';
+import { singleLargePageOperationConfig } from '../hooks/tools/singleLargePage/useSingleLargePageOperation';
+import { ocrOperationConfig } from '../hooks/tools/ocr/useOCROperation';
+import { convertOperationConfig } from '../hooks/tools/convert/useConvertOperation';
+import { removeCertificateSignOperationConfig } from '../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation';
+import { changePermissionsOperationConfig } from '../hooks/tools/changePermissions/useChangePermissionsOperation';
+import CompressSettings from '../components/tools/compress/CompressSettings';
+import SplitSettings from '../components/tools/split/SplitSettings';
+import AddPasswordSettings from '../components/tools/addPassword/AddPasswordSettings';
+import RemovePasswordSettings from '../components/tools/removePassword/RemovePasswordSettings';
+import SanitizeSettings from '../components/tools/sanitize/SanitizeSettings';
+import RepairSettings from '../components/tools/repair/RepairSettings';
+import UnlockPdfFormsSettings from '../components/tools/unlockPdfForms/UnlockPdfFormsSettings';
+import AddWatermarkSingleStepSettings from '../components/tools/addWatermark/AddWatermarkSingleStepSettings';
+import OCRSettings from '../components/tools/ocr/OCRSettings';
+import ConvertSettings from '../components/tools/convert/ConvertSettings';
+import ChangePermissionsSettings from '../components/tools/changePermissions/ChangePermissionsSettings';
 
 const showPlaceholderTools = false; // For development purposes. Allows seeing the full list of tools, even if they're unimplemented
 
@@ -20,7 +45,8 @@ const showPlaceholderTools = false; // For development purposes. Allows seeing t
 export function useFlatToolRegistry(): ToolRegistry {
   const { t } = useTranslation();
 
-  const allTools: ToolRegistry = {
+  return useMemo(() => {
+    const allTools: ToolRegistry = {
     // Signing
 
     "certSign": {
@@ -54,7 +80,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
-        endpoints: ["add-password"]
+        endpoints: ["add-password"],
+        operationConfig: addPasswordOperationConfig,
+        settingsComponent: AddPasswordSettings
     },
     "watermark": {
         icon: <span className="material-symbols-rounded">branding_watermark</span>,
@@ -65,7 +93,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.watermark.desc", "Add a custom watermark to your PDF document."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
-        endpoints: ["add-watermark"]
+        endpoints: ["add-watermark"],
+        operationConfig: addWatermarkOperationConfig,
+        settingsComponent: AddWatermarkSingleStepSettings
     },
     "add-stamp": {
         icon: <span className="material-symbols-rounded">approval</span>,
@@ -85,7 +115,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
         description: t("home.sanitize.desc", "Remove potentially harmful elements from PDF files"),
-        endpoints: ["sanitize-pdf"]
+        endpoints: ["sanitize-pdf"],
+        operationConfig: sanitizeOperationConfig,
+        settingsComponent: SanitizeSettings
     },
     "flatten": {
         icon: <span className="material-symbols-rounded">layers_clear</span>,
@@ -105,7 +137,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
-        endpoints: ["unlock-pdf-forms"]
+        endpoints: ["unlock-pdf-forms"],
+        operationConfig: unlockPdfFormsOperationConfig,
+        settingsComponent: UnlockPdfFormsSettings
     },
     "manage-certificates": {
         icon: <span className="material-symbols-rounded">license</span>,
@@ -125,7 +159,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
-        endpoints: ["add-password"]
+        endpoints: ["add-password"],
+        operationConfig: changePermissionsOperationConfig,
+        settingsComponent: ChangePermissionsSettings
     },
     // Verification
 
@@ -196,7 +232,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         view: "split",
         description: t("home.split.desc", "Split PDFs into multiple documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.PAGE_FORMATTING
+        subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        operationConfig: splitOperationConfig,
+        settingsComponent: SplitSettings
     },
     "reorganize-pages": {
         icon: <span className="material-symbols-rounded">move_down</span>,
@@ -243,7 +281,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
-        endpoints: ["pdf-to-single-page"]
+        endpoints: ["pdf-to-single-page"],
+        operationConfig: singleLargePageOperationConfig
     },
     "add-attachments": {
         icon: <span className="material-symbols-rounded">attachment</span>,
@@ -326,7 +365,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.REMOVAL,
         endpoints: ["remove-password"],
         maxFiles: -1,
-
+        operationConfig: removePasswordOperationConfig,
+        settingsComponent: RemovePasswordSettings
     },
     "remove-certificate-sign": {
         icon: <span className="material-symbols-rounded">remove_moderator</span>,
@@ -337,7 +377,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: -1,
-        endpoints: ["remove-certificate-sign"]
+        endpoints: ["remove-certificate-sign"],
+        operationConfig: removeCertificateSignOperationConfig
     },
 
 
@@ -346,11 +387,13 @@ export function useFlatToolRegistry(): ToolRegistry {
     "automate": {
         icon: <span className="material-symbols-rounded">automation</span>,
         name: t("home.automate.title", "Automate"),
-        component: null,
+        component: React.lazy(() => import('../tools/Automate')),
         view: "format",
         description: t("home.automate.desc", "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.AUTOMATION
+        subcategoryId: SubcategoryId.AUTOMATION,
+        maxFiles: -1,
+        endpoints: ["handleData"]
     },
     "auto-rename-pdf-file": {
         icon: <span className="material-symbols-rounded">match_word</span>,
@@ -401,7 +444,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         maxFiles: -1,
-        endpoints: ["repair"]
+        endpoints: ["repair"],
+        operationConfig: repairOperationConfig,
+        settingsComponent: RepairSettings
     },
     "detect-split-scanned-photos": {
         icon: <span className="material-symbols-rounded">scanner</span>,
@@ -530,7 +575,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.compress.desc", "Compress PDFs to reduce their file size."),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: -1
+        maxFiles: -1,
+        operationConfig: compressOperationConfig,
+        settingsComponent: CompressSettings
     },
     "convert": {
         icon: <span className="material-symbols-rounded">sync_alt</span>,
@@ -574,7 +621,9 @@ export function useFlatToolRegistry(): ToolRegistry {
             "zip",
             // Other
             "dbf", "fods", "vsd", "vor", "vor3", "vor4", "uop", "pct", "ps", "pdf"
-        ]
+        ],
+        operationConfig: convertOperationConfig,
+        settingsComponent: ConvertSettings
     },
     "mergePdfs": {
         icon: <span className="material-symbols-rounded">library_add</span>,
@@ -604,7 +653,9 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.ocr.desc", "Extract text from scanned PDFs using Optical Character Recognition"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: -1
+        maxFiles: -1,
+        operationConfig: ocrOperationConfig,
+        settingsComponent: OCRSettings
     },
     "redact": {
         icon: <span className="material-symbols-rounded">visibility_off</span>,
@@ -617,15 +668,16 @@ export function useFlatToolRegistry(): ToolRegistry {
     },
   };
 
-  if (showPlaceholderTools) {
-    return allTools;
-  } else {
-    const filteredTools = Object.keys(allTools)
-      .filter(key => allTools[key].component !== null || allTools[key].link)
-      .reduce((obj, key) => {
-        obj[key] = allTools[key];
-        return obj;
-      }, {} as ToolRegistry);
-    return filteredTools;
-  }
+    if (showPlaceholderTools) {
+      return allTools;
+    } else {
+      const filteredTools = Object.keys(allTools)
+        .filter(key => allTools[key].component !== null || allTools[key].link)
+        .reduce((obj, key) => {
+          obj[key] = allTools[key];
+          return obj;
+        }, {} as ToolRegistry);
+      return filteredTools;
+    }
+  }, [t]); // Only re-compute when translations change
 }
