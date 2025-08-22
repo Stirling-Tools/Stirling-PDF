@@ -1,10 +1,11 @@
 export interface PDFPage {
   id: string;
   pageNumber: number;
+  originalPageNumber: number;
   thumbnail: string | null;
   rotation: number;
   selected: boolean;
-  splitBefore?: boolean;
+  splitAfter?: boolean;
 }
 
 export interface PDFDocument {

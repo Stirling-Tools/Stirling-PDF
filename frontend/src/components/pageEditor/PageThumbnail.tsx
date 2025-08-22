@@ -194,9 +194,14 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   const handleSplit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Split at page:', page.pageNumber);
-    onSetStatus(`Split marker toggled for page ${page.pageNumber}`);
-  }, [page.pageNumber, onSetStatus]);
+    
+    // Create a command to toggle split marker
+    const command = new ToggleSplitCommand([page.id]);
+    onExecuteCommand(command);
+    
+    const action = page.splitAfter ? 'removed' : 'added';
+    onSetStatus(`Split marker ${action} after page ${page.pageNumber}`);
+  }, [page.pageNumber, page.id, page.splitAfter, onExecuteCommand, onSetStatus, ToggleSplitCommand]);
 
   return (
     <div
@@ -411,8 +416,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             </ActionIcon>
           </Tooltip>
 
-          {index > 0 && (
-            <Tooltip label="Split Here">
+          {index < totalPages - 1 && (
+            <Tooltip label="Split After">
               <ActionIcon
                 size="md"
                 variant="subtle"
@@ -427,16 +432,16 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
       </div>
 
-      {/* Split indicator */}
-      {page.splitBefore && (
+      {/* Split indicator - shows where document will be split */}
+      {page.splitAfter && (
         <div
           style={{
             position: 'absolute',
-            top: '-1px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '100px',
-            height: '2px',
+            right: '-8px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '2px',
+            height: '60px',
             backgroundColor: '#3b82f6',
             zIndex: 5,
           }}

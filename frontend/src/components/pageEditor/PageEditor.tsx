@@ -11,6 +11,7 @@ import { PDFDocument, PDFPage } from "../../types/pageEditor";
 import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
 import { pdfExportService } from "../../services/pdfExportService";
+import { documentManipulationService } from "../../services/documentManipulationService";
 import { enhancedPDFProcessingService } from "../../services/enhancedPDFProcessingService";
 import { fileProcessingService } from "../../services/fileProcessingService";
 import { pdfProcessingService } from "../../services/pdfProcessingService";
@@ -42,7 +43,7 @@ class RotatePageCommand extends DOMCommand {
   }
 
   execute(): void {
-    // Find the page thumbnail and rotate it directly in the DOM
+    // Only update DOM for immediate visual feedback
     const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
     if (pageElement) {
       const img = pageElement.querySelector('img');
@@ -55,6 +56,7 @@ class RotatePageCommand extends DOMCommand {
   }
 
   undo(): void {
+    // Only update DOM
     const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
     if (pageElement) {
       const img = pageElement.querySelector('img');
@@ -128,6 +130,7 @@ export interface PageEditorProps {
     showExportPreview: (selectedOnly: boolean) => void;
     onExportSelected: () => void;
     onExportAll: () => void;
+    applyChanges: () => void;
     exportLoading: boolean;
     selectionMode: boolean;
     selectedPages: number[];
@@ -267,8 +270,8 @@ const PageEditor = ({
           thumbnail: page.thumbnail || null,
           rotation: page.rotation || 0,
           selected: false,
-          splitBefore: page.splitBefore || false,
-          originalPageNumber: page.pageNumber,
+          splitAfter: page.splitAfter || false,
+          originalPageNumber: page.originalPageNumber || page.pageNumber || pageIndex + 1,
           originalFileId: fileId,
         }));
       } else if (processedFile?.totalPages) {
@@ -282,7 +285,7 @@ const PageEditor = ({
           rotation: 0,
           thumbnail: null, // Will be generated later
           selected: false,
-          splitBefore: false,
+          splitAfter: false,
         }));
       }
       
@@ -442,9 +445,30 @@ const PageEditor = ({
   }
 
   class ToggleSplitCommand {
-    constructor(public pageId: string) {}
+    constructor(public pageIds: string[]) {}
     execute() {
-      console.log('Toggle split:', this.pageId);
+      if (!displayDocument) return;
+      
+      console.log('Toggle split:', this.pageIds);
+      
+      // Create new pages array with toggled split markers
+      const newPages = displayDocument.pages.map(page => {
+        if (this.pageIds.includes(page.id)) {
+          return {
+            ...page,
+            splitAfter: !page.splitAfter
+          };
+        }
+        return page;
+      });
+      
+      // Update the document with new split markers
+      const updatedDocument: PDFDocument = {
+        ...displayDocument,
+        pages: newPages,
+      };
+      
+      setEditedDocument(updatedDocument);
     }
   }
 
@@ -484,8 +508,21 @@ const PageEditor = ({
   }, [selectedPageNumbers]);
 
   const handleSplit = useCallback(() => {
-    console.log('Split at selected pages:', selectedPageNumbers);
-  }, [selectedPageNumbers]);
+    if (!displayDocument || selectedPageNumbers.length === 0) return;
+    
+    console.log('Toggle split markers at selected pages:', selectedPageNumbers);
+    
+    // Get page IDs for selected pages
+    const selectedPageIds = selectedPageNumbers.map(pageNum => {
+      const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
+      return page?.id || '';
+    }).filter(id => id);
+    
+    if (selectedPageIds.length > 0) {
+      const command = new ToggleSplitCommand(selectedPageIds);
+      command.execute();
+    }
+  }, [selectedPageNumbers, displayDocument]);
 
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => {
     if (!displayDocument) return;
@@ -535,6 +572,9 @@ const PageEditor = ({
       totalPages: newPages.length,
     };
     
+    console.log('Reordered document page numbers:', newPages.map(p => p.pageNumber));
+    console.log('Reordered document page IDs:', newPages.map(p => p.id));
+    
     // Update the edited document state
     setEditedDocument(reorderedDocument);
     
@@ -542,42 +582,23 @@ const PageEditor = ({
   }, [displayDocument]);
 
 
-  // Helper function to read DOM state and update document with current rotations
-  const updateDocumentWithDOMState = useCallback((pdfDocument: PDFDocument): PDFDocument => {
-    const updatedPages = pdfDocument.pages.map(page => {
-      // Find the DOM element for this page
-      const pageElement = document.querySelector(`[data-page-id="${page.id}"]`);
-      if (pageElement) {
-        const img = pageElement.querySelector('img');
-        if (img && img.style.rotate) {
-          // Parse rotation from DOM (e.g., "90deg" -> 90)
-          const rotationMatch = img.style.rotate.match(/-?\d+/);
-          const domRotation = rotationMatch ? parseInt(rotationMatch[0]) : 0;
-          
-          return {
-            ...page,
-            rotation: domRotation // Update page rotation from DOM state
-          };
-        }
-      }
-      return page;
-    });
-
-    return {
-      ...pdfDocument,
-      pages: updatedPages
-    };
-  }, []);
 
   const onExportSelected = useCallback(async () => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
     
     setExportLoading(true);
     try {
-      // Step 1: Update document with current DOM state (rotations)
-      const documentWithDOMState = updateDocumentWithDOMState(displayDocument);
+      // Step 1: Apply DOM changes to document state first
+      console.log('Applying DOM changes before export...');
+      const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
+        mergedPdfDocument || displayDocument, // Original order
+        displayDocument // Current display order (includes reordering)
+      );
       
-      // Step 2: Get page IDs for selected pages
+      // For selected pages export, we work with the first document (or single document)
+      const documentWithDOMState = Array.isArray(processedDocuments) ? processedDocuments[0] : processedDocuments;
+      
+      // Step 2: Convert selected page numbers to page IDs from the document with DOM state
       const selectedPageIds = selectedPageNumbers.map(pageNum => {
         const page = documentWithDOMState.pages.find(p => p.pageNumber === pageNum);
         return page?.id || '';
@@ -592,35 +613,61 @@ const PageEditor = ({
       );
 
       // Step 4: Download the result
-      if ('blob' in result) {
-        pdfExportService.downloadFile(result.blob, result.filename);
-      }
+      pdfExportService.downloadFile(result.blob, result.filename);
       
       setExportLoading(false);
     } catch (error) {
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, selectedPageNumbers, updateDocumentWithDOMState]);
+  }, [displayDocument, selectedPageNumbers, mergedPdfDocument]);
 
   const onExportAll = useCallback(async () => {
     if (!displayDocument) return;
     
     setExportLoading(true);
     try {
-      // Step 1: Update document with current DOM state (rotations)
-      const documentWithDOMState = updateDocumentWithDOMState(displayDocument);
-      
-      // Step 2: Export all pages with pdfExportService
-      console.log('Exporting all pages with DOM rotations applied');
-      const result = await pdfExportService.exportPDF(
-        documentWithDOMState,
-        [],
-        { selectedOnly: false, filename: documentWithDOMState.name }
+      // Step 1: Apply DOM changes to document state first
+      console.log('Applying DOM changes before export...');
+      const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
+        mergedPdfDocument || displayDocument, // Original order
+        displayDocument // Current display order (includes reordering)
       );
+      
+      // Step 2: Check if we have multiple documents (splits) or single document
+      if (Array.isArray(processedDocuments)) {
+        // Multiple documents (splits) - export as ZIP
+        console.log('Exporting multiple split documents:', processedDocuments.length);
+        const blobs: Blob[] = [];
+        const filenames: string[] = [];
+        
+        for (const doc of processedDocuments) {
+          const result = await pdfExportService.exportPDF(doc, [], { filename: doc.name });
+          blobs.push(result.blob);
+          filenames.push(result.filename);
+        }
+        
+        // Create ZIP file
+        const JSZip = await import('jszip');
+        const zip = new JSZip.default();
+        
+        blobs.forEach((blob, index) => {
+          zip.file(filenames[index], blob);
+        });
+        
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const zipFilename = displayDocument.name.replace(/\.pdf$/i, '_split.zip');
+        
+        pdfExportService.downloadFile(zipBlob, zipFilename);
+      } else {
+        // Single document - regular export
+        console.log('Exporting as single PDF');
+        const result = await pdfExportService.exportPDF(
+          processedDocuments,
+          [],
+          { selectedOnly: false, filename: processedDocuments.name }
+        );
 
-      // Step 3: Download the result
-      if ('blob' in result) {
         pdfExportService.downloadFile(result.blob, result.filename);
       }
       
@@ -629,7 +676,25 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, updateDocumentWithDOMState]);
+  }, [displayDocument, mergedPdfDocument]);
+
+  // Apply DOM changes to document state using dedicated service
+  const applyChanges = useCallback(() => {
+    if (!displayDocument) return;
+    
+    // Pass current display document (which includes reordering) to get both reordering AND DOM changes
+    const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
+      mergedPdfDocument || displayDocument, // Original order
+      displayDocument // Current display order (includes reordering)
+    );
+    
+    // For apply changes, we only set the first document if it's an array (splits shouldn't affect document state)
+    const documentToSet = Array.isArray(processedDocuments) ? processedDocuments[0] : processedDocuments;
+    setEditedDocument(documentToSet);
+    
+    console.log('Changes applied to document');
+  }, [displayDocument, mergedPdfDocument]);
+
 
   const closePdf = useCallback(() => {
     actions.clearAllFiles();
@@ -665,6 +730,7 @@ const PageEditor = ({
         showExportPreview: handleExportPreview,
         onExportSelected,
         onExportAll,
+        applyChanges,
         exportLoading,
         selectionMode,
         selectedPages: selectedPageNumbers,
@@ -673,7 +739,7 @@ const PageEditor = ({
     }
   }, [
     onFunctionsReady, handleUndo, handleRedo, handleRotate, handleDelete, handleSplit,
-    handleExportPreview, onExportSelected, onExportAll, exportLoading, selectionMode, selectedPageNumbers, closePdf
+    handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading, selectionMode, selectedPageNumbers, closePdf
   ]);
 
   // Display all pages - use edited or original document
