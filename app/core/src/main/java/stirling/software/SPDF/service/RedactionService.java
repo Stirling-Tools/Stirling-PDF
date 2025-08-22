@@ -3,6 +3,7 @@ package stirling.software.SPDF.service;
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -708,8 +709,7 @@ public class RedactionService {
 
     private static String tryFontBasedExtraction(COSString cosString, PDFont font) {
         try {
-            String decoded = TextDecodingHelper.tryDecodeWithFont(font, cosString);
-            return decoded;
+            return TextDecodingHelper.tryDecodeWithFont(font, cosString);
         } catch (Exception e) {
             return null;
         }
@@ -888,56 +888,20 @@ public class RedactionService {
         }
     }
 
-    String createPlaceholderWithFont(String originalWord, PDFont font) {
-        if (originalWord == null || originalWord.isEmpty()) return " ";
-
-        if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
+    private static float calculateCharacterSumWidth(PDFont font, String text) {
+        float totalWidth = 0f;
+        for (char c : text.toCharArray()) {
             try {
-                // Use helper to get accurate width at fontSize=1.0
-                float originalWidth =
-                        WidthCalculator.calculateAccurateWidth(font, originalWord, 1.0f);
-                String result =
-                        createAlternativePlaceholder(originalWord, originalWidth, font, 1.0f);
-                return result != null ? result : " ".repeat(Math.max(1, originalWord.length()));
+                totalWidth += font.getStringWidth(String.valueOf(c));
             } catch (Exception e) {
-                return " ".repeat(Math.max(1, originalWord.length()));
+                return -1f;
             }
         }
-
-        return " ".repeat(Math.max(1, originalWord.length()));
+        return totalWidth;
     }
 
-    String createPlaceholderWithWidth(
-            String originalWord, float targetWidth, PDFont font, float fontSize) {
-        if (originalWord == null || originalWord.isEmpty()) return " ";
-        if (font == null || fontSize <= 0) return " ".repeat(Math.max(1, originalWord.length()));
-        if (!WidthCalculator.isWidthCalculationReliable(font))
-            return " ".repeat(Math.max(1, originalWord.length()));
-
-        if (TextEncodingHelper.isFontSubset(font.getName())) {
-            String result = createSubsetFontPlaceholder(originalWord, targetWidth, font, fontSize);
-            return result != null
-                    ? result
-                    : " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
-        }
-
-        try {
-            float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
-            if (spaceWidth <= 0) {
-                return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
-            }
-
-            int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
-            int maxSpaces =
-                    Math.max(
-                            originalWord.length() * 2, Math.round(targetWidth / spaceWidth * 1.5f));
-            return " ".repeat(Math.min(spaceCount, maxSpaces));
-        } catch (Exception e) {
-            String result = createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
-            return result != null
-                    ? result
-                    : " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
-        }
+    private static boolean isValidTokenIndex(List<Object> tokens, int index) {
+        return index >= 0 && index < tokens.size();
     }
 
     private String createSubsetFontPlaceholder(
@@ -1020,35 +984,16 @@ public class RedactionService {
         }
     }
 
-    private String createAlternativePlaceholder(
-            String originalWord, float targetWidth, PDFont font, float fontSize) {
-        try {
-            String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
-            if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
-                float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
-                if (spaceWidth > 0) {
-                    int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
-                    int maxSpaces = originalWord.length() * 2;
-                    return " ".repeat(Math.min(spaceCount, maxSpaces));
-                }
-            }
-            for (String alt : alternatives) {
-                if (" ".equals(alt)) continue;
-                try {
-                    if (!TextEncodingHelper.fontSupportsCharacter(font, alt)) continue;
-                    float cw = WidthCalculator.calculateAccurateWidth(font, alt, fontSize);
-                    if (cw > 0) {
-                        int count = Math.max(1, Math.round(targetWidth / cw));
-                        int max = originalWord.length() * 2;
-                        return " ".repeat(Math.min(count, max));
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-            return " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
-        } catch (Exception e) {
-            return " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
+    private static boolean isValidTokenForOperator(Object token, String operatorName) {
+        if (token == null || operatorName == null) {
+            return false;
         }
+
+        return switch (operatorName) {
+            case "Tj", "'", "\"" -> token instanceof COSString;
+            case "TJ" -> token instanceof COSArray;
+            default -> true;
+        };
     }
 
     private List<TextSegment> extractTextSegments(
@@ -1257,199 +1202,25 @@ public class RedactionService {
         }
     }
 
-    private List<MatchRange> findAllMatchesAggressive(
-            List<TextSegment> segments,
-            List<Object> tokens,
-            Set<String> targetWords,
-            boolean useRegex,
-            boolean wholeWordSearch) {
-        List<Pattern> patterns =
-                TextFinderUtils.createOptimizedSearchPatterns(
-                        targetWords, useRegex, wholeWordSearch);
-        List<MatchRange> result = new ArrayList<>();
-        Map<Integer, List<AggressiveSegMatch>> perSegMatches = new HashMap<>();
+    private static int getActualStringLength(COSString cosString, PDFont font) {
         try {
-            String completeText = buildCompleteText(segments);
-            if (!completeText.isEmpty()) {
-                List<MatchRange> global =
-                        findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
-                if (!global.isEmpty()) {
-                    result.addAll(global);
-                } else if (!useRegex && !targetWords.isEmpty()) {
-                    String lower = completeText.toLowerCase();
-                    for (String word : targetWords) {
-                        String w = word.toLowerCase();
-                        int idx = lower.indexOf(w);
-                        while (idx >= 0) {
-                            result.add(new MatchRange(idx, idx + w.length()));
-                            idx = lower.indexOf(w, idx + 1);
-                        }
-                    }
-                }
-            }
-        } catch (Exception ignored) {
+            if (font == null) return cosString.getString().length();
+            String decodedText = TextDecodingHelper.tryDecodeWithFont(font, cosString);
+            return decodedText != null ? decodedText.length() : cosString.getString().length();
+        } catch (Exception e) {
+            return cosString.getString().length();
         }
+    }
 
-        List<String> decodedPerSegment = new ArrayList<>(segments.size());
-        List<Integer> decStarts = new ArrayList<>(segments.size());
-        List<Integer> decEnds = new ArrayList<>(segments.size());
-        int decCursor = 0;
-        for (TextSegment seg : segments) {
-            String decoded = null;
-            try {
-                Object tok = tokens.get(seg.tokenIndex);
-                if (("Tj".equals(seg.operatorName)
-                                || "'".equals(seg.operatorName)
-                                || "\"".equals(seg.operatorName))
-                        && tok instanceof COSString cs) {
-                    decoded = TextDecodingHelper.tryDecodeWithFont(seg.font, cs);
-                } else if ("TJ".equals(seg.operatorName) && tok instanceof COSArray arr) {
-                    StringBuilder sb = new StringBuilder();
-                    for (COSBase el : arr) {
-                        if (el instanceof COSString s) {
-                            String d = TextDecodingHelper.tryDecodeWithFont(seg.font, s);
-                            sb.append(d != null ? d : s.getString());
-                        }
-                    }
-                    decoded = sb.toString();
-                }
-            } catch (Exception ignored) {
+    private static float calculateSafeWidth(String text, PDFont font, float fontSize) {
+        try {
+            if (font != null && fontSize > 0) {
+                return WidthCalculator.calculateAccurateWidth(font, text, fontSize);
             }
-            String basis = (decoded != null) ? decoded : seg.getText();
-            decodedPerSegment.add(basis);
-            decStarts.add(decCursor);
-            decCursor += basis.length();
-            decEnds.add(decCursor);
+        } catch (Exception e) {
+            // Width calculation failed
         }
-        StringBuilder decodedCompleteSb = new StringBuilder();
-        for (String d : decodedPerSegment) {
-            decodedCompleteSb.append(d);
-        }
-        String decodedComplete = decodedCompleteSb.toString();
-        if (!decodedComplete.isEmpty()) {
-            List<Pattern> patternsDec =
-                    TextFinderUtils.createOptimizedSearchPatterns(
-                            targetWords, useRegex, wholeWordSearch);
-            for (Pattern p : patternsDec) {
-                try {
-                    var m = p.matcher(decodedComplete);
-                    while (m.find()) {
-                        int gStart = m.start();
-                        int gEnd = m.end();
-                        for (int sIdx = 0; sIdx < segments.size(); sIdx++) {
-                            int sStart = decStarts.get(sIdx);
-                            int sEnd = decEnds.get(sIdx);
-                            int ovStart = Math.max(gStart, sStart);
-                            int ovEnd = Math.min(gEnd, sEnd);
-                            if (ovStart < ovEnd) {
-                                int localStart = ovStart - sStart;
-                                int localEnd = ovEnd - sStart;
-                                perSegMatches
-                                        .computeIfAbsent(sIdx, k -> new ArrayList<>())
-                                        .add(new AggressiveSegMatch(sIdx, localStart, localEnd));
-                                TextSegment seg = segments.get(sIdx);
-                                int mappedStart = seg.getStartPos();
-                                int mappedEnd = Math.min(seg.getEndPos(), seg.getStartPos() + 1);
-                                result.add(new MatchRange(mappedStart, mappedEnd));
-                            }
-                        }
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-            if (perSegMatches.isEmpty() && !useRegex && !targetWords.isEmpty()) {
-                String lower = decodedComplete.toLowerCase();
-                for (String word : targetWords) {
-                    String w = word.toLowerCase();
-                    int idx = lower.indexOf(w);
-                    while (idx >= 0) {
-                        int gStart = idx;
-                        int gEnd = idx + w.length();
-                        for (int sIdx = 0; sIdx < segments.size(); sIdx++) {
-                            int sStart = decStarts.get(sIdx);
-                            int sEnd = decEnds.get(sIdx);
-                            int ovStart = Math.max(gStart, sStart);
-                            int ovEnd = Math.min(gEnd, sEnd);
-                            if (ovStart < ovEnd) {
-                                int localStart = ovStart - sStart;
-                                int localEnd = ovEnd - sStart;
-                                perSegMatches
-                                        .computeIfAbsent(sIdx, k -> new ArrayList<>())
-                                        .add(new AggressiveSegMatch(sIdx, localStart, localEnd));
-                                TextSegment seg = segments.get(sIdx);
-                                int mappedStart = seg.getStartPos();
-                                int mappedEnd = Math.min(seg.getEndPos(), seg.getStartPos() + 1);
-                                result.add(new MatchRange(mappedStart, mappedEnd));
-                            }
-                        }
-                        idx = lower.indexOf(w, idx + 1);
-                    }
-                }
-            }
-        }
-        if (!perSegMatches.isEmpty()) {
-            this.aggressiveSegMatches = perSegMatches;
-        } else {
-            this.aggressiveSegMatches = null;
-        }
-
-        for (TextSegment seg : segments) {
-            String decoded = null;
-            try {
-                Object tok = tokens.get(seg.tokenIndex);
-                if (("Tj".equals(seg.operatorName) || "'".equals(seg.operatorName))
-                        && tok instanceof COSString cs) {
-                    decoded = TextDecodingHelper.tryDecodeWithFont(seg.font, cs);
-                } else if ("TJ".equals(seg.operatorName) && tok instanceof COSArray arr) {
-                    StringBuilder sb = new StringBuilder();
-                    for (COSBase el : arr) {
-                        if (el instanceof COSString s) {
-                            String d = TextDecodingHelper.tryDecodeWithFont(seg.font, s);
-                            sb.append(d != null ? d : s.getString());
-                        }
-                    }
-                    decoded = sb.toString();
-                }
-            } catch (Exception ignored) {
-            }
-            String basis = (decoded != null && !decoded.isEmpty()) ? decoded : seg.getText();
-            boolean any = false;
-            for (Pattern p : patterns) {
-                try {
-                    var m = p.matcher(basis);
-                    while (m.find()) {
-                        any = true;
-                        result.add(new MatchRange(seg.getStartPos(), seg.getStartPos()));
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-            if (!any) {
-                NormalizedMap nm = buildNormalizedMap(seg.getText());
-                if (!nm.norm.isEmpty()) {
-                    for (String word : targetWords) {
-                        String normWord = normalizeForFuzzy(word);
-                        if (normWord.isEmpty()) {
-                            continue;
-                        }
-                        int idx = nm.norm.indexOf(normWord);
-                        while (idx >= 0) {
-                            int origStart = nm.map[idx];
-                            int origEnd =
-                                    nm.map[Math.min(idx + normWord.length() - 1, nm.map.length - 1)]
-                                            + 1;
-                            result.add(
-                                    new MatchRange(
-                                            seg.getStartPos() + origStart,
-                                            seg.getStartPos() + origEnd));
-                            idx = nm.norm.indexOf(normWord, idx + 1);
-                        }
-                    }
-                }
-            }
-        }
-        result.sort(Comparator.comparingInt(MatchRange::getStartPos));
-        return result;
+        return 0f;
     }
 
     private List<MatchRange> findMatchesInSegments(
@@ -1642,65 +1413,41 @@ public class RedactionService {
         }
     }
 
-    private float calculateCharacterSumWidth(PDFont font, String text) {
-        float totalWidth = 0f;
-        for (char c : text.toCharArray()) {
-            try {
-                totalWidth += font.getStringWidth(String.valueOf(c));
-            } catch (Exception e) {
-                return -1f;
+    private static void addSpacingAdjustment(
+            COSArray newArray, TextSegment segment, String originalText, String modifiedText) {
+        try {
+            if (segment.getFont() == null || segment.getFontSize() <= 0) return;
+
+            float originalWidth =
+                    calculateSafeWidth(originalText, segment.getFont(), segment.getFontSize());
+            float modifiedWidth =
+                    calculateSafeWidth(modifiedText, segment.getFont(), segment.getFontSize());
+            float adjustment = originalWidth - modifiedWidth;
+
+            if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
+                float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR * 1.10f;
+                if (Math.abs(kerning) < 1000) {
+                    newArray.add(new COSFloat(kerning));
+                }
             }
+        } catch (Exception e) {
+            // Failed to add spacing adjustment
         }
-        return totalWidth;
     }
 
-    private WidthCalculationResult calculatePreciseWidthAdjustment(
-            TextSegment segment, List<MatchRange> matches, String text) {
-        float totalOriginalWidth = 0f, totalPlaceholderWidth = 0f;
-        int processedMatches = 0;
-        List<String> warnings = new ArrayList<>();
-
-        for (MatchRange match : matches) {
-            try {
-                int segStart = Math.max(0, match.getStartPos() - segment.getStartPos());
-                int segEnd = Math.min(text.length(), match.getEndPos() - segment.getStartPos());
-
-                if (segStart >= text.length() || segEnd <= segStart || segStart < 0) {
-                    warnings.add("Invalid bounds: " + segStart + "-" + segEnd);
-                    continue;
-                }
-
-                String originalPart = text.substring(segStart, segEnd);
-                if (originalPart.isEmpty()) continue;
-
-                WidthMeasurement originalMeasurement =
-                        measureTextWidth(segment.getFont(), originalPart, segment.getFontSize());
-                if (!originalMeasurement.isValid()) {
-                    warnings.add(
-                            "Cannot measure: "
-                                    + originalPart.substring(
-                                            0, Math.min(10, originalPart.length())));
-                    continue;
-                }
-
-                String placeholderPart = createSafePlaceholder(originalPart, segment);
-                WidthMeasurement placeholderMeasurement =
-                        measureTextWidth(segment.getFont(), placeholderPart, segment.getFontSize());
-
-                totalOriginalWidth += originalMeasurement.getWidth();
-                totalPlaceholderWidth +=
-                        placeholderMeasurement.isValid()
-                                ? placeholderMeasurement.getWidth()
-                                : originalMeasurement.getWidth();
-                processedMatches++;
-
-            } catch (Exception e) {
-                warnings.add("Error: " + e.getMessage());
+    private static TokenModificationResult updateOperatorSafely(
+            List<Object> tokens, int tokenIndex, String originalOperator) {
+        try {
+            int operatorIndex = tokenIndex + 1;
+            if (isValidTokenIndex(tokens, operatorIndex)
+                    && tokens.get(operatorIndex) instanceof Operator op
+                    && op.getName().equals(originalOperator)) {
+                tokens.set(operatorIndex, Operator.getOperator("TJ"));
             }
+            return TokenModificationResult.success();
+        } catch (Exception e) {
+            return TokenModificationResult.success(); // Non-critical failure
         }
-
-        return new WidthCalculationResult(
-                totalOriginalWidth - totalPlaceholderWidth, processedMatches, warnings);
     }
 
     private WidthMeasurement measureTextWidth(PDFont font, String text, float fontSize) {
@@ -1724,17 +1471,35 @@ public class RedactionService {
         }
     }
 
-    private String createSafePlaceholder(String originalText, TextSegment segment) {
+    private static String tryEncodingFallbacks(COSString cosString) {
         try {
-            return createPlaceholderWithWidth(
-                    originalText,
-                    measureTextWidth(segment.getFont(), originalText, segment.getFontSize())
-                            .getWidth(),
-                    segment.getFont(),
-                    segment.getFontSize());
+            byte[] bytes = cosString.getBytes();
+            if (bytes.length == 0) return "";
+
+            String[] encodings = {"UTF-8", "UTF-16BE", "UTF-16LE", "ISO-8859-1", "Windows-1252"};
+
+            for (String encoding : encodings) {
+                try {
+                    if (bytes.length >= 2) {
+                        if ((bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
+                            return new String(
+                                    bytes, 2, bytes.length - 2, StandardCharsets.UTF_16LE);
+                        } else if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
+                            return new String(
+                                    bytes, 2, bytes.length - 2, StandardCharsets.UTF_16LE);
+                        }
+                    }
+
+                    String decoded = new String(bytes, encoding);
+                    if (!isGibberish(decoded)) {
+                        return decoded;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
         } catch (Exception e) {
-            return "█".repeat(Math.max(1, originalText.length()));
         }
+        return null;
     }
 
     private float applySafetyBounds(
@@ -1796,20 +1561,27 @@ public class RedactionService {
         }
     }
 
-    private boolean isValidTokenIndex(List<Object> tokens, int index) {
-        return index >= 0 && index < tokens.size();
-    }
-
-    private boolean isValidTokenForOperator(Object token, String operatorName) {
-        if (token == null || operatorName == null) {
-            return false;
+    private static boolean isGibberish(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return true;
         }
 
-        return switch (operatorName) {
-            case "Tj", "'", "\"" -> token instanceof COSString;
-            case "TJ" -> token instanceof COSArray;
-            default -> true;
-        };
+        int questionMarks = 0;
+        int replacementChars = 0;
+        int totalChars = text.length();
+
+        for (char c : text.toCharArray()) {
+            if (c == '?') questionMarks++;
+            if (c == '\uFFFD') replacementChars++;
+        }
+
+        double problematicRatio = (double) (questionMarks + replacementChars) / totalChars;
+        return problematicRatio > 0.3;
+    }
+
+    private static WipeResult wipeAllSemanticTextInTokens(List<Object> tokens) {
+        return wipeAllSemanticTextInTokens(
+                tokens, true); // Default to removing TU for backward compatibility
     }
 
     private COSArray createRedactedTJArray(
@@ -1844,14 +1616,24 @@ public class RedactionService {
         }
     }
 
-    private int getActualStringLength(COSString cosString, PDFont font) {
-        try {
-            if (font == null) return cosString.getString().length();
-            String decodedText = TextDecodingHelper.tryDecodeWithFont(font, cosString);
-            return decodedText != null ? decodedText.length() : cosString.getString().length();
-        } catch (Exception e) {
-            return cosString.getString().length();
+    String createPlaceholderWithFont(String originalWord, PDFont font) {
+        if (originalWord == null || originalWord.isEmpty()) return " ";
+
+        final String repeat = " ".repeat(Math.max(1, originalWord.length()));
+        if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
+            try {
+                // Use helper to get accurate width at fontSize=1.0
+                float originalWidth =
+                        WidthCalculator.calculateAccurateWidth(font, originalWord, 1.0f);
+                String result =
+                        createAlternativePlaceholder(originalWord, originalWidth, font, 1.0f);
+                return result != null ? result : repeat;
+            } catch (Exception e) {
+                return repeat;
+            }
         }
+
+        return repeat;
     }
 
     private TokenModificationResult performTokenModification(
@@ -1913,15 +1695,33 @@ public class RedactionService {
         }
     }
 
-    private float calculateSafeWidth(String text, PDFont font, float fontSize) {
-        try {
-            if (font != null && fontSize > 0) {
-                return WidthCalculator.calculateAccurateWidth(font, text, fontSize);
-            }
-        } catch (Exception e) {
-            // Width calculation failed
+    String createPlaceholderWithWidth(
+            String originalWord, float targetWidth, PDFont font, float fontSize) {
+        if (originalWord == null || originalWord.isEmpty()) return " ";
+        if (font == null || fontSize <= 0) return " ".repeat(Math.max(1, originalWord.length()));
+        if (!WidthCalculator.isWidthCalculationReliable(font))
+            return " ".repeat(originalWord.length());
+
+        final String repeat = " ".repeat(Math.max(1, originalWord.length()));
+        if (TextEncodingHelper.isFontSubset(font.getName())) {
+            return createSubsetFontPlaceholder(originalWord, targetWidth, font, fontSize);
         }
-        return 0f;
+
+        try {
+            float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
+            if (spaceWidth <= 0) {
+                return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
+            }
+
+            int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
+            int maxSpaces =
+                    Math.max(
+                            originalWord.length() * 2, Math.round(targetWidth / spaceWidth * 1.5f));
+            return " ".repeat(Math.min(spaceCount, maxSpaces));
+        } catch (Exception e) {
+            String result = createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
+            return result != null ? result : repeat;
+        }
     }
 
     private TokenModificationResult convertToTJWithAdjustment(
@@ -1949,42 +1749,208 @@ public class RedactionService {
         }
     }
 
-    private void addSpacingAdjustment(
-            COSArray newArray, TextSegment segment, String originalText, String modifiedText) {
+    private String createAlternativePlaceholder(
+            String originalWord, float targetWidth, PDFont font, float fontSize) {
+        final String repeat =
+                " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
         try {
-            if (segment.getFont() == null || segment.getFontSize() <= 0) return;
-
-            float originalWidth =
-                    calculateSafeWidth(originalText, segment.getFont(), segment.getFontSize());
-            float modifiedWidth =
-                    calculateSafeWidth(modifiedText, segment.getFont(), segment.getFontSize());
-            float adjustment = originalWidth - modifiedWidth;
-
-            if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
-                float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR * 1.10f;
-                if (Math.abs(kerning) < 1000) {
-                    newArray.add(new COSFloat(kerning));
+            String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
+            if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
+                float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
+                if (spaceWidth > 0) {
+                    int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
+                    int maxSpaces = originalWord.length() * 2;
+                    return " ".repeat(Math.min(spaceCount, maxSpaces));
                 }
             }
+            for (String alt : alternatives) {
+                if (" ".equals(alt)) continue;
+                try {
+                    if (!TextEncodingHelper.fontSupportsCharacter(font, alt)) continue;
+                    float cw = WidthCalculator.calculateAccurateWidth(font, alt, fontSize);
+                    if (cw > 0) {
+                        int count = Math.max(1, Math.round(targetWidth / cw));
+                        int max = originalWord.length() * 2;
+                        return " ".repeat(Math.min(count, max));
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            return repeat;
         } catch (Exception e) {
-            // Failed to add spacing adjustment
+            return repeat;
         }
     }
 
-    private String extractTextFromToken(Object token, String operatorName, PDFont currentFont) {
-        if (token == null || operatorName == null) return "";
-
+    private List<MatchRange> findAllMatchesAggressive(
+            List<TextSegment> segments,
+            List<Object> tokens,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch) {
+        List<Pattern> patterns =
+                TextFinderUtils.createOptimizedSearchPatterns(
+                        targetWords, useRegex, wholeWordSearch);
+        List<MatchRange> result = new ArrayList<>();
+        Map<Integer, List<AggressiveSegMatch>> perSegMatches = new HashMap<>();
         try {
-            return switch (operatorName) {
-                case "Tj" -> handleTjOperator(token, currentFont);
-                case "'" -> handleQuotedOperator(token, currentFont);
-                case "\"" -> handleQuotedOperator(token, currentFont);
-                case "TJ" -> handleTJOperator(token, currentFont);
-                default -> "";
-            };
-        } catch (Exception e) {
-            return "";
+            String completeText = buildCompleteText(segments);
+            if (!completeText.isEmpty()) {
+                List<MatchRange> global =
+                        findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
+                if (!global.isEmpty()) {
+                    result.addAll(global);
+                } else if (!useRegex && !targetWords.isEmpty()) {
+                    String lower = completeText.toLowerCase();
+                    for (String word : targetWords) {
+                        String w = word.toLowerCase();
+                        int idx = lower.indexOf(w);
+                        while (idx >= 0) {
+                            result.add(new MatchRange(idx, idx + w.length()));
+                            idx = lower.indexOf(w, idx + 1);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
         }
+
+        List<String> decodedPerSegment = new ArrayList<>(segments.size());
+        List<Integer> decStarts = new ArrayList<>(segments.size());
+        List<Integer> decEnds = new ArrayList<>(segments.size());
+        int decCursor = 0;
+        for (TextSegment seg : segments) {
+            String decoded = null;
+            try {
+                Object tok = tokens.get(seg.tokenIndex);
+                if (("Tj".equals(seg.operatorName)
+                                || "'".equals(seg.operatorName)
+                                || "\"".equals(seg.operatorName))
+                        && tok instanceof COSString cs) {
+                    decoded = TextDecodingHelper.tryDecodeWithFont(seg.font, cs);
+                } else if ("TJ".equals(seg.operatorName) && tok instanceof COSArray arr) {
+                    StringBuilder sb = new StringBuilder();
+                    for (COSBase el : arr) {
+                        if (el instanceof COSString s) {
+                            String d = TextDecodingHelper.tryDecodeWithFont(seg.font, s);
+                            sb.append(d != null ? d : s.getString());
+                        }
+                    }
+                    decoded = sb.toString();
+                }
+            } catch (Exception ignored) {
+            }
+            String basis = (decoded != null) ? decoded : seg.getText();
+            decodedPerSegment.add(basis);
+            decStarts.add(decCursor);
+            decCursor += basis.length();
+            decEnds.add(decCursor);
+        }
+        StringBuilder decodedCompleteSb = new StringBuilder();
+        for (String d : decodedPerSegment) {
+            decodedCompleteSb.append(d);
+        }
+        String decodedComplete = decodedCompleteSb.toString();
+        if (!decodedComplete.isEmpty()) {
+            List<Pattern> patternsDec =
+                    TextFinderUtils.createOptimizedSearchPatterns(
+                            targetWords, useRegex, wholeWordSearch);
+            for (Pattern p : patternsDec) {
+                try {
+                    var m = p.matcher(decodedComplete);
+                    while (m.find()) {
+                        int gStart = m.start();
+                        int gEnd = m.end();
+                        mapStartToEnd(
+                                segments, result, perSegMatches, decStarts, decEnds, gStart, gEnd);
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            if (perSegMatches.isEmpty() && !useRegex && !targetWords.isEmpty()) {
+                String lower = decodedComplete.toLowerCase();
+                for (String word : targetWords) {
+                    String w = word.toLowerCase();
+                    int idx = lower.indexOf(w);
+                    while (idx >= 0) {
+                        int gStart = idx;
+                        int gEnd = idx + w.length();
+                        mapStartToEnd(
+                                (List<TextSegment>) segments,
+                                (List<MatchRange>) result,
+                                (Map<Integer, List<AggressiveSegMatch>>) perSegMatches,
+                                decStarts,
+                                decEnds,
+                                gStart,
+                                gEnd);
+                        idx = lower.indexOf(w, idx + 1);
+                    }
+                }
+            }
+        }
+        if (!perSegMatches.isEmpty()) {
+            this.aggressiveSegMatches = perSegMatches;
+        } else {
+            this.aggressiveSegMatches = null;
+        }
+
+        for (TextSegment seg : segments) {
+            String decoded = null;
+            try {
+                Object tok = tokens.get(seg.tokenIndex);
+                if (("Tj".equals(seg.operatorName) || "'".equals(seg.operatorName))
+                        && tok instanceof COSString cs) {
+                    decoded = TextDecodingHelper.tryDecodeWithFont(seg.font, cs);
+                } else if ("TJ".equals(seg.operatorName) && tok instanceof COSArray arr) {
+                    StringBuilder sb = new StringBuilder();
+                    for (COSBase el : arr) {
+                        if (el instanceof COSString s) {
+                            String d = TextDecodingHelper.tryDecodeWithFont(seg.font, s);
+                            sb.append(d != null ? d : s.getString());
+                        }
+                    }
+                    decoded = sb.toString();
+                }
+            } catch (Exception ignored) {
+            }
+            String basis = (decoded != null && !decoded.isEmpty()) ? decoded : seg.getText();
+            boolean any = false;
+            for (Pattern p : patterns) {
+                try {
+                    var m = p.matcher(basis);
+                    while (m.find()) {
+                        any = true;
+                        result.add(new MatchRange(seg.getStartPos(), seg.getStartPos()));
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            if (!any) {
+                NormalizedMap nm = buildNormalizedMap(seg.getText());
+                if (!nm.norm.isEmpty()) {
+                    for (String word : targetWords) {
+                        String normWord = normalizeForFuzzy(word);
+                        if (normWord.isEmpty()) {
+                            continue;
+                        }
+                        int idx = nm.norm.indexOf(normWord);
+                        while (idx >= 0) {
+                            int origStart = nm.map[idx];
+                            int origEnd =
+                                    nm.map[Math.min(idx + normWord.length() - 1, nm.map.length - 1)]
+                                            + 1;
+                            result.add(
+                                    new MatchRange(
+                                            seg.getStartPos() + origStart,
+                                            seg.getStartPos() + origEnd));
+                            idx = nm.norm.indexOf(normWord, idx + 1);
+                        }
+                    }
+                }
+            }
+        }
+        result.sort(Comparator.comparingInt(MatchRange::getStartPos));
+        return result;
     }
 
     private String handleTjOperator(Object token, PDFont font) {
@@ -2015,18 +1981,30 @@ public class RedactionService {
         return textBuilder.toString();
     }
 
-    private TokenModificationResult updateOperatorSafely(
-            List<Object> tokens, int tokenIndex, String originalOperator) {
-        try {
-            int operatorIndex = tokenIndex + 1;
-            if (isValidTokenIndex(tokens, operatorIndex)
-                    && tokens.get(operatorIndex) instanceof Operator op
-                    && op.getName().equals(originalOperator)) {
-                tokens.set(operatorIndex, Operator.getOperator("TJ"));
+    private void mapStartToEnd(
+            List<TextSegment> segments,
+            List<MatchRange> result,
+            Map<Integer, List<AggressiveSegMatch>> perSegMatches,
+            List<Integer> decStarts,
+            List<Integer> decEnds,
+            int gStart,
+            int gEnd) {
+        for (int sIdx = 0; sIdx < segments.size(); sIdx++) {
+            int sStart = decStarts.get(sIdx);
+            int sEnd = decEnds.get(sIdx);
+            int ovStart = Math.max(gStart, sStart);
+            int ovEnd = Math.min(gEnd, sEnd);
+            if (ovStart < ovEnd) {
+                int localStart = ovStart - sStart;
+                int localEnd = ovEnd - sStart;
+                perSegMatches
+                        .computeIfAbsent(sIdx, k -> new ArrayList<>())
+                        .add(new AggressiveSegMatch(sIdx, localStart, localEnd));
+                TextSegment seg = segments.get(sIdx);
+                int mappedStart = seg.getStartPos();
+                int mappedEnd = Math.min(seg.getEndPos(), seg.getStartPos() + 1);
+                result.add(new MatchRange(mappedStart, mappedEnd));
             }
-            return TokenModificationResult.success();
-        } catch (Exception e) {
-            return TokenModificationResult.success(); // Non-critical failure
         }
     }
 
@@ -2048,51 +2026,65 @@ public class RedactionService {
         }
     }
 
-    private String tryEncodingFallbacks(COSString cosString) {
-        try {
-            byte[] bytes = cosString.getBytes();
-            if (bytes.length == 0) return "";
+    private WidthCalculationResult calculatePreciseWidthAdjustment(
+            TextSegment segment, List<MatchRange> matches, String text) {
+        float totalOriginalWidth = 0f, totalPlaceholderWidth = 0f;
+        int processedMatches = 0;
+        List<String> warnings = new ArrayList<>();
 
-            String[] encodings = {"UTF-8", "UTF-16BE", "UTF-16LE", "ISO-8859-1", "Windows-1252"};
+        for (MatchRange match : matches) {
+            try {
+                int segStart = Math.max(0, match.getStartPos() - segment.getStartPos());
+                int segEnd = Math.min(text.length(), match.getEndPos() - segment.getStartPos());
 
-            for (String encoding : encodings) {
-                try {
-                    if (bytes.length >= 2) {
-                        if ((bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
-                            return new String(bytes, 2, bytes.length - 2, "UTF-16BE");
-                        } else if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
-                            return new String(bytes, 2, bytes.length - 2, "UTF-16LE");
-                        }
-                    }
-
-                    String decoded = new String(bytes, encoding);
-                    if (!isGibberish(decoded)) {
-                        return decoded;
-                    }
-                } catch (Exception ignored) {
+                if (segStart >= text.length() || segEnd <= segStart || segStart < 0) {
+                    warnings.add("Invalid bounds: " + segStart + "-" + segEnd);
+                    continue;
                 }
+
+                String originalPart = text.substring(segStart, segEnd);
+
+                WidthMeasurement originalMeasurement =
+                        measureTextWidth(segment.getFont(), originalPart, segment.getFontSize());
+                if (!originalMeasurement.valid()) {
+                    warnings.add(
+                            "Cannot measure: "
+                                    + originalPart.substring(
+                                            0, Math.min(10, originalPart.length())));
+                    continue;
+                }
+
+                String placeholderPart = createSafePlaceholder(originalPart, segment);
+                WidthMeasurement placeholderMeasurement =
+                        measureTextWidth(segment.getFont(), placeholderPart, segment.getFontSize());
+
+                totalOriginalWidth += originalMeasurement.width();
+                totalPlaceholderWidth +=
+                        placeholderMeasurement.valid()
+                                ? placeholderMeasurement.width()
+                                : originalMeasurement.width();
+                processedMatches++;
+
+            } catch (Exception e) {
+                warnings.add("Error: " + e.getMessage());
             }
-        } catch (Exception e) {
         }
-        return null;
+
+        return new WidthCalculationResult(
+                totalOriginalWidth - totalPlaceholderWidth, processedMatches, warnings);
     }
 
-    private boolean isGibberish(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            return true;
+    private String createSafePlaceholder(String originalText, TextSegment segment) {
+        try {
+            return createPlaceholderWithWidth(
+                    originalText,
+                    measureTextWidth(segment.getFont(), originalText, segment.getFontSize())
+                            .width(),
+                    segment.getFont(),
+                    segment.getFontSize());
+        } catch (Exception e) {
+            return "█".repeat(Math.max(1, originalText.length()));
         }
-
-        int questionMarks = 0;
-        int replacementChars = 0;
-        int totalChars = text.length();
-
-        for (char c : text.toCharArray()) {
-            if (c == '?') questionMarks++;
-            if (c == '\uFFFD') replacementChars++;
-        }
-
-        double problematicRatio = (double) (questionMarks + replacementChars) / totalChars;
-        return problematicRatio > 0.3;
     }
 
     private boolean isValidTJArray(COSArray array) {
@@ -2105,9 +2097,19 @@ public class RedactionService {
         return true;
     }
 
-    private WipeResult wipeAllSemanticTextInTokens(List<Object> tokens) {
-        return wipeAllSemanticTextInTokens(
-                tokens, true); // Default to removing TU for backward compatibility
+    private String extractTextFromToken(Object token, String operatorName, PDFont currentFont) {
+        if (token == null || operatorName == null) return "";
+
+        try {
+            return switch (operatorName) {
+                case "Tj" -> handleTjOperator(token, currentFont);
+                case "'", "\"" -> handleQuotedOperator(token, currentFont);
+                case "TJ" -> handleTJOperator(token, currentFont);
+                default -> "";
+            };
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private void processStringElement(
@@ -2247,15 +2249,7 @@ public class RedactionService {
     }
 
     // Helper classes
-    @Getter
-    private static class WidthMeasurement {
-        private final float width;
-        private final boolean valid;
-
-        public WidthMeasurement(float width, boolean valid) {
-            this.width = width;
-            this.valid = valid;
-        }
+    private record WidthMeasurement(float width, boolean valid) {
 
         public static WidthMeasurement invalid() {
             return new WidthMeasurement(0f, false);
