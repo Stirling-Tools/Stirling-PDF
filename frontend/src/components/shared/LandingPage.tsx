@@ -136,6 +136,7 @@ const LandingPage = () => {
                   transition: 'width .5s ease, padding .5s ease'
                 }}
                 onClick={handleOpenFilesModal}
+                onMouseEnter={() => setIsUploadHover(false)}
               >
                 <AddIcon className="text-[var(--accent-interactive)]" />
                 {!isUploadHover && (
