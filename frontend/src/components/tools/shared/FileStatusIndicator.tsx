@@ -39,7 +39,7 @@ const FileStatusIndicator = ({
   if (selectedFiles.length === 0) {
     return (
       <Text size="sm" c="dimmed">
-        {t("files.selectFromWorkbench", "Select files from the workbench or ")}{" "}
+        {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
         <Anchor
           size="sm"
           onClick={openFilesModal}
