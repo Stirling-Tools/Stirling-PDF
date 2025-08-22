@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "../contexts/FileContext";
 import { useFileSelection } from "../contexts/FileContext";
+import { useNavigation } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import { createFilesToolStep } from "../components/tools/shared/FilesToolStep";
@@ -19,6 +20,7 @@ import { AUTOMATION_STEPS } from "../constants/automation";
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
+  const { setMode } = useNavigation();
 
   const [currentStep, setCurrentStep] = useState<'selection' | 'creation' | 'run'>(AUTOMATION_STEPS.SELECTION);
   const [stepData, setStepData] = useState<AutomationStepData>({ step: AUTOMATION_STEPS.SELECTION });
@@ -33,13 +35,13 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     if (currentStep === AUTOMATION_STEPS.RUN && data.step !== AUTOMATION_STEPS.RUN) {
       automateOperation.resetResults();
     }
-    
+
     // If navigating to run step with a different automation, reset results
-    if (data.step === AUTOMATION_STEPS.RUN && data.automation && 
+    if (data.step === AUTOMATION_STEPS.RUN && data.automation &&
         stepData.automation && data.automation.id !== stepData.automation.id) {
       automateOperation.resetResults();
     }
-    
+
     setStepData(data);
     setCurrentStep(data.step);
   };
@@ -47,7 +49,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleComplete = () => {
     // Reset automation results when completing
     automateOperation.resetResults();
-    
+
     // Reset to selection step
     setCurrentStep(AUTOMATION_STEPS.SELECTION);
     setStepData({ step: AUTOMATION_STEPS.SELECTION });
@@ -160,7 +162,11 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     review: {
       isVisible: hasResults,
       operation: automateOperation,
-      title: t('automate.reviewTitle', 'Automation Results')
+      title: t('automate.reviewTitle', 'Automation Results'),
+      onFileClick: (file: File) => {
+        onPreviewFile?.(file);
+        setMode('viewer');
+      }
     }
   });
 };
