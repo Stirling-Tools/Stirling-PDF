@@ -41,6 +41,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -704,55 +705,134 @@ public class RedactionService {
     }
 
     String createPlaceholderWithFont(String originalWord, PDFont font) {
-        if (originalWord == null || originalWord.isEmpty()) {
-            return originalWord;
-        }
-        if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
-            try {
-                float originalWidth = safeGetStringWidth(font, originalWord) / FONT_SCALE_FACTOR;
-                return createAlternativePlaceholder(originalWord, originalWidth, font, 1.0f);
-            } catch (Exception e) {
-                return "";
+        try {
+            if (originalWord == null || originalWord.isEmpty()) {
+                log.debug(
+                        "createPlaceholderWithFont: originalWord is null or empty, returning space");
+                return " ";
             }
+
+            if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
+                try {
+                    float originalWidth =
+                            safeGetStringWidth(font, originalWord) / FONT_SCALE_FACTOR;
+                    String result =
+                            createAlternativePlaceholder(originalWord, originalWidth, font, 1.0f);
+                    if (result == null) {
+                        log.warn("createAlternativePlaceholder returned null, using fallback");
+                        return " ".repeat(Math.max(1, originalWord.length()));
+                    }
+                    return result;
+                } catch (Exception e) {
+                    log.debug(
+                            "Error in createPlaceholderWithFont subset logic: {}", e.getMessage());
+                    return " ".repeat(Math.max(1, originalWord.length()));
+                }
+            }
+
+            int length = Math.max(1, originalWord.length());
+            String result = " ".repeat(length);
+            log.debug("createPlaceholderWithFont: returning '{}' for '{}'", result, originalWord);
+            return result;
+        } catch (Exception e) {
+            log.error("Unexpected error in createPlaceholderWithFont: {}", e.getMessage());
+            return " ";
         }
-        return " ".repeat(originalWord.length());
     }
 
     String createPlaceholderWithWidth(
             String originalWord, float targetWidth, PDFont font, float fontSize) {
-        if (originalWord == null || originalWord.isEmpty()) {
-            return originalWord;
-        }
-        if (font == null || fontSize <= 0) {
-            return " ".repeat(originalWord.length());
-        }
         try {
+            if (originalWord == null || originalWord.isEmpty()) {
+                log.debug(
+                        "createPlaceholderWithWidth: originalWord is null or empty, returning space");
+                return " ";
+            }
+            if (font == null || fontSize <= 0) {
+                int length = Math.max(1, originalWord.length());
+                String result = " ".repeat(length);
+                log.debug(
+                        "createPlaceholderWithWidth: invalid font/size, returning '{}' for '{}'",
+                        result,
+                        originalWord);
+                return result;
+            }
+
             if (!WidthCalculator.isWidthCalculationReliable(font)) {
-                return " ".repeat(originalWord.length());
+                int length = Math.max(1, originalWord.length());
+                String result = " ".repeat(length);
+                log.debug(
+                        "createPlaceholderWithWidth: font not reliable, returning '{}' for '{}'",
+                        result,
+                        originalWord);
+                return result;
             }
+
             if (TextEncodingHelper.isFontSubset(font.getName())) {
-                return createSubsetFontPlaceholder(originalWord, targetWidth, font, fontSize);
+                String result =
+                        createSubsetFontPlaceholder(originalWord, targetWidth, font, fontSize);
+                if (result == null) {
+                    log.warn("createSubsetFontPlaceholder returned null, using fallback");
+                    return " ".repeat(Math.max(1, originalWord.length()));
+                }
+                log.debug(
+                        "createPlaceholderWithWidth: subset font, returning '{}' for '{}'",
+                        result,
+                        originalWord);
+                return result;
             }
-            float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
-            if (spaceWidth <= 0) {
-                return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
+
+            try {
+                float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
+                if (spaceWidth <= 0) {
+                    log.debug(
+                            "createPlaceholderWithWidth: invalid space width, using alternative placeholder");
+                    return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
+                }
+
+                int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
+                int maxSpaces =
+                        Math.max(
+                                originalWord.length() * 2,
+                                Math.round(targetWidth / spaceWidth * 1.5f));
+                int finalSpaces = Math.min(spaceCount, maxSpaces);
+                String result = " ".repeat(finalSpaces);
+
+                log.debug(
+                        "createPlaceholderWithWidth: calculated {} spaces for '{}' (targetWidth: {}, spaceWidth: {})",
+                        finalSpaces,
+                        originalWord,
+                        targetWidth,
+                        spaceWidth);
+                return result;
+            } catch (Exception e) {
+                log.debug("Error calculating space width, using alternative: {}", e.getMessage());
+                String result =
+                        createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
+                if (result == null) {
+                    return " ".repeat(Math.max(1, originalWord.length()));
+                }
+                return result;
             }
-            int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
-            int maxSpaces =
-                    Math.max(
-                            originalWord.length() * 2, Math.round(targetWidth / spaceWidth * 1.5f));
-            return " ".repeat(Math.min(spaceCount, maxSpaces));
         } catch (Exception e) {
-            return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
+            log.error("Unexpected error in createPlaceholderWithWidth: {}", e.getMessage());
+            return " ".repeat(Math.max(1, originalWord.length()));
         }
     }
 
     private String createSubsetFontPlaceholder(
             String originalWord, float targetWidth, PDFont font, float fontSize) {
         try {
-            return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
+            String result = createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
+            if (result == null) {
+                log.warn(
+                        "createAlternativePlaceholder returned null in subset font, using fallback");
+                return " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
+            }
+            return result;
         } catch (Exception e) {
-            return "";
+            log.error("Error in createSubsetFontPlaceholder: {}", e.getMessage());
+            return " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
         }
     }
 
@@ -785,9 +865,12 @@ public class RedactionService {
                 } catch (Exception ignored) {
                 }
             }
-            return "";
+            log.debug(
+                    "createAlternativePlaceholder: no suitable alternative found, returning spaces");
+            return " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
         } catch (Exception e) {
-            return "";
+            log.error("Unexpected error in createAlternativePlaceholder: {}", e.getMessage());
+            return " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
         }
     }
 
@@ -971,7 +1054,7 @@ public class RedactionService {
                 }
                 if (isTextShowingOperator(opName) && i > 0) {
                     String textContent = extractTextFromToken(tokens.get(i - 1), opName, gs.font);
-                    if (!textContent.isEmpty()) {
+                    if (textContent != null && !textContent.trim().isEmpty()) {
                         if (aggressive
                                 && gs.font != null
                                 && tokens.get(i - 1) instanceof COSString cs) {
@@ -1017,7 +1100,7 @@ public class RedactionService {
                 }
                 if (isTextShowingOperator(opName) && i > 0) {
                     String textContent = extractTextFromToken(tokens.get(i - 1), opName, gs.font);
-                    if (!textContent.isEmpty()) {
+                    if (textContent != null && !textContent.trim().isEmpty()) {
                         segments.add(
                                 new TextSegment(
                                         i - 1,
@@ -1070,11 +1153,14 @@ public class RedactionService {
         }
         List<TextSegment> textSegments = extractTextSegments(page, tokens, this.aggressiveMode);
         String completeText = buildCompleteText(textSegments);
-        List<MatchRange> matches =
-                this.aggressiveMode
-                        ? findAllMatchesAggressive(
-                                textSegments, tokens, targetWords, useRegex, wholeWordSearch)
-                        : findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
+        List<MatchRange> matches;
+        if (this.aggressiveMode) {
+            matches =
+                    findAllMatchesAggressive(
+                            textSegments, tokens, targetWords, useRegex, wholeWordSearch);
+        } else {
+            matches = findMatchesInSegments(textSegments, targetWords, useRegex, wholeWordSearch);
+        }
         return applyRedactionsToTokens(tokens, textSegments, matches);
     }
 
@@ -1329,49 +1415,65 @@ public class RedactionService {
     }
 
     private String applyRedactionsToSegmentText(TextSegment segment, List<MatchRange> matches) {
+        if (segment == null || matches == null || matches.isEmpty()) {
+            return segment != null && segment.getText() != null ? segment.getText() : "";
+        }
+
         String text = segment.getText();
-        if (!this.aggressiveMode
+        if (text == null) return "";
+
+        if (!aggressiveMode
                 && segment.getFont() != null
                 && !TextEncodingHelper.isTextSegmentRemovable(segment.getFont(), text)) {
             return text;
         }
 
-        StringBuilder result = new StringBuilder(text);
-        for (MatchRange match : matches) {
-            int segmentStart = Math.max(0, match.getStartPos() - segment.getStartPos());
-            int segmentEnd = Math.min(text.length(), match.getEndPos() - segment.getStartPos());
-            if (segmentStart < text.length() && segmentEnd > segmentStart) {
-                String originalPart = text.substring(segmentStart, segmentEnd);
-                if (!this.aggressiveMode
-                        && segment.getFont() != null
-                        && !TextEncodingHelper.isTextSegmentRemovable(
-                                segment.getFont(), originalPart)) {
-                    continue;
-                }
+        try {
+            StringBuilder result = new StringBuilder(text);
+            for (MatchRange match : matches) {
+                int segmentStart = Math.max(0, match.getStartPos() - segment.getStartPos());
+                int segmentEnd = Math.min(text.length(), match.getEndPos() - segment.getStartPos());
 
-                if (this.aggressiveMode) {
-                    result.replace(segmentStart, segmentEnd, "");
-                } else {
-                    float originalWidth = 0;
-                    if (segment.getFont() != null && segment.getFontSize() > 0) {
-                        originalWidth =
-                                safeGetStringWidth(segment.getFont(), originalPart)
-                                        / FONT_SCALE_FACTOR
-                                        * segment.getFontSize();
+                if (segmentStart < text.length() && segmentEnd > segmentStart) {
+                    String originalPart = text.substring(segmentStart, segmentEnd);
+
+                    if (!aggressiveMode
+                            && segment.getFont() != null
+                            && !TextEncodingHelper.isTextSegmentRemovable(
+                                    segment.getFont(), originalPart)) {
+                        continue;
                     }
-                    String placeholder =
-                            (originalWidth > 0)
-                                    ? createPlaceholderWithWidth(
-                                            originalPart,
-                                            originalWidth,
-                                            segment.getFont(),
-                                            segment.getFontSize())
-                                    : createPlaceholderWithFont(originalPart, segment.getFont());
-                    result.replace(segmentStart, segmentEnd, placeholder);
+
+                    if (aggressiveMode) {
+                        result.replace(segmentStart, segmentEnd, "");
+                    } else {
+                        float originalWidth = 0;
+                        if (segment.getFont() != null && segment.getFontSize() > 0) {
+                            originalWidth =
+                                    safeGetStringWidth(segment.getFont(), originalPart)
+                                            / FONT_SCALE_FACTOR
+                                            * segment.getFontSize();
+                        }
+
+                        String placeholder =
+                                originalWidth > 0
+                                        ? createPlaceholderWithWidth(
+                                                originalPart,
+                                                originalWidth,
+                                                segment.getFont(),
+                                                segment.getFontSize())
+                                        : createPlaceholderWithFont(
+                                                originalPart, segment.getFont());
+
+                        if (placeholder == null) placeholder = " ";
+                        result.replace(segmentStart, segmentEnd, placeholder);
+                    }
                 }
             }
+            return result.toString();
+        } catch (Exception e) {
+            return text;
         }
-        return result.toString();
     }
 
     private List<MatchRange> findAllMatchesAggressive(
@@ -1569,6 +1671,50 @@ public class RedactionService {
         return result;
     }
 
+    private List<MatchRange> findMatchesInSegments(
+            List<TextSegment> segments,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch) {
+        List<MatchRange> allMatches = new ArrayList<>();
+        List<Pattern> patterns =
+                TextFinderUtils.createOptimizedSearchPatterns(
+                        targetWords, useRegex, wholeWordSearch);
+
+        for (TextSegment segment : segments) {
+            String segmentText = segment.getText();
+            if (segmentText == null || segmentText.isEmpty()) continue;
+
+            if (segment.getFont() != null
+                    && !TextEncodingHelper.isTextSegmentRemovable(segment.getFont(), segmentText)) {
+                continue;
+            }
+
+            for (Pattern pattern : patterns) {
+                try {
+                    var matcher = pattern.matcher(segmentText);
+                    while (matcher.find()) {
+                        int matchStart = matcher.start();
+                        int matchEnd = matcher.end();
+
+                        if (matchStart >= 0
+                                && matchEnd <= segmentText.length()
+                                && matchStart < matchEnd) {
+                            allMatches.add(
+                                    new MatchRange(
+                                            segment.getStartPos() + matchStart,
+                                            segment.getStartPos() + matchEnd));
+                        }
+                    }
+                } catch (Exception e) {
+                }
+            }
+        }
+
+        allMatches.sort(Comparator.comparingInt(MatchRange::getStartPos));
+        return allMatches;
+    }
+
     private List<Object> applyRedactionsToTokens(
             List<Object> tokens, List<TextSegment> textSegments, List<MatchRange> matches) {
         List<Object> newTokens = new ArrayList<>(tokens);
@@ -1618,24 +1764,97 @@ public class RedactionService {
         for (Map.Entry<Integer, List<MatchRange>> entry : matchesBySegment.entrySet()) {
             int segmentIndex = entry.getKey();
             List<MatchRange> segmentMatches = entry.getValue();
+
+            if (segmentIndex < 0 || segmentIndex >= textSegments.size()) {
+                log.warn(
+                        "Invalid segment index: {} (textSegments size: {})",
+                        segmentIndex,
+                        textSegments.size());
+                continue;
+            }
+
             TextSegment segment = textSegments.get(segmentIndex);
-            if ("Tj".equals(segment.operatorName) || "'".equals(segment.operatorName)) {
-                String newText = applyRedactionsToSegmentText(segment, segmentMatches);
-                float adjustment = 0;
-                adjustment = calculateWidthAdjustment(segment, segmentMatches);
-                tasks.add(new ModificationTask(segment, newText, adjustment));
-            } else if ("TJ".equals(segment.operatorName)) {
-                tasks.add(new ModificationTask(segment, null, 0));
+            if (segment == null) {
+                log.warn("Segment is null at index: {}", segmentIndex);
+                continue;
+            }
+
+            log.debug(
+                    "Creating task for segment {} with operator '{}' and {} matches",
+                    segmentIndex,
+                    segment.operatorName,
+                    segmentMatches.size());
+
+            try {
+                if ("Tj".equals(segment.operatorName) || "'".equals(segment.operatorName)) {
+                    String newText = applyRedactionsToSegmentText(segment, segmentMatches);
+                    if (newText == null) {
+                        log.warn(
+                                "applyRedactionsToSegmentText returned null for segment {}, using empty string",
+                                segmentIndex);
+                        newText = ""; // Ensure it's never null
+                    }
+                    float adjustment = calculateWidthAdjustment(segment, segmentMatches);
+                    tasks.add(new ModificationTask(segment, newText, adjustment));
+                    log.debug(
+                            "Created Tj/' task with newText: '{}' (length: {})",
+                            newText,
+                            newText.length());
+                } else if ("TJ".equals(segment.operatorName)) {
+                    tasks.add(
+                            new ModificationTask(
+                                    segment, "", 0)); // Use empty string instead of null for TJ
+                    log.debug("Created TJ task with empty newText (was null)");
+                } else {
+                    log.debug("Skipping segment with operator: {}", segment.operatorName);
+                }
+            } catch (Exception e) {
+                log.error("Error creating task for segment {}: {}", segmentIndex, e.getMessage());
             }
         }
         tasks.sort((a, b) -> Integer.compare(b.segment.tokenIndex, a.segment.tokenIndex));
-        for (ModificationTask task : tasks) {
-            List<MatchRange> segmentMatches =
-                    matchesBySegment.getOrDefault(
-                            textSegments.indexOf(task.segment), Collections.emptyList());
-            modifyTokenForRedaction(
-                    newTokens, task.segment, task.newText, task.adjustment, segmentMatches);
+
+        int processedCount = 0;
+        int maxTasksToProcess = Math.min(tasks.size(), 1000); // Safety limit
+
+        for (int i = 0; i < maxTasksToProcess && i < tasks.size(); i++) {
+            ModificationTask task = tasks.get(i);
+            try {
+                List<MatchRange> segmentMatches =
+                        matchesBySegment.getOrDefault(
+                                textSegments.indexOf(task.segment), Collections.emptyList());
+
+                if (task.segment.tokenIndex >= newTokens.size()) {
+                    log.debug(
+                            "Skipping segment with invalid token index {} (tokens size: {})",
+                            task.segment.tokenIndex,
+                            newTokens.size());
+                    continue;
+                }
+
+                if (task.segment.getText() == null || task.segment.getText().isEmpty()) {
+                    log.debug(
+                            "Skipping segment with empty text at index {}",
+                            task.segment.tokenIndex);
+                    continue;
+                }
+
+                modifyTokenForRedaction(
+                        newTokens, task.segment, task.newText, task.adjustment, segmentMatches);
+                processedCount++;
+
+            } catch (Exception e) {
+                log.warn(
+                        "Failed to process modification task for segment at {}: {}",
+                        task.segment.tokenIndex,
+                        e.getMessage());
+            }
         }
+
+        log.debug(
+                "Successfully processed {} out of {} modification tasks",
+                processedCount,
+                tasks.size());
         return newTokens;
     }
 
@@ -1837,20 +2056,67 @@ public class RedactionService {
             String newText,
             float adjustment,
             List<MatchRange> matches) {
-        if (tokens == null
-                || segment == null
-                || newText == null
-                || !isValidTokenIndex(tokens, segment.tokenIndex)
-                || segment.operatorName == null) {
-            log.warn("Invalid input to modifyTokenForRedaction");
+        // Defensive null handling
+        if (tokens == null || segment == null) {
+            log.warn(
+                    "Invalid input to modifyTokenForRedaction: tokens={}, segment={}",
+                    tokens == null ? "null" : "valid",
+                    segment == null ? "null" : "valid");
+            return;
+        }
+
+        // Handle null newText by providing a default
+        if (newText == null) {
+            log.warn("newText is null, providing default empty string");
+            log.warn(
+                    "Segment details: tokenIndex={}, operatorName={}, font={}, fontSize={}, text='{}'",
+                    segment.tokenIndex,
+                    segment.operatorName,
+                    segment.getFont() != null ? segment.getFont().getName() : "null",
+                    segment.getFontSize(),
+                    segment.getText() != null ? segment.getText() : "null");
+            log.warn("This should not happen with the new null safety measures!");
+            newText = ""; // Default to empty string
+        }
+        if (!isValidTokenIndex(tokens, segment.tokenIndex)) {
+            log.warn(
+                    "Invalid input to modifyTokenForRedaction: invalid token index {} (tokens size: {})",
+                    segment.tokenIndex,
+                    tokens.size());
+            log.debug(
+                    "Segment details: operator={}, font={}, fontSize={}, startPos={}, endPos={}",
+                    segment.operatorName,
+                    segment.getFont(),
+                    segment.getFontSize(),
+                    segment.getStartPos(),
+                    segment.getEndPos());
+            return;
+        }
+        if (segment.operatorName == null) {
+            log.warn("Invalid input to modifyTokenForRedaction: operatorName is null");
             return;
         }
 
         try {
+            Object token = tokens.get(segment.tokenIndex);
+
+            if (token == null) {
+                log.warn("Token at index {} is null, skipping modification", segment.tokenIndex);
+                return;
+            }
+
+            if (!isValidTokenForOperator(token, segment.operatorName)) {
+                log.warn(
+                        "Token at index {} is not valid for operator {}, skipping modification",
+                        segment.tokenIndex,
+                        segment.operatorName);
+                return;
+            }
+
             TokenModificationResult result =
                     performTokenModification(
                             tokens,
-                            tokens.get(segment.tokenIndex),
+                            token,
                             segment.operatorName,
                             newText,
                             adjustment,
@@ -1860,17 +2126,41 @@ public class RedactionService {
             if (!result.isSuccess()) {
                 performFallbackModification(tokens, segment.tokenIndex, newText);
             }
+        } catch (IndexOutOfBoundsException e) {
+            log.warn(
+                    "Token index {} is out of bounds (tokens size: {}), skipping modification",
+                    segment.tokenIndex,
+                    tokens.size());
         } catch (Exception e) {
             log.error(
                     "Token modification failed at index {}: {}",
                     segment.tokenIndex,
                     e.getMessage());
-            performEmergencyFallback(tokens, segment.tokenIndex);
+            try {
+                performEmergencyFallback(tokens, segment.tokenIndex);
+            } catch (Exception emergencyError) {
+                log.error(
+                        "Emergency fallback also failed at index {}: {}",
+                        segment.tokenIndex,
+                        emergencyError.getMessage());
+            }
         }
     }
 
     private boolean isValidTokenIndex(List<Object> tokens, int index) {
         return index >= 0 && index < tokens.size();
+    }
+
+    private boolean isValidTokenForOperator(Object token, String operatorName) {
+        if (token == null || operatorName == null) {
+            return false;
+        }
+
+        return switch (operatorName) {
+            case "Tj", "'", "\"" -> token instanceof COSString;
+            case "TJ" -> token instanceof COSArray;
+            default -> true;
+        };
     }
 
     private COSArray createRedactedTJArray(
@@ -2403,29 +2693,44 @@ public class RedactionService {
         return totalMods;
     }
 
-    private static class WidthCalculationResult {
-        private final float adjustment;
-        private final int processedMatches;
-        private final List<String> warnings;
-
-        public WidthCalculationResult(
-                float adjustment, int processedMatches, List<String> warnings) {
-            this.adjustment = adjustment;
-            this.processedMatches = processedMatches;
-            this.warnings = new ArrayList<>(warnings);
+    private List<TextSegment> extractTextSegmentsFromXObject(
+            PDResources resources, List<Object> tokens) {
+        List<TextSegment> segments = new ArrayList<>();
+        int currentTextPos = 0;
+        GraphicsState gs = new GraphicsState();
+        for (int i = 0; i < tokens.size(); i++) {
+            Object currentToken = tokens.get(i);
+            if (currentToken instanceof Operator op) {
+                String opName = op.getName();
+                if ("Tf".equals(opName) && i >= 2) {
+                    try {
+                        COSName fontName = (COSName) tokens.get(i - 2);
+                        COSBase fontSizeBase = (COSBase) tokens.get(i - 1);
+                        if (fontSizeBase instanceof COSNumber cosNumber) {
+                            gs.setFont(resources.getFont(fontName));
+                            gs.setFontSize(cosNumber.floatValue());
+                        }
+                    } catch (ClassCastException | IOException ignored) {
+                    }
+                }
+                if (isTextShowingOperator(opName) && i > 0) {
+                    String textContent = extractTextFromToken(tokens.get(i - 1), opName, gs.font);
+                    if (textContent != null && !textContent.trim().isEmpty()) {
+                        segments.add(
+                                new TextSegment(
+                                        i - 1,
+                                        opName,
+                                        textContent,
+                                        currentTextPos,
+                                        currentTextPos + textContent.length(),
+                                        gs.font,
+                                        gs.fontSize));
+                        currentTextPos += textContent.length();
+                    }
+                }
+            }
         }
-
-        public float getAdjustment() {
-            return adjustment;
-        }
-
-        public int getProcessedMatches() {
-            return processedMatches;
-        }
-
-        public List<String> getWarnings() {
-            return new ArrayList<>(warnings);
-        }
+        return segments;
     }
 
     private int wipeAllTextInFormXObject(PDDocument document, PDFormXObject formXObject)
@@ -2485,25 +2790,20 @@ public class RedactionService {
         }
     }
 
-    private static class TokenModificationResult {
-        private final boolean success;
-        private final String errorMessage;
+    private static class WidthCalculationResult {
+        @Getter private final float adjustment;
+        @Getter private final int processedMatches;
+        private final List<String> warnings;
 
-        private TokenModificationResult(boolean success, String errorMessage) {
-            this.success = success;
-            this.errorMessage = errorMessage;
+        public WidthCalculationResult(
+                float adjustment, int processedMatches, List<String> warnings) {
+            this.adjustment = adjustment;
+            this.processedMatches = processedMatches;
+            this.warnings = new ArrayList<>(warnings);
         }
 
-        public static TokenModificationResult success() {
-            return new TokenModificationResult(true, null);
-        }
-
-        public static TokenModificationResult failure(String errorMessage) {
-            return new TokenModificationResult(false, errorMessage);
-        }
-
-        public boolean isSuccess() {
-            return success;
+        public List<String> getWarnings() {
+            return new ArrayList<>(warnings);
         }
     }
 
@@ -2556,44 +2856,22 @@ public class RedactionService {
         }
     }
 
-    private List<TextSegment> extractTextSegmentsFromXObject(
-            PDResources resources, List<Object> tokens) {
-        List<TextSegment> segments = new ArrayList<>();
-        int currentTextPos = 0;
-        GraphicsState gs = new GraphicsState();
-        for (int i = 0; i < tokens.size(); i++) {
-            Object currentToken = tokens.get(i);
-            if (currentToken instanceof Operator op) {
-                String opName = op.getName();
-                if ("Tf".equals(opName) && i >= 2) {
-                    try {
-                        COSName fontName = (COSName) tokens.get(i - 2);
-                        COSBase fontSizeBase = (COSBase) tokens.get(i - 1);
-                        if (fontSizeBase instanceof COSNumber cosNumber) {
-                            gs.setFont(resources.getFont(fontName));
-                            gs.setFontSize(cosNumber.floatValue());
-                        }
-                    } catch (ClassCastException | IOException ignored) {
-                    }
-                }
-                if (isTextShowingOperator(opName) && i > 0) {
-                    String textContent = extractTextFromToken(tokens.get(i - 1), opName, gs.font);
-                    if (!textContent.isEmpty()) {
-                        segments.add(
-                                new TextSegment(
-                                        i - 1,
-                                        opName,
-                                        textContent,
-                                        currentTextPos,
-                                        currentTextPos + textContent.length(),
-                                        gs.font,
-                                        gs.fontSize));
-                        currentTextPos += textContent.length();
-                    }
-                }
-            }
+    private static class TokenModificationResult {
+        @Getter private final boolean success;
+        private final String errorMessage;
+
+        private TokenModificationResult(boolean success, String errorMessage) {
+            this.success = success;
+            this.errorMessage = errorMessage;
         }
-        return segments;
+
+        public static TokenModificationResult success() {
+            return new TokenModificationResult(true, null);
+        }
+
+        public static TokenModificationResult failure(String errorMessage) {
+            return new TokenModificationResult(false, errorMessage);
+        }
     }
 
     @Data
