@@ -80,10 +80,10 @@ export default function ToolSelector({
     setSearchTerm(''); // Clear search to show the selected tool display
   }, [onSelect]);
 
-  const renderedTools = useMemo(() => 
+  const renderedTools = useMemo(() =>
     displayGroups.map((subcategory) =>
-      renderToolButtons(subcategory, null, handleToolSelect, !isSearching)
-    ), [displayGroups, handleToolSelect, isSearching]
+      renderToolButtons(t, subcategory, null, handleToolSelect, !isSearching)
+    ), [displayGroups, handleToolSelect, isSearching, t]
   );
 
   const handleSearchFocus = () => {

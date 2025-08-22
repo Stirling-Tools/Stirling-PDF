@@ -11,8 +11,8 @@ import { SubcategoryGroup } from '../../../hooks/useToolSections';
 export const renderToolButtons = (
   t: TFunction,
   subcategory: SubcategoryGroup,
-  selectedToolKey: String | null,
-  onSelect: (id: String) => void,
+  selectedToolKey: string | null,
+  onSelect: (id: string) => void,
   showSubcategoryHeader: boolean = true
 ) => (
   <Box key={subcategory.subcategoryId} w="100%">
