@@ -3,11 +3,11 @@
  */
 
 import { useContext, useMemo } from 'react';
-import { 
-  FileStateContext, 
+import {
+  FileStateContext,
   FileActionsContext,
   FileContextStateValue,
-  FileContextActionsValue 
+  FileContextActionsValue
 } from './contexts';
 import { FileId, FileRecord } from '../../types/fileContext';
 
@@ -39,7 +39,7 @@ export function useFileActions(): FileContextActionsValue {
  */
 export function useCurrentFile(): { file?: File; record?: FileRecord } {
   const { state, selectors } = useFileState();
-  
+
   const primaryFileId = state.files.ids[0];
   return useMemo(() => ({
     file: primaryFileId ? selectors.getFile(primaryFileId) : undefined,
@@ -81,7 +81,7 @@ export function useFileSelection() {
  */
 export function useFileManagement() {
   const { actions } = useFileActions();
-  
+
   return useMemo(() => ({
     addFiles: actions.addFiles,
     removeFiles: actions.removeFiles,
@@ -112,7 +112,7 @@ export function useFileUI() {
  */
 export function useFileRecord(fileId: FileId): { file?: File; record?: FileRecord } {
   const { selectors } = useFileState();
-  
+
   return useMemo(() => ({
     file: selectors.getFile(fileId),
     record: selectors.getFileRecord(fileId)
@@ -124,7 +124,7 @@ export function useFileRecord(fileId: FileId): { file?: File; record?: FileRecor
  */
 export function useAllFiles(): { files: File[]; records: FileRecord[]; fileIds: FileId[] } {
   const { state, selectors } = useFileState();
-  
+
   return useMemo(() => ({
     files: selectors.getFiles(),
     records: selectors.getFileRecords(),
@@ -135,13 +135,13 @@ export function useAllFiles(): { files: File[]; records: FileRecord[]; fileIds: 
 /**
  * Hook for selected files (optimized for selection-based UI)
  */
-export function useSelectedFiles(): { files: File[]; records: FileRecord[]; fileIds: FileId[] } {
+export function useSelectedFiles(): { selectedFiles: File[]; selectedRecords: FileRecord[]; selectedFileIds: FileId[] } {
   const { state, selectors } = useFileState();
-  
+
   return useMemo(() => ({
-    files: selectors.getSelectedFiles(),
-    records: selectors.getSelectedFileRecords(),
-    fileIds: state.ui.selectedFileIds
+    selectedFiles: selectors.getSelectedFiles(),
+    selectedRecords: selectors.getSelectedFileRecords(),
+    selectedFileIds: state.ui.selectedFileIds
   }), [state.ui.selectedFileIds, selectors]);
 }
 
@@ -160,31 +160,31 @@ export function useFileContext() {
     trackBlobUrl: actions.trackBlobUrl,
     scheduleCleanup: actions.scheduleCleanup,
     setUnsavedChanges: actions.setHasUnsavedChanges,
-    
+
     // File management
     addFiles: actions.addFiles,
     consumeFiles: actions.consumeFiles,
     recordOperation: (fileId: string, operation: any) => {}, // Operation tracking not implemented
-    markOperationApplied: (fileId: string, operationId: string) => {}, // Operation tracking not implemented  
+    markOperationApplied: (fileId: string, operationId: string) => {}, // Operation tracking not implemented
     markOperationFailed: (fileId: string, operationId: string, error: string) => {}, // Operation tracking not implemented
-    
+
     // File ID lookup
     findFileId: (file: File) => {
       return state.files.ids.find(id => {
         const record = state.files.byId[id];
-        return record && 
-               record.name === file.name && 
-               record.size === file.size && 
+        return record &&
+               record.name === file.name &&
+               record.size === file.size &&
                record.lastModified === file.lastModified;
       });
     },
-    
+
     // Pinned files
     pinnedFiles: state.pinnedFiles,
     pinFile: actions.pinFile,
     unpinFile: actions.unpinFile,
     isFilePinned: selectors.isFilePinned,
-    
+
     // Active files
     activeFiles: selectors.getFiles()
   }), [state, selectors, actions]);

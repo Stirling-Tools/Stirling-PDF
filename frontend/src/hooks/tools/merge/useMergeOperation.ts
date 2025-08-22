@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ResponseHandler } from '../shared/useToolOperation';
+import { useToolOperation, ResponseHandler, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { MergeParameters } from './useMergeParameters';
 
@@ -21,16 +21,21 @@ const mergeResponseHandler: ResponseHandler = (blob: Blob, originalFiles: File[]
   return [new File([blob], filename, { type: 'application/pdf' })];
 };
 
+// Operation configuration for automation
+export const mergeOperationConfig: ToolOperationConfig<MergeParameters> = {
+  operationType: 'merge',
+  endpoint: '/api/v1/general/merge-pdfs',
+  buildFormData,
+  filePrefix: 'merged_',
+  multiFileEndpoint: true,
+  responseHandler: mergeResponseHandler,
+};
+
 export const useMergeOperation = () => {
   const { t } = useTranslation();
 
   return useToolOperation<MergeParameters>({
-    operationType: 'merge',
-    endpoint: '/api/v1/general/merge-pdfs',
-    buildFormData,
-    filePrefix: 'merged_',
-    multiFileEndpoint: true, // Single API call with all files
-    responseHandler: mergeResponseHandler, // Handle single PDF response
+    ...mergeOperationConfig,
     getErrorMessage: createStandardErrorHandler(t('merge.error.failed', 'An error occurred while merging the PDFs.'))
   });
 };

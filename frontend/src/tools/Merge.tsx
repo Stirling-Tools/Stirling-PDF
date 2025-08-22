@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection, useFileSelectionActions } from "../contexts/FileSelectionContext";
+import { useFileSelection, useFileManagement, useSelectedFiles, useAllFiles } from "../contexts/FileContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import MergeSettings from "../components/tools/merge/MergeSettings";
@@ -14,9 +13,10 @@ import { BaseToolProps } from "../types/tool";
 
 const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
-  const { setSelectedFiles } = useFileSelectionActions();
+  const { selectedFiles, selectedFileIds } = useFileSelection();
+  const { fileIds } = useAllFiles()
+  const { selectedRecords } = useSelectedFiles()
+  const { reorderFiles } = useFileManagement();
 
   const mergeParams = useMergeParameters();
   const mergeOperation = useMergeOperation();
@@ -45,36 +45,35 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "merge");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     mergeOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("merge");
   };
 
   // TODO: Move to more general place so other tools can use it
   const sortFiles = useCallback((sortType: 'filename' | 'dateModified', ascending: boolean = true) => {
-    setSelectedFiles(((prevFiles: File[]) => {
-      const sortedFiles = [...prevFiles].sort((a, b) => {
-        let comparison = 0;
+    // Sort the FileIds based on their corresponding File properties
+    const sortedRecords = [...selectedRecords].sort((recordA, recordB) => {
+      let comparison = 0;
+      switch (sortType) {
+        case 'filename':
+          comparison = recordA.name.localeCompare(recordB.name);
+          break;
+        case 'dateModified':
+          comparison = recordA.lastModified - recordB.lastModified;
+          break;
+      }
 
-        switch (sortType) {
-          case 'filename':
-            comparison = a.name.localeCompare(b.name);
-            break;
-          case 'dateModified':
-            comparison = a.lastModified - b.lastModified;
-            break;
-        }
+      return ascending ? comparison : -comparison;
+    });
 
-        return ascending ? comparison : -comparison;
-      });
+    const selectedIds = sortedRecords.map(record => record.id);
+    const deselectedIds = fileIds.filter(id => !selectedIds.includes(id));
 
-      return sortedFiles;
-    }) as any /* FIX ME: Parameter type is wrong on setSelectedFiles */);
-  }, []);
+    reorderFiles([...selectedIds, ...deselectedIds]); // Move all sorted IDs to the front of the workbench
+  }, [selectedFiles, selectedFileIds, reorderFiles]);
 
   const minFiles = 2; // Merging one file doesn't make sense
   const hasFiles = selectedFiles.length >= minFiles;
@@ -83,7 +82,7 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   return createToolFlow({
     files: {
-      selectedFiles,
+      selectedFiles: selectedFiles,
       isCollapsed: hasFiles && !hasResults,
       placeholder: "Select multiple PDF files to merge",
       minFiles: minFiles,

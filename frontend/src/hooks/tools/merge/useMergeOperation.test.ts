@@ -20,12 +20,12 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { ToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
+import { ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
 
 describe('useMergeOperation', () => {
-  const mockUseToolOperation = vi.mocked(useToolOperation);
+  const mockUseToolOperation = vi.mocked(useToolOperation<MergeParameters>);
 
-  const getToolConfig = (): ToolOperationConfig<MergeParameters> => mockUseToolOperation.mock.calls[0][0];
+  const getToolConfig = () => mockUseToolOperation.mock.calls[0][0];
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
