@@ -10,7 +10,7 @@ interface FileSourceButtonsProps {
   horizontal?: boolean;
 }
 
-const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ 
+const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   horizontal = false
 }) => {
   const { activeSource, onSourceChange, onLocalFileClick } = useFileManagerContext();
@@ -44,7 +44,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       >
         {horizontal ? t('fileManager.recent', 'Recent') : t('fileManager.recent', 'Recent')}
       </Button>
-      
+
       <Button
         variant="subtle"
         color='var(--mantine-color-gray-6)'
@@ -63,9 +63,9 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
           }
         }}
       >
-        {horizontal ? t('fileManager.uploadFiles', 'Upload') : t('fileManager.uploadFiles', 'Upload Files')}
+        {horizontal ? t('fileUpload.uploadFiles', 'Upload') : t('fileUpload.uploadFiles', 'Upload Files')}
       </Button>
-      
+
       <Button
         variant={buttonProps.variant('drive')}
         leftSection={<CloudIcon />}
