@@ -1,18 +1,18 @@
 import React from "react";
 import { Button } from "@mantine/core";
 import { Tooltip } from "../../shared/Tooltip";
-import { ToolId, ToolRegistryEntry } from "../../../data/toolsTaxonomy";
+import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import FitText from "../../shared/FitText";
 
 interface ToolButtonProps {
-  id: ToolId;
+  id: string;
   tool: ToolRegistryEntry;
   isSelected: boolean;
-  onSelect: (id: ToolId) => void;
+  onSelect: (id: string) => void;
 }
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect }) => {
-  const handleClick = (id: ToolId) => {
+  const handleClick = (id: string) => {
     if (tool.link) {
       // Open external link in new tab
       window.open(tool.link, '_blank', 'noopener,noreferrer');

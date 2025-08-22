@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
-import { getAllEndpoints, ToolId, type ToolRegistryEntry } from "../data/toolsTaxonomy";
+import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 
 interface ToolManagementResult {
-  selectedToolKey: ToolId | null;
+  selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
   toolSelectedFileIds: string[];
   toolRegistry: Record<string, ToolRegistryEntry>;
-  selectTool: (toolKey: ToolId) => void;
+  selectTool: (toolKey: string) => void;
   clearToolSelection: () => void;
   setToolSelectedFileIds: (fileIds: string[]) => void;
 }
@@ -17,7 +17,7 @@ interface ToolManagementResult {
 export const useToolManagement = (): ToolManagementResult => {
   const { t } = useTranslation();
 
-  const [selectedToolKey, setSelectedToolKey] = useState<ToolId | null>(null);
+  const [selectedToolKey, setSelectedToolKey] = useState<string /* FIX ME: Should be ToolId */ | null>(null);
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
 
   // Build endpoints list from registry entries with fallback to legacy mapping
@@ -35,7 +35,7 @@ export const useToolManagement = (): ToolManagementResult => {
   const allEndpoints = useMemo(() => getAllEndpoints(baseRegistry), [baseRegistry]);
   const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
 
-  const isToolAvailable = useCallback((toolKey: ToolId): boolean => {
+  const isToolAvailable = useCallback((toolKey: string): boolean => {
     if (endpointsLoading) return true;
     const endpoints = baseRegistry[toolKey]?.endpoints || [];
     return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
@@ -43,7 +43,7 @@ export const useToolManagement = (): ToolManagementResult => {
 
   const toolRegistry: Record<string, ToolRegistryEntry> = useMemo(() => {
     const availableToolRegistry: Record<string, ToolRegistryEntry> = {};
-    (Object.keys(baseRegistry) as ToolId[]).forEach(toolKey => {
+    Object.keys(baseRegistry).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
         const baseTool = baseRegistry[toolKey as keyof typeof baseRegistry];
         availableToolRegistry[toolKey] = {
@@ -58,7 +58,7 @@ export const useToolManagement = (): ToolManagementResult => {
 
   useEffect(() => {
     if (!endpointsLoading && selectedToolKey && !toolRegistry[selectedToolKey]) {
-      const firstAvailableTool = (Object.keys(toolRegistry) as ToolId[])[0];
+      const firstAvailableTool = Object.keys(toolRegistry)[0];
       if (firstAvailableTool) {
         setSelectedToolKey(firstAvailableTool);
       } else {
@@ -67,7 +67,7 @@ export const useToolManagement = (): ToolManagementResult => {
     }
   }, [endpointsLoading, selectedToolKey, toolRegistry]);
 
-  const selectTool = useCallback((toolKey: ToolId) => {
+  const selectTool = useCallback((toolKey: string) => {
     setSelectedToolKey(toolKey);
   }, []);
 

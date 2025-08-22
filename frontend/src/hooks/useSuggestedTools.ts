@@ -7,10 +7,9 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import CropIcon from '@mui/icons-material/Crop';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
-import { ToolId } from '../data/toolsTaxonomy';
 
 export interface SuggestedTool {
-  id: ToolId;
+  id: string /* FIX ME: Should be ToolId */;
   title: string;
   icon: React.ComponentType<any>;
   navigate: () => void;
@@ -18,27 +17,27 @@ export interface SuggestedTool {
 
 const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
   {
-    id: ToolId.COMPRESS,
+    id: 'compress',
     title: 'Compress',
     icon: CompressIcon
   },
   {
-    id: ToolId.CONVERT,
+    id: 'convert',
     title: 'Convert',
     icon: SwapHorizIcon
   },
   {
-    id: ToolId.SANITIZE,
+    id: 'sanitize',
     title: 'Sanitize',
     icon: CleaningServicesIcon
   },
   {
-    id: ToolId.SPLIT_PDF,
+    id: 'split',
     title: 'Split',
     icon: CropIcon
   },
   {
-    id: ToolId.OCR,
+    id: 'ocr',
     title: 'OCR',
     icon: TextFieldsIcon
   }

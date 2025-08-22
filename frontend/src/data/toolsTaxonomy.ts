@@ -2,64 +2,6 @@ import { type TFunction } from 'i18next';
 import React from 'react';
 import { BaseToolProps } from '../types/tool';
 
-export enum ToolId {
-  CERT_SIGN = 'certSign',
-  SIGN = 'sign',
-  ADD_PASSWORD = 'addPassword',
-  WATERMARK = 'watermark',
-  ADD_STAMP = 'add-stamp',
-  SANITIZE = 'sanitize',
-  FLATTEN = 'flatten',
-  UNLOCK_PDF_FORMS = 'unlock-pdf-forms',
-  MANAGE_CERTIFICATES = 'manage-certificates',
-  CHANGE_PERMISSIONS = 'change-permissions',
-  GET_ALL_INFO_ON_PDF = 'get-all-info-on-pdf',
-  VALIDATE_PDF_SIGNATURE = 'validate-pdf-signature',
-  READ = 'read',
-  CHANGE_METADATA = 'change-metadata',
-  CROP_PDF = 'cropPdf',
-  ROTATE = 'rotate',
-  SPLIT_PDF = 'splitPdf',
-  REORGANIZE_PAGES = 'reorganize-pages',
-  ADJUST_PAGE_SIZE_SCALE = 'adjust-page-size-scale',
-  ADD_PAGE_NUMBERS = 'addPageNumbers',
-  MULTI_PAGE_LAYOUT = 'multi-page-layout',
-  SINGLE_LARGE_PAGE = 'single-large-page',
-  ADD_ATTACHMENTS = 'add-attachments',
-  EXTRACT_PAGES = 'extractPages',
-  EXTRACT_IMAGES = 'extract-images',
-  REMOVE_PAGES = 'removePages',
-  REMOVE_BLANK_PAGES = 'remove-blank-pages',
-  REMOVE_ANNOTATIONS = 'remove-annotations',
-  REMOVE_IMAGE = 'remove-image',
-  REMOVE_PASSWORD = 'remove-password',
-  REMOVE_CERTIFICATE_SIGN = 'remove-certificate-sign',
-  AUTOMATE = 'automate',
-  AUTO_RENAME_PDF_FILE = 'auto-rename-pdf-file',
-  AUTO_SPLIT_PAGES = 'auto-split-pages',
-  AUTO_SPLIT_BY_SIZE_COUNT = 'auto-split-by-size-count',
-  ADJUST_CONTRAST = 'adjustContrast',
-  REPAIR = 'repair',
-  DETECT_SPLIT_SCANNED_PHOTOS = 'detect-split-scanned-photos',
-  OVERLAY_PDFS = 'overlay-pdfs',
-  REPLACE_AND_INVERT_COLOR = 'replace-and-invert-color',
-  ADD_IMAGE = 'add-image',
-  EDIT_TABLE_OF_CONTENTS = 'edit-table-of-contents',
-  SCANNER_EFFECT = 'scanner-effect',
-  SHOW_JAVASCRIPT = 'show-javascript',
-  DEV_API = 'dev-api',
-  DEV_FOLDER_SCANNING = 'dev-folder-scanning',
-  DEV_SSO_GUIDE = 'dev-sso-guide',
-  DEV_AIRGAPPED = 'dev-airgapped',
-  COMPARE = 'compare',
-  COMPRESS = 'compress',
-  CONVERT = 'convert',
-  MERGE_PDFS = 'mergePdfs',
-  MULTI_TOOL = 'multi-tool',
-  OCR = 'ocr',
-  REDACT = 'redact'
-};
-
 export enum SubcategoryId {
   SIGNING = 'signing',
   DOCUMENT_SECURITY = 'documentSecurity',
@@ -95,7 +37,7 @@ export type ToolRegistryEntry = {
   type?: string;
 }
 
-export type ToolRegistry = Record<ToolId, ToolRegistryEntry>;
+export type ToolRegistry = Record<string /* FIX ME: Should be ToolId */, ToolRegistryEntry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.SIGNING,

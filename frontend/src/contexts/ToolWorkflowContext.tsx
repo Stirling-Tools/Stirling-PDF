@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
-import { ToolId, ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { ToolRegistryEntry } from '../data/toolsTaxonomy';
 import { useToolWorkflowUrlSync } from '../hooks/useUrlSync';
 
 // State interface
@@ -69,7 +69,7 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
 // Context value interface
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
-  selectedToolKey: ToolId | null;
+  selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
   toolRegistry: any; // From useToolManagement
 
@@ -82,16 +82,16 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setSearchQuery: (query: string) => void;
 
   // Tool Actions
-  selectTool: (toolId: ToolId) => void;
+  selectTool: (toolId: string) => void;
   clearToolSelection: () => void;
 
   // Workflow Actions (compound actions)
-  handleToolSelect: (toolId: ToolId) => void;
+  handleToolSelect: (toolId: string) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: [ToolId, ToolRegistryEntry][]; // Filtered by search
+  filteredTools: [string, ToolRegistryEntry][]; // Filtered by search
   isPanelVisible: boolean;
 }
 
@@ -144,9 +144,9 @@ export function ToolWorkflowProvider({ children, onViewChange, enableUrlSync = t
   }, []);
 
   // Workflow actions (compound actions that coordinate multiple state changes)
-  const handleToolSelect = useCallback((toolId: ToolId) => {
+  const handleToolSelect = useCallback((toolId: string) => {
     // Special-case: if tool is a dedicated reader tool, enter reader mode and do not go to toolContent
-    if (toolId === ToolId.READ) {
+    if (toolId === 'read' || toolId === 'view-pdf') {
       setReaderMode(true);
       setLeftPanelView('toolPicker');
       clearToolSelection();
@@ -175,7 +175,7 @@ export function ToolWorkflowProvider({ children, onViewChange, enableUrlSync = t
   // Filter tools based on search query
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    return (Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]).filter(([_, { name }]) =>
+    return Object.entries(toolRegistry).filter(([_, { name }]) =>
       name.toLowerCase().includes(state.searchQuery.toLowerCase())
     );
   }, [toolRegistry, state.searchQuery]);

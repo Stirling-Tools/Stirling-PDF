@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 
-import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolId, ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } from '../data/toolsTaxonomy';
 import { useTranslation } from 'react-i18next';
 
 type SubcategoryIdMap = {
-  [subcategoryId in SubcategoryId]: Array<{ id: ToolId; tool: ToolRegistryEntry }>;
+  [subcategoryId in SubcategoryId]: Array<{ id: string /* FIX ME: Should be ToolId */; tool: ToolRegistryEntry }>;
 }
 
 type GroupedTools = {
@@ -14,7 +14,7 @@ type GroupedTools = {
 export interface SubcategoryGroup {
   subcategoryId: SubcategoryId;
   tools: {
-    id: ToolId;
+    id: string /* FIX ME: Should be ToolId */;
     tool: ToolRegistryEntry;
   }[];
 };
@@ -27,7 +27,7 @@ export interface ToolSection {
   subcategories: SubcategoryGroup[];
 };
 
-export function useToolSections(filteredTools: [ToolId, ToolRegistryEntry][]) {
+export function useToolSections(filteredTools: [string /* FIX ME: Should be ToolId */, ToolRegistryEntry][]) {
   const { t } = useTranslation();
 
   const groupedTools = useMemo(() => {
@@ -91,9 +91,9 @@ export function useToolSections(filteredTools: [ToolId, ToolRegistryEntry][]) {
 
   const searchGroups: SubcategoryGroup[] = useMemo(() => {
     const subMap = {} as SubcategoryIdMap;
-    const seen = new Set<ToolId>();
+    const seen = new Set<string /* FIX ME: Should be ToolId */>();
     filteredTools.forEach(([id, tool]) => {
-      const toolId = id as ToolId;
+      const toolId = id as string /* FIX ME: Should be ToolId */;
       if (seen.has(toolId)) return;
       seen.add(toolId);
       const sub = tool.subcategoryId;

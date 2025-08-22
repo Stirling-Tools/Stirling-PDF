@@ -7,7 +7,7 @@ import Sanitize from '../tools/Sanitize';
 import AddPassword from '../tools/AddPassword';
 import ChangePermissions from '../tools/ChangePermissions';
 import RemovePassword from '../tools/RemovePassword';
-import { SubcategoryId, ToolCategoryId, ToolId, ToolRegistry } from './toolsTaxonomy';
+import { SubcategoryId, ToolCategoryId, ToolRegistry } from './toolsTaxonomy';
 import AddWatermark from '../tools/AddWatermark';
 import Repair from '../tools/Repair';
 import SingleLargePage from '../tools/SingleLargePage';
@@ -23,7 +23,7 @@ export function useFlatToolRegistry(): ToolRegistry {
   const allTools: ToolRegistry = {
     // Signing
 
-    [ToolId.CERT_SIGN]: {
+    "certSign": {
         icon: <span className="material-symbols-rounded">workspace_premium</span>,
         name: t("home.certSign.title", "Sign with Certificate"),
         component: null,
@@ -32,7 +32,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING
     },
-    [ToolId.SIGN]: {
+    "sign": {
         icon: <span className="material-symbols-rounded">signature</span>,
         name: t("home.sign.title", "Sign"),
         component: null,
@@ -45,7 +45,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Document Security
 
-    [ToolId.ADD_PASSWORD]: {
+    "addPassword": {
         icon: <span className="material-symbols-rounded">password</span>,
         name: t("home.addPassword.title", "Add Password"),
         component: AddPassword,
@@ -56,7 +56,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["add-password"]
     },
-    [ToolId.WATERMARK]: {
+    "watermark": {
         icon: <span className="material-symbols-rounded">branding_watermark</span>,
         name: t("home.watermark.title", "Add Watermark"),
         component: AddWatermark,
@@ -67,7 +67,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
         endpoints: ["add-watermark"]
     },
-    [ToolId.ADD_STAMP]: {
+    "add-stamp": {
         icon: <span className="material-symbols-rounded">approval</span>,
         name: t("home.AddStampRequest.title", "Add Stamp to PDF"),
         component: null,
@@ -76,7 +76,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY
     },
-    [ToolId.SANITIZE]: {
+    "sanitize": {
         icon: <span className="material-symbols-rounded">cleaning_services</span>,
         name: t("home.sanitize.title", "Sanitize"),
         component: Sanitize,
@@ -87,7 +87,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.sanitize.desc", "Remove potentially harmful elements from PDF files"),
         endpoints: ["sanitize-pdf"]
     },
-    [ToolId.FLATTEN]: {
+    "flatten": {
         icon: <span className="material-symbols-rounded">layers_clear</span>,
         name: t("home.flatten.title", "Flatten"),
         component: null,
@@ -96,7 +96,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY
     },
-    [ToolId.UNLOCK_PDF_FORMS]: {
+    "unlock-pdf-forms": {
         icon: <span className="material-symbols-rounded">preview_off</span>,
         name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
         component: UnlockPdfForms,
@@ -107,7 +107,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["unlock-pdf-forms"]
     },
-    [ToolId.MANAGE_CERTIFICATES]: {
+    "manage-certificates": {
         icon: <span className="material-symbols-rounded">license</span>,
         name: t("home.manageCertificates.title", "Manage Certificates"),
         component: null,
@@ -116,7 +116,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY
     },
-    [ToolId.CHANGE_PERMISSIONS]: {
+    "change-permissions": {
         icon: <span className="material-symbols-rounded">lock</span>,
         name: t("home.changePermissions.title", "Change Permissions"),
         component: ChangePermissions,
@@ -129,7 +129,7 @@ export function useFlatToolRegistry(): ToolRegistry {
     },
     // Verification
 
-    [ToolId.GET_ALL_INFO_ON_PDF]: {
+    "get-all-info-on-pdf": {
         icon: <span className="material-symbols-rounded">fact_check</span>,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
         component: null,
@@ -138,7 +138,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION
     },
-    [ToolId.VALIDATE_PDF_SIGNATURE]: {
+    "validate-pdf-signature": {
         icon: <span className="material-symbols-rounded">verified</span>,
         name: t("home.validateSignature.title", "Validate PDF Signature"),
         component: null,
@@ -151,7 +151,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Document Review
 
-    [ToolId.READ]: {
+    "read": {
         icon: <span className="material-symbols-rounded">article</span>,
         name: t("home.read.title", "Read"),
         component: null,
@@ -160,7 +160,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_REVIEW
     },
-    [ToolId.CHANGE_METADATA]: {
+    "change-metadata": {
         icon: <span className="material-symbols-rounded">assignment</span>,
         name: t("home.changeMetadata.title", "Change Metadata"),
         component: null,
@@ -171,7 +171,7 @@ export function useFlatToolRegistry(): ToolRegistry {
     },
     // Page Formatting
 
-    [ToolId.CROP_PDF]: {
+    "cropPdf": {
         icon: <span className="material-symbols-rounded">crop</span>,
         name: t("home.crop.title", "Crop PDF"),
         component: null,
@@ -180,7 +180,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING
     },
-    [ToolId.ROTATE]: {
+    "rotate": {
         icon: <span className="material-symbols-rounded">rotate_right</span>,
         name: t("home.rotate.title", "Rotate"),
         component: null,
@@ -189,7 +189,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING
     },
-    [ToolId.SPLIT_PDF]: {
+    "splitPdf": {
         icon: <span className="material-symbols-rounded">content_cut</span>,
         name: t("home.split.title", "Split"),
         component: SplitPdfPanel,
@@ -198,7 +198,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING
     },
-    [ToolId.REORGANIZE_PAGES]: {
+    "reorganize-pages": {
         icon: <span className="material-symbols-rounded">move_down</span>,
         name: t("home.reorganizePages.title", "Reorganize Pages"),
         component: null,
@@ -207,7 +207,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING
     },
-    [ToolId.ADJUST_PAGE_SIZE_SCALE]: {
+    "adjust-page-size-scale": {
         icon: <span className="material-symbols-rounded">crop_free</span>,
         name: t("home.scalePages.title", "Adjust page size/scale"),
         component: null,
@@ -216,7 +216,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING
     },
-    [ToolId.ADD_PAGE_NUMBERS]: {
+    "addPageNumbers": {
         icon: <span className="material-symbols-rounded">123</span>,
         name: t("home.addPageNumbers.title", "Add Page Numbers"),
         component: null,
@@ -225,7 +225,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING
     },
-    [ToolId.MULTI_PAGE_LAYOUT]: {
+    "multi-page-layout": {
         icon: <span className="material-symbols-rounded">dashboard</span>,
         name: t("home.pageLayout.title", "Multi-Page Layout"),
         component: null,
@@ -234,7 +234,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING
     },
-    [ToolId.SINGLE_LARGE_PAGE]: {
+    "single-large-page": {
         icon: <span className="material-symbols-rounded">looks_one</span>,
         name: t("home.pdfToSinglePage.title", "PDF to Single Large Page"),
         component: SingleLargePage,
@@ -245,7 +245,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["pdf-to-single-page"]
     },
-    [ToolId.ADD_ATTACHMENTS]: {
+    "add-attachments": {
         icon: <span className="material-symbols-rounded">attachment</span>,
         name: t("home.attachments.title", "Add Attachments"),
         component: null,
@@ -258,7 +258,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Extraction
 
-    [ToolId.EXTRACT_PAGES]: {
+    "extractPages": {
         icon: <span className="material-symbols-rounded">upload</span>,
         name: t("home.extractPages.title", "Extract Pages"),
         component: null,
@@ -267,7 +267,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION
     },
-    [ToolId.EXTRACT_IMAGES]: {
+    "extract-images": {
         icon: <span className="material-symbols-rounded">filter</span>,
         name: t("home.extractImages.title", "Extract Images"),
         component: null,
@@ -280,7 +280,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Removal
 
-    [ToolId.REMOVE_PAGES]: {
+    "removePages": {
         icon: <span className="material-symbols-rounded">delete</span>,
         name: t("home.removePages.title", "Remove Pages"),
         component: null,
@@ -289,7 +289,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL
     },
-    [ToolId.REMOVE_BLANK_PAGES]: {
+    "remove-blank-pages": {
         icon: <span className="material-symbols-rounded">scan_delete</span>,
         name: t("home.removeBlanks.title", "Remove Blank Pages"),
         component: null,
@@ -298,7 +298,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL
     },
-    [ToolId.REMOVE_ANNOTATIONS]: {
+    "remove-annotations": {
         icon: <span className="material-symbols-rounded">thread_unread</span>,
         name: t("home.removeAnnotations.title", "Remove Annotations"),
         component: null,
@@ -307,7 +307,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL
     },
-    [ToolId.REMOVE_IMAGE]: {
+    "remove-image": {
         icon: <span className="material-symbols-rounded">remove_selection</span>,
         name: t("home.removeImagePdf.title", "Remove Image"),
         component: null,
@@ -316,7 +316,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL
     },
-    [ToolId.REMOVE_PASSWORD]: {
+    "remove-password": {
         icon: <span className="material-symbols-rounded">lock_open_right</span>,
         name: t("home.removePassword.title", "Remove Password"),
         component: RemovePassword,
@@ -328,7 +328,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
 
     },
-    [ToolId.REMOVE_CERTIFICATE_SIGN]: {
+    "remove-certificate-sign": {
         icon: <span className="material-symbols-rounded">remove_moderator</span>,
         name: t("home.removeCertSign.title", "Remove Certificate Sign"),
         component: RemoveCertificateSign,
@@ -343,7 +343,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Automation
 
-    [ToolId.AUTOMATE]: {
+    "automate": {
         icon: <span className="material-symbols-rounded">automation</span>,
         name: t("home.automate.title", "Automate"),
         component: null,
@@ -352,7 +352,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION
     },
-    [ToolId.AUTO_RENAME_PDF_FILE]: {
+    "auto-rename-pdf-file": {
         icon: <span className="material-symbols-rounded">match_word</span>,
         name: t("home.auto-rename.title", "Auto Rename PDF File"),
         component: null,
@@ -361,7 +361,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION
     },
-    [ToolId.AUTO_SPLIT_PAGES]: {
+    "auto-split-pages": {
         icon: <span className="material-symbols-rounded">split_scene_right</span>,
         name: t("home.autoSplitPDF.title", "Auto Split Pages"),
         component: null,
@@ -370,7 +370,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION
     },
-    [ToolId.AUTO_SPLIT_BY_SIZE_COUNT]: {
+    "auto-split-by-size-count": {
         icon: <span className="material-symbols-rounded">content_cut</span>,
         name: t("home.autoSizeSplitPDF.title", "Auto Split by Size/Count"),
         component: null,
@@ -383,7 +383,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Advanced Formatting
 
-    [ToolId.ADJUST_CONTRAST]: {
+    "adjustContrast": {
         icon: <span className="material-symbols-rounded">palette</span>,
         name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
         component: null,
@@ -392,7 +392,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING
     },
-    [ToolId.REPAIR]: {
+    "repair": {
         icon: <span className="material-symbols-rounded">build</span>,
         name: t("home.repair.title", "Repair"),
         component: Repair,
@@ -403,7 +403,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["repair"]
     },
-    [ToolId.DETECT_SPLIT_SCANNED_PHOTOS]: {
+    "detect-split-scanned-photos": {
         icon: <span className="material-symbols-rounded">scanner</span>,
         name: t("home.ScannerImageSplit.title", "Detect & Split Scanned Photos"),
         component: null,
@@ -412,7 +412,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING
     },
-    [ToolId.OVERLAY_PDFS]: {
+    "overlay-pdfs": {
         icon: <span className="material-symbols-rounded">layers</span>,
         name: t("home.overlay-pdfs.title", "Overlay PDFs"),
         component: null,
@@ -421,7 +421,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING
     },
-    [ToolId.REPLACE_AND_INVERT_COLOR]: {
+    "replace-and-invert-color": {
         icon: <span className="material-symbols-rounded">format_color_fill</span>,
         name: t("home.replaceColorPdf.title", "Replace & Invert Color"),
         component: null,
@@ -430,7 +430,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING
     },
-    [ToolId.ADD_IMAGE]: {
+    "add-image": {
         icon: <span className="material-symbols-rounded">image</span>,
         name: t("home.addImage.title", "Add Image"),
         component: null,
@@ -439,7 +439,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING
     },
-    [ToolId.EDIT_TABLE_OF_CONTENTS]: {
+    "edit-table-of-contents": {
         icon: <span className="material-symbols-rounded">bookmark_add</span>,
         name: t("home.editTableOfContents.title", "Edit Table of Contents"),
         component: null,
@@ -448,7 +448,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING
     },
-    [ToolId.SCANNER_EFFECT]: {
+    "scanner-effect": {
         icon: <span className="material-symbols-rounded">scanner</span>,
         name: t("home.fakeScan.title", "Scanner Effect"),
         component: null,
@@ -461,7 +461,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     // Developer Tools
 
-    [ToolId.SHOW_JAVASCRIPT]: {
+    "show-javascript": {
         icon: <span className="material-symbols-rounded">javascript</span>,
         name: t("home.showJS.title", "Show JavaScript"),
         component: null,
@@ -470,7 +470,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS
     },
-    [ToolId.DEV_API]: {
+    "dev-api": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
         name: t("home.devApi.title", "API"),
         component: null,
@@ -480,7 +480,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html"
     },
-    [ToolId.DEV_FOLDER_SCANNING]: {
+    "dev-folder-scanning": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
         name: t("home.devFolderScanning.title", "Automated Folder Scanning"),
         component: null,
@@ -490,7 +490,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/"
     },
-    [ToolId.DEV_SSO_GUIDE]: {
+    "dev-sso-guide": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
         name: t("home.devSsoGuide.title", "SSO Guide"),
         component: null,
@@ -500,7 +500,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
     },
-    [ToolId.DEV_AIRGAPPED]: {
+    "dev-airgapped": {
         icon: <span className="material-symbols-rounded" style={{ color: '#2F7BF6' }}>open_in_new</span>,
         name: t("home.devAirgapped.title", "Air-gapped Setup"),
         component: null,
@@ -513,7 +513,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
 
     // Recommended Tools
-    [ToolId.COMPARE]: {
+    "compare": {
         icon: <span className="material-symbols-rounded">compare</span>,
         name: t("home.compare.title", "Compare"),
         component: null,
@@ -522,7 +522,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL
     },
-    [ToolId.COMPRESS]: {
+    "compress": {
         icon: <span className="material-symbols-rounded">zoom_in_map</span>,
         name: t("home.compress.title", "Compress"),
         component: CompressPdfPanel,
@@ -532,7 +532,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1
     },
-    [ToolId.CONVERT]: {
+    "convert": {
         icon: <span className="material-symbols-rounded">sync_alt</span>,
         name: t("home.convert.title", "Convert"),
         component: ConvertPanel,
@@ -576,7 +576,7 @@ export function useFlatToolRegistry(): ToolRegistry {
             "dbf", "fods", "vsd", "vor", "vor3", "vor4", "uop", "pct", "ps", "pdf"
         ]
     },
-    [ToolId.MERGE_PDFS]: {
+    "mergePdfs": {
         icon: <span className="material-symbols-rounded">library_add</span>,
         name: t("home.merge.title", "Merge"),
         component: null,
@@ -586,7 +586,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1
     },
-    [ToolId.MULTI_TOOL]: {
+    "multi-tool": {
         icon: <span className="material-symbols-rounded">dashboard_customize</span>,
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,
@@ -596,7 +596,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1
     },
-    [ToolId.OCR]: {
+    "ocr": {
         icon: <span className="material-symbols-rounded">quick_reference_all</span>,
         name: t("home.ocr.title", "OCR"),
         component: OCRPanel,
@@ -606,7 +606,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1
     },
-    [ToolId.REDACT]: {
+    "redact": {
         icon: <span className="material-symbols-rounded">visibility_off</span>,
         name: t("home.redact.title", "Redact"),
         component: null,
@@ -620,7 +620,7 @@ export function useFlatToolRegistry(): ToolRegistry {
   if (showPlaceholderTools) {
     return allTools;
   } else {
-    const filteredTools = (Object.keys(allTools) as ToolId[])
+    const filteredTools = Object.keys(allTools)
       .filter(key => allTools[key].component !== null || allTools[key].link)
       .reduce((obj, key) => {
         obj[key] = allTools[key];
