@@ -156,9 +156,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setLeftPanelView('toolPicker');
       if (toolId === 'read' || toolId === 'view-pdf') {
         setReaderMode(true);
+      } else {
+        setReaderMode(false);
       }
     } else {
       setLeftPanelView('toolContent');
+      setReaderMode(false); // Disable read mode when selecting tools
     }
   }, [actions, setLeftPanelView, setReaderMode, setSearchQuery]);
 
