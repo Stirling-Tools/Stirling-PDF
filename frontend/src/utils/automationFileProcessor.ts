@@ -34,30 +34,29 @@ export class AutomationFileProcessor {
   static async extractAutomationZipFiles(blob: Blob): Promise<AutomationProcessingResult> {
     try {
       const zipFile = ResourceManager.createTimestampedFile(
-        blob, 
-        AUTOMATION_CONSTANTS.RESPONSE_ZIP_PREFIX, 
-        '.zip', 
+        blob,
+        AUTOMATION_CONSTANTS.RESPONSE_ZIP_PREFIX,
+        '.zip',
         'application/zip'
       );
-      
+
       const result = await zipFileService.extractPdfFiles(zipFile);
-      
+
       if (!result.success || result.extractedFiles.length === 0) {
-        console.warn('ZIP extraction failed, treating as single file');
         // Fallback: treat as single PDF file
         const fallbackFile = ResourceManager.createTimestampedFile(
           blob,
           AUTOMATION_CONSTANTS.RESULT_FILE_PREFIX,
           '.pdf'
         );
-        
+
         return {
           success: true,
           files: [fallbackFile],
           errors: [`ZIP extraction failed, treated as single file: ${result.errors?.join(', ') || 'Unknown error'}`]
         };
       }
-      
+
       return {
         success: true,
         files: result.extractedFiles,
@@ -71,7 +70,7 @@ export class AutomationFileProcessor {
         AUTOMATION_CONSTANTS.RESULT_FILE_PREFIX,
         '.pdf'
       );
-      
+
       return {
         success: true,
         files: [fallbackFile],
