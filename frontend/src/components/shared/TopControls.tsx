@@ -5,9 +5,10 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
+import { ModeType, isValidMode } from '../../contexts/NavigationContext';
 
 // Create view options with icons and loading states
-const createViewOptions = (switchingTo: string | null) => [
+const createViewOptions = (switchingTo: ModeType | null) => [
   {
     label: (
       <div style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'}}>
@@ -50,8 +51,8 @@ const createViewOptions = (switchingTo: string | null) => [
 ];
 
 interface TopControlsProps {
-  currentView: string;
-  setCurrentView: (view: string) => void;
+  currentView: ModeType;
+  setCurrentView: (view: ModeType) => void;
   selectedToolKey?: string | null;
 }
 
@@ -61,19 +62,25 @@ const TopControls = ({
   selectedToolKey,
 }: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
-  const [switchingTo, setSwitchingTo] = useState<string | null>(null);
+  const [switchingTo, setSwitchingTo] = useState<ModeType | null>(null);
 
   const isToolSelected = selectedToolKey !== null;
 
   const handleViewChange = useCallback((view: string) => {
+    if (!isValidMode(view)) {
+      // Ignore invalid values defensively
+      return;
+    }
+    const mode = view as ModeType;
+
     // Show immediate feedback
-    setSwitchingTo(view);
+    setSwitchingTo(mode);
 
     // Defer the heavy view change to next frame so spinner can render
     requestAnimationFrame(() => {
       // Give the spinner one more frame to show
       requestAnimationFrame(() => {
-        setCurrentView(view);
+        setCurrentView(mode);
 
         // Clear the loading state after view change completes
         setTimeout(() => setSwitchingTo(null), 300);
