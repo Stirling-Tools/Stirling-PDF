@@ -239,6 +239,7 @@ const PageEditor = ({
   const [exportLoading, setExportLoading] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportPreview, setExportPreview] = useState<{pageCount: number; splitCount: number; estimatedSize: string} | null>(null);
+  const [exportSelectedOnly, setExportSelectedOnly] = useState<boolean>(false);
 
   // Animation state
   const [movingPage, setMovingPage] = useState<number | null>(null);
@@ -247,8 +248,17 @@ const PageEditor = ({
   // Undo/Redo system
   const { executeCommand, undo, redo, canUndo, canRedo } = useUndoRedo();
 
+  // Track whether the user has manually edited the filename to avoid auto-overwrites
+  const userEditedFilename = useRef(false);
+
+  // Reset user edit flag when the active files change, so defaults can be applied for new docs
+  useEffect(() => {
+    userEditedFilename.current = false;
+  }, [filesSignature]);
+
   // Set initial filename when document changes - use stable signature
   useEffect(() => {
+    if (userEditedFilename.current) return; // Do not overwrite user-typed filename
     if (mergedPdfDocument) {
       if (activeFileIds.length === 1 && primaryFileId) {
         const record = selectors.getFileRecord(primaryFileId);
@@ -884,49 +894,52 @@ const PageEditor = ({
   }, [displayDocument, selectedPageNumbers, selectionMode, executeCommand, setPdfDocument]);
 
   const showExportPreview = useCallback((selectedOnly: boolean = false) => {
-    if (!mergedPdfDocument) return;
+    const doc = editedDocument || mergedPdfDocument;
+    if (!doc) return;
 
     // Convert page numbers to page IDs for export service
     const exportPageIds = selectedOnly
       ? selectedPageNumbers.map(pageNum => {
-          const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
+          const page = doc.pages.find(p => p.pageNumber === pageNum);
           return page?.id || '';
         }).filter(id => id)
       : [];
 
-
-    const preview = pdfExportService.getExportInfo(mergedPdfDocument, exportPageIds, selectedOnly);
+    const preview = pdfExportService.getExportInfo(doc, exportPageIds, selectedOnly);
     setExportPreview(preview);
+    setExportSelectedOnly(selectedOnly);
     setShowExportModal(true);
-  }, [mergedPdfDocument, selectedPageNumbers]);
+  }, [editedDocument, mergedPdfDocument, selectedPageNumbers]);
 
   const handleExport = useCallback(async (selectedOnly: boolean = false) => {
-    if (!mergedPdfDocument) return;
+    const doc = editedDocument || mergedPdfDocument;
+    if (!doc) return;
 
     setExportLoading(true);
     try {
       // Convert page numbers to page IDs for export service
       const exportPageIds = selectedOnly
         ? selectedPageNumbers.map(pageNum => {
-            const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
+            const page = doc.pages.find(p => p.pageNumber === pageNum);
             return page?.id || '';
           }).filter(id => id)
         : [];
 
 
-      const errors = pdfExportService.validateExport(mergedPdfDocument, exportPageIds, selectedOnly);
+      const errors = pdfExportService.validateExport(doc, exportPageIds, selectedOnly);
       if (errors.length > 0) {
         setStatus(errors.join(', '));
         return;
       }
 
-      const hasSplitMarkers = mergedPdfDocument.pages.some(page => page.splitBefore);
+      const hasSplitMarkers = doc.pages.some(page => page.splitBefore);
 
       if (hasSplitMarkers) {
-        const result = await pdfExportService.exportPDF(mergedPdfDocument, exportPageIds, {
+        const result = await pdfExportService.exportPDF(doc, exportPageIds, {
           selectedOnly,
           filename,
-          splitDocuments: true
+          splitDocuments: true,
+          appendSuffix: false
         }) as { blobs: Blob[]; filenames: string[] };
 
         result.blobs.forEach((blob, index) => {
@@ -937,9 +950,10 @@ const PageEditor = ({
 
         setStatus(`Exported ${result.blobs.length} split documents`);
       } else {
-        const result = await pdfExportService.exportPDF(mergedPdfDocument, exportPageIds, {
+        const result = await pdfExportService.exportPDF(doc, exportPageIds, {
           selectedOnly,
-          filename
+          filename,
+          appendSuffix: false
         }) as { blob: Blob; filename: string };
 
         pdfExportService.downloadFile(result.blob, result.filename);
@@ -952,7 +966,7 @@ const PageEditor = ({
     } finally {
       setExportLoading(false);
     }
-  }, [mergedPdfDocument, selectedPageNumbers, filename]);
+  }, [editedDocument, mergedPdfDocument, selectedPageNumbers, filename]);
 
   const handleUndo = useCallback(() => {
     if (undo()) {
@@ -1240,10 +1254,11 @@ const PageEditor = ({
             </Box>
           )}
             <TextInput
+              label="Filename"
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
               placeholder="Enter filename"
-              style={{ minWidth: 200 }}
+              style={{ minWidth: 200, maxWidth: 200, marginLeft: "1rem"}}
             />
 
 
@@ -1338,8 +1353,7 @@ const PageEditor = ({
                   loading={exportLoading}
                   onClick={() => {
                     setShowExportModal(false);
-                    const selectedOnly = exportPreview.pageCount < (mergedPdfDocument?.pages.length || 0);
-                    handleExport(selectedOnly);
+                    handleExport(exportSelectedOnly);
                   }}
                 >
                   Export PDF

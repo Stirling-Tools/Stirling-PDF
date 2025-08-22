@@ -7,11 +7,21 @@ import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import { ModeType, isValidMode } from '../../contexts/NavigationContext';
 
+const viewOptionStyle = {
+  display: 'inline-flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+  whiteSpace: 'nowrap',
+  paddingTop: '0.3rem',
+}
+
+
 // Create view options with icons and loading states
 const createViewOptions = (switchingTo: ModeType | null) => [
   {
     label: (
-      <div style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'}}>
+      <div style={viewOptionStyle as React.CSSProperties}>
         {switchingTo === "viewer" ? (
           <Loader size="xs" />
         ) : (
@@ -24,7 +34,7 @@ const createViewOptions = (switchingTo: ModeType | null) => [
   },
   {
     label: (
-      <div style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+      <div style={viewOptionStyle as React.CSSProperties}>
         {switchingTo === "pageEditor" ? (
           <Loader size="xs" />
         ) : (
@@ -37,7 +47,7 @@ const createViewOptions = (switchingTo: ModeType | null) => [
   },
   {
     label: (
-      <div style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+      <div style={viewOptionStyle as React.CSSProperties}>
         {switchingTo === "fileEditor" ? (
           <Loader size="xs" />
         ) : (
@@ -91,7 +101,7 @@ const TopControls = ({
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       {!isToolSelected && (
-        <div className="flex justify-center items-center h-full pointer-events-auto mt-[0.5rem] rounded-full">
+        <div className="flex justify-center mt-[0.5rem]">
             <SegmentedControl
               data={createViewOptions(switchingTo)}
               value={currentView}
@@ -103,6 +113,7 @@ const TopControls = ({
               style={{
                 transition: 'all 0.2s ease',
                 opacity: switchingTo ? 0.8 : 1,
+                pointerEvents: 'auto'
               }}
               styles={{
                 root: {

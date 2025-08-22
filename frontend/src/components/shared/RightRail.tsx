@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { ActionIcon, Divider, Popover } from '@mantine/core';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import './rightRail/RightRail.css';
@@ -16,7 +16,7 @@ export default function RightRail() {
   const { t } = useTranslation();
   const { toggleTheme } = useRainbowThemeContext();
   const { buttons, actions } = useRightRail();
-  const topButtons = buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true));
+  const topButtons = useMemo(() => buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true)), [buttons]);
 
   // Access PageEditor functions for page-editor-specific actions
   const { pageEditorFunctions } = useToolWorkflow();
@@ -33,6 +33,7 @@ export default function RightRail() {
   const { removeFiles } = useFileManagement();
 
   const activeFiles = selectors.getFiles();
+  const filesSignature = selectors.getFilesSignature();
   const fileRecords = selectors.getFileRecords();
 
   // Compute selection state and total items
@@ -149,9 +150,16 @@ export default function RightRail() {
   }, []);
 
   const updatePagesFromCSV = useCallback(() => {
-    const pageNumbers = parseCSVInput(csvInput);
-    setSelectedPages(pageNumbers);
-  }, [csvInput, parseCSVInput, setSelectedPages]);
+    const rawPages = parseCSVInput(csvInput);
+    // Determine max page count from processed records
+    const maxPages = fileRecords.reduce((sum, rec) => {
+      const pf = rec.processedFile;
+      if (!pf) return sum;
+      return sum + ((pf.totalPages as number) || (pf.pages?.length || 0));
+    }, 0);
+    const normalized = Array.from(new Set(rawPages.filter(n => Number.isFinite(n) && n > 0 && n <= maxPages))).sort((a,b)=>a-b);
+    setSelectedPages(normalized);
+  }, [csvInput, parseCSVInput, fileRecords, setSelectedPages]);
 
   // Sync csvInput with selectedPageNumbers changes
   useEffect(() => {
@@ -162,10 +170,10 @@ export default function RightRail() {
     setCsvInput(newCsvInput);
   }, [selectedPageNumbers]);
 
-  // Clear CSV input when files change
+  // Clear CSV input when files change (use stable signature to avoid ref churn)
   useEffect(() => {
     setCsvInput("");
-  }, [activeFiles]);
+  }, [filesSignature]);
 
   // Mount/visibility for page-editor-only buttons to allow exit animation, then remove to avoid flex gap
   const [pageControlsMounted, setPageControlsMounted] = useState<boolean>(currentView === 'pageEditor');
@@ -217,7 +225,7 @@ export default function RightRail() {
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             {/* Select All Button */}
-            <Tooltip content={t('pageEdit.selectAll', 'Select All')} position="left" offset={12} arrow>
+            <Tooltip content={t('rightRail.selectAll', 'Select All')} position="left" offset={12} arrow>
               <div>
                 <ActionIcon
                   variant="subtle"
@@ -234,7 +242,7 @@ export default function RightRail() {
             </Tooltip>
 
             {/* Deselect All Button */}
-            <Tooltip content={t('pageEdit.deselectAll', 'Deselect All')} position="left" offset={12} arrow>
+            <Tooltip content={t('rightRail.deselectAll', 'Deselect All')} position="left" offset={12} arrow>
               <div>
                 <ActionIcon
                   variant="subtle"
@@ -252,7 +260,7 @@ export default function RightRail() {
 
             {/* Select by Numbers - page editor only, with animated presence */}
             {pageControlsMounted && (
-                                  <Tooltip content={t('pageEdit.selectByNumber', 'Select by Page Numbers')} position="left" offset={12} arrow>
+                                  <Tooltip content={t('rightRail.selectByNumber', 'Select by Page Numbers')} position="left" offset={12} arrow>
 
               <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
                 <Popover position="left" withArrow shadow="md" offset={8}>
@@ -263,6 +271,7 @@ export default function RightRail() {
                           radius="md"
                           className="right-rail-icon"
                           disabled={!pageControlsVisible || totalItems === 0}
+                          aria-label={typeof t === 'function' ? t('rightRail.selectByNumber', 'Select by Page Numbers') : 'Select by Page Numbers'}
                         >
                           <span className="material-symbols-rounded">
                             pin_end
@@ -288,7 +297,7 @@ export default function RightRail() {
 
             {/* Delete Selected Pages - page editor only, with animated presence */}
             {pageControlsMounted && (
-                              <Tooltip content={t('pageEdit.deleteSelected', 'Delete Selected Pages')} position="left" offset={12} arrow>
+                              <Tooltip content={t('rightRail.deleteSelected', 'Delete Selected Pages')} position="left" offset={12} arrow>
 
               <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
                   <div style={{ display: 'inline-flex' }}>
@@ -296,8 +305,9 @@ export default function RightRail() {
                       variant="subtle"
                       radius="md"
                       className="right-rail-icon"
-                      onClick={() => pageEditorFunctions?.handleDelete?.()}
+                      onClick={() => { pageEditorFunctions?.handleDelete?.(); setSelectedPages([]); }}
                       disabled={!pageControlsVisible || (Array.isArray(selectedPageNumbers) ? selectedPageNumbers.length === 0 : true)}
+                      aria-label={typeof t === 'function' ? t('rightRail.deleteSelected', 'Delete Selected Pages') : 'Delete Selected Pages'}
                     >
                       <span className="material-symbols-rounded">delete</span>
                     </ActionIcon>
@@ -308,7 +318,7 @@ export default function RightRail() {
             )}
 
             {/* Close (File Editor: Close Selected | Page Editor: Close PDF) */}
-            <Tooltip content={currentView === 'pageEditor' ? 'Close PDF' : 'Close Selected Files'} position="left" offset={12} arrow>
+            <Tooltip content={currentView === 'pageEditor' ? t('rightRail.closePdf', 'Close PDF') : t('rightRail.downloadSelected', 'Download Selected Files')} position="left" offset={12} arrow>
               <div>
                 <ActionIcon
                   variant="subtle"
@@ -332,7 +342,7 @@ export default function RightRail() {
 
         {/* Theme toggle and Language dropdown */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <Tooltip content={t('app.toggleTheme', 'Toggle Theme')} position="left" offset={12} arrow>
+          <Tooltip content={t('rightRail.toggleTheme', 'Toggle Theme')} position="left" offset={12} arrow>
             <ActionIcon
               variant="subtle"
               radius="md"
@@ -347,8 +357,8 @@ export default function RightRail() {
 
           <Tooltip content={
             currentView === 'pageEditor' 
-              ? 'Export All Pages' 
-              : (selectedCount > 0 ? 'Download Selected Files' : 'Download All')
+              ? t('rightRail.exportAll', 'Export PDF') 
+              : (selectedCount > 0 ? t('rightRail.downloadSelected', 'Download Selected Files') : t('rightRail.downloadAll', 'Download All'))
           } position="left" offset={12} arrow>
             <div>
               <ActionIcon 

@@ -2,14 +2,12 @@ import React from "react";
 import {
   Tooltip,
   ActionIcon,
-  Paper
 } from "@mantine/core";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
-import CloseIcon from "@mui/icons-material/Close";
 
 interface PageEditorControlsProps {
   // Close/Reset functions
@@ -37,17 +35,12 @@ interface PageEditorControlsProps {
 }
 
 const PageEditorControls = ({
-  onClosePdf,
   onUndo,
   onRedo,
   canUndo,
   canRedo,
   onRotate,
-  onDelete,
   onSplit,
-  onExportSelected,
-  onExportAll,
-  exportLoading,
   selectionMode,
   selectedPages
 }: PageEditorControlsProps) => {
@@ -87,19 +80,6 @@ const PageEditorControls = ({
           paddingBottom: "2rem"
         }}
       >
-        {/* Close PDF */}
-        <Tooltip label="Close PDF">
-          <ActionIcon
-            onClick={onClosePdf}
-            color="red"
-            variant="light"
-            size="lg"
-          >
-            <CloseIcon />
-          </ActionIcon>
-        </Tooltip>
-
-        <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
 
         {/* Undo/Redo */}
         <Tooltip label="Undo">

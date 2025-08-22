@@ -18,8 +18,19 @@ export function RightRailProvider({ children }: { children: React.ReactNode }) {
 
 	const registerButtons = useCallback((newButtons: RightRailButtonConfig[]) => {
 		setButtons(prev => {
-			const merged = [...prev.filter(b => !newButtons.some(nb => nb.id === b.id)), ...newButtons];
-			return merged.sort((a, b) => (a.order || 0) - (b.order || 0));
+			const byId = new Map(prev.map(b => [b.id, b] as const));
+			newButtons.forEach(nb => {
+				const existing = byId.get(nb.id) || ({} as RightRailButtonConfig);
+				byId.set(nb.id, { ...existing, ...nb });
+			});
+			const merged = Array.from(byId.values());
+			merged.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id.localeCompare(b.id));
+			if (process.env.NODE_ENV === 'development') {
+				const ids = newButtons.map(b => b.id);
+				const dupes = ids.filter((id, idx) => ids.indexOf(id) !== idx);
+				if (dupes.length) console.warn('[RightRail] Duplicate ids in registerButtons:', dupes);
+			}
+			return merged;
 		});
 	}, []);
 

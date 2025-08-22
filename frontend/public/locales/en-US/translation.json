@@ -55,6 +55,18 @@
   "bored": "Bored Waiting?",
   "alphabet": "Alphabet",
   "downloadPdf": "Download PDF",
+  "rightRail": {
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectByNumber": "Select by Page Numbers",
+    "deleteSelected": "Delete Selected Pages",
+    "closePdf": "Close PDF",
+    "exportAll": "Export PDF",
+    "downloadSelected": "Download Selected Files",
+    "downloadAll": "Download All",
+    "toggleTheme": "Toggle Theme",
+    "language": "Language"
+  },
   "text": "Text",
   "font": "Font",
   "selectFillter": "-- Select --",

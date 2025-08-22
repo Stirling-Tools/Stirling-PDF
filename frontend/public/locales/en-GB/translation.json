@@ -1920,6 +1920,18 @@
     "currentPage": "Current Page",
     "totalPages": "Total Pages"
   },
+  "rightRail": {
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectByNumber": "Select by Page Numbers",
+    "deleteSelected": "Delete Selected Pages",
+    "closePdf": "Close PDF",
+    "exportAll": "Export PDF",
+    "downloadSelected": "Download Selected Files",
+    "downloadAll": "Download All",
+    "toggleTheme": "Toggle Theme",
+    "language": "Language"
+  },
   "toolPicker": {
     "searchPlaceholder": "Search tools...",
     "noToolsFound": "No tools found",
