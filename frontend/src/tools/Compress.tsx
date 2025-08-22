@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { use, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileSelection } from "../contexts/FileContext";
@@ -10,7 +10,7 @@ import CompressSettings from "../components/tools/compress/CompressSettings";
 
 import { useCompressParameters } from "../hooks/tools/compress/useCompressParameters";
 import { useCompressOperation } from "../hooks/tools/compress/useCompressOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useCompressTips } from "../components/tooltips/useCompressTips";
 
 const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -94,4 +94,5 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default Compress;
+
+export default Compress as ToolComponent;

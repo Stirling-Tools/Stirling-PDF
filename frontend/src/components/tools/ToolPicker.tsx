@@ -1,13 +1,11 @@
 import React, { useMemo, useRef, useLayoutEffect, useState } from "react";
-import { Box, Text, Stack } from "@mantine/core";
+import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { getSubcategoryLabel, ToolRegistryEntry } from "../../data/toolsTaxonomy";
-import ToolButton from "./toolPicker/ToolButton";
+import { ToolRegistryEntry } from "../../data/toolsTaxonomy";
 import "./toolPicker/ToolPicker.css";
-import { SubcategoryGroup, useToolSections } from "../../hooks/useToolSections";
-import SubcategoryHeader from "./shared/SubcategoryHeader";
+import { useToolSections } from "../../hooks/useToolSections";
 import NoToolsFound from "./shared/NoToolsFound";
-import { TFunction } from "i18next";
+import { renderToolButtons } from "./shared/renderToolButtons";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
@@ -15,32 +13,6 @@ interface ToolPickerProps {
   filteredTools: [string, ToolRegistryEntry][];
   isSearching?: boolean;
 }
-
-// Helper function to render tool buttons for a subcategory
-const renderToolButtons = (
-  t: TFunction,
-  subcategory: SubcategoryGroup,
-  selectedToolKey: string | null,
-  onSelect: (id: string) => void,
-  showSubcategoryHeader: boolean = true
-) => (
-  <Box key={subcategory.subcategoryId} w="100%">
-    {showSubcategoryHeader && (
-      <SubcategoryHeader label={getSubcategoryLabel(t, subcategory.subcategoryId)} />
-    )}
-    <Stack gap="xs">
-      {subcategory.tools.map(({ id, tool }: { id: string; tool: any }) => (
-        <ToolButton
-          key={id}
-          id={id}
-          tool={tool}
-          isSelected={selectedToolKey === id}
-          onSelect={onSelect}
-        />
-      ))}
-    </Stack>
-  </Box>
-);
 
 const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = false }: ToolPickerProps) => {
   const { t } = useTranslation();

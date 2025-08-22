@@ -9,7 +9,7 @@ import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import { useUnlockPdfFormsParameters } from "../hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
 import { useUnlockPdfFormsOperation } from "../hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const UnlockPdfForms = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -77,4 +77,7 @@ const UnlockPdfForms = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   });
 };
 
-export default UnlockPdfForms;
+// Static method to get the operation hook for automation
+UnlockPdfForms.tool = () => useUnlockPdfFormsOperation;
+
+export default UnlockPdfForms as ToolComponent;

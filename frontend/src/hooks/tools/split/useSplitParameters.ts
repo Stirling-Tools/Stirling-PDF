@@ -17,7 +17,7 @@ export interface SplitParameters extends BaseParameters {
 
 export type SplitParametersHook = BaseParametersHook<SplitParameters>;
 
-const defaultParameters: SplitParameters = {
+export const defaultParameters: SplitParameters = {
   mode: '',
   pages: '',
   hDiv: '2',

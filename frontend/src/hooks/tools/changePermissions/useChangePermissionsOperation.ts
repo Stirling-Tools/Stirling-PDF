@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import type { ChangePermissionsParameters } from './useChangePermissionsParameters';
+import { ChangePermissionsParameters, defaultParameters } from './useChangePermissionsParameters';
 
 export const getFormData = ((parameters: ChangePermissionsParameters) =>
   Object.entries(parameters).map(([key, value]) =>
@@ -9,27 +9,34 @@ export const getFormData = ((parameters: ChangePermissionsParameters) =>
   ) as string[][]
 );
 
+// Static function that can be used by both the hook and automation executor
+export const buildChangePermissionsFormData = (parameters: ChangePermissionsParameters, file: File): FormData => {
+  const formData = new FormData();
+  formData.append("fileInput", file);
+
+  // Add all permission parameters
+  getFormData(parameters).forEach(([key, value]) => {
+    formData.append(key, value);
+  });
+
+  return formData;
+};
+
+// Static configuration object
+export const changePermissionsOperationConfig = {
+  operationType: 'change-permissions',
+  endpoint: '/api/v1/security/add-password', // Change Permissions is a fake endpoint for the Add Password tool
+  buildFormData: buildChangePermissionsFormData,
+  filePrefix: 'permissions_',
+  multiFileEndpoint: false,
+  defaultParameters,
+} as const;
+
 export const useChangePermissionsOperation = () => {
   const { t } = useTranslation();
 
-  const buildFormData = (parameters: ChangePermissionsParameters, file: File): FormData => {
-    const formData = new FormData();
-    formData.append("fileInput", file);
-
-    // Add all permission parameters
-    getFormData(parameters).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-
-    return formData;
-  };
-
   return useToolOperation({
-    operationType: 'changePermissions',
-    endpoint: '/api/v1/security/add-password', // Change Permissions is a fake endpoint for the Add Password tool
-    buildFormData,
-    filePrefix: 'permissions_',
-    multiFileEndpoint: false,
+    ...changePermissionsOperationConfig,
     getErrorMessage: createStandardErrorHandler(
       t('changePermissions.error.failed', 'An error occurred while changing PDF permissions.')
     )

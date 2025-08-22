@@ -1,23 +1,31 @@
 import { useTranslation } from 'react-i18next';
 import { useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { RepairParameters } from './useRepairParameters';
+import { RepairParameters, defaultParameters } from './useRepairParameters';
+
+// Static function that can be used by both the hook and automation executor
+export const buildRepairFormData = (parameters: RepairParameters, file: File): FormData => {
+  const formData = new FormData();
+  formData.append("fileInput", file);
+  return formData;
+};
+
+// Static configuration object
+export const repairOperationConfig = {
+  operationType: 'repair',
+  endpoint: '/api/v1/misc/repair',
+  buildFormData: buildRepairFormData,
+  filePrefix: 'repaired_', // Will be overridden in hook with translation
+  multiFileEndpoint: false,
+  defaultParameters,
+} as const;
 
 export const useRepairOperation = () => {
   const { t } = useTranslation();
 
-  const buildFormData = (parameters: RepairParameters, file: File): FormData => {
-    const formData = new FormData();
-    formData.append("fileInput", file);
-    return formData;
-  };
-
   return useToolOperation<RepairParameters>({
-    operationType: 'repair',
-    endpoint: '/api/v1/misc/repair',
-    buildFormData,
+    ...repairOperationConfig,
     filePrefix: t('repair.filenamePrefix', 'repaired') + '_',
-    multiFileEndpoint: false,
     getErrorMessage: createStandardErrorHandler(t('repair.error.failed', 'An error occurred while repairing the PDF.'))
   });
 };
