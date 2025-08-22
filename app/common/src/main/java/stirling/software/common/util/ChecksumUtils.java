@@ -24,6 +24,9 @@ public class ChecksumUtils {
     /** Shared buffer size for streaming I/O. */
     private static final int BUFFER_SIZE = 8192;
 
+    /** Mask constant to extract the lower 32 bits of a long value (unsigned int). */
+    private static final long UNSIGNED_32_BIT_MASK = 0xFFFFFFFFL;
+
     /**
      * Computes a checksum for the given file using the chosen algorithm and returns a
      * lowercase hex string.
@@ -176,7 +179,7 @@ public class ChecksumUtils {
         }
         for (Map.Entry<String, Checksum> entry : checksums.entrySet()) {
             // Mask to 32 bits explicitly (CRC32/Adler32 are 32-bit unsigned)
-            long unsigned32 = entry.getValue().getValue() & 0xFFFFFFFFL;
+            long unsigned32 = entry.getValue().getValue() & UNSIGNED_32_BIT_MASK;
             results.put(entry.getKey(), String.format("%08x", unsigned32));
         }
         return results;
@@ -254,7 +257,7 @@ public class ChecksumUtils {
         while ((read = is.read(buffer)) != -1) {
             checksum.update(buffer, 0, read);
         }
-        long unsigned32 = checksum.getValue() & 0xFFFFFFFFL;
+        long unsigned32 = checksum.getValue() & UNSIGNED_32_BIT_MASK;
         return String.format("%08x", unsigned32);
     }
 
@@ -279,7 +282,7 @@ public class ChecksumUtils {
         while ((read = is.read(buffer)) != -1) {
             checksum.update(buffer, 0, read);
         }
-        int v = (int) (checksum.getValue() & 0xFFFFFFFFL); // keep lower 32 bits explicitly
+        int v = (int) (checksum.getValue() & UNSIGNED_32_BIT_MASK); // keep lower 32 bits explicitly
         return ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(v).array();
     }
 
