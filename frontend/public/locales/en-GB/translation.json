@@ -732,7 +732,8 @@
     "officeDocs": "Office Documents (Word, Excel, PowerPoint)",
     "imagesExt": "Images (JPG, PNG, etc.)",
     "markdown": "Markdown",
-    "textRtf": "Text/RTF"
+    "textRtf": "Text/RTF",
+    "grayscale": "Greyscale"
   },
   "imageToPdf": {
     "tags": "conversion,img,jpg,picture,photo"
@@ -2017,7 +2018,8 @@
     "downloadSelected": "Download Selected",
     "selectedCount": "{{count}} selected",
     "download": "Download",
-    "delete": "Delete"
+    "delete": "Delete",
+    "unsupported":"Unsupported"
   },
   "storage": {
     "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",

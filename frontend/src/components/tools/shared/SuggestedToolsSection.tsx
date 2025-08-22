@@ -1,22 +1,13 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Stack, Text, Divider, Card, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSuggestedTools } from '../../../hooks/useSuggestedTools';
-import { useNavigationActions, useNavigationState, type ModeType } from '../../../contexts/NavigationContext';
 
 export interface SuggestedToolsSectionProps {}
 
 export function SuggestedToolsSection(): React.ReactElement {
   const { t } = useTranslation();
-  const { actions } = useNavigationActions();
-  const { currentMode } = useNavigationState();
-  
-  // Create handleToolSelect function that navigates to the tool
-  const handleToolSelect = useCallback((toolId: string) => {
-    actions.setMode(toolId as ModeType);
-  }, [actions]);
-  
-  const suggestedTools = useSuggestedTools(currentMode, handleToolSelect);
+  const suggestedTools = useSuggestedTools();
 
   return (
     <Stack gap="md">

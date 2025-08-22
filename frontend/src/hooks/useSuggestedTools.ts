@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
 
 // Material UI Icons
 import CompressIcon from '@mui/icons-material/Compress';
@@ -42,15 +43,17 @@ const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
   }
 ];
 
-export function useSuggestedTools(selectedToolKey?: string | null, handleToolSelect?: (toolId: string) => void): SuggestedTool[] {
+export function useSuggestedTools(): SuggestedTool[] {
+  const { handleToolSelect, selectedToolKey } = useToolWorkflow();
+
   return useMemo(() => {
     // Filter out the current tool
     const filteredTools = ALL_SUGGESTED_TOOLS.filter(tool => tool.name !== selectedToolKey);
-    
+
     // Add navigation function to each tool
     return filteredTools.map(tool => ({
       ...tool,
-      navigate: handleToolSelect ? () => handleToolSelect(tool.name) : () => {}
+      navigate: () => handleToolSelect(tool.name)
     }));
   }, [selectedToolKey, handleToolSelect]);
 }
