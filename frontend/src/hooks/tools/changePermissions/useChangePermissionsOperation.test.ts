@@ -109,7 +109,7 @@ describe('useChangePermissionsOperation', () => {
     { property: 'multiFileEndpoint' as const, expectedValue: false },
     { property: 'endpoint' as const, expectedValue: '/api/v1/security/add-password' },
     { property: 'filePrefix' as const, expectedValue: 'permissions_' },
-    { property: 'operationType' as const, expectedValue: 'changePermissions' }
+    { property: 'operationType' as const, expectedValue: 'change-permissions' }
   ])('should configure $property correctly', ({ property, expectedValue }) => {
     renderHook(() => useChangePermissionsOperation());
 
