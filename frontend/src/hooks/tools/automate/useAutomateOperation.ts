@@ -2,13 +2,8 @@ import { useToolOperation } from '../shared/useToolOperation';
 import { useCallback } from 'react';
 import { executeAutomationSequence } from '../../../utils/automationExecutor';
 import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
-
-interface AutomateParameters {
-  automationConfig?: any;
-  onStepStart?: (stepIndex: number, operationName: string) => void;
-  onStepComplete?: (stepIndex: number, resultFiles: File[]) => void;
-  onStepError?: (stepIndex: number, error: string) => void;
-}
+import { AutomateParameters } from '../../../types/automation';
+import { AUTOMATION_CONSTANTS } from '../../../constants/automation';
 
 export function useAutomateOperation() {
   const toolRegistry = useFlatToolRegistry();
@@ -22,7 +17,7 @@ export function useAutomateOperation() {
 
     // Execute the automation sequence and return the final results
     const finalResults = await executeAutomationSequence(
-      params.automationConfig,
+      params.automationConfig!,
       files,
       toolRegistry,
       (stepIndex: number, operationName: string) => {
@@ -49,6 +44,6 @@ export function useAutomateOperation() {
     endpoint: '/api/v1/pipeline/handleData', // Not used with customProcessor
     buildFormData: () => new FormData(), // Not used with customProcessor
     customProcessor,
-    filePrefix: 'automated_'
+    filePrefix: AUTOMATION_CONSTANTS.FILE_PREFIX
   });
 }

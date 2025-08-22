@@ -5,13 +5,14 @@ import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AutomationEntry from "./AutomationEntry";
 import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSuggestedAutomations";
+import { AutomationConfig } from "../../../types/automation";
 
 interface AutomationSelectionProps {
-  savedAutomations: any[];
+  savedAutomations: AutomationConfig[];
   onCreateNew: () => void;
-  onRun: (automation: any) => void;
-  onEdit: (automation: any) => void;
-  onDelete: (automation: any) => void;
+  onRun: (automation: AutomationConfig) => void;
+  onEdit: (automation: AutomationConfig) => void;
+  onDelete: (automation: AutomationConfig) => void;
 }
 
 export default function AutomationSelection({ 
@@ -44,7 +45,7 @@ export default function AutomationSelection({
           key={automation.id}
           title={automation.name}
           badgeIcon={SettingsIcon}
-          operations={automation.operations.map((op: any) => typeof op === 'string' ? op : op.operation)}
+          operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
           onClick={() => onRun(automation)}
           showMenu={true}
           onEdit={() => onEdit(automation)}

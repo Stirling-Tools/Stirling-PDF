@@ -5,25 +5,21 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
 import { useFileSelection } from "../../../contexts/FileContext";
 import { useFlatToolRegistry } from "../../../data/useTranslatedToolRegistry";
+import { AutomationConfig, ExecutionStep } from "../../../types/automation";
+import { AUTOMATION_CONSTANTS, EXECUTION_STATUS } from "../../../constants/automation";
+import { useResourceCleanup } from "../../../utils/resourceManager";
 
 interface AutomationRunProps {
-  automation: any;
+  automation: AutomationConfig;
   onComplete: () => void;
-  automateOperation?: any;
-}
-
-interface ExecutionStep {
-  id: string;
-  operation: string;
-  name: string;
-  status: 'pending' | 'running' | 'completed' | 'error';
-  error?: string;
+  automateOperation?: any; // TODO: Type this properly when available
 }
 
 export default function AutomationRun({ automation, onComplete, automateOperation }: AutomationRunProps) {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
   const toolRegistry = useFlatToolRegistry();
+  const cleanup = useResourceCleanup();
   
   // Progress tracking state
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
@@ -42,7 +38,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           id: `${op.operation}-${index}`,
           operation: op.operation,
           name: tool?.name || op.operation,
-          status: 'pending' as const
+          status: EXECUTION_STATUS.PENDING as const
         };
       });
       setExecutionSteps(steps);
@@ -56,8 +52,10 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
       // Reset progress state when component unmounts
       setExecutionSteps([]);
       setCurrentStepIndex(-1);
+      // Clean up any blob URLs
+      cleanup();
     };
-  }, []);
+  }, [cleanup]);
 
   const executeAutomation = async () => {
     if (!selectedFiles || selectedFiles.length === 0) {
@@ -71,7 +69,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
 
     // Reset progress tracking
     setCurrentStepIndex(0);
-    setExecutionSteps(prev => prev.map(step => ({ ...step, status: 'pending' as const, error: undefined })));
+    setExecutionSteps(prev => prev.map(step => ({ ...step, status: EXECUTION_STATUS.PENDING as const, error: undefined })));
 
     try {
       // Use the automateOperation.executeOperation to handle file consumption properly
@@ -81,17 +79,17 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           onStepStart: (stepIndex: number, operationName: string) => {
             setCurrentStepIndex(stepIndex);
             setExecutionSteps(prev => prev.map((step, idx) =>
-              idx === stepIndex ? { ...step, status: 'running' as const } : step
+              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.RUNNING as const } : step
             ));
           },
           onStepComplete: (stepIndex: number, resultFiles: File[]) => {
             setExecutionSteps(prev => prev.map((step, idx) =>
-              idx === stepIndex ? { ...step, status: 'completed' as const } : step
+              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.COMPLETED as const } : step
             ));
           },
           onStepError: (stepIndex: number, error: string) => {
             setExecutionSteps(prev => prev.map((step, idx) =>
-              idx === stepIndex ? { ...step, status: 'error' as const, error } : step
+              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.ERROR as const, error } : step
             ));
           }
         },
@@ -109,24 +107,24 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
 
   const getProgress = () => {
     if (executionSteps.length === 0) return 0;
-    const completedSteps = executionSteps.filter(step => step.status === 'completed').length;
+    const completedSteps = executionSteps.filter(step => step.status === EXECUTION_STATUS.COMPLETED).length;
     return (completedSteps / executionSteps.length) * 100;
   };
 
   const getStepIcon = (step: ExecutionStep) => {
     switch (step.status) {
-      case 'completed':
+      case EXECUTION_STATUS.COMPLETED:
         return <CheckIcon style={{ fontSize: 16, color: 'green' }} />;
-      case 'error':
+      case EXECUTION_STATUS.ERROR:
         return <span style={{ fontSize: 16, color: 'red' }}>✕</span>;
-      case 'running':
+      case EXECUTION_STATUS.RUNNING:
         return <div style={{ 
           width: 16, 
           height: 16, 
           border: '2px solid #ccc', 
           borderTop: '2px solid #007bff', 
           borderRadius: '50%',
-          animation: 'spin 1s linear infinite' 
+          animation: `spin ${AUTOMATION_CONSTANTS.SPINNER_ANIMATION_DURATION} linear infinite` 
         }} />;
       default:
         return <div style={{ 
@@ -175,8 +173,8 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
                 <Text 
                   size="sm" 
                   style={{
-                    color: step.status === 'running' ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-text)',
-                    fontWeight: step.status === 'running' ? 500 : 400
+                    color: step.status === EXECUTION_STATUS.RUNNING ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-text)',
+                    fontWeight: step.status === EXECUTION_STATUS.RUNNING ? 500 : 400
                   }}
                 >
                   {step.name}

@@ -1,32 +1,10 @@
 import axios from 'axios';
 import { ToolRegistry } from '../data/toolsTaxonomy';
-import { zipFileService } from '../services/zipFileService';
+import { AutomationConfig, AutomationExecutionCallbacks } from '../types/automation';
+import { AUTOMATION_CONSTANTS } from '../constants/automation';
+import { AutomationFileProcessor } from './automationFileProcessor';
+import { ResourceManager } from './resourceManager';
 
-/**
- * Extract zip files from response blob
- */
-const extractZipFiles = async (blob: Blob): Promise<File[]> => {
-  try {
-    // Convert blob to File for the zip service
-    const zipFile = new File([blob], `response_${Date.now()}.zip`, { type: 'application/zip' });
-    
-    // Extract PDF files from the ZIP
-    const result = await zipFileService.extractPdfFiles(zipFile);
-    
-    if (!result.success || result.extractedFiles.length === 0) {
-      console.error('ZIP extraction failed:', result.errors);
-      throw new Error(`ZIP extraction failed: ${result.errors.join(', ')}`);
-    }
-    
-    console.log(`📦 Extracted ${result.extractedFiles.length} files from ZIP`);
-    return result.extractedFiles;
-  } catch (error) {
-    console.error('Failed to extract ZIP files:', error);
-    // Fallback: treat as single PDF file
-    const file = new File([blob], `result_${Date.now()}.pdf`, { type: 'application/pdf' });
-    return [file];
-  }
-};
 
 /**
  * Execute a tool operation directly without using React hooks
@@ -68,15 +46,20 @@ export const executeToolOperation = async (
       
       const response = await axios.post(endpoint, formData, { 
         responseType: 'blob',
-        timeout: 300000 // 5 minute timeout for large files
+        timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
       });
 
       console.log(`📥 Response status: ${response.status}, size: ${response.data.size} bytes`);
 
-      // Multi-file responses are typically ZIP files
-      const resultFiles = await extractZipFiles(response.data);
-      console.log(`📁 Extracted ${resultFiles.length} files from response`);
-      return resultFiles;
+      // Multi-file responses are typically ZIP files, but may be single files
+      const result = await AutomationFileProcessor.extractAutomationZipFiles(response.data);
+      
+      if (result.errors.length > 0) {
+        console.warn(`⚠️ File processing warnings:`, result.errors);
+      }
+      
+      console.log(`📁 Processed ${result.files.length} files from response`);
+      return result.files;
 
     } else {
       // Single-file processing - separate API call per file
@@ -95,16 +78,16 @@ export const executeToolOperation = async (
         
         const response = await axios.post(endpoint, formData, { 
           responseType: 'blob',
-          timeout: 300000 // 5 minute timeout for large files
+          timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
         });
 
         console.log(`📥 Response ${i+1} status: ${response.status}, size: ${response.data.size} bytes`);
 
         // Create result file
-        const resultFile = new File(
-          [response.data], 
-          `processed_${file.name}`, 
-          { type: 'application/pdf' }
+        const resultFile = ResourceManager.createResultFile(
+          response.data, 
+          file.name,
+          AUTOMATION_CONSTANTS.FILE_PREFIX
         );
         resultFiles.push(resultFile);
         console.log(`✅ Created result file: ${resultFile.name}`);
