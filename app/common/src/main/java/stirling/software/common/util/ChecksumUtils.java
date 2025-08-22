@@ -24,16 +24,16 @@ public class ChecksumUtils {
     /** Shared buffer size for streaming I/O. */
     private static final int BUFFER_SIZE = 8192;
 
-    /** Mask constant to extract the lower 32 bits of a long value (unsigned int). */
+    /** Mask to extract the lower 32 bits of a long value (unsigned int). */
     private static final long UNSIGNED_32_BIT_MASK = 0xFFFFFFFFL;
 
     /**
-     * Computes a checksum for the given file using the chosen algorithm and returns a
-     * lowercase hex string.
+     * Computes a checksum for the given file using the chosen algorithm and returns a lowercase hex
+     * string.
      *
-     * <p>For digest algorithms (e.g., SHA-256, SHA-1, MD5), this returns the digest as hex.
-     * For 32-bit {@link Checksum} algorithms ("CRC32", "ADLER32"), this returns an
-     * 8-character lowercase hex string of the unsigned 32-bit value.
+     * <p>For digest algorithms (e.g., SHA-256, SHA-1, MD5), this returns the digest as hex. For
+     * 32-bit {@link Checksum} algorithms ("CRC32", "ADLER32"), this returns an 8-character
+     * lowercase hex string of the unsigned 32-bit value.
      *
      * @param path file to read
      * @param algorithm algorithm name (case-insensitive). Special values: "CRC32", "ADLER32".
@@ -47,8 +47,8 @@ public class ChecksumUtils {
     }
 
     /**
-     * Computes a checksum for the given stream using the chosen algorithm and returns a
-     * lowercase hex string.
+     * Computes a checksum for the given stream using the chosen algorithm and returns a lowercase
+     * hex string.
      *
      * <p><strong>Note:</strong> This method does <em>not</em> close the provided stream.
      *
@@ -72,9 +72,8 @@ public class ChecksumUtils {
      * Computes a checksum for the given file using the chosen algorithm and returns a Base64
      * encoded string.
      *
-     * <p>For digest algorithms this is the Base64 of the raw digest bytes.
-     * For 32-bit checksum algorithms ("CRC32", "ADLER32"), this is the Base64 of the
-     * 4-byte big-endian unsigned value.
+     * <p>For digest algorithms this is the Base64 of the raw digest bytes. For 32-bit checksum
+     * algorithms ("CRC32", "ADLER32"), this is the Base64 of the 4-byte big-endian unsigned value.
      *
      * @param path file to read
      * @param algorithm algorithm name (case-insensitive). Special values: "CRC32", "ADLER32".
@@ -112,8 +111,8 @@ public class ChecksumUtils {
     /**
      * Computes multiple checksums for the given file in a single pass over the data.
      *
-     * <p>Returns a map from algorithm name to lowercase hex string. Order of results follows
-     * the order of the provided {@code algorithms}.
+     * <p>Returns a map from algorithm name to lowercase hex string. Order of results follows the
+     * order of the provided {@code algorithms}.
      *
      * @param path file to read
      * @param algorithms algorithm names (case-insensitive). Special: "CRC32", "ADLER32".
@@ -178,7 +177,7 @@ public class ChecksumUtils {
             results.put(entry.getKey(), toHex(entry.getValue().digest()));
         }
         for (Map.Entry<String, Checksum> entry : checksums.entrySet()) {
-            // Mask to 32 bits explicitly (CRC32/Adler32 are 32-bit unsigned)
+            // Keep value as long and mask to ensure unsigned hex formatting.
             long unsigned32 = entry.getValue().getValue() & UNSIGNED_32_BIT_MASK;
             results.put(entry.getKey(), String.format("%08x", unsigned32));
         }
@@ -243,8 +242,8 @@ public class ChecksumUtils {
     }
 
     /**
-     * Computes a 32-bit {@link Checksum} over a stream and returns the lowercase 8-char hex
-     * of the unsigned 32-bit value.
+     * Computes a 32-bit {@link Checksum} over a stream and returns the lowercase 8-char hex of the
+     * unsigned 32-bit value.
      *
      * @param is input stream (not closed)
      * @param checksum checksum implementation (CRC32, Adler32, etc.)
@@ -257,6 +256,7 @@ public class ChecksumUtils {
         while ((read = is.read(buffer)) != -1) {
             checksum.update(buffer, 0, read);
         }
+        // Keep as long and mask to ensure correct unsigned representation.
         long unsigned32 = checksum.getValue() & UNSIGNED_32_BIT_MASK;
         return String.format("%08x", unsigned32);
     }
@@ -265,10 +265,8 @@ public class ChecksumUtils {
      * Computes a 32-bit {@link Checksum} over a stream and returns the raw 4-byte big-endian
      * representation of the unsigned 32-bit value.
      *
-     * <p><strong>Why cast to int is safe here:</strong> CRC32/Adler32 are defined as 32-bit
-     * unsigned integers. Casting the {@code long} return value to {@code int} preserves the
-     * lower 32 bits. We then write those bits into a 4-byte array. Sign does not matter as
-     * we only care about the bit pattern; big-endian byte order is enforced explicitly.
+     * <p>Cast to int already truncates to the lower 32 bits; the sign is irrelevant because we
+     * serialize the bit pattern directly into 4 bytes.
      *
      * @param is input stream (not closed)
      * @param checksum checksum implementation (CRC32, Adler32, etc.)
@@ -282,15 +280,16 @@ public class ChecksumUtils {
         while ((read = is.read(buffer)) != -1) {
             checksum.update(buffer, 0, read);
         }
-        int v = (int) (checksum.getValue() & UNSIGNED_32_BIT_MASK); // keep lower 32 bits explicitly
+        // Cast keeps only the lower 32 bits; mask is unnecessary here.
+        int v = (int) checksum.getValue();
         return ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(v).array();
     }
 
     /**
      * Converts bytes to a lowercase hex string.
      *
-     * @param hash raw bytes
-     * @return lowercase hex
+     * @param hash the byte array to convert
+     * @return the lowercase hex string
      */
     private static String toHex(byte[] hash) {
         StringBuilder sb = new StringBuilder(hash.length * 2);
