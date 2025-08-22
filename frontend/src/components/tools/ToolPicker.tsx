@@ -1,8 +1,7 @@
 import React, { useMemo, useRef, useLayoutEffect, useState } from "react";
-import { Box, Text, Stack } from "@mantine/core";
+import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "../../data/toolsTaxonomy";
-import ToolButton from "./toolPicker/ToolButton";
 import "./toolPicker/ToolPicker.css";
 import { useToolSections } from "../../hooks/useToolSections";
 import NoToolsFound from "./shared/NoToolsFound";
@@ -44,11 +43,11 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const { sections: visibleSections } = useToolSections(filteredTools);
 
   const quickSection = useMemo(
-    () => visibleSections.find(s => (s as any).key === 'quick'),
+    () => visibleSections.find(s => s.key === 'quick'),
     [visibleSections]
   );
   const allSection = useMemo(
-    () => visibleSections.find(s => (s as any).key === 'all'),
+    () => visibleSections.find(s => s.key === 'all'),
     [visibleSections]
   );
 
@@ -95,7 +94,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             {searchGroups.length === 0 ? (
               <NoToolsFound />
             ) : (
-              searchGroups.map(group => renderToolButtons(group, selectedToolKey, onSelect))
+              searchGroups.map(group => renderToolButtons(t, group, selectedToolKey, onSelect))
             )}
           </Stack>
         ) : (
@@ -139,8 +138,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={quickAccessRef} w="100%">
               <Stack p="sm" gap="xs">
-                {quickSection?.subcategories.map(sc => 
-                  renderToolButtons(sc, selectedToolKey, onSelect, false)
+                {quickSection?.subcategories.map(sc =>
+                  renderToolButtons(t, sc, selectedToolKey, onSelect, false)
                 )}
               </Stack>
             </Box>
@@ -185,8 +184,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
-                {allSection?.subcategories.map(sc => 
-                  renderToolButtons(sc, selectedToolKey, onSelect, true)
+                {allSection?.subcategories.map(sc =>
+                  renderToolButtons(t, sc, selectedToolKey, onSelect, true)
                 )}
               </Stack>
             </Box>

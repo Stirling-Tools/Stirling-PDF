@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Box, Stack, Text } from '@mantine/core';
-import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
+import { getSubcategoryLabel, ToolRegistryEntry } from '../../data/toolsTaxonomy';
 import ToolButton from './toolPicker/ToolButton';
 import { useTranslation } from 'react-i18next';
 import { useToolSections } from '../../hooks/useToolSections';
@@ -23,8 +23,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }
   return (
     <Stack p="sm" gap="xs">
       {searchGroups.map(group => (
-        <Box key={group.subcategory} w="100%">
-          <SubcategoryHeader label={t(`toolPicker.subcategories.${group.subcategory}`, group.subcategory)} />
+        <Box key={group.subcategoryId} w="100%">
+          <SubcategoryHeader label={getSubcategoryLabel(t, group.subcategoryId)} />
           <Stack gap="xs">
             {group.tools.map(({ id, tool }) => (
               <ToolButton

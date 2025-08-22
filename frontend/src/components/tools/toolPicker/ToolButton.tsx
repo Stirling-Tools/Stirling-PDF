@@ -14,9 +14,9 @@ interface ToolButtonProps {
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect }) => {
   const handleClick = (id: string) => {
     if (tool.link) {
-      // Open external link in new tab 
+      // Open external link in new tab
       window.open(tool.link, '_blank', 'noopener,noreferrer');
-      return; 
+      return;
     }
     // Normal tool selection
     onSelect(id);
@@ -47,4 +47,4 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
   );
 };
 
-export default ToolButton; 
+export default ToolButton;
