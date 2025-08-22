@@ -1,12 +1,12 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Text, Center, Box, Notification, LoadingOverlay, Stack, Group, Portal
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useFileContext } from '../../contexts/FileContext';
-import { useFileSelection } from '../../contexts/FileSelectionContext';
+import { useFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
+import { useNavigationActions } from '../../contexts/NavigationContext';
 import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
@@ -14,19 +14,9 @@ import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
 import styles from '../pageEditor/PageEditor.module.css';
 import FileThumbnail from '../pageEditor/FileThumbnail';
-import DragDropGrid from '../pageEditor/DragDropGrid';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
 
-interface FileItem {
-  id: string;
-  name: string;
-  pageCount: number;
-  thumbnail: string;
-  size: number;
-  file: File;
-  splitBefore?: boolean;
-}
 
 interface FileEditorProps {
   onOpenPageEditor?: (file: File) => void;
@@ -53,33 +43,25 @@ const FileEditor = ({
     return extension ? supportedExtensions.includes(extension) : false;
   }, [supportedExtensions]);
 
-  // Get file context
-  const fileContext = useFileContext();
-  const {
-    activeFiles,
-    processedFiles,
-    selectedFileIds,
-    setSelectedFiles: setContextSelectedFiles,
-    isProcessing,
-    addFiles,
-    removeFiles,
-    setCurrentView,
-    recordOperation,
-    markOperationApplied
-  } = fileContext;
-
+  // Use optimized FileContext hooks
+  const { state, selectors } = useFileState();
+  const { addFiles, removeFiles, reorderFiles } = useFileManagement();
+  
+  // Extract needed values from state (memoized to prevent infinite loops)
+  const activeFiles = useMemo(() => selectors.getFiles(), [selectors.getFilesSignature()]);
+  const activeFileRecords = useMemo(() => selectors.getFileRecords(), [selectors.getFilesSignature()]);
+  const selectedFileIds = state.ui.selectedFileIds;
+  const isProcessing = state.ui.isProcessing;
+  
+  // Get the real context actions
+  const { actions } = useFileActions();
+  const { actions: navActions } = useNavigationActions();
+  
   // Get file selection context
-  const {
-    selectedFiles: toolSelectedFiles,
-    setSelectedFiles: setToolSelectedFiles,
-    maxFiles,
-    isToolMode
-  } = useFileSelection();
+  const { setSelectedFiles } = useFileSelection();
 
-  const [files, setFiles] = useState<FileItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [localLoading, setLocalLoading] = useState(false);
   const [selectionMode, setSelectionMode] = useState(toolMode);
 
   // Enable selection mode automatically in tool mode
@@ -88,13 +70,7 @@ const FileEditor = ({
       setSelectionMode(true);
     }
   }, [toolMode]);
-  const [draggedFile, setDraggedFile] = useState<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<string | null>(null);
-  const [multiFileDrag, setMultiFileDrag] = useState<{fileIds: string[], count: number} | null>(null);
-  const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
-  const [conversionProgress, setConversionProgress] = useState(0);
   const [zipExtractionProgress, setZipExtractionProgress] = useState<{
     isExtracting: boolean;
     currentFile: string;
@@ -108,115 +84,30 @@ const FileEditor = ({
     extractedCount: 0,
     totalFiles: 0
   });
-  const fileRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const lastActiveFilesRef = useRef<string[]>([]);
-  const lastProcessedFilesRef = useRef<number>(0);
-
   // Get selected file IDs from context (defensive programming)
   const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
+  
+  // Create refs for frequently changing values to stabilize callbacks
+  const contextSelectedIdsRef = useRef<string[]>([]);
+  contextSelectedIdsRef.current = contextSelectedIds;
 
-  // Map context selections to local file IDs for UI display
-  const localSelectedIds = files
-    .filter(file => {
-      const fileId = (file.file as any).id || file.name;
-      return contextSelectedIds.includes(fileId);
-    })
-    .map(file => file.id);
+  // Use activeFileRecords directly - no conversion needed
+  const localSelectedIds = contextSelectedIds;
 
-  // Convert shared files to FileEditor format
-  const convertToFileItem = useCallback(async (sharedFile: any): Promise<FileItem> => {
-    // Generate thumbnail if not already available
-    const thumbnail = sharedFile.thumbnail || await generateThumbnailForFile(sharedFile.file || sharedFile);
-
+  // Helper to convert FileRecord to FileThumbnail format
+  const recordToFileItem = useCallback((record: any) => {
+    const file = selectors.getFile(record.id);
+    if (!file) return null;
+    
     return {
-      id: sharedFile.id || `file-${Date.now()}-${Math.random()}`,
-      name: (sharedFile.file?.name || sharedFile.name || 'unknown'),
-      pageCount: sharedFile.pageCount || Math.floor(Math.random() * 20) + 1, // Mock for now
-      thumbnail,
-      size: sharedFile.file?.size || sharedFile.size || 0,
-      file: sharedFile.file || sharedFile,
+      id: record.id,
+      name: file.name,
+      pageCount: record.processedFile?.totalPages || 1,
+      thumbnail: record.thumbnailUrl || '',
+      size: file.size,
+      file: file
     };
-  }, []);
-
-  // Convert activeFiles to FileItem format using context (async to avoid blocking)
-  useEffect(() => {
-    // Check if the actual content has changed, not just references
-    const currentActiveFileNames = activeFiles.map(f => f.name);
-    const currentProcessedFilesSize = processedFiles.size;
-
-    const activeFilesChanged = JSON.stringify(currentActiveFileNames) !== JSON.stringify(lastActiveFilesRef.current);
-    const processedFilesChanged = currentProcessedFilesSize !== lastProcessedFilesRef.current;
-
-    if (!activeFilesChanged && !processedFilesChanged) {
-      return;
-    }
-
-    // Update refs
-    lastActiveFilesRef.current = currentActiveFileNames;
-    lastProcessedFilesRef.current = currentProcessedFilesSize;
-
-    const convertActiveFiles = async () => {
-
-      if (activeFiles.length > 0) {
-        setLocalLoading(true);
-        try {
-          // Process files in chunks to avoid blocking UI
-          const convertedFiles: FileItem[] = [];
-
-          for (let i = 0; i < activeFiles.length; i++) {
-            const file = activeFiles[i];
-
-            // Try to get thumbnail from processed file first
-            const processedFile = processedFiles.get(file);
-            let thumbnail = processedFile?.pages?.[0]?.thumbnail;
-
-            // If no thumbnail from processed file, try to generate one
-            if (!thumbnail) {
-              try {
-                thumbnail = await generateThumbnailForFile(file);
-              } catch (error) {
-                console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
-                thumbnail = undefined; // Use placeholder
-              }
-            }
-
-            const convertedFile = {
-              id: `file-${Date.now()}-${Math.random()}`,
-              name: file.name,
-              pageCount: processedFile?.totalPages || Math.floor(Math.random() * 20) + 1,
-              thumbnail: thumbnail || '',
-              size: file.size,
-              file,
-            };
-
-            convertedFiles.push(convertedFile);
-
-            // Update progress
-            setConversionProgress(((i + 1) / activeFiles.length) * 100);
-
-            // Yield to main thread between files
-            if (i < activeFiles.length - 1) {
-              await new Promise(resolve => requestAnimationFrame(resolve));
-            }
-          }
-
-
-          setFiles(convertedFiles);
-        } catch (err) {
-          console.error('Error converting active files:', err);
-        } finally {
-          setLocalLoading(false);
-          setConversionProgress(0);
-        }
-      } else {
-        setFiles([]);
-        setLocalLoading(false);
-        setConversionProgress(0);
-      }
-    };
-
-    convertActiveFiles();
-  }, [activeFiles, processedFiles]);
+  }, [selectors]);
 
 
   // Process uploaded files using context
@@ -288,10 +179,7 @@ const FileEditor = ({
                   }
                 }
               };
-
-              recordOperation(file.name, operation);
-              markOperationApplied(file.name, operationId);
-
+              
               if (extractionResult.errors.length > 0) {
                 errors.push(...extractionResult.errors);
               }
@@ -300,7 +188,6 @@ const FileEditor = ({
               }
             } else {
               // ZIP doesn't contain PDFs or is invalid - treat as regular file
-              console.log(`Adding ZIP file as regular file: ${file.name} (no PDFs found)`);
               allExtractedFiles.push(file);
             }
           } catch (zipError) {
@@ -314,7 +201,6 @@ const FileEditor = ({
             });
           }
         } else {
-          console.log(`Adding none PDF file: ${file.name} (${file.type})`);
           allExtractedFiles.push(file);
         }
       }
@@ -343,9 +229,6 @@ const FileEditor = ({
               }
             }
           };
-
-          recordOperation(file.name, operation);
-          markOperationApplied(file.name, operationId);
         }
 
         // Add files to context (they will be processed automatically)
@@ -356,7 +239,7 @@ const FileEditor = ({
       const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
       setError(errorMessage);
       console.error('File processing error:', err);
-
+      
       // Reset extraction progress on error
       setZipExtractionProgress({
         isExtracting: false,
@@ -366,220 +249,137 @@ const FileEditor = ({
         totalFiles: 0
       });
     }
-  }, [addFiles, recordOperation, markOperationApplied]);
+  }, [addFiles]);
 
   const selectAll = useCallback(() => {
-    setContextSelectedFiles(files.map(f => (f.file as any).id || f.name));
-  }, [files, setContextSelectedFiles]);
+    setSelectedFiles(activeFileRecords.map(r => r.id)); // Use FileRecord IDs directly
+  }, [activeFileRecords, setSelectedFiles]);
 
-  const deselectAll = useCallback(() => setContextSelectedFiles([]), [setContextSelectedFiles]);
+  const deselectAll = useCallback(() => setSelectedFiles([]), [setSelectedFiles]);
 
   const closeAllFiles = useCallback(() => {
-    if (activeFiles.length === 0) return;
-
-    // Record close all operation for each file
-    activeFiles.forEach(file => {
-      const operationId = `close-all-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const operation: FileOperation = {
-        id: operationId,
-        type: 'remove',
-        timestamp: Date.now(),
-        fileIds: [file.name],
-        status: 'pending',
-        metadata: {
-          originalFileName: file.name,
-          fileSize: file.size,
-          parameters: {
-            action: 'close_all',
-            reason: 'user_request'
-          }
-        }
-      };
-
-      recordOperation(file.name, operation);
-      markOperationApplied(file.name, operationId);
-    });
+    if (activeFileRecords.length === 0) return;
 
     // Remove all files from context but keep in storage
-    removeFiles(activeFiles.map(f => (f as any).id || f.name), false);
-
+    const allFileIds = activeFileRecords.map(record => record.id);
+    removeFiles(allFileIds, false); // false = keep in storage
+    
     // Clear selections
-    setContextSelectedFiles([]);
-  }, [activeFiles, removeFiles, setContextSelectedFiles, recordOperation, markOperationApplied]);
+    setSelectedFiles([]);
+  }, [activeFileRecords, removeFiles, setSelectedFiles]);
 
   const toggleFile = useCallback((fileId: string) => {
-    const targetFile = files.find(f => f.id === fileId);
-    if (!targetFile) return;
+    const currentSelectedIds = contextSelectedIdsRef.current;
+    
+    const targetRecord = activeFileRecords.find(r => r.id === fileId);
+    if (!targetRecord) return;
 
-    const contextFileId = (targetFile.file as any).id || targetFile.name;
-    const isSelected = contextSelectedIds.includes(contextFileId);
+    const contextFileId = fileId; // No need to create a new ID
+    const isSelected = currentSelectedIds.includes(contextFileId);
 
     let newSelection: string[];
 
     if (isSelected) {
       // Remove file from selection
-      newSelection = contextSelectedIds.filter(id => id !== contextFileId);
+      newSelection = currentSelectedIds.filter(id => id !== contextFileId);
     } else {
       // Add file to selection
-      if (maxFiles === 1) {
+      // In tool mode, typically allow multiple files unless specified otherwise
+      const maxAllowed = toolMode ? 10 : Infinity; // Default max for tools
+      
+      if (maxAllowed === 1) {
         newSelection = [contextFileId];
       } else {
         // Check if we've hit the selection limit
-        if (maxFiles > 1 && contextSelectedIds.length >= maxFiles) {
-          setStatus(`Maximum ${maxFiles} files can be selected`);
+        if (maxAllowed > 1 && currentSelectedIds.length >= maxAllowed) {
+          setStatus(`Maximum ${maxAllowed} files can be selected`);
           return;
         }
-        newSelection = [...contextSelectedIds, contextFileId];
+        newSelection = [...currentSelectedIds, contextFileId];
       }
     }
 
-    // Update context
-    setContextSelectedFiles(newSelection);
-
-    // Update tool selection context if in tool mode
-    if (isToolMode || toolMode) {
-      const selectedFiles = files
-        .filter(f => {
-          const fId = (f.file as any).id || f.name;
-          return newSelection.includes(fId);
-        })
-        .map(f => f.file);
-      setToolSelectedFiles(selectedFiles);
-    }
-  }, [files, setContextSelectedFiles, maxFiles, contextSelectedIds, setStatus, isToolMode, toolMode, setToolSelectedFiles]);
+    // Update context (this automatically updates tool selection since they use the same action)
+    setSelectedFiles(newSelection);
+  }, [setSelectedFiles, toolMode, setStatus, activeFileRecords]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
       const newMode = !prev;
       if (!newMode) {
-        setContextSelectedFiles([]);
+        setSelectedFiles([]);
       }
       return newMode;
     });
-  }, [setContextSelectedFiles]);
+  }, [setSelectedFiles]);
 
-
-  // Drag and drop handlers
-  const handleDragStart = useCallback((fileId: string) => {
-    setDraggedFile(fileId);
-
-    if (selectionMode && localSelectedIds.includes(fileId) && localSelectedIds.length > 1) {
-      setMultiFileDrag({
-        fileIds: localSelectedIds,
-        count: localSelectedIds.length
-      });
-    } else {
-      setMultiFileDrag(null);
-    }
-  }, [selectionMode, localSelectedIds]);
-
-  const handleDragEnd = useCallback(() => {
-    setDraggedFile(null);
-    setDropTarget(null);
-    setMultiFileDrag(null);
-    setDragPosition(null);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-
-    if (!draggedFile) return;
-
-    if (multiFileDrag) {
-      setDragPosition({ x: e.clientX, y: e.clientY });
-    }
-
-    const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
-    if (!elementUnderCursor) return;
-
-    const fileContainer = elementUnderCursor.closest('[data-file-id]');
-    if (fileContainer) {
-      const fileId = fileContainer.getAttribute('data-file-id');
-      if (fileId && fileId !== draggedFile) {
-        setDropTarget(fileId);
-        return;
-      }
-    }
-
-    const endZone = elementUnderCursor.closest('[data-drop-zone="end"]');
-    if (endZone) {
-      setDropTarget('end');
+  // File reordering handler for drag and drop
+  const handleReorderFiles = useCallback((sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => {
+    const currentIds = activeFileRecords.map(r => r.id);
+    
+    // Find indices
+    const sourceIndex = currentIds.findIndex(id => id === sourceFileId);
+    const targetIndex = currentIds.findIndex(id => id === targetFileId);
+    
+    if (sourceIndex === -1 || targetIndex === -1) {
+      console.warn('Could not find source or target file for reordering');
       return;
     }
 
-    setDropTarget(null);
-  }, [draggedFile, multiFileDrag]);
+    // Handle multi-file selection reordering
+    const filesToMove = selectedFileIds.length > 1 
+      ? selectedFileIds.filter(id => currentIds.includes(id))
+      : [sourceFileId];
 
-  const handleDragEnter = useCallback((fileId: string) => {
-    if (draggedFile && fileId !== draggedFile) {
-      setDropTarget(fileId);
-    }
-  }, [draggedFile]);
-
-  const handleDragLeave = useCallback(() => {
-    // Let dragover handle this
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent, targetFileId: string | 'end') => {
-    e.preventDefault();
-    if (!draggedFile || draggedFile === targetFileId) return;
-
-    let targetIndex: number;
-    if (targetFileId === 'end') {
-      targetIndex = files.length;
-    } else {
-      targetIndex = files.findIndex(f => f.id === targetFileId);
-      if (targetIndex === -1) return;
-    }
-
-    const filesToMove = selectionMode && localSelectedIds.includes(draggedFile)
-      ? localSelectedIds
-      : [draggedFile];
-
-    // Update the local files state and sync with activeFiles
-    setFiles(prev => {
-      const newFiles = [...prev];
-      const movedFiles = filesToMove.map(id => newFiles.find(f => f.id === id)!).filter(Boolean);
-
-      // Remove moved files
-      filesToMove.forEach(id => {
-        const index = newFiles.findIndex(f => f.id === id);
-        if (index !== -1) newFiles.splice(index, 1);
-      });
-
-      // Insert at target position
-      newFiles.splice(targetIndex, 0, ...movedFiles);
-
-      // TODO: Update context with reordered files (need to implement file reordering in context)
-      // For now, just return the reordered local state
-      return newFiles;
+    // Create new order
+    const newOrder = [...currentIds];
+    
+    // Remove files to move from their current positions (in reverse order to maintain indices)
+    const sourceIndices = filesToMove.map(id => newOrder.findIndex(nId => nId === id))
+      .sort((a, b) => b - a); // Sort descending
+      
+    sourceIndices.forEach(index => {
+      newOrder.splice(index, 1);
     });
 
-    const moveCount = multiFileDrag ? multiFileDrag.count : 1;
-    setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
-
-  }, [draggedFile, files, selectionMode, localSelectedIds, multiFileDrag]);
-
-  const handleEndZoneDragEnter = useCallback(() => {
-    if (draggedFile) {
-      setDropTarget('end');
+    // Calculate insertion index after removals
+    let insertIndex = newOrder.findIndex(id => id === targetFileId);
+    if (insertIndex !== -1) {
+      // Determine if moving forward or backward
+      const isMovingForward = sourceIndex < targetIndex;
+      if (isMovingForward) {
+        // Moving forward: insert after target
+        insertIndex += 1;
+      } else {
+        // Moving backward: insert before target (insertIndex already correct)
+      }
+    } else {
+      // Target was moved, insert at end
+      insertIndex = newOrder.length;
     }
-  }, [draggedFile]);
+
+    // Insert files at the calculated position
+    newOrder.splice(insertIndex, 0, ...filesToMove);
+
+    // Update file order
+    reorderFiles(newOrder);
+
+    // Update status
+    const moveCount = filesToMove.length;
+    setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
+  }, [activeFileRecords, reorderFiles, setStatus]);
+
+
 
   // File operations using context
   const handleDeleteFile = useCallback((fileId: string) => {
-    console.log('handleDeleteFile called with fileId:', fileId);
-    const file = files.find(f => f.id === fileId);
-    console.log('Found file:', file);
+    const record = activeFileRecords.find(r => r.id === fileId);
+    const file = record ? selectors.getFile(record.id) : null;
 
-    if (file) {
-      console.log('Attempting to remove file:', file.name);
-      console.log('Actual file object:', file.file);
-      console.log('Actual file.file.name:', file.file.name);
-
+    if (record && file) {
       // Record close operation
-      const fileName = file.file.name;
-      const fileId = (file.file as any).id || fileName;
+      const fileName = file.name;
+      const contextFileId = record.id;
       const operationId = `close-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const operation: FileOperation = {
         id: operationId,
@@ -589,75 +389,62 @@ const FileEditor = ({
         status: 'pending',
         metadata: {
           originalFileName: fileName,
-          fileSize: file.size,
+          fileSize: record.size,
           parameters: {
             action: 'close',
             reason: 'user_request'
           }
         }
       };
-
-      recordOperation(fileName, operation);
-
+            
       // Remove file from context but keep in storage (close, don't delete)
-      console.log('Calling removeFiles with:', [fileId]);
-      removeFiles([fileId], false);
+      removeFiles([contextFileId], false);
 
       // Remove from context selections
-      const newSelection = contextSelectedIds.filter(id => id !== fileId);
-      setContextSelectedFiles(newSelection);
-      // Mark operation as applied
-      markOperationApplied(fileName, operationId);
-    } else {
-      console.log('File not found for fileId:', fileId);
+      const currentSelected = selectedFileIds.filter(id => id !== contextFileId);
+      setSelectedFiles(currentSelected);
     }
-  }, [files, removeFiles, setContextSelectedFiles, recordOperation, markOperationApplied]);
+  }, [activeFileRecords, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
 
   const handleViewFile = useCallback((fileId: string) => {
-    const file = files.find(f => f.id === fileId);
-    if (file) {
-      // Set the file as selected in context and switch to page editor view
-      const contextFileId = (file.file as any).id || file.name;
-      setContextSelectedFiles([contextFileId]);
-      setCurrentView('pageEditor');
-      onOpenPageEditor?.(file.file);
+    const record = activeFileRecords.find(r => r.id === fileId);
+    if (record) {
+      // Set the file as selected in context and switch to viewer for preview
+      setSelectedFiles([fileId]);
+      navActions.setMode('viewer');
     }
-  }, [files, setContextSelectedFiles, setCurrentView, onOpenPageEditor]);
+  }, [activeFileRecords, setSelectedFiles, navActions.setMode]);
 
   const handleMergeFromHere = useCallback((fileId: string) => {
-    const startIndex = files.findIndex(f => f.id === fileId);
+    const startIndex = activeFileRecords.findIndex(r => r.id === fileId);
     if (startIndex === -1) return;
 
-    const filesToMerge = files.slice(startIndex).map(f => f.file);
+    const recordsToMerge = activeFileRecords.slice(startIndex);
+    const filesToMerge = recordsToMerge.map(r => selectors.getFile(r.id)).filter(Boolean) as File[];
     if (onMergeFiles) {
       onMergeFiles(filesToMerge);
     }
-  }, [files, onMergeFiles]);
+  }, [activeFileRecords, selectors, onMergeFiles]);
 
   const handleSplitFile = useCallback((fileId: string) => {
-    const file = files.find(f => f.id === fileId);
+    const file = selectors.getFile(fileId);
     if (file && onOpenPageEditor) {
-      onOpenPageEditor(file.file);
+      onOpenPageEditor(file);
     }
-  }, [files, onOpenPageEditor]);
+  }, [selectors, onOpenPageEditor]);
 
   const handleLoadFromStorage = useCallback(async (selectedFiles: any[]) => {
     if (selectedFiles.length === 0) return;
 
-    setLocalLoading(true);
     try {
-      const convertedFiles = await Promise.all(
-        selectedFiles.map(convertToFileItem)
-      );
-      setFiles(prev => [...prev, ...convertedFiles]);
+      // Use FileContext to handle loading stored files
+      // The files are already in FileContext, just need to add them to active files
       setStatus(`Loaded ${selectedFiles.length} files from storage`);
     } catch (err) {
       console.error('Error loading files from storage:', err);
       setError('Failed to load some files from storage');
-    } finally {
-      setLocalLoading(false);
     }
-  }, [convertToFileItem]);
+  }, []);
 
 
   return (
@@ -680,7 +467,7 @@ const FileEditor = ({
         <Box p="md" pt="xl">
 
 
-        {files.length === 0 && !localLoading && !zipExtractionProgress.isExtracting ? (
+        {activeFileRecords.length === 0 && !zipExtractionProgress.isExtracting ? (
           <Center h="60vh">
             <Stack align="center" gap="md">
               <Text size="lg" c="dimmed">📁</Text>
@@ -688,7 +475,7 @@ const FileEditor = ({
               <Text size="sm" c="dimmed">Upload PDF files, ZIP archives, or load from storage to get started</Text>
             </Stack>
           </Center>
-        ) : files.length === 0 && (localLoading || zipExtractionProgress.isExtracting) ? (
+        ) : activeFileRecords.length === 0 && zipExtractionProgress.isExtracting ? (
           <Box>
             <SkeletonLoader type="controls" />
 
@@ -722,88 +509,42 @@ const FileEditor = ({
               </Box>
             )}
 
-            {/* Processing indicator */}
-            {localLoading && (
-              <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
-                <Group justify="space-between" mb="xs">
-                  <Text size="sm" fw={500}>Loading files...</Text>
-                  <Text size="sm" c="dimmed">{Math.round(conversionProgress)}%</Text>
-                </Group>
-                <div style={{
-                  width: '100%',
-                  height: '4px',
-                  backgroundColor: 'var(--mantine-color-gray-2)',
-                  borderRadius: '2px',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    width: `${Math.round(conversionProgress)}%`,
-                    height: '100%',
-                    backgroundColor: 'var(--mantine-color-blue-6)',
-                    transition: 'width 0.3s ease'
-                  }} />
-                </div>
-              </Box>
-            )}
 
             <SkeletonLoader type="fileGrid" count={6} />
           </Box>
         ) : (
-          <DragDropGrid
-            items={files}
-            selectedItems={localSelectedIds as any /* FIX ME */}
-            selectionMode={selectionMode}
-            isAnimating={isAnimating}
-            onDragStart={handleDragStart as any /* FIX ME */}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragEnter={handleDragEnter as any /* FIX ME */}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop as any /* FIX ME */}
-            onEndZoneDragEnter={handleEndZoneDragEnter}
-            draggedItem={draggedFile as any /* FIX ME */}
-            dropTarget={dropTarget as any /* FIX ME */}
-            multiItemDrag={multiFileDrag as any /* FIX ME */}
-            dragPosition={dragPosition}
-            renderItem={(file, index, refs) => (
-            <FileThumbnail
-              file={file}
-              index={index}
-              totalFiles={files.length}
-              selectedFiles={localSelectedIds}
-              selectionMode={selectionMode}
-              draggedFile={draggedFile}
-              dropTarget={dropTarget}
-              isAnimating={isAnimating}
-              fileRefs={refs}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onToggleFile={toggleFile}
-              onDeleteFile={handleDeleteFile}
-              onViewFile={handleViewFile}
-              onSetStatus={setStatus}
-              toolMode={toolMode}
-              isSupported={isFileSupported(file.name)}
-            />
-          )}
-          renderSplitMarker={(file, index) => (
-            <div
-              style={{
-                width: '2px',
-                height: '24rem',
-                borderLeft: '2px dashed #3b82f6',
-                backgroundColor: 'transparent',
-                marginLeft: '-0.75rem',
-                marginRight: '-0.75rem',
-                flexShrink: 0
-              }}
-            />
-          )}
-        />
+          <div 
+            style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+              gap: '1.5rem', 
+              padding: '1rem',
+              pointerEvents: 'auto'
+            }}
+          >
+            {activeFileRecords.map((record, index) => {
+              const fileItem = recordToFileItem(record);
+              if (!fileItem) return null;
+              
+              return (
+                <FileThumbnail
+                  key={record.id}
+                  file={fileItem}
+                  index={index}
+                  totalFiles={activeFileRecords.length}
+                  selectedFiles={localSelectedIds}
+                  selectionMode={selectionMode}
+                  onToggleFile={toggleFile}
+                  onDeleteFile={handleDeleteFile}
+                  onViewFile={handleViewFile}
+                  onSetStatus={setStatus}
+                  onReorderFiles={handleReorderFiles}
+                  toolMode={toolMode}
+                  isSupported={isFileSupported(fileItem.name)}
+                />
+              );
+            })}
+          </div>
         )}
       </Box>
 

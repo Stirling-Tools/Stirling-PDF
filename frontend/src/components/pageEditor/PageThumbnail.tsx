@@ -6,20 +6,13 @@ import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { PDFPage, PDFDocument } from '../../types/pageEditor';
 import { RotatePagesCommand, DeletePagesCommand, ToggleSplitCommand } from '../../commands/pageCommands';
 import { Command } from '../../hooks/useUndoRedo';
+import { useFileState } from '../../contexts/FileContext';
+import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
 import styles from './PageEditor.module.css';
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-
-// Ensure PDF.js worker is available
-if (!GlobalWorkerOptions.workerSrc) {
-  GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
-  console.log('📸 PageThumbnail: Set PDF.js worker source to /pdf.worker.js');
-} else {
-  console.log('📸 PageThumbnail: PDF.js worker source already set to', GlobalWorkerOptions.workerSrc);
-}
 
 interface PageThumbnailProps {
   page: PDFPage;
@@ -28,22 +21,15 @@ interface PageThumbnailProps {
   originalFile?: File; // For lazy thumbnail generation
   selectedPages: number[];
   selectionMode: boolean;
-  draggedPage: number | null;
-  dropTarget: number | 'end' | null;
   movingPage: number | null;
   isAnimating: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  onDragStart: (pageNumber: number) => void;
-  onDragEnd: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragEnter: (pageNumber: number) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent, pageNumber: number) => void;
   onTogglePage: (pageNumber: number) => void;
   onAnimateReorder: (pageNumber: number, targetIndex: number) => void;
   onExecuteCommand: (command: Command) => void;
   onSetStatus: (status: string) => void;
   onSetMovingPage: (pageNumber: number | null) => void;
+  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => void;
   RotatePagesCommand: typeof RotatePagesCommand;
   DeletePagesCommand: typeof DeletePagesCommand;
   ToggleSplitCommand: typeof ToggleSplitCommand;
@@ -58,22 +44,15 @@ const PageThumbnail = React.memo(({
   originalFile,
   selectedPages,
   selectionMode,
-  draggedPage,
-  dropTarget,
   movingPage,
   isAnimating,
   pageRefs,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragEnter,
-  onDragLeave,
-  onDrop,
   onTogglePage,
   onAnimateReorder,
   onExecuteCommand,
   onSetStatus,
   onSetMovingPage,
+  onReorderPages,
   RotatePagesCommand,
   DeletePagesCommand,
   ToggleSplitCommand,
@@ -81,51 +60,122 @@ const PageThumbnail = React.memo(({
   setPdfDocument,
 }: PageThumbnailProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
-  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragElementRef = useRef<HTMLDivElement>(null);
+  const { state, selectors } = useFileState();
+  const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
 
-  // Update thumbnail URL when page prop changes
+  // Update thumbnail URL when page prop changes - prevent redundant updates
   useEffect(() => {
     if (page.thumbnail && page.thumbnail !== thumbnailUrl) {
       console.log(`📸 PageThumbnail: Updating thumbnail URL for page ${page.pageNumber}`, page.thumbnail.substring(0, 50) + '...');
       setThumbnailUrl(page.thumbnail);
     }
-  }, [page.thumbnail, page.pageNumber, page.id, thumbnailUrl]);
+  }, [page.thumbnail, page.id]); // Remove thumbnailUrl dependency to prevent redundant cycles
 
-  // Listen for ready thumbnails from Web Workers (only if no existing thumbnail)
+  // Request thumbnail generation if not available (optimized for performance)
   useEffect(() => {
-    if (thumbnailUrl) {
-      console.log(`📸 PageThumbnail: Page ${page.pageNumber} already has thumbnail, skipping worker listener`);
-      return; // Skip if we already have a thumbnail
+    if (thumbnailUrl || !originalFile) {
+      return; // Skip if we already have a thumbnail or no original file
     }
 
-    console.log(`📸 PageThumbnail: Setting up worker listener for page ${page.pageNumber} (${page.id})`);
+    // Check cache first without async call
+    const cachedThumbnail = getThumbnailFromCache(page.id);
+    if (cachedThumbnail) {
+      setThumbnailUrl(cachedThumbnail);
+      return;
+    }
 
-    const handleThumbnailReady = (event: CustomEvent) => {
-      const { pageNumber, thumbnail, pageId } = event.detail;
-      console.log(`📸 PageThumbnail: Received worker thumbnail for page ${pageNumber}, looking for page ${page.pageNumber} (${page.id})`);
+    let cancelled = false;
 
-      if (pageNumber === page.pageNumber && pageId === page.id) {
-        console.log(`✓ PageThumbnail: Thumbnail matched for page ${page.pageNumber}, setting URL`);
-        setThumbnailUrl(thumbnail);
+    const loadThumbnail = async () => {
+      try {
+        const thumbnail = await requestThumbnail(page.id, originalFile, page.pageNumber);
+        
+        // Only update if component is still mounted and we got a result
+        if (!cancelled && thumbnail) {
+          setThumbnailUrl(thumbnail);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn(`📸 PageThumbnail: Failed to load thumbnail for page ${page.pageNumber}:`, error);
+        }
       }
     };
 
-    window.addEventListener('thumbnailReady', handleThumbnailReady as EventListener);
+    loadThumbnail();
+
+    // Cleanup function to prevent state updates after unmount
     return () => {
-      console.log(`📸 PageThumbnail: Cleaning up worker listener for page ${page.pageNumber}`);
-      window.removeEventListener('thumbnailReady', handleThumbnailReady as EventListener);
+      cancelled = true;
     };
-  }, [page.pageNumber, page.id, thumbnailUrl]);
+  }, [page.id, originalFile, requestThumbnail, getThumbnailFromCache]); // Removed thumbnailUrl to prevent loops
 
 
-  // Register this component with pageRefs for animations
   const pageElementRef = useCallback((element: HTMLDivElement | null) => {
     if (element) {
       pageRefs.current.set(page.id, element);
+      dragElementRef.current = element;
+      
+      const dragCleanup = draggable({
+        element,
+        getInitialData: () => ({
+          pageNumber: page.pageNumber,
+          pageId: page.id,
+          selectedPages: selectionMode && selectedPages.includes(page.pageNumber) 
+            ? selectedPages 
+            : [page.pageNumber]
+        }),
+        onDragStart: () => {
+          setIsDragging(true);
+        },
+        onDrop: ({ location }) => {
+          setIsDragging(false);
+          
+          if (location.current.dropTargets.length === 0) {
+            return;
+          }
+          
+          const dropTarget = location.current.dropTargets[0];
+          const targetData = dropTarget.data;
+          
+          if (targetData.type === 'page') {
+            const targetPageNumber = targetData.pageNumber as number;
+            const targetIndex = pdfDocument.pages.findIndex(p => p.pageNumber === targetPageNumber);
+            if (targetIndex !== -1) {
+              const pagesToMove = selectionMode && selectedPages.includes(page.pageNumber)
+                ? selectedPages
+                : undefined;
+              onReorderPages(page.pageNumber, targetIndex, pagesToMove);
+            }
+          }
+        }
+      });
+
+      element.style.cursor = 'grab';
+      
+      
+      const dropCleanup = dropTargetForElements({
+        element,
+        getData: () => ({
+          type: 'page',
+          pageNumber: page.pageNumber
+        }),
+        onDrop: ({ source }) => {}
+      });
+      
+      (element as any).__dragCleanup = () => {
+        dragCleanup();
+        dropCleanup();
+      };
     } else {
       pageRefs.current.delete(page.id);
+      if (dragElementRef.current && (dragElementRef.current as any).__dragCleanup) {
+        (dragElementRef.current as any).__dragCleanup();
+      }
     }
-  }, [page.id, pageRefs]);
+  }, [page.id, page.pageNumber, pageRefs, selectionMode, selectedPages, pdfDocument.pages, onReorderPages]);
+
 
   return (
     <div
@@ -147,25 +197,13 @@ const PageThumbnail = React.memo(({
         ${selectionMode
           ? 'bg-white hover:bg-gray-50'
           : 'bg-white hover:bg-gray-50'}
-        ${draggedPage === page.pageNumber ? 'opacity-50 scale-95' : ''}
+        ${isDragging ? 'opacity-50 scale-95' : ''}
         ${movingPage === page.pageNumber ? 'page-moving' : ''}
       `}
       style={{
-        transform: (() => {
-          if (!isAnimating && draggedPage && page.pageNumber !== draggedPage && dropTarget === page.pageNumber) {
-            return 'translateX(20px)';
-          }
-          return 'translateX(0)';
-        })(),
         transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
       }}
-      draggable
-      onDragStart={() => onDragStart(page.pageNumber)}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      onDragEnter={() => onDragEnter(page.pageNumber)}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, page.pageNumber)}
+      draggable={false}
     >
       {
         <div
@@ -188,7 +226,6 @@ const PageThumbnail = React.memo(({
             e.stopPropagation();
           }}
           onClick={(e) => {
-            console.log('📸 Checkbox clicked for page', page.pageNumber);
             e.stopPropagation();
             onTogglePage(page.pageNumber);
           }}
@@ -203,7 +240,7 @@ const PageThumbnail = React.memo(({
         </div>
       }
 
-      <div className="page-container w-[90%] h-[90%]">
+      <div className="page-container w-[90%] h-[90%]" draggable={false}>
         <div
           style={{
             width: '100%',
@@ -221,6 +258,7 @@ const PageThumbnail = React.memo(({
             <img
               src={thumbnailUrl}
               alt={`Page ${page.pageNumber}`}
+              draggable={false}
               style={{
                 width: '100%',
                 height: '100%',
@@ -230,11 +268,6 @@ const PageThumbnail = React.memo(({
                 transition: 'transform 0.3s ease-in-out'
               }}
             />
-          ) : isLoadingThumbnail ? (
-            <div style={{ textAlign: 'center' }}>
-              <Loader size="sm" />
-              <Text size="xs" c="dimmed" mt={4}>Loading...</Text>
-            </div>
           ) : (
             <div style={{ textAlign: 'center' }}>
               <Text size="lg" c="dimmed">📄</Text>
@@ -407,30 +440,25 @@ const PageThumbnail = React.memo(({
           )}
         </div>
 
-        <DragIndicatorIcon
-          style={{
-            position: 'absolute',
-            bottom: 4,
-            right: 4,
-            color: 'rgba(0,0,0,0.3)',
-            fontSize: 16,
-            zIndex: 1
-          }}
-        />
       </div>
     </div>
   );
 }, (prevProps, nextProps) => {
+  // Helper for shallow array comparison
+  const arraysEqual = (a: number[], b: number[]) => {
+    return a.length === b.length && a.every((val, i) => val === b[i]);
+  };
+
   // Only re-render if essential props change
   return (
     prevProps.page.id === nextProps.page.id &&
     prevProps.page.pageNumber === nextProps.page.pageNumber &&
     prevProps.page.rotation === nextProps.page.rotation &&
     prevProps.page.thumbnail === nextProps.page.thumbnail &&
-    prevProps.selectedPages === nextProps.selectedPages && // Compare array reference - will re-render when selection changes
+    // Shallow compare selectedPages array for better stability
+    (prevProps.selectedPages === nextProps.selectedPages || 
+     arraysEqual(prevProps.selectedPages, nextProps.selectedPages)) &&
     prevProps.selectionMode === nextProps.selectionMode &&
-    prevProps.draggedPage === nextProps.draggedPage &&
-    prevProps.dropTarget === nextProps.dropTarget &&
     prevProps.movingPage === nextProps.movingPage &&
     prevProps.isAnimating === nextProps.isAnimating
   );

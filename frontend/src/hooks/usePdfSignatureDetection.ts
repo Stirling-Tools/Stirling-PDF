@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
+import { pdfWorkerManager } from '../services/pdfWorkerManager';
 
 export interface PdfSignatureDetectionResult {
   hasDigitalSignatures: boolean;
@@ -21,14 +22,12 @@ export const usePdfSignatureDetection = (files: File[]): PdfSignatureDetectionRe
       let foundSignature = false;
 
       try {
-        // Set up PDF.js worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs-legacy/pdf.worker.mjs';
 
         for (const file of files) {
           const arrayBuffer = await file.arrayBuffer();
           
           try {
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
 
             for (let i = 1; i <= pdf.numPages; i++) {
               const page = await pdf.getPage(i);
@@ -42,6 +41,9 @@ export const usePdfSignatureDetection = (files: File[]): PdfSignatureDetectionRe
 
               if (foundSignature) break;
             }
+            
+            // Clean up PDF document using worker manager
+            pdfWorkerManager.destroyDocument(pdf);
           } catch (error) {
             console.warn('Error analyzing PDF for signatures:', error);
           }

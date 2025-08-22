@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
-import { Text, Checkbox, Tooltip, ActionIcon, Badge, Modal } from '@mantine/core';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Text, Checkbox, Tooltip, ActionIcon, Badge } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/Close';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import HistoryIcon from '@mui/icons-material/History';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import styles from './PageEditor.module.css';
-import FileOperationHistory from '../history/FileOperationHistory';
 import { useFileContext } from '../../contexts/FileContext';
 
 interface FileItem {
@@ -26,20 +24,11 @@ interface FileThumbnailProps {
   totalFiles: number;
   selectedFiles: string[];
   selectionMode: boolean;
-  draggedFile: string | null;
-  dropTarget: string | null;
-  isAnimating: boolean;
-  fileRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  onDragStart: (fileId: string) => void;
-  onDragEnd: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragEnter: (fileId: string) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent, fileId: string) => void;
   onToggleFile: (fileId: string) => void;
   onDeleteFile: (fileId: string) => void;
   onViewFile: (fileId: string) => void;
   onSetStatus: (status: string) => void;
+  onReorderFiles?: (sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => void;
   toolMode?: boolean;
   isSupported?: boolean;
 }
@@ -50,26 +39,20 @@ const FileThumbnail = ({
   totalFiles,
   selectedFiles,
   selectionMode,
-  draggedFile,
-  dropTarget,
-  isAnimating,
-  fileRefs,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragEnter,
-  onDragLeave,
-  onDrop,
   onToggleFile,
   onDeleteFile,
   onViewFile,
   onSetStatus,
+  onReorderFiles,
   toolMode = false,
   isSupported = true,
 }: FileThumbnailProps) => {
   const { t } = useTranslation();
-  const [showHistory, setShowHistory] = useState(false);
   const { pinnedFiles, pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
+  
+  // Drag and drop state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragElementRef = useRef<HTMLDivElement | null>(null);
 
   // Find the actual File object that corresponds to this FileItem
   const actualFile = activeFiles.find(f => f.name === file.name && f.size === file.size);
@@ -82,15 +65,57 @@ const FileThumbnail = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  // Setup drag and drop using @atlaskit/pragmatic-drag-and-drop
+  const fileElementRef = useCallback((element: HTMLDivElement | null) => {
+    if (!element) return;
+    
+    dragElementRef.current = element;
+    
+    const dragCleanup = draggable({
+      element,
+      getInitialData: () => ({
+        type: 'file',
+        fileId: file.id,
+        fileName: file.name,
+        selectedFiles: [file.id]  // Always drag only this file, ignore selection state
+      }),
+      onDragStart: () => {
+        setIsDragging(true);
+      },
+      onDrop: () => {
+        setIsDragging(false);
+      }
+    });
+    
+    const dropCleanup = dropTargetForElements({
+      element,
+      getData: () => ({
+        type: 'file',
+        fileId: file.id
+      }),
+      canDrop: ({ source }) => {
+        const sourceData = source.data;
+        return sourceData.type === 'file' && sourceData.fileId !== file.id;
+      },
+      onDrop: ({ source }) => {
+        const sourceData = source.data;
+        if (sourceData.type === 'file' && onReorderFiles) {
+          const sourceFileId = sourceData.fileId as string;
+          const selectedFileIds = sourceData.selectedFiles as string[];
+          onReorderFiles(sourceFileId, file.id, selectedFileIds);
+        }
+      }
+    });
+
+    return () => {
+      dragCleanup();
+      dropCleanup();
+    };
+  }, [file.id, file.name, selectionMode, selectedFiles, onReorderFiles]);
+
   return (
     <div
-      ref={(el) => {
-        if (el) {
-          fileRefs.current.set(file.id, el);
-        } else {
-          fileRefs.current.delete(file.id);
-        }
-      }}
+      ref={fileElementRef}
       data-file-id={file.id}
       data-testid="file-thumbnail"
       className={`
@@ -109,26 +134,12 @@ const FileThumbnail = ({
         ${selectionMode
           ? 'bg-white hover:bg-gray-50'
           : 'bg-white hover:bg-gray-50'}
-        ${draggedFile === file.id ? 'opacity-50 scale-95' : ''}
+        ${isDragging ? 'opacity-50 scale-95' : ''}
       `}
       style={{
-        transform: (() => {
-          if (!isAnimating && draggedFile && file.id !== draggedFile && dropTarget === file.id) {
-            return 'translateX(20px)';
-          }
-          return 'translateX(0)';
-        })(),
-        transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out',
-        opacity: isSupported ? 1 : 0.5,
+        opacity: isSupported ? (isDragging ? 0.5 : 1) : 0.5,
         filter: isSupported ? 'none' : 'grayscale(50%)'
       }}
-      draggable
-      onDragStart={() => onDragStart(file.id)}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      onDragEnter={() => onDragEnter(file.id)}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, file.id)}
     >
         <div
           className={styles.checkboxContainer}
@@ -185,6 +196,12 @@ const FileThumbnail = ({
           <img
             src={file.thumbnail}
             alt={file.name}
+            draggable={false}
+            onError={(e) => {
+              // Hide broken image if blob URL was revoked
+              const img = e.target as HTMLImageElement;
+              img.style.display = 'none';
+            }}
             style={{
               maxWidth: '100%',
               maxHeight: '100%',
@@ -194,20 +211,22 @@ const FileThumbnail = ({
           />
         </div>
 
-        {/* Page count badge */}
-        <Badge
-          size="sm"
-          variant="filled"
-          color="blue"
-          style={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
-            zIndex: 3,
-          }}
-        >
-          {file.pageCount} pages
-        </Badge>
+        {/* Page count badge - only show for PDFs */}
+        {file.pageCount > 0 && (
+          <Badge
+            size="sm"
+            variant="filled"
+            color="blue"
+            style={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              zIndex: 3,
+            }}
+          >
+            {file.pageCount} {file.pageCount === 1 ? 'page' : 'pages'}
+          </Badge>
+        )}
 
         {/* Unsupported badge */}
         {!isSupported && (
@@ -271,40 +290,6 @@ const FileThumbnail = ({
             whiteSpace: 'nowrap'
           }}
         >
-          {!toolMode && isSupported && (
-            <>
-              <Tooltip label="View File">
-                <ActionIcon
-                  size="md"
-                  variant="subtle"
-                  c="white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewFile(file.id);
-                    onSetStatus(`Opened ${file.name}`);
-                  }}
-                >
-                  <VisibilityIcon style={{ fontSize: 20 }} />
-                </ActionIcon>
-              </Tooltip>
-
-            </>
-          )}
-
-          <Tooltip label="View History">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowHistory(true);
-                onSetStatus(`Viewing history for ${file.name}`);
-              }}
-            >
-              <HistoryIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
 
           {actualFile && (
             <Tooltip label={isFilePinned(actualFile) ? "Unpin File" : "Pin File"}>
@@ -370,20 +355,6 @@ const FileThumbnail = ({
         </Text>
       </div>
 
-      {/* History Modal */}
-      <Modal
-        opened={showHistory}
-        onClose={() => setShowHistory(false)}
-        title={`Operation History - ${file.name}`}
-        size="lg"
-        scrollAreaComponent={'div' as any}
-      >
-        <FileOperationHistory 
-          fileId={file.name} 
-          showOnlyApplied={true}
-          maxHeight={500}
-        />
-      </Modal>
     </div>
   );
 };

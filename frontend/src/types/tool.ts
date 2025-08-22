@@ -54,24 +54,3 @@ export interface Tool {
 
 export type ToolRegistry = Record<string, Tool>;
 
-export interface FileSelectionState {
-  selectedFiles: File[];
-  maxFiles: MaxFiles;
-  isToolMode: boolean;
-}
-
-export interface FileSelectionActions {
-  setSelectedFiles: (files: File[]) => void;
-  setMaxFiles: (maxFiles: MaxFiles) => void;
-  setIsToolMode: (isToolMode: boolean) => void;
-  clearSelection: () => void;
-}
-
-export interface FileSelectionComputed {
-  canSelectMore: boolean;
-  isAtLimit: boolean;
-  selectionCount: number;
-  isMultiFileMode: boolean;
-}
-
-export interface FileSelectionContextValue extends FileSelectionState, FileSelectionActions, FileSelectionComputed {}

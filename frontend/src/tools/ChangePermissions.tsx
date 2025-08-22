@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -15,8 +15,8 @@ import { BaseToolProps } from "../types/tool";
 
 const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
+  const { actions } = useNavigationActions();
+  const { selectedFiles } = useFileSelection();
 
   const changePermissionsParams = useChangePermissionsParameters();
   const changePermissionsOperation = useChangePermissionsOperation();
@@ -48,13 +48,11 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "changePermissions");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     changePermissionsOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("changePermissions");
   };
 
   const hasFiles = selectedFiles.length > 0;
@@ -64,7 +62,7 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: hasFiles || hasResults,
+      isCollapsed: hasResults,
     },
     steps: [
       {

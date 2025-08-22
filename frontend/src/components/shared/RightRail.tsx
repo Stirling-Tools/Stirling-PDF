@@ -4,7 +4,8 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import './rightRail/RightRail.css';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useRightRail } from '../../contexts/RightRailContext';
-import { useFileContext } from '../../contexts/FileContext';
+import { useFileState, useFileSelection, useFileManagement } from '../../contexts/FileContext';
+import { useNavigationState } from '../../contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from '../shared/LanguageSelector';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
@@ -23,17 +24,16 @@ export default function RightRail() {
   // CSV input state for page selection
   const [csvInput, setCsvInput] = useState<string>("");
 
-  // File/page selection handlers that adapt to current view
-  const {
-    currentView,
-    activeFiles,
-    processedFiles,
-    selectedFileIds,
-    selectedPageNumbers,
-    setSelectedFiles,
-    setSelectedPages,
-    removeFiles
-  } = useFileContext();
+  // Navigation view
+  const { currentMode: currentView } = useNavigationState();
+
+  // File state and selection
+  const { state, selectors } = useFileState();
+  const { selectedFiles, selectedFileIds, selectedPageNumbers, setSelectedFiles, setSelectedPages } = useFileSelection();
+  const { removeFiles } = useFileManagement();
+
+  const activeFiles = selectors.getFiles();
+  const fileRecords = selectors.getFileRecords();
 
   // Compute selection state and total items
   const getSelectionState = useCallback(() => {
@@ -45,48 +45,43 @@ export default function RightRail() {
 
     if (currentView === 'pageEditor') {
       let totalItems = 0;
-      if (activeFiles.length === 1) {
-        const pf = processedFiles.get(activeFiles[0]);
-        totalItems = (pf?.totalPages as number) || (pf?.pages?.length || 0);
-      } else if (activeFiles.length > 1) {
-        activeFiles.forEach(file => {
-          const pf = processedFiles.get(file);
-          totalItems += (pf?.totalPages as number) || (pf?.pages?.length || 0);
-        });
-      }
-      const selectedCount = selectedPageNumbers.length;
+      fileRecords.forEach(rec => {
+        const pf = rec.processedFile;
+        if (pf) {
+          totalItems += (pf.totalPages as number) || (pf.pages?.length || 0);
+        }
+      });
+      const selectedCount = Array.isArray(selectedPageNumbers) ? selectedPageNumbers.length : 0;
       return { totalItems, selectedCount };
     }
 
     return { totalItems: 0, selectedCount: 0 };
-  }, [currentView, activeFiles, processedFiles, selectedFileIds, selectedPageNumbers]);
+  }, [currentView, activeFiles, fileRecords, selectedFileIds, selectedPageNumbers]);
 
   const { totalItems, selectedCount } = getSelectionState();
 
   const handleSelectAll = useCallback(() => {
     if (currentView === 'fileEditor' || currentView === 'viewer') {
-      const allIds = activeFiles.map(f => (f as any).id || f.name);
+      // Select all file IDs
+      const allIds = state.files.ids;
       setSelectedFiles(allIds);
       return;
     }
 
     if (currentView === 'pageEditor') {
       let totalPages = 0;
-      if (activeFiles.length === 1) {
-        const pf = processedFiles.get(activeFiles[0]);
-        totalPages = (pf?.totalPages as number) || (pf?.pages?.length || 0);
-      } else if (activeFiles.length > 1) {
-        activeFiles.forEach(file => {
-          const pf = processedFiles.get(file);
-          totalPages += (pf?.totalPages as number) || (pf?.pages?.length || 0);
-        });
-      }
+      fileRecords.forEach(rec => {
+        const pf = rec.processedFile;
+        if (pf) {
+          totalPages += (pf.totalPages as number) || (pf.pages?.length || 0);
+        }
+      });
 
       if (totalPages > 0) {
         setSelectedPages(Array.from({ length: totalPages }, (_, i) => i + 1));
       }
     }
-  }, [currentView, activeFiles, processedFiles, setSelectedFiles, setSelectedPages]);
+  }, [currentView, state.files.ids, fileRecords, setSelectedFiles, setSelectedPages]);
 
   const handleDeselectAll = useCallback(() => {
     if (currentView === 'fileEditor' || currentView === 'viewer') {
@@ -101,9 +96,7 @@ export default function RightRail() {
   const handleExportAll = useCallback(() => {
     if (currentView === 'fileEditor' || currentView === 'viewer') {
       // Download selected files (or all if none selected)
-      const filesToDownload = selectedCount > 0 
-        ? activeFiles.filter(f => selectedFileIds.includes((f as any).id || f.name))
-        : activeFiles;
+      const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
       
       filesToDownload.forEach(file => {
         const link = document.createElement('a');
@@ -118,23 +111,18 @@ export default function RightRail() {
       // Export all pages (not just selected)
       pageEditorFunctions?.onExportAll?.();
     }
-  }, [currentView, selectedCount, activeFiles, selectedFileIds, pageEditorFunctions]);
+  }, [currentView, activeFiles, selectedFiles, pageEditorFunctions]);
 
   const handleCloseSelected = useCallback(() => {
     if (currentView !== 'fileEditor') return;
-    if (selectedCount === 0) return;
-
-    const fileIdsToClose = activeFiles.filter(f => selectedFileIds.includes((f as any).id || f.name))
-      .map(f => (f as any).id || f.name);
-
-    if (fileIdsToClose.length === 0) return;
+    if (selectedFileIds.length === 0) return;
 
     // Close only selected files (do not delete from storage)
-    removeFiles(fileIdsToClose, false);
+    removeFiles(selectedFileIds, false);
 
-    // Update selection state to remove closed ids
-    setSelectedFiles(selectedFileIds.filter(id => !fileIdsToClose.includes(id)));
-  }, [currentView, selectedCount, activeFiles, selectedFileIds, removeFiles, setSelectedFiles]);
+    // Clear selection after closing
+    setSelectedFiles([]);
+  }, [currentView, selectedFileIds, removeFiles, setSelectedFiles]);
 
   // CSV parsing functions for page selection
   const parseCSVInput = useCallback((csv: string) => {
@@ -167,7 +155,9 @@ export default function RightRail() {
 
   // Sync csvInput with selectedPageNumbers changes
   useEffect(() => {
-    const sortedPageNumbers = [...selectedPageNumbers].sort((a, b) => a - b);
+    const sortedPageNumbers = Array.isArray(selectedPageNumbers)
+      ? [...selectedPageNumbers].sort((a, b) => a - b)
+      : [];
     const newCsvInput = sortedPageNumbers.join(', ');
     setCsvInput(newCsvInput);
   }, [selectedPageNumbers]);
@@ -285,7 +275,7 @@ export default function RightRail() {
                       <BulkSelectionPanel
                         csvInput={csvInput}
                         setCsvInput={setCsvInput}
-                        selectedPages={selectedPageNumbers}
+                        selectedPages={Array.isArray(selectedPageNumbers) ? selectedPageNumbers : []}
                         onUpdatePagesFromCSV={updatePagesFromCSV}
                       />
                     </div>
@@ -307,7 +297,7 @@ export default function RightRail() {
                       radius="md"
                       className="right-rail-icon"
                       onClick={() => pageEditorFunctions?.handleDelete?.()}
-                      disabled={!pageControlsVisible || selectedCount === 0}
+                      disabled={!pageControlsVisible || (Array.isArray(selectedPageNumbers) ? selectedPageNumbers.length === 0 : true)}
                     >
                       <span className="material-symbols-rounded">delete</span>
                     </ActionIcon>

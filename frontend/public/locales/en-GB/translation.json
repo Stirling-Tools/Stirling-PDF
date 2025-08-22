@@ -366,14 +366,6 @@
       "title": "Convert",
       "desc": "Convert files between different formats"
     },
-    "imageToPDF": {
-      "title": "Image to PDF",
-      "desc": "Convert a image (PNG, JPEG, GIF) to PDF."
-    },
-    "pdfToImage": {
-      "title": "PDF to Image",
-      "desc": "Convert a PDF to a image. (PNG, JPEG, GIF)"
-    },
     "pdfOrganiser": {
       "title": "Organise",
       "desc": "Remove/Rearrange pages in any order"
@@ -389,14 +381,6 @@
     "watermark": {
       "title": "Add Watermark",
       "desc": "Add a custom watermark to your PDF document."
-    },
-    "permissions": {
-      "title": "Change Permissions",
-      "desc": "Change the permissions of your PDF document"
-    },
-    "pageRemover": {
-      "title": "Remove",
-      "desc": "Delete unwanted pages from your PDF document."
     },
     "removePassword": {
       "title": "Remove Password",
@@ -414,10 +398,6 @@
       "title": "Change Metadata",
       "desc": "Change/Remove/Add metadata from a PDF document"
     },
-    "fileToPDF": {
-      "title": "Convert file to PDF",
-      "desc": "Convert nearly any file to PDF (DOCX, PNG, XLS, PPT, TXT and more)"
-    },
     "ocr": {
       "title": "OCR / Cleanup scans",
       "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
@@ -425,30 +405,6 @@
     "extractImages": {
       "title": "Extract Images",
       "desc": "Extracts all images from a PDF and saves them to zip"
-    },
-    "pdfToPDFA": {
-      "title": "PDF to PDF/A",
-      "desc": "Convert PDF to PDF/A for long-term storage"
-    },
-    "PDFToWord": {
-      "title": "PDF to Word",
-      "desc": "Convert PDF to Word formats (DOC, DOCX and ODT)"
-    },
-    "PDFToPresentation": {
-      "title": "PDF to Presentation",
-      "desc": "Convert PDF to Presentation formats (PPT, PPTX and ODP)"
-    },
-    "PDFToText": {
-      "title": "PDF to RTF (Text)",
-      "desc": "Convert PDF to Text or RTF format"
-    },
-    "PDFToHTML": {
-      "title": "PDF to HTML",
-      "desc": "Convert PDF to HTML format"
-    },
-    "PDFToXML": {
-      "title": "PDF to XML",
-      "desc": "Convert PDF to XML format"
     },
     "ScannerImageSplit": {
       "title": "Detect/Split Scanned photos",
@@ -518,33 +474,13 @@
       "title": "Auto Split Pages",
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
-    "sanitizePdf": {
+    "sanitize": {
       "title": "Sanitise",
-      "desc": "Remove scripts and other elements from PDF files"
-    },
-    "URLToPDF": {
-      "title": "URL/Website To PDF",
-      "desc": "Converts any http(s)URL to PDF"
-    },
-    "HTMLToPDF": {
-      "title": "HTML to PDF",
-      "desc": "Converts any HTML file or zip to PDF"
-    },
-    "MarkdownToPDF": {
-      "title": "Markdown to PDF",
-      "desc": "Converts any Markdown file to PDF"
-    },
-    "PDFToMarkdown": {
-      "title": "PDF to Markdown",
-      "desc": "Converts any PDF to Markdown"
+      "desc": "Remove potentially harmful elements from PDF files"
     },
     "getPdfInfo": {
       "title": "Get ALL Info on PDF",
       "desc": "Grabs any and all information possible on PDFs"
-    },
-    "pageExtracter": {
-      "title": "Extract page(s)",
-      "desc": "Extracts select pages from PDF"
     },
     "pdfToSinglePage": {
       "title": "PDF to Single Large Page",
@@ -561,14 +497,6 @@
     "redact": {
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
-    },
-    "PDFToCSV": {
-      "title": "PDF to CSV",
-      "desc": "Extracts Tables from a PDF converting it to CSV"
-    },
-    "split-by-size-or-count": {
-      "title": "Auto Split by Size/Count",
-      "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
     },
     "overlay-pdfs": {
       "title": "Overlay PDFs",
@@ -625,6 +553,54 @@
     "reorganizePages": {
       "title": "Reorganize Pages",
       "desc": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
+    },
+    "extractPages": {
+      "title": "Extract Pages",
+      "desc": "Extract specific pages from a PDF document"
+    },
+    "removePages": {
+      "title": "Remove Pages",
+      "desc": "Remove specific pages from a PDF document"
+    },
+    "removeImagePdf": {
+      "title": "Remove Image",
+      "desc": "Remove images from PDF documents"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Auto Split by Size/Count",
+      "desc": "Automatically split PDFs by file size or page count"
+    },
+    "adjust-contrast": {
+      "title": "Adjust Colours/Contrast",
+      "desc": "Adjust colours and contrast of PDF documents"
+    },
+    "replaceColorPdf": {
+      "title": "Replace & Invert Colour",
+      "desc": "Replace or invert colours in PDF documents"
+    },
+    "devApi": {
+      "title": "API",
+      "desc": "Link to API documentation"
+    },
+    "devFolderScanning": {
+      "title": "Automated Folder Scanning",
+      "desc": "Link to automated folder scanning guide"
+    },
+    "devSsoGuide": {
+      "title": "SSO Guide",
+      "desc": "Link to SSO guide"
+    },
+    "devAirgapped": {
+      "title": "Air-gapped Setup",
+      "desc": "Link to air-gapped setup guide"
+    },
+    "addPassword": {
+      "title": "Add Password",
+      "desc": "Add password protection and restrictions to PDF files"
+    },
+    "changePermissions": {
+      "title": "Change Permissions",
+      "desc": "Change document restrictions and permissions"
     }
   },
   "viewPdf": {
@@ -1011,7 +987,49 @@
     "submit": "Change"
   },
   "removePages": {
-    "tags": "Remove pages,delete pages"
+    "tags": "Remove pages,delete pages",
+    "title": "Remove Pages",
+    "pageNumbers": "Pages to Remove",
+    "pageNumbersPlaceholder": "e.g. 1,3,5-7",
+    "pageNumbersHelp": "Enter page numbers separated by commas, or ranges like 1-5. Example: 1,3,5-7",
+    "filenamePrefix": "pages_removed",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "settings": {
+      "title": "Page Selection"
+    },
+    "error": {
+      "failed": "An error occurred whilst removing pages."
+    },
+    "results": {
+      "title": "Page Removal Results"
+    },
+    "submit": "Remove Pages"
+  },
+  "pageSelection": {
+    "tooltip": {
+      "header": {
+        "title": "Page Selection Guide"
+      },
+      "basic": {
+        "title": "Basic Usage",
+        "text": "Select specific pages from your PDF document using simple syntax.",
+        "bullet1": "Individual pages: 1,3,5",
+        "bullet2": "Page ranges: 3-6 or 10-15",
+        "bullet3": "All pages: all"
+      },
+      "advanced": {
+        "title": "Advanced Features"
+      },
+      "tips": {
+        "title": "Tips",
+        "text": "Keep these guidelines in mind:",
+        "bullet1": "Page numbers start from 1 (not 0)",
+        "bullet2": "Spaces are automatically removed",
+        "bullet3": "Invalid expressions are ignored"
+      }
+    }
   },
   "compressPdfs": {
     "tags": "squish,small,tiny"
@@ -1020,7 +1038,18 @@
     "tags": "remove,delete,form,field,readonly",
     "title": "Remove Read-Only from Form Fields",
     "header": "Unlock PDF Forms",
-    "submit": "Remove"
+    "submit": "Unlock Forms",
+    "description": "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable.",
+    "filenamePrefix": "unlocked_forms",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst unlocking PDF forms."
+    },
+    "results": {
+      "title": "Unlocked Forms Results"
+    }
   },
   "changeMetadata": {
     "tags": "Title,author,date,creation,time,publisher,producer,stats",
@@ -1188,7 +1217,18 @@
     "tags": "fix,restore,correction,recover",
     "title": "Repair",
     "header": "Repair PDFs",
-    "submit": "Repair"
+    "submit": "Repair",
+    "description": "This tool will attempt to repair corrupted or damaged PDF files. No additional settings are required.",
+    "filenamePrefix": "repaired",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst repairing the PDF."
+    },
+    "results": {
+      "title": "Repair Results"
+    }
   },
   "removeBlanks": {
     "tags": "cleanup,streamline,non-content,organize",
@@ -1257,7 +1297,18 @@
     "title": "Remove Certificate Signature",
     "header": "Remove the digital certificate from the PDF",
     "selectPDF": "Select a PDF file:",
-    "submit": "Remove Signature"
+    "submit": "Remove Signature",
+    "description": "This tool will remove digital certificate signatures from your PDF document.",
+    "filenamePrefix": "unsigned",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst removing certificate signatures."
+    },
+    "results": {
+      "title": "Certificate Removal Results"
+    }
   },
   "pageLayout": {
     "tags": "merge,composite,single-view,organize",
@@ -1585,7 +1636,18 @@
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
     "header": "PDF To Single Page",
-    "submit": "Convert To Single Page"
+    "submit": "Convert To Single Page",
+    "description": "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights.",
+    "filenamePrefix": "single_page",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst converting to single page."
+    },
+    "results": {
+      "title": "Single Page Results"
+    }
   },
   "pageExtracter": {
     "title": "Extract Pages",
@@ -1863,18 +1925,23 @@
     "noToolsFound": "No tools found",
     "allTools": "ALL TOOLS",
     "quickAccess": "QUICK ACCESS",
+    "categories": {
+      "standardTools": "Standard Tools",
+      "advancedTools": "Advanced Tools",
+      "recommendedTools": "Recommended Tools"
+    },
     "subcategories": {
-      "Signing": "Signing",
-      "Document Security": "Document Security",
-      "Verification": "Verification",
-      "Document Review": "Document Review",
-      "Page Formatting": "Page Formatting",
-      "Extraction": "Extraction",
-      "Removal": "Removal",
-      "Automation": "Automation",
-      "General": "General",
-      "Advanced Formatting": "Advanced Formatting",
-      "Developer Tools": "Developer Tools"
+      "signing": "Signing",
+      "documentSecurity": "Document Security",
+      "verification": "Verification",
+      "documentReview": "Document Review",
+      "pageFormatting": "Page Formatting",
+      "extraction": "Extraction",
+      "removal": "Removal",
+      "automation": "Automation",
+      "general": "General",
+      "advancedFormatting": "Advanced Formatting",
+      "developerTools": "Developer Tools"
     }
   },
   "quickAccess": {
@@ -1905,7 +1972,9 @@
     "uploadFiles": "Upload Files",
     "noFilesInStorage": "No files available in storage. Upload some files first.",
     "selectFromStorage": "Select from Storage",
-    "backToTools": "Back to Tools"
+    "backToTools": "Back to Tools",
+    "addFiles": "Add Files",
+    "dragFilesInOrClick": "Drag files in or click \"Add Files\" to browse"
   },
   "fileManager": {
     "title": "Upload PDF Files",
@@ -1945,7 +2014,14 @@
     "fileSize": "Size",
     "fileVersion": "Version",
     "totalSelected": "Total Selected",
-    "dropFilesHere": "Drop files here"
+    "dropFilesHere": "Drop files here",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "deleteSelected": "Delete Selected",
+    "downloadSelected": "Download Selected",
+    "selectedCount": "{{count}} selected",
+    "download": "Download",
+    "delete": "Delete"
   },
   "storage": {
     "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",

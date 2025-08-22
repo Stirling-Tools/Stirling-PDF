@@ -1,5 +1,5 @@
-import { getDocument } from 'pdfjs-dist';
 import { FileAnalysis, ProcessingStrategy } from '../types/processing';
+import { pdfWorkerManager } from './pdfWorkerManager';
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {
@@ -66,17 +66,16 @@ export class FileAnalyzer {
       // For large files, try the whole file first (PDF.js needs the complete structure)
       const arrayBuffer = await file.arrayBuffer();
 
-      const pdf = await getDocument({
-        data: arrayBuffer,
+      const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
         stopAtErrors: false, // Don't stop at minor errors
         verbosity: 0 // Suppress PDF.js warnings
-      }).promise;
+      });
 
       const pageCount = pdf.numPages;
       const isEncrypted = (pdf as any).isEncrypted;
 
-      // Clean up
-      pdf.destroy();
+      // Clean up using worker manager
+      pdfWorkerManager.destroyDocument(pdf);
 
       return {
         pageCount,

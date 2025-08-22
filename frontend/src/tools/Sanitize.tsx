@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
@@ -9,13 +10,12 @@ import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
 import { useSanitizeParameters } from "../hooks/tools/sanitize/useSanitizeParameters";
 import { useSanitizeOperation } from "../hooks/tools/sanitize/useSanitizeOperation";
 import { BaseToolProps } from "../types/tool";
-import { useFileContext } from "../contexts/FileContext";
 
 const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const { selectedFiles } = useToolFileSelection();
-  const { setCurrentMode } = useFileContext();
+  const { selectedFiles } = useFileSelection();
+  const { actions } = useNavigationActions();
 
   const sanitizeParams = useSanitizeParameters();
   const sanitizeOperation = useSanitizeOperation();
@@ -44,24 +44,21 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleSettingsReset = () => {
     sanitizeOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("sanitize");
   };
 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "sanitize");
-    setCurrentMode("viewer");
   };
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = sanitizeOperation.files.length > 0;
-  const filesCollapsed = hasFiles || hasResults;
   const settingsCollapsed = !hasFiles || hasResults;
 
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: filesCollapsed,
+      isCollapsed: hasResults,
       placeholder: t("sanitize.files.placeholder", "Select a PDF file in the main view to get started"),
     },
     steps: [
