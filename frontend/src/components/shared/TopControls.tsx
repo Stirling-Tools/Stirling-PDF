@@ -74,13 +74,13 @@ const TopControls = ({
     const mode = view as ModeType;
 
     // Show immediate feedback
-    setSwitchingTo(mode);
+    setSwitchingTo(mode as ModeType);
 
     // Defer the heavy view change to next frame so spinner can render
     requestAnimationFrame(() => {
       // Give the spinner one more frame to show
       requestAnimationFrame(() => {
-        setCurrentView(mode);
+        setCurrentView(mode as ModeType);
 
         // Clear the loading state after view change completes
         setTimeout(() => setSwitchingTo(null), 300);
