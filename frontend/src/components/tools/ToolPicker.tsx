@@ -111,7 +111,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
           overflowY: "auto",
           overflowX: "hidden",
           minHeight: 0,
-          height: "100%"
+          height: "100%",
+          marginTop: -2
         }}
         className="tool-picker-scrollable"
       >
@@ -135,7 +136,6 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 zIndex: 2,
                 borderTop: `0.0625rem solid var(--tool-header-border)`,
                 borderBottom: `0.0625rem solid var(--tool-header-border)`,
-                marginBottom: -1,
                 padding: "0.5rem 1rem",
                 fontWeight: 700,
                 background: "var(--tool-header-bg)",
@@ -143,7 +143,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between"
+                justifyContent: "space-between",
               }}
               onClick={() => scrollTo(quickAccessRef)}
             >

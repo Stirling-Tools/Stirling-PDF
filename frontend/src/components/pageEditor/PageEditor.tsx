@@ -1,14 +1,12 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
-  Button, Text, Center, Checkbox, Box, Tooltip, ActionIcon,
+  Button, Text, Center, Box,
   Notification, TextInput, LoadingOverlay, Modal, Alert,
-  Stack, Group
+  Stack, Group, Portal
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useFileContext, useCurrentFile } from "../../contexts/FileContext";
-import { ViewType, ToolType } from "../../types/fileContext";
 import { PDFDocument, PDFPage } from "../../types/pageEditor";
-import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
 import {
   RotatePagesCommand,
@@ -51,11 +49,9 @@ export interface PageEditorProps {
 const PageEditor = ({
   onFunctionsReady,
 }: PageEditorProps) => {
-  const { t } = useTranslation();
 
   // Get file context
   const fileContext = useFileContext();
-  const { file: currentFile, processedFile: currentProcessedFile } = useCurrentFile();
 
   // Use file context state
   const {
@@ -160,10 +156,7 @@ const PageEditor = ({
 
   // Animation state
   const [movingPage, setMovingPage] = useState<number | null>(null);
-  const [pagePositions, setPagePositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const [isAnimating, setIsAnimating] = useState(false);
-  const pageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const fileInputRef = useRef<() => void>(null);
 
   // Undo/Redo system
   const { executeCommand, undo, redo, canUndo, canRedo } = useUndoRedo();
@@ -204,8 +197,6 @@ const PageEditor = ({
     generateThumbnails,
     addThumbnailToCache,
     getThumbnailFromCache,
-    stopGeneration,
-    destroyThumbnails
   } = useThumbnailGeneration();
 
   // Start thumbnail generation process (separate from document loading)
@@ -813,14 +804,18 @@ const PageEditor = ({
   const handleDelete = useCallback(() => {
     if (!displayDocument) return;
 
-    const pagesToDelete = selectionMode
-      ? selectedPageNumbers.map(pageNum => {
-          const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
-          return page?.id || '';
-        }).filter(id => id)
+    const hasSelectedPages = selectedPageNumbers.length > 0;
+
+    const pagesToDelete = (selectionMode || hasSelectedPages)
+      ? selectedPageNumbers
+          .map(pageNum => {
+            const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
+            return page?.id || '';
+          })
+          .filter(id => id)
       : displayDocument.pages.map(p => p.id);
 
-    if (selectionMode && selectedPageNumbers.length === 0) return;
+    if ((selectionMode || hasSelectedPages) && selectedPageNumbers.length === 0) return;
 
     const command = new DeletePagesCommand(
       displayDocument,
@@ -829,10 +824,10 @@ const PageEditor = ({
     );
 
     executeCommand(command);
-    if (selectionMode) {
+    if (selectionMode || hasSelectedPages) {
       setSelectedPages([]);
     }
-    const pageCount = selectionMode ? selectedPageNumbers.length : displayDocument.pages.length;
+    const pageCount = (selectionMode || hasSelectedPages) ? selectedPageNumbers.length : displayDocument.pages.length;
     setStatus(`Deleted ${pageCount} pages`);
   }, [displayDocument, selectedPageNumbers, selectionMode, executeCommand, setPdfDocument, setSelectedPages]);
 
@@ -1181,58 +1176,12 @@ const PageEditor = ({
               </div>
             </Box>
           )}
-
-          <Group mb="md">
             <TextInput
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
               placeholder="Enter filename"
               style={{ minWidth: 200 }}
             />
-            <Button
-              onClick={toggleSelectionMode}
-              variant={selectionMode ? "filled" : "outline"}
-              color={selectionMode ? "blue" : "gray"}
-              styles={{
-                root: {
-                  transition: 'all 0.2s ease',
-                  ...(selectionMode && {
-                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-                  })
-                }
-              }}
-            >
-              {selectionMode ? "Exit Selection" : "Select Pages"}
-            </Button>
-            {selectionMode && (
-              <>
-                <Button onClick={selectAll} variant="light">Select All</Button>
-                <Button onClick={deselectAll} variant="light">Deselect All</Button>
-              </>
-            )}
-
-            {/* Apply Changes Button */}
-            {hasUnsavedChanges && (
-              <Button
-                onClick={applyChanges}
-                color="green"
-                variant="filled"
-                style={{ marginLeft: 'auto' }}
-              >
-                Apply Changes
-              </Button>
-            )}
-          </Group>
-
-          {selectionMode && (
-            <BulkSelectionPanel
-              csvInput={csvInput}
-              setCsvInput={setCsvInput}
-              selectedPages={selectedPageNumbers}
-              onUpdatePagesFromCSV={updatePagesFromCSV}
-            />
-          )}
-
 
         <DragDropGrid
           items={displayedPages}
@@ -1399,14 +1348,16 @@ const PageEditor = ({
         </Modal>
 
       {status && (
+      <Portal>
         <Notification
           color="blue"
           mt="md"
           onClose={() => setStatus(null)}
-          style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}
+          style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 10000 }}
         >
           {status}
         </Notification>
+      </Portal>
       )}
     </Box>
   );

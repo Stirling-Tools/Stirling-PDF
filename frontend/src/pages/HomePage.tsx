@@ -11,7 +11,9 @@ import { getBaseUrl } from "../constants/app";
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
+import RightRail from "../components/shared/RightRail";
 import FileManager from "../components/FileManager";
+import { RightRailProvider } from "../contexts/RightRailContext";
 
 
 function HomePageContent() {
@@ -37,7 +39,6 @@ function HomePageContent() {
     ogImage: selectedToolKey ? `${baseUrl}/og_images/${selectedToolKey}.png` : `${baseUrl}/og_images/home.png`,
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
   });
-
   // Update file selection context when tool changes
   useEffect(() => {
     if (selectedTool) {
@@ -60,6 +61,7 @@ function HomePageContent() {
         ref={quickAccessRef} />
       <ToolPanel />
       <Workbench />
+      <RightRail />
       <FileManager selectedTool={selectedTool as any /* FIX ME */} />
     </Group>
   );
@@ -71,7 +73,9 @@ export default function HomePage() {
     <FileSelectionProvider>
       <ToolWorkflowProvider onViewChange={setCurrentView as any /* FIX ME */}>
         <SidebarProvider>
-          <HomePageContent />
+          <RightRailProvider>
+            <HomePageContent />
+          </RightRailProvider>
         </SidebarProvider>
       </ToolWorkflowProvider>
     </FileSelectionProvider>
