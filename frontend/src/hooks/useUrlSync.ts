@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useCallback } from 'react';
-import { ModeType } from '../contexts/NavigationContext';
+import { ModeType } from '../types/navigation';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
 
 /**

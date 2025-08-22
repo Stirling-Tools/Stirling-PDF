@@ -8,7 +8,7 @@ import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry } from '../data/toolsTaxonomy';
 import { useToolWorkflowUrlSync } from '../hooks/useUrlSync';
-import { useNavigationActions } from './NavigationContext';
+import { useNavigationActions, useNavigationState } from './NavigationContext';
 
 // State interface
 interface ToolWorkflowState {
@@ -106,21 +106,18 @@ interface ToolWorkflowProviderProps {
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, initialState);
 
-  // File context for view changes
+  // Navigation actions and state are available since we're inside NavigationProvider
   const { actions } = useNavigationActions();
-    // Wrapper to convert string to ModeType
-  const handleViewChange = (view: string) => {
-    actions.setMode(view as any); // ToolWorkflowContext should validate this
-  };
-
+  const navigationState = useNavigationState();
+  
   // Tool management hook
   const {
-    selectedToolKey,
-    selectedTool,
     toolRegistry,
-    selectTool,
-    clearToolSelection,
+    getSelectedTool,
   } = useToolManagement();
+  
+  // Get selected tool from navigation context
+  const selectedTool = getSelectedTool(navigationState.selectedToolKey);
 
   // UI Action creators
   const setSidebarsVisible = useCallback((visible: boolean) => {
@@ -149,28 +146,27 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: string) => {
-    // Special-case: if tool is a dedicated reader tool, enter reader mode and do not go to toolContent
-    if (toolId === 'read' || toolId === 'view-pdf') {
-      setReaderMode(true);
-      setLeftPanelView('toolPicker');
-      clearToolSelection();
-      setSearchQuery('');
-      return;
-    }
-
-    selectTool(toolId);
-    handleViewChange('fileEditor' as any); // ToolWorkflowContext should validate this
-    setLeftPanelView('toolContent');
-    setReaderMode(false);
-    // Clear search so the tool content becomes visible immediately
+    actions.handleToolSelect(toolId);
+    
+    // Clear search query when selecting a tool
     setSearchQuery('');
-  }, [selectTool, handleViewChange, setLeftPanelView, setReaderMode, setSearchQuery, clearToolSelection]);
+    
+    // Handle view switching logic
+    if (toolId === 'allTools' || toolId === 'read' || toolId === 'view-pdf') {
+      setLeftPanelView('toolPicker');
+      if (toolId === 'read' || toolId === 'view-pdf') {
+        setReaderMode(true);
+      }
+    } else {
+      setLeftPanelView('toolContent');
+    }
+  }, [actions, setLeftPanelView, setReaderMode, setSearchQuery]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
     setReaderMode(false);
-    clearToolSelection();
-  }, [setLeftPanelView, setReaderMode, clearToolSelection]);
+    actions.clearToolSelection();
+  }, [setLeftPanelView, setReaderMode, actions]);
 
   const handleReaderToggle = useCallback(() => {
     setReaderMode(true);
@@ -190,13 +186,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   // Enable URL synchronization for tool selection
-  useToolWorkflowUrlSync(selectedToolKey, selectTool, clearToolSelection, true);
+  useToolWorkflowUrlSync(navigationState.selectedToolKey, actions.selectTool, actions.clearToolSelection, true);
 
-  // Simple context value with basic memoization
-  const contextValue : ToolWorkflowContextValue ={
+  // Properly memoized context value
+  const contextValue = useMemo((): ToolWorkflowContextValue => ({
     // State
     ...state,
-    selectedToolKey,
+    selectedToolKey: navigationState.selectedToolKey,
     selectedTool,
     toolRegistry,
 
@@ -207,8 +203,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
-    selectTool,
-    clearToolSelection,
+    selectTool: actions.selectTool,
+    clearToolSelection: actions.clearToolSelection,
 
     // Workflow Actions
     handleToolSelect,
@@ -218,7 +214,25 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     // Computed
     filteredTools,
     isPanelVisible,
-  };
+  }), [
+    state,
+    navigationState.selectedToolKey,
+    selectedTool,
+    toolRegistry,
+    setSidebarsVisible,
+    setLeftPanelView,
+    setReaderMode,
+    setPreviewFile,
+    setPageEditorFunctions,
+    setSearchQuery,
+    actions.selectTool,
+    actions.clearToolSelection,
+    handleToolSelect,
+    handleBackToTools,
+    handleReaderToggle,
+    filteredTools,
+    isPanelVisible,
+  ]);
 
   return (
     <ToolWorkflowContext.Provider value={contextValue}>

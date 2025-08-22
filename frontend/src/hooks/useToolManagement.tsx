@@ -5,19 +5,16 @@ import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 
 interface ToolManagementResult {
-  selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
   toolSelectedFileIds: string[];
   toolRegistry: Record<string, ToolRegistryEntry>;
-  selectTool: (toolKey: string) => void;
-  clearToolSelection: () => void;
   setToolSelectedFileIds: (fileIds: string[]) => void;
+  getSelectedTool: (toolKey: string | null) => ToolRegistryEntry | null;
 }
 
 export const useToolManagement = (): ToolManagementResult => {
   const { t } = useTranslation();
 
-  const [selectedToolKey, setSelectedToolKey] = useState<string | null>(null);
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
 
   // Build endpoints list from registry entries with fallback to legacy mapping
@@ -56,35 +53,15 @@ export const useToolManagement = (): ToolManagementResult => {
     return availableToolRegistry;
   }, [isToolAvailable, t, baseRegistry]);
 
-  useEffect(() => {
-    if (!endpointsLoading && selectedToolKey && !toolRegistry[selectedToolKey]) {
-      const firstAvailableTool = Object.keys(toolRegistry)[0];
-      if (firstAvailableTool) {
-        setSelectedToolKey(firstAvailableTool);
-      } else {
-        setSelectedToolKey(null);
-      }
-    }
-  }, [endpointsLoading, selectedToolKey, toolRegistry]);
-
-  const selectTool = useCallback((toolKey: string) => {
-    setSelectedToolKey(toolKey);
-  }, []);
-
-  const clearToolSelection = useCallback(() => {
-    setSelectedToolKey(null);
-  }, []);
-
-  const selectedTool = selectedToolKey ? toolRegistry[selectedToolKey] : null;
+  const getSelectedTool = useCallback((toolKey: string | null): ToolRegistryEntry | null => {
+    return toolKey ? toolRegistry[toolKey] || null : null;
+  }, [toolRegistry]);
 
   return {
-    selectedToolKey,
-    selectedTool,
+    selectedTool: getSelectedTool(null), // This will be unused, kept for compatibility
     toolSelectedFileIds,
     toolRegistry,
-    selectTool,
-    clearToolSelection,
     setToolSelectedFileIds,
-
+    getSelectedTool,
   };
 };

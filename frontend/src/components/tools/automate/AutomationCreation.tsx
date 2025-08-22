@@ -27,7 +27,7 @@ interface AutomationCreationProps {
 
 export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry }: AutomationCreationProps) {
   const { t } = useTranslation();
-  
+
   const {
     automationName,
     setAutomationName,
