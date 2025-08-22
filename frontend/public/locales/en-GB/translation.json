@@ -1925,18 +1925,23 @@
     "noToolsFound": "No tools found",
     "allTools": "ALL TOOLS",
     "quickAccess": "QUICK ACCESS",
+    "categories": {
+      "standardTools": "Standard Tools",
+      "advancedTools": "Advanced Tools",
+      "recommendedTools": "Recommended Tools"
+    },
     "subcategories": {
-      "Signing": "Signing",
-      "Document Security": "Document Security",
-      "Verification": "Verification",
-      "Document Review": "Document Review",
-      "Page Formatting": "Page Formatting",
-      "Extraction": "Extraction",
-      "Removal": "Removal",
-      "Automation": "Automation",
-      "General": "General",
-      "Advanced Formatting": "Advanced Formatting",
-      "Developer Tools": "Developer Tools"
+      "signing": "Signing",
+      "documentSecurity": "Document Security",
+      "verification": "Verification",
+      "documentReview": "Document Review",
+      "pageFormatting": "Page Formatting",
+      "extraction": "Extraction",
+      "removal": "Removal",
+      "automation": "Automation",
+      "general": "General",
+      "advancedFormatting": "Advanced Formatting",
+      "developerTools": "Developer Tools"
     }
   },
   "quickAccess": {
