@@ -1,6 +1,8 @@
 import { type TFunction } from 'i18next';
 import React from 'react';
+import { ToolOperationHook, ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
 import { BaseToolProps } from '../types/tool';
+import { BaseParameters } from '../types/parameters';
 
 export enum SubcategoryId {
   SIGNING = 'signing',
@@ -23,18 +25,22 @@ export enum ToolCategoryId {
 }
 
 export type ToolRegistryEntry = {
-  icon: React.ReactNode;
-  name: string;
-  component: React.ComponentType<BaseToolProps> | null;
-  view: 'sign' | 'security' | 'format' | 'extract' | 'view' | 'merge' | 'pageEditor' | 'convert' | 'redact' | 'split' | 'convert' | 'remove' | 'compress' | 'external';
-  description: string;
-  categoryId: ToolCategoryId;
-  subcategoryId: SubcategoryId;
-  maxFiles?: number;
-  supportedFormats?: string[];
-  endpoints?: string[];
-  link?: string;
-  type?: string;
+	icon: React.ReactNode;
+	name: string;
+	component: React.ComponentType<BaseToolProps> | null;
+	view: 'sign' | 'security' | 'format' | 'extract' | 'view' | 'merge' | 'pageEditor' | 'convert' | 'redact' | 'split' | 'convert' | 'remove' | 'compress' | 'external';
+	description: string;
+	categoryId: ToolCategoryId;
+	subcategoryId: SubcategoryId;
+	maxFiles?: number;
+	supportedFormats?: string[];
+	endpoints?: string[];
+	link?: string;
+	type?: string;
+	// Operation configuration for automation
+	operationConfig?: ToolOperationConfig<any>;
+	// Settings component for automation configuration
+	settingsComponent?: React.ComponentType<any>;
 }
 
 export type ToolRegistry = Record<string /* FIX ME: Should be ToolId */, ToolRegistryEntry>;

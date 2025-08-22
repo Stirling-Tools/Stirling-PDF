@@ -11,7 +11,7 @@ import RemovePasswordSettings from "../components/tools/removePassword/RemovePas
 import { useRemovePasswordParameters } from "../hooks/tools/removePassword/useRemovePasswordParameters";
 import { useRemovePasswordOperation } from "../hooks/tools/removePassword/useRemovePasswordOperation";
 import { useRemovePasswordTips } from "../components/tooltips/useRemovePasswordTips";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -94,4 +94,7 @@ const RemovePassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   });
 };
 
-export default RemovePassword;
+// Static method to get the operation hook for automation
+RemovePassword.tool = () => useRemovePasswordOperation;
+
+export default RemovePassword as ToolComponent;

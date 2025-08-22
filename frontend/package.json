@@ -74,6 +74,7 @@
     "@vitest/coverage-v8": "^1.0.0",
     "jsdom": "^23.0.0",
     "license-checker": "^25.0.1",
+    "madge": "^8.0.0",
     "postcss": "^8.5.3",
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.17.0",

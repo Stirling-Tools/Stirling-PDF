@@ -9,6 +9,7 @@ export interface FilesStepConfig {
   isCollapsed?: boolean;
   placeholder?: string;
   onCollapsedClick?: () => void;
+  isVisible?: boolean;
 }
 
 export interface MiddleStepConfig {
@@ -63,7 +64,7 @@ export function createToolFlow(config: ToolFlowConfig) {
     <Stack gap="sm" p="sm" h="95vh" w="100%" style={{ overflow: 'auto' }}>
       <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>
         {/* Files Step */}
-        {steps.createFilesStep({
+        {config.files.isVisible !== false && steps.createFilesStep({
           selectedFiles: config.files.selectedFiles,
           isCollapsed: config.files.isCollapsed,
           placeholder: config.files.placeholder,

@@ -1,7 +1,9 @@
 import { 
   CONVERSION_ENDPOINTS,
   ENDPOINT_NAMES,
-  EXTENSION_TO_ENDPOINT
+  EXTENSION_TO_ENDPOINT,
+  CONVERSION_MATRIX,
+  TO_FORMAT_OPTIONS
 } from '../constants/convertConstants';
 
 /**
@@ -56,4 +58,33 @@ export const isImageFormat = (extension: string): boolean => {
  */
 export const isWebFormat = (extension: string): boolean => {
   return ['html', 'zip'].includes(extension.toLowerCase());
+};
+
+/**
+ * Gets available target extensions for a given source extension
+ * Extracted from useConvertParameters to be reusable in automation settings
+ */
+export const getAvailableToExtensions = (fromExtension: string): Array<{value: string, label: string, group: string}> => {
+  if (!fromExtension) return [];
+
+  // Handle dynamic format identifiers (file-<extension>)
+  if (fromExtension.startsWith('file-')) {
+    // Dynamic format - use 'any' conversion options (file-to-pdf)
+    const supportedExtensions = CONVERSION_MATRIX['any'] || [];
+    return TO_FORMAT_OPTIONS.filter(option =>
+      supportedExtensions.includes(option.value)
+    );
+  }
+
+  let supportedExtensions = CONVERSION_MATRIX[fromExtension] || [];
+
+  // If no explicit conversion exists, but file-to-pdf might be available,
+  // fall back to 'any' conversion (which converts unknown files to PDF via file-to-pdf)
+  if (supportedExtensions.length === 0 && fromExtension !== 'any') {
+    supportedExtensions = CONVERSION_MATRIX['any'] || [];
+  }
+
+  return TO_FORMAT_OPTIONS.filter(option =>
+    supportedExtensions.includes(option.value)
+  );
 };

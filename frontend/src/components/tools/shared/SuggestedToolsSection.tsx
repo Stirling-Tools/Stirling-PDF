@@ -2,6 +2,7 @@ import React from 'react';
 import { Stack, Text, Divider, Card, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSuggestedTools } from '../../../hooks/useSuggestedTools';
+
 export interface SuggestedToolsSectionProps {}
 
 export function SuggestedToolsSection(): React.ReactElement {

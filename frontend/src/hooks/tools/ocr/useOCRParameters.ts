@@ -10,7 +10,7 @@ export interface OCRParameters extends BaseParameters {
 
 export type OCRParametersHook = BaseParametersHook<OCRParameters>;
 
-const defaultParameters: OCRParameters = {
+export const defaultParameters: OCRParameters = {
   languages: [],
   ocrType: 'skip-text',
   ocrRenderType: 'hocr',

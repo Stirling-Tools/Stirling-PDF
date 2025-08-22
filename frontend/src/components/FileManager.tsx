@@ -111,7 +111,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
       onClose={closeFilesModal}
       size={isMobile ? "100%" : "auto"}
       centered
-      radius={30}
+      radius="md"
       className="overflow-hidden p-0"
       withCloseButton={false}
       styles={{
@@ -144,7 +144,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             height: '100%',
             width: '100%',
             border: 'none',
-            borderRadius: '30px',
+            borderRadius: 'var(--radius-md)',
             backgroundColor: 'var(--bg-file-manager)'
           }}
           styles={{

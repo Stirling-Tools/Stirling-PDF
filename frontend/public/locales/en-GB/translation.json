@@ -85,6 +85,7 @@
   "warning": {
     "tooltipTitle": "Warning"
   },
+  "edit": "Edit",
   "delete": "Delete",
   "username": "Username",
   "password": "Password",
@@ -538,10 +539,6 @@
       "title": "Edit Table of Contents",
       "desc": "Add or edit bookmarks and table of contents in PDF documents"
     },
-    "automate": {
-      "title": "Automate",
-      "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
-    },
     "manageCertificates": {
       "title": "Manage Certificates",
       "desc": "Import, export, or delete digital certificate files used for signing PDFs."
@@ -601,6 +598,10 @@
     "changePermissions": {
       "title": "Change Permissions",
       "desc": "Change document restrictions and permissions"
+    },
+    "automate": {
+      "title": "Automate",
+      "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
     }
   },
   "viewPdf": {
@@ -731,7 +732,8 @@
     "officeDocs": "Office Documents (Word, Excel, PowerPoint)",
     "imagesExt": "Images (JPG, PNG, etc.)",
     "markdown": "Markdown",
-    "textRtf": "Text/RTF"
+    "textRtf": "Text/RTF",
+    "grayscale": "Greyscale"
   },
   "imageToPdf": {
     "tags": "conversion,img,jpg,picture,photo"
@@ -2021,7 +2023,8 @@
     "downloadSelected": "Download Selected",
     "selectedCount": "{{count}} selected",
     "download": "Download",
-    "delete": "Delete"
+    "delete": "Delete",
+    "unsupported":"Unsupported"
   },
   "storage": {
     "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",
@@ -2191,5 +2194,68 @@
     "results": {
       "title": "Decrypted PDFs"
     }
-  }
+  },
+  "automate": {
+      "title": "Automate",
+      "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks.",
+      "invalidStep": "Invalid step",
+      "files": {
+        "placeholder": "Select files to process with this automation"
+      },
+      "selection": {
+        "title": "Automation Selection",
+        "saved": {
+          "title": "Saved"
+        },
+        "createNew": {
+          "title": "Create New Automation"
+        },
+        "suggested": {
+          "title": "Suggested"
+        }
+      },
+      "creation": {
+        "createTitle": "Create Automation",
+        "editTitle": "Edit Automation",
+        "description": "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
+        "name": {
+          "placeholder": "Automation name"
+        },
+        "tools": {
+          "selectTool": "Select a tool...",
+          "selected": "Selected Tools",
+          "remove": "Remove tool",
+          "configure": "Configure tool",
+          "notConfigured": "! Not Configured",
+          "addTool": "Add Tool",
+          "add": "Add a tool..."
+        },
+        "save": "Save Automation",
+        "unsavedChanges": {
+          "title": "Unsaved Changes",
+          "message": "You have unsaved changes. Are you sure you want to go back? All changes will be lost.",
+          "cancel": "Cancel",
+          "confirm": "Go Back"
+        }
+      },
+      "run": {
+        "title": "Run Automation"
+      },
+      "sequence": {
+        "unnamed": "Unnamed Automation",
+        "steps": "{{count}} steps",
+        "running": "Running Automation...",
+        "run": "Run Automation",
+        "finish": "Finish"
+      },
+      "reviewTitle": "Automation Results",
+      "config": {
+        "loading": "Loading tool configuration...",
+        "noSettings": "This tool does not have configurable settings.",
+        "title": "Configure {{toolName}}",
+        "description": "Configure the settings for this tool. These settings will be applied when the automation runs.",
+        "cancel": "Cancel",
+        "save": "Save Configuration"
+      }
+    }
 }

@@ -409,7 +409,7 @@ describe('Convert Tool Integration Tests', () => {
 
       // Verify integration: utils validation prevents API call, hook shows error
       expect(mockedAxios.post).not.toHaveBeenCalled();
-      expect(result.current.errorMessage).toContain('errorNotSupported');
+      expect(result.current.errorMessage).toContain('Unsupported conversion format');
       expect(result.current.isLoading).toBe(false);
       expect(result.current.downloadUrl).toBe(null);
     });

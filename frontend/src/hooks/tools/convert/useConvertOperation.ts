@@ -1,13 +1,14 @@
 import { useCallback } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
-import { ConvertParameters } from './useConvertParameters';
+import { ConvertParameters, defaultParameters } from './useConvertParameters';
 import { detectFileExtension } from '../../../utils/fileUtils';
 import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
 import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
 
-const shouldProcessFilesSeparately = (
+// Static function that can be used by both the hook and automation executor
+export const shouldProcessFilesSeparately = (
   selectedFiles: File[],
   parameters: ConvertParameters
 ): boolean => {
@@ -29,7 +30,8 @@ const shouldProcessFilesSeparately = (
   );
 };
 
-const buildFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
+// Static function that can be used by both the hook and automation executor
+export const buildConvertFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
 
   selectedFiles.forEach(file => {
@@ -69,7 +71,8 @@ const buildFormData = (parameters: ConvertParameters, selectedFiles: File[]): Fo
   return formData;
 };
 
-const createFileFromResponse = (
+// Static function that can be used by both the hook and automation executor
+export const createFileFromResponse = (
   responseData: any,
   headers: any,
   originalFileName: string,
@@ -81,6 +84,59 @@ const createFileFromResponse = (
   return createFileFromApiResponse(responseData, headers, fallbackFilename);
 };
 
+// Static processor that can be used by both the hook and automation executor
+export const convertProcessor = async (
+  parameters: ConvertParameters,
+  selectedFiles: File[]
+): Promise<File[]> => {
+  const processedFiles: File[] = [];
+  const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
+
+  if (!endpoint) {
+    throw new Error('Unsupported conversion format');
+  }
+
+  // Convert-specific routing logic: decide batch vs individual processing
+  if (shouldProcessFilesSeparately(selectedFiles, parameters)) {
+    // Individual processing for complex cases (PDF→image, smart detection, etc.)
+    for (const file of selectedFiles) {
+      try {
+        const formData = buildConvertFormData(parameters, [file]);
+        const response = await axios.post(endpoint, formData, { responseType: 'blob' });
+
+        const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
+
+        processedFiles.push(convertedFile);
+      } catch (error) {
+        console.warn(`Failed to convert file ${file.name}:`, error);
+      }
+    }
+  } else {
+    // Batch processing for simple cases (image→PDF combine)
+    const formData = buildConvertFormData(parameters, selectedFiles);
+    const response = await axios.post(endpoint, formData, { responseType: 'blob' });
+
+    const baseFilename = selectedFiles.length === 1
+      ? selectedFiles[0].name
+      : 'converted_files';
+
+    const convertedFile = createFileFromResponse(response.data, response.headers, baseFilename, parameters.toExtension);
+    processedFiles.push(convertedFile);
+  }
+
+  return processedFiles;
+};
+
+// Static configuration object
+export const convertOperationConfig = {
+  operationType: 'convert',
+  endpoint: '', // Not used with customProcessor but required
+  buildFormData: buildConvertFormData, // Not used with customProcessor but required
+  filePrefix: 'converted_',
+  customProcessor: convertProcessor,
+  defaultParameters,
+} as const;
+
 export const useConvertOperation = () => {
   const { t } = useTranslation();
 
@@ -88,52 +144,12 @@ export const useConvertOperation = () => {
     parameters: ConvertParameters,
     selectedFiles: File[]
   ): Promise<File[]> => {
-
-    const processedFiles: File[] = [];
-    const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
-
-    if (!endpoint) {
-      throw new Error(t('errorNotSupported', 'Unsupported conversion format'));
-    }
-
-    // Convert-specific routing logic: decide batch vs individual processing
-    if (shouldProcessFilesSeparately(selectedFiles, parameters)) {
-      // Individual processing for complex cases (PDF→image, smart detection, etc.)
-      for (const file of selectedFiles) {
-        try {
-          const formData = buildFormData(parameters, [file]);
-          const response = await axios.post(endpoint, formData, { responseType: 'blob' });
-
-          const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
-
-          processedFiles.push(convertedFile);
-        } catch (error) {
-          console.warn(`Failed to convert file ${file.name}:`, error);
-        }
-      }
-    } else {
-      // Batch processing for simple cases (image→PDF combine)
-      const formData = buildFormData(parameters, selectedFiles);
-      const response = await axios.post(endpoint, formData, { responseType: 'blob' });
-
-      const baseFilename = selectedFiles.length === 1
-        ? selectedFiles[0].name
-        : 'converted_files';
-
-      const convertedFile = createFileFromResponse(response.data, response.headers, baseFilename, parameters.toExtension);
-      processedFiles.push(convertedFile);
-
-    }
-
-    return processedFiles;
-  }, [t]);
+    return convertProcessor(parameters, selectedFiles);
+  }, []);
 
   return useToolOperation<ConvertParameters>({
-    operationType: 'convert',
-    endpoint: '', // Not used with customProcessor but required
-    buildFormData, // Not used with customProcessor but required
-    filePrefix: 'converted_',
-    customProcessor: customConvertProcessor, // Convert handles its own routing
+    ...convertOperationConfig,
+    customProcessor: customConvertProcessor, // Use instance-specific processor for translation support
     getErrorMessage: (error) => {
       if (error.response?.data && typeof error.response.data === 'string') {
         return error.response.data;

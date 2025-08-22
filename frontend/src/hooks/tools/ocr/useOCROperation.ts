@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { OCRParameters } from './useOCRParameters';
+import { OCRParameters, defaultParameters } from './useOCRParameters';
 import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { useToolResources } from '../shared/useToolResources';
@@ -37,7 +37,8 @@ function stripExt(name: string): string {
   return i > 0 ? name.slice(0, i) : name;
 }
 
-const buildFormData = (parameters: OCRParameters, file: File): FormData => {
+// Static function that can be used by both the hook and automation executor
+export const buildOCRFormData = (parameters: OCRParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
   parameters.languages.forEach((lang) => formData.append('languages', lang));
@@ -51,57 +52,70 @@ const buildFormData = (parameters: OCRParameters, file: File): FormData => {
   return formData;
 };
 
+// Static response handler for OCR - can be used by automation executor  
+export const ocrResponseHandler = async (blob: Blob, originalFiles: File[], extractZipFiles: (blob: Blob) => Promise<File[]>): Promise<File[]> => {
+  const headBuf = await blob.slice(0, 8).arrayBuffer();
+  const head = new TextDecoder().decode(new Uint8Array(headBuf));
+
+  // ZIP: sidecar or multi-asset output
+  if (head.startsWith('PK')) {
+    const base = stripExt(originalFiles[0].name);
+    try {
+      const extractedFiles = await extractZipFiles(blob);
+      if (extractedFiles.length > 0) return extractedFiles;
+    } catch { /* ignore and try local extractor */ }
+    try {
+      const local = await extractZipFile(blob); // local fallback
+      if (local.length > 0) return local;
+    } catch { /* fall through */ }
+    return [new File([blob], `ocr_${base}.zip`, { type: 'application/zip' })];
+  }
+
+  // Not a PDF: surface error details if present
+  if (!head.startsWith('%PDF')) {
+    const textBuf = await blob.slice(0, 1024).arrayBuffer();
+    const text = new TextDecoder().decode(new Uint8Array(textBuf));
+    if (/error|exception|html/i.test(text)) {
+      if (text.includes('OCR tools') && text.includes('not installed')) {
+        throw new Error('OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.');
+      }
+      const title =
+        text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ||
+        text.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] ||
+        'Unknown error';
+      throw new Error(`OCR service error: ${title}`);
+    }
+    throw new Error(`Response is not a valid PDF. Header: "${head}"`);
+  }
+
+  const base = stripExt(originalFiles[0].name);
+  return [new File([blob], `ocr_${base}.pdf`, { type: 'application/pdf' })];
+};
+
+// Static configuration object (without t function dependencies)
+export const ocrOperationConfig = {
+  operationType: 'ocr',
+  endpoint: '/api/v1/misc/ocr-pdf',
+  buildFormData: buildOCRFormData,
+  filePrefix: 'ocr_',
+  multiFileEndpoint: false,
+  defaultParameters,
+} as const;
+
 export const useOCROperation = () => {
   const { t } = useTranslation();
   const { extractZipFiles } = useToolResources();
 
   // OCR-specific parsing: ZIP (sidecar) vs PDF vs HTML error
   const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
-    const headBuf = await blob.slice(0, 8).arrayBuffer();
-    const head = new TextDecoder().decode(new Uint8Array(headBuf));
-
-    // ZIP: sidecar or multi-asset output
-    if (head.startsWith('PK')) {
-      const base = stripExt(originalFiles[0].name);
-      try {
-        const extracted = await extractZipFiles(blob);
-        if (extracted.length > 0) return extracted;
-      } catch { /* ignore and try local extractor */ }
-      try {
-        const local = await extractZipFile(blob); // local fallback
-        if (local.length > 0) return local;
-      } catch { /* fall through */ }
-      return [new File([blob], `ocr_${base}.zip`, { type: 'application/zip' })];
-    }
-
-    // Not a PDF: surface error details if present
-    if (!head.startsWith('%PDF')) {
-      const textBuf = await blob.slice(0, 1024).arrayBuffer();
-      const text = new TextDecoder().decode(new Uint8Array(textBuf));
-      if (/error|exception|html/i.test(text)) {
-        if (text.includes('OCR tools') && text.includes('not installed')) {
-          throw new Error('OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.');
-        }
-        const title =
-          text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ||
-          text.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] ||
-          t('ocr.error.unknown', 'Unknown error');
-        throw new Error(`OCR service error: ${title}`);
-      }
-      throw new Error(`Response is not a valid PDF. Header: "${head}"`);
-    }
-
-    const base = stripExt(originalFiles[0].name);
-    return [new File([blob], `ocr_${base}.pdf`, { type: 'application/pdf' })];
-  }, [t, extractZipFiles]);
+    // extractZipFiles from useToolResources already returns File[] directly
+    const simpleExtractZipFiles = extractZipFiles;
+    return ocrResponseHandler(blob, originalFiles, simpleExtractZipFiles);
+  }, [extractZipFiles]);
 
   const ocrConfig: ToolOperationConfig<OCRParameters> = {
-    operationType: 'ocr',
-    endpoint: '/api/v1/misc/ocr-pdf',
-    buildFormData,
-    filePrefix: 'ocr_',
-    multiFileEndpoint: false, // Process files individually
-    responseHandler, // use shared flow
+    ...ocrOperationConfig,
+    responseHandler,
     getErrorMessage: (error) =>
       error.message?.includes('OCR tools') && error.message?.includes('not installed')
         ? 'OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.'

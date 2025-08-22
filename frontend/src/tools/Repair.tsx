@@ -9,7 +9,7 @@ import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import { useRepairParameters } from "../hooks/tools/repair/useRepairParameters";
 import { useRepairOperation } from "../hooks/tools/repair/useRepairOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const Repair = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -77,4 +77,7 @@ const Repair = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default Repair;
+// Static method to get the operation hook for automation
+Repair.tool = () => useRepairOperation;
+
+export default Repair as ToolComponent;

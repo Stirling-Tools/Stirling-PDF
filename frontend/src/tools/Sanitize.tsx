@@ -2,20 +2,18 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileSelection } from "../contexts/FileContext";
-import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
 
 import { useSanitizeParameters } from "../hooks/tools/sanitize/useSanitizeParameters";
 import { useSanitizeOperation } from "../hooks/tools/sanitize/useSanitizeOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
 
   const { selectedFiles } = useFileSelection();
-  const { actions } = useNavigationActions();
 
   const sanitizeParams = useSanitizeParameters();
   const sanitizeOperation = useSanitizeOperation();
@@ -91,4 +89,7 @@ const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default Sanitize;
+// Static method to get the operation hook for automation
+Sanitize.tool = () => useSanitizeOperation;
+
+export default Sanitize as ToolComponent;

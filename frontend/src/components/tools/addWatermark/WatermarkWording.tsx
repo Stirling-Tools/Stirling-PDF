@@ -6,7 +6,7 @@ import { removeEmojis } from "../../../utils/textUtils";
 
 interface WatermarkWordingProps {
   parameters: AddWatermarkParameters;
-  onParameterChange: (key: keyof AddWatermarkParameters, value: any) => void;
+  onParameterChange: <K extends keyof AddWatermarkParameters>(key: K, value: AddWatermarkParameters[K]) => void;
   disabled?: boolean;
 }
 

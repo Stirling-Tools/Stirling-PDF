@@ -6,7 +6,7 @@ import FileUploadButton from "../../shared/FileUploadButton";
 
 interface WatermarkImageFileProps {
   parameters: AddWatermarkParameters;
-  onParameterChange: (key: keyof AddWatermarkParameters, value: any) => void;
+  onParameterChange: <K extends keyof AddWatermarkParameters>(key: K, value: AddWatermarkParameters[K]) => void;
   disabled?: boolean;
 }
 
@@ -17,7 +17,7 @@ const WatermarkImageFile = ({ parameters, onParameterChange, disabled = false }:
     <Stack gap="sm">
       <FileUploadButton
         file={parameters.watermarkImage}
-        onChange={(file) => onParameterChange('watermarkImage', file)}
+        onChange={(file) => onParameterChange('watermarkImage', file || undefined)}
         accept="image/*"
         disabled={disabled}
         placeholder={t('watermark.settings.image.choose', 'Choose Image')}
