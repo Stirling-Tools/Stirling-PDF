@@ -13,9 +13,9 @@ import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
-import { 
-  isNavButtonActive, 
-  getNavButtonStyle, 
+import {
+  isNavButtonActive,
+  getNavButtonStyle,
   getActiveNavButton,
 } from './quickAccessBar/QuickAccessBar';
 
@@ -39,7 +39,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     openFilesModal();
   };
 
-  
+
   const buttonConfigs: ButtonConfig[] = [
     {
       id: 'read',

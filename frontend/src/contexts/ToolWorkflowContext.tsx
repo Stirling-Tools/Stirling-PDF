@@ -72,7 +72,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
   toolRegistry: any; // From useToolManagement
-  
+
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
   setLeftPanelView: (view: 'toolPicker' | 'toolContent') => void;

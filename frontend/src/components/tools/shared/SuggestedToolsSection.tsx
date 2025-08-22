@@ -21,7 +21,7 @@ export function SuggestedToolsSection(): React.ReactElement {
           const IconComponent = tool.icon;
           return (
             <Card
-              key={tool.name}
+              key={tool.id}
               p="sm"
               withBorder
               style={{ cursor: 'pointer' }}

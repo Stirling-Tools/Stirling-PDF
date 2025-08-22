@@ -17,7 +17,7 @@ interface ToolManagementResult {
 export const useToolManagement = (): ToolManagementResult => {
   const { t } = useTranslation();
 
-  const [selectedToolKey, setSelectedToolKey] = useState<string | null>(null);
+  const [selectedToolKey, setSelectedToolKey] = useState<string /* FIX ME: Should be ToolId */ | null>(null);
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
 
   // Build endpoints list from registry entries with fallback to legacy mapping
