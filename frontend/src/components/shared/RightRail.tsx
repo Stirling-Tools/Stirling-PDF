@@ -318,7 +318,7 @@ export default function RightRail() {
             )}
 
             {/* Close (File Editor: Close Selected | Page Editor: Close PDF) */}
-            <Tooltip content={currentView === 'pageEditor' ? t('rightRail.closePdf', 'Close PDF') : t('rightRail.downloadSelected', 'Download Selected Files')} position="left" offset={12} arrow>
+            <Tooltip content={currentView === 'pageEditor' ? t('rightRail.closePdf', 'Close PDF') : t('rightRail.closeSelected', 'Close Selected Files')} position="left" offset={12} arrow>
               <div>
                 <ActionIcon
                   variant="subtle"

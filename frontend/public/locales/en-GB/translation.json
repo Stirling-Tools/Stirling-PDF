@@ -988,6 +988,7 @@
     },
     "submit": "Change"
   },
+  
   "removePages": {
     "tags": "Remove pages,delete pages",
     "title": "Remove Pages",
@@ -1923,6 +1924,7 @@
     "totalPages": "Total Pages"
   },
   "rightRail": {
+    "closeSelected": "Close Selected Files",
     "selectAll": "Select All",
     "deselectAll": "Deselect All",
     "selectByNumber": "Select by Page Numbers",
