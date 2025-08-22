@@ -1974,6 +1974,7 @@
     "dropFilesHere": "Drop files here or click to upload",
     "pdfFilesOnly": "PDF files only",
     "supportedFileTypes": "Supported file types",
+    "upload": "Upload",
     "uploadFile": "Upload File",
     "uploadFiles": "Upload Files",
     "noFilesInStorage": "No files available in storage. Upload some files first.",
