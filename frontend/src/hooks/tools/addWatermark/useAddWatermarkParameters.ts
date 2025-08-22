@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
-import { defaultWatermarkParameters } from '../../../constants/addWatermarkConstants';
+import { BaseParameters } from '../../../types/parameters';
+import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface AddWatermarkParameters {
+export interface AddWatermarkParameters extends BaseParameters {
   watermarkType?: 'text' | 'image';
   watermarkText: string;
   watermarkImage?: File;
@@ -15,36 +15,35 @@ export interface AddWatermarkParameters {
   convertPDFToImage: boolean;
 }
 
-
-export const useAddWatermarkParameters = () => {
-  const [parameters, setParameters] = useState<AddWatermarkParameters>(defaultWatermarkParameters);
-
-  const updateParameter = useCallback(<K extends keyof AddWatermarkParameters>(
-    key: K,
-    value: AddWatermarkParameters[K]
-  ) => {
-    setParameters(prev => ({ ...prev, [key]: value }));
-  }, []);
-
-  const resetParameters = useCallback(() => {
-    setParameters(defaultWatermarkParameters);
-  }, []);
-
-  const validateParameters = useCallback((): boolean => {
-    if (!parameters.watermarkType) {
-      return false;
-    }
-    if (parameters.watermarkType === 'text') {
-      return parameters.watermarkText.trim().length > 0;
-    } else {
-      return parameters.watermarkImage !== undefined;
-    }
-  }, [parameters]);
-
-  return {
-    parameters,
-    updateParameter,
-    resetParameters,
-    validateParameters
-  };
+export const defaultParameters: AddWatermarkParameters = {
+  watermarkType: undefined,
+  watermarkText: '',
+  fontSize: 12,
+  rotation: 0,
+  opacity: 50,
+  widthSpacer: 50,
+  heightSpacer: 50,
+  alphabet: 'roman',
+  customColor: '#d3d3d3',
+  convertPDFToImage: false
 };
+
+export type AddWatermarkParametersHook = BaseParametersHook<AddWatermarkParameters>;
+
+export const useAddWatermarkParameters = (): AddWatermarkParametersHook => {
+  return useBaseParameters({
+    defaultParameters: defaultParameters,
+    endpointName: 'add-watermark',
+    validateFn: (params): boolean => {
+      if (!params.watermarkType) {
+        return false;
+      }
+      if (params.watermarkType === 'text') {
+        return params.watermarkText.trim().length > 0;
+      } else {
+        return params.watermarkImage !== undefined;
+      }
+    },
+  });
+};
+

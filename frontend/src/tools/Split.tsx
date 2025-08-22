@@ -1,20 +1,20 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import SplitSettings from "../components/tools/split/SplitSettings";
 
 import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
 import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
+  const { actions } = useNavigationActions();
+  const { selectedFiles } = useFileSelection();
 
   const splitParams = useSplitParameters();
   const splitOperation = useSplitOperation();
@@ -25,8 +25,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     splitOperation.resetResults();
     onPreviewFile?.(null);
-  }, [splitParams.parameters]);
-
+  }, [splitParams.parameters, selectedFiles]); 
   const handleSplit = async () => {
     try {
       await splitOperation.executeOperation(splitParams.parameters, selectedFiles);
@@ -43,24 +42,22 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "split");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     splitOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("split");
+    actions.setMode("split");
   };
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = splitOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles || hasResults;
   const settingsCollapsed = !hasFiles || hasResults;
 
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: filesCollapsed,
+      isCollapsed: hasResults,
       placeholder: "Select a PDF file in the main view to get started",
     },
     steps: [
@@ -93,4 +90,4 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default Split;
+export default Split as ToolComponent;

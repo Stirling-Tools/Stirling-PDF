@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useFileState, useFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -10,12 +10,14 @@ import ConvertSettings from "../components/tools/convert/ConvertSettings";
 
 import { useConvertParameters } from "../hooks/tools/convert/useConvertParameters";
 import { useConvertOperation } from "../hooks/tools/convert/useConvertOperation";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode, activeFiles } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
+  const { selectors } = useFileState();
+  const { actions } = useNavigationActions();
+  const activeFiles = selectors.getFiles();
+  const { selectedFiles } = useFileSelection();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const convertParams = useConvertParameters();
@@ -34,7 +36,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = convertOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles;
   const settingsCollapsed = hasResults;
 
   useEffect(() => {
@@ -47,7 +48,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         convertParams.resetParameters();
       }
     }
-  }, [selectedFiles, activeFiles]);
+  }, [selectedFiles, activeFiles, convertParams.analyzeFileTypes, convertParams.resetParameters]);
 
   useEffect(() => {
     // Only clear results if we're not currently processing and parameters changed
@@ -85,19 +86,17 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "convert");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     convertOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("convert");
   };
 
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: filesCollapsed,
+      isCollapsed: hasResults,
       placeholder: t("convert.selectFilesPlaceholder", "Select files in the main view to get started"),
     },
     steps: [
@@ -134,4 +133,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default Convert;
+// Static method to get the operation hook for automation
+Convert.tool = () => useConvertOperation;
+
+export default Convert as ToolComponent;

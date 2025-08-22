@@ -1,206 +1,67 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
-import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-import ApiIcon from "@mui/icons-material/Api";
-import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
-import LockIcon from "@mui/icons-material/Lock";
-import BrandingWatermarkIcon from "@mui/icons-material/BrandingWatermark";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
+import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
+import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
-import { Tool, ToolDefinition, ToolRegistry } from "../types/tool";
-
-
-// Add entry here with maxFiles, endpoints, and lazy component
-const toolDefinitions: Record<string, ToolDefinition> = {
-  split: {
-    id: "split",
-    icon: <ContentCutIcon />,
-    component: React.lazy(() => import("../tools/Split")),
-    maxFiles: 1,
-    category: "manipulation",
-    description: "Split PDF files into smaller parts",
-    endpoints: ["split-pages", "split-pdf-by-sections", "split-by-size-or-count", "split-pdf-by-chapters"]
-  },
-  compress: {
-    id: "compress",
-    icon: <ZoomInMapIcon />,
-    component: React.lazy(() => import("../tools/Compress")),
-    maxFiles: -1,
-    category: "optimization",
-    description: "Reduce PDF file size",
-    endpoints: ["compress-pdf"]
-  },
-  convert: {
-  id: "convert",
-  icon: <SwapHorizIcon />,
-  component: React.lazy(() => import("../tools/Convert")),
-  maxFiles: -1,
-  category: "manipulation",
-  description: "Change to and from PDF and other formats",
-  endpoints: ["pdf-to-img", "img-to-pdf", "pdf-to-word", "pdf-to-presentation", "pdf-to-text", "pdf-to-html", "pdf-to-xml", "html-to-pdf", "markdown-to-pdf", "file-to-pdf"],
-  supportedFormats: [
-    // Microsoft Office
-    "doc", "docx", "dot", "dotx", "csv", "xls", "xlsx", "xlt", "xltx", "slk", "dif", "ppt", "pptx",
-    // OpenDocument
-    "odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg",
-    // Text formats
-    "txt", "text", "xml", "rtf", "html", "lwp", "md",
-    // Images
-    "bmp", "gif", "jpeg", "jpg", "png", "tif", "tiff", "pbm", "pgm", "ppm", "ras", "xbm", "xpm", "svg", "svm", "wmf", "webp",
-    // StarOffice
-    "sda", "sdc", "sdd", "sdw", "stc", "std", "sti", "stw", "sxd", "sxg", "sxi", "sxw",
-    // Email formats
-    "eml",
-    // Archive formats
-    "zip",
-    // Other
-    "dbf", "fods", "vsd", "vor", "vor3", "vor4", "uop", "pct", "ps", "pdf"
-  ]
-  },
-  swagger: {
-    id: "swagger",
-    icon: <ApiIcon />,
-    component: React.lazy(() => import("../tools/SwaggerUI")),
-    maxFiles: 0,
-    category: "utility",
-    description: "Open API documentation",
-    endpoints: ["swagger-ui"]
-  },
-  ocr: {
-    id: "ocr",
-    icon: <span className="material-symbols-rounded font-size-20">
-      quick_reference_all
-    </span>,
-    component: React.lazy(() => import("../tools/OCR")),
-    maxFiles: -1,
-    category: "utility",
-    description: "Extract text from images using OCR",
-    endpoints: ["ocr-pdf"]
-  },
-  sanitize: {
-    id: "sanitize",
-    icon: <CleaningServicesIcon />,
-    component: React.lazy(() => import("../tools/Sanitize")),
-    maxFiles: -1,
-    category: "security",
-    description: "Remove potentially harmful elements from PDF files",
-    endpoints: ["sanitize-pdf"]
-  },
-  addPassword: {
-    id: "addPassword",
-    icon: <LockIcon />,
-    component: React.lazy(() => import("../tools/AddPassword")),
-    maxFiles: -1,
-    category: "security",
-    description: "Add password protection and restrictions to PDF files",
-    endpoints: ["add-password"]
-  },
-  changePermissions: {
-    id: "changePermissions",
-    icon: <LockIcon />,
-    component: React.lazy(() => import("../tools/ChangePermissions")),
-    maxFiles: -1,
-    category: "security",
-    description: "Change document restrictions and permissions",
-    endpoints: ["add-password"]
-  },
-  watermark: {
-    id: "watermark",
-    icon: <BrandingWatermarkIcon />,
-    component: React.lazy(() => import("../tools/AddWatermark")),
-    maxFiles: -1,
-    category: "security",
-    description: "Add text or image watermarks to PDF files",
-    endpoints: ["add-watermark"]
-  },
-  removePassword: {
-    id: "removePassword",
-    icon: <LockOpenIcon />,
-    component: React.lazy(() => import("../tools/RemovePassword")),
-    maxFiles: -1,
-    category: "security",
-    description: "Remove password protection from PDF files",
-    endpoints: ["remove-password"]
-  },
-
-};
 
 interface ToolManagementResult {
-  selectedToolKey: string | null;
-  selectedTool: Tool | null;
+  selectedTool: ToolRegistryEntry | null;
   toolSelectedFileIds: string[];
-  toolRegistry: ToolRegistry;
-  selectTool: (toolKey: string) => void;
-  clearToolSelection: () => void;
+  toolRegistry: Record<string, ToolRegistryEntry>;
   setToolSelectedFileIds: (fileIds: string[]) => void;
+  getSelectedTool: (toolKey: string | null) => ToolRegistryEntry | null;
 }
 
 export const useToolManagement = (): ToolManagementResult => {
   const { t } = useTranslation();
 
-  const [selectedToolKey, setSelectedToolKey] = useState<string | null>(null);
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
 
-  const allEndpoints = Array.from(new Set(
-    Object.values(toolDefinitions).flatMap(tool => tool.endpoints || [])
-  ));
+  // Build endpoints list from registry entries with fallback to legacy mapping
+  const baseRegistry = useFlatToolRegistry();
+  const registryDerivedEndpoints = useMemo(() => {
+    const endpointsByTool: Record<string, string[]> = {};
+    Object.entries(baseRegistry).forEach(([key, entry]) => {
+      if (entry.endpoints && entry.endpoints.length > 0) {
+        endpointsByTool[key] = entry.endpoints;
+      }
+    });
+    return endpointsByTool;
+  }, [baseRegistry]);
+
+  const allEndpoints = useMemo(() => getAllEndpoints(baseRegistry), [baseRegistry]);
   const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
     if (endpointsLoading) return true;
-    const tool = toolDefinitions[toolKey];
-    if (!tool?.endpoints) return true;
-    return tool.endpoints.some(endpoint => endpointStatus[endpoint] === true);
-  }, [endpointsLoading, endpointStatus]);
+    const endpoints = baseRegistry[toolKey]?.endpoints || [];
+    return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
+  }, [endpointsLoading, endpointStatus, baseRegistry]);
 
-  const toolRegistry: ToolRegistry = useMemo(() => {
-    const availableTools: ToolRegistry = {};
-    Object.keys(toolDefinitions).forEach(toolKey => {
+  const toolRegistry: Record<string, ToolRegistryEntry> = useMemo(() => {
+    const availableToolRegistry: Record<string, ToolRegistryEntry> = {};
+    Object.keys(baseRegistry).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
-        const toolDef = toolDefinitions[toolKey];
-        availableTools[toolKey] = {
-          ...toolDef,
-          name: t(`${toolKey}.title`, toolKey.charAt(0).toUpperCase() + toolKey.slice(1)),
-          title: t(`${toolKey}.title`, toolDef.description || toolKey),
-          description: t(`${toolKey}.desc`, toolDef.description || `${toolKey} tool`)
+        const baseTool = baseRegistry[toolKey as keyof typeof baseRegistry];
+        availableToolRegistry[toolKey] = {
+          ...baseTool,
+          name: baseTool.name,
+          description: baseTool.description,
         };
       }
     });
-    return availableTools;
-  }, [t, isToolAvailable]);
+    return availableToolRegistry;
+  }, [isToolAvailable, t, baseRegistry]);
 
-  useEffect(() => {
-    if (!endpointsLoading && selectedToolKey && !toolRegistry[selectedToolKey]) {
-      const firstAvailableTool = Object.keys(toolRegistry)[0];
-      if (firstAvailableTool) {
-        setSelectedToolKey(firstAvailableTool);
-      } else {
-        setSelectedToolKey(null);
-      }
-    }
-  }, [endpointsLoading, selectedToolKey, toolRegistry]);
-
-  const selectTool = useCallback((toolKey: string) => {
-    setSelectedToolKey(toolKey);
-  }, []);
-
-  const clearToolSelection = useCallback(() => {
-    setSelectedToolKey(null);
-  }, []);
-
-  const selectedTool = selectedToolKey ? toolRegistry[selectedToolKey] : null;
+  const getSelectedTool = useCallback((toolKey: string | null): ToolRegistryEntry | null => {
+    return toolKey ? toolRegistry[toolKey] || null : null;
+  }, [toolRegistry]);
 
   return {
-    selectedToolKey,
-    selectedTool,
+    selectedTool: getSelectedTool(null), // This will be unused, kept for compatibility
     toolSelectedFileIds,
     toolRegistry,
-
-    selectTool,
-    clearToolSelection,
     setToolSelectedFileIds,
-
+    getSelectedTool,
   };
 };

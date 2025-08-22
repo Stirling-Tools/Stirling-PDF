@@ -2,9 +2,10 @@ import React from 'react';
 import { Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
-import { useWorkbenchState, useToolSelection } from '../../contexts/ToolWorkflowContext';
+import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
-import { useFileContext } from '../../contexts/FileContext';
+import { useFileState, useFileActions } from '../../contexts/FileContext';
+import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
 
 import TopControls from '../shared/TopControls';
 import FileEditor from '../fileEditor/FileEditor';
@@ -20,7 +21,12 @@ export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Use context-based hooks to eliminate all prop drilling
-  const { activeFiles, currentView, setCurrentView } = useFileContext();
+  const { state } = useFileState();
+  const { actions } = useFileActions();
+  const { currentMode: currentView } = useNavigationState();
+  const { actions: navActions } = useNavigationActions();
+  const setCurrentView = navActions.setMode;
+  const activeFiles = state.files.ids;
   const {
     previewFile,
     pageEditorFunctions,
@@ -28,9 +34,9 @@ export default function Workbench() {
     setPreviewFile,
     setPageEditorFunctions,
     setSidebarsVisible
-  } = useWorkbenchState();
+  } = useToolWorkflow();
 
-  const { selectedToolKey, selectedTool, handleToolSelect } = useToolSelection();
+  const { selectedToolKey, selectedTool, handleToolSelect } = useToolWorkflow();
   const { addToActiveFiles } = useFileHandler();
 
   const handlePreviewClose = () => {
@@ -47,12 +53,12 @@ export default function Workbench() {
       handleToolSelect('convert');
       sessionStorage.removeItem('previousMode');
     } else {
-      setCurrentView('fileEditor' as any);
+      setCurrentView('fileEditor');
     }
   };
 
   const renderMainContent = () => {
-    if (!activeFiles[0]) {
+    if (activeFiles.length === 0) {
       return (
         <LandingPage
         />
@@ -69,11 +75,11 @@ export default function Workbench() {
             supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
             {...(!selectedToolKey && {
               onOpenPageEditor: (file) => {
-                setCurrentView("pageEditor" as any);
+                setCurrentView("pageEditor");
               },
               onMergeFiles: (filesToMerge) => {
                 filesToMerge.forEach(addToActiveFiles);
-                setCurrentView("viewer" as any);
+                setCurrentView("viewer");
               }
             })}
           />
@@ -142,7 +148,7 @@ export default function Workbench() {
       {/* Top Controls */}
       <TopControls
         currentView={currentView}
-        setCurrentView={setCurrentView as any /* FIX ME */}
+        setCurrentView={setCurrentView}
         selectedToolKey={selectedToolKey}
       />
 

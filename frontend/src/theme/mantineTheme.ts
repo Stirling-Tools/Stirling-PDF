@@ -191,6 +191,19 @@ export const mantineTheme = createTheme({
         },
       },
     },
+    Tooltip: {
+      styles: {
+        tooltip: {
+          backgroundColor: 'var( --tooltip-title-bg)',
+          color: 'var( --tooltip-title-color)',
+          border: '1px solid var(--tooltip-borderp)',
+          fontSize: '0.75rem',
+          fontWeight: '500',
+          boxShadow: 'var(--shadow-md)',
+          borderRadius: 'var(--radius-sm)',
+        },
+      },
+    },
 
     Checkbox: {
       styles: {
@@ -270,7 +283,7 @@ export const mantineTheme = createTheme({
         },
         control: {
           color: 'var(--text-secondary)',
-          '[dataActive]': {
+          '[data-active]': {
             backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
             boxShadow: 'var(--shadow-sm)',

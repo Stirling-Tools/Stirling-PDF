@@ -2,13 +2,7 @@ import React from 'react';
 import { Stack, Select, Text, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LanguagePicker from './LanguagePicker';
-
-export interface OCRParameters {
-  languages: string[];
-  ocrType: string;
-  ocrRenderType: string;
-  additionalOptions: string[];
-}
+import { OCRParameters } from '../../../hooks/tools/ocr/useOCRParameters';
 
 interface OCRSettingsProps {
   parameters: OCRParameters;
@@ -25,7 +19,7 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
 
   return (
     <Stack gap="md">
-      
+
       <Select
         label={t('ocr.settings.ocrMode.label', 'OCR Mode')}
         value={parameters.ocrType}
@@ -51,4 +45,4 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
   );
 };
 
-export default OCRSettings; 
+export default OCRSettings;

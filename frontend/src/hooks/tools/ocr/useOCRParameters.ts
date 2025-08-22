@@ -1,14 +1,16 @@
-import { useState } from 'react';
-import { OCRParameters } from '../../../components/tools/ocr/OCRSettings';
+import { BaseParameters } from '../../../types/parameters';
+import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface OCRParametersHook {
-  parameters: OCRParameters;
-  updateParameter: (key: keyof OCRParameters, value: any) => void;
-  resetParameters: () => void;
-  validateParameters: () => boolean;
+export interface OCRParameters extends BaseParameters {
+  languages: string[];
+  ocrType: string;
+  ocrRenderType: string;
+  additionalOptions: string[];
 }
 
-const defaultParameters: OCRParameters = {
+export type OCRParametersHook = BaseParametersHook<OCRParameters>;
+
+export const defaultParameters: OCRParameters = {
   languages: [],
   ocrType: 'skip-text',
   ocrRenderType: 'hocr',
@@ -16,28 +18,12 @@ const defaultParameters: OCRParameters = {
 };
 
 export const useOCRParameters = (): OCRParametersHook => {
-  const [parameters, setParameters] = useState<OCRParameters>(defaultParameters);
-
-  const updateParameter = (key: keyof OCRParameters, value: any) => {
-    setParameters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  const resetParameters = () => {
-    setParameters(defaultParameters);
-  };
-
-  const validateParameters = () => {
-    // At minimum, we need at least one language selected
-    return parameters.languages.length > 0;
-  };
-
-  return {
-    parameters,
-    updateParameter,
-    resetParameters,
-    validateParameters,
-  };
-}; 
+  return useBaseParameters({
+    defaultParameters,
+    endpointName: 'ocr-pdf',
+    validateFn: (params) => {
+      // At minimum, we need at least one language selected
+      return params.languages.length > 0;
+    },
+  });
+};

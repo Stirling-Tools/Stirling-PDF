@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { AddWatermarkParameters } from './useAddWatermarkParameters';
+import { AddWatermarkParameters, defaultParameters } from './useAddWatermarkParameters';
 
-const buildFormData = (parameters: AddWatermarkParameters, file: File): FormData => {
+// Static function that can be used by both the hook and automation executor
+export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
@@ -32,15 +33,22 @@ const buildFormData = (parameters: AddWatermarkParameters, file: File): FormData
   return formData;
 };
 
+// Static configuration object
+export const addWatermarkOperationConfig = {
+  operationType: 'watermark',
+  endpoint: '/api/v1/security/add-watermark',
+  buildFormData: buildAddWatermarkFormData,
+  filePrefix: 'watermarked_', // Will be overridden in hook with translation
+  multiFileEndpoint: false,
+  defaultParameters,
+} as const;
+
 export const useAddWatermarkOperation = () => {
   const { t } = useTranslation();
 
   return useToolOperation<AddWatermarkParameters>({
-    operationType: 'watermark',
-    endpoint: '/api/v1/security/add-watermark',
-    buildFormData,
+    ...addWatermarkOperationConfig,
     filePrefix: t('watermark.filenamePrefix', 'watermarked') + '_',
-    multiFileEndpoint: false, // Individual API calls per file
     getErrorMessage: createStandardErrorHandler(t('watermark.error.failed', 'An error occurred while adding watermark to the PDF.'))
   });
 };

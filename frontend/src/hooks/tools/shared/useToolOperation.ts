@@ -61,6 +61,9 @@ export interface ToolOperationConfig<TParams = void> {
 
   /** Extract user-friendly error messages from API errors */
   getErrorMessage?: (error: any) => string;
+
+  /** Default parameter values for automation */
+  defaultParameters?: TParams;
 }
 
 /**
@@ -104,7 +107,7 @@ export const useToolOperation = <TParams = void>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles } = useFileContext();
+  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, findFileId } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -198,8 +201,9 @@ export const useToolOperation = <TParams = void>(
         actions.setThumbnails(thumbnails);
         actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
 
-        // Consume input files and add output files (will replace unpinned inputs)
-        await consumeFiles(validFiles, processedFiles);
+        // Replace input files with processed files (consumeFiles handles pinning)
+        const inputFileIds = validFiles.map(file => findFileId(file)).filter(Boolean) as string[];
+        await consumeFiles(inputFileIds, processedFiles);
 
         markOperationApplied(fileId, operationId);
       }
@@ -213,7 +217,7 @@ export const useToolOperation = <TParams = void>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
+  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, findFileId, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();

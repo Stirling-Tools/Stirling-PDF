@@ -48,7 +48,11 @@ export class RotatePagesCommand extends PageCommand {
       return page;
     });
     
-    this.setPdfDocument({ ...this.pdfDocument, pages: updatedPages });
+    this.setPdfDocument({ 
+      ...this.pdfDocument, 
+      pages: updatedPages,
+      totalPages: updatedPages.length 
+    });
   }
 
   get description(): string {
@@ -148,7 +152,11 @@ export class MovePagesCommand extends PageCommand {
       pageNumber: index + 1 
     }));
     
-    this.setPdfDocument({ ...this.pdfDocument, pages: newPages });
+    this.setPdfDocument({ 
+      ...this.pdfDocument, 
+      pages: newPages,
+      totalPages: newPages.length 
+    });
   }
 
   get description(): string {
@@ -185,7 +193,11 @@ export class ReorderPageCommand extends PageCommand {
       pageNumber: index + 1 
     }));
     
-    this.setPdfDocument({ ...this.pdfDocument, pages: updatedPages });
+    this.setPdfDocument({ 
+      ...this.pdfDocument, 
+      pages: updatedPages,
+      totalPages: updatedPages.length 
+    });
   }
 
   get description(): string {
@@ -224,7 +236,11 @@ export class ToggleSplitCommand extends PageCommand {
       return page;
     });
     
-    this.setPdfDocument({ ...this.pdfDocument, pages: updatedPages });
+    this.setPdfDocument({ 
+      ...this.pdfDocument, 
+      pages: updatedPages,
+      totalPages: updatedPages.length 
+    });
   }
 
   undo(): void {
@@ -236,7 +252,11 @@ export class ToggleSplitCommand extends PageCommand {
       return page;
     });
     
-    this.setPdfDocument({ ...this.pdfDocument, pages: updatedPages });
+    this.setPdfDocument({ 
+      ...this.pdfDocument, 
+      pages: updatedPages,
+      totalPages: updatedPages.length 
+    });
   }
 
   get description(): string {

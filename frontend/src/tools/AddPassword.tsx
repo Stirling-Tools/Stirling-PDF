@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
+import { useFileSelection } from "../contexts/FileContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 
-import { useAddPasswordParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
+import { useAddPasswordParameters, defaultParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
 import { useAddPasswordOperation } from "../hooks/tools/addPassword/useAddPasswordOperation";
 import { useAddPasswordTips } from "../components/tooltips/useAddPasswordTips";
 import { useAddPasswordPermissionsTips } from "../components/tooltips/useAddPasswordPermissionsTips";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
+  const { actions } = useNavigationActions();
+  const { selectedFiles } = useFileSelection();
 
   const [collapsedPermissions, setCollapsedPermissions] = useState(true);
 
@@ -29,6 +29,8 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(addPasswordParams.getEndpointName());
+
+
 
   useEffect(() => {
     addPasswordOperation.resetResults();
@@ -51,13 +53,11 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "addPassword");
-    setCurrentMode("viewer");
   };
 
   const handleSettingsReset = () => {
     addPasswordOperation.resetResults();
     onPreviewFile?.(null);
-    setCurrentMode("addPassword");
   };
 
   const hasFiles = selectedFiles.length > 0;
@@ -68,7 +68,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   return createToolFlow({
     files: {
       selectedFiles,
-      isCollapsed: hasFiles || hasResults,
+      isCollapsed: hasResults,
     },
     steps: [
       {
@@ -114,4 +114,4 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 };
 
-export default AddPassword;
+export default AddPassword as ToolComponent;

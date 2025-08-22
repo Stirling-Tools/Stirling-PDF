@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import { generateThumbnailForFile } from '../../../utils/thumbnailUtils';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { generateThumbnailForFile, generateThumbnailWithMetadata, ThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
 import { zipFileService } from '../../../services/zipFileService';
 
 
@@ -11,20 +11,28 @@ export const useToolResources = () => {
   }, []);
 
   const cleanupBlobUrls = useCallback(() => {
-    blobUrls.forEach(url => {
-      try {
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.warn('Failed to revoke blob URL:', error);
-      }
+    setBlobUrls(prev => {
+      prev.forEach(url => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.warn('Failed to revoke blob URL:', error);
+        }
+      });
+      return [];
     });
-    setBlobUrls([]);
-  }, [blobUrls]);
+  }, []); // No dependencies - use functional update pattern
 
-  // Cleanup on unmount
+  // Cleanup on unmount - use ref to avoid dependency on blobUrls state
+  const blobUrlsRef = useRef<string[]>([]);
+  
+  useEffect(() => {
+    blobUrlsRef.current = blobUrls;
+  }, [blobUrls]);
+  
   useEffect(() => {
     return () => {
-      blobUrls.forEach(url => {
+      blobUrlsRef.current.forEach(url => {
         try {
           URL.revokeObjectURL(url);
         } catch (error) {
@@ -32,24 +40,45 @@ export const useToolResources = () => {
         }
       });
     };
-  }, [blobUrls]);
+  }, []); // No dependencies - use ref to access current URLs
 
   const generateThumbnails = useCallback(async (files: File[]): Promise<string[]> => {
+    console.log(`🖼️ useToolResources.generateThumbnails: Starting for ${files.length} files`);
     const thumbnails: string[] = [];
 
     for (const file of files) {
       try {
+        console.log(`🖼️ Generating thumbnail for: ${file.name} (${file.type}, ${file.size} bytes)`);
         const thumbnail = await generateThumbnailForFile(file);
-        if (thumbnail) {
-          thumbnails.push(thumbnail);
-        }
+        console.log(`🖼️ Generated thumbnail for ${file.name}: SUCCESS`);
+        thumbnails.push(thumbnail);
       } catch (error) {
-        console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
+        console.warn(`🖼️ Failed to generate thumbnail for ${file.name}:`, error);
         thumbnails.push('');
       }
     }
 
     return thumbnails;
+  }, []);
+
+  const generateThumbnailsWithMetadata = useCallback(async (files: File[]): Promise<ThumbnailWithMetadata[]> => {
+    console.log(`🖼️ useToolResources.generateThumbnailsWithMetadata: Starting for ${files.length} files`);
+    const results: ThumbnailWithMetadata[] = [];
+
+    for (const file of files) {
+      try {
+        console.log(`🖼️ Generating thumbnail with metadata for: ${file.name} (${file.type}, ${file.size} bytes)`);
+        const result = await generateThumbnailWithMetadata(file);
+        console.log(`🖼️ Generated thumbnail with metadata for ${file.name}: SUCCESS, ${result.pageCount} pages`);
+        results.push(result);
+      } catch (error) {
+        console.warn(`🖼️ Failed to generate thumbnail with metadata for ${file.name}:`, error);
+        results.push({ thumbnail: '', pageCount: 1 });
+      }
+    }
+
+    console.log(`🖼️ useToolResources.generateThumbnailsWithMetadata: Complete. Generated ${results.length}/${files.length} thumbnails with metadata`);
+    return results;
   }, []);
 
   const extractZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
@@ -108,6 +137,7 @@ export const useToolResources = () => {
 
   return {
     generateThumbnails,
+    generateThumbnailsWithMetadata,
     createDownloadInfo,
     extractZipFiles,
     extractAllZipFiles,

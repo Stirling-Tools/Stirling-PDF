@@ -5,9 +5,10 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
-import { useToolUrlRouting } from '../hooks/useToolUrlRouting';
-import { Tool } from '../types/tool';
 import { PageEditorFunctions } from '../types/pageEditor';
+import { ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { useToolWorkflowUrlSync } from '../hooks/useUrlSync';
+import { useNavigationActions, useNavigationState } from './NavigationContext';
 
 // State interface
 interface ToolWorkflowState {
@@ -70,7 +71,7 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: string | null;
-  selectedTool: Tool | null;
+  selectedTool: ToolRegistryEntry | null;
   toolRegistry: any; // From useToolManagement
 
   // UI Actions
@@ -91,7 +92,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: [string, any][]; // Filtered by search
+  filteredTools: [string, ToolRegistryEntry][]; // Filtered by search
   isPanelVisible: boolean;
 }
 
@@ -100,21 +101,23 @@ const ToolWorkflowContext = createContext<ToolWorkflowContextValue | undefined>(
 // Provider component
 interface ToolWorkflowProviderProps {
   children: React.ReactNode;
-  /** Handler for view changes (passed from parent) */
-  onViewChange?: (view: string) => void;
 }
 
-export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowProviderProps) {
+export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, initialState);
 
+  // Navigation actions and state are available since we're inside NavigationProvider
+  const { actions } = useNavigationActions();
+  const navigationState = useNavigationState();
+  
   // Tool management hook
   const {
-    selectedToolKey,
-    selectedTool,
     toolRegistry,
-    selectTool,
-    clearToolSelection,
+    getSelectedTool,
   } = useToolManagement();
+  
+  // Get selected tool from navigation context
+  const selectedTool = getSelectedTool(navigationState.selectedToolKey);
 
   // UI Action creators
   const setSidebarsVisible = useCallback((visible: boolean) => {
@@ -143,35 +146,34 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: string) => {
-    selectTool(toolId);
-    onViewChange?.('fileEditor');
-    setLeftPanelView('toolContent');
-    setReaderMode(false);
-  }, [selectTool, onViewChange, setLeftPanelView, setReaderMode]);
+    actions.handleToolSelect(toolId);
+    
+    // Clear search query when selecting a tool
+    setSearchQuery('');
+    
+    // Handle view switching logic
+    if (toolId === 'allTools' || toolId === 'read' || toolId === 'view-pdf') {
+      setLeftPanelView('toolPicker');
+      if (toolId === 'read' || toolId === 'view-pdf') {
+        setReaderMode(true);
+      } else {
+        setReaderMode(false);
+      }
+    } else {
+      setLeftPanelView('toolContent');
+      setReaderMode(false); // Disable read mode when selecting tools
+    }
+  }, [actions, setLeftPanelView, setReaderMode, setSearchQuery]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
     setReaderMode(false);
-    clearToolSelection();
-  }, [setLeftPanelView, setReaderMode, clearToolSelection]);
+    actions.clearToolSelection();
+  }, [setLeftPanelView, setReaderMode, actions]);
 
   const handleReaderToggle = useCallback(() => {
     setReaderMode(true);
   }, [setReaderMode]);
-
-  // URL routing functionality
-  const { getToolUrlSlug, getToolKeyFromSlug } = useToolUrlRouting({
-    selectedToolKey,
-    toolRegistry,
-    selectTool,
-    clearToolSelection,
-    // During initial load, we want the full UI side-effects (like before):
-    onInitSelect: handleToolSelect,
-    // For back/forward nav, keep it lightweight like before (selection only):
-    onPopStateSelect: selectTool,
-    // If your app serves under a subpath, provide basePath here (e.g., '/app')
-    // basePath: ''
-  });
 
   // Filter tools based on search query
   const filteredTools = useMemo(() => {
@@ -186,11 +188,14 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     [state.sidebarsVisible, state.readerMode]
   );
 
-  // Simple context value with basic memoization
+  // Enable URL synchronization for tool selection
+  useToolWorkflowUrlSync(navigationState.selectedToolKey, actions.selectTool, actions.clearToolSelection, true);
+
+  // Properly memoized context value
   const contextValue = useMemo((): ToolWorkflowContextValue => ({
     // State
     ...state,
-    selectedToolKey,
+    selectedToolKey: navigationState.selectedToolKey,
     selectedTool,
     toolRegistry,
 
@@ -201,8 +206,8 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
-    selectTool,
-    clearToolSelection,
+    selectTool: actions.selectTool,
+    clearToolSelection: actions.clearToolSelection,
 
     // Workflow Actions
     handleToolSelect,
@@ -212,7 +217,25 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
     // Computed
     filteredTools,
     isPanelVisible,
-  }), [state, selectedToolKey, selectedTool, toolRegistry, filteredTools, isPanelVisible]);
+  }), [
+    state,
+    navigationState.selectedToolKey,
+    selectedTool,
+    toolRegistry,
+    setSidebarsVisible,
+    setLeftPanelView,
+    setReaderMode,
+    setPreviewFile,
+    setPageEditorFunctions,
+    setSearchQuery,
+    actions.selectTool,
+    actions.clearToolSelection,
+    handleToolSelect,
+    handleBackToTools,
+    handleReaderToggle,
+    filteredTools,
+    isPanelVisible,
+  ]);
 
   return (
     <ToolWorkflowContext.Provider value={contextValue}>
@@ -225,12 +248,39 @@ export function ToolWorkflowProvider({ children, onViewChange }: ToolWorkflowPro
 export function useToolWorkflow(): ToolWorkflowContextValue {
   const context = useContext(ToolWorkflowContext);
   if (!context) {
+    // During development hot reload, temporarily return a safe fallback
+    if (false && process.env.NODE_ENV === 'development') {
+      console.warn('ToolWorkflowContext temporarily unavailable during hot reload, using fallback');
+
+      // Return minimal safe fallback to prevent crashes
+      return {
+        sidebarsVisible: true,
+        leftPanelView: 'toolPicker',
+        readerMode: false,
+        previewFile: null,
+        pageEditorFunctions: null,
+        searchQuery: '',
+        selectedToolKey: null,
+        selectedTool: null,
+        toolRegistry: {},
+        filteredTools: [],
+        isPanelVisible: true,
+        setSidebarsVisible: () => {},
+        setLeftPanelView: () => {},
+        setReaderMode: () => {},
+        setPreviewFile: () => {},
+        setPageEditorFunctions: () => {},
+        setSearchQuery: () => {},
+        selectTool: () => {},
+        clearToolSelection: () => {},
+        handleToolSelect: () => {},
+        handleBackToTools: () => {},
+        handleReaderToggle: () => {}
+      } as ToolWorkflowContextValue;
+    }
+
+    console.error('ToolWorkflowContext not found. Current stack:', new Error().stack);
     throw new Error('useToolWorkflow must be used within a ToolWorkflowProvider');
   }
   return context;
 }
-
-// Convenience exports for specific use cases (optional - components can use useToolWorkflow directly)
-export const useToolSelection = useToolWorkflow;
-export const useToolPanelState = useToolWorkflow;
-export const useWorkbenchState = useToolWorkflow;
