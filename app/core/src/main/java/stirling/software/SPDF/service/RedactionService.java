@@ -74,6 +74,38 @@ public class RedactionService {
     private Map<Integer, List<AggressiveSegMatch>> aggressiveSegMatches = null;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
+    private static PDFont getFontSafely(PDResources resources, COSName fontName) {
+        if (resources == null || fontName == null) {
+            return null;
+        }
+
+        try {
+            PDFont font = resources.getFont(fontName);
+            if (font == null) {
+                return null;
+            }
+
+            try {
+                String fontNameCheck = font.getName();
+                if (fontNameCheck == null || fontNameCheck.trim().isEmpty()) {
+                    log.debug("Font {} has null or empty name, skipping", fontName.getName());
+                    return null;
+                }
+            } catch (Exception e) {
+                log.debug(
+                        "Error accessing font name for {}, skipping: {}",
+                        fontName.getName(),
+                        e.getMessage());
+                return null;
+            }
+
+            return font;
+        } catch (Exception e) {
+            log.debug("Error retrieving font {}: {}", fontName.getName(), e.getMessage());
+            return null;
+        }
+    }
+
     private static void redactAreas(
             List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
             throws IOException {
@@ -360,8 +392,6 @@ public class RedactionService {
         } catch (Exception ignored) {
         }
     }
-
-    // Local decoding helpers removed in favor of TextDecodingHelper
 
     private static String normalizeForFuzzy(String s) {
         if (s == null) {
@@ -904,7 +934,6 @@ public class RedactionService {
                                     document, page, allSearchTerms, useRegex, wholeWordSearchBool);
                     writeFilteredContentStream(document, page, filtered);
                 }
-                // Stop early if nothing remains
                 if (!documentStillContainsTargets(
                         document, allSearchTerms, useRegex, wholeWordSearchBool)) {
                     break;
@@ -1006,11 +1035,9 @@ public class RedactionService {
                     } catch (Exception ignored) {
                     }
                 }
-                // If no residuals detected in this sweep, stop early
                 if (!anyResidual) {
                     break;
                 }
-                // As a safety, if nothing left in the doc, stop
                 if (!documentStillContainsTargets(
                         document, allSearchTerms, useRegex, wholeWordSearchBool)) {
                     break;
@@ -1046,10 +1073,11 @@ public class RedactionService {
                         COSName fontName = (COSName) tokens.get(i - 2);
                         COSBase fontSizeBase = (COSBase) tokens.get(i - 1);
                         if (fontSizeBase instanceof COSNumber cosNumber) {
-                            gs.setFont(resources.getFont(fontName));
+                            PDFont safeFont = getFontSafely(resources, fontName);
+                            gs.setFont(safeFont);
                             gs.setFontSize(cosNumber.floatValue());
                         }
-                    } catch (ClassCastException | IOException ignored) {
+                    } catch (ClassCastException ignored) {
                     }
                 }
                 if (isTextShowingOperator(opName) && i > 0) {
@@ -1092,7 +1120,8 @@ public class RedactionService {
                         COSName fontName = (COSName) tokens.get(i - 2);
                         COSBase fontSizeBase = (COSBase) tokens.get(i - 1);
                         if (fontSizeBase instanceof COSNumber cosNumber) {
-                            gs.setFont(resources.getFont(fontName));
+                            PDFont safeFont = getFontSafely(resources, fontName);
+                            gs.setFont(safeFont);
                             gs.setFontSize(cosNumber.floatValue());
                         }
                     } catch (Exception ignored) {
@@ -2018,16 +2047,16 @@ public class RedactionService {
 
     private float applySafetyBounds(
             WidthCalculationResult result, TextSegment segment, String text) {
-        if (result.getProcessedMatches() == 0) return 0f;
+        if (result.processedMatches() == 0) return 0f;
 
-        float adjustment = result.getAdjustment();
+        float adjustment = result.adjustment();
         float maxReasonable = calculateMaxReasonableAdjustment(segment, text);
 
-        if (!result.getWarnings().isEmpty()) {
+        if (!result.warnings().isEmpty()) {
             log.debug(
                     "Width warnings for segment {}: {}",
                     segment.getStartPos(),
-                    result.getWarnings());
+                    result.warnings());
         }
 
         return Math.abs(adjustment) > maxReasonable ? 0f : adjustment;
@@ -2056,7 +2085,6 @@ public class RedactionService {
             String newText,
             float adjustment,
             List<MatchRange> matches) {
-        // Defensive null handling
         if (tokens == null || segment == null) {
             log.warn(
                     "Invalid input to modifyTokenForRedaction: tokens={}, segment={}",
@@ -2065,7 +2093,6 @@ public class RedactionService {
             return;
         }
 
-        // Handle null newText by providing a default
         if (newText == null) {
             log.warn("newText is null, providing default empty string");
             log.warn(
@@ -2171,7 +2198,6 @@ public class RedactionService {
             return originalArray != null ? originalArray : new COSArray();
         }
 
-        // Validate critical inputs
         if (matches.isEmpty()) {
             return originalArray;
         }
@@ -2541,7 +2567,6 @@ public class RedactionService {
         StringBuilder newText = new StringBuilder(originalText);
         boolean modified = false;
 
-        // Sort matches by start position to process them in order
         List<MatchRange> sortedMatches =
                 matches.stream().sorted(Comparator.comparingInt(MatchRange::getStartPos)).toList();
 
@@ -2652,47 +2677,6 @@ public class RedactionService {
         }
     }
 
-    // Helper classes
-    private static class WidthMeasurement {
-        private final float width;
-        private final boolean valid;
-
-        public WidthMeasurement(float width, boolean valid) {
-            this.width = width;
-            this.valid = valid;
-        }
-
-        public static WidthMeasurement invalid() {
-            return new WidthMeasurement(0f, false);
-        }
-
-        public float getWidth() {
-            return width;
-        }
-
-        public boolean isValid() {
-            return valid;
-        }
-    }
-
-    private int wipeAllTextInResources(PDDocument document, PDResources resources) {
-        int totalMods = 0; // aggregated but currently not returned to caller
-        try {
-            totalMods += wipeAllSemanticTextInProperties(resources);
-            for (COSName xobjName : resources.getXObjectNames()) {
-                try {
-                    PDXObject xobj = resources.getXObject(xobjName);
-                    if (xobj instanceof PDFormXObject form) {
-                        totalMods += wipeAllTextInFormXObject(document, form);
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        return totalMods;
-    }
-
     private List<TextSegment> extractTextSegmentsFromXObject(
             PDResources resources, List<Object> tokens) {
         List<TextSegment> segments = new ArrayList<>();
@@ -2707,10 +2691,11 @@ public class RedactionService {
                         COSName fontName = (COSName) tokens.get(i - 2);
                         COSBase fontSizeBase = (COSBase) tokens.get(i - 1);
                         if (fontSizeBase instanceof COSNumber cosNumber) {
-                            gs.setFont(resources.getFont(fontName));
+                            PDFont safeFont = getFontSafely(resources, fontName);
+                            gs.setFont(safeFont);
                             gs.setFontSize(cosNumber.floatValue());
                         }
-                    } catch (ClassCastException | IOException ignored) {
+                    } catch (ClassCastException ignored) {
                     }
                 }
                 if (isTextShowingOperator(opName) && i > 0) {
@@ -2731,6 +2716,41 @@ public class RedactionService {
             }
         }
         return segments;
+    }
+
+    private int wipeAllTextInResources(PDDocument document, PDResources resources) {
+        int totalMods = 0; // aggregated but currently not returned to caller
+        try {
+            totalMods += wipeAllSemanticTextInProperties(resources);
+            for (COSName xobjName : resources.getXObjectNames()) {
+                try {
+                    PDXObject xobj = resources.getXObject(xobjName);
+                    if (xobj instanceof PDFormXObject form) {
+                        totalMods += wipeAllTextInFormXObject(document, form);
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return totalMods;
+    }
+
+    // Helper classes
+    @Getter
+    private static class WidthMeasurement {
+        private final float width;
+        private final boolean valid;
+
+        public WidthMeasurement(float width, boolean valid) {
+            this.width = width;
+            this.valid = valid;
+        }
+
+        public static WidthMeasurement invalid() {
+            return new WidthMeasurement(0f, false);
+        }
+
     }
 
     private int wipeAllTextInFormXObject(PDDocument document, PDFormXObject formXObject)
@@ -2790,22 +2810,20 @@ public class RedactionService {
         }
     }
 
-    private static class WidthCalculationResult {
-        @Getter private final float adjustment;
-        @Getter private final int processedMatches;
-        private final List<String> warnings;
-
-        public WidthCalculationResult(
+    private record WidthCalculationResult(float adjustment, int processedMatches,
+                                          List<String> warnings) {
+            private WidthCalculationResult(
                 float adjustment, int processedMatches, List<String> warnings) {
-            this.adjustment = adjustment;
-            this.processedMatches = processedMatches;
-            this.warnings = new ArrayList<>(warnings);
-        }
+                this.adjustment = adjustment;
+                this.processedMatches = processedMatches;
+                this.warnings = new ArrayList<>(warnings);
+            }
 
-        public List<String> getWarnings() {
-            return new ArrayList<>(warnings);
+            @Override
+            public List<String> warnings() {
+                return new ArrayList<>(warnings);
+            }
         }
-    }
 
     private void processFormXObject(
             PDDocument document,
