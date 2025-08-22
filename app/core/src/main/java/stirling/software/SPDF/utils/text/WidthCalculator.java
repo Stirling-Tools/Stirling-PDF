@@ -1,5 +1,6 @@
 package stirling.software.SPDF.utils.text;
 
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +97,6 @@ public class WidthCalculator {
             for (int codePoint : codePoints) {
                 String character = new String(Character.toChars(codePoint));
                 Float charWidth = calculateSingleCharacterWidth(font, character, fontSize);
-                if (charWidth == null) return null;
 
                 totalWidth += charWidth;
                 if (previousCodePoint != -1) {
@@ -133,7 +133,7 @@ public class WidthCalculator {
 
             if (encoded == null && font instanceof PDType0Font) {
                 try {
-                    encoded = character.getBytes("UTF-8");
+                    encoded = character.getBytes(StandardCharsets.UTF_8);
                 } catch (Exception e) {
                     log.debug("UTF-8 encoding failed for '{}': {}", character, e.getMessage());
                 }
@@ -271,7 +271,6 @@ public class WidthCalculator {
             }
         }
 
-        // Try multi-byte interpretation for Unicode fonts
         if (encoded.length >= 2 && font instanceof PDType0Font) {
             try {
                 int glyphCode = ((encoded[0] & 0xFF) << 8) | (encoded[1] & 0xFF);
@@ -348,7 +347,6 @@ public class WidthCalculator {
             return enhancedAverage;
 
         } catch (Exception e) {
-            // Ultimate fallback
             float conservativeWidth = text.length() * CONSERVATIVE_CHAR_WIDTH_RATIO * fontSize;
             log.debug("Conservative fallback width: {}", conservativeWidth);
             return conservativeWidth;
@@ -394,7 +392,6 @@ public class WidthCalculator {
             i += Character.charCount(codePoint);
         }
 
-        // Log composition analysis for debugging
         log.debug(
                 "Text composition analysis - Spaces: {}, Upper: {}, Lower: {}, Digits: {}, Punct: {}",
                 spaceCount,
@@ -410,7 +407,6 @@ public class WidthCalculator {
         try {
             float baseAverage = font.getAverageFontWidth();
 
-            // Try to get more specific metrics
             float capHeight = 0;
             float xHeight = 0;
 
@@ -419,7 +415,6 @@ public class WidthCalculator {
                 xHeight = font.getFontDescriptor().getXHeight();
             }
 
-            // Use metrics to adjust the average width estimation
             float adjustmentFactor = 1.0f;
             if (capHeight > 0 && xHeight > 0) {
                 adjustmentFactor = Math.max(0.8f, Math.min(1.2f, xHeight / capHeight));
@@ -439,7 +434,6 @@ public class WidthCalculator {
             return false;
         }
 
-        // Check cache first
         String cacheKey = createReliabilityCacheKey(font);
         Boolean cachedResult = reliabilityCache.get(cacheKey);
         if (cachedResult != null) {
@@ -452,26 +446,22 @@ public class WidthCalculator {
 
         boolean result = performReliabilityCheck(font);
 
-        // Cache the result
         reliabilityCache.put(cacheKey, result);
         return result;
     }
 
     private boolean performReliabilityCheck(PDFont font) {
         try {
-            // Check if font is damaged
             if (font.isDamaged()) {
                 log.debug("Font {} is damaged", font.getName());
                 return false;
             }
 
-            // Check basic width calculation capability
             if (!TextEncodingHelper.canCalculateBasicWidths(font)) {
                 log.debug("Font {} cannot perform basic width calculations", font.getName());
                 return false;
             }
 
-            // Test with a simple character
             try {
                 font.getStringWidth("A");
                 return true;
@@ -494,96 +484,5 @@ public class WidthCalculator {
             log.debug("Reliability check failed for font {}: {}", font.getName(), e.getMessage());
             return false;
         }
-    }
-
-    public float calculateCharacterWidth(PDFont font, String character, float fontSize) {
-        if (font == null || character == null || character.isEmpty() || fontSize <= 0) return 0;
-
-        String cacheKey = createCacheKey(font, character, fontSize);
-        Float cachedWidth = widthCache.get(cacheKey);
-        if (cachedWidth != null) return cachedWidth;
-
-        Float width = calculateSingleCharacterWidth(font, character, fontSize);
-        if (width == null) width = calculateAverageCharacterWidth(font, fontSize);
-
-        widthCache.put(cacheKey, width);
-        return width;
-    }
-
-    public String createWidthMatchingPlaceholder(
-            String originalText,
-            float targetWidth,
-            PDFont font,
-            float fontSize,
-            String placeholderChar) {
-        if (originalText == null || originalText.isEmpty() || targetWidth <= 0) return "";
-
-        if (placeholderChar == null || placeholderChar.isEmpty()) placeholderChar = " ";
-
-        try {
-            float placeholderCharWidth = calculateCharacterWidth(font, placeholderChar, fontSize);
-            if (placeholderCharWidth <= 0) {
-                return " ".repeat(Math.max(1, originalText.length()));
-            }
-
-            int placeholderCount = Math.max(1, Math.round(targetWidth / placeholderCharWidth));
-            int originalLength = originalText.length();
-            int maxReasonableLength = Math.max(originalLength * 3, Math.max(placeholderCount, 10));
-            placeholderCount = Math.min(placeholderCount, maxReasonableLength);
-            placeholderCount = Math.max(1, placeholderCount);
-
-            return placeholderChar.repeat(placeholderCount);
-
-        } catch (Exception e) {
-            return " ".repeat(Math.max(1, originalText.length()));
-        }
-    }
-
-    public boolean canCalculateTextWidth(PDFont font, String text) {
-        if (font == null || text == null || text.isEmpty()) return false;
-        if (!isWidthCalculationReliable(font)) return false;
-
-        List<Integer> codePoints = getCodePoints(text);
-        int testSampleSize = Math.min(5, codePoints.size());
-
-        for (int i = 0; i < testSampleSize; i++) {
-            int codePoint = codePoints.get(i);
-            String character = new String(Character.toChars(codePoint));
-
-            try {
-                if (!TextEncodingHelper.canEncodeCharacters(font, character)) {
-                    log.debug(
-                            "Cannot encode character U+{} in text '{}'",
-                            Integer.toHexString(codePoint),
-                            text);
-                    return false;
-                }
-
-                float width = calculateCharacterWidth(font, character, 12.0f);
-                if (width <= 0) {
-                    log.debug(
-                            "Character U+{} has invalid width: {}",
-                            Integer.toHexString(codePoint),
-                            width);
-                    return false;
-                }
-            } catch (Exception e) {
-                log.debug(
-                        "Error testing character U+{}: {}",
-                        Integer.toHexString(codePoint),
-                        e.getMessage());
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public void clearWidthCache() {
-        widthCache.clear();
-    }
-
-    public void clearReliabilityCache() {
-        reliabilityCache.clear();
     }
 }
