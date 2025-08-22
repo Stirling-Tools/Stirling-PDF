@@ -365,8 +365,15 @@ const PageEditor = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [csvInput, setCsvInput] = useState('');
   
+  // Position-based split tracking (replaces page-based splitAfter)
+  const [splitPositions, setSplitPositions] = useState<Set<number>>(new Set());
+  
+  // Grid container ref for positioning split indicators
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+  
   // Export state
   const [exportLoading, setExportLoading] = useState(false);
+
 
   // DOM-first command handlers
   const handleRotatePages = useCallback((pageIds: string[], rotation: number) => {
@@ -445,30 +452,22 @@ const PageEditor = ({
   }
 
   class ToggleSplitCommand {
-    constructor(public pageIds: string[]) {}
+    constructor(public position: number) {}
     execute() {
       if (!displayDocument) return;
       
-      console.log('Toggle split:', this.pageIds);
+      console.log('Toggle split at position:', this.position);
       
-      // Create new pages array with toggled split markers
-      const newPages = displayDocument.pages.map(page => {
-        if (this.pageIds.includes(page.id)) {
-          return {
-            ...page,
-            splitAfter: !page.splitAfter
-          };
+      // Toggle the split position in the splitPositions set
+      setSplitPositions(prev => {
+        const newPositions = new Set(prev);
+        if (newPositions.has(this.position)) {
+          newPositions.delete(this.position);
+        } else {
+          newPositions.add(this.position);
         }
-        return page;
+        return newPositions;
       });
-      
-      // Update the document with new split markers
-      const updatedDocument: PDFDocument = {
-        ...displayDocument,
-        pages: newPages,
-      };
-      
-      setEditedDocument(updatedDocument);
     }
   }
 
@@ -481,6 +480,7 @@ const PageEditor = ({
 
   // Interface functions for parent component
   const displayDocument = editedDocument || mergedPdfDocument;
+  
   
   const handleUndo = useCallback(() => {
     undoManagerRef.current.undo();
@@ -510,18 +510,17 @@ const PageEditor = ({
   const handleSplit = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
     
-    console.log('Toggle split markers at selected pages:', selectedPageNumbers);
+    console.log('Toggle split markers at selected page positions:', selectedPageNumbers);
     
-    // Get page IDs for selected pages
-    const selectedPageIds = selectedPageNumbers.map(pageNum => {
-      const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
-      return page?.id || '';
-    }).filter(id => id);
-    
-    if (selectedPageIds.length > 0) {
-      const command = new ToggleSplitCommand(selectedPageIds);
-      command.execute();
-    }
+    // Convert page numbers to positions (0-based indices)
+    selectedPageNumbers.forEach(pageNum => {
+      const pageIndex = displayDocument.pages.findIndex(p => p.pageNumber === pageNum);
+      if (pageIndex !== -1 && pageIndex < displayDocument.pages.length - 1) {
+        // Only allow splits before the last page
+        const command = new ToggleSplitCommand(pageIndex);
+        command.execute();
+      }
+    });
   }, [selectedPageNumbers, displayDocument]);
 
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => {
@@ -592,7 +591,8 @@ const PageEditor = ({
       console.log('Applying DOM changes before export...');
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
         mergedPdfDocument || displayDocument, // Original order
-        displayDocument // Current display order (includes reordering)
+        displayDocument, // Current display order (includes reordering)
+        splitPositions // Position-based splits
       );
       
       // For selected pages export, we work with the first document (or single document)
@@ -620,7 +620,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, selectedPageNumbers, mergedPdfDocument]);
+  }, [displayDocument, selectedPageNumbers, mergedPdfDocument, splitPositions]);
 
   const onExportAll = useCallback(async () => {
     if (!displayDocument) return;
@@ -631,7 +631,8 @@ const PageEditor = ({
       console.log('Applying DOM changes before export...');
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
         mergedPdfDocument || displayDocument, // Original order
-        displayDocument // Current display order (includes reordering)
+        displayDocument, // Current display order (includes reordering)
+        splitPositions // Position-based splits
       );
       
       // Step 2: Check if we have multiple documents (splits) or single document
@@ -676,7 +677,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, mergedPdfDocument]);
+  }, [displayDocument, mergedPdfDocument, splitPositions]);
 
   // Apply DOM changes to document state using dedicated service
   const applyChanges = useCallback(() => {
@@ -685,7 +686,8 @@ const PageEditor = ({
     // Pass current display document (which includes reordering) to get both reordering AND DOM changes
     const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
       mergedPdfDocument || displayDocument, // Original order
-      displayDocument // Current display order (includes reordering)
+      displayDocument, // Current display order (includes reordering)
+      splitPositions // Position-based splits
     );
     
     // For apply changes, we only set the first document if it's an array (splits shouldn't affect document state)
@@ -693,7 +695,7 @@ const PageEditor = ({
     setEditedDocument(documentToSet);
     
     console.log('Changes applied to document');
-  }, [displayDocument, mergedPdfDocument]);
+  }, [displayDocument, mergedPdfDocument, splitPositions]);
 
 
   const closePdf = useCallback(() => {
@@ -767,7 +769,7 @@ const PageEditor = ({
       )}
 
       {displayDocument && (
-        <Box p={0}>
+        <Box ref={gridContainerRef} p={0} style={{ position: 'relative' }}>
           {/* File name and basic controls */}
           <Group mb="md" p="md" justify="space-between">
             <TextInput
@@ -805,6 +807,48 @@ const PageEditor = ({
             />
           )}
 
+          {/* Split Lines Overlay */}
+          <div 
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              pointerEvents: 'none',
+              zIndex: 10
+            }}
+          >
+            {Array.from(splitPositions).map((position) => {
+              // Calculate the split line position based on grid layout
+              const ITEM_WIDTH = 320; // 20rem
+              const ITEM_HEIGHT = 340; // 20rem + gap
+              const ITEM_GAP = 24; // 1.5rem
+              const ITEMS_PER_ROW = 4; // Default, could be dynamic
+              
+              const row = Math.floor(position / ITEMS_PER_ROW);
+              const col = position % ITEMS_PER_ROW;
+              
+              // Position after the current item
+              const leftPosition = (col + 1) * (ITEM_WIDTH + ITEM_GAP) - ITEM_GAP / 2;
+              const topPosition = row * ITEM_HEIGHT + 100; // Offset for header controls
+              
+              return (
+                <div
+                  key={`split-${position}`}
+                  style={{
+                    position: 'absolute',
+                    left: leftPosition,
+                    top: topPosition,
+                    width: '1px',
+                    height: '320px', // Match item height
+                    borderLeft: '1px dashed #3b82f6'
+                  }}
+                />
+              );
+            })}
+          </div>
+
           {/* Pages Grid */}
           <DragDropGrid
             items={displayedPages}
@@ -835,11 +879,14 @@ const PageEditor = ({
                 ToggleSplitCommand={ToggleSplitCommand}
                 pdfDocument={displayDocument}
                 setPdfDocument={setEditedDocument}
+                splitPositions={splitPositions}
               />
             )}
           />
+
         </Box>
       )}
+
 
       <NavigationWarningModal />
     </Box>

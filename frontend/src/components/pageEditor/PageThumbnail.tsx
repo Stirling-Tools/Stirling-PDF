@@ -39,6 +39,7 @@ interface PageThumbnailProps {
   ToggleSplitCommand: any;
   pdfDocument: PDFDocument;
   setPdfDocument: (doc: PDFDocument) => void;
+  splitPositions: Set<number>;
 }
 
 const PageThumbnail: React.FC<PageThumbnailProps> = ({
@@ -62,6 +63,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   ToggleSplitCommand,
   pdfDocument,
   setPdfDocument,
+  splitPositions,
 }: PageThumbnailProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const [isDragging, setIsDragging] = useState(false);
@@ -195,13 +197,14 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const handleSplit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Create a command to toggle split marker
-    const command = new ToggleSplitCommand([page.id]);
+    // Create a command to toggle split at this position
+    const command = new ToggleSplitCommand(index);
     onExecuteCommand(command);
     
-    const action = page.splitAfter ? 'removed' : 'added';
-    onSetStatus(`Split marker ${action} after page ${page.pageNumber}`);
-  }, [page.pageNumber, page.id, page.splitAfter, onExecuteCommand, onSetStatus, ToggleSplitCommand]);
+    const hasSplit = splitPositions.has(index);
+    const action = hasSplit ? 'removed' : 'added';
+    onSetStatus(`Split marker ${action} after position ${index + 1}`);
+  }, [index, splitPositions, onExecuteCommand, onSetStatus, ToggleSplitCommand]);
 
   return (
     <div
@@ -432,21 +435,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
       </div>
 
-      {/* Split indicator - shows where document will be split */}
-      {page.splitAfter && (
-        <div
-          style={{
-            position: 'absolute',
-            right: '-8px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: '2px',
-            height: '60px',
-            backgroundColor: '#3b82f6',
-            zIndex: 5,
-          }}
-        />
-      )}
     </div>
   );
 };

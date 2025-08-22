@@ -6,7 +6,7 @@ import styles from './PageEditor.module.css';
 
 interface DragDropItem {
   id: string;
-  splitBefore?: boolean;
+  splitAfter?: boolean;
 }
 
 interface DragDropGridProps<T extends DragDropItem> {
@@ -128,14 +128,13 @@ const DragDropGrid = <T extends DragDropItem>({
                   justifyContent: 'flex-start',
                   height: '100%',
                   alignItems: 'center',
+                  position: 'relative'
                 }}
               >
                 {rowItems.map((item, itemIndex) => {
                   const actualIndex = startIndex + itemIndex;
                   return (
                     <React.Fragment key={item.id}>
-                      {/* Split marker */}
-                      {renderSplitMarker && item.splitBefore && actualIndex > 0 && renderSplitMarker(item, actualIndex)}
                       {/* Item */}
                       {renderItem(item, actualIndex, itemRefs)}
                     </React.Fragment>

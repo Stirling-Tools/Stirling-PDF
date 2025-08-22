@@ -9,17 +9,26 @@ export class DocumentManipulationService {
    * Apply all DOM changes (rotations, splits, reordering) to document state
    * Returns single document or multiple documents if splits are present
    */
-  applyDOMChangesToDocument(pdfDocument: PDFDocument, currentDisplayOrder?: PDFDocument): PDFDocument | PDFDocument[] {
+  applyDOMChangesToDocument(pdfDocument: PDFDocument, currentDisplayOrder?: PDFDocument, splitPositions?: Set<number>): PDFDocument | PDFDocument[] {
     console.log('DocumentManipulationService: Applying DOM changes to document');
     console.log('Original document page order:', pdfDocument.pages.map(p => p.pageNumber));
     console.log('Current display order:', currentDisplayOrder?.pages.map(p => p.pageNumber) || 'none provided');
+    console.log('Split positions:', splitPositions ? Array.from(splitPositions).sort() : 'none');
     
     // Use current display order (from React state) if provided, otherwise use original order
     const baseDocument = currentDisplayOrder || pdfDocument;
     console.log('Using page order:', baseDocument.pages.map(p => p.pageNumber));
     
-    // Apply DOM changes to each page (rotation, split markers)
-    const updatedPages = baseDocument.pages.map(page => this.applyPageChanges(page));
+    // Apply DOM changes to each page (rotation only now, splits are position-based)
+    let updatedPages = baseDocument.pages.map(page => this.applyPageChanges(page));
+    
+    // Convert position-based splits to page-based splits for export
+    if (splitPositions && splitPositions.size > 0) {
+      updatedPages = updatedPages.map((page, index) => ({
+        ...page,
+        splitAfter: splitPositions.has(index)
+      }));
+    }
     
     // Create final document with reordered pages and applied changes
     const finalDocument = {
@@ -28,7 +37,7 @@ export class DocumentManipulationService {
     };
 
     // Check for splits and return multiple documents if needed
-    if (this.hasSplitMarkers(finalDocument)) {
+    if (splitPositions && splitPositions.size > 0) {
       return this.createSplitDocuments(finalDocument);
     }
     
