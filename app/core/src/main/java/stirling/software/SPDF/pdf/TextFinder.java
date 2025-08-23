@@ -75,7 +75,7 @@ public class TextFinder extends PDFTextStripper {
         if (this.wholeWordSearch) {
             if (processedSearchTerm.length() == 1
                     && Character.isDigit(processedSearchTerm.charAt(0))) {
-                regex = "(?<![\\w])" + regex + "(?![\\w])";
+                regex = "(?<![\\w])(?<!\\d[\\.,])" + regex + "(?![\\w])(?![\\.,]\\d)";
             } else if (processedSearchTerm.length() == 1) {
                 regex = "(?<![\\w])" + regex + "(?![\\w])";
             } else {
