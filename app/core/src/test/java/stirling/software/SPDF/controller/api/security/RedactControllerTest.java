@@ -131,7 +131,6 @@ class RedactControllerTest {
         mockPdfFile =
                 new MockMultipartFile(
                         "fileInput", "test.pdf", "application/pdf", createSimplePdfContent());
-        createSimplePdfContent();
 
         // Mock PDF document and related objects
         mockDocument = mock(PDDocument.class);

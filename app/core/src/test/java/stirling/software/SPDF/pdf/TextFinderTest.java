@@ -595,7 +595,7 @@ class TextFinderTest {
         }
 
         @Test
-        @DisplayName("Should handle digits at word boundaries correctly")
+        @DisplayName("Digits as strict standalone tokens (exclude decimals and suffixes)")
         void findDigitsAtWordBoundaries() throws IOException {
             String content = "Numbers: 1, 2, 3. Code: 123. Version: 1.0. Item1 and Item2.";
             addTextToPage(content);
@@ -605,9 +605,9 @@ class TextFinderTest {
             List<PDFText> foundTexts1 = textFinder1.getFoundTexts();
 
             assertEquals(
-                    2,
+                    1,
                     foundTexts1.size(),
-                    "Should find '1' as a standalone number and before the decimal in '1.0'");
+                    "Should find only the standalone '1'; do not count the '1' in '1.0' or in 'Item1'.");
 
             TextFinder textFinder2 = new TextFinder("2", false, true);
             textFinder2.getText(document);
