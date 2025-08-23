@@ -27,6 +27,7 @@ interface PageEditorControlsProps {
   onRotate: (direction: 'left' | 'right') => void;
   onDelete: () => void;
   onSplit: () => void;
+  onSplitAll: () => void;
 
   // Export functions
   onExportSelected: () => void;
@@ -36,6 +37,10 @@ interface PageEditorControlsProps {
   // Selection state
   selectionMode: boolean;
   selectedPages: number[];
+  
+  // Split state (for tooltip logic)
+  splitPositions?: Set<number>;
+  totalPages?: number;
 }
 
 const PageEditorControls = ({
@@ -47,12 +52,33 @@ const PageEditorControls = ({
   onRotate,
   onDelete,
   onSplit,
+  onSplitAll,
   onExportSelected,
   onExportAll,
   exportLoading,
   selectionMode,
-  selectedPages
+  selectedPages,
+  splitPositions,
+  totalPages
 }: PageEditorControlsProps) => {
+  // Calculate split all tooltip text
+  const getSplitAllTooltip = () => {
+    if (selectionMode) {
+      return "Split Selected";
+    }
+    
+    if (!splitPositions || !totalPages) {
+      return "Split All";
+    }
+    
+    // Check if all possible splits are active
+    const allPossibleSplitsCount = totalPages - 1;
+    const hasAllSplits = splitPositions.size === allPossibleSplitsCount && 
+      Array.from({length: allPossibleSplitsCount}, (_, i) => i).every(pos => splitPositions.has(pos));
+    
+    return hasAllSplits ? "Remove All Splits" : "Split All";
+  };
+
   return (
     <div
       style={{
@@ -144,9 +170,9 @@ const PageEditorControls = ({
             <DeleteIcon />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={selectionMode ? "Split Selected" : "Split All"}>
+        <Tooltip label={getSplitAllTooltip()}>
           <ActionIcon
-            onClick={onSplit}
+            onClick={selectionMode ? onSplit : onSplitAll}
             disabled={selectionMode && selectedPages.length === 0}
             variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
             color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}

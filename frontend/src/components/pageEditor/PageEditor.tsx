@@ -127,6 +127,7 @@ export interface PageEditorProps {
     handleRotate: (direction: 'left' | 'right') => void;
     handleDelete: () => void;
     handleSplit: () => void;
+    handleSplitAll: () => void;
     showExportPreview: (selectedOnly: boolean) => void;
     onExportSelected: () => void;
     onExportAll: () => void;
@@ -134,6 +135,8 @@ export interface PageEditorProps {
     exportLoading: boolean;
     selectionMode: boolean;
     selectedPages: number[];
+    splitPositions: Set<number>;
+    totalPages: number;
     closePdf: () => void;
   }) => void;
 }
@@ -523,6 +526,28 @@ const PageEditor = ({
     });
   }, [selectedPageNumbers, displayDocument]);
 
+  const handleSplitAll = useCallback(() => {
+    if (!displayDocument) return;
+    
+    // Check if all possible split positions are already set
+    const allPossibleSplits = new Set<number>();
+    for (let i = 0; i < displayDocument.pages.length - 1; i++) {
+      allPossibleSplits.add(i);
+    }
+    
+    const hasAllSplits = Array.from(allPossibleSplits).every(pos => splitPositions.has(pos));
+    
+    if (hasAllSplits) {
+      // Remove all splits
+      console.log('Removing all split markers');
+      setSplitPositions(new Set());
+    } else {
+      // Add split marker after every page except the last one
+      console.log('Adding split markers after every page');
+      setSplitPositions(allPossibleSplits);
+    }
+  }, [displayDocument, splitPositions]);
+
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => {
     if (!displayDocument) return;
     
@@ -729,6 +754,7 @@ const PageEditor = ({
         handleRotate,
         handleDelete,
         handleSplit,
+        handleSplitAll,
         showExportPreview: handleExportPreview,
         onExportSelected,
         onExportAll,
@@ -736,12 +762,15 @@ const PageEditor = ({
         exportLoading,
         selectionMode,
         selectedPages: selectedPageNumbers,
+        splitPositions,
+        totalPages: displayDocument?.pages.length || 0,
         closePdf,
       });
     }
   }, [
-    onFunctionsReady, handleUndo, handleRedo, handleRotate, handleDelete, handleSplit,
-    handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading, selectionMode, selectedPageNumbers, closePdf
+    onFunctionsReady, handleUndo, handleRedo, handleRotate, handleDelete, handleSplit, handleSplitAll,
+    handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading, selectionMode, selectedPageNumbers, 
+    splitPositions, displayDocument?.pages.length, closePdf
   ]);
 
   // Display all pages - use edited or original document
