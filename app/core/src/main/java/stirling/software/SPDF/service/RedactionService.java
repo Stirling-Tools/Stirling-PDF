@@ -4,10 +4,12 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,6 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
@@ -64,7 +65,6 @@ import stirling.software.common.util.PdfUtils;
 public class RedactionService {
 
     private static final Pattern FUZZY_STRIP = Pattern.compile("[^a-z0-9]+");
-    private static final Pattern PAGE_SPLIT = Pattern.compile("[,\\s]+");
     private static final float DEFAULT_TEXT_PADDING_MULTIPLIER = 0.6f;
     private static final float PRECISION_THRESHOLD = 1e-3f;
     private static final int FONT_SCALE_FACTOR = 1000;
@@ -74,38 +74,6 @@ public class RedactionService {
     private boolean aggressiveMode = false;
     private Map<Integer, List<AggressiveSegMatch>> aggressiveSegMatches = null;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    private static PDFont getFontSafely(PDResources resources, COSName fontName) {
-        if (resources == null || fontName == null) {
-            return null;
-        }
-
-        try {
-            PDFont font = resources.getFont(fontName);
-            if (font == null) {
-                return null;
-            }
-
-            try {
-                String fontNameCheck = font.getName();
-                if (fontNameCheck == null || fontNameCheck.trim().isEmpty()) {
-                    log.debug("Font {} has null or empty name, skipping", fontName.getName());
-                    return null;
-                }
-            } catch (Exception e) {
-                log.debug(
-                        "Error accessing font name for {}, skipping: {}",
-                        fontName.getName(),
-                        e.getMessage());
-                return null;
-            }
-
-            return font;
-        } catch (Exception e) {
-            log.debug("Error retrieving font {}: {}", fontName.getName(), e.getMessage());
-            return null;
-        }
-    }
 
     private static void redactAreas(
             List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
@@ -161,10 +129,15 @@ public class RedactionService {
             ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages)
             throws IOException {
         Color redactColor = decodeOrDefault(request.getPageRedactionColor());
-        List<Integer> pageNumbers = getPageNumbers(request, allPages.getCount());
+        String pageNumbers = request.getPageNumbers();
 
-        for (Integer pageNumber : pageNumbers) {
-            PDPage page = allPages.get(pageNumber);
+        List<Integer> pageNumberList = parsePageNumbers(pageNumbers);
+
+        for (Integer pageNumber : pageNumberList) {
+            if (pageNumber <= 0 || pageNumber > allPages.getCount()) {
+                continue; // Skip invalid page numbers
+            }
+            PDPage page = allPages.get(pageNumber - 1); // Convert to 0-based index
             try (PDPageContentStream contentStream =
                     new PDPageContentStream(
                             document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
@@ -174,6 +147,39 @@ public class RedactionService {
                 contentStream.fill();
             }
         }
+    }
+
+    private static List<Integer> parsePageNumbers(String pageNumbers) {
+        if (pageNumbers == null || pageNumbers.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Integer> result = new ArrayList<>();
+        String[] parts = pageNumbers.split(",");
+
+        for (String part : parts) {
+            part = part.trim();
+            if (part.contains("-")) {
+                String[] range = part.split("-");
+                if (range.length == 2) {
+                    try {
+                        int start = Integer.parseInt(range[0].trim());
+                        int end = Integer.parseInt(range[1].trim());
+                        for (int i = start; i <= end; i++) {
+                            result.add(i);
+                        }
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            } else {
+                try {
+                    result.add(Integer.parseInt(part));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        return result;
     }
 
     private static Color decodeOrDefault(String hex) {
@@ -186,41 +192,6 @@ public class RedactionService {
         } catch (NumberFormatException e) {
             return Color.BLACK;
         }
-    }
-
-    private static List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
-        String pageNumbersInput = request.getPageNumbers();
-        String[] parts =
-                (pageNumbersInput != null) ? PAGE_SPLIT.split(pageNumbersInput) : new String[0];
-        List<Integer> pageNumbers = new ArrayList<>();
-        if (parts.length == 0 || parts[0].isEmpty()) {
-            return pageNumbers;
-        }
-        for (String token : parts) {
-            if (token.contains("-")) {
-                String[] range = token.split("-");
-                if (range.length == 2) {
-                    int start = Integer.parseInt(range[0]);
-                    int end = Integer.parseInt(range[1]);
-                    if (start > 0 && end > 0 && start <= end) {
-                        for (int i = start; i <= end; i++) {
-                            if (i <= pagesCount) {
-                                pageNumbers.add(i - 1);
-                            }
-                        }
-                    }
-                }
-            } else {
-                try {
-                    int num = Integer.parseInt(token);
-                    if (num > 0 && num <= pagesCount) {
-                        pageNumbers.add(num - 1);
-                    }
-                } catch (NumberFormatException ignored) {
-                }
-            }
-        }
-        return pageNumbers;
     }
 
     private static void redactFoundText(
@@ -363,11 +334,9 @@ public class RedactionService {
                 Color redactColor = decodeOrDefault(colorString);
                 redactFoundText(document, allFoundTexts, customPadding, redactColor);
             }
-            cleanDocumentMetadata(document);
         }
         if (Boolean.TRUE.equals(convertToImage)) {
             try (PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document)) {
-                cleanDocumentMetadata(convertedPdf);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 convertedPdf.save(baos);
                 return baos.toByteArray();
@@ -376,22 +345,6 @@ public class RedactionService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         document.save(baos);
         return baos.toByteArray();
-    }
-
-    private static void cleanDocumentMetadata(PDDocument document) {
-        try {
-            var info = document.getDocumentInformation();
-            if (info != null) {
-                info.setAuthor(null);
-                info.setSubject(null);
-                info.setKeywords(null);
-                info.setModificationDate(java.util.Calendar.getInstance());
-            }
-            if (document.getDocumentCatalog() != null) {
-                document.getDocumentCatalog().setMetadata(null);
-            }
-        } catch (Exception ignored) {
-        }
     }
 
     private static String normalizeForFuzzy(String s) {
@@ -445,64 +398,6 @@ public class RedactionService {
                 .collect(Collectors.toList());
     }
 
-    private static DecodedMapping buildDecodeMapping(PDFont font, byte[] bytes) {
-        DecodedMapping map = new DecodedMapping();
-        if (font == null || bytes == null) {
-            map.text = "";
-            map.charByteStart = new int[0];
-            map.charByteEnd = new int[0];
-            return map;
-        }
-        StringBuilder sb = new StringBuilder();
-        List<Integer> starts = new ArrayList<>();
-        List<Integer> ends = new ArrayList<>();
-        int i = 0;
-        boolean isType0 = font instanceof PDType0Font;
-        while (i < bytes.length) {
-            int b1 = bytes[i] & 0xFF;
-            String u = null;
-            int consumed = 1;
-            try {
-                if (isType0 && i + 1 < bytes.length) {
-                    int b2 = bytes[i + 1] & 0xFF;
-                    int code = (b1 << 8) | b2;
-                    String u2 = null;
-                    try {
-                        u2 = font.toUnicode(code);
-                    } catch (Exception ignored) {
-                    }
-                    if (u2 != null) {
-                        u = u2;
-                        consumed = 2;
-                    }
-                }
-                if (u == null) {
-                    try {
-                        u = font.toUnicode(b1);
-                    } catch (Exception ignored) {
-                    }
-                    if (u == null) {
-                        u = "?";
-                    }
-                }
-            } catch (Exception e) {
-                u = "?";
-            }
-            int start = i;
-            int end = i + consumed;
-            for (int k = 0; k < u.length(); k++) {
-                sb.append(u.charAt(k));
-                starts.add(start);
-                ends.add(end);
-            }
-            i += consumed;
-        }
-        map.text = sb.toString();
-        map.charByteStart = starts.stream().mapToInt(Integer::intValue).toArray();
-        map.charByteEnd = ends.stream().mapToInt(Integer::intValue).toArray();
-        return map;
-    }
-
     private static void performFallbackModification(
             List<Object> tokens, int tokenIndex, String newText) {
         try {
@@ -520,7 +415,7 @@ public class RedactionService {
             for (COSBase element : originalArray) {
                 if (element instanceof COSString cosString) {
                     byte[] bytes = cosString.getBytes();
-                    DecodedMapping dm = buildDecodeMapping(font, bytes);
+                    DecodedMapping dm = TextDecodingHelper.buildDecodeMapping(font, bytes);
                     int decodedLen = dm.text.length();
                     if (decodedLen == 0 || dm.charByteStart.length == 0) {
                         newArray.add(element);
@@ -576,8 +471,9 @@ public class RedactionService {
                         && newTokens.get(i - 1) instanceof COSString) {
                     newTokens.set(i - 1, EMPTY_COS_STRING);
                     modifications++;
-                } else if ("TJ".equals(name) && i > 0 && newTokens.get(i - 1) instanceof COSArray) {
-                    COSArray arr = (COSArray) newTokens.get(i - 1);
+                } else if ("TJ".equals(name)
+                        && i > 0
+                        && newTokens.get(i - 1) instanceof COSArray arr) {
                     COSArray newArr = new COSArray();
                     for (int j = 0; j < arr.size(); j++) {
                         COSBase el = arr.get(j);
@@ -717,7 +613,7 @@ public class RedactionService {
 
     private static int processSemanticTokens(List<Object> tokens, boolean removeTU) {
         int modifications = 0;
-        java.util.Stack<Integer> markedContentStack = new java.util.Stack<>();
+        Deque<Integer> markedContentStack = new ArrayDeque<>();
 
         for (int i = 0; i < tokens.size(); i++) {
             Object t = tokens.get(i);
@@ -784,37 +680,12 @@ public class RedactionService {
         }
     }
 
-    private COSString redactCosStringByDecodedRanges(
-            PDFont font, COSString cosString, List<AggressiveSegMatch> decRanges) {
-        try {
-            byte[] bytes = cosString.getBytes();
-            DecodedMapping dm = buildDecodeMapping(font, bytes);
-            if (dm.text.isEmpty() || dm.charByteStart.length == 0) {
-                return cosString;
-            }
-            boolean[] delete = new boolean[bytes.length];
-            for (AggressiveSegMatch r : decRanges) {
-                int ds = Math.max(0, Math.min(r.decodedStart, dm.charByteStart.length));
-                int de = Math.max(ds, Math.min(r.decodedEnd, dm.charByteStart.length));
-                if (ds >= de) {
-                    continue;
-                }
-                int byteStart = dm.charByteStart[ds];
-                int byteEnd = dm.charByteEnd[de - 1];
-                for (int bi = Math.max(0, byteStart); bi < Math.min(bytes.length, byteEnd); bi++) {
-                    delete[bi] = true;
-                }
-            }
-            ByteArrayOutputStream baos = new ByteArrayOutputStream(bytes.length);
-            for (int bi = 0; bi < bytes.length; bi++) {
-                if (!delete[bi]) {
-                    baos.write(bytes[bi]);
-                }
-            }
-            return new COSString(baos.toByteArray());
-        } catch (Exception e) {
-            return this.aggressiveMode ? EMPTY_COS_STRING : cosString;
-        }
+    private static String createSubsetFontPlaceholder(
+            String originalWord, float targetWidth, PDFont font, float fontSize) {
+        String result = createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
+        return result != null
+                ? result
+                : " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
     }
 
     public void performTextReplacementAggressive(
@@ -904,20 +775,20 @@ public class RedactionService {
         return index >= 0 && index < tokens.size();
     }
 
-    private String createSubsetFontPlaceholder(
-            String originalWord, float targetWidth, PDFont font, float fontSize) {
-        String result = createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
-        return result != null
-                ? result
-                : " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
-    }
-
-    private String buildCompleteText(List<TextSegment> segments) {
+    private static String buildCompleteText(List<TextSegment> segments) {
         StringBuilder sb = new StringBuilder();
         for (TextSegment segment : segments) {
             sb.append(segment.text);
         }
         return sb.toString();
+    }
+
+    private static boolean isProperFontSubset(String fontName) {
+        if (fontName.length() < 7) return false;
+        for (int i = 0; i < 6; i++) {
+            if (fontName.charAt(i) < 'A' || fontName.charAt(i) > 'Z') return false;
+        }
+        return fontName.charAt(6) == '+';
     }
 
     List<Object> createTokensWithoutTargetText(
@@ -1006,50 +877,16 @@ public class RedactionService {
         return extractTextSegmentsFromTokens(page.getResources(), tokens, aggressive);
     }
 
-    private List<TextSegment> extractTextSegmentsFromTokens(
-            PDResources resources, List<Object> tokens, boolean aggressive) {
-        List<TextSegment> segments = new ArrayList<>();
-        int currentTextPos = 0;
-        GraphicsState gs = new GraphicsState();
-        for (int i = 0; i < tokens.size(); i++) {
-            Object currentToken = tokens.get(i);
-            if (currentToken instanceof Operator op) {
-                String opName = op.getName();
-                if ("Tf".equals(opName) && i >= 2) {
-                    try {
-                        COSName fontName = (COSName) tokens.get(i - 2);
-                        COSBase fontSizeBase = (COSBase) tokens.get(i - 1);
-                        if (fontSizeBase instanceof COSNumber cosNumber) {
-                            PDFont safeFont = getFontSafely(resources, fontName);
-                            gs.setFont(safeFont);
-                            gs.setFontSize(cosNumber.floatValue());
-                        }
-                    } catch (Exception ignored) {
-                    }
-                }
-                if (isTextShowingOperator(opName) && i > 0) {
-                    String textContent = extractTextFromToken(tokens.get(i - 1), opName, gs.font);
-                    if (textContent != null && !textContent.trim().isEmpty()) {
-                        if (aggressive
-                                && gs.font != null
-                                && tokens.get(i - 1) instanceof COSString cs) {
-                            TextDecodingHelper.tryDecodeWithFontEnhanced(gs.font, cs);
-                        }
-                        segments.add(
-                                new TextSegment(
-                                        i - 1,
-                                        opName,
-                                        textContent,
-                                        currentTextPos,
-                                        currentTextPos + textContent.length(),
-                                        gs.font,
-                                        gs.fontSize));
-                        currentTextPos += textContent.length();
-                    }
-                }
-            }
+    private static boolean hasReliableWidthMetrics(PDFont font) {
+        try {
+            String testString = "AbCdEf123";
+            float width1 = font.getStringWidth(testString);
+            float width2 = calculateCharacterSumWidth(font, testString);
+            if (width1 <= 0 || width2 <= 0) return false;
+            return Math.abs(width1 - width2) / Math.max(width1, width2) < 0.05f;
+        } catch (Exception e) {
+            return false;
         }
-        return segments;
     }
 
     private static String sanitizeText(String text) {
@@ -1393,23 +1230,47 @@ public class RedactionService {
         }
     }
 
-    private boolean isProperFontSubset(String fontName) {
-        if (fontName.length() < 7) return false;
-        for (int i = 0; i < 6; i++) {
-            if (fontName.charAt(i) < 'A' || fontName.charAt(i) > 'Z') return false;
+    static String createPlaceholderWithFont(String originalWord, PDFont font) {
+        if (originalWord == null || originalWord.isEmpty()) return " ";
+
+        final String repeat = " ".repeat(Math.max(1, originalWord.length()));
+        if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
+            try {
+                float originalWidth =
+                        WidthCalculator.calculateAccurateWidth(font, originalWord, 1.0f);
+                String result =
+                        createAlternativePlaceholder(originalWord, originalWidth, font, 1.0f);
+                return result != null ? result : repeat;
+            } catch (Exception e) {
+                return repeat;
+            }
         }
-        return fontName.charAt(6) == '+';
+
+        return repeat;
     }
 
-    private boolean hasReliableWidthMetrics(PDFont font) {
+    private static TokenModificationResult convertToTJWithAdjustment(
+            List<Object> tokens,
+            int tokenIndex,
+            String originalOperator,
+            String newText,
+            float adjustment,
+            TextSegment segment) {
         try {
-            String testString = "AbCdEf123";
-            float width1 = font.getStringWidth(testString);
-            float width2 = calculateCharacterSumWidth(font, testString);
-            if (width1 <= 0 || width2 <= 0) return false;
-            return Math.abs(width1 - width2) / Math.max(width1, width2) < 0.05f;
+            COSArray newArray = new COSArray();
+            newArray.add(new COSString(newText));
+
+            if (segment.getFontSize() > 0) {
+                float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
+                if (Math.abs(kerning) <= 10000f) {
+                    newArray.add(new COSFloat(kerning));
+                }
+            }
+
+            tokens.set(tokenIndex, newArray);
+            return updateOperatorSafely(tokens, tokenIndex, originalOperator);
         } catch (Exception e) {
-            return false;
+            return TokenModificationResult.failure("TJ conversion failed: " + e.getMessage());
         }
     }
 
@@ -1450,24 +1311,36 @@ public class RedactionService {
         }
     }
 
-    private WidthMeasurement measureTextWidth(PDFont font, String text, float fontSize) {
+    private static String createAlternativePlaceholder(
+            String originalWord, float targetWidth, PDFont font, float fontSize) {
+        final String repeat =
+                " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
         try {
-            float fontUnits = safeGetStringWidth(font, text);
-            if (fontUnits < 0) return WidthMeasurement.invalid();
-
-            float actualWidth = (fontUnits / FONT_SCALE_FACTOR) * fontSize;
-            float characterSumWidth = calculateCharacterSumWidth(font, text);
-
-            if (characterSumWidth > 0) {
-                float characterActualWidth = (characterSumWidth / FONT_SCALE_FACTOR) * fontSize;
-                if (Math.abs(actualWidth - characterActualWidth) / actualWidth > 0.1f) {
-                    actualWidth = Math.max(actualWidth, characterActualWidth);
+            String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
+            if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
+                float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
+                if (spaceWidth > 0) {
+                    int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
+                    int maxSpaces = originalWord.length() * 2;
+                    return " ".repeat(Math.min(spaceCount, maxSpaces));
                 }
             }
-
-            return new WidthMeasurement(actualWidth, true);
+            for (String alt : alternatives) {
+                if (" ".equals(alt)) continue;
+                try {
+                    if (!TextEncodingHelper.fontSupportsCharacter(font, alt)) continue;
+                    float cw = WidthCalculator.calculateAccurateWidth(font, alt, fontSize);
+                    if (cw > 0) {
+                        int count = Math.max(1, Math.round(targetWidth / cw));
+                        int max = originalWord.length() * 2;
+                        return " ".repeat(Math.min(count, max));
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            return repeat;
         } catch (Exception e) {
-            return WidthMeasurement.invalid();
+            return repeat;
         }
     }
 
@@ -1616,24 +1489,37 @@ public class RedactionService {
         }
     }
 
-    String createPlaceholderWithFont(String originalWord, PDFont font) {
-        if (originalWord == null || originalWord.isEmpty()) return " ";
-
-        final String repeat = " ".repeat(Math.max(1, originalWord.length()));
-        if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
-            try {
-                // Use helper to get accurate width at fontSize=1.0
-                float originalWidth =
-                        WidthCalculator.calculateAccurateWidth(font, originalWord, 1.0f);
-                String result =
-                        createAlternativePlaceholder(originalWord, originalWidth, font, 1.0f);
-                return result != null ? result : repeat;
-            } catch (Exception e) {
-                return repeat;
+    private COSString redactCosStringByDecodedRanges(
+            PDFont font, COSString cosString, List<AggressiveSegMatch> decRanges) {
+        try {
+            byte[] bytes = cosString.getBytes();
+            DecodedMapping dm = TextDecodingHelper.buildDecodeMapping(font, bytes);
+            if (dm.text.isEmpty() || dm.charByteStart.length == 0) {
+                return cosString;
             }
+            boolean[] delete = new boolean[bytes.length];
+            for (AggressiveSegMatch r : decRanges) {
+                int ds = Math.max(0, Math.min(r.decodedStart, dm.charByteStart.length));
+                int de = Math.max(ds, Math.min(r.decodedEnd, dm.charByteStart.length));
+                if (ds >= de) {
+                    continue;
+                }
+                int byteStart = dm.charByteStart[ds];
+                int byteEnd = dm.charByteEnd[de - 1];
+                for (int bi = Math.max(0, byteStart); bi < Math.min(bytes.length, byteEnd); bi++) {
+                    delete[bi] = true;
+                }
+            }
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(bytes.length);
+            for (int bi = 0; bi < bytes.length; bi++) {
+                if (!delete[bi]) {
+                    baos.write(bytes[bi]);
+                }
+            }
+            return new COSString(baos.toByteArray());
+        } catch (Exception e) {
+            return this.aggressiveMode ? EMPTY_COS_STRING : cosString;
         }
-
-        return repeat;
     }
 
     private TokenModificationResult performTokenModification(
@@ -1724,61 +1610,71 @@ public class RedactionService {
         }
     }
 
-    private TokenModificationResult convertToTJWithAdjustment(
-            List<Object> tokens,
-            int tokenIndex,
-            String originalOperator,
-            String newText,
-            float adjustment,
-            TextSegment segment) {
-        try {
-            COSArray newArray = new COSArray();
-            newArray.add(new COSString(newText));
-
-            if (segment.getFontSize() > 0) {
-                float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
-                if (Math.abs(kerning) <= 10000f) {
-                    newArray.add(new COSFloat(kerning));
+    private List<TextSegment> extractTextSegmentsFromTokens(
+            PDResources resources, List<Object> tokens, boolean aggressive) {
+        List<TextSegment> segments = new ArrayList<>();
+        int currentTextPos = 0;
+        GraphicsState gs = new GraphicsState();
+        for (int i = 0; i < tokens.size(); i++) {
+            Object currentToken = tokens.get(i);
+            if (currentToken instanceof Operator op) {
+                String opName = op.getName();
+                if ("Tf".equals(opName) && i >= 2) {
+                    try {
+                        COSName fontName = (COSName) tokens.get(i - 2);
+                        COSBase fontSizeBase = (COSBase) tokens.get(i - 1);
+                        if (fontSizeBase instanceof COSNumber cosNumber) {
+                            PDFont safeFont = TextDecodingHelper.getFontSafely(resources, fontName);
+                            gs.setFont(safeFont);
+                            gs.setFontSize(cosNumber.floatValue());
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+                if (isTextShowingOperator(opName) && i > 0) {
+                    String textContent = extractTextFromToken(tokens.get(i - 1), opName, gs.font);
+                    if (textContent != null && !textContent.trim().isEmpty()) {
+                        if (aggressive
+                                && gs.font != null
+                                && tokens.get(i - 1) instanceof COSString cs) {
+                            TextDecodingHelper.tryDecodeWithFontEnhanced(gs.font, cs);
+                        }
+                        segments.add(
+                                new TextSegment(
+                                        i - 1,
+                                        opName,
+                                        textContent,
+                                        currentTextPos,
+                                        currentTextPos + textContent.length(),
+                                        gs.font,
+                                        gs.fontSize));
+                        currentTextPos += textContent.length();
+                    }
                 }
             }
-
-            tokens.set(tokenIndex, newArray);
-            return updateOperatorSafely(tokens, tokenIndex, originalOperator);
-        } catch (Exception e) {
-            return TokenModificationResult.failure("TJ conversion failed: " + e.getMessage());
         }
+        return segments;
     }
 
-    private String createAlternativePlaceholder(
-            String originalWord, float targetWidth, PDFont font, float fontSize) {
-        final String repeat =
-                " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
+    private WidthMeasurement measureTextWidth(PDFont font, String text, float fontSize) {
         try {
-            String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
-            if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
-                float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
-                if (spaceWidth > 0) {
-                    int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
-                    int maxSpaces = originalWord.length() * 2;
-                    return " ".repeat(Math.min(spaceCount, maxSpaces));
+            float fontUnits = safeGetStringWidth(font, text);
+            if (fontUnits < 0) return WidthMeasurement.invalid();
+
+            float actualWidth = (fontUnits / FONT_SCALE_FACTOR) * fontSize;
+            float characterSumWidth = calculateCharacterSumWidth(font, text);
+
+            if (characterSumWidth > 0) {
+                float characterActualWidth = (characterSumWidth / FONT_SCALE_FACTOR) * fontSize;
+                if (actualWidth != 0
+                        && Math.abs(actualWidth - characterActualWidth) / actualWidth > 0.1f) {
+                    actualWidth = Math.max(actualWidth, characterActualWidth);
                 }
             }
-            for (String alt : alternatives) {
-                if (" ".equals(alt)) continue;
-                try {
-                    if (!TextEncodingHelper.fontSupportsCharacter(font, alt)) continue;
-                    float cw = WidthCalculator.calculateAccurateWidth(font, alt, fontSize);
-                    if (cw > 0) {
-                        int count = Math.max(1, Math.round(targetWidth / cw));
-                        int max = originalWord.length() * 2;
-                        return " ".repeat(Math.min(count, max));
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-            return repeat;
+
+            return new WidthMeasurement(actualWidth, true);
         } catch (Exception e) {
-            return repeat;
+            return WidthMeasurement.invalid();
         }
     }
 
@@ -1876,13 +1772,7 @@ public class RedactionService {
                         int gStart = idx;
                         int gEnd = idx + w.length();
                         mapStartToEnd(
-                                (List<TextSegment>) segments,
-                                (List<MatchRange>) result,
-                                (Map<Integer, List<AggressiveSegMatch>>) perSegMatches,
-                                decStarts,
-                                decEnds,
-                                gStart,
-                                gEnd);
+                                segments, result, perSegMatches, decStarts, decEnds, gStart, gEnd);
                         idx = lower.indexOf(w, idx + 1);
                     }
                 }
@@ -2083,7 +1973,7 @@ public class RedactionService {
                     segment.getFont(),
                     segment.getFontSize());
         } catch (Exception e) {
-            return "█".repeat(Math.max(1, originalText.length()));
+            return " ".repeat(Math.max(1, originalText.length()));
         }
     }
 
@@ -2321,11 +2211,6 @@ public class RedactionService {
             this.processedMatches = processedMatches;
             this.warnings = new ArrayList<>(warnings);
         }
-
-        @Override
-        public List<String> warnings() {
-            return new ArrayList<>(warnings);
-        }
     }
 
     private void processFormXObject(
@@ -2380,12 +2265,8 @@ public class RedactionService {
     private static class TokenModificationResult {
         @Getter private final boolean success;
 
-        @SuppressWarnings("unused")
-        private final String errorMessage;
-
         private TokenModificationResult(boolean success, String errorMessage) {
             this.success = success;
-            this.errorMessage = errorMessage;
         }
 
         public static TokenModificationResult success() {
@@ -2440,10 +2321,10 @@ public class RedactionService {
     }
 
     @Data
-    private static class DecodedMapping {
-        String text;
-        int[] charByteStart;
-        int[] charByteEnd;
+    public static class DecodedMapping {
+        public String text;
+        public int[] charByteStart;
+        public int[] charByteEnd;
     }
 
     @Data

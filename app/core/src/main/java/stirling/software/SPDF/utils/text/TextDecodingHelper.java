@@ -4,13 +4,18 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.font.*;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.service.RedactionService;
 
 @Slf4j
 @UtilityClass
@@ -20,6 +25,38 @@ public class TextDecodingHelper {
     private final int ASCII_UPPER_BOUND = 126;
     private final int EXTENDED_ASCII_LOWER_BOUND = 160;
     private final int EXTENDED_ASCII_UPPER_BOUND = 255;
+
+    public PDFont getFontSafely(PDResources resources, COSName fontName) {
+        if (resources == null || fontName == null) {
+            return null;
+        }
+
+        try {
+            PDFont font = resources.getFont(fontName);
+            if (font == null) {
+                return null;
+            }
+
+            try {
+                String fontNameCheck = font.getName();
+                if (fontNameCheck == null || fontNameCheck.trim().isEmpty()) {
+                    log.debug("Font {} has null or empty name, skipping", fontName.getName());
+                    return null;
+                }
+            } catch (Exception e) {
+                log.debug(
+                        "Error accessing font name for {}, skipping: {}",
+                        fontName.getName(),
+                        e.getMessage());
+                return null;
+            }
+
+            return font;
+        } catch (Exception e) {
+            log.debug("Error retrieving font {}: {}", fontName.getName(), e.getMessage());
+            return null;
+        }
+    }
 
     public void tryDecodeWithFontEnhanced(PDFont font, COSString cosString) {
         if (font == null || cosString == null) {
@@ -228,5 +265,222 @@ public class TextDecodingHelper {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static RedactionService.DecodedMapping buildDecodeMapping(PDFont font, byte[] bytes) {
+        RedactionService.DecodedMapping map = new RedactionService.DecodedMapping();
+        if (font == null || bytes == null) {
+            map.text = "";
+            map.charByteStart = new int[0];
+            map.charByteEnd = new int[0];
+            return map;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        List<Integer> starts = new ArrayList<>();
+        List<Integer> ends = new ArrayList<>();
+        int i = 0;
+
+        // Determine font type and encoding characteristics
+        boolean isType0 = font instanceof PDType0Font;
+        boolean isType1 = font instanceof PDType1Font;
+        boolean isType3 = font instanceof PDType3Font;
+        boolean isTrueType = font instanceof PDTrueTypeFont;
+
+        while (i < bytes.length) {
+            int start = i;
+            String decodedChar = null;
+            int consumed = 1;
+
+            try {
+                if (isType0) {
+                    // Handle CID fonts and multi-byte encodings
+                    decodedChar = decodeType0Font((PDType0Font) font, bytes, i);
+                    consumed = getType0CharLength((PDType0Font) font, bytes, i);
+                } else if (isType1) {
+                    // Handle Type1 fonts with specific encoding
+                    decodedChar = decodeType1Font((PDType1Font) font, bytes, i);
+                    consumed = getType1CharLength((PDType1Font) font, bytes, i);
+                } else if (isType3) {
+                    // Handle Type3 bitmap fonts
+                    decodedChar = decodeType3Font((PDType3Font) font, bytes, i);
+                    consumed = 1; // Type3 typically single byte
+                } else if (isTrueType) {
+                    // Handle TrueType fonts
+                    decodedChar = decodeTrueTypeFont((PDTrueTypeFont) font, bytes, i);
+                    consumed = getTrueTypeCharLength((PDTrueTypeFont) font, bytes, i);
+                } else {
+                    // Generic fallback for other font types
+                    decodedChar = decodeGenericFont(font, bytes, i);
+                    consumed = getGenericCharLength(font, bytes, i);
+                }
+
+                // Validate the consumed length
+                if (consumed <= 0 || i + consumed > bytes.length) {
+                    consumed = 1;
+                }
+
+            } catch (Exception e) {
+                // Log the error for debugging purposes
+                System.err.println(
+                        "Error decoding character at position " + i + ": " + e.getMessage());
+                decodedChar = null;
+                consumed = 1;
+            }
+
+            // Handle null or empty decoded characters
+            if (decodedChar == null || decodedChar.isEmpty()) {
+                decodedChar = handleUndecodableChar(bytes, i, consumed);
+            }
+
+            int end = i + consumed;
+
+            // Add each Unicode character separately
+            for (int k = 0; k < decodedChar.length(); k++) {
+                sb.append(decodedChar.charAt(k));
+                starts.add(start);
+                ends.add(end);
+            }
+
+            i += consumed;
+        }
+
+        map.text = sb.toString();
+        map.charByteStart = starts.stream().mapToInt(Integer::intValue).toArray();
+        map.charByteEnd = ends.stream().mapToInt(Integer::intValue).toArray();
+        return map;
+    }
+
+    private static String decodeType0Font(PDType0Font font, byte[] bytes, int position) {
+        try {
+            // Try multi-byte decoding first (common for CJK fonts)
+            if (position + 1 < bytes.length) {
+                int b1 = bytes[position] & 0xFF;
+                int b2 = bytes[position + 1] & 0xFF;
+                int code = (b1 << 8) | b2;
+                String unicode = font.toUnicode(code);
+                if (unicode != null && !unicode.isEmpty()) {
+                    return unicode;
+                }
+            }
+
+            int code = bytes[position] & 0xFF;
+            return font.toUnicode(code);
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static int getType0CharLength(PDType0Font font, byte[] bytes, int position) {
+        try {
+            if (position + 1 < bytes.length) {
+                int b1 = bytes[position] & 0xFF;
+                int b2 = bytes[position + 1] & 0xFF;
+                int code = (b1 << 8) | b2;
+                String unicode = font.toUnicode(code);
+                if (unicode != null && !unicode.isEmpty()) {
+                    return 2;
+                }
+            }
+            return 1;
+        } catch (Exception e) {
+            return 1;
+        }
+    }
+
+    private static String decodeType1Font(PDType1Font font, byte[] bytes, int position) {
+        try {
+            int code = bytes[position] & 0xFF;
+            return font.toUnicode(code);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static int getType1CharLength(PDType1Font font, byte[] bytes, int position) {
+        return 1; // Type1 fonts are typically single-byte
+    }
+
+    private static String decodeType3Font(PDType3Font font, byte[] bytes, int position) {
+        try {
+            int code = bytes[position] & 0xFF;
+            return font.toUnicode(code);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String decodeTrueTypeFont(PDTrueTypeFont font, byte[] bytes, int position) {
+        try {
+            int code = bytes[position] & 0xFF;
+            String unicode = font.toUnicode(code);
+
+            if ((unicode == null || unicode.isEmpty()) && position + 1 < bytes.length) {
+                int b1 = bytes[position] & 0xFF;
+                int b2 = bytes[position + 1] & 0xFF;
+                int multiByteCode = (b1 << 8) | b2;
+                unicode = font.toUnicode(multiByteCode);
+            }
+
+            return unicode;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static int getTrueTypeCharLength(PDTrueTypeFont font, byte[] bytes, int position) {
+        try {
+            // First try single byte
+            int code = bytes[position] & 0xFF;
+            String unicode = font.toUnicode(code);
+            if (unicode != null && !unicode.isEmpty()) {
+                return 1;
+            }
+
+            if (position + 1 < bytes.length) {
+                int b1 = bytes[position] & 0xFF;
+                int b2 = bytes[position + 1] & 0xFF;
+                int multiByteCode = (b1 << 8) | b2;
+                unicode = font.toUnicode(multiByteCode);
+                if (unicode != null && !unicode.isEmpty()) {
+                    return 2;
+                }
+            }
+
+            return 1; // Default fallback
+        } catch (Exception e) {
+            return 1;
+        }
+    }
+
+    private static String decodeGenericFont(PDFont font, byte[] bytes, int position) {
+        try {
+            int code = bytes[position] & 0xFF;
+            return font.toUnicode(code);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static int getGenericCharLength(PDFont font, byte[] bytes, int position) {
+        return 1; // Default to single byte for unknown font types
+    }
+
+    private static String handleUndecodableChar(byte[] bytes, int position, int length) {
+
+        // Or try to interpret as ISO-8859-1 (Latin-1) as fallback
+        try {
+            byte[] charBytes = new byte[length];
+            System.arraycopy(bytes, position, charBytes, 0, length);
+            String fallback = new String(charBytes, StandardCharsets.ISO_8859_1);
+            if (!fallback.trim().isEmpty()) {
+                return fallback;
+            }
+        } catch (Exception e) {
+            // Ignore and fall through to default
+        }
+
+        return "�"; // Unicode replacement character instead of "?"
     }
 }
