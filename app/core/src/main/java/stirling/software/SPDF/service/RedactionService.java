@@ -1104,95 +1104,37 @@ public class RedactionService {
         return allMatches;
     }
 
-    private List<Object> applyRedactionsToTokens(
-            List<Object> tokens, List<TextSegment> textSegments, List<MatchRange> matches) {
-        List<Object> newTokens = new ArrayList<>(tokens);
-        if (this.aggressiveMode) {
-            Map<Integer, List<AggressiveSegMatch>> perSeg = this.aggressiveSegMatches;
-            if (perSeg != null && !perSeg.isEmpty()) {
-                List<Integer> segIndices = new ArrayList<>(perSeg.keySet());
-                segIndices.sort(
-                        (a, b) ->
-                                Integer.compare(
-                                        textSegments.get(b).tokenIndex,
-                                        textSegments.get(a).tokenIndex));
-                for (Integer segIndex : segIndices) {
-                    TextSegment segment = textSegments.get(segIndex);
-                    List<AggressiveSegMatch> segMatches = perSeg.getOrDefault(segIndex, List.of());
-                    if (segMatches.isEmpty()) {
-                        continue;
+    private static String createAlternativePlaceholder(
+            String originalWord, float targetWidth, PDFont font, float fontSize) {
+        final String repeat =
+                " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
+        try {
+            String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
+            if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
+                float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
+                if (spaceWidth > 0) {
+                    int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
+                    int maxSpaces = (originalWord != null ? originalWord.length() : 1) * 2;
+                    return " ".repeat(Math.min(spaceCount, maxSpaces));
+                }
+            }
+            for (String alt : alternatives) {
+                if (" ".equals(alt)) continue;
+                try {
+                    if (!TextEncodingHelper.fontSupportsCharacter(font, alt)) continue;
+                    float cw = WidthCalculator.calculateAccurateWidth(font, alt, fontSize);
+                    if (cw > 0) {
+                        int count = Math.max(1, Math.round(targetWidth / cw));
+                        int max = (originalWord != null ? originalWord.length() : 1) * 2;
+                        return " ".repeat(Math.min(count, max));
                     }
-                    Object token = newTokens.get(segment.tokenIndex);
-                    String opName = segment.operatorName;
-                    if (("Tj".equals(opName) || "'".equals(opName) || "\"".equals(opName))
-                            && token instanceof COSString cs) {
-                        COSString redacted =
-                                redactCosStringByDecodedRanges(segment.font, cs, segMatches);
-                        newTokens.set(segment.tokenIndex, redacted);
-                    } else if ("TJ".equals(opName) && token instanceof COSArray arr) {
-                        COSArray redacted =
-                                redactTJArrayByDecodedRanges(segment.font, arr, segMatches);
-                        newTokens.set(segment.tokenIndex, redacted);
-                    }
-                }
-                return newTokens;
-            }
-        }
-        Map<Integer, List<MatchRange>> matchesBySegment = new HashMap<>();
-        for (MatchRange match : matches) {
-            for (int i = 0; i < textSegments.size(); i++) {
-                TextSegment segment = textSegments.get(i);
-                int overlapStart = Math.max(match.startPos, segment.startPos);
-                int overlapEnd = Math.min(match.endPos, segment.endPos);
-                if (overlapStart < overlapEnd) {
-                    matchesBySegment.computeIfAbsent(i, k -> new ArrayList<>()).add(match);
+                } catch (Exception ignored) {
                 }
             }
+            return repeat;
+        } catch (Exception e) {
+            return repeat;
         }
-        List<ModificationTask> tasks = new ArrayList<>();
-        for (Map.Entry<Integer, List<MatchRange>> entry : matchesBySegment.entrySet()) {
-            int segmentIndex = entry.getKey();
-            List<MatchRange> segmentMatches = entry.getValue();
-
-            if (segmentIndex < 0 || segmentIndex >= textSegments.size()) continue;
-            TextSegment segment = textSegments.get(segmentIndex);
-            if (segment == null) continue;
-
-            try {
-                if ("Tj".equals(segment.operatorName) || "'".equals(segment.operatorName)) {
-                    String newText = applyRedactionsToSegmentText(segment, segmentMatches);
-                    if (newText == null) newText = "";
-                    float adjustment = calculateWidthAdjustment(segment, segmentMatches);
-                    tasks.add(new ModificationTask(segment, newText, adjustment));
-                } else if ("TJ".equals(segment.operatorName)) {
-                    tasks.add(new ModificationTask(segment, "", 0));
-                }
-            } catch (Exception e) {
-                // Skip this segment
-            }
-        }
-        tasks.sort((a, b) -> Integer.compare(b.segment.tokenIndex, a.segment.tokenIndex));
-
-        int maxTasksToProcess = Math.min(tasks.size(), 1000);
-
-        for (int i = 0; i < maxTasksToProcess && i < tasks.size(); i++) {
-            ModificationTask task = tasks.get(i);
-            try {
-                List<MatchRange> segmentMatches =
-                        matchesBySegment.getOrDefault(
-                                textSegments.indexOf(task.segment), Collections.emptyList());
-
-                if (task.segment.tokenIndex >= newTokens.size()) continue;
-                if (task.segment.getText() == null || task.segment.getText().isEmpty()) continue;
-
-                modifyTokenForRedaction(
-                        newTokens, task.segment, task.newText, task.adjustment, segmentMatches);
-            } catch (Exception e) {
-                // Skip this task
-            }
-        }
-
-        return newTokens;
     }
 
     private float calculateWidthAdjustment(TextSegment segment, List<MatchRange> matches) {
@@ -1311,36 +1253,164 @@ public class RedactionService {
         }
     }
 
-    private static String createAlternativePlaceholder(
-            String originalWord, float targetWidth, PDFont font, float fontSize) {
-        final String repeat =
-                " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
-        try {
-            String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
-            if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
-                float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
-                if (spaceWidth > 0) {
-                    int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
-                    int maxSpaces = originalWord.length() * 2;
-                    return " ".repeat(Math.min(spaceCount, maxSpaces));
-                }
-            }
-            for (String alt : alternatives) {
-                if (" ".equals(alt)) continue;
-                try {
-                    if (!TextEncodingHelper.fontSupportsCharacter(font, alt)) continue;
-                    float cw = WidthCalculator.calculateAccurateWidth(font, alt, fontSize);
-                    if (cw > 0) {
-                        int count = Math.max(1, Math.round(targetWidth / cw));
-                        int max = originalWord.length() * 2;
-                        return " ".repeat(Math.min(count, max));
+    private List<Object> applyRedactionsToTokens(
+            List<Object> tokens, List<TextSegment> textSegments, List<MatchRange> matches) {
+        List<Object> newTokens = new ArrayList<>(tokens);
+        if (this.aggressiveMode) {
+            Map<Integer, List<AggressiveSegMatch>> perSeg = this.aggressiveSegMatches;
+            if (perSeg != null && !perSeg.isEmpty()) {
+                List<Integer> segIndices = new ArrayList<>(perSeg.keySet());
+                segIndices.sort(
+                        (a, b) ->
+                                Integer.compare(
+                                        textSegments.get(b).tokenIndex,
+                                        textSegments.get(a).tokenIndex));
+                for (Integer segIndex : segIndices) {
+                    TextSegment segment = textSegments.get(segIndex);
+                    List<AggressiveSegMatch> segMatches = perSeg.getOrDefault(segIndex, List.of());
+                    if (segMatches.isEmpty()) {
+                        continue;
                     }
-                } catch (Exception ignored) {
+                    Object token = newTokens.get(segment.tokenIndex);
+                    String opName = segment.operatorName;
+                    if (("Tj".equals(opName) || "'".equals(opName) || "\"".equals(opName))
+                            && token instanceof COSString cs) {
+                        COSString redacted =
+                                redactCosStringByDecodedRanges(segment.font, cs, segMatches);
+                        if (segment.font != null && segment.fontSize > 0) {
+                            String originalText = getDecodedString(cs, segment.font);
+                            String modifiedText = getDecodedString(redacted, segment.font);
+                            float wOrig =
+                                    calculateSafeWidth(
+                                            originalText, segment.font, segment.fontSize);
+                            float wMod =
+                                    calculateSafeWidth(
+                                            modifiedText, segment.font, segment.fontSize);
+                            float adjustment = wOrig - wMod;
+                            if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
+                                COSArray arr = new COSArray();
+                                arr.add(redacted);
+                                float kerning =
+                                        (-adjustment / segment.fontSize) * FONT_SCALE_FACTOR;
+                                arr.add(new COSFloat(kerning));
+                                newTokens.set(segment.tokenIndex, arr);
+                                updateOperatorSafely(newTokens, segment.tokenIndex, opName);
+                            } else {
+                                newTokens.set(segment.tokenIndex, redacted);
+                            }
+                        } else {
+                            newTokens.set(segment.tokenIndex, redacted);
+                        }
+                    } else if ("TJ".equals(opName) && token instanceof COSArray arr) {
+                        COSArray redacted =
+                                redactTJArrayByDecodedRanges(segment.font, arr, segMatches);
+                        // Inject kerning adjustments per string element to preserve layout
+                        COSArray withKerning = buildKerningAdjustedTJArray(arr, redacted, segment);
+                        newTokens.set(segment.tokenIndex, withKerning);
+                    }
+                }
+                return newTokens;
+            }
+        }
+        Map<Integer, List<MatchRange>> matchesBySegment = new HashMap<>();
+        for (MatchRange match : matches) {
+            for (int i = 0; i < textSegments.size(); i++) {
+                TextSegment segment = textSegments.get(i);
+                int overlapStart = Math.max(match.startPos, segment.startPos);
+                int overlapEnd = Math.min(match.endPos, segment.endPos);
+                if (overlapStart < overlapEnd) {
+                    matchesBySegment.computeIfAbsent(i, k -> new ArrayList<>()).add(match);
                 }
             }
-            return repeat;
+        }
+        List<ModificationTask> tasks = new ArrayList<>();
+        for (Map.Entry<Integer, List<MatchRange>> entry : matchesBySegment.entrySet()) {
+            int segmentIndex = entry.getKey();
+            List<MatchRange> segmentMatches = entry.getValue();
+
+            if (segmentIndex < 0 || segmentIndex >= textSegments.size()) continue;
+            TextSegment segment = textSegments.get(segmentIndex);
+            if (segment == null) continue;
+
+            try {
+                if ("Tj".equals(segment.operatorName) || "'".equals(segment.operatorName)) {
+                    String newText = applyRedactionsToSegmentText(segment, segmentMatches);
+                    if (newText == null) newText = "";
+                    float adjustment = calculateWidthAdjustment(segment, segmentMatches);
+                    tasks.add(new ModificationTask(segment, newText, adjustment));
+                } else if ("TJ".equals(segment.operatorName)) {
+                    tasks.add(new ModificationTask(segment, "", 0));
+                }
+            } catch (Exception e) {
+                // Skip this segment
+            }
+        }
+        tasks.sort((a, b) -> Integer.compare(b.segment.tokenIndex, a.segment.tokenIndex));
+
+        int maxTasksToProcess = Math.min(tasks.size(), 1000);
+
+        for (int i = 0; i < maxTasksToProcess && i < tasks.size(); i++) {
+            ModificationTask task = tasks.get(i);
+            try {
+                List<MatchRange> segmentMatches =
+                        matchesBySegment.getOrDefault(
+                                textSegments.indexOf(task.segment), Collections.emptyList());
+
+                if (task.segment.tokenIndex >= newTokens.size()) continue;
+                if (task.segment.getText() == null || task.segment.getText().isEmpty()) continue;
+
+                modifyTokenForRedaction(
+                        newTokens, task.segment, task.newText, task.adjustment, segmentMatches);
+            } catch (Exception e) {
+                // Skip this task
+            }
+        }
+
+        return newTokens;
+    }
+
+    private COSArray buildKerningAdjustedTJArray(
+            COSArray originalArray, COSArray redactedArray, TextSegment segment) {
+        try {
+            if (segment == null || segment.getFont() == null || segment.getFontSize() <= 0)
+                return redactedArray;
+
+            COSArray out = new COSArray();
+            int size = redactedArray.size();
+            for (int i = 0; i < size; i++) {
+                COSBase redEl = redactedArray.get(i);
+                COSBase origEl =
+                        (originalArray != null && i < originalArray.size())
+                                ? originalArray.get(i)
+                                : null;
+
+                out.add(redEl);
+
+                if (redEl instanceof COSString redStr && origEl instanceof COSString origStr) {
+                    String origText = getDecodedString(origStr, segment.getFont());
+                    String modText = getDecodedString(redStr, segment.getFont());
+                    float wOrig =
+                            calculateSafeWidth(origText, segment.getFont(), segment.getFontSize());
+                    float wMod =
+                            calculateSafeWidth(modText, segment.getFont(), segment.getFontSize());
+                    float adjustment = wOrig - wMod;
+                    if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
+                        float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
+                        // If next token is a number, combine; otherwise insert new number
+                        if (i + 1 < size && redactedArray.get(i + 1) instanceof COSNumber num) {
+                            // Skip adding the next separately and add combined value
+                            i++;
+                            float combined = num.floatValue() + kerning;
+                            out.add(new COSFloat(combined));
+                        } else {
+                            out.add(new COSFloat(kerning));
+                        }
+                    }
+                }
+            }
+            return out;
         } catch (Exception e) {
-            return repeat;
+            return redactedArray;
         }
     }
 

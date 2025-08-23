@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import lombok.Getter;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
@@ -20,6 +21,7 @@ public class TextFinder extends PDFTextStripper {
     private final String searchTerm;
     private final boolean useRegex;
     private final boolean wholeWordSearch;
+    @Getter
     private final List<PDFText> foundTexts = new ArrayList<>();
 
     private final List<TextPosition> pageTextPositions = new ArrayList<>();
@@ -68,11 +70,17 @@ public class TextFinder extends PDFTextStripper {
         }
 
         String processedSearchTerm = this.searchTerm.trim();
+
+        if (processedSearchTerm.isEmpty()) {
+            super.endPage(page);
+            return;
+        }
+
         String regex = this.useRegex ? processedSearchTerm : "\\Q" + processedSearchTerm + "\\E";
         if (this.wholeWordSearch) {
             if (processedSearchTerm.length() == 1
                     && Character.isDigit(processedSearchTerm.charAt(0))) {
-                regex = "(?<![\\w])" + regex + "(?![\\w])";
+                regex = "(?<![\\w])(?<!\\d[\\.,])" + regex + "(?![\\w])(?![\\.,]\\d)";
             } else if (processedSearchTerm.length() == 1) {
                 regex = "(?<![\\w])" + regex + "(?![\\w])";
             } else {
@@ -182,10 +190,6 @@ public class TextFinder extends PDFTextStripper {
                 processedSearchTerm);
 
         super.endPage(page);
-    }
-
-    public List<PDFText> getFoundTexts() {
-        return foundTexts;
     }
 
     public String getDebugInfo() {
