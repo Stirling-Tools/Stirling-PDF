@@ -1,12 +1,14 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -266,8 +268,8 @@ class MergeControllerTest {
         when(pdfDocumentFactory.createNewDocument()).thenReturn(mockMergedDocument);
         when(doc1.getPages()).thenReturn(pages1);
         when(doc2.getPages()).thenReturn(pages2);
-        when(pages1.iterator()).thenReturn(Arrays.asList(page1).iterator());
-        when(pages2.iterator()).thenReturn(Arrays.asList(page2).iterator());
+        when(pages1.iterator()).thenReturn(Collections.singletonList(page1).iterator());
+        when(pages2.iterator()).thenReturn(Collections.singletonList(page2).iterator());
 
         // When
         PDDocument result = mergeController.mergeDocuments(documents);
@@ -282,7 +284,7 @@ class MergeControllerTest {
     @Test
     void testMergeDocuments_EmptyList_ReturnsEmptyDocument() throws IOException {
         // Given
-        List<PDDocument> documents = Arrays.asList();
+        List<PDDocument> documents = List.of();
 
         when(pdfDocumentFactory.createNewDocument()).thenReturn(mockMergedDocument);
 
