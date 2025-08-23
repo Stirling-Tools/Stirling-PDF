@@ -162,33 +162,19 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   // DOM command handlers
   const handleRotateLeft = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    // Use DOM command to rotate the image directly
-    const pageElement = document.querySelector(`[data-page-number="${page.pageNumber}"]`);
-    if (pageElement) {
-      const img = pageElement.querySelector('img');
-      if (img) {
-        const currentRotation = parseInt(img.style.rotate?.replace(/[^\d-]/g, '') || '0');
-        const newRotation = currentRotation - 90;
-        img.style.rotate = `${newRotation}deg`;
-      }
-    }
+    // Use the command system for undo/redo support
+    const command = new RotatePagesCommand([page.id], -90);
+    onExecuteCommand(command);
     onSetStatus(`Rotated page ${page.pageNumber} left`);
-  }, [page.pageNumber, onSetStatus]);
+  }, [page.id, page.pageNumber, onExecuteCommand, onSetStatus, RotatePagesCommand]);
 
   const handleRotateRight = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    // Use DOM command to rotate the image directly
-    const pageElement = document.querySelector(`[data-page-number="${page.pageNumber}"]`);
-    if (pageElement) {
-      const img = pageElement.querySelector('img');
-      if (img) {
-        const currentRotation = parseInt(img.style.rotate?.replace(/[^\d-]/g, '') || '0');
-        const newRotation = currentRotation + 90;
-        img.style.rotate = `${newRotation}deg`;
-      }
-    }
+    // Use the command system for undo/redo support
+    const command = new RotatePagesCommand([page.id], 90);
+    onExecuteCommand(command);
     onSetStatus(`Rotated page ${page.pageNumber} right`);
-  }, [page.pageNumber, onSetStatus]);
+  }, [page.id, page.pageNumber, onExecuteCommand, onSetStatus, RotatePagesCommand]);
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();

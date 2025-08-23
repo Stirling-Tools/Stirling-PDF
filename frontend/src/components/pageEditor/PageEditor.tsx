@@ -22,7 +22,6 @@ import { fileStorage } from "../../services/fileStorage";
 import { indexedDBManager, DATABASE_CONFIGS } from "../../services/indexedDBManager";
 import './PageEditor.module.css';
 import PageThumbnail from './PageThumbnail';
-import BulkSelectionPanel from './BulkSelectionPanel';
 import DragDropGrid from './DragDropGrid';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
@@ -73,15 +72,316 @@ class RotatePageCommand extends DOMCommand {
   }
 }
 
+class DeletePagesCommand extends DOMCommand {
+  private originalDocument: PDFDocument | null = null;
+  private originalSplitPositions: Set<number> = new Set();
+  private originalSelectedPages: number[] = [];
+  private hasExecuted: boolean = false;
+  private pageIdsToDelete: string[] = [];
+
+  constructor(
+    private pagesToDelete: number[],
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void,
+    private setSelectedPages: (pages: number[]) => void,
+    private getSplitPositions: () => Set<number>,
+    private setSplitPositions: (positions: Set<number>) => void,
+    private getSelectedPages: () => number[]
+  ) {
+    super();
+  }
+
+  execute(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc || this.pagesToDelete.length === 0) return;
+
+    // Store complete original state for undo (only on first execution)
+    if (!this.hasExecuted) {
+      this.originalDocument = {
+        ...currentDoc,
+        pages: currentDoc.pages.map(page => ({...page})) // Deep copy pages
+      };
+      this.originalSplitPositions = new Set(this.getSplitPositions());
+      this.originalSelectedPages = [...this.getSelectedPages()];
+      
+      // Convert page numbers to page IDs for stable identification
+      this.pageIdsToDelete = this.pagesToDelete.map(pageNum => {
+        const page = currentDoc.pages.find(p => p.pageNumber === pageNum);
+        return page?.id || '';
+      }).filter(id => id);
+      
+      this.hasExecuted = true;
+    }
+
+    // Filter out deleted pages by ID (stable across undo/redo)
+    const remainingPages = currentDoc.pages.filter(page => 
+      !this.pageIdsToDelete.includes(page.id)
+    );
+
+    if (remainingPages.length === 0) return; // Safety check
+
+    // Renumber remaining pages
+    remainingPages.forEach((page, index) => {
+      page.pageNumber = index + 1;
+    });
+
+    // Update document
+    const updatedDocument: PDFDocument = {
+      ...currentDoc,
+      pages: remainingPages,
+      totalPages: remainingPages.length,
+    };
+
+    // Adjust split positions
+    const currentSplitPositions = this.getSplitPositions();
+    const newPositions = new Set<number>();
+    currentSplitPositions.forEach(pos => {
+      if (pos < remainingPages.length - 1) {
+        newPositions.add(pos);
+      }
+    });
+
+    // Apply changes
+    this.setDocument(updatedDocument);
+    this.setSelectedPages([]);
+    this.setSplitPositions(newPositions);
+  }
+
+  undo(): void {
+    if (!this.originalDocument) return;
+
+    // Simply restore the complete original document state
+    this.setDocument(this.originalDocument);
+    this.setSplitPositions(this.originalSplitPositions);
+    this.setSelectedPages(this.originalSelectedPages);
+  }
+
+  get description(): string {
+    return `Delete ${this.pagesToDelete.length} page(s)`;
+  }
+}
+
+class ReorderPagesCommand extends DOMCommand {
+  private originalPages: PDFPage[] = [];
+
+  constructor(
+    private sourcePageNumber: number,
+    private targetIndex: number,
+    private selectedPages: number[] | undefined,
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void
+  ) {
+    super();
+  }
+
+  execute(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    // Store original state for undo
+    this.originalPages = currentDoc.pages.map(page => ({...page}));
+
+    // Perform the reorder
+    const sourceIndex = currentDoc.pages.findIndex(p => p.pageNumber === this.sourcePageNumber);
+    if (sourceIndex === -1) return;
+
+    const newPages = [...currentDoc.pages];
+
+    if (this.selectedPages && this.selectedPages.length > 1 && this.selectedPages.includes(this.sourcePageNumber)) {
+      // Multi-page reorder
+      const selectedPageObjects = this.selectedPages
+        .map(pageNum => currentDoc.pages.find(p => p.pageNumber === pageNum))
+        .filter(page => page !== undefined) as PDFPage[];
+      
+      const remainingPages = newPages.filter(page => !this.selectedPages!.includes(page.pageNumber));
+      remainingPages.splice(this.targetIndex, 0, ...selectedPageObjects);
+      
+      remainingPages.forEach((page, index) => {
+        page.pageNumber = index + 1;
+      });
+      
+      newPages.splice(0, newPages.length, ...remainingPages);
+    } else {
+      // Single page reorder
+      const [movedPage] = newPages.splice(sourceIndex, 1);
+      newPages.splice(this.targetIndex, 0, movedPage);
+      
+      newPages.forEach((page, index) => {
+        page.pageNumber = index + 1;
+      });
+    }
+
+    const reorderedDocument: PDFDocument = {
+      ...currentDoc,
+      pages: newPages,
+      totalPages: newPages.length,
+    };
+
+    this.setDocument(reorderedDocument);
+  }
+
+  undo(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc || this.originalPages.length === 0) return;
+
+    // Restore original page order
+    const restoredDocument: PDFDocument = {
+      ...currentDoc,
+      pages: this.originalPages,
+      totalPages: this.originalPages.length,
+    };
+
+    this.setDocument(restoredDocument);
+  }
+
+  get description(): string {
+    return `Reorder page(s)`;
+  }
+}
+
+class SplitCommand extends DOMCommand {
+  private originalSplitPositions: Set<number> = new Set();
+
+  constructor(
+    private position: number,
+    private getSplitPositions: () => Set<number>,
+    private setSplitPositions: (positions: Set<number>) => void
+  ) {
+    super();
+  }
+
+  execute(): void {
+    // Store original state for undo
+    this.originalSplitPositions = new Set(this.getSplitPositions());
+
+    // Toggle the split position
+    const currentPositions = this.getSplitPositions();
+    const newPositions = new Set(currentPositions);
+    
+    if (newPositions.has(this.position)) {
+      newPositions.delete(this.position);
+    } else {
+      newPositions.add(this.position);
+    }
+    
+    this.setSplitPositions(newPositions);
+  }
+
+  undo(): void {
+    // Restore original split positions
+    this.setSplitPositions(this.originalSplitPositions);
+  }
+
+  get description(): string {
+    const currentPositions = this.getSplitPositions();
+    const willAdd = !currentPositions.has(this.position);
+    return `${willAdd ? 'Add' : 'Remove'} split at position ${this.position + 1}`;
+  }
+}
+
+class BulkRotateCommand extends DOMCommand {
+  private originalRotations: Map<string, number> = new Map();
+
+  constructor(
+    private pageIds: string[],
+    private degrees: number
+  ) {
+    super();
+  }
+
+  execute(): void {
+    this.pageIds.forEach(pageId => {
+      const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
+      if (pageElement) {
+        const img = pageElement.querySelector('img');
+        if (img) {
+          // Store original rotation for undo (only on first execution)
+          if (!this.originalRotations.has(pageId)) {
+            const currentRotation = parseInt(img.style.rotate?.replace(/[^\d-]/g, '') || '0');
+            this.originalRotations.set(pageId, currentRotation);
+          }
+          
+          // Apply rotation
+          const currentRotation = parseInt(img.style.rotate?.replace(/[^\d-]/g, '') || '0');
+          const newRotation = currentRotation + this.degrees;
+          img.style.rotate = `${newRotation}deg`;
+        }
+      }
+    });
+  }
+
+  undo(): void {
+    this.pageIds.forEach(pageId => {
+      const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
+      if (pageElement) {
+        const img = pageElement.querySelector('img');
+        if (img && this.originalRotations.has(pageId)) {
+          img.style.rotate = `${this.originalRotations.get(pageId)}deg`;
+        }
+      }
+    });
+  }
+
+  get description(): string {
+    return `Rotate ${this.pageIds.length} page(s) ${this.degrees > 0 ? 'right' : 'left'}`;
+  }
+}
+
+class BulkSplitCommand extends DOMCommand {
+  private originalSplitPositions: Set<number> = new Set();
+
+  constructor(
+    private positions: number[],
+    private getSplitPositions: () => Set<number>,
+    private setSplitPositions: (positions: Set<number>) => void
+  ) {
+    super();
+  }
+
+  execute(): void {
+    // Store original state for undo (only on first execution)
+    if (this.originalSplitPositions.size === 0) {
+      this.originalSplitPositions = new Set(this.getSplitPositions());
+    }
+
+    // Toggle each position
+    const currentPositions = new Set(this.getSplitPositions());
+    this.positions.forEach(position => {
+      if (currentPositions.has(position)) {
+        currentPositions.delete(position);
+      } else {
+        currentPositions.add(position);
+      }
+    });
+
+    this.setSplitPositions(currentPositions);
+  }
+
+  undo(): void {
+    // Restore original split positions
+    this.setSplitPositions(this.originalSplitPositions);
+  }
+
+  get description(): string {
+    return `Toggle ${this.positions.length} split position(s)`;
+  }
+}
+
 // Simple undo manager for DOM commands
 class UndoManager {
   private undoStack: DOMCommand[] = [];
   private redoStack: DOMCommand[] = [];
+  private onStateChange?: () => void;
+
+  setStateChangeCallback(callback: () => void): void {
+    this.onStateChange = callback;
+  }
 
   executeCommand(command: DOMCommand): void {
     command.execute();
     this.undoStack.push(command);
     this.redoStack = [];
+    this.onStateChange?.();
   }
 
   undo(): boolean {
@@ -89,6 +389,7 @@ class UndoManager {
     if (command) {
       command.undo();
       this.redoStack.push(command);
+      this.onStateChange?.();
       return true;
     }
     return false;
@@ -99,6 +400,7 @@ class UndoManager {
     if (command) {
       command.execute();
       this.undoStack.push(command);
+      this.onStateChange?.();
       return true;
     }
     return false;
@@ -115,6 +417,7 @@ class UndoManager {
   clear(): void {
     this.undoStack = [];
     this.redoStack = [];
+    this.onStateChange?.();
   }
 }
 
@@ -375,14 +678,29 @@ const PageEditor = ({
   
   // Export state
   const [exportLoading, setExportLoading] = useState(false);
+  
+  // Undo/Redo state
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  
+  // Update undo/redo state
+  const updateUndoRedoState = useCallback(() => {
+    setCanUndo(undoManagerRef.current.canUndo());
+    setCanRedo(undoManagerRef.current.canRedo());
+  }, []);
+  
+  // Set up undo manager callback
+  useEffect(() => {
+    undoManagerRef.current.setStateChangeCallback(updateUndoRedoState);
+    // Initialize state
+    updateUndoRedoState();
+  }, [updateUndoRedoState]);
 
 
   // DOM-first command handlers
   const handleRotatePages = useCallback((pageIds: string[], rotation: number) => {
-    pageIds.forEach(pageId => {
-      const command = new RotatePageCommand(pageId, rotation);
-      undoManagerRef.current.executeCommand(command);
-    });
+    const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
+    undoManagerRef.current.executeCommand(bulkRotateCommand);
   }, []);
 
   // Page selection handlers
@@ -414,37 +732,46 @@ const PageEditor = ({
   class RotatePagesCommand {
     constructor(public pageIds: string[], public rotation: number) {}
     execute() {
-      this.pageIds.forEach(pageId => {
-        const command = new RotatePageCommand(pageId, this.rotation);
-        undoManagerRef.current.executeCommand(command);
-      });
+      const bulkRotateCommand = new BulkRotateCommand(this.pageIds, this.rotation);
+      undoManagerRef.current.executeCommand(bulkRotateCommand);
     }
   }
 
-  class DeletePagesCommand {
+  class DeletePagesWrapper {
     constructor(public pageIds: string[]) {}
     execute() {
-      console.log('Delete pages:', this.pageIds);
+      // Convert page IDs to page numbers for the real delete command
+      if (!displayDocument) return;
+      
+      const pagesToDelete = this.pageIds.map(pageId => {
+        const page = displayDocument.pages.find(p => p.id === pageId);
+        return page?.pageNumber || 0;
+      }).filter(num => num > 0);
+      
+      if (pagesToDelete.length > 0) {
+        const deleteCommand = new DeletePagesCommand(
+          pagesToDelete,
+          () => displayDocument,
+          setEditedDocument,
+          setSelectedPageNumbers,
+          () => splitPositions,
+          setSplitPositions,
+          () => selectedPageNumbers
+        );
+        undoManagerRef.current.executeCommand(deleteCommand);
+      }
     }
   }
 
   class ToggleSplitCommand {
     constructor(public position: number) {}
     execute() {
-      if (!displayDocument) return;
-      
-      console.log('Toggle split at position:', this.position);
-      
-      // Toggle the split position in the splitPositions set
-      setSplitPositions(prev => {
-        const newPositions = new Set(prev);
-        if (newPositions.has(this.position)) {
-          newPositions.delete(this.position);
-        } else {
-          newPositions.add(this.position);
-        }
-        return newPositions;
-      });
+      const splitCommand = new SplitCommand(
+        this.position,
+        () => splitPositions,
+        setSplitPositions
+      );
+      undoManagerRef.current.executeCommand(splitCommand);
     }
   }
 
@@ -470,7 +797,7 @@ const PageEditor = ({
   const handleRotate = useCallback((direction: 'left' | 'right') => {
     if (!displayDocument) return;
     const rotation = direction === 'left' ? -90 : 90;
-    const pagesToRotate = selectedPageNumbers.length > 0
+    const pagesToRotate = selectionMode && selectedPageNumbers.length > 0
       ? selectedPageNumbers.map(pageNum => {
           const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
           return page?.id || '';
@@ -478,106 +805,37 @@ const PageEditor = ({
       : displayDocument.pages.map(p => p.id);
     
     handleRotatePages(pagesToRotate, rotation);
-  }, [displayDocument, selectedPageNumbers, handleRotatePages]);
+  }, [displayDocument, selectedPageNumbers, selectionMode, handleRotatePages]);
 
   const handleDelete = useCallback(() => {
-    if (!displayDocument) return;
+    if (!displayDocument || selectedPageNumbers.length === 0) return;
     
-    if (selectedPageNumbers.length === 0) {
-      console.log('No pages selected for deletion');
-      return;
-    }
-    
-    console.log('Delete selected pages:', selectedPageNumbers);
-    
-    // Filter out the selected pages
-    const remainingPages = displayDocument.pages.filter(
-      page => !selectedPageNumbers.includes(page.pageNumber)
+    const deleteCommand = new DeletePagesCommand(
+      selectedPageNumbers,
+      () => displayDocument,
+      setEditedDocument,
+      setSelectedPageNumbers,
+      () => splitPositions,
+      setSplitPositions,
+      () => selectedPageNumbers
     );
-    
-    if (remainingPages.length === 0) {
-      console.log('Cannot delete all pages - at least one page must remain');
-      return;
-    }
-    
-    // Re-number the remaining pages sequentially
-    remainingPages.forEach((page, index) => {
-      page.pageNumber = index + 1;
-    });
-    
-    // Create updated document with remaining pages
-    const updatedDocument: PDFDocument = {
-      ...displayDocument,
-      pages: remainingPages,
-      totalPages: remainingPages.length,
-    };
-    
-    // Update the document state
-    setEditedDocument(updatedDocument);
-    
-    // Clear selection since the selected pages are now deleted
-    setSelectedPageNumbers([]);
-    
-    // Adjust split positions - remove any splits that are now out of bounds
-    setSplitPositions(prev => {
-      const newPositions = new Set<number>();
-      prev.forEach(pos => {
-        if (pos < remainingPages.length - 1) {
-          newPositions.add(pos);
-        }
-      });
-      return newPositions;
-    });
-    
-    console.log(`Deleted ${displayDocument.pages.length - remainingPages.length} pages. ${remainingPages.length} pages remaining.`);
-  }, [selectedPageNumbers, displayDocument]);
+    undoManagerRef.current.executeCommand(deleteCommand);
+  }, [selectedPageNumbers, displayDocument, splitPositions]);
 
   const handleDeletePage = useCallback((pageNumber: number) => {
     if (!displayDocument) return;
     
-    console.log('Delete individual page:', pageNumber);
-    
-    // Filter out the specific page
-    const remainingPages = displayDocument.pages.filter(
-      page => page.pageNumber !== pageNumber
+    const deleteCommand = new DeletePagesCommand(
+      [pageNumber],
+      () => displayDocument,
+      setEditedDocument,
+      setSelectedPageNumbers,
+      () => splitPositions,
+      setSplitPositions,
+      () => selectedPageNumbers
     );
-    
-    if (remainingPages.length === 0) {
-      console.log('Cannot delete the last remaining page');
-      return;
-    }
-    
-    // Re-number the remaining pages sequentially
-    remainingPages.forEach((page, index) => {
-      page.pageNumber = index + 1;
-    });
-    
-    // Create updated document with remaining pages
-    const updatedDocument: PDFDocument = {
-      ...displayDocument,
-      pages: remainingPages,
-      totalPages: remainingPages.length,
-    };
-    
-    // Update the document state
-    setEditedDocument(updatedDocument);
-    
-    // Remove the deleted page from selection if it was selected
-    setSelectedPageNumbers(prev => prev.filter(num => num !== pageNumber));
-    
-    // Adjust split positions - remove any splits that are now out of bounds
-    setSplitPositions(prev => {
-      const newPositions = new Set<number>();
-      prev.forEach(pos => {
-        if (pos < remainingPages.length - 1) {
-          newPositions.add(pos);
-        }
-      });
-      return newPositions;
-    });
-    
-    console.log(`Deleted page ${pageNumber}. ${remainingPages.length} pages remaining.`);
-  }, [displayDocument]);
+    undoManagerRef.current.executeCommand(deleteCommand);
+  }, [displayDocument, splitPositions, selectedPageNumbers]);
 
   const handleSplit = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
@@ -585,93 +843,83 @@ const PageEditor = ({
     console.log('Toggle split markers at selected page positions:', selectedPageNumbers);
     
     // Convert page numbers to positions (0-based indices)
+    const positions: number[] = [];
     selectedPageNumbers.forEach(pageNum => {
       const pageIndex = displayDocument.pages.findIndex(p => p.pageNumber === pageNum);
       if (pageIndex !== -1 && pageIndex < displayDocument.pages.length - 1) {
         // Only allow splits before the last page
-        const command = new ToggleSplitCommand(pageIndex);
-        command.execute();
+        positions.push(pageIndex);
       }
     });
-  }, [selectedPageNumbers, displayDocument]);
+
+    if (positions.length > 0) {
+      const bulkSplitCommand = new BulkSplitCommand(
+        positions,
+        () => splitPositions,
+        setSplitPositions
+      );
+      undoManagerRef.current.executeCommand(bulkSplitCommand);
+    }
+  }, [selectedPageNumbers, displayDocument, splitPositions]);
 
   const handleSplitAll = useCallback(() => {
     if (!displayDocument) return;
     
-    // Check if all possible split positions are already set
-    const allPossibleSplits = new Set<number>();
-    for (let i = 0; i < displayDocument.pages.length - 1; i++) {
-      allPossibleSplits.add(i);
+    // Create a command that toggles all splits
+    class SplitAllCommand extends DOMCommand {
+      private originalSplitPositions: Set<number> = new Set();
+      private allPossibleSplits: Set<number> = new Set();
+      
+      constructor() {
+        super();
+        // Calculate all possible split positions
+        for (let i = 0; i < displayDocument!.pages.length - 1; i++) {
+          this.allPossibleSplits.add(i);
+        }
+      }
+      
+      execute(): void {
+        // Store original state for undo
+        this.originalSplitPositions = new Set(splitPositions);
+        
+        // Check if all splits are already active
+        const hasAllSplits = Array.from(this.allPossibleSplits).every(pos => splitPositions.has(pos));
+        
+        if (hasAllSplits) {
+          // Remove all splits
+          setSplitPositions(new Set());
+        } else {
+          // Add all splits
+          setSplitPositions(this.allPossibleSplits);
+        }
+      }
+      
+      undo(): void {
+        // Restore original split positions
+        setSplitPositions(this.originalSplitPositions);
+      }
+      
+      get description(): string {
+        const hasAllSplits = Array.from(this.allPossibleSplits).every(pos => splitPositions.has(pos));
+        return hasAllSplits ? 'Remove all splits' : 'Split all pages';
+      }
     }
     
-    const hasAllSplits = Array.from(allPossibleSplits).every(pos => splitPositions.has(pos));
-    
-    if (hasAllSplits) {
-      // Remove all splits
-      console.log('Removing all split markers');
-      setSplitPositions(new Set());
-    } else {
-      // Add split marker after every page except the last one
-      console.log('Adding split markers after every page');
-      setSplitPositions(allPossibleSplits);
-    }
+    const splitAllCommand = new SplitAllCommand();
+    undoManagerRef.current.executeCommand(splitAllCommand);
   }, [displayDocument, splitPositions]);
 
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => {
     if (!displayDocument) return;
     
-    console.log('Reorder pages:', { sourcePageNumber, targetIndex, selectedPages });
-    
-    // Find the source page
-    const sourceIndex = displayDocument.pages.findIndex(p => p.pageNumber === sourcePageNumber);
-    if (sourceIndex === -1) return;
-    
-    // Create a new pages array with reordered pages
-    const newPages = [...displayDocument.pages];
-    
-    if (selectedPages && selectedPages.length > 1 && selectedPages.includes(sourcePageNumber)) {
-      // Multi-page drag: move all selected pages together
-      const selectedPageObjects = selectedPages
-        .map(pageNum => displayDocument.pages.find(p => p.pageNumber === pageNum))
-        .filter(page => page !== undefined) as PDFPage[];
-      
-      // Remove selected pages from their current positions
-      const remainingPages = newPages.filter(page => !selectedPages.includes(page.pageNumber));
-      
-      // Insert selected pages at target position
-      remainingPages.splice(targetIndex, 0, ...selectedPageObjects);
-      
-      // Update page numbers to reflect new positions
-      remainingPages.forEach((page, index) => {
-        page.pageNumber = index + 1;
-      });
-      
-      newPages.splice(0, newPages.length, ...remainingPages);
-    } else {
-      // Single page drag
-      const [movedPage] = newPages.splice(sourceIndex, 1);
-      newPages.splice(targetIndex, 0, movedPage);
-      
-      // Update page numbers to reflect new positions
-      newPages.forEach((page, index) => {
-        page.pageNumber = index + 1;
-      });
-    }
-    
-    // Update the document with reordered pages
-    const reorderedDocument: PDFDocument = {
-      ...displayDocument,
-      pages: newPages,
-      totalPages: newPages.length,
-    };
-    
-    console.log('Reordered document page numbers:', newPages.map(p => p.pageNumber));
-    console.log('Reordered document page IDs:', newPages.map(p => p.id));
-    
-    // Update the edited document state
-    setEditedDocument(reorderedDocument);
-    
-    console.log('Pages reordered successfully');
+    const reorderCommand = new ReorderPagesCommand(
+      sourcePageNumber,
+      targetIndex,
+      selectedPages,
+      () => displayDocument,
+      setEditedDocument
+    );
+    undoManagerRef.current.executeCommand(reorderCommand);
   }, [displayDocument]);
 
 
@@ -818,8 +1066,8 @@ const PageEditor = ({
       onFunctionsReady({
         handleUndo,
         handleRedo,
-        canUndo: undoManagerRef.current.canUndo(),
-        canRedo: undoManagerRef.current.canRedo(),
+        canUndo,
+        canRedo,
         handleRotate,
         handleDelete,
         handleSplit,
@@ -837,7 +1085,7 @@ const PageEditor = ({
       });
     }
   }, [
-    onFunctionsReady, handleUndo, handleRedo, handleRotate, handleDelete, handleSplit, handleSplitAll,
+    onFunctionsReady, handleUndo, handleRedo, canUndo, canRedo, handleRotate, handleDelete, handleSplit, handleSplitAll,
     handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading, selectionMode, selectedPageNumbers, 
     splitPositions, displayDocument?.pages.length, closePdf
   ]);
@@ -965,7 +1213,7 @@ const PageEditor = ({
                 onSetMovingPage={setMovingPage}
                 onDeletePage={handleDeletePage}
                 RotatePagesCommand={RotatePagesCommand}
-                DeletePagesCommand={DeletePagesCommand}
+                DeletePagesCommand={DeletePagesWrapper}
                 ToggleSplitCommand={ToggleSplitCommand}
                 pdfDocument={displayDocument}
                 setPdfDocument={setEditedDocument}

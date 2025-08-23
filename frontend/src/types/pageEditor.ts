@@ -48,9 +48,12 @@ export interface PageEditorFunctions {
   handleRotate: (direction: 'left' | 'right') => void;
   handleDelete: () => void;
   handleSplit: () => void;
+  handleSplitAll: () => void;
   onExportSelected: () => void;
   onExportAll: () => void;
   exportLoading: boolean;
   selectionMode: boolean;
   selectedPages: number[];
+  splitPositions: Set<number>;
+  totalPages: number;
 }
