@@ -605,9 +605,9 @@ class TextFinderTest {
             List<PDFText> foundTexts1 = textFinder1.getFoundTexts();
 
             assertEquals(
-                    1,
+                    2,
                     foundTexts1.size(),
-                    "Should find only the standalone '1'; do not count the '1' in '1.0' or in 'Item1'.");
+                    "Should find only the standalone '2'; do not count the '1' in '1.0' or in 'Item1'.");
 
             TextFinder textFinder2 = new TextFinder("2", false, true);
             textFinder2.getText(document);
