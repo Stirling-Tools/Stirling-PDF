@@ -34,6 +34,7 @@ interface PageThumbnailProps {
   onExecuteCommand: (command: DOMCommand) => void;
   onSetStatus: (status: string) => void;
   onSetMovingPage: (page: number | null) => void;
+  onDeletePage: (pageNumber: number) => void;
   RotatePagesCommand: any;
   DeletePagesCommand: any;
   ToggleSplitCommand: any;
@@ -58,6 +59,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   onExecuteCommand,
   onSetStatus,
   onSetMovingPage,
+  onDeletePage,
   RotatePagesCommand,
   DeletePagesCommand,
   ToggleSplitCommand,
@@ -190,9 +192,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Delete page:', page.pageNumber);
+    onDeletePage(page.pageNumber);
     onSetStatus(`Deleted page ${page.pageNumber}`);
-  }, [page.pageNumber, onSetStatus]);
+  }, [page.pageNumber, onDeletePage, onSetStatus]);
 
   const handleSplit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();

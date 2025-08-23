@@ -366,7 +366,6 @@ const PageEditor = ({
   const [selectedPageNumbers, setSelectedPageNumbers] = useState<number[]>([]);
   const [movingPage, setMovingPage] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [csvInput, setCsvInput] = useState('');
   
   // Position-based split tracking (replaces page-based splitAfter)
   const [splitPositions, setSplitPositions] = useState<Set<number>>(new Set());
@@ -404,31 +403,6 @@ const PageEditor = ({
     );
   }, [mergedPdfDocument]);
 
-  // CSV page selection
-  const updatePagesFromCSV = useCallback(() => {
-    if (!csvInput.trim()) return;
-    
-    const pageNumbers: number[] = [];
-    const ranges = csvInput.split(',').map(s => s.trim());
-    
-    ranges.forEach(range => {
-      if (range.includes('-')) {
-        const [start, end] = range.split('-').map(n => parseInt(n.trim()));
-        if (!isNaN(start) && !isNaN(end)) {
-          for (let i = start; i <= end; i++) {
-            pageNumbers.push(i);
-          }
-        }
-      } else {
-        const num = parseInt(range);
-        if (!isNaN(num)) {
-          pageNumbers.push(num);
-        }
-      }
-    });
-    
-    setSelectedPageNumbers(pageNumbers);
-  }, [csvInput]);
 
   // Animation helpers
   const animateReorder = useCallback(() => {
@@ -507,8 +481,103 @@ const PageEditor = ({
   }, [displayDocument, selectedPageNumbers, handleRotatePages]);
 
   const handleDelete = useCallback(() => {
+    if (!displayDocument) return;
+    
+    if (selectedPageNumbers.length === 0) {
+      console.log('No pages selected for deletion');
+      return;
+    }
+    
     console.log('Delete selected pages:', selectedPageNumbers);
-  }, [selectedPageNumbers]);
+    
+    // Filter out the selected pages
+    const remainingPages = displayDocument.pages.filter(
+      page => !selectedPageNumbers.includes(page.pageNumber)
+    );
+    
+    if (remainingPages.length === 0) {
+      console.log('Cannot delete all pages - at least one page must remain');
+      return;
+    }
+    
+    // Re-number the remaining pages sequentially
+    remainingPages.forEach((page, index) => {
+      page.pageNumber = index + 1;
+    });
+    
+    // Create updated document with remaining pages
+    const updatedDocument: PDFDocument = {
+      ...displayDocument,
+      pages: remainingPages,
+      totalPages: remainingPages.length,
+    };
+    
+    // Update the document state
+    setEditedDocument(updatedDocument);
+    
+    // Clear selection since the selected pages are now deleted
+    setSelectedPageNumbers([]);
+    
+    // Adjust split positions - remove any splits that are now out of bounds
+    setSplitPositions(prev => {
+      const newPositions = new Set<number>();
+      prev.forEach(pos => {
+        if (pos < remainingPages.length - 1) {
+          newPositions.add(pos);
+        }
+      });
+      return newPositions;
+    });
+    
+    console.log(`Deleted ${displayDocument.pages.length - remainingPages.length} pages. ${remainingPages.length} pages remaining.`);
+  }, [selectedPageNumbers, displayDocument]);
+
+  const handleDeletePage = useCallback((pageNumber: number) => {
+    if (!displayDocument) return;
+    
+    console.log('Delete individual page:', pageNumber);
+    
+    // Filter out the specific page
+    const remainingPages = displayDocument.pages.filter(
+      page => page.pageNumber !== pageNumber
+    );
+    
+    if (remainingPages.length === 0) {
+      console.log('Cannot delete the last remaining page');
+      return;
+    }
+    
+    // Re-number the remaining pages sequentially
+    remainingPages.forEach((page, index) => {
+      page.pageNumber = index + 1;
+    });
+    
+    // Create updated document with remaining pages
+    const updatedDocument: PDFDocument = {
+      ...displayDocument,
+      pages: remainingPages,
+      totalPages: remainingPages.length,
+    };
+    
+    // Update the document state
+    setEditedDocument(updatedDocument);
+    
+    // Remove the deleted page from selection if it was selected
+    setSelectedPageNumbers(prev => prev.filter(num => num !== pageNumber));
+    
+    // Adjust split positions - remove any splits that are now out of bounds
+    setSplitPositions(prev => {
+      const newPositions = new Set<number>();
+      prev.forEach(pos => {
+        if (pos < remainingPages.length - 1) {
+          newPositions.add(pos);
+        }
+      });
+      return newPositions;
+    });
+    
+    console.log(`Deleted page ${pageNumber}. ${remainingPages.length} pages remaining.`);
+  }, [displayDocument]);
 
   const handleSplit = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
@@ -826,15 +895,6 @@ const PageEditor = ({
             </Group>
           </Group>
 
-          {/* Bulk selection panel - only show in selection mode */}
-          {selectionMode && (
-            <BulkSelectionPanel
-              csvInput={csvInput}
-              setCsvInput={setCsvInput}
-              selectedPages={selectedPageNumbers}
-              onUpdatePagesFromCSV={updatePagesFromCSV}
-            />
-          )}
 
           {/* Split Lines Overlay */}
           <div 
@@ -903,6 +963,7 @@ const PageEditor = ({
                 onExecuteCommand={executeCommand}
                 onSetStatus={() => {}}
                 onSetMovingPage={setMovingPage}
+                onDeletePage={handleDeletePage}
                 RotatePagesCommand={RotatePagesCommand}
                 DeletePagesCommand={DeletePagesCommand}
                 ToggleSplitCommand={ToggleSplitCommand}

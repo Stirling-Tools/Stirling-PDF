@@ -159,17 +159,19 @@ const PageEditorControls = ({
             <RotateRightIcon />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={selectionMode ? "Delete Selected" : "Delete All"}>
-          <ActionIcon
-            onClick={onDelete}
-            disabled={selectionMode && selectedPages.length === 0}
-            color="red"
-            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
-            size="lg"
-          >
-            <DeleteIcon />
-          </ActionIcon>
-        </Tooltip>
+        {selectionMode && (
+          <Tooltip label="Delete Selected">
+            <ActionIcon
+              onClick={onDelete}
+              disabled={selectedPages.length === 0}
+              color="red"
+              variant={selectedPages.length > 0 ? "light" : "default"}
+              size="lg"
+            >
+              <DeleteIcon />
+            </ActionIcon>
+          </Tooltip>
+        )}
         <Tooltip label={getSplitAllTooltip()}>
           <ActionIcon
             onClick={selectionMode ? onSplit : onSplitAll}
@@ -185,13 +187,13 @@ const PageEditorControls = ({
         <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
 
         {/* Export Controls */}
-        {selectionMode && selectedPages.length > 0 && (
+        {selectionMode && (
           <Tooltip label="Export Selected">
             <ActionIcon
               onClick={onExportSelected}
-              disabled={exportLoading}
+              disabled={exportLoading || selectedPages.length === 0}
               color="blue"
-              variant="light"
+              variant={selectedPages.length > 0 ? "light" : "default"}
               size="lg"
             >
               <DownloadIcon />
