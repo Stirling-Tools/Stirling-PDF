@@ -999,7 +999,7 @@ const PageEditor = ({
         });
         
         const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const zipFilename = displayDocument.name.replace(/\.pdf$/i, '_split.zip');
+        const zipFilename = displayDocument.name.replace(/\.pdf$/i, '.zip');
         
         pdfExportService.downloadFile(zipBlob, zipFilename);
       } else {
@@ -1094,7 +1094,7 @@ const PageEditor = ({
   const displayedPages = displayDocument?.pages || [];
 
   return (
-    <Box pos="relative" h="100vh" style={{ overflow: 'auto' }} data-scrolling-container="true">
+    <Box pos="relative" h="100vh" pt={40} style={{ overflow: 'auto' }} data-scrolling-container="true">
       <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
 
       {!mergedPdfDocument && !globalProcessing && activeFileIds.length === 0 && (
@@ -1178,7 +1178,7 @@ const PageEditor = ({
                     left: leftPosition,
                     top: topPosition,
                     width: '1px',
-                    height: '320px', // Match item height
+                    height: '20rem', // Match item height
                     borderLeft: '1px dashed #3b82f6'
                   }}
                 />

@@ -69,6 +69,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 }: PageThumbnailProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const dragElementRef = useRef<HTMLDivElement>(null);
   const { getThumbnailFromCache } = useThumbnailGeneration();
 
@@ -194,6 +196,40 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     onSetStatus(`Split marker ${action} after position ${index + 1}`);
   }, [index, splitPositions, onExecuteCommand, onSetStatus, ToggleSplitCommand]);
 
+  // Handle click vs drag differentiation
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!selectionMode) return;
+    
+    setIsMouseDown(true);
+    setMouseStartPos({ x: e.clientX, y: e.clientY });
+  }, [selectionMode]);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (!selectionMode || !isMouseDown || !mouseStartPos) {
+      setIsMouseDown(false);
+      setMouseStartPos(null);
+      return;
+    }
+
+    // Calculate distance moved
+    const deltaX = Math.abs(e.clientX - mouseStartPos.x);
+    const deltaY = Math.abs(e.clientY - mouseStartPos.y);
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    // If mouse moved less than 5 pixels, consider it a click (not a drag)
+    if (distance < 5 && !isDragging) {
+      onTogglePage(page.pageNumber);
+    }
+
+    setIsMouseDown(false);
+    setMouseStartPos(null);
+  }, [selectionMode, isMouseDown, mouseStartPos, isDragging, page.pageNumber, onTogglePage]);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsMouseDown(false);
+    setMouseStartPos(null);
+  }, []);
+
   return (
     <div
       ref={pageElementRef}
@@ -202,7 +238,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       className={`
         ${styles.pageContainer}
         !rounded-lg
-        cursor-grab
+        ${selectionMode ? 'cursor-pointer' : 'cursor-grab'}
         select-none
         w-[20rem]
         h-[20rem]
@@ -222,6 +258,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
       }}
       draggable={false}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
     >
       {selectionMode && (
         <div
@@ -240,13 +279,10 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             cursor: 'pointer'
           }}
           onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
           onDragStart={(e) => {
             e.preventDefault();
             e.stopPropagation();
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePage(page.pageNumber);
           }}
         >
           <Checkbox

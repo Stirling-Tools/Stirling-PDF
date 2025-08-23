@@ -82,8 +82,7 @@ export class PDFExportService {
    */
   private generateFilename(originalName: string, selectedOnly: boolean): string {
     const baseName = originalName.replace(/\.pdf$/i, '');
-    const suffix = selectedOnly ? '_selected' : '_edited';
-    return `${baseName}${suffix}.pdf`;
+    return `${baseName}.pdf`;
   }
 
 
