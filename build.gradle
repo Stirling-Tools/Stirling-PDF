@@ -34,6 +34,13 @@ ext {
     tempJrePath = null
 }
 
+ext.isSecurityDisabled = { ->
+    System.getenv('DOCKER_ENABLE_SECURITY') == 'false' ||
+    System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true' ||
+    (project.hasProperty('DISABLE_ADDITIONAL_FEATURES') &&
+     System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')
+}
+
 jar {
     enabled = false
     manifest {
@@ -220,37 +227,6 @@ licenseReport {
     renderers = [new JsonReportRenderer()]
     allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
-}
-
-sourceSets {
-    main {
-        java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
-                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
-                exclude 'stirling/software/proprietary/security/**'
-            }
-
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
-            }
-
-        }
-    }
-
-    test {
-        java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
-                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
-                exclude 'stirling/software/proprietary/security/**'
-            }
-
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
-            }
-        }
-    }
 }
 
 // Configure the forked spring boot run task to properly delegate to the stirling-pdf module
@@ -575,9 +551,7 @@ swaggerhubUpload {
 dependencies {
     implementation project(':stirling-pdf')
     implementation project(':common')
-    if (System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
-        || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-        && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
+    if (rootProject.ext.isSecurityDisabled()) {
         implementation project(':proprietary')
     }
 
@@ -591,7 +565,6 @@ dependencies {
 tasks.named("test") {
     useJUnitPlatform()
 }
-
 
 // Make sure all relevant processes depend on writeVersion
 processResources.dependsOn(writeVersion)
