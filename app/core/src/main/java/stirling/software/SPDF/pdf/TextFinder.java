@@ -27,7 +27,6 @@ public class TextFinder extends PDFTextStripper {
 
     public TextFinder(String searchTerm, boolean useRegex, boolean wholeWordSearch)
             throws IOException {
-        super();
         this.searchTerm = searchTerm;
         this.useRegex = useRegex;
         this.wholeWordSearch = wholeWordSearch;
@@ -68,6 +67,10 @@ public class TextFinder extends PDFTextStripper {
         }
 
         String processedSearchTerm = this.searchTerm.trim();
+        if (processedSearchTerm.isEmpty()) {
+            super.endPage(page);
+            return;
+        }
         String regex = this.useRegex ? processedSearchTerm : "\\Q" + processedSearchTerm + "\\E";
         if (this.wholeWordSearch) {
             if (processedSearchTerm.length() == 1
