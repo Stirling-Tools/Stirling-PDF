@@ -1,0 +1,8 @@
+pip
+setuptools
+WeasyPrint
+pdf2image
+pillow
+unoserver
+opencv-python-headless
+pre-commit
