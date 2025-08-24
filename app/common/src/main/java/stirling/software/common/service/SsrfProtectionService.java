@@ -51,16 +51,11 @@ public class SsrfProtectionService {
 
         SsrfProtectionLevel level = parseProtectionLevel(config.getLevel());
 
-        switch (level) {
-            case OFF:
-                return true;
-            case MAX:
-                return isMaxSecurityAllowed(trimmedUrl, config);
-            case MEDIUM:
-                return isMediumSecurityAllowed(trimmedUrl, config);
-            default:
-                return false;
-        }
+        return switch (level) {
+            case OFF -> true;
+            case MAX -> isMaxSecurityAllowed(trimmedUrl, config);
+            case MEDIUM -> isMediumSecurityAllowed(trimmedUrl, config);
+        };
     }
 
     private SsrfProtectionLevel parseProtectionLevel(String level) {
