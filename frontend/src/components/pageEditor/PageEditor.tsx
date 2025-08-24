@@ -9,426 +9,28 @@ import { useFileState, useFileActions, useCurrentFile, useFileSelection } from "
 import { ModeType } from "../../contexts/NavigationContext";
 import { PDFDocument, PDFPage } from "../../types/pageEditor";
 import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
-import { useUndoRedo } from "../../hooks/useUndoRedo";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
-import { enhancedPDFProcessingService } from "../../services/enhancedPDFProcessingService";
-import { fileProcessingService } from "../../services/fileProcessingService";
-import { pdfProcessingService } from "../../services/pdfProcessingService";
-import { pdfWorkerManager } from "../../services/pdfWorkerManager";
 // Thumbnail generation is now handled by individual PageThumbnail components
-import { fileStorage } from "../../services/fileStorage";
-import { indexedDBManager, DATABASE_CONFIGS } from "../../services/indexedDBManager";
 import './PageEditor.module.css';
 import PageThumbnail from './PageThumbnail';
 import DragDropGrid from './DragDropGrid';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
 
-// V1-style DOM-first command system (replaces the old React state commands)
-abstract class DOMCommand {
-  abstract execute(): void;
-  abstract undo(): void;
-  abstract description: string;
-}
-
-class RotatePageCommand extends DOMCommand {
-  constructor(
-    private pageId: string,
-    private degrees: number
-  ) {
-    super();
-  }
-
-  execute(): void {
-    // Only update DOM for immediate visual feedback
-    const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
-    if (pageElement) {
-      const img = pageElement.querySelector('img');
-      if (img) {
-        // Extract current rotation from transform property to match the animated CSS
-        const currentTransform = img.style.transform || '';
-        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-        const newRotation = currentRotation + this.degrees;
-        img.style.transform = `rotate(${newRotation}deg)`;
-      }
-    }
-  }
-
-  undo(): void {
-    // Only update DOM
-    const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
-    if (pageElement) {
-      const img = pageElement.querySelector('img');
-      if (img) {
-        // Extract current rotation from transform property
-        const currentTransform = img.style.transform || '';
-        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-        const previousRotation = currentRotation - this.degrees;
-        img.style.transform = `rotate(${previousRotation}deg)`;
-      }
-    }
-  }
-
-  get description(): string {
-    return `Rotate page ${this.degrees > 0 ? 'right' : 'left'}`;
-  }
-}
-
-class DeletePagesCommand extends DOMCommand {
-  private originalDocument: PDFDocument | null = null;
-  private originalSplitPositions: Set<number> = new Set();
-  private originalSelectedPages: number[] = [];
-  private hasExecuted: boolean = false;
-  private pageIdsToDelete: string[] = [];
-
-  constructor(
-    private pagesToDelete: number[],
-    private getCurrentDocument: () => PDFDocument | null,
-    private setDocument: (doc: PDFDocument) => void,
-    private setSelectedPages: (pages: number[]) => void,
-    private getSplitPositions: () => Set<number>,
-    private setSplitPositions: (positions: Set<number>) => void,
-    private getSelectedPages: () => number[]
-  ) {
-    super();
-  }
-
-  execute(): void {
-    const currentDoc = this.getCurrentDocument();
-    if (!currentDoc || this.pagesToDelete.length === 0) return;
-
-    // Store complete original state for undo (only on first execution)
-    if (!this.hasExecuted) {
-      this.originalDocument = {
-        ...currentDoc,
-        pages: currentDoc.pages.map(page => ({...page})) // Deep copy pages
-      };
-      this.originalSplitPositions = new Set(this.getSplitPositions());
-      this.originalSelectedPages = [...this.getSelectedPages()];
-      
-      // Convert page numbers to page IDs for stable identification
-      this.pageIdsToDelete = this.pagesToDelete.map(pageNum => {
-        const page = currentDoc.pages.find(p => p.pageNumber === pageNum);
-        return page?.id || '';
-      }).filter(id => id);
-      
-      this.hasExecuted = true;
-    }
-
-    // Filter out deleted pages by ID (stable across undo/redo)
-    const remainingPages = currentDoc.pages.filter(page => 
-      !this.pageIdsToDelete.includes(page.id)
-    );
-
-    if (remainingPages.length === 0) return; // Safety check
-
-    // Renumber remaining pages
-    remainingPages.forEach((page, index) => {
-      page.pageNumber = index + 1;
-    });
-
-    // Update document
-    const updatedDocument: PDFDocument = {
-      ...currentDoc,
-      pages: remainingPages,
-      totalPages: remainingPages.length,
-    };
-
-    // Adjust split positions
-    const currentSplitPositions = this.getSplitPositions();
-    const newPositions = new Set<number>();
-    currentSplitPositions.forEach(pos => {
-      if (pos < remainingPages.length - 1) {
-        newPositions.add(pos);
-      }
-    });
-
-    // Apply changes
-    this.setDocument(updatedDocument);
-    this.setSelectedPages([]);
-    this.setSplitPositions(newPositions);
-  }
-
-  undo(): void {
-    if (!this.originalDocument) return;
-
-    // Simply restore the complete original document state
-    this.setDocument(this.originalDocument);
-    this.setSplitPositions(this.originalSplitPositions);
-    this.setSelectedPages(this.originalSelectedPages);
-  }
-
-  get description(): string {
-    return `Delete ${this.pagesToDelete.length} page(s)`;
-  }
-}
-
-class ReorderPagesCommand extends DOMCommand {
-  private originalPages: PDFPage[] = [];
-
-  constructor(
-    private sourcePageNumber: number,
-    private targetIndex: number,
-    private selectedPages: number[] | undefined,
-    private getCurrentDocument: () => PDFDocument | null,
-    private setDocument: (doc: PDFDocument) => void
-  ) {
-    super();
-  }
-
-  execute(): void {
-    const currentDoc = this.getCurrentDocument();
-    if (!currentDoc) return;
-
-    // Store original state for undo
-    this.originalPages = currentDoc.pages.map(page => ({...page}));
-
-    // Perform the reorder
-    const sourceIndex = currentDoc.pages.findIndex(p => p.pageNumber === this.sourcePageNumber);
-    if (sourceIndex === -1) return;
-
-    const newPages = [...currentDoc.pages];
-
-    if (this.selectedPages && this.selectedPages.length > 1 && this.selectedPages.includes(this.sourcePageNumber)) {
-      // Multi-page reorder
-      const selectedPageObjects = this.selectedPages
-        .map(pageNum => currentDoc.pages.find(p => p.pageNumber === pageNum))
-        .filter(page => page !== undefined) as PDFPage[];
-      
-      const remainingPages = newPages.filter(page => !this.selectedPages!.includes(page.pageNumber));
-      remainingPages.splice(this.targetIndex, 0, ...selectedPageObjects);
-      
-      remainingPages.forEach((page, index) => {
-        page.pageNumber = index + 1;
-      });
-      
-      newPages.splice(0, newPages.length, ...remainingPages);
-    } else {
-      // Single page reorder
-      const [movedPage] = newPages.splice(sourceIndex, 1);
-      newPages.splice(this.targetIndex, 0, movedPage);
-      
-      newPages.forEach((page, index) => {
-        page.pageNumber = index + 1;
-      });
-    }
-
-    const reorderedDocument: PDFDocument = {
-      ...currentDoc,
-      pages: newPages,
-      totalPages: newPages.length,
-    };
-
-    this.setDocument(reorderedDocument);
-  }
-
-  undo(): void {
-    const currentDoc = this.getCurrentDocument();
-    if (!currentDoc || this.originalPages.length === 0) return;
-
-    // Restore original page order
-    const restoredDocument: PDFDocument = {
-      ...currentDoc,
-      pages: this.originalPages,
-      totalPages: this.originalPages.length,
-    };
-
-    this.setDocument(restoredDocument);
-  }
-
-  get description(): string {
-    return `Reorder page(s)`;
-  }
-}
-
-class SplitCommand extends DOMCommand {
-  private originalSplitPositions: Set<number> = new Set();
-
-  constructor(
-    private position: number,
-    private getSplitPositions: () => Set<number>,
-    private setSplitPositions: (positions: Set<number>) => void
-  ) {
-    super();
-  }
-
-  execute(): void {
-    // Store original state for undo
-    this.originalSplitPositions = new Set(this.getSplitPositions());
-
-    // Toggle the split position
-    const currentPositions = this.getSplitPositions();
-    const newPositions = new Set(currentPositions);
-    
-    if (newPositions.has(this.position)) {
-      newPositions.delete(this.position);
-    } else {
-      newPositions.add(this.position);
-    }
-    
-    this.setSplitPositions(newPositions);
-  }
-
-  undo(): void {
-    // Restore original split positions
-    this.setSplitPositions(this.originalSplitPositions);
-  }
-
-  get description(): string {
-    const currentPositions = this.getSplitPositions();
-    const willAdd = !currentPositions.has(this.position);
-    return `${willAdd ? 'Add' : 'Remove'} split at position ${this.position + 1}`;
-  }
-}
-
-class BulkRotateCommand extends DOMCommand {
-  private originalRotations: Map<string, number> = new Map();
-
-  constructor(
-    private pageIds: string[],
-    private degrees: number
-  ) {
-    super();
-  }
-
-  execute(): void {
-    this.pageIds.forEach(pageId => {
-      const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
-      if (pageElement) {
-        const img = pageElement.querySelector('img');
-        if (img) {
-          // Store original rotation for undo (only on first execution)
-          if (!this.originalRotations.has(pageId)) {
-            const currentTransform = img.style.transform || '';
-            const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-            const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-            this.originalRotations.set(pageId, currentRotation);
-          }
-          
-          // Apply rotation using transform to trigger CSS animation
-          const currentTransform = img.style.transform || '';
-          const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-          const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-          const newRotation = currentRotation + this.degrees;
-          img.style.transform = `rotate(${newRotation}deg)`;
-        }
-      }
-    });
-  }
-
-  undo(): void {
-    this.pageIds.forEach(pageId => {
-      const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
-      if (pageElement) {
-        const img = pageElement.querySelector('img');
-        if (img && this.originalRotations.has(pageId)) {
-          img.style.transform = `rotate(${this.originalRotations.get(pageId)}deg)`;
-        }
-      }
-    });
-  }
-
-  get description(): string {
-    return `Rotate ${this.pageIds.length} page(s) ${this.degrees > 0 ? 'right' : 'left'}`;
-  }
-}
-
-class BulkSplitCommand extends DOMCommand {
-  private originalSplitPositions: Set<number> = new Set();
-
-  constructor(
-    private positions: number[],
-    private getSplitPositions: () => Set<number>,
-    private setSplitPositions: (positions: Set<number>) => void
-  ) {
-    super();
-  }
-
-  execute(): void {
-    // Store original state for undo (only on first execution)
-    if (this.originalSplitPositions.size === 0) {
-      this.originalSplitPositions = new Set(this.getSplitPositions());
-    }
-
-    // Toggle each position
-    const currentPositions = new Set(this.getSplitPositions());
-    this.positions.forEach(position => {
-      if (currentPositions.has(position)) {
-        currentPositions.delete(position);
-      } else {
-        currentPositions.add(position);
-      }
-    });
-
-    this.setSplitPositions(currentPositions);
-  }
-
-  undo(): void {
-    // Restore original split positions
-    this.setSplitPositions(this.originalSplitPositions);
-  }
-
-  get description(): string {
-    return `Toggle ${this.positions.length} split position(s)`;
-  }
-}
-
-// Simple undo manager for DOM commands
-class UndoManager {
-  private undoStack: DOMCommand[] = [];
-  private redoStack: DOMCommand[] = [];
-  private onStateChange?: () => void;
-
-  setStateChangeCallback(callback: () => void): void {
-    this.onStateChange = callback;
-  }
-
-  executeCommand(command: DOMCommand): void {
-    command.execute();
-    this.undoStack.push(command);
-    this.redoStack = [];
-    this.onStateChange?.();
-  }
-
-  undo(): boolean {
-    const command = this.undoStack.pop();
-    if (command) {
-      command.undo();
-      this.redoStack.push(command);
-      this.onStateChange?.();
-      return true;
-    }
-    return false;
-  }
-
-  redo(): boolean {
-    const command = this.redoStack.pop();
-    if (command) {
-      command.execute();
-      this.undoStack.push(command);
-      this.onStateChange?.();
-      return true;
-    }
-    return false;
-  }
-
-  canUndo(): boolean {
-    return this.undoStack.length > 0;
-  }
-
-  canRedo(): boolean {
-    return this.redoStack.length > 0;
-  }
-
-  clear(): void {
-    this.undoStack = [];
-    this.redoStack = [];
-    this.onStateChange?.();
-  }
-}
+import {
+  DOMCommand,
+  RotatePageCommand,
+  DeletePagesCommand,
+  ReorderPagesCommand,
+  SplitCommand,
+  BulkRotateCommand,
+  BulkSplitCommand,
+  SplitAllCommand,
+  UndoManager
+} from './commands/pageCommands';
+import { usePageDocument } from './hooks/usePageDocument';
+import { usePageEditorState } from './hooks/usePageEditorState';
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: {
@@ -485,126 +87,19 @@ const PageEditor = ({
   // DOM-first undo manager (replaces the old React state undo system)
   const undoManagerRef = useRef(new UndoManager());
 
-  // Thumbnail generation is now handled on-demand by individual PageThumbnail components using modern services
+  // Document state management
+  const { document: mergedPdfDocument, isVeryLargeDocument, isLoading: documentLoading } = usePageDocument();
 
 
-  // Get primary file record outside useMemo to track processedFile changes
-  const primaryFileRecord = primaryFileId ? selectors.getFileRecord(primaryFileId) : null;
-  const processedFilePages = primaryFileRecord?.processedFile?.pages;
-  const processedFileTotalPages = primaryFileRecord?.processedFile?.totalPages;
-
-  // Compute merged document with stable signature (prevents infinite loops)
-  const mergedPdfDocument = useMemo((): PDFDocument | null => {
-    if (activeFileIds.length === 0) return null;
-
-    const primaryFile = primaryFileId ? selectors.getFile(primaryFileId) : null;
-    
-    // If we have file IDs but no file record, something is wrong - return null to show loading
-    if (!primaryFileRecord) {
-      console.log('🎬 PageEditor: No primary file record found, showing loading');
-      return null;
-    }
-
-    const name =
-      activeFileIds.length === 1
-        ? (primaryFileRecord.name ?? 'document.pdf')
-        : activeFileIds
-            .map(id => (selectors.getFileRecord(id)?.name ?? 'file').replace(/\.pdf$/i, ''))
-            .join(' + ');
-
-    // Debug logging for merged document creation
-    console.log(`🎬 PageEditor: Building merged document for ${name} with ${activeFileIds.length} files`);
-    
-    // Collect pages from ALL active files, not just the primary file
-    let pages: PDFPage[] = [];
-    let totalPageCount = 0;
-    
-    activeFileIds.forEach((fileId, fileIndex) => {
-      const fileRecord = selectors.getFileRecord(fileId);
-      if (!fileRecord) {
-        console.warn(`🎬 PageEditor: No record found for file ${fileId}`);
-        return;
-      }
-      
-      const processedFile = fileRecord.processedFile;
-      console.log(`🎬 PageEditor: Processing file ${fileIndex + 1}/${activeFileIds.length} (${fileRecord.name})`);
-      console.log(`🎬 ProcessedFile exists:`, !!processedFile);
-      console.log(`🎬 ProcessedFile pages:`, processedFile?.pages?.length || 0);
-      console.log(`🎬 ProcessedFile totalPages:`, processedFile?.totalPages || 'unknown');
-      
-      let filePages: PDFPage[] = [];
-      
-      if (processedFile?.pages && processedFile.pages.length > 0) {
-        // Use fully processed pages with thumbnails
-        filePages = processedFile.pages.map((page, pageIndex) => ({
-          id: `${fileId}-${page.pageNumber}`,
-          pageNumber: totalPageCount + pageIndex + 1,
-          thumbnail: page.thumbnail || null,
-          rotation: page.rotation || 0,
-          selected: false,
-          splitAfter: page.splitAfter || false,
-          originalPageNumber: page.originalPageNumber || page.pageNumber || pageIndex + 1,
-          originalFileId: fileId,
-        }));
-      } else if (processedFile?.totalPages) {
-        // Fallback: create pages without thumbnails but with correct count
-        console.log(`🎬 PageEditor: Creating placeholder pages for ${fileRecord.name} (${processedFile.totalPages} pages)`);
-        filePages = Array.from({ length: processedFile.totalPages }, (_, pageIndex) => ({
-          id: `${fileId}-${pageIndex + 1}`,
-          pageNumber: totalPageCount + pageIndex + 1,
-          originalPageNumber: pageIndex + 1,
-          originalFileId: fileId,
-          rotation: 0,
-          thumbnail: null, // Will be generated later
-          selected: false,
-          splitAfter: false,
-        }));
-      }
-      
-      pages = pages.concat(filePages);
-      totalPageCount += filePages.length;
-    });
-
-    if (pages.length === 0) {
-      console.warn('🎬 PageEditor: No pages found in any files');
-      return null;
-    }
-
-    console.log(`🎬 PageEditor: Created merged document with ${pages.length} total pages`);
-
-    const mergedDoc: PDFDocument = {
-      id: activeFileIds.join('-'),
-      name,
-      file: primaryFile!,
-      pages,
-      totalPages: pages.length,
-    };
-
-    return mergedDoc;
-  }, [activeFileIds, primaryFileId, primaryFileRecord, processedFilePages, processedFileTotalPages, selectors, filesSignature]);
-
-  // Large document detection for smart loading
-  const isVeryLargeDocument = useMemo(() => {
-    return mergedPdfDocument ? mergedPdfDocument.totalPages > 2000 : false;
-  }, [mergedPdfDocument?.totalPages]);
-
-  // Thumbnails are now generated on-demand by PageThumbnail components
-  // No bulk generation needed - modern thumbnail service handles this efficiently
-
-  // Selection and UI state management
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedPageNumbers, setSelectedPageNumbers] = useState<number[]>([]);
-  const [movingPage, setMovingPage] = useState<number | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
-  
-  // Position-based split tracking (replaces page-based splitAfter)
-  const [splitPositions, setSplitPositions] = useState<Set<number>>(new Set());
+  // UI state management
+  const {
+    selectionMode, selectedPageNumbers, movingPage, isAnimating, splitPositions, exportLoading,
+    setSelectionMode, setSelectedPageNumbers, setMovingPage, setIsAnimating, setSplitPositions, setExportLoading,
+    togglePage, toggleSelectAll, animateReorder
+  } = usePageEditorState();
   
   // Grid container ref for positioning split indicators
   const gridContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Export state
-  const [exportLoading, setExportLoading] = useState(false);
   
   // Undo/Redo state
   const [canUndo, setCanUndo] = useState(false);
@@ -624,53 +119,28 @@ const PageEditor = ({
   }, [updateUndoRedoState]);
 
 
+  // Interface functions for parent component
+  const displayDocument = editedDocument || mergedPdfDocument;
+
   // DOM-first command handlers
   const handleRotatePages = useCallback((pageIds: string[], rotation: number) => {
     const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
     undoManagerRef.current.executeCommand(bulkRotateCommand);
   }, []);
 
-  // Page selection handlers
-  const togglePage = useCallback((pageNumber: number) => {
-    setSelectedPageNumbers(prev => 
-      prev.includes(pageNumber)
-        ? prev.filter(n => n !== pageNumber)
-        : [...prev, pageNumber]
-    );
-  }, []);
-
-  const toggleSelectAll = useCallback(() => {
-    if (!mergedPdfDocument) return;
-    
-    const allPageNumbers = mergedPdfDocument.pages.map(p => p.pageNumber);
-    setSelectedPageNumbers(prev => 
-      prev.length === allPageNumbers.length ? [] : allPageNumbers
-    );
-  }, [mergedPdfDocument]);
-
-
-  // Animation helpers
-  const animateReorder = useCallback(() => {
-    setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 500);
-  }, []);
-
-  // Placeholder command classes for PageThumbnail compatibility
-  class RotatePagesCommand {
-    constructor(public pageIds: string[], public rotation: number) {}
-    execute() {
-      const bulkRotateCommand = new BulkRotateCommand(this.pageIds, this.rotation);
+  // Command factory functions for PageThumbnail
+  const createRotateCommand = useCallback((pageIds: string[], rotation: number) => ({
+    execute: () => {
+      const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
       undoManagerRef.current.executeCommand(bulkRotateCommand);
     }
-  }
+  }), []);
 
-  class DeletePagesWrapper {
-    constructor(public pageIds: string[]) {}
-    execute() {
-      // Convert page IDs to page numbers for the real delete command
+  const createDeleteCommand = useCallback((pageIds: string[]) => ({
+    execute: () => {
       if (!displayDocument) return;
       
-      const pagesToDelete = this.pageIds.map(pageId => {
+      const pagesToDelete = pageIds.map(pageId => {
         const page = displayDocument.pages.find(p => p.id === pageId);
         return page?.pageNumber || 0;
       }).filter(num => num > 0);
@@ -688,19 +158,18 @@ const PageEditor = ({
         undoManagerRef.current.executeCommand(deleteCommand);
       }
     }
-  }
+  }), [displayDocument, splitPositions, selectedPageNumbers]);
 
-  class ToggleSplitCommand {
-    constructor(public position: number) {}
-    execute() {
+  const createSplitCommand = useCallback((position: number) => ({
+    execute: () => {
       const splitCommand = new SplitCommand(
-        this.position,
+        position,
         () => splitPositions,
         setSplitPositions
       );
       undoManagerRef.current.executeCommand(splitCommand);
     }
-  }
+  }), [splitPositions]);
 
   // Command executor for PageThumbnail
   const executeCommand = useCallback((command: any) => {
@@ -708,9 +177,6 @@ const PageEditor = ({
       command.execute();
     }
   }, []);
-
-  // Interface functions for parent component
-  const displayDocument = editedDocument || mergedPdfDocument;
   
   
   const handleUndo = useCallback(() => {
@@ -792,47 +258,11 @@ const PageEditor = ({
   const handleSplitAll = useCallback(() => {
     if (!displayDocument) return;
     
-    // Create a command that toggles all splits
-    class SplitAllCommand extends DOMCommand {
-      private originalSplitPositions: Set<number> = new Set();
-      private allPossibleSplits: Set<number> = new Set();
-      
-      constructor() {
-        super();
-        // Calculate all possible split positions
-        for (let i = 0; i < displayDocument!.pages.length - 1; i++) {
-          this.allPossibleSplits.add(i);
-        }
-      }
-      
-      execute(): void {
-        // Store original state for undo
-        this.originalSplitPositions = new Set(splitPositions);
-        
-        // Check if all splits are already active
-        const hasAllSplits = Array.from(this.allPossibleSplits).every(pos => splitPositions.has(pos));
-        
-        if (hasAllSplits) {
-          // Remove all splits
-          setSplitPositions(new Set());
-        } else {
-          // Add all splits
-          setSplitPositions(this.allPossibleSplits);
-        }
-      }
-      
-      undo(): void {
-        // Restore original split positions
-        setSplitPositions(this.originalSplitPositions);
-      }
-      
-      get description(): string {
-        const hasAllSplits = Array.from(this.allPossibleSplits).every(pos => splitPositions.has(pos));
-        return hasAllSplits ? 'Remove all splits' : 'Split all pages';
-      }
-    }
-    
-    const splitAllCommand = new SplitAllCommand();
+    const splitAllCommand = new SplitAllCommand(
+      displayDocument.pages.length,
+      () => splitPositions,
+      setSplitPositions
+    );
     undoManagerRef.current.executeCommand(splitAllCommand);
   }, [displayDocument, splitPositions]);
 
@@ -1059,7 +489,7 @@ const PageEditor = ({
               </Button>
               {selectionMode && (
                 <>
-                  <Button variant="outline" onClick={toggleSelectAll}>
+                  <Button variant="outline" onClick={() => toggleSelectAll(displayDocument?.pages.length || 0)}>
                     {selectedPageNumbers.length === displayDocument.pages.length ? "Deselect All" : "Select All"}
                   </Button>
                   <Text size="sm" c="dimmed">
@@ -1139,9 +569,9 @@ const PageEditor = ({
                 onSetStatus={() => {}}
                 onSetMovingPage={setMovingPage}
                 onDeletePage={handleDeletePage}
-                RotatePagesCommand={RotatePagesCommand}
-                DeletePagesCommand={DeletePagesWrapper}
-                ToggleSplitCommand={ToggleSplitCommand}
+                createRotateCommand={createRotateCommand}
+                createDeleteCommand={createDeleteCommand}
+                createSplitCommand={createSplitCommand}
                 pdfDocument={displayDocument}
                 setPdfDocument={setEditedDocument}
                 splitPositions={splitPositions}

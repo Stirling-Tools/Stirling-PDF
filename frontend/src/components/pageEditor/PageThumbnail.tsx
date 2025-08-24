@@ -11,12 +11,6 @@ import { PDFPage, PDFDocument } from '../../types/pageEditor';
 import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
 import styles from './PageEditor.module.css';
 
-// DOM Command types (match what PageEditor expects)
-abstract class DOMCommand {
-  abstract execute(): void;
-  abstract undo(): void;
-  abstract description: string;
-}
 
 interface PageThumbnailProps {
   page: PDFPage;
@@ -31,13 +25,13 @@ interface PageThumbnailProps {
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => void;
   onTogglePage: (pageNumber: number) => void;
   onAnimateReorder: () => void;
-  onExecuteCommand: (command: DOMCommand) => void;
+  onExecuteCommand: (command: { execute: () => void }) => void;
   onSetStatus: (status: string) => void;
   onSetMovingPage: (page: number | null) => void;
   onDeletePage: (pageNumber: number) => void;
-  RotatePagesCommand: any;
-  DeletePagesCommand: any;
-  ToggleSplitCommand: any;
+  createRotateCommand: (pageIds: string[], rotation: number) => { execute: () => void };
+  createDeleteCommand: (pageIds: string[]) => { execute: () => void };
+  createSplitCommand: (position: number) => { execute: () => void };
   pdfDocument: PDFDocument;
   setPdfDocument: (doc: PDFDocument) => void;
   splitPositions: Set<number>;
@@ -60,18 +54,18 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   onSetStatus,
   onSetMovingPage,
   onDeletePage,
-  RotatePagesCommand,
-  DeletePagesCommand,
-  ToggleSplitCommand,
+  createRotateCommand,
+  createDeleteCommand,
+  createSplitCommand,
   pdfDocument,
   setPdfDocument,
   splitPositions,
 }: PageThumbnailProps) => {
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const [isDragging, setIsDragging] = useState(false);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const dragElementRef = useRef<HTMLDivElement>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
 
   // Update thumbnail URL when page prop changes
@@ -79,9 +73,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     if (page.thumbnail && page.thumbnail !== thumbnailUrl) {
       setThumbnailUrl(page.thumbnail);
     }
-  }, [page.thumbnail, page.id]);
+  }, [page.thumbnail, thumbnailUrl]);
 
-  // Request thumbnail on-demand using modern service
+  // Request thumbnail if missing (on-demand, virtualized approach)
   useEffect(() => {
     let isCancelled = false;
 
@@ -100,8 +94,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
     // Request thumbnail generation if we have the original file
     if (originalFile) {
-      // Extract page number from page.id (format: fileId-pageNumber)
-      const pageNumber = parseInt(page.id.split('-').pop() || '1');
+      const pageNumber = page.originalPageNumber;
       
       requestThumbnail(page.id, originalFile, pageNumber)
         .then(thumbnail => {
@@ -153,6 +146,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
               const pagesToMove = selectionMode && selectedPages.includes(page.pageNumber)
                 ? selectedPages
                 : undefined;
+              // Trigger animation for drag & drop
+              onAnimateReorder();
               onReorderPages(page.pageNumber, targetIndex, pagesToMove);
             }
           }
@@ -186,18 +181,18 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const handleRotateLeft = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     // Use the command system for undo/redo support
-    const command = new RotatePagesCommand([page.id], -90);
+    const command = createRotateCommand([page.id], -90);
     onExecuteCommand(command);
     onSetStatus(`Rotated page ${page.pageNumber} left`);
-  }, [page.id, page.pageNumber, onExecuteCommand, onSetStatus, RotatePagesCommand]);
+  }, [page.id, page.pageNumber, onExecuteCommand, onSetStatus, createRotateCommand]);
 
   const handleRotateRight = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     // Use the command system for undo/redo support
-    const command = new RotatePagesCommand([page.id], 90);
+    const command = createRotateCommand([page.id], 90);
     onExecuteCommand(command);
     onSetStatus(`Rotated page ${page.pageNumber} right`);
-  }, [page.id, page.pageNumber, onExecuteCommand, onSetStatus, RotatePagesCommand]);
+  }, [page.id, page.pageNumber, onExecuteCommand, onSetStatus, createRotateCommand]);
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -209,13 +204,13 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     e.stopPropagation();
     
     // Create a command to toggle split at this position
-    const command = new ToggleSplitCommand(index);
+    const command = createSplitCommand(index);
     onExecuteCommand(command);
     
     const hasSplit = splitPositions.has(index);
     const action = hasSplit ? 'removed' : 'added';
     onSetStatus(`Split marker ${action} after position ${index + 1}`);
-  }, [index, splitPositions, onExecuteCommand, onSetStatus, ToggleSplitCommand]);
+  }, [index, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand]);
 
   // Handle click vs drag differentiation
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -254,8 +249,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   return (
     <div
       ref={pageElementRef}
-      data-page-number={page.pageNumber}
       data-page-id={page.id}
+      data-page-number={page.pageNumber}
       className={`
         ${styles.pageContainer}
         !rounded-lg
@@ -402,8 +397,11 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
                 e.stopPropagation();
                 if (index > 0 && !movingPage && !isAnimating) {
                   onSetMovingPage(page.pageNumber);
+                  // Trigger animation
                   onAnimateReorder();
-                  setTimeout(() => onSetMovingPage(null), 500);
+                  // Actually move the page left (swap with previous page)
+                  onReorderPages(page.pageNumber, index - 1);
+                  setTimeout(() => onSetMovingPage(null), 650);
                   onSetStatus(`Moved page ${page.pageNumber} left`);
                 }
               }}
@@ -422,8 +420,11 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
                 e.stopPropagation();
                 if (index < totalPages - 1 && !movingPage && !isAnimating) {
                   onSetMovingPage(page.pageNumber);
+                  // Trigger animation
                   onAnimateReorder();
-                  setTimeout(() => onSetMovingPage(null), 500);
+                  // Actually move the page right (swap with next page)
+                  onReorderPages(page.pageNumber, index + 1);
+                  setTimeout(() => onSetMovingPage(null), 650);
                   onSetStatus(`Moved page ${page.pageNumber} right`);
                 }
               }}

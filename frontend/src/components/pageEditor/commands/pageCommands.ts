@@ -1,0 +1,451 @@
+import { PDFDocument, PDFPage } from '../../../types/pageEditor';
+
+// V1-style DOM-first command system (replaces the old React state commands)
+export abstract class DOMCommand {
+  abstract execute(): void;
+  abstract undo(): void;
+  abstract description: string;
+}
+
+export class RotatePageCommand extends DOMCommand {
+  constructor(
+    private pageId: string,
+    private degrees: number
+  ) {
+    super();
+  }
+
+  execute(): void {
+    // Only update DOM for immediate visual feedback
+    const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
+    if (pageElement) {
+      const img = pageElement.querySelector('img');
+      if (img) {
+        // Extract current rotation from transform property to match the animated CSS
+        const currentTransform = img.style.transform || '';
+        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
+        const newRotation = currentRotation + this.degrees;
+        img.style.transform = `rotate(${newRotation}deg)`;
+      }
+    }
+  }
+
+  undo(): void {
+    // Only update DOM
+    const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
+    if (pageElement) {
+      const img = pageElement.querySelector('img');
+      if (img) {
+        // Extract current rotation from transform property
+        const currentTransform = img.style.transform || '';
+        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
+        const previousRotation = currentRotation - this.degrees;
+        img.style.transform = `rotate(${previousRotation}deg)`;
+      }
+    }
+  }
+
+  get description(): string {
+    return `Rotate page ${this.degrees > 0 ? 'right' : 'left'}`;
+  }
+}
+
+export class DeletePagesCommand extends DOMCommand {
+  private originalDocument: PDFDocument | null = null;
+  private originalSplitPositions: Set<number> = new Set();
+  private originalSelectedPages: number[] = [];
+  private hasExecuted: boolean = false;
+  private pageIdsToDelete: string[] = [];
+
+  constructor(
+    private pagesToDelete: number[],
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void,
+    private setSelectedPages: (pages: number[]) => void,
+    private getSplitPositions: () => Set<number>,
+    private setSplitPositions: (positions: Set<number>) => void,
+    private getSelectedPages: () => number[]
+  ) {
+    super();
+  }
+
+  execute(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc || this.pagesToDelete.length === 0) return;
+
+    // Store complete original state for undo (only on first execution)
+    if (!this.hasExecuted) {
+      this.originalDocument = {
+        ...currentDoc,
+        pages: currentDoc.pages.map(page => ({...page})) // Deep copy pages
+      };
+      this.originalSplitPositions = new Set(this.getSplitPositions());
+      this.originalSelectedPages = [...this.getSelectedPages()];
+      
+      // Convert page numbers to page IDs for stable identification
+      this.pageIdsToDelete = this.pagesToDelete.map(pageNum => {
+        const page = currentDoc.pages.find(p => p.pageNumber === pageNum);
+        return page?.id || '';
+      }).filter(id => id);
+      
+      this.hasExecuted = true;
+    }
+
+    // Filter out deleted pages by ID (stable across undo/redo)
+    const remainingPages = currentDoc.pages.filter(page => 
+      !this.pageIdsToDelete.includes(page.id)
+    );
+
+    if (remainingPages.length === 0) return; // Safety check
+
+    // Renumber remaining pages
+    remainingPages.forEach((page, index) => {
+      page.pageNumber = index + 1;
+    });
+
+    // Update document
+    const updatedDocument: PDFDocument = {
+      ...currentDoc,
+      pages: remainingPages,
+      totalPages: remainingPages.length,
+    };
+
+    // Adjust split positions
+    const currentSplitPositions = this.getSplitPositions();
+    const newPositions = new Set<number>();
+    currentSplitPositions.forEach(pos => {
+      if (pos < remainingPages.length - 1) {
+        newPositions.add(pos);
+      }
+    });
+
+    // Apply changes
+    this.setDocument(updatedDocument);
+    this.setSelectedPages([]);
+    this.setSplitPositions(newPositions);
+  }
+
+  undo(): void {
+    if (!this.originalDocument) return;
+
+    // Simply restore the complete original document state
+    this.setDocument(this.originalDocument);
+    this.setSplitPositions(this.originalSplitPositions);
+    this.setSelectedPages(this.originalSelectedPages);
+  }
+
+  get description(): string {
+    return `Delete ${this.pagesToDelete.length} page(s)`;
+  }
+}
+
+export class ReorderPagesCommand extends DOMCommand {
+  private originalPages: PDFPage[] = [];
+
+  constructor(
+    private sourcePageNumber: number,
+    private targetIndex: number,
+    private selectedPages: number[] | undefined,
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void
+  ) {
+    super();
+  }
+
+  execute(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    // Store original state for undo
+    this.originalPages = currentDoc.pages.map(page => ({...page}));
+
+    // Perform the reorder
+    const sourceIndex = currentDoc.pages.findIndex(p => p.pageNumber === this.sourcePageNumber);
+    if (sourceIndex === -1) return;
+
+    const newPages = [...currentDoc.pages];
+
+    if (this.selectedPages && this.selectedPages.length > 1 && this.selectedPages.includes(this.sourcePageNumber)) {
+      // Multi-page reorder
+      const selectedPageObjects = this.selectedPages
+        .map(pageNum => currentDoc.pages.find(p => p.pageNumber === pageNum))
+        .filter(page => page !== undefined) as PDFPage[];
+      
+      const remainingPages = newPages.filter(page => !this.selectedPages!.includes(page.pageNumber));
+      remainingPages.splice(this.targetIndex, 0, ...selectedPageObjects);
+      
+      remainingPages.forEach((page, index) => {
+        page.pageNumber = index + 1;
+      });
+      
+      newPages.splice(0, newPages.length, ...remainingPages);
+    } else {
+      // Single page reorder
+      const [movedPage] = newPages.splice(sourceIndex, 1);
+      newPages.splice(this.targetIndex, 0, movedPage);
+      
+      newPages.forEach((page, index) => {
+        page.pageNumber = index + 1;
+      });
+    }
+
+    const reorderedDocument: PDFDocument = {
+      ...currentDoc,
+      pages: newPages,
+      totalPages: newPages.length,
+    };
+
+    this.setDocument(reorderedDocument);
+  }
+
+  undo(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc || this.originalPages.length === 0) return;
+
+    // Restore original page order
+    const restoredDocument: PDFDocument = {
+      ...currentDoc,
+      pages: this.originalPages,
+      totalPages: this.originalPages.length,
+    };
+
+    this.setDocument(restoredDocument);
+  }
+
+  get description(): string {
+    return `Reorder page(s)`;
+  }
+}
+
+export class SplitCommand extends DOMCommand {
+  private originalSplitPositions: Set<number> = new Set();
+
+  constructor(
+    private position: number,
+    private getSplitPositions: () => Set<number>,
+    private setSplitPositions: (positions: Set<number>) => void
+  ) {
+    super();
+  }
+
+  execute(): void {
+    // Store original state for undo
+    this.originalSplitPositions = new Set(this.getSplitPositions());
+
+    // Toggle the split position
+    const currentPositions = this.getSplitPositions();
+    const newPositions = new Set(currentPositions);
+    
+    if (newPositions.has(this.position)) {
+      newPositions.delete(this.position);
+    } else {
+      newPositions.add(this.position);
+    }
+    
+    this.setSplitPositions(newPositions);
+  }
+
+  undo(): void {
+    // Restore original split positions
+    this.setSplitPositions(this.originalSplitPositions);
+  }
+
+  get description(): string {
+    const currentPositions = this.getSplitPositions();
+    const willAdd = !currentPositions.has(this.position);
+    return `${willAdd ? 'Add' : 'Remove'} split at position ${this.position + 1}`;
+  }
+}
+
+export class BulkRotateCommand extends DOMCommand {
+  private originalRotations: Map<string, number> = new Map();
+
+  constructor(
+    private pageIds: string[],
+    private degrees: number
+  ) {
+    super();
+  }
+
+  execute(): void {
+    this.pageIds.forEach(pageId => {
+      const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
+      if (pageElement) {
+        const img = pageElement.querySelector('img');
+        if (img) {
+          // Store original rotation for undo (only on first execution)
+          if (!this.originalRotations.has(pageId)) {
+            const currentTransform = img.style.transform || '';
+            const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+            const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
+            this.originalRotations.set(pageId, currentRotation);
+          }
+          
+          // Apply rotation using transform to trigger CSS animation
+          const currentTransform = img.style.transform || '';
+          const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+          const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
+          const newRotation = currentRotation + this.degrees;
+          img.style.transform = `rotate(${newRotation}deg)`;
+        }
+      }
+    });
+  }
+
+  undo(): void {
+    this.pageIds.forEach(pageId => {
+      const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
+      if (pageElement) {
+        const img = pageElement.querySelector('img');
+        if (img && this.originalRotations.has(pageId)) {
+          img.style.transform = `rotate(${this.originalRotations.get(pageId)}deg)`;
+        }
+      }
+    });
+  }
+
+  get description(): string {
+    return `Rotate ${this.pageIds.length} page(s) ${this.degrees > 0 ? 'right' : 'left'}`;
+  }
+}
+
+export class BulkSplitCommand extends DOMCommand {
+  private originalSplitPositions: Set<number> = new Set();
+
+  constructor(
+    private positions: number[],
+    private getSplitPositions: () => Set<number>,
+    private setSplitPositions: (positions: Set<number>) => void
+  ) {
+    super();
+  }
+
+  execute(): void {
+    // Store original state for undo (only on first execution)
+    if (this.originalSplitPositions.size === 0) {
+      this.originalSplitPositions = new Set(this.getSplitPositions());
+    }
+
+    // Toggle each position
+    const currentPositions = new Set(this.getSplitPositions());
+    this.positions.forEach(position => {
+      if (currentPositions.has(position)) {
+        currentPositions.delete(position);
+      } else {
+        currentPositions.add(position);
+      }
+    });
+
+    this.setSplitPositions(currentPositions);
+  }
+
+  undo(): void {
+    // Restore original split positions
+    this.setSplitPositions(this.originalSplitPositions);
+  }
+
+  get description(): string {
+    return `Toggle ${this.positions.length} split position(s)`;
+  }
+}
+
+export class SplitAllCommand extends DOMCommand {
+  private originalSplitPositions: Set<number> = new Set();
+  private allPossibleSplits: Set<number> = new Set();
+  
+  constructor(
+    private totalPages: number,
+    private getSplitPositions: () => Set<number>,
+    private setSplitPositions: (positions: Set<number>) => void
+  ) {
+    super();
+    // Calculate all possible split positions (between pages, not after last page)
+    for (let i = 0; i < this.totalPages - 1; i++) {
+      this.allPossibleSplits.add(i);
+    }
+  }
+  
+  execute(): void {
+    // Store original state for undo
+    this.originalSplitPositions = new Set(this.getSplitPositions());
+    
+    // Check if all splits are already active
+    const currentSplits = this.getSplitPositions();
+    const hasAllSplits = Array.from(this.allPossibleSplits).every(pos => currentSplits.has(pos));
+    
+    if (hasAllSplits) {
+      // Remove all splits
+      this.setSplitPositions(new Set());
+    } else {
+      // Add all splits
+      this.setSplitPositions(this.allPossibleSplits);
+    }
+  }
+  
+  undo(): void {
+    // Restore original split positions
+    this.setSplitPositions(this.originalSplitPositions);
+  }
+  
+  get description(): string {
+    const currentSplits = this.getSplitPositions();
+    const hasAllSplits = Array.from(this.allPossibleSplits).every(pos => currentSplits.has(pos));
+    return hasAllSplits ? 'Remove all splits' : 'Split all pages';
+  }
+}
+
+// Simple undo manager for DOM commands
+export class UndoManager {
+  private undoStack: DOMCommand[] = [];
+  private redoStack: DOMCommand[] = [];
+  private onStateChange?: () => void;
+
+  setStateChangeCallback(callback: () => void): void {
+    this.onStateChange = callback;
+  }
+
+  executeCommand(command: DOMCommand): void {
+    command.execute();
+    this.undoStack.push(command);
+    this.redoStack = [];
+    this.onStateChange?.();
+  }
+
+  undo(): boolean {
+    const command = this.undoStack.pop();
+    if (command) {
+      command.undo();
+      this.redoStack.push(command);
+      this.onStateChange?.();
+      return true;
+    }
+    return false;
+  }
+
+  redo(): boolean {
+    const command = this.redoStack.pop();
+    if (command) {
+      command.execute();
+      this.undoStack.push(command);
+      this.onStateChange?.();
+      return true;
+    }
+    return false;
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+  clear(): void {
+    this.undoStack = [];
+    this.redoStack = [];
+    this.onStateChange?.();
+  }
+}
