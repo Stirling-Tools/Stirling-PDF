@@ -49,7 +49,7 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
-    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.35'
+    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.36'
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.14.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
