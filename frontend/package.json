@@ -36,7 +36,7 @@
   },
   "scripts": {
     "dev": "npx tsc --noEmit && vite",
-    "build": "npx tsc --noEmit && vite build",
+    "build": "npx tsc --noEmit && vite build && subfont dist --in-place --font-family='Material Symbols Rounded'",
     "preview": "vite preview",
     "generate-licenses": "node scripts/generate-licenses.js",
     "test": "vitest",
@@ -78,6 +78,7 @@
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
+    "subfont": "^7.2.1",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vitest": "^1.0.0"
