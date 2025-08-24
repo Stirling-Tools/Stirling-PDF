@@ -74,8 +74,8 @@ allprojects {
 }
 
 tasks.register('writeVersion', WriteProperties) {
-    outputFile = layout.projectDirectory.file('app/common/src/main/resources/version.properties')
-    println "Writing version.properties to ${outputFile.path}"
+    destinationFile = layout.projectDirectory.file('app/common/src/main/resources/version.properties')
+    println "Writing version.properties to ${destinationFile.get().asFile.path}"
     comment = "${new Date()}"
     property 'version', project.provider { project.version.toString() }
 }
