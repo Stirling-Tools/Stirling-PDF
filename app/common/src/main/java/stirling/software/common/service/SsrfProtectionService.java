@@ -215,7 +215,8 @@ public class SsrfProtectionService {
                 return false;
             }
         }
-        // For IPv4-mapped IPv6 addresses, bytes 10 and 11 must be 0xff (i.e., address is ::ffff:w.x.y.z)
+        // For IPv4-mapped IPv6 addresses, bytes 10 and 11 must be 0xff (i.e., address is
+        // ::ffff:w.x.y.z)
         return addr[10] == (byte) 0xff && addr[11] == (byte) 0xff;
     }
 
