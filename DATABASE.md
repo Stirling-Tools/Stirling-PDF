@@ -5,7 +5,7 @@
 The newly introduced feature enhances the application with robust database backup and import capabilities. This feature is designed to ensure data integrity and provide a straightforward way to manage database backups. Here's how it works:
 
 1. Automatic Backup Creation
-   - The system automatically creates a database backup every day at midnight. This ensures that there is always a recent backup available, minimizing the risk of data loss.
+   - The system automatically creates a database backup on a configurable schedule (default: daily at midnight via `system.databaseBackup.cron`). This ensures that there is always a recent backup available, minimizing the risk of data loss.
 2. Manual Backup Export
    - Admin actions that modify the user database trigger a manual export of the database. This keeps the backup up-to-date with the latest changes and provides an extra layer of data security.
 3. Importing Database Backups
