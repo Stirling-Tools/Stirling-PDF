@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box } from '@mantine/core';
+import { Box, Center } from '@mantine/core';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import { FileMetadata } from '../../types/file';
 import DocumentThumbnail from './filePreview/DocumentThumbnail';
 import DocumentStack from './filePreview/DocumentStack';
@@ -38,7 +39,21 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   onPrevious,
   onNext
 }) => {
-  if (!file) return null;
+  if (!file) {
+    return (
+      <Box style={{ width: '100%', height: '100%' }}>
+        <Center style={{ width: '100%', height: '100%' }}>
+          <InsertDriveFileIcon 
+            style={{ 
+              fontSize: '4rem', 
+              color: 'var(--mantine-color-gray-4)',
+              opacity: 0.6 
+            }} 
+          />
+        </Center>
+      </Box>
+    );
+  }
   
   const hasMultipleFiles = totalFiles > 1;
   

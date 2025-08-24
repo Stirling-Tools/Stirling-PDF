@@ -25,6 +25,7 @@ export interface ToolStepProps {
   _stepNumber?: number; // Internal prop set by ToolStepContainer
   _excludeFromCount?: boolean; // Internal prop to exclude from visible count calculation
   _noPadding?: boolean; // Internal prop to exclude from default left padding
+  alwaysShowTooltip?: boolean; // Force tooltip to show even when collapsed
   tooltip?: {
     content?: React.ReactNode;
     tips?: TooltipTip[];
@@ -38,9 +39,10 @@ export interface ToolStepProps {
 const renderTooltipTitle = (
   title: string,
   tooltip: ToolStepProps['tooltip'],
-  isCollapsed: boolean
+  isCollapsed: boolean,
+  alwaysShowTooltip: boolean = false
 ) => {
-  if (tooltip && !isCollapsed) {
+  if (tooltip && (!isCollapsed || alwaysShowTooltip)) {
     return (
       <Tooltip
         content={tooltip.content}
@@ -77,6 +79,7 @@ const ToolStep = ({
   showNumber,
   _stepNumber,
   _noPadding,
+  alwaysShowTooltip = false,
   tooltip
 }: ToolStepProps) => {
   if (!isVisible) return null;
@@ -118,7 +121,7 @@ const ToolStep = ({
               {stepNumber}
             </Text>
           )}
-          {renderTooltipTitle(title, tooltip, isCollapsed)}
+          {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
         </Flex>
 
         {isCollapsed ? (
