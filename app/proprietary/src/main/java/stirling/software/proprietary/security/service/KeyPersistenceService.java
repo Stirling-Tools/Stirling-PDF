@@ -1,9 +1,11 @@
 package stirling.software.proprietary.security.service;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -52,6 +54,34 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
     }
 
+    /** Move all key files from db/keys to backup/keys */
+    @Deprecated(since = "2.0.0", forRemoval = true)
+    private void moveKeysToBackup() {
+        Path sourceDir =
+                Paths.get(InstallationPathConfig.getConfigPath(), "db", "keys").normalize();
+
+        if (!Files.exists(sourceDir)) {
+            log.info("Source directory does not exist: {}", sourceDir);
+            return;
+        }
+
+        Path targetDir = Paths.get(InstallationPathConfig.getPrivateKeyPath()).normalize();
+
+        try {
+            Files.createDirectories(targetDir);
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
+                for (Path entry : stream) {
+                    Files.move(
+                            entry,
+                            targetDir.resolve(entry.getFileName()),
+                            StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+        } catch (IOException e) {
+            log.error("Error moving key files to backup: {}", e.getMessage(), e);
+        }
+    }
+
     @PostConstruct
     public void initializeKeystore() {
         if (!isKeystoreEnabled()) {
@@ -59,6 +89,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         }
 
         try {
+            moveKeysToBackup();
             ensurePrivateKeyDirectoryExists();
             loadKeyPair();
         } catch (Exception e) {

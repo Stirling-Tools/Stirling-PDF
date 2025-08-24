@@ -179,7 +179,7 @@ class ApplicationPropertiesLogicTest {
         assertEquals(30, t.getOcrMyPdfTimeoutMinutes());
     }
 
-    @Deprecated
+    @Deprecated(since = "0.45.0")
     @Test
     void enterprise_metadata_defaults() {
         ApplicationProperties.EnterpriseEdition ee = new ApplicationProperties.EnterpriseEdition();

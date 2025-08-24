@@ -2,6 +2,7 @@ package stirling.software.proprietary.service;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.security.core.Authentication;
@@ -29,8 +30,7 @@ public class AuditService {
     public AuditService(
             AuditEventRepository repository,
             AuditConfigurationProperties auditConfig,
-            @org.springframework.beans.factory.annotation.Qualifier("runningEE")
-                    boolean runningEE) {
+            @Qualifier("runningEE") boolean runningEE) {
         this.repository = repository;
         this.auditConfig = auditConfig;
         this.runningEE = runningEE;

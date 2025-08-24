@@ -7,10 +7,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-import org.eclipse.jetty.http.HttpStatus;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -145,7 +145,7 @@ public class DatabaseController {
                     .body(resource);
         } catch (IOException e) {
             log.error("Error downloading file: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.SEE_OTHER_303)
+            return ResponseEntity.status(HttpStatus.SEE_OTHER)
                     .location(URI.create("/database?error=downloadFailed"))
                     .build();
         }
