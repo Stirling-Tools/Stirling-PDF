@@ -72,7 +72,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const dragElementRef = useRef<HTMLDivElement>(null);
-  const { getThumbnailFromCache } = useThumbnailGeneration();
+  const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
 
   // Update thumbnail URL when page prop changes
   useEffect(() => {
@@ -81,22 +81,43 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     }
   }, [page.thumbnail, page.id]);
 
-  // Poll for cached thumbnails as they're generated
+  // Request thumbnail on-demand using modern service
   useEffect(() => {
-    const checkThumbnail = () => {
-      const cachedThumbnail = getThumbnailFromCache(page.id);
-      if (cachedThumbnail && cachedThumbnail !== thumbnailUrl) {
-        setThumbnailUrl(cachedThumbnail);
-      }
+    let isCancelled = false;
+
+    // If we already have a thumbnail, use it
+    if (page.thumbnail) {
+      setThumbnailUrl(page.thumbnail);
+      return;
+    }
+
+    // Check cache first
+    const cachedThumbnail = getThumbnailFromCache(page.id);
+    if (cachedThumbnail) {
+      setThumbnailUrl(cachedThumbnail);
+      return;
+    }
+
+    // Request thumbnail generation if we have the original file
+    if (originalFile) {
+      // Extract page number from page.id (format: fileId-pageNumber)
+      const pageNumber = parseInt(page.id.split('-').pop() || '1');
+      
+      requestThumbnail(page.id, originalFile, pageNumber)
+        .then(thumbnail => {
+          if (!isCancelled && thumbnail) {
+            setThumbnailUrl(thumbnail);
+          }
+        })
+        .catch(error => {
+          console.warn(`Failed to generate thumbnail for ${page.id}:`, error);
+        });
+    }
+
+    return () => {
+      isCancelled = true;
     };
-
-    // Check immediately
-    checkThumbnail();
-
-    // Poll every 500ms for new thumbnails
-    const pollInterval = setInterval(checkThumbnail, 500);
-    return () => clearInterval(pollInterval);
-  }, [page.id, getThumbnailFromCache, thumbnailUrl]);
+  }, [page.id, page.thumbnail, originalFile, getThumbnailFromCache, requestThumbnail]);
 
   const pageElementRef = useCallback((element: HTMLDivElement | null) => {
     if (element) {
@@ -270,13 +291,11 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             top: 8,
             right: 8,
             zIndex: 10,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            border: '1px solid #ccc',
+            backgroundColor: 'white',
             borderRadius: '4px',
-            padding: '4px',
+            padding: '2px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            pointerEvents: 'auto',
-            cursor: 'pointer'
+            pointerEvents: 'auto'
           }}
           onMouseDown={(e) => e.stopPropagation()}
           onMouseUp={(e) => e.stopPropagation()}
@@ -369,6 +388,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             alignItems: 'center',
             whiteSpace: 'nowrap'
           }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <Tooltip label="Move Left">
             <ActionIcon

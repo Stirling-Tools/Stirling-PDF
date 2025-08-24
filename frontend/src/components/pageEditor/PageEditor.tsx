@@ -16,8 +16,7 @@ import { enhancedPDFProcessingService } from "../../services/enhancedPDFProcessi
 import { fileProcessingService } from "../../services/fileProcessingService";
 import { pdfProcessingService } from "../../services/pdfProcessingService";
 import { pdfWorkerManager } from "../../services/pdfWorkerManager";
-import { useThumbnailGeneration } from "../../hooks/useThumbnailGeneration";
-import { calculateScaleFromFileSize } from "../../utils/thumbnailUtils";
+// Thumbnail generation is now handled by individual PageThumbnail components
 import { fileStorage } from "../../services/fileStorage";
 import { indexedDBManager, DATABASE_CONFIGS } from "../../services/indexedDBManager";
 import './PageEditor.module.css';
@@ -47,9 +46,12 @@ class RotatePageCommand extends DOMCommand {
     if (pageElement) {
       const img = pageElement.querySelector('img');
       if (img) {
-        const currentRotation = parseInt(img.style.rotate?.replace(/[^\d-]/g, '') || '0');
+        // Extract current rotation from transform property to match the animated CSS
+        const currentTransform = img.style.transform || '';
+        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
         const newRotation = currentRotation + this.degrees;
-        img.style.rotate = `${newRotation}deg`;
+        img.style.transform = `rotate(${newRotation}deg)`;
       }
     }
   }
@@ -60,9 +62,12 @@ class RotatePageCommand extends DOMCommand {
     if (pageElement) {
       const img = pageElement.querySelector('img');
       if (img) {
-        const currentRotation = parseInt(img.style.rotate?.replace(/[^\d-]/g, '') || '0');
+        // Extract current rotation from transform property
+        const currentTransform = img.style.transform || '';
+        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
         const previousRotation = currentRotation - this.degrees;
-        img.style.rotate = `${previousRotation}deg`;
+        img.style.transform = `rotate(${previousRotation}deg)`;
       }
     }
   }
@@ -297,14 +302,18 @@ class BulkRotateCommand extends DOMCommand {
         if (img) {
           // Store original rotation for undo (only on first execution)
           if (!this.originalRotations.has(pageId)) {
-            const currentRotation = parseInt(img.style.rotate?.replace(/[^\d-]/g, '') || '0');
+            const currentTransform = img.style.transform || '';
+            const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+            const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
             this.originalRotations.set(pageId, currentRotation);
           }
           
-          // Apply rotation
-          const currentRotation = parseInt(img.style.rotate?.replace(/[^\d-]/g, '') || '0');
+          // Apply rotation using transform to trigger CSS animation
+          const currentTransform = img.style.transform || '';
+          const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+          const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
           const newRotation = currentRotation + this.degrees;
-          img.style.rotate = `${newRotation}deg`;
+          img.style.transform = `rotate(${newRotation}deg)`;
         }
       }
     });
@@ -316,7 +325,7 @@ class BulkRotateCommand extends DOMCommand {
       if (pageElement) {
         const img = pageElement.querySelector('img');
         if (img && this.originalRotations.has(pageId)) {
-          img.style.rotate = `${this.originalRotations.get(pageId)}deg`;
+          img.style.transform = `rotate(${this.originalRotations.get(pageId)}deg)`;
         }
       }
     });
@@ -476,50 +485,7 @@ const PageEditor = ({
   // DOM-first undo manager (replaces the old React state undo system)
   const undoManagerRef = useRef(new UndoManager());
 
-  // Thumbnail generation (opt-in for visual tools) - MUST be before mergedPdfDocument
-  const {
-    generateThumbnails,
-    addThumbnailToCache,
-    getThumbnailFromCache,
-    stopGeneration,
-    destroyThumbnails
-  } = useThumbnailGeneration();
-
-  // Helper function to generate thumbnails in batches
-  const generateThumbnailBatch = useCallback(async (file: File, fileId: string, pageNumbers: number[]) => {
-    console.log(`📸 PageEditor: Starting thumbnail batch for ${file.name}, pages: [${pageNumbers.join(', ')}]`);
-    
-    try {
-      // Load PDF array buffer for Web Workers
-      const arrayBuffer = await file.arrayBuffer();
-      
-      // Calculate quality scale based on file size
-      const scale = calculateScaleFromFileSize(selectors.getFileRecord(fileId)?.size || 0);
-      
-      // Start parallel thumbnail generation
-      const results = await generateThumbnails(
-        fileId,
-        arrayBuffer,
-        pageNumbers,
-        {
-          scale,
-          parallelBatches: Math.min(4, pageNumbers.length),
-        }
-      );
-
-      // Cache all generated thumbnails
-      results.forEach(({ pageNumber, thumbnail }) => {
-        if (thumbnail) {
-          const pageId = `${fileId}-${pageNumber}`;
-          addThumbnailToCache(pageId, thumbnail);
-        }
-      });
-
-      console.log(`📸 PageEditor: Thumbnail batch completed for ${file.name}. Generated ${results.length} thumbnails`);
-    } catch (error) {
-      console.error(`PageEditor: Thumbnail generation failed for ${file.name}:`, error);
-    }
-  }, [generateThumbnails, addThumbnailToCache, selectors]);
+  // Thumbnail generation is now handled on-demand by individual PageThumbnail components using modern services
 
 
   // Get primary file record outside useMemo to track processedFile changes
@@ -617,52 +583,13 @@ const PageEditor = ({
     return mergedDoc;
   }, [activeFileIds, primaryFileId, primaryFileRecord, processedFilePages, processedFileTotalPages, selectors, filesSignature]);
 
-  // Generate missing thumbnails for all loaded files
-  const generateMissingThumbnails = useCallback(async () => {
-    if (!mergedPdfDocument || activeFileIds.length === 0) {
-      return;
-    }
+  // Large document detection for smart loading
+  const isVeryLargeDocument = useMemo(() => {
+    return mergedPdfDocument ? mergedPdfDocument.totalPages > 2000 : false;
+  }, [mergedPdfDocument?.totalPages]);
 
-    console.log(`📸 PageEditor: Generating thumbnails for ${activeFileIds.length} files with ${mergedPdfDocument.totalPages} total pages`);
-    
-    // Process files sequentially to avoid PDF document contention
-    for (const fileId of activeFileIds) {
-      const file = selectors.getFile(fileId);
-      const fileRecord = selectors.getFileRecord(fileId);
-      
-      if (!file || !fileRecord?.processedFile) continue;
-
-      const fileTotalPages = fileRecord.processedFile.totalPages;
-      if (!fileTotalPages) continue;
-
-      // Find missing thumbnails for this file
-      const pageNumbersToGenerate: number[] = [];
-      for (let pageNum = 1; pageNum <= fileTotalPages; pageNum++) {
-        const pageId = `${fileId}-${pageNum}`;
-        if (!getThumbnailFromCache(pageId)) {
-          pageNumbersToGenerate.push(pageNum);
-        }
-      }
-
-      if (pageNumbersToGenerate.length > 0) {
-        console.log(`📸 PageEditor: Generating thumbnails for ${fileRecord.name}: pages [${pageNumbersToGenerate.join(', ')}]`);
-        await generateThumbnailBatch(file, fileId, pageNumbersToGenerate);
-      }
-      
-      // Small delay between files to ensure proper sequential processing
-      if (activeFileIds.length > 1) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
-  }, [mergedPdfDocument, activeFileIds, selectors, getThumbnailFromCache, generateThumbnailBatch]);
-
-  // Generate missing thumbnails when document is ready
-  useEffect(() => {
-    if (mergedPdfDocument && mergedPdfDocument.totalPages > 0) {
-      console.log(`📸 PageEditor: Document ready with ${mergedPdfDocument.totalPages} pages, checking for missing thumbnails`);
-      generateMissingThumbnails();
-    }
-  }, [mergedPdfDocument, generateMissingThumbnails]);
+  // Thumbnails are now generated on-demand by PageThumbnail components
+  // No bulk generation needed - modern thumbnail service handles this efficiently
 
   // Selection and UI state management
   const [selectionMode, setSelectionMode] = useState(false);
