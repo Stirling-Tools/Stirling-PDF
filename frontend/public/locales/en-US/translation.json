@@ -55,6 +55,7 @@
   "bored": "Bored Waiting?",
   "alphabet": "Alphabet",
   "downloadPdf": "Download PDF",
+
   "text": "Text",
   "font": "Font",
   "selectFillter": "-- Select --",
@@ -2071,6 +2072,18 @@
         }
       }
     }
+  },
+  "rightRail": {
+    "closePdf": "Close PDF",
+    "closeSelected": "Close Selected Files",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectByNumber": "Select by Page Numbers",
+    "deleteSelected": "Delete Selected Pages",
+    "toggleTheme": "Toggle Theme",
+    "exportAll": "Export PDF",
+    "downloadSelected": "Download Selected Files",
+    "downloadAll": "Download All"
   },
   "removePassword": {
     "title": "Remove Password",

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Group, TextInput, Button, Text } from '@mantine/core';
+import { Group, TextInput, Button, Text } from '@mantine/core';
 
 interface BulkSelectionPanelProps {
   csvInput: string;
@@ -15,7 +15,7 @@ const BulkSelectionPanel = ({
   onUpdatePagesFromCSV,
 }: BulkSelectionPanelProps) => {
   return (
-    <Paper p="md" mb="md" withBorder>
+    <>
       <Group>
         <TextInput
           value={csvInput}
@@ -35,7 +35,7 @@ const BulkSelectionPanel = ({
           Selected: {selectedPages.length} pages
         </Text>
       )}
-    </Paper>
+      </>
   );
 };
 
