@@ -52,18 +52,19 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
         handleReaderToggle();
       }
     },
-    {
-      id: 'sign',
-      name: t("quickAccess.sign", "Sign"),
-      icon: <LocalIcon icon="signature-rounded" width="1.25rem" height="1.25rem" />,
-      size: 'lg',
-      isRound: false,
-      type: 'navigation',
-      onClick: () => {
-        setActiveButton('sign');
-        handleToolSelect('sign');
-      }
-    },
+    // TODO: Add sign
+    //{
+    //  id: 'sign',
+    //  name: t("quickAccess.sign", "Sign"),
+    //  icon: <LocalIcon icon="signature-rounded" width="1.25rem" height="1.25rem" />,
+    //  size: 'lg',
+    //  isRound: false,
+    //  type: 'navigation',
+    //  onClick: () => {
+    //    setActiveButton('sign');
+    //    handleToolSelect('sign');
+    //  }
+    //},
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
@@ -85,15 +86,16 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       type: 'modal',
       onClick: handleFilesButtonClick
     },
-    {
-      id: 'activity',
-      name: t("quickAccess.activity", "Activity"),
-      icon: <LocalIcon icon="vital-signs-rounded" width="1.25rem" height="1.25rem" />,
-      isRound: true,
-      size: 'lg',
-      type: 'navigation',
-      onClick: () => setActiveButton('activity')
-    },
+    //TODO: Activity
+    //{
+    //  id: 'activity',
+    //  name: t("quickAccess.activity", "Activity"),
+    //  icon: <LocalIcon icon="vital-signs-rounded" width="1.25rem" height="1.25rem" />,
+    //  isRound: true,
+    //  size: 'lg',
+    //  type: 'navigation',
+    //  onClick: () => setActiveButton('activity')
+    //},
     {
       id: 'config',
       name: t("quickAccess.config", "Config"),
