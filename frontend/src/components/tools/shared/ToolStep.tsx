@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useRef } from 'react';
 import { Text, Stack, Box, Flex, Divider } from '@mantine/core';
+import LocalIcon from '../../shared/LocalIcon';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Tooltip } from '../../shared/Tooltip';
@@ -54,9 +55,7 @@ const renderTooltipTitle = (
           <Text fw={500} size="lg">
             {title}
           </Text>
-          <span className="material-symbols-rounded" style={{ fontSize: '1.2rem', color: 'var(--icon-files-color)' }}>
-            gpp_maybe
-          </span>
+          <LocalIcon icon="gpp-maybe-rounded" width="20" height="20" style={{ color: 'var(--icon-files-color)' }} />
         </Flex>
       </Tooltip>
     );

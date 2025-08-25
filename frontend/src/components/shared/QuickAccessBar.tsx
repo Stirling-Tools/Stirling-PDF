@@ -1,6 +1,7 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
 import { ActionIcon, Stack, Divider } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
+import LocalIcon from './LocalIcon';
 import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
 import SettingsIcon from "@mui/icons-material/SettingsRounded";
 import FolderIcon from "@mui/icons-material/FolderRounded";
@@ -57,10 +58,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'sign',
       name: t("quickAccess.sign", "Sign"),
-      icon:
-        <span className="material-symbols-rounded font-size-20">
-          signature
-        </span>,
+      icon: <LocalIcon icon="signature-rounded" width="20" height="20" />,
       size: 'lg',
       isRound: false,
       type: 'navigation',
@@ -72,10 +70,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
-      icon:
-        <span className="material-symbols-rounded font-size-20">
-          automation
-        </span>,
+      icon: <LocalIcon icon="automation" width="20" height="20" />,
       size: 'lg',
       isRound: false,
       type: 'navigation',
@@ -96,10 +91,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'activity',
       name: t("quickAccess.activity", "Activity"),
-      icon:
-        <span className="material-symbols-rounded font-size-20">
-          vital_signs
-        </span>,
+      icon: <LocalIcon icon="vital-signs-rounded" width="20" height="20" />,
       isRound: true,
       size: 'lg',
       type: 'navigation',
