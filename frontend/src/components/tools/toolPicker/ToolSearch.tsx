@@ -15,6 +15,7 @@ interface ToolSearchProps {
   placeholder?: string;
   hideIcon?: boolean;
   onFocus?: () => void;
+  autoFocus?: boolean;
 }
 
 const ToolSearch = ({
@@ -26,7 +27,8 @@ const ToolSearch = ({
   selectedToolKey,
   placeholder,
   hideIcon = false,
-  onFocus
+  onFocus,
+  autoFocus = false
 }: ToolSearchProps) => {
   const { t } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -67,6 +69,15 @@ const ToolSearch = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Auto-focus the input when requested
+  useEffect(() => {
+    if (autoFocus && searchRef.current) {
+      setTimeout(() => {
+        searchRef.current?.focus();
+      }, 10);
+    }
+  }, [autoFocus]);
+
   const searchInput = (
     <div className="search-input-container">
       <TextInput
@@ -76,7 +87,7 @@ const ToolSearch = ({
         placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
         icon={hideIcon ? undefined : <span className="material-symbols-rounded">search</span>}
         autoComplete="off"
-
+        onFocus={onFocus}
       />
     </div>
   );
