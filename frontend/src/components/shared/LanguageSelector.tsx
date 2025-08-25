@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Button, ScrollArea } from '@mantine/core';
+import { Menu, Button, ScrollArea, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { supportedLanguages } from '../../i18n';
 import LanguageIcon from '@mui/icons-material/Language';
 import styles from './LanguageSelector.module.css';
 
-const LanguageSelector = () => {
+interface LanguageSelectorProps {
+  position?: React.ComponentProps<typeof Menu>['position'];
+  offset?: number;
+  compact?: boolean; // icon-only trigger
+}
+
+const LanguageSelector = ({ position = 'bottom-start', offset = 8, compact = false }: LanguageSelectorProps) => {
   const { i18n } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [animationTriggered, setAnimationTriggered] = useState(false);
@@ -21,26 +27,27 @@ const LanguageSelector = () => {
     }));
 
   const handleLanguageChange = (value: string, event: React.MouseEvent) => {
-    // Create ripple effect at click position
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    setRippleEffect({ x, y, key: Date.now() });
-    
+    // Create ripple effect at click position (only for button mode)
+    if (!compact) {
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      setRippleEffect({ x, y, key: Date.now() });
+    }
+
     // Start transition animation
     setIsChanging(true);
     setPendingLanguage(value);
-    
+
     // Simulate processing time for smooth transition
     setTimeout(() => {
       i18n.changeLanguage(value);
-      
+
       setTimeout(() => {
         setIsChanging(false);
         setPendingLanguage(null);
         setOpened(false);
-        
+
         // Clear ripple effect
         setTimeout(() => setRippleEffect(null), 100);
       }, 300);
@@ -64,19 +71,9 @@ const LanguageSelector = () => {
       <style>
         {`
           @keyframes ripple-expand {
-            0% {
-              width: 0;
-              height: 0;
-              opacity: 0.6;
-            }
-            50% {
-              opacity: 0.3;
-            }
-            100% {
-              width: 100px;
-              height: 100px;
-              opacity: 0;
-            }
+            0% { width: 0; height: 0; opacity: 0.6; }
+            50% { opacity: 0.3; }
+            100% { width: 100px; height: 100px; opacity: 0; }
           }
         `}
       </style>
@@ -84,8 +81,8 @@ const LanguageSelector = () => {
         opened={opened} 
         onChange={setOpened}
         width={600}
-        position="bottom-start"
-        offset={8}
+        position={position}
+        offset={offset}
         transitionProps={{
           transition: 'scale-y',
           duration: 200,
@@ -93,29 +90,45 @@ const LanguageSelector = () => {
         }}
       >
       <Menu.Target>
-        <Button
-          variant="subtle"
-          size="sm"
-          leftSection={<LanguageIcon style={{ fontSize: 18 }} />}
-          styles={{
-            root: {
-              border: 'none',
-              color: 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-1))',
-              transition: 'background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              '&:hover': {
-                backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))',
+        {compact ? (
+          <ActionIcon
+            variant="subtle"
+            radius="md"
+            title={currentLanguage}
+            className="right-rail-icon"
+            styles={{
+              root: {
+                color: 'var(--right-rail-icon)',
+                '&:hover': {
+                  backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))',
+                }
               }
-            },
-            label: {
-              fontSize: '12px',
-              fontWeight: 500,
-            }
-          }}
-        >
-          <span className={styles.languageText}>
-            {currentLanguage}
-          </span>
-        </Button>
+            }}
+          >
+            <span className="material-symbols-rounded">language</span>
+          </ActionIcon>
+        ) : (
+          <Button
+            variant="subtle"
+            size="sm"
+            leftSection={<LanguageIcon style={{ fontSize: 18 }} />}
+            styles={{
+              root: {
+                border: 'none',
+                color: 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-1))',
+                transition: 'background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                '&:hover': {
+                  backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))',
+                }
+              },
+              label: { fontSize: '12px', fontWeight: 500 }
+            }}
+          >
+            <span className={styles.languageText}>
+              {currentLanguage}
+            </span>
+          </Button>
+        )}
       </Menu.Target>
 
       <Menu.Dropdown
@@ -181,9 +194,7 @@ const LanguageSelector = () => {
                   }}
                 >
                   {option.label}
-                  
-                  {/* Ripple effect */}
-                  {rippleEffect && pendingLanguage === option.value && (
+                  {!compact && rippleEffect && pendingLanguage === option.value && (
                     <div
                       key={rippleEffect.key}
                       style={{

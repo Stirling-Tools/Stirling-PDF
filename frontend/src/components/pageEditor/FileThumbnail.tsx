@@ -141,7 +141,6 @@ const FileThumbnail = ({
         filter: isSupported ? 'none' : 'grayscale(50%)'
       }}
     >
-      {selectionMode && (
         <div
           className={styles.checkboxContainer}
           data-testid="file-thumbnail-checkbox"
@@ -175,7 +174,6 @@ const FileThumbnail = ({
             size="sm"
           />
         </div>
-      )}
 
       {/* File content area */}
       <div className="file-container w-[90%] h-[80%] relative">

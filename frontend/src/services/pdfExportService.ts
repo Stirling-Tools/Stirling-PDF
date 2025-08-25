@@ -5,6 +5,7 @@ export interface ExportOptions {
   selectedOnly?: boolean;
   filename?: string;
   splitDocuments?: boolean;
+  appendSuffix?: boolean; // when false, do not append _edited/_selected
 }
 
 export class PDFExportService {
@@ -16,7 +17,7 @@ export class PDFExportService {
     selectedPageIds: string[] = [],
     options: ExportOptions = {}
   ): Promise<{ blob: Blob; filename: string } | { blobs: Blob[]; filenames: string[] }> {
-    const { selectedOnly = false, filename, splitDocuments = false } = options;
+    const { selectedOnly = false, filename, splitDocuments = false, appendSuffix = true } = options;
 
     try {
       // Determine which pages to export
@@ -36,7 +37,7 @@ export class PDFExportService {
         return await this.createSplitDocuments(sourceDoc, pagesToExport, filename || pdfDocument.name);
       } else {
         const blob = await this.createSingleDocument(sourceDoc, pagesToExport);
-        const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly);
+        const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly, appendSuffix);
         return { blob, filename: exportFilename };
       }
     } catch (error) {
@@ -56,7 +57,7 @@ export class PDFExportService {
 
     for (const page of pages) {
       // Get the original page from source document
-      const sourcePageIndex = page.pageNumber - 1;
+      const sourcePageIndex = this.getOriginalSourceIndex(page);
 
       if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
         // Copy the page
@@ -113,7 +114,7 @@ export class PDFExportService {
         const newDoc = await PDFLibDocument.create();
 
         for (const page of segmentPages) {
-          const sourcePageIndex = page.pageNumber - 1;
+          const sourcePageIndex = this.getOriginalSourceIndex(page);
 
           if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
             const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
@@ -147,10 +148,27 @@ export class PDFExportService {
   }
 
   /**
+   * Derive the original page index from a page's stable id.
+   * Falls back to the current pageNumber if parsing fails.
+   */
+  private getOriginalSourceIndex(page: PDFPage): number {
+    const match = page.id.match(/-page-(\d+)$/);
+    if (match) {
+      const originalNumber = parseInt(match[1], 10);
+      if (!Number.isNaN(originalNumber)) {
+        return originalNumber - 1; // zero-based index for pdf-lib
+      }
+    }
+    // Fallback to the visible page number
+    return Math.max(0, page.pageNumber - 1);
+  }
+
+  /**
    * Generate appropriate filename for export
    */
-  private generateFilename(originalName: string, selectedOnly: boolean): string {
+  private generateFilename(originalName: string, selectedOnly: boolean, appendSuffix: boolean): string {
     const baseName = originalName.replace(/\.pdf$/i, '');
+    if (!appendSuffix) return `${baseName}.pdf`;
     const suffix = selectedOnly ? '_selected' : '_edited';
     return `${baseName}${suffix}.pdf`;
   }

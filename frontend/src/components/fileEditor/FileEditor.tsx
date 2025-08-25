@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
-  Button, Text, Center, Box, Notification, TextInput, LoadingOverlay, Modal, Alert, Container,
-  Stack, Group
+  Text, Center, Box, Notification, LoadingOverlay, Stack, Group, Portal
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
@@ -466,21 +465,6 @@ const FileEditor = ({
         <LoadingOverlay visible={false} />
 
         <Box p="md" pt="xl">
-          <Group mb="md">
-            {toolMode && (
-              <>
-                <Button onClick={selectAll} variant="light">Select All</Button>
-                <Button onClick={deselectAll} variant="light">Deselect All</Button>
-              </>
-            )}
-            {showBulkActions && !toolMode && (
-              <>
-                <Button onClick={closeAllFiles} variant="light" color="orange">
-                  Close All
-                </Button>
-              </>
-            )}
-          </Group>
 
 
         {activeFileRecords.length === 0 && !zipExtractionProgress.isExtracting ? (
@@ -573,25 +557,29 @@ const FileEditor = ({
       />
 
       {status && (
-        <Notification
-          color="blue"
-          mt="md"
-          onClose={() => setStatus(null)}
-          style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}
-        >
-          {status}
-        </Notification>
+        <Portal>
+          <Notification
+            color="blue"
+            mt="md"
+            onClose={() => setStatus(null)}
+            style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 10001 }}
+          >
+            {status}
+          </Notification>
+        </Portal>
       )}
 
       {error && (
-        <Notification
-          color="red"
-          mt="md"
-          onClose={() => setError(null)}
-          style={{ position: 'fixed', bottom: 80, right: 20, zIndex: 1000 }}
-        >
-          {error}
-        </Notification>
+        <Portal>
+          <Notification
+            color="red"
+            mt="md"
+            onClose={() => setError(null)}
+            style={{ position: 'fixed', bottom: 80, right: 20, zIndex: 10001 }}
+          >
+            {error}
+          </Notification>
+        </Portal>
       )}
       </Box>
     </Dropzone>

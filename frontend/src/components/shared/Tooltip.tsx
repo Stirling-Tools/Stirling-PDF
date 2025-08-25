@@ -124,8 +124,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
     if (sidebarTooltip) return null;
 
     switch (position) {
-      case 'top': return "tooltip-arrow tooltip-arrow-top";
-      case 'bottom': return "tooltip-arrow tooltip-arrow-bottom";
+      case 'top': return "tooltip-arrow tooltip-arrow-bottom";
+      case 'bottom': return "tooltip-arrow tooltip-arrow-top";
       case 'left': return "tooltip-arrow tooltip-arrow-left";
       case 'right': return "tooltip-arrow tooltip-arrow-right";
       default: return "tooltip-arrow tooltip-arrow-right";
@@ -150,7 +150,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         position: 'fixed',
         top: coords.top,
         left: coords.left,
-        width: (maxWidth !== undefined ? maxWidth : '25rem'),
+        width: (maxWidth !== undefined ? maxWidth : (sidebarTooltip ? '25rem' : undefined)),
         minWidth: minWidth,
         zIndex: 9999,
         visibility: positionReady ? 'visible' : 'hidden',

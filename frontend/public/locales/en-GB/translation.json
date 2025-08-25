@@ -992,6 +992,7 @@
     },
     "submit": "Change"
   },
+  
   "removePages": {
     "tags": "Remove pages,delete pages",
     "title": "Remove Pages",
@@ -1925,6 +1926,19 @@
     "pageNavigation": "Page Navigation",
     "currentPage": "Current Page",
     "totalPages": "Total Pages"
+  },
+  "rightRail": {
+    "closeSelected": "Close Selected Files",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectByNumber": "Select by Page Numbers",
+    "deleteSelected": "Delete Selected Pages",
+    "closePdf": "Close PDF",
+    "exportAll": "Export PDF",
+    "downloadSelected": "Download Selected Files",
+    "downloadAll": "Download All",
+    "toggleTheme": "Toggle Theme",
+    "language": "Language"
   },
   "toolPicker": {
     "searchPlaceholder": "Search tools...",
