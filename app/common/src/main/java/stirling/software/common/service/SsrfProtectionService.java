@@ -61,9 +61,9 @@ public class SsrfProtectionService {
         };
     }
 
-    private SsrfProtectionLevel parseProtectionLevel(String level) {
+    private SsrfProtectionLevel parseProtectionLevel(SsrfProtectionLevel level) {
         try {
-            return SsrfProtectionLevel.valueOf(level.toUpperCase());
+            return SsrfProtectionLevel.valueOf(level.name());
         } catch (IllegalArgumentException e) {
             log.warn("Invalid SSRF protection level '{}', defaulting to MEDIUM", level);
             return SsrfProtectionLevel.MEDIUM;
@@ -215,7 +215,8 @@ public class SsrfProtectionService {
                 return false;
             }
         }
-        // For IPv4-mapped IPv6 addresses, bytes 10 and 11 must be 0xff (i.e., address is ::ffff:w.x.y.z)
+        // For IPv4-mapped IPv6 addresses, bytes 10 and 11 must be 0xff (i.e., address is
+        // ::ffff:w.x.y.z)
         return addr[10] == (byte) 0xff && addr[11] == (byte) 0xff;
     }
 
