@@ -54,21 +54,22 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
         handleReaderToggle();
       }
     },
-    {
-      id: 'sign',
-      name: t("quickAccess.sign", "Sign"),
-      icon:
-        <span className="material-symbols-rounded font-size-20">
-          signature
-        </span>,
-      size: 'lg',
-      isRound: false,
-      type: 'navigation',
-      onClick: () => {
-        setActiveButton('sign');
-        handleToolSelect('sign');
-      }
-    },
+    // TODO: Add sign tool
+    // {
+    //   id: 'sign',
+    //   name: t("quickAccess.sign", "Sign"),
+    //   icon:
+    //     <span className="material-symbols-rounded font-size-20">
+    //       signature
+    //     </span>,
+    //   size: 'lg',
+    //   isRound: false,
+    //   type: 'navigation',
+    //   onClick: () => {
+    //     setActiveButton('sign');
+    //     handleToolSelect('sign');
+    //   }
+    // },
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
