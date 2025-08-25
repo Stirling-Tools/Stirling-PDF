@@ -87,7 +87,6 @@ const ToolSearch = ({
         placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
         icon={hideIcon ? undefined : <span className="material-symbols-rounded">search</span>}
         autoComplete="off"
-        style={{padding: 0}}
         onFocus={onFocus}
       />
   );
