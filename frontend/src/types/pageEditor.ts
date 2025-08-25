@@ -6,6 +6,7 @@ export interface PDFPage {
   rotation: number;
   selected: boolean;
   splitAfter?: boolean;
+  isBlankPage?: boolean;
 }
 
 export interface PDFDocument {

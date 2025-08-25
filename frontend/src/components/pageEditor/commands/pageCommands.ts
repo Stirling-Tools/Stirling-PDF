@@ -396,6 +396,147 @@ export class SplitAllCommand extends DOMCommand {
   }
 }
 
+export class PageBreakCommand extends DOMCommand {
+  private insertedPages: PDFPage[] = [];
+  private originalDocument: PDFDocument | null = null;
+
+  constructor(
+    private selectedPageNumbers: number[],
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void,
+    private setSelectedPages: (pages: number[]) => void
+  ) {
+    super();
+  }
+
+  execute(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc || this.selectedPageNumbers.length === 0) return;
+
+    // Store original state for undo
+    this.originalDocument = {
+      ...currentDoc,
+      pages: currentDoc.pages.map(page => ({...page}))
+    };
+
+    // Create new pages array with blank pages inserted
+    const newPages: PDFPage[] = [];
+    this.insertedPages = [];
+    let pageNumberCounter = 1;
+
+    currentDoc.pages.forEach((page, index) => {
+      // Add the current page
+      const updatedPage = { ...page, pageNumber: pageNumberCounter++ };
+      newPages.push(updatedPage);
+
+      // If this page is selected for page break insertion, add a blank page after it
+      if (this.selectedPageNumbers.includes(page.pageNumber)) {
+        const blankPage: PDFPage = {
+          id: `blank-${Date.now()}-${index}`,
+          pageNumber: pageNumberCounter++,
+          originalPageNumber: -1, // Mark as blank page
+          thumbnail: null,
+          rotation: 0,
+          selected: false,
+          splitAfter: false,
+          isBlankPage: true // Custom flag for blank pages
+        };
+        newPages.push(blankPage);
+        this.insertedPages.push(blankPage);
+      }
+    });
+
+    // Update document
+    const updatedDocument: PDFDocument = {
+      ...currentDoc,
+      pages: newPages,
+      totalPages: newPages.length,
+    };
+
+    this.setDocument(updatedDocument);
+    this.setSelectedPages([]);
+  }
+
+  undo(): void {
+    if (!this.originalDocument) return;
+    this.setDocument(this.originalDocument);
+  }
+
+  get description(): string {
+    return `Insert ${this.selectedPageNumbers.length} page break(s)`;
+  }
+}
+
+export class BulkPageBreakCommand extends DOMCommand {
+  private insertedPages: PDFPage[] = [];
+  private originalDocument: PDFDocument | null = null;
+
+  constructor(
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void,
+    private setSelectedPages: (pages: number[]) => void
+  ) {
+    super();
+  }
+
+  execute(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    // Store original state for undo
+    this.originalDocument = {
+      ...currentDoc,
+      pages: currentDoc.pages.map(page => ({...page}))
+    };
+
+    // Create new pages array with blank pages inserted after each page (except the last)
+    const newPages: PDFPage[] = [];
+    this.insertedPages = [];
+    let pageNumberCounter = 1;
+
+    currentDoc.pages.forEach((page, index) => {
+      // Add the current page
+      const updatedPage = { ...page, pageNumber: pageNumberCounter++ };
+      newPages.push(updatedPage);
+
+      // Add blank page after each page except the last one
+      if (index < currentDoc.pages.length - 1) {
+        const blankPage: PDFPage = {
+          id: `blank-${Date.now()}-${index}`,
+          pageNumber: pageNumberCounter++,
+          originalPageNumber: -1,
+          thumbnail: null,
+          rotation: 0,
+          selected: false,
+          splitAfter: false,
+          isBlankPage: true
+        };
+        newPages.push(blankPage);
+        this.insertedPages.push(blankPage);
+      }
+    });
+
+    // Update document
+    const updatedDocument: PDFDocument = {
+      ...currentDoc,
+      pages: newPages,
+      totalPages: newPages.length,
+    };
+
+    this.setDocument(updatedDocument);
+    this.setSelectedPages([]);
+  }
+
+  undo(): void {
+    if (!this.originalDocument) return;
+    this.setDocument(this.originalDocument);
+  }
+
+  get description(): string {
+    return `Insert page breaks after all pages`;
+  }
+}
+
 // Simple undo manager for DOM commands
 export class UndoManager {
   private undoStack: DOMCommand[] = [];

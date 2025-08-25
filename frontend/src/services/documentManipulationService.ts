@@ -121,10 +121,10 @@ export class DocumentManipulationService {
    */
   private getRotationFromDOM(pageElement: Element, originalPage: PDFPage): number {
     const img = pageElement.querySelector('img');
-    if (img && img.style.rotate) {
-      // Parse rotation from DOM (e.g., "90deg" -> 90)
-      const rotationMatch = img.style.rotate.match(/-?\d+/);
-      const domRotation = rotationMatch ? parseInt(rotationMatch[0]) : 0;
+    if (img && img.style.transform) {
+      // Parse rotation from transform property (e.g., "rotate(90deg)" -> 90)
+      const rotationMatch = img.style.transform.match(/rotate\((-?\d+)deg\)/);
+      const domRotation = rotationMatch ? parseInt(rotationMatch[1]) : 0;
       
       console.log(`Page ${originalPage.pageNumber}: DOM rotation = ${domRotation}°, original = ${originalPage.rotation}°`);
       return domRotation;
@@ -146,7 +146,7 @@ export class DocumentManipulationService {
         const img = pageElement.querySelector('img');
         if (img) {
           // Reset rotation to match document state
-          img.style.rotate = `${page.rotation}deg`;
+          img.style.transform = `rotate(${page.rotation}deg)`;
         }
       }
     });

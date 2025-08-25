@@ -27,6 +27,8 @@ import {
   BulkRotateCommand,
   BulkSplitCommand,
   SplitAllCommand,
+  PageBreakCommand,
+  BulkPageBreakCommand,
   UndoManager
 } from './commands/pageCommands';
 import { usePageDocument } from './hooks/usePageDocument';
@@ -42,6 +44,8 @@ export interface PageEditorProps {
     handleDelete: () => void;
     handleSplit: () => void;
     handleSplitAll: () => void;
+    handlePageBreak: () => void;
+    handlePageBreakAll: () => void;
     showExportPreview: (selectedOnly: boolean) => void;
     onExportSelected: () => void;
     onExportAll: () => void;
@@ -266,6 +270,31 @@ const PageEditor = ({
     undoManagerRef.current.executeCommand(splitAllCommand);
   }, [displayDocument, splitPositions]);
 
+  const handlePageBreak = useCallback(() => {
+    if (!displayDocument || selectedPageNumbers.length === 0) return;
+    
+    console.log('Insert page breaks after selected pages:', selectedPageNumbers);
+    
+    const pageBreakCommand = new PageBreakCommand(
+      selectedPageNumbers,
+      () => displayDocument,
+      setEditedDocument,
+      setSelectedPageNumbers
+    );
+    undoManagerRef.current.executeCommand(pageBreakCommand);
+  }, [selectedPageNumbers, displayDocument]);
+
+  const handlePageBreakAll = useCallback(() => {
+    if (!displayDocument) return;
+    
+    const pageBreakAllCommand = new BulkPageBreakCommand(
+      () => displayDocument,
+      setEditedDocument,
+      setSelectedPageNumbers
+    );
+    undoManagerRef.current.executeCommand(pageBreakAllCommand);
+  }, [displayDocument]);
+
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => {
     if (!displayDocument) return;
     
@@ -429,6 +458,8 @@ const PageEditor = ({
         handleDelete,
         handleSplit,
         handleSplitAll,
+        handlePageBreak,
+        handlePageBreakAll,
         showExportPreview: handleExportPreview,
         onExportSelected,
         onExportAll,
@@ -443,8 +474,8 @@ const PageEditor = ({
     }
   }, [
     onFunctionsReady, handleUndo, handleRedo, canUndo, canRedo, handleRotate, handleDelete, handleSplit, handleSplitAll,
-    handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading, selectionMode, selectedPageNumbers, 
-    splitPositions, displayDocument?.pages.length, closePdf
+    handlePageBreak, handlePageBreakAll, handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading, 
+    selectionMode, selectedPageNumbers, splitPositions, displayDocument?.pages.length, closePdf
   ]);
 
   // Display all pages - use edited or original document

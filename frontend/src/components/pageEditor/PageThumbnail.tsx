@@ -95,7 +95,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     // Request thumbnail generation if we have the original file
     if (originalFile) {
       const pageNumber = page.originalPageNumber;
-      
+
       requestThumbnail(page.id, originalFile, pageNumber)
         .then(thumbnail => {
           if (!isCancelled && thumbnail) {
@@ -116,14 +116,14 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     if (element) {
       pageRefs.current.set(page.id, element);
       dragElementRef.current = element;
-      
+
       const dragCleanup = draggable({
         element,
         getInitialData: () => ({
           pageNumber: page.pageNumber,
           pageId: page.id,
-          selectedPages: selectionMode && selectedPages.includes(page.pageNumber) 
-            ? selectedPages 
+          selectedPages: selectionMode && selectedPages.includes(page.pageNumber)
+            ? selectedPages
             : [page.pageNumber]
         }),
         onDragStart: () => {
@@ -131,14 +131,14 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         },
         onDrop: ({ location }) => {
           setIsDragging(false);
-          
+
           if (location.current.dropTargets.length === 0) {
             return;
           }
-          
+
           const dropTarget = location.current.dropTargets[0];
           const targetData = dropTarget.data;
-          
+
           if (targetData.type === 'page') {
             const targetPageNumber = targetData.pageNumber as number;
             const targetIndex = pdfDocument.pages.findIndex(p => p.pageNumber === targetPageNumber);
@@ -155,7 +155,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       });
 
       element.style.cursor = 'grab';
-      
+
       const dropCleanup = dropTargetForElements({
         element,
         getData: () => ({
@@ -164,7 +164,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         }),
         onDrop: ({ source }) => {}
       });
-      
+
       (element as any).__dragCleanup = () => {
         dragCleanup();
         dropCleanup();
@@ -202,11 +202,11 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   const handleSplit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     // Create a command to toggle split at this position
     const command = createSplitCommand(index);
     onExecuteCommand(command);
-    
+
     const hasSplit = splitPositions.has(index);
     const action = hasSplit ? 'removed' : 'added';
     onSetStatus(`Split marker ${action} after position ${index + 1}`);
@@ -215,7 +215,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   // Handle click vs drag differentiation
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!selectionMode) return;
-    
+
     setIsMouseDown(true);
     setMouseStartPos({ x: e.clientX, y: e.clientY });
   }, [selectionMode]);
@@ -292,7 +292,10 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             pointerEvents: 'auto'
           }}
-          onMouseDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            onTogglePage(page.pageNumber);
+          }}
           onMouseUp={(e) => e.stopPropagation()}
           onDragStart={(e) => {
             e.preventDefault();
@@ -302,9 +305,10 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           <Checkbox
             checked={Array.isArray(selectedPages) ? selectedPages.includes(page.pageNumber) : false}
             onChange={() => {
-              // onChange is handled by the parent div click
+              // Selection is handled by container mouseDown
             }}
             size="sm"
+            style={{ pointerEvents: 'none' }}
           />
         </div>
       )}
@@ -323,7 +327,14 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             justifyContent: 'center'
           }}
         >
-          {thumbnailUrl ? (
+          {page.isBlankPage ? (
+            <div style={{ 
+              width: '100%', 
+              height: '100%', 
+              backgroundColor: 'white',
+              borderRadius: 4
+            }}></div>
+          ) : thumbnailUrl ? (
             <img
               src={thumbnailUrl}
               alt={`Page ${page.pageNumber}`}
@@ -354,7 +365,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             position: 'absolute',
             top: 5,
             left: 5,
-            background: 'rgba(162, 201, 255, 0.8)',
+            background: page.isBlankPage ? 'rgba(255, 165, 0, 0.8)' : 'rgba(162, 201, 255, 0.8)',
             padding: '6px 8px',
             borderRadius: 8,
             zIndex: 2,

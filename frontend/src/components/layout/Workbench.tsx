@@ -112,6 +112,8 @@ export default function Workbench() {
                 onDelete={pageEditorFunctions.handleDelete}
                 onSplit={pageEditorFunctions.handleSplit}
                 onSplitAll={pageEditorFunctions.handleSplitAll}
+                onPageBreak={pageEditorFunctions.handlePageBreak}
+                onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
                 onExportSelected={pageEditorFunctions.onExportSelected}
                 onExportAll={pageEditorFunctions.onExportAll}
                 exportLoading={pageEditorFunctions.exportLoading}

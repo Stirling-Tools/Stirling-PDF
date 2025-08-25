@@ -50,19 +50,29 @@ export class PDFExportService {
     const newDoc = await PDFLibDocument.create();
 
     for (const page of pages) {
-      // Get the original page from source document using originalPageNumber
-      const sourcePageIndex = page.originalPageNumber - 1;
-
-      if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
-        // Copy the page
-        const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
-
-        // Apply rotation
+      if (page.isBlankPage || page.originalPageNumber === -1) {
+        // Create a blank page
+        const blankPage = newDoc.addPage(PageSizes.A4);
+        
+        // Apply rotation if needed
         if (page.rotation !== 0) {
-          copiedPage.setRotation(degrees(page.rotation));
+          blankPage.setRotation(degrees(page.rotation));
         }
+      } else {
+        // Get the original page from source document using originalPageNumber
+        const sourcePageIndex = page.originalPageNumber - 1;
 
-        newDoc.addPage(copiedPage);
+        if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
+          // Copy the page
+          const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
+
+          // Apply rotation
+          if (page.rotation !== 0) {
+            copiedPage.setRotation(degrees(page.rotation));
+          }
+
+          newDoc.addPage(copiedPage);
+        }
       }
     }
 

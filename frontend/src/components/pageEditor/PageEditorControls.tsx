@@ -12,6 +12,7 @@ import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
+import InsertPageBreakIcon from "@mui/icons-material/InsertPageBreak";
 
 interface PageEditorControlsProps {
   // Close/Reset functions
@@ -28,6 +29,8 @@ interface PageEditorControlsProps {
   onDelete: () => void;
   onSplit: () => void;
   onSplitAll: () => void;
+  onPageBreak: () => void;
+  onPageBreakAll: () => void;
 
   // Export functions
   onExportSelected: () => void;
@@ -53,6 +56,8 @@ const PageEditorControls = ({
   onDelete,
   onSplit,
   onSplitAll,
+  onPageBreak,
+  onPageBreakAll,
   onExportSelected,
   onExportAll,
   exportLoading,
@@ -77,6 +82,16 @@ const PageEditorControls = ({
       Array.from({length: allPossibleSplitsCount}, (_, i) => i).every(pos => splitPositions.has(pos));
     
     return hasAllSplits ? "Remove All Splits" : "Split All";
+  };
+
+  // Calculate page break tooltip text
+  const getPageBreakTooltip = () => {
+    if (selectionMode) {
+      return selectedPages.length > 0 
+        ? `Insert ${selectedPages.length} Page Break${selectedPages.length > 1 ? 's' : ''}`
+        : "Insert Page Breaks";
+    }
+    return "Insert Page Breaks After All Pages";
   };
 
   return (
@@ -181,6 +196,17 @@ const PageEditorControls = ({
             size="lg"
           >
             <ContentCutIcon />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label={getPageBreakTooltip()}>
+          <ActionIcon
+            onClick={selectionMode ? onPageBreak : onPageBreakAll}
+            disabled={selectionMode && selectedPages.length === 0}
+            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
+            color={selectionMode && selectedPages.length > 0 ? "orange" : undefined}
+            size="lg"
+          >
+            <InsertPageBreakIcon />
           </ActionIcon>
         </Tooltip>
 
