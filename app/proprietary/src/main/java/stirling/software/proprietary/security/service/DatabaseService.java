@@ -51,10 +51,13 @@ public class DatabaseService implements DatabaseServiceInterface {
     private final DatabaseNotificationServiceInterface backupNotificationService;
 
     public DatabaseService(
-            ApplicationProperties.Datasource datasourceProps, DataSource dataSource) {
+            ApplicationProperties.Datasource datasourceProps,
+            DataSource dataSource,
+            DatabaseNotificationServiceInterface backupNotificationService) {
         this.BACKUP_DIR = Paths.get(InstallationPathConfig.getBackupPath()).normalize();
         this.datasourceProps = datasourceProps;
         this.dataSource = dataSource;
+        this.backupNotificationService = backupNotificationService;
         moveBackupFiles();
     }
 
