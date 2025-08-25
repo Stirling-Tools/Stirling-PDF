@@ -350,7 +350,7 @@ public class RedactionService {
         return result;
     }
 
-    private static Color decodeOrDefault(String hex) {
+    public static Color decodeOrDefault(String hex) {
         if (hex == null || hex.trim().isEmpty()) {
             return Color.BLACK;
         }
@@ -424,8 +424,8 @@ public class RedactionService {
         }
     }
 
-    static void writeFilteredContentStream(PDDocument document, PDPage page, List<Object> tokens)
-            throws IOException {
+    public static void writeFilteredContentStream(
+            PDDocument document, PDPage page, List<Object> tokens) throws IOException {
         if (document == null || page == null || tokens == null) {
             throw new IllegalArgumentException("Document, page, and tokens cannot be null");
         }
@@ -437,7 +437,7 @@ public class RedactionService {
         page.setContents(newStream);
     }
 
-    static boolean isTextShowingOperator(String opName) {
+    public static boolean isTextShowingOperator(String opName) {
         return TEXT_SHOWING_OPERATORS.contains(opName);
     }
 
@@ -1133,120 +1133,23 @@ public class RedactionService {
         }
     }
 
-    List<Object> createTokensWithoutTargetText(
-            PDDocument document,
-            PDPage page,
-            Set<String> targetWords,
-            boolean useRegex,
-            boolean wholeWordSearch)
-            throws IOException {
-        log.debug("Processing page with {} target words: {}", targetWords.size(), targetWords);
+    public static String createPlaceholderWithFont(String originalWord, PDFont font) {
+        if (originalWord == null || originalWord.isEmpty()) return " ";
 
-        PDFStreamParser parser = new PDFStreamParser(page);
-        List<Object> tokens = parseAllTokens(parser);
-        int tokenCount = tokens.size();
-
-        log.debug("Parsed {} tokens from page content stream", tokenCount);
-
-        if (tokenCount == 0 && !targetWords.isEmpty()) {
-            log.warn(
-                    "No tokens parsed from page content stream - this might indicate encoding issues");
-            log.warn("Attempting alternative verification for target words: {}", targetWords);
-
+        final String repeat = " ".repeat(Math.max(1, originalWord.length()));
+        if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
             try {
-                TextFinder directFinder = new TextFinder("", false, false);
-                directFinder.setStartPage(document.getPages().indexOf(page) + 1);
-                directFinder.setEndPage(document.getPages().indexOf(page) + 1);
-                directFinder.getText(document);
-
-                StringBuilder pageText = new StringBuilder();
-                for (PDFText pdfText : directFinder.getFoundTexts()) {
-                    if (pdfText.getText() != null) {
-                        pageText.append(pdfText.getText()).append(" ");
-                    }
-                }
-
-                String extractedText = pageText.toString().trim();
-                log.debug("Alternative text extraction found: '{}'", extractedText);
-
-                for (String word : targetWords) {
-                    if (extractedText.toLowerCase().contains(word.toLowerCase())) {
-                        log.warn("Found target word '{}' via alternative extraction method", word);
-                    }
-                }
-
+                float originalWidth =
+                        WidthCalculator.calculateAccurateWidth(font, originalWord, 1.0f);
+                String result =
+                        createAlternativePlaceholder(originalWord, originalWidth, font, 1.0f);
+                return result != null ? result : repeat;
             } catch (Exception e) {
-                log.error("Alternative text extraction failed: {}", e.getMessage());
+                return repeat;
             }
         }
 
-        PDResources resources = page.getResources();
-        if (resources != null) {
-            log.debug("Processing XObjects for page");
-            processPageXObjects(
-                    document,
-                    resources,
-                    targetWords,
-                    useRegex,
-                    wholeWordSearch,
-                    this.aggressiveMode);
-        }
-
-        List<TextSegment> textSegments =
-                extractTextSegmentsFromTokens(page.getResources(), tokens, this.aggressiveMode);
-        log.debug("Extracted {} text segments from tokens", textSegments.size());
-
-        if (!textSegments.isEmpty()) {
-            StringBuilder allText = new StringBuilder();
-            boolean hasProblematicChars = false;
-
-            for (TextSegment seg : textSegments) {
-                if (seg.getText() != null && !seg.getText().trim().isEmpty()) {
-                    String segmentText = seg.getText();
-                    if (!isTextSafeForRedaction(segmentText)) {
-                        hasProblematicChars = true;
-                        segmentText = normalizeTextForRedaction(segmentText);
-                        log.debug(
-                                "Normalized problematic text in segment: original contained encoding issues");
-                    }
-                    allText.append(segmentText).append(" ");
-                }
-            }
-
-            String completeText = allText.toString().trim();
-            if (!completeText.isEmpty()) {
-                log.debug("Complete extracted text: '{}'", completeText);
-                if (hasProblematicChars) {
-                    log.info("Applied character normalization to handle encoding issues");
-                }
-            }
-        }
-
-        List<MatchRange> matches;
-        if (this.aggressiveMode) {
-            log.debug("Using aggressive mode for matching");
-            matches =
-                    findAllMatchesAggressive(
-                            textSegments, tokens, targetWords, useRegex, wholeWordSearch);
-        } else {
-            log.debug("Using moderate mode for matching");
-            matches = findMatchesInSegments(textSegments, targetWords, useRegex, wholeWordSearch);
-        }
-
-        log.info("Found {} matches to redact", matches.size());
-        if (!matches.isEmpty()) {
-            log.debug("Match ranges: {}", matches);
-        }
-
-        List<Object> resultTokens = applyRedactionsToTokens(tokens, textSegments, matches);
-        int modifications = tokens.size() - resultTokens.size();
-        log.debug(
-                "Applied redactions - original tokens: {}, result tokens: {}, modifications: {}",
-                tokens.size(),
-                resultTokens.size(),
-                modifications);
-
-        return resultTokens;
+        return repeat;
     }
 
     private static COSArray buildKerningAdjustedTJArray(
@@ -1810,23 +1713,120 @@ public class RedactionService {
         }
     }
 
-    static String createPlaceholderWithFont(String originalWord, PDFont font) {
-        if (originalWord == null || originalWord.isEmpty()) return " ";
+    public List<Object> createTokensWithoutTargetText(
+            PDDocument document,
+            PDPage page,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch)
+            throws IOException {
+        log.debug("Processing page with {} target words: {}", targetWords.size(), targetWords);
 
-        final String repeat = " ".repeat(Math.max(1, originalWord.length()));
-        if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
+        PDFStreamParser parser = new PDFStreamParser(page);
+        List<Object> tokens = parseAllTokens(parser);
+        int tokenCount = tokens.size();
+
+        log.debug("Parsed {} tokens from page content stream", tokenCount);
+
+        if (tokenCount == 0 && !targetWords.isEmpty()) {
+            log.warn(
+                    "No tokens parsed from page content stream - this might indicate encoding issues");
+            log.warn("Attempting alternative verification for target words: {}", targetWords);
+
             try {
-                float originalWidth =
-                        WidthCalculator.calculateAccurateWidth(font, originalWord, 1.0f);
-                String result =
-                        createAlternativePlaceholder(originalWord, originalWidth, font, 1.0f);
-                return result != null ? result : repeat;
+                TextFinder directFinder = new TextFinder("", false, false);
+                directFinder.setStartPage(document.getPages().indexOf(page) + 1);
+                directFinder.setEndPage(document.getPages().indexOf(page) + 1);
+                directFinder.getText(document);
+
+                StringBuilder pageText = new StringBuilder();
+                for (PDFText pdfText : directFinder.getFoundTexts()) {
+                    if (pdfText.getText() != null) {
+                        pageText.append(pdfText.getText()).append(" ");
+                    }
+                }
+
+                String extractedText = pageText.toString().trim();
+                log.debug("Alternative text extraction found: '{}'", extractedText);
+
+                for (String word : targetWords) {
+                    if (extractedText.toLowerCase().contains(word.toLowerCase())) {
+                        log.warn("Found target word '{}' via alternative extraction method", word);
+                    }
+                }
+
             } catch (Exception e) {
-                return repeat;
+                log.error("Alternative text extraction failed: {}", e.getMessage());
             }
         }
 
-        return repeat;
+        PDResources resources = page.getResources();
+        if (resources != null) {
+            log.debug("Processing XObjects for page");
+            processPageXObjects(
+                    document,
+                    resources,
+                    targetWords,
+                    useRegex,
+                    wholeWordSearch,
+                    this.aggressiveMode);
+        }
+
+        List<TextSegment> textSegments =
+                extractTextSegmentsFromTokens(page.getResources(), tokens, this.aggressiveMode);
+        log.debug("Extracted {} text segments from tokens", textSegments.size());
+
+        if (!textSegments.isEmpty()) {
+            StringBuilder allText = new StringBuilder();
+            boolean hasProblematicChars = false;
+
+            for (TextSegment seg : textSegments) {
+                if (seg.getText() != null && !seg.getText().trim().isEmpty()) {
+                    String segmentText = seg.getText();
+                    if (!isTextSafeForRedaction(segmentText)) {
+                        hasProblematicChars = true;
+                        segmentText = normalizeTextForRedaction(segmentText);
+                        log.debug(
+                                "Normalized problematic text in segment: original contained encoding issues");
+                    }
+                    allText.append(segmentText).append(" ");
+                }
+            }
+
+            String completeText = allText.toString().trim();
+            if (!completeText.isEmpty()) {
+                log.debug("Complete extracted text: '{}'", completeText);
+                if (hasProblematicChars) {
+                    log.info("Applied character normalization to handle encoding issues");
+                }
+            }
+        }
+
+        List<MatchRange> matches;
+        if (this.aggressiveMode) {
+            log.debug("Using aggressive mode for matching");
+            matches =
+                    findAllMatchesAggressive(
+                            textSegments, tokens, targetWords, useRegex, wholeWordSearch);
+        } else {
+            log.debug("Using moderate mode for matching");
+            matches = findMatchesInSegments(textSegments, targetWords, useRegex, wholeWordSearch);
+        }
+
+        log.info("Found {} matches to redact", matches.size());
+        if (!matches.isEmpty()) {
+            log.debug("Match ranges: {}", matches);
+        }
+
+        List<Object> resultTokens = applyRedactionsToTokens(tokens, textSegments, matches);
+        int modifications = tokens.size() - resultTokens.size();
+        log.debug(
+                "Applied redactions - original tokens: {}, result tokens: {}, modifications: {}",
+                tokens.size(),
+                resultTokens.size(),
+                modifications);
+
+        return resultTokens;
     }
 
     private static TokenModificationResult convertToTJWithAdjustment(

@@ -726,28 +726,28 @@ class RedactControllerTest {
         @Test
         @DisplayName("Should decode valid hex color with hash")
         void decodeValidHexColorWithHash() throws Exception {
-            Color result = redactController.decodeOrDefault("#FF0000");
+            Color result = RedactController.decodeOrDefault("#FF0000");
             assertEquals(Color.RED, result);
         }
 
         @Test
         @DisplayName("Should decode valid hex color without hash")
         void decodeValidHexColorWithoutHash() throws Exception {
-            Color result = redactController.decodeOrDefault("FF0000");
+            Color result = RedactController.decodeOrDefault("FF0000");
             assertEquals(Color.RED, result);
         }
 
         @Test
         @DisplayName("Should default to black for null color")
         void defaultToBlackForNullColor() throws Exception {
-            Color result = redactController.decodeOrDefault(null);
+            Color result = RedactController.decodeOrDefault(null);
             assertEquals(Color.BLACK, result);
         }
 
         @Test
         @DisplayName("Should default to black for invalid color")
         void defaultToBlackForInvalidColor() throws Exception {
-            Color result = redactController.decodeOrDefault("invalid-color");
+            Color result = RedactController.decodeOrDefault("invalid-color");
             assertEquals(Color.BLACK, result);
         }
 
@@ -759,7 +759,7 @@ class RedactControllerTest {
                 })
         @DisplayName("Should handle various valid color formats")
         void handleVariousValidColorFormats(String colorInput) throws Exception {
-            Color result = redactController.decodeOrDefault(colorInput);
+            Color result = RedactController.decodeOrDefault(colorInput);
             assertNotNull(result);
             assertTrue(
                     result.getRed() >= 0 && result.getRed() <= 255,
@@ -775,8 +775,8 @@ class RedactControllerTest {
         @Test
         @DisplayName("Should handle short hex codes appropriately")
         void handleShortHexCodes() throws Exception {
-            Color result1 = redactController.decodeOrDefault("123");
-            Color result2 = redactController.decodeOrDefault("#12");
+            Color result1 = RedactController.decodeOrDefault("123");
+            Color result2 = RedactController.decodeOrDefault("#12");
 
             assertNotNull(result1);
             assertNotNull(result2);
