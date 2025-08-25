@@ -7,6 +7,7 @@ export interface PDFPage {
   selected: boolean;
   splitAfter?: boolean;
   isBlankPage?: boolean;
+  originalFileId?: string;
 }
 
 export interface PDFDocument {

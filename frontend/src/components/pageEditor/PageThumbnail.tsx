@@ -68,6 +68,18 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
 
+  // Calculate document aspect ratio from first non-blank page
+  const getDocumentAspectRatio = useCallback(() => {
+    // Find first non-blank page with a thumbnail to get aspect ratio
+    const firstRealPage = pdfDocument.pages.find(p => !p.isBlankPage && p.thumbnail);
+    if (firstRealPage?.thumbnail) {
+      // Try to get aspect ratio from an actual thumbnail image
+      // For now, default to A4 but could be enhanced to measure image dimensions
+      return '1 / 1.414'; // A4 ratio as fallback
+    }
+    return '1 / 1.414'; // Default A4 ratio
+  }, [pdfDocument.pages]);
+
   // Update thumbnail URL when page prop changes
   useEffect(() => {
     if (page.thumbnail && page.thumbnail !== thumbnailUrl) {
@@ -329,11 +341,20 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         >
           {page.isBlankPage ? (
             <div style={{ 
-              width: '100%', 
-              height: '100%', 
-              backgroundColor: 'white',
-              borderRadius: 4
-            }}></div>
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <div style={{
+                width: '70%',
+                aspectRatio: getDocumentAspectRatio(),
+                backgroundColor: 'white',
+                border: '1px solid #e9ecef',
+                borderRadius: 2
+              }}></div>
+            </div>
           ) : thumbnailUrl ? (
             <img
               src={thumbnailUrl}

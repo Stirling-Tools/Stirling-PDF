@@ -308,6 +308,26 @@ const PageEditor = ({
     undoManagerRef.current.executeCommand(reorderCommand);
   }, [displayDocument]);
 
+  // Helper function to collect source files for multi-file export
+  const getSourceFiles = useCallback((): Map<string, File> | null => {
+    const sourceFiles = new Map<string, File>();
+    
+    // Check if we have multiple files by looking at active file IDs
+    if (activeFileIds.length <= 1) {
+      return null; // Use single-file export method
+    }
+    
+    // Collect all source files
+    activeFileIds.forEach(fileId => {
+      const file = selectors.getFile(fileId);
+      if (file) {
+        sourceFiles.set(fileId, file);
+      }
+    });
+    
+    return sourceFiles.size > 0 ? sourceFiles : null;
+  }, [activeFileIds, selectors]);
+
 
 
   const onExportSelected = useCallback(async () => {
@@ -334,11 +354,20 @@ const PageEditor = ({
 
       // Step 3: Export with pdfExportService
       console.log('Exporting selected pages:', selectedPageNumbers, 'with DOM rotations applied');
-      const result = await pdfExportService.exportPDF(
-        documentWithDOMState,
-        selectedPageIds,
-        { selectedOnly: true, filename: documentWithDOMState.name }
-      );
+      
+      const sourceFiles = getSourceFiles();
+      const result = sourceFiles 
+        ? await pdfExportService.exportPDFMultiFile(
+            documentWithDOMState,
+            sourceFiles,
+            selectedPageIds,
+            { selectedOnly: true, filename: documentWithDOMState.name }
+          )
+        : await pdfExportService.exportPDF(
+            documentWithDOMState,
+            selectedPageIds,
+            { selectedOnly: true, filename: documentWithDOMState.name }
+          );
 
       // Step 4: Download the result
       pdfExportService.downloadFile(result.blob, result.filename);
@@ -348,7 +377,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, selectedPageNumbers, mergedPdfDocument, splitPositions]);
+  }, [displayDocument, selectedPageNumbers, mergedPdfDocument, splitPositions, getSourceFiles]);
 
   const onExportAll = useCallback(async () => {
     if (!displayDocument) return;
@@ -370,8 +399,11 @@ const PageEditor = ({
         const blobs: Blob[] = [];
         const filenames: string[] = [];
         
+        const sourceFiles = getSourceFiles();
         for (const doc of processedDocuments) {
-          const result = await pdfExportService.exportPDF(doc, [], { filename: doc.name });
+          const result = sourceFiles 
+            ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], { filename: doc.name })
+            : await pdfExportService.exportPDF(doc, [], { filename: doc.name });
           blobs.push(result.blob);
           filenames.push(result.filename);
         }
@@ -391,11 +423,19 @@ const PageEditor = ({
       } else {
         // Single document - regular export
         console.log('Exporting as single PDF');
-        const result = await pdfExportService.exportPDF(
-          processedDocuments,
-          [],
-          { selectedOnly: false, filename: processedDocuments.name }
-        );
+        const sourceFiles = getSourceFiles();
+        const result = sourceFiles
+          ? await pdfExportService.exportPDFMultiFile(
+              processedDocuments,
+              sourceFiles,
+              [],
+              { selectedOnly: false, filename: processedDocuments.name }
+            )
+          : await pdfExportService.exportPDF(
+              processedDocuments,
+              [],
+              { selectedOnly: false, filename: processedDocuments.name }
+            );
 
         pdfExportService.downloadFile(result.blob, result.filename);
       }
@@ -405,7 +445,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, mergedPdfDocument, splitPositions]);
+  }, [displayDocument, mergedPdfDocument, splitPositions, getSourceFiles]);
 
   // Apply DOM changes to document state using dedicated service
   const applyChanges = useCallback(() => {
@@ -587,7 +627,7 @@ const PageEditor = ({
                 page={page}
                 index={index}
                 totalPages={displayDocument.pages.length}
-                originalFile={activeFileIds.length === 1 && primaryFileId ? selectors.getFile(primaryFileId) : undefined}
+                originalFile={(page as any).originalFileId ? selectors.getFile((page as any).originalFileId) : undefined}
                 selectedPages={selectedPageNumbers}
                 selectionMode={selectionMode}
                 movingPage={movingPage}

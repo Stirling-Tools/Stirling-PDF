@@ -8,7 +8,7 @@ export interface ExportOptions {
 
 export class PDFExportService {
   /**
-   * Export PDF document with applied operations
+   * Export PDF document with applied operations (single file source)
    */
   async exportPDF(
     pdfDocument: PDFDocument,
@@ -41,7 +41,100 @@ export class PDFExportService {
   }
 
   /**
-   * Create a single PDF document with all operations applied
+   * Export PDF document with applied operations (multi-file source)
+   */
+  async exportPDFMultiFile(
+    pdfDocument: PDFDocument,
+    sourceFiles: Map<string, File>,
+    selectedPageIds: string[] = [],
+    options: ExportOptions = {}
+  ): Promise<{ blob: Blob; filename: string }> {
+    const { selectedOnly = false, filename } = options;
+
+    try {
+      // Determine which pages to export
+      const pagesToExport = selectedOnly && selectedPageIds.length > 0
+        ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
+        : pdfDocument.pages;
+
+      if (pagesToExport.length === 0) {
+        throw new Error('No pages to export');
+      }
+
+      const blob = await this.createMultiSourceDocument(sourceFiles, pagesToExport);
+      const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly);
+      
+      return { blob, filename: exportFilename };
+    } catch (error) {
+      console.error('Multi-file PDF export error:', error);
+      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Create a PDF document from multiple source files
+   */
+  private async createMultiSourceDocument(
+    sourceFiles: Map<string, File>,
+    pages: PDFPage[]
+  ): Promise<Blob> {
+    const newDoc = await PDFLibDocument.create();
+    
+    // Load all source documents once and cache them
+    const loadedDocs = new Map<string, PDFLibDocument>();
+    
+    for (const [fileId, file] of sourceFiles) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const doc = await PDFLibDocument.load(arrayBuffer);
+        loadedDocs.set(fileId, doc);
+      } catch (error) {
+        console.warn(`Failed to load source file ${fileId}:`, error);
+      }
+    }
+
+    for (const page of pages) {
+      if (page.isBlankPage || page.originalPageNumber === -1) {
+        // Create a blank page
+        const blankPage = newDoc.addPage(PageSizes.A4);
+        
+        // Apply rotation if needed
+        if (page.rotation !== 0) {
+          blankPage.setRotation(degrees(page.rotation));
+        }
+      } else if (page.originalFileId && loadedDocs.has(page.originalFileId)) {
+        // Get the correct source document for this page
+        const sourceDoc = loadedDocs.get(page.originalFileId)!;
+        const sourcePageIndex = page.originalPageNumber - 1;
+
+        if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
+          // Copy the page from the correct source document
+          const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
+
+          // Apply rotation
+          if (page.rotation !== 0) {
+            copiedPage.setRotation(degrees(page.rotation));
+          }
+
+          newDoc.addPage(copiedPage);
+        }
+      } else {
+        console.warn(`Cannot find source document for page ${page.pageNumber} (fileId: ${page.originalFileId})`);
+      }
+    }
+
+    // Set metadata
+    newDoc.setCreator('Stirling PDF');
+    newDoc.setProducer('Stirling PDF');
+    newDoc.setCreationDate(new Date());
+    newDoc.setModificationDate(new Date());
+
+    const pdfBytes = await newDoc.save();
+    return new Blob([pdfBytes], { type: 'application/pdf' });
+  }
+
+  /**
+   * Create a single PDF document with all operations applied (single source)
    */
   private async createSingleDocument(
     sourceDoc: PDFLibDocument,
