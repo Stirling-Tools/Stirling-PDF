@@ -170,8 +170,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
                   </div>
 
 
-                {/* Add divider after Automate button (index 2) */}
-                {index === 2 && (
+                {/* Add divider after Automate button (index 1) and Files button (index 2) */}
+                {index === 1 && (
                   <Divider
                     size="xs"
                     className="content-divider"
