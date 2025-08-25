@@ -3,14 +3,14 @@ import { Stack, Button, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { TextInput } from "../../shared/TextInput";
-import './ToolPicker.css';
+import "./ToolPicker.css";
 
 interface ToolSearchProps {
   value: string;
   onChange: (value: string) => void;
   toolRegistry: Readonly<Record<string, ToolRegistryEntry>>;
   onToolSelect?: (toolId: string) => void;
-  mode: 'filter' | 'dropdown';
+  mode: "filter" | "dropdown" | "unstyled";
   selectedToolKey?: string | null;
   placeholder?: string;
   hideIcon?: boolean;
@@ -23,12 +23,12 @@ const ToolSearch = ({
   onChange,
   toolRegistry,
   onToolSelect,
-  mode = 'filter',
+  mode = "filter",
   selectedToolKey,
   placeholder,
   hideIcon = false,
   onFocus,
-  autoFocus = false
+  autoFocus = false,
 }: ToolSearchProps) => {
   const { t } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -39,9 +39,10 @@ const ToolSearch = ({
     if (!value.trim()) return [];
     return Object.entries(toolRegistry)
       .filter(([id, tool]) => {
-        if (mode === 'dropdown' && id === selectedToolKey) return false;
-        return tool.name.toLowerCase().includes(value.toLowerCase()) ||
-               tool.description.toLowerCase().includes(value.toLowerCase());
+        if (mode === "dropdown" && id === selectedToolKey) return false;
+        return (
+          tool.name.toLowerCase().includes(value.toLowerCase()) || tool.description.toLowerCase().includes(value.toLowerCase())
+        );
       })
       .slice(0, 6)
       .map(([id, tool]) => ({ id, tool }));
@@ -49,7 +50,7 @@ const ToolSearch = ({
 
   const handleSearchChange = (searchValue: string) => {
     onChange(searchValue);
-    if (mode === 'dropdown') {
+    if (mode === "dropdown") {
       setDropdownOpen(searchValue.trim().length > 0 && filteredTools.length > 0);
     }
   };
@@ -65,8 +66,8 @@ const ToolSearch = ({
         setDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Auto-focus the input when requested
@@ -79,7 +80,6 @@ const ToolSearch = ({
   }, [autoFocus]);
 
   const searchInput = (
-    <div className="search-input-container">
       <TextInput
         ref={searchRef}
         value={value}
@@ -87,36 +87,40 @@ const ToolSearch = ({
         placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
         icon={hideIcon ? undefined : <span className="material-symbols-rounded">search</span>}
         autoComplete="off"
+        style={{padding: 0}}
         onFocus={onFocus}
       />
-    </div>
   );
 
-  if (mode === 'filter') {
+  if (mode === "filter") {
+    return <div className="search-input-container">{searchInput}</div>;
+  }
+
+  if (mode === "unstyled") {
     return searchInput;
   }
 
   return (
-    <div ref={searchRef} style={{ position: 'relative' }}>
+    <div ref={searchRef} style={{ position: "relative" }}>
       {searchInput}
       {dropdownOpen && filteredTools.length > 0 && (
         <div
           ref={dropdownRef}
           style={{
-            position: 'absolute',
-            top: '100%',
+            position: "absolute",
+            top: "100%",
             left: 0,
             right: 0,
             zIndex: 1000,
-            backgroundColor: 'var(--mantine-color-body)',
-            border: '1px solid var(--mantine-color-gray-3)',
-            borderRadius: '6px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            maxHeight: '300px',
-            overflowY: 'auto'
+            backgroundColor: "var(--mantine-color-body)",
+            border: "1px solid var(--mantine-color-gray-3)",
+            borderRadius: "6px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            maxHeight: "300px",
+            overflowY: "auto",
           }}
         >
-          <Stack gap="xs" style={{ padding: '8px' }}>
+          <Stack gap="xs" style={{ padding: "8px" }}>
             {filteredTools.map(({ id, tool }) => (
               <Button
                 key={id}
@@ -125,22 +129,18 @@ const ToolSearch = ({
                   onToolSelect && onToolSelect(id);
                   setDropdownOpen(false);
                 }}
-                leftSection={
-                  <div style={{ color: 'var(--tools-text-and-icon-color)' }}>
-                    {tool.icon}
-                  </div>
-                }
+                leftSection={<div style={{ color: "var(--tools-text-and-icon-color)" }}>{tool.icon}</div>}
                 fullWidth
                 justify="flex-start"
                 style={{
-                  borderRadius: '6px',
-                  color: 'var(--tools-text-and-icon-color)',
-                  padding: '8px 12px'
+                  borderRadius: "6px",
+                  color: "var(--tools-text-and-icon-color)",
+                  padding: "8px 12px",
                 }}
               >
-                <div style={{ textAlign: 'left' }}>
+                <div style={{ textAlign: "left" }}>
                   <div style={{ fontWeight: 500 }}>{tool.name}</div>
-                  <Text size="xs" c="dimmed" style={{ marginTop: '2px' }}>
+                  <Text size="xs" c="dimmed" style={{ marginTop: "2px" }}>
                     {tool.description}
                   </Text>
                 </div>

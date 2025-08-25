@@ -5,6 +5,7 @@ import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 import { useToolSections } from '../../../hooks/useToolSections';
 import { renderToolButtons } from '../shared/renderToolButtons';
 import ToolSearch from '../toolPicker/ToolSearch';
+import ToolButton from '../toolPicker/ToolButton';
 
 interface ToolSelectorProps {
   onSelect: (toolKey: string) => void;
@@ -72,7 +73,8 @@ export default function ToolSelector({
       if (baseFilteredTools.length > 0) {
         return [{
           name: 'All Tools',
-          tools: baseFilteredTools.map(([key, tool]) => ({ key, ...tool }))
+          subcategoryId: 'all' as any,
+          tools: baseFilteredTools.map(([key, tool]) => ({ id: key, tool }))
         }];
       }
       return [];
@@ -140,26 +142,15 @@ export default function ToolSelector({
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+    <div ref={containerRef} className='rounded-xl'>
       {/* Always show the target - either selected tool or search input */}
-      <div style={{ width: '100%' }}>
+
         {selectedValue && toolRegistry[selectedValue] && !opened ? (
           // Show selected tool in AutomationEntry style when tool is selected and dropdown closed
-          <div onClick={handleSearchFocus} style={{ cursor: 'pointer' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--mantine-spacing-sm)',
-              padding: '0 0.5rem',
-              borderRadius: 'var(--mantine-radius-sm)',
-            }}>
-              <div style={{ color: 'var(--mantine-color-text)', fontSize: '1.2rem' }}>
-                {toolRegistry[selectedValue].icon}
-              </div>
-              <Text size="sm" style={{ flex: 1, color: 'var(--mantine-color-text)' }}>
-                {toolRegistry[selectedValue].name}
-              </Text>
-            </div>
+          <div onClick={handleSearchFocus} style={{ cursor: 'pointer',
+           borderRadius: "var(--mantine-radius-lg)" }}>
+            <ToolButton id='tool' tool={toolRegistry[selectedValue]}  isSelected={false}
+          onSelect={()=>{}} rounded={true}></ToolButton>
           </div>
         ) : (
           // Show search input when no tool selected OR when dropdown is opened
@@ -167,14 +158,13 @@ export default function ToolSelector({
             value={searchTerm}
             onChange={handleSearchChange}
             toolRegistry={filteredToolRegistry}
-            mode="filter"
+            mode="unstyled"
             placeholder={getDisplayValue()}
             hideIcon={true}
             onFocus={handleInputFocus}
             autoFocus={shouldAutoFocus}
           />
         )}
-      </div>
 
       {/* Custom dropdown */}
       {opened && (
