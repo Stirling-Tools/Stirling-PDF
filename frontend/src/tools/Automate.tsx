@@ -36,6 +36,12 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       automateOperation.resetResults();
     }
 
+    // If navigating to selection step, always clear results
+    if (data.step === AUTOMATION_STEPS.SELECTION) {
+      automateOperation.resetResults();
+      automateOperation.clearError();
+    }
+
     // If navigating to run step with a different automation, reset results
     if (data.step === AUTOMATION_STEPS.RUN && data.automation &&
         stepData.automation && data.automation.id !== stepData.automation.id) {
@@ -129,7 +135,12 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     createStep(t('automate.selection.title', 'Automation Selection'), {
       isVisible: true,
       isCollapsed: currentStep !== AUTOMATION_STEPS.SELECTION,
-      onCollapsedClick: () => setCurrentStep(AUTOMATION_STEPS.SELECTION)
+      onCollapsedClick: () => {
+        // Clear results when clicking back to selection
+        automateOperation.resetResults();
+        setCurrentStep(AUTOMATION_STEPS.SELECTION);
+        setStepData({ step: AUTOMATION_STEPS.SELECTION });
+      }
     }, currentStep === AUTOMATION_STEPS.SELECTION ? renderCurrentStep() : null),
 
     createStep(stepData.mode === AutomationMode.EDIT
@@ -160,7 +171,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     },
     steps: automationSteps,
     review: {
-      isVisible: hasResults,
+      isVisible: hasResults && currentStep === AUTOMATION_STEPS.RUN,
       operation: automateOperation,
       title: t('automate.reviewTitle', 'Automation Results'),
       onFileClick: (file: File) => {
