@@ -63,7 +63,7 @@ public class ConvertWebsiteToPDF {
                             .queryParam("error", "error.endpointDisabled")
                             .build()
                             .toUri();
-        }
+        } else
 
         // Validate the URL format
         if (!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
@@ -72,7 +72,7 @@ public class ConvertWebsiteToPDF {
                             .queryParam("error", "error.invalidUrlFormat")
                             .build()
                             .toUri();
-        }
+        } else
 
         // validate the URL is reachable
         if (!GeneralUtils.isURLReachable(URL)) {
