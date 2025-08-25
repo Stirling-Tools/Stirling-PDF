@@ -1,26 +1,21 @@
 import React from 'react';
 import { addCollection, Icon } from '@iconify/react';
+import iconSet from '../../assets/material-symbols-icons.json';
 
-// Try to load icons at import time
+// Load icons synchronously at import time - guaranteed to be ready on first render
 let iconsLoaded = false;
 let localIconCount = 0;
 
-// Use a simple try/catch for the icon loading
-(async () => {
-  try {
-    const iconModule = await import('../../assets/material-symbols-icons.json');
-    const iconSet = iconModule.default || iconModule;
-    if (iconSet) {
-      addCollection(iconSet);
-      iconsLoaded = true;
-      localIconCount = Object.keys(iconSet.icons || {}).length;
-      console.info(`✅ Local icons loaded: ${localIconCount} icons (${Math.round(JSON.stringify(iconSet).length / 1024)}KB)`);
-    }
-  } catch (error) {
-    // Silently fail - icons will fallback to CDN
-    console.info('ℹ️  Local icons not available - using CDN fallback');
+try {
+  if (iconSet) {
+    addCollection(iconSet);
+    iconsLoaded = true;
+    localIconCount = Object.keys(iconSet.icons || {}).length;
+    console.info(`✅ Local icons loaded: ${localIconCount} icons (${Math.round(JSON.stringify(iconSet).length / 1024)}KB)`);
   }
-})();
+} catch (error) {
+  console.info('ℹ️  Local icons not available - using CDN fallback');
+}
 
 interface LocalIconProps {
   icon: string;

@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useMemo, useRef } from 'react';
 import { Text, Stack, Box, Flex, Divider } from '@mantine/core';
 import LocalIcon from '../../shared/LocalIcon';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Tooltip } from '../../shared/Tooltip';
 import { TooltipTip } from '../../../types/tips';
 import { createFilesToolStep, FilesToolStepProps } from './FilesToolStep';
@@ -124,14 +122,12 @@ const ToolStep = ({
         </Flex>
 
         {isCollapsed ? (
-          <ChevronRightIcon style={{
-            fontSize: '1.2rem',
+          <LocalIcon icon="chevron-right-rounded" width="1.2rem" height="1.2rem" style={{
             color: 'var(--mantine-color-dimmed)',
             opacity: onCollapsedClick ? 1 : 0.5
           }} />
         ) : (
-          <ExpandMoreIcon style={{
-            fontSize: '1.2rem',
+          <LocalIcon icon="expand-more-rounded" width="1.2rem" height="1.2rem" style={{
             color: 'var(--mantine-color-dimmed)',
             opacity: onCollapsedClick ? 1 : 0.5
           }} />
