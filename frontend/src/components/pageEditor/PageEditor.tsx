@@ -31,6 +31,7 @@ import {
   BulkPageBreakCommand,
   UndoManager
 } from './commands/pageCommands';
+import { GRID_CONSTANTS } from './constants';
 import { usePageDocument } from './hooks/usePageDocument';
 import { usePageEditorState } from './hooks/usePageEditorState';
 
@@ -103,6 +104,9 @@ const PageEditor = ({
 
   // Grid container ref for positioning split indicators
   const gridContainerRef = useRef<HTMLDivElement>(null);
+  
+  // State to trigger re-renders when container size changes
+  const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
 
   // Undo/Redo state
   const [canUndo, setCanUndo] = useState(false);
@@ -120,6 +124,28 @@ const PageEditor = ({
     // Initialize state
     updateUndoRedoState();
   }, [updateUndoRedoState]);
+
+  // Watch for container size changes to update split line positions
+  useEffect(() => {
+    const container = gridContainerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setContainerDimensions({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        });
+      }
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
 
   // Interface functions for parent component
@@ -576,18 +602,25 @@ const PageEditor = ({
             }}
           >
             {Array.from(splitPositions).map((position) => {
-              // Calculate the split line position based on grid layout
-              const ITEM_WIDTH = 320; // 20rem
-              const ITEM_HEIGHT = 340; // 20rem + gap
-              const ITEM_GAP = 24; // 1.5rem
-              const ITEMS_PER_ROW = 4; // Default, could be dynamic
-
-              const row = Math.floor(position / ITEMS_PER_ROW);
-              const col = position % ITEMS_PER_ROW;
-
-              // Position after the current item
-              const leftPosition = (col + 1) * (ITEM_WIDTH + ITEM_GAP) - ITEM_GAP / 2;
-              const topPosition = row * ITEM_HEIGHT + 100; // Offset for header controls
+              // Match DragDropGrid's layout calculations exactly
+              const containerWidth = containerDimensions.width;
+              const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+              const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx;
+              const ITEM_HEIGHT = parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx;
+              const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx;
+              
+              // Calculate items per row using DragDropGrid's logic
+              const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
+              const itemWithGap = ITEM_WIDTH + ITEM_GAP;
+              const itemsPerRow = Math.max(1, Math.floor(availableWidth / itemWithGap));
+              
+              // Calculate position within the grid (same as DragDropGrid)
+              const row = Math.floor(position / itemsPerRow);
+              const col = position % itemsPerRow;
+              
+              // Position split line between pages (after the current page)
+              const leftPosition = col * itemWithGap + ITEM_WIDTH + (ITEM_GAP / 2);
+              const topPosition = row * ITEM_HEIGHT;
 
               return (
                 <div
@@ -597,7 +630,7 @@ const PageEditor = ({
                     left: leftPosition,
                     top: topPosition,
                     width: '1px',
-                    height: '20rem', // Match item height
+                    height: GRID_CONSTANTS.ITEM_WIDTH, // Match item height
                     borderLeft: '1px dashed #3b82f6'
                   }}
                 />
