@@ -5,6 +5,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
@@ -49,14 +51,40 @@ public class DatabaseService implements DatabaseServiceInterface {
     private final DatabaseNotificationServiceInterface backupNotificationService;
 
     public DatabaseService(
-            ApplicationProperties.Datasource datasourceProps,
-            DataSource dataSource,
-            DatabaseNotificationServiceInterface backupNotificationService) {
-        this.BACKUP_DIR =
-                Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
+            ApplicationProperties.Datasource datasourceProps, DataSource dataSource) {
+        this.BACKUP_DIR = Paths.get(InstallationPathConfig.getBackupPath()).normalize();
         this.datasourceProps = datasourceProps;
         this.dataSource = dataSource;
-        this.backupNotificationService = backupNotificationService;
+        moveBackupFiles();
+    }
+
+    /** Move all backup files from db/backup to backup/db */
+    @Deprecated(since = "2.0.0", forRemoval = true)
+    private void moveBackupFiles() {
+        Path sourceDir =
+                Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
+
+        if (!Files.exists(sourceDir)) {
+            log.info("Source directory does not exist: {}", sourceDir);
+            return;
+        }
+
+        try {
+            Files.createDirectories(BACKUP_DIR);
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(sourceDir)) {
+                for (Path entry : stream) {
+                    if (entry.getFileName().toString().startsWith(BACKUP_PREFIX)
+                            && entry.getFileName().toString().endsWith(SQL_SUFFIX)) {
+                        Files.move(
+                                entry,
+                                BACKUP_DIR.resolve(entry.getFileName()),
+                                StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            log.error("Error moving backup files: {}", e.getMessage(), e);
+        }
     }
 
     /**
@@ -254,6 +282,46 @@ public class DatabaseService implements DatabaseServiceInterface {
         return hexString.toString();
     }
 
+    @Override
+    public List<Pair<FileInfo, Boolean>> deleteAllBackups() {
+        List<FileInfo> backupList = this.getBackupList();
+        List<Pair<FileInfo, Boolean>> deletedFiles = new ArrayList<>();
+
+        for (FileInfo backup : backupList) {
+            try {
+                Files.deleteIfExists(Paths.get(backup.getFilePath()));
+                deletedFiles.add(Pair.of(backup, true));
+            } catch (IOException e) {
+                log.error("Error deleting backup file: {}", backup.getFileName(), e);
+                deletedFiles.add(Pair.of(backup, false));
+            }
+        }
+        return deletedFiles;
+    }
+
+    @Override
+    public List<Pair<FileInfo, Boolean>> deleteLastBackup() {
+
+        List<FileInfo> backupList = this.getBackupList();
+        List<Pair<FileInfo, Boolean>> deletedFiles = new ArrayList<>();
+        if (!backupList.isEmpty()) {
+            FileInfo lastBackup = backupList.get(backupList.size() - 1);
+            try {
+                Files.deleteIfExists(Paths.get(lastBackup.getFilePath()));
+                deletedFiles.add(Pair.of(lastBackup, true));
+            } catch (IOException e) {
+                log.error("Error deleting last backup file: {}", lastBackup.getFileName(), e);
+                deletedFiles.add(Pair.of(lastBackup, false));
+            }
+        }
+        return deletedFiles;
+    }
+
+    /**
+     * Deletes the oldest backup file from the specified list.
+     *
+     * @param filteredBackupList the list of backup files
+     */
     private static void deleteOldestBackup(List<FileInfo> filteredBackupList) {
         try {
             filteredBackupList.sort(
@@ -293,6 +361,11 @@ public class DatabaseService implements DatabaseServiceInterface {
         return version;
     }
 
+    /*
+     * Checks if the current datasource is H2.
+     *
+     * @return true if the datasource is H2, false otherwise
+     */
     private boolean isH2Database() {
         boolean isTypeH2 =
                 datasourceProps.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
