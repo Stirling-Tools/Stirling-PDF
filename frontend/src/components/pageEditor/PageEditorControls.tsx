@@ -31,8 +31,7 @@ interface PageEditorControlsProps {
   onPageBreak: () => void;
   onPageBreakAll: () => void;
 
-  // Export functions
-  onExportSelected: () => void;
+  // Export functions (moved to right rail)
   onExportAll: () => void;
   exportLoading: boolean;
 
@@ -57,7 +56,6 @@ const PageEditorControls = ({
   onSplitAll,
   onPageBreak,
   onPageBreakAll,
-  onExportSelected,
   onExportAll,
   exportLoading,
   selectionMode,
@@ -65,32 +63,43 @@ const PageEditorControls = ({
   splitPositions,
   totalPages
 }: PageEditorControlsProps) => {
-  // Calculate split all tooltip text
-  const getSplitAllTooltip = () => {
-    if (selectionMode) {
+  // Calculate split tooltip text using smart toggle logic
+  const getSplitTooltip = () => {
+    if (!splitPositions || !totalPages || selectedPages.length === 0) {
       return "Split Selected";
     }
     
-    if (!splitPositions || !totalPages) {
-      return "Split All";
+    // Convert selected pages to split positions (same logic as handleSplit)
+    const selectedSplitPositions = selectedPages.map(pageNum => pageNum - 1).filter(pos => pos < totalPages - 1);
+    
+    if (selectedSplitPositions.length === 0) {
+      return "Split Selected";
     }
     
-    // Check if all possible splits are active
-    const allPossibleSplitsCount = totalPages - 1;
-    const hasAllSplits = splitPositions.size === allPossibleSplitsCount && 
-      Array.from({length: allPossibleSplitsCount}, (_, i) => i).every(pos => splitPositions.has(pos));
+    // Smart toggle logic: follow the majority, default to adding splits if equal
+    const existingSplitsCount = selectedSplitPositions.filter(pos => splitPositions.has(pos)).length;
+    const noSplitsCount = selectedSplitPositions.length - existingSplitsCount;
     
-    return hasAllSplits ? "Remove All Splits" : "Split All";
+    // Remove splits only if majority already have splits
+    // If equal (50/50), default to adding splits  
+    const willRemoveSplits = existingSplitsCount > noSplitsCount;
+    
+    if (willRemoveSplits) {
+      return existingSplitsCount === selectedSplitPositions.length 
+        ? "Remove All Selected Splits" 
+        : "Remove Selected Splits";
+    } else {
+      return existingSplitsCount === 0 
+        ? "Split Selected" 
+        : "Complete Selected Splits";
+    }
   };
 
   // Calculate page break tooltip text
   const getPageBreakTooltip = () => {
-    if (selectionMode) {
-      return selectedPages.length > 0 
-        ? `Insert ${selectedPages.length} Page Break${selectedPages.length > 1 ? 's' : ''}`
-        : "Insert Page Breaks";
-    }
-    return "Insert Page Breaks After All Pages";
+    return selectedPages.length > 0 
+      ? `Insert ${selectedPages.length} Page Break${selectedPages.length > 1 ? 's' : ''}`
+      : "Insert Page Breaks";
   };
 
   return (
@@ -145,10 +154,10 @@ const PageEditorControls = ({
         <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
 
         {/* Page Operations */}
-        <Tooltip label={selectionMode ? "Rotate Selected Left" : "Rotate All Left"}>
+        <Tooltip label="Rotate Selected Left">
           <ActionIcon
             onClick={() => onRotate('left')}
-            disabled={selectionMode && selectedPages.length === 0}
+            disabled={selectedPages.length === 0}
             variant="subtle"
             style={{ color: 'var(--mantine-color-dimmed)' }}
             radius="md"
@@ -157,10 +166,10 @@ const PageEditorControls = ({
             <RotateLeftIcon />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={selectionMode ? "Rotate Selected Right" : "Rotate All Right"}>
+        <Tooltip label="Rotate Selected Right">
           <ActionIcon
             onClick={() => onRotate('right')}
-            disabled={selectionMode && selectedPages.length === 0}
+            disabled={selectedPages.length === 0}
             variant="subtle"
             style={{ color: 'var(--mantine-color-dimmed)' }}
             radius="md"
@@ -169,23 +178,22 @@ const PageEditorControls = ({
             <RotateRightIcon />
           </ActionIcon>
         </Tooltip>
-        {selectionMode && (
-          <Tooltip label="Delete Selected">
-            <ActionIcon
-              onClick={onDelete}
-              disabled={selectedPages.length === 0}
-              variant={selectedPages.length > 0 ? "light" : "subtle"}
-              radius="md"
-            size="lg"
-            >
-              <DeleteIcon />
-            </ActionIcon>
-          </Tooltip>
-        )}
-        <Tooltip label={getSplitAllTooltip()}>
+        <Tooltip label="Delete Selected">
           <ActionIcon
-            onClick={selectionMode ? onSplit : onSplitAll}
-            disabled={selectionMode && selectedPages.length === 0}
+            onClick={onDelete}
+            disabled={selectedPages.length === 0}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
+            size="lg"
+          >
+            <DeleteIcon />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label={getSplitTooltip()}>
+          <ActionIcon
+            onClick={onSplit}
+            disabled={selectedPages.length === 0}
             variant="subtle"
             style={{ color: 'var(--mantine-color-dimmed)' }}
             radius="md"
@@ -196,8 +204,8 @@ const PageEditorControls = ({
         </Tooltip>
         <Tooltip label={getPageBreakTooltip()}>
           <ActionIcon
-            onClick={selectionMode ? onPageBreak : onPageBreakAll}
-            disabled={selectionMode && selectedPages.length === 0}
+            onClick={onPageBreak}
+            disabled={selectedPages.length === 0}
             variant="subtle"
             style={{ color: 'var(--mantine-color-dimmed)' }}
             radius="md"
@@ -206,21 +214,6 @@ const PageEditorControls = ({
             <InsertPageBreakIcon />
           </ActionIcon>
         </Tooltip>
-
-        {/* Export Controls */}
-        {selectionMode && (
-          <Tooltip label="Export Selected">
-            <ActionIcon
-              onClick={onExportSelected}
-              disabled={exportLoading || selectedPages.length === 0}
-              variant={selectedPages.length > 0 ? "light" : "subtle"}
-              radius="md"
-            size="lg"
-            >
-              <DownloadIcon />
-            </ActionIcon>
-          </Tooltip>
-        )}
       </div>
     </div>
   );

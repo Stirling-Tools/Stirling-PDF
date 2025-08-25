@@ -47,6 +47,9 @@ export interface PageEditorProps {
     handleSplitAll: () => void;
     handlePageBreak: () => void;
     handlePageBreakAll: () => void;
+    handleSelectAll: () => void;
+    handleDeselectAll: () => void;
+    handleSetSelectedPages: (pageNumbers: number[]) => void;
     showExportPreview: (selectedOnly: boolean) => void;
     onExportSelected: () => void;
     onExportAll: () => void;
@@ -147,9 +150,19 @@ const PageEditor = ({
     };
   }, []);
 
-
   // Interface functions for parent component
   const displayDocument = editedDocument || mergedPdfDocument;
+
+  // Select all pages by default when document initially loads
+  const hasInitializedSelection = useRef(false);
+  useEffect(() => {
+    if (displayDocument && displayDocument.pages.length > 0 && !hasInitializedSelection.current) {
+      const allPageNumbers = Array.from({ length: displayDocument.pages.length }, (_, i) => i + 1);
+      setSelectedPageNumbers(allPageNumbers);
+      setSelectionMode(true);
+      hasInitializedSelection.current = true;
+    }
+  }, [displayDocument, setSelectedPageNumbers, setSelectionMode]);
 
   // DOM-first command handlers
   const handleRotatePages = useCallback((pageIds: string[], rotation: number) => {
@@ -217,17 +230,15 @@ const PageEditor = ({
   }, []);
 
   const handleRotate = useCallback((direction: 'left' | 'right') => {
-    if (!displayDocument) return;
+    if (!displayDocument || selectedPageNumbers.length === 0) return;
     const rotation = direction === 'left' ? -90 : 90;
-    const pagesToRotate = selectionMode && selectedPageNumbers.length > 0
-      ? selectedPageNumbers.map(pageNum => {
-          const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
-          return page?.id || '';
-        }).filter(id => id)
-      : displayDocument.pages.map(p => p.id);
+    const pagesToRotate = selectedPageNumbers.map(pageNum => {
+      const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
+      return page?.id || '';
+    }).filter(id => id);
 
     handleRotatePages(pagesToRotate, rotation);
-  }, [displayDocument, selectedPageNumbers, selectionMode, handleRotatePages]);
+  }, [displayDocument, selectedPageNumbers, handleRotatePages]);
 
   const handleDelete = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
@@ -262,6 +273,53 @@ const PageEditor = ({
   const handleSplit = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
 
+    // Convert selected page numbers to split positions (0-based indices)
+    const selectedPositions: number[] = [];
+    selectedPageNumbers.forEach(pageNum => {
+      const pageIndex = displayDocument.pages.findIndex(p => p.pageNumber === pageNum);
+      if (pageIndex !== -1 && pageIndex < displayDocument.pages.length - 1) {
+        // Only allow splits before the last page
+        selectedPositions.push(pageIndex);
+      }
+    });
+
+    if (selectedPositions.length === 0) return;
+
+    // Smart toggle logic: follow the majority, default to adding splits if equal
+    const existingSplitsCount = selectedPositions.filter(pos => splitPositions.has(pos)).length;
+    const noSplitsCount = selectedPositions.length - existingSplitsCount;
+    
+    // Remove splits only if majority already have splits
+    // If equal (50/50), default to adding splits
+    const shouldRemoveSplits = existingSplitsCount > noSplitsCount;
+    
+    console.log(`Smart split toggle: ${existingSplitsCount} with splits, ${noSplitsCount} without splits → will ${shouldRemoveSplits ? 'remove' : 'add'} splits`);
+
+    const newSplitPositions = new Set(splitPositions);
+    
+    if (shouldRemoveSplits) {
+      // Remove splits from all selected positions
+      selectedPositions.forEach(pos => newSplitPositions.delete(pos));
+    } else {
+      // Add splits to all selected positions
+      selectedPositions.forEach(pos => newSplitPositions.add(pos));
+    }
+
+    // Create a custom command that sets the final state directly
+    const smartSplitCommand = {
+      execute: () => setSplitPositions(newSplitPositions),
+      undo: () => setSplitPositions(splitPositions),
+      description: shouldRemoveSplits 
+        ? `Remove ${selectedPositions.length} split(s)` 
+        : `Add ${selectedPositions.length - existingSplitsCount} split(s)`
+    };
+
+    undoManagerRef.current.executeCommand(smartSplitCommand);
+  }, [selectedPageNumbers, displayDocument, splitPositions, setSplitPositions]);
+
+  const handleSplitAll = useCallback(() => {
+    if (!displayDocument || selectedPageNumbers.length === 0) return;
+
     console.log('Toggle split markers at selected page positions:', selectedPageNumbers);
 
     // Convert page numbers to positions (0-based indices)
@@ -284,17 +342,6 @@ const PageEditor = ({
     }
   }, [selectedPageNumbers, displayDocument, splitPositions]);
 
-  const handleSplitAll = useCallback(() => {
-    if (!displayDocument) return;
-
-    const splitAllCommand = new SplitAllCommand(
-      displayDocument.pages.length,
-      () => splitPositions,
-      setSplitPositions
-    );
-    undoManagerRef.current.executeCommand(splitAllCommand);
-  }, [displayDocument, splitPositions]);
-
   const handlePageBreak = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
 
@@ -310,15 +357,18 @@ const PageEditor = ({
   }, [selectedPageNumbers, displayDocument]);
 
   const handlePageBreakAll = useCallback(() => {
-    if (!displayDocument) return;
+    if (!displayDocument || selectedPageNumbers.length === 0) return;
 
-    const pageBreakAllCommand = new BulkPageBreakCommand(
+    console.log('Insert page breaks after selected pages:', selectedPageNumbers);
+
+    const pageBreakCommand = new PageBreakCommand(
+      selectedPageNumbers,
       () => displayDocument,
       setEditedDocument,
       setSelectedPageNumbers
     );
-    undoManagerRef.current.executeCommand(pageBreakAllCommand);
-  }, [displayDocument]);
+    undoManagerRef.current.executeCommand(pageBreakCommand);
+  }, [selectedPageNumbers, displayDocument]);
 
   const handleSelectAll = useCallback(() => {
     if (!displayDocument) return;

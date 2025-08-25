@@ -114,7 +114,6 @@ export default function Workbench() {
                 onSplitAll={pageEditorFunctions.handleSplitAll}
                 onPageBreak={pageEditorFunctions.handlePageBreak}
                 onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
-                onExportSelected={pageEditorFunctions.onExportSelected}
                 onExportAll={pageEditorFunctions.onExportAll}
                 exportLoading={pageEditorFunctions.exportLoading}
                 selectionMode={pageEditorFunctions.selectionMode}

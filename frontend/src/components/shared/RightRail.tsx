@@ -295,6 +295,26 @@ export default function RightRail() {
 
             )}
 
+            {/* Export Selected Pages - page editor only */}
+            {pageControlsMounted && (
+              <Tooltip content={t('rightRail.exportSelected', 'Export Selected Pages')} position="left" offset={12} arrow>
+                <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
+                  <div style={{ display: 'inline-flex' }}>
+                    <ActionIcon
+                      variant="subtle"
+                      radius="md"
+                      className="right-rail-icon"
+                      onClick={() => { pageEditorFunctions?.onExportSelected?.(); }}
+                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPages?.length || 0) === 0 || pageEditorFunctions?.exportLoading}
+                      aria-label={typeof t === 'function' ? t('rightRail.exportSelected', 'Export Selected Pages') : 'Export Selected Pages'}
+                    >
+                      <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
+                    </ActionIcon>
+                  </div>
+                </div>
+              </Tooltip>
+            )}
+
             {/* Close (File Editor: Close Selected | Page Editor: Close PDF) */}
             <Tooltip content={currentView === 'pageEditor' ? t('rightRail.closePdf', 'Close PDF') : t('rightRail.closeSelected', 'Close Selected Files')} position="left" offset={12} arrow>
               <div>
