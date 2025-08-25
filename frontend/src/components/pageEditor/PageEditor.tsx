@@ -608,7 +608,7 @@ const PageEditor = ({
       )}
 
       {displayDocument && (
-        <Box ref={gridContainerRef} p={0} style={{ position: 'relative' }}>
+        <Box ref={gridContainerRef} p={0} pb="15rem" style={{ position: 'relative' }}>
 
 
           {/* Split Lines Overlay */}
@@ -641,7 +641,11 @@ const PageEditor = ({
               const col = position % itemsPerRow;
               
               // Position split line between pages (after the current page)
-              const leftPosition = col * itemWithGap + ITEM_WIDTH + (ITEM_GAP / 2);
+              // Calculate grid centering offset (same as DragDropGrid)
+              const gridWidth = itemsPerRow * ITEM_WIDTH + (itemsPerRow - 1) * ITEM_GAP;
+              const gridOffset = Math.max(0, (containerWidth - gridWidth) / 2);
+              
+              const leftPosition = gridOffset + col * itemWithGap + ITEM_WIDTH + (ITEM_GAP / 2);
               const topPosition = row * ITEM_HEIGHT + (ITEM_HEIGHT * 0.05); // Center vertically (5% offset since page is 90% height)
 
               return (

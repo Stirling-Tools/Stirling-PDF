@@ -94,6 +94,12 @@ const DragDropGrid = <T extends DragDropItem>({
 
 
 
+  // Calculate optimal width for centering
+  const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const itemWidth = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx;
+  const itemGap = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx;
+  const gridWidth = itemsPerRow * itemWidth + (itemsPerRow - 1) * itemGap;
+
   return (
     <Box 
       ref={containerRef}
@@ -108,6 +114,8 @@ const DragDropGrid = <T extends DragDropItem>({
           height: `${rowVirtualizer.getTotalSize()}px`,
           width: '100%',
           position: 'relative',
+          margin: '0 auto',
+          maxWidth: `${gridWidth}px`,
         }}
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {

@@ -121,7 +121,7 @@ const PageEditorControls = ({
           border: '1px solid var(--border-default)',
           borderRadius: '16px 16px 0 0',
           pointerEvents: 'auto',
-          minWidth: 420,
+          minWidth: 360,
           maxWidth: 700,
           flexWrap: 'wrap',
           justifyContent: 'center',
@@ -221,17 +221,6 @@ const PageEditorControls = ({
             </ActionIcon>
           </Tooltip>
         )}
-        <Tooltip label="Export All">
-          <ActionIcon
-            onClick={onExportAll}
-            disabled={exportLoading}
-            variant="light"
-            radius="md"
-            size="lg"
-          >
-            <DownloadIcon />
-          </ActionIcon>
-        </Tooltip>
       </div>
     </div>
   );
