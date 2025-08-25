@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Stack, Button, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import LocalIcon from '../../shared/LocalIcon';
 import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { TextInput } from "../../shared/TextInput";
 import './ToolPicker.css';
@@ -74,7 +75,7 @@ const ToolSearch = ({
         value={value}
         onChange={handleSearchChange}
         placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
-        icon={hideIcon ? undefined : <span className="material-symbols-rounded">search</span>}
+        icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
         autoComplete="off"
 
       />
