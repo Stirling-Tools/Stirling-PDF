@@ -290,7 +290,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
     >
-      {selectionMode && (
+      {
         <div
           className={styles.checkboxContainer}
           style={{
@@ -323,7 +323,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             style={{ pointerEvents: 'none' }}
           />
         </div>
-      )}
+      }
 
       <div className="page-container w-[90%] h-[90%]" draggable={false}>
         <div

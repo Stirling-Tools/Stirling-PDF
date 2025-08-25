@@ -1,23 +1,31 @@
 import { useTranslation } from 'react-i18next';
 import { useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { UnlockPdfFormsParameters } from './useUnlockPdfFormsParameters';
+import { UnlockPdfFormsParameters, defaultParameters } from './useUnlockPdfFormsParameters';
+
+// Static function that can be used by both the hook and automation executor
+export const buildUnlockPdfFormsFormData = (parameters: UnlockPdfFormsParameters, file: File): FormData => {
+  const formData = new FormData();
+  formData.append("fileInput", file);
+  return formData;
+};
+
+// Static configuration object
+export const unlockPdfFormsOperationConfig = {
+  operationType: 'unlock-pdf-forms',
+  endpoint: '/api/v1/misc/unlock-pdf-forms',
+  buildFormData: buildUnlockPdfFormsFormData,
+  filePrefix: 'unlocked_forms_', // Will be overridden in hook with translation
+  multiFileEndpoint: false,
+  defaultParameters,
+} as const;
 
 export const useUnlockPdfFormsOperation = () => {
   const { t } = useTranslation();
 
-  const buildFormData = (parameters: UnlockPdfFormsParameters, file: File): FormData => {
-    const formData = new FormData();
-    formData.append("fileInput", file);
-    return formData;
-  };
-
   return useToolOperation<UnlockPdfFormsParameters>({
-    operationType: 'unlockPdfForms',
-    endpoint: '/api/v1/misc/unlock-pdf-forms',
-    buildFormData,
+    ...unlockPdfFormsOperationConfig,
     filePrefix: t('unlockPDFForms.filenamePrefix', 'unlocked_forms') + '_',
-    multiFileEndpoint: false,
     getErrorMessage: createStandardErrorHandler(t('unlockPDFForms.error.failed', 'An error occurred while unlocking PDF forms.'))
   });
 };

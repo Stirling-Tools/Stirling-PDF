@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Stack, Button, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import LocalIcon from '../../shared/LocalIcon';
 import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { TextInput } from "../../shared/TextInput";
 import './ToolPicker.css';
@@ -12,19 +13,26 @@ interface ToolSearchProps {
   onToolSelect?: (toolId: string) => void;
   mode: 'filter' | 'dropdown';
   selectedToolKey?: string | null;
+  placeholder?: string;
+  hideIcon?: boolean;
+  onFocus?: () => void;
 }
 
-const ToolSearch = ({ 
-  value, 
-  onChange, 
-  toolRegistry, 
-  onToolSelect, 
+const ToolSearch = ({
+  value,
+  onChange,
+  toolRegistry,
+  onToolSelect,
   mode = 'filter',
-  selectedToolKey 
+  selectedToolKey,
+  placeholder,
+  hideIcon = false,
+  onFocus
 }: ToolSearchProps) => {
   const { t } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const filteredTools = useMemo(() => {
     if (!value.trim()) return [];
@@ -47,7 +55,12 @@ const ToolSearch = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        dropdownRef.current &&
+        !searchRef.current.contains(event.target as Node) &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setDropdownOpen(false);
       }
     };
@@ -61,9 +74,10 @@ const ToolSearch = ({
         ref={searchRef}
         value={value}
         onChange={handleSearchChange}
-        placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
-        icon={<span className="material-symbols-rounded">search</span>}
+        placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
+        icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
         autoComplete="off"
+
       />
     </div>
   );
@@ -77,19 +91,19 @@ const ToolSearch = ({
       {searchInput}
       {dropdownOpen && filteredTools.length > 0 && (
         <div
+          ref={dropdownRef}
           style={{
             position: 'absolute',
             top: '100%',
             left: 0,
             right: 0,
             zIndex: 1000,
-            backgroundColor: 'var(--bg-toolbar)',
-            border: '1px solid var(--border-default)',
-            borderRadius: '8px',
-            marginTop: '4px',
+            backgroundColor: 'var(--mantine-color-body)',
+            border: '1px solid var(--mantine-color-gray-3)',
+            borderRadius: '6px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
             maxHeight: '300px',
-            overflowY: 'auto',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            overflowY: 'auto'
           }}
         >
           <Stack gap="xs" style={{ padding: '8px' }}>
@@ -97,7 +111,10 @@ const ToolSearch = ({
               <Button
                 key={id}
                 variant="subtle"
-                onClick={() => onToolSelect && onToolSelect(id)}
+                onClick={() => {
+                  onToolSelect && onToolSelect(id);
+                  setDropdownOpen(false);
+                }}
                 leftSection={
                   <div style={{ color: 'var(--tools-text-and-icon-color)' }}>
                     {tool.icon}
@@ -126,4 +143,4 @@ const ToolSearch = ({
   );
 };
 
-export default ToolSearch; 
+export default ToolSearch;

@@ -1,12 +1,11 @@
 import React, { useMemo, useRef, useLayoutEffect, useState } from "react";
-import { Box, Text, Stack } from "@mantine/core";
+import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "../../data/toolsTaxonomy";
-import ToolButton from "./toolPicker/ToolButton";
 import "./toolPicker/ToolPicker.css";
 import { useToolSections } from "../../hooks/useToolSections";
-import SubcategoryHeader from "./shared/SubcategoryHeader";
 import NoToolsFound from "./shared/NoToolsFound";
+import { renderToolButtons } from "./shared/renderToolButtons";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
@@ -14,31 +13,6 @@ interface ToolPickerProps {
   filteredTools: [string, ToolRegistryEntry][];
   isSearching?: boolean;
 }
-
-// Helper function to render tool buttons for a subcategory
-const renderToolButtons = (
-  subcategory: any,
-  selectedToolKey: string | null,
-  onSelect: (id: string) => void,
-  showSubcategoryHeader: boolean = true
-) => (
-  <Box key={subcategory.subcategory} w="100%">
-    {showSubcategoryHeader && (
-      <SubcategoryHeader label={subcategory.subcategory} />
-    )}
-    <Stack gap="xs">
-      {subcategory.tools.map(({ id, tool }: { id: string; tool: any }) => (
-        <ToolButton
-          key={id}
-          id={id}
-          tool={tool}
-          isSelected={selectedToolKey === id}
-          onSelect={onSelect}
-        />
-      ))}
-    </Stack>
-  </Box>
-);
 
 const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = false }: ToolPickerProps) => {
   const { t } = useTranslation();
@@ -51,29 +25,49 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const quickAccessRef = useRef<HTMLDivElement>(null);
   const allToolsRef = useRef<HTMLDivElement>(null);
 
-  // On resize adjust headers height to offset height
+  // Keep header heights in sync with any dynamic size changes
   useLayoutEffect(() => {
     const update = () => {
       if (quickHeaderRef.current) {
-        setQuickHeaderHeight(quickHeaderRef.current.offsetHeight);
+        setQuickHeaderHeight(quickHeaderRef.current.offsetHeight || 0);
       }
       if (allHeaderRef.current) {
-        setAllHeaderHeight(allHeaderRef.current.offsetHeight);
+        setAllHeaderHeight(allHeaderRef.current.offsetHeight || 0);
       }
     };
+
     update();
+
+    // Update on window resize
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+
+    // Update on element resize (e.g., font load, badge count change, zoom)
+    const observers: ResizeObserver[] = [];
+    if (typeof ResizeObserver !== "undefined") {
+      const observe = (el: HTMLDivElement | null, cb: () => void) => {
+        if (!el) return;
+        const ro = new ResizeObserver(() => cb());
+        ro.observe(el);
+        observers.push(ro);
+      };
+      observe(quickHeaderRef.current, update);
+      observe(allHeaderRef.current, update);
+    }
+
+    return () => {
+      window.removeEventListener("resize", update);
+      observers.forEach(o => o.disconnect());
+    };
   }, []);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
 
   const quickSection = useMemo(
-    () => visibleSections.find(s => (s as any).key === 'quick'),
+    () => visibleSections.find(s => s.key === 'quick'),
     [visibleSections]
   );
   const allSection = useMemo(
-    () => visibleSections.find(s => (s as any).key === 'all'),
+    () => visibleSections.find(s => s.key === 'all'),
     [visibleSections]
   );
 
@@ -111,7 +105,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
           overflowY: "auto",
           overflowX: "hidden",
           minHeight: 0,
-          height: "100%"
+          height: "100%",
+          marginTop: -2
         }}
         className="tool-picker-scrollable"
       >
@@ -120,7 +115,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             {searchGroups.length === 0 ? (
               <NoToolsFound />
             ) : (
-              searchGroups.map(group => renderToolButtons(group, selectedToolKey, onSelect))
+              searchGroups.map(group => renderToolButtons(t, group, selectedToolKey, onSelect))
             )}
           </Stack>
         ) : (
@@ -135,7 +130,6 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 zIndex: 2,
                 borderTop: `0.0625rem solid var(--tool-header-border)`,
                 borderBottom: `0.0625rem solid var(--tool-header-border)`,
-                marginBottom: -1,
                 padding: "0.5rem 1rem",
                 fontWeight: 700,
                 background: "var(--tool-header-bg)",
@@ -143,7 +137,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between"
+                justifyContent: "space-between",
               }}
               onClick={() => scrollTo(quickAccessRef)}
             >
@@ -164,8 +158,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={quickAccessRef} w="100%">
               <Stack p="sm" gap="xs">
-                {quickSection?.subcategories.map(sc => 
-                  renderToolButtons(sc, selectedToolKey, onSelect, false)
+                {quickSection?.subcategories.map(sc =>
+                  renderToolButtons(t, sc, selectedToolKey, onSelect, false)
                 )}
               </Stack>
             </Box>
@@ -178,7 +172,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               ref={allHeaderRef}
               style={{
                 position: "sticky",
-                top: quickSection ? quickHeaderHeight - 1: 0,
+                top: quickSection ? quickHeaderHeight -1 : 0,
                 zIndex: 2,
                 borderTop: `0.0625rem solid var(--tool-header-border)`,
                 borderBottom: `0.0625rem solid var(--tool-header-border)`,
@@ -210,8 +204,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
-                {allSection?.subcategories.map(sc => 
-                  renderToolButtons(sc, selectedToolKey, onSelect, true)
+                {allSection?.subcategories.map(sc =>
+                  renderToolButtons(t, sc, selectedToolKey, onSelect, true)
                 )}
               </Stack>
             </Box>

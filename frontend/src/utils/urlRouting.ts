@@ -3,12 +3,7 @@
  * Provides clean URL routing for the V2 tool system
  */
 
-import { ModeType } from '../contexts/NavigationContext';
-
-export interface ToolRoute {
-  mode: ModeType;
-  toolKey?: string;
-}
+import { ModeType, isValidMode as isValidModeType, getDefaultMode, ToolRoute } from '../types/navigation';
 
 /**
  * Parse the current URL to extract tool routing information
@@ -45,7 +40,7 @@ export function parseToolRoute(): ToolRoute {
   
   // Check for query parameter fallback (e.g., ?tool=split)
   const toolParam = searchParams.get('tool');
-  if (toolParam && isValidMode(toolParam)) {
+  if (toolParam && isValidModeType(toolParam)) {
     return {
       mode: toolParam as ModeType,
       toolKey: toolParam
@@ -54,7 +49,8 @@ export function parseToolRoute(): ToolRoute {
   
   // Default to page editor for home page
   return {
-    mode: 'pageEditor'
+    mode: getDefaultMode(),
+    toolKey: null
   };
 }
 
@@ -137,16 +133,7 @@ export function getToolDisplayName(toolKey: string): string {
   return displayNames[toolKey] || toolKey;
 }
 
-/**
- * Check if a mode is valid
- */
-function isValidMode(mode: string): mode is ModeType {
-  const validModes: ModeType[] = [
-    'viewer', 'pageEditor', 'fileEditor', 'merge', 'split', 
-    'compress', 'ocr', 'convert', 'addPassword', 'changePermissions', 'sanitize'
-  ];
-  return validModes.includes(mode as ModeType);
-}
+// Note: isValidMode is now imported from types/navigation.ts
 
 /**
  * Generate shareable URL for current tool state

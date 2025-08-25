@@ -32,7 +32,7 @@ export class PDFExportService {
       const sourceDoc = await PDFLibDocument.load(originalPDFBytes);
       const blob = await this.createSingleDocument(sourceDoc, pagesToExport);
       const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly);
-      
+
       return { blob, filename: exportFilename };
     } catch (error) {
       console.error('PDF export error:', error);
@@ -63,7 +63,7 @@ export class PDFExportService {
 
       const blob = await this.createMultiSourceDocument(sourceFiles, pagesToExport);
       const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly);
-      
+
       return { blob, filename: exportFilename };
     } catch (error) {
       console.error('Multi-file PDF export error:', error);
@@ -79,10 +79,10 @@ export class PDFExportService {
     pages: PDFPage[]
   ): Promise<Blob> {
     const newDoc = await PDFLibDocument.create();
-    
+
     // Load all source documents once and cache them
     const loadedDocs = new Map<string, PDFLibDocument>();
-    
+
     for (const [fileId, file] of sourceFiles) {
       try {
         const arrayBuffer = await file.arrayBuffer();
@@ -97,7 +97,7 @@ export class PDFExportService {
       if (page.isBlankPage || page.originalPageNumber === -1) {
         // Create a blank page
         const blankPage = newDoc.addPage(PageSizes.A4);
-        
+
         // Apply rotation if needed
         if (page.rotation !== 0) {
           blankPage.setRotation(degrees(page.rotation));
@@ -146,7 +146,7 @@ export class PDFExportService {
       if (page.isBlankPage || page.originalPageNumber === -1) {
         // Create a blank page
         const blankPage = newDoc.addPage(PageSizes.A4);
-        
+
         // Apply rotation if needed
         if (page.rotation !== 0) {
           blankPage.setRotation(degrees(page.rotation));
@@ -183,7 +183,7 @@ export class PDFExportService {
   /**
    * Generate appropriate filename for export
    */
-  private generateFilename(originalName: string, selectedOnly: boolean): string {
+  private generateFilename(originalName: string, selectedOnly: boolean, appendSuffix: boolean): string {
     const baseName = originalName.replace(/\.pdf$/i, '');
     return `${baseName}.pdf`;
   }

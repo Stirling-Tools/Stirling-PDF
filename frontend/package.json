@@ -8,6 +8,7 @@
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@iconify/react": "^6.0.0",
     "@mantine/core": "^8.0.1",
     "@mantine/dropzone": "^8.0.1",
     "@mantine/hooks": "^8.0.1",
@@ -25,7 +26,6 @@
     "i18next-browser-languagedetector": "^8.1.0",
     "i18next-http-backend": "^3.0.2",
     "jszip": "^3.10.1",
-    "material-symbols": "^0.33.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^3.11.174",
     "react": "^19.1.0",
@@ -36,10 +36,14 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "predev": "npm run generate-icons",
     "dev": "npx tsc --noEmit && vite",
+    "prebuild": "npm run generate-icons",
     "build": "npx tsc --noEmit && vite build",
     "preview": "vite preview",
     "generate-licenses": "node scripts/generate-licenses.js",
+    "generate-icons": "node scripts/generate-icons.js",
+    "generate-icons:verbose": "node scripts/generate-icons.js --verbose",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
@@ -66,6 +70,8 @@
     ]
   },
   "devDependencies": {
+    "@iconify-json/material-symbols": "^1.2.33",
+    "@iconify/utils": "^3.0.1",
     "@playwright/test": "^1.40.0",
     "@types/node": "^24.2.1",
     "@types/react": "^19.1.4",
@@ -74,6 +80,7 @@
     "@vitest/coverage-v8": "^1.0.0",
     "jsdom": "^23.0.0",
     "license-checker": "^25.0.1",
+    "madge": "^8.0.0",
     "postcss": "^8.5.3",
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.17.0",

@@ -2,17 +2,16 @@ import React from "react";
 import {
   Tooltip,
   ActionIcon,
-  Paper
 } from "@mantine/core";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
-import DownloadIcon from "@mui/icons-material/Download";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertPageBreakIcon from "@mui/icons-material/InsertPageBreak";
+import DownloadIcon from "@mui/icons-material/Download";
 
 interface PageEditorControlsProps {
   // Close/Reset functions
@@ -98,9 +97,9 @@ const PageEditorControls = ({
     <div
       style={{
         position: 'absolute',
-        left: '50%',
-        bottom: '20px',
-        transform: 'translateX(-50%)',
+        left: 0,
+        right: 0,
+        bottom: 0,
         zIndex: 50,
         display: 'flex',
         justifyContent: 'center',
@@ -108,34 +107,28 @@ const PageEditorControls = ({
         background: 'transparent',
       }}
     >
-      <Paper
-        radius="xl"
-        shadow="lg"
-        p={16}
+      <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 12,
-          borderRadius: 32,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: 16,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+          boxShadow: '0 -2px 8px rgba(0,0,0,0.04)',
+          backgroundColor: 'var(--bg-toolbar)',
+          border: '1px solid var(--border-default)',
+          borderRadius: '16px 16px 0 0',
           pointerEvents: 'auto',
-          minWidth: 400,
-          justifyContent: 'center'
+          minWidth: 420,
+          maxWidth: 700,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          padding: "1rem",
+          paddingBottom: "2rem"
         }}
       >
-        {/* Close PDF */}
-        <Tooltip label="Close PDF">
-          <ActionIcon
-            onClick={onClosePdf}
-            color="red"
-            variant="light"
-            size="lg"
-          >
-            <CloseIcon />
-          </ActionIcon>
-        </Tooltip>
-
-        <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
 
         {/* Undo/Redo */}
         <Tooltip label="Undo">
@@ -210,8 +203,6 @@ const PageEditorControls = ({
           </ActionIcon>
         </Tooltip>
 
-        <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
-
         {/* Export Controls */}
         {selectionMode && (
           <Tooltip label="Export Selected">
@@ -237,7 +228,7 @@ const PageEditorControls = ({
             <DownloadIcon />
           </ActionIcon>
         </Tooltip>
-      </Paper>
+      </div>
     </div>
   );
 };

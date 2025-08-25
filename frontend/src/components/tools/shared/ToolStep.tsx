@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useMemo, useRef } from 'react';
 import { Text, Stack, Box, Flex, Divider } from '@mantine/core';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import LocalIcon from '../../shared/LocalIcon';
 import { Tooltip } from '../../shared/Tooltip';
 import { TooltipTip } from '../../../types/tips';
 import { createFilesToolStep, FilesToolStepProps } from './FilesToolStep';
@@ -25,6 +24,7 @@ export interface ToolStepProps {
   _stepNumber?: number; // Internal prop set by ToolStepContainer
   _excludeFromCount?: boolean; // Internal prop to exclude from visible count calculation
   _noPadding?: boolean; // Internal prop to exclude from default left padding
+  alwaysShowTooltip?: boolean; // Force tooltip to show even when collapsed
   tooltip?: {
     content?: React.ReactNode;
     tips?: TooltipTip[];
@@ -38,9 +38,10 @@ export interface ToolStepProps {
 const renderTooltipTitle = (
   title: string,
   tooltip: ToolStepProps['tooltip'],
-  isCollapsed: boolean
+  isCollapsed: boolean,
+  alwaysShowTooltip: boolean = false
 ) => {
-  if (tooltip && !isCollapsed) {
+  if (tooltip && (!isCollapsed || alwaysShowTooltip)) {
     return (
       <Tooltip
         content={tooltip.content}
@@ -52,9 +53,7 @@ const renderTooltipTitle = (
           <Text fw={500} size="lg">
             {title}
           </Text>
-          <span className="material-symbols-rounded" style={{ fontSize: '1.2rem', color: 'var(--icon-files-color)' }}>
-            gpp_maybe
-          </span>
+          <LocalIcon icon="gpp-maybe-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />
         </Flex>
       </Tooltip>
     );
@@ -77,6 +76,7 @@ const ToolStep = ({
   showNumber,
   _stepNumber,
   _noPadding,
+  alwaysShowTooltip = false,
   tooltip
 }: ToolStepProps) => {
   if (!isVisible) return null;
@@ -118,18 +118,16 @@ const ToolStep = ({
               {stepNumber}
             </Text>
           )}
-          {renderTooltipTitle(title, tooltip, isCollapsed)}
+          {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
         </Flex>
 
         {isCollapsed ? (
-          <ChevronRightIcon style={{
-            fontSize: '1.2rem',
+          <LocalIcon icon="chevron-right-rounded" width="1.2rem" height="1.2rem" style={{
             color: 'var(--mantine-color-dimmed)',
             opacity: onCollapsedClick ? 1 : 0.5
           }} />
         ) : (
-          <ExpandMoreIcon style={{
-            fontSize: '1.2rem',
+          <LocalIcon icon="expand-more-rounded" width="1.2rem" height="1.2rem" style={{
             color: 'var(--mantine-color-dimmed)',
             opacity: onCollapsedClick ? 1 : 0.5
           }} />

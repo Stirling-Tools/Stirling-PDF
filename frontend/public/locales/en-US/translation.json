@@ -55,6 +55,7 @@
   "bored": "Bored Waiting?",
   "alphabet": "Alphabet",
   "downloadPdf": "Download PDF",
+
   "text": "Text",
   "font": "Font",
   "selectFillter": "-- Select --",
@@ -606,6 +607,10 @@
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }
+  },
+  "landing": {
+    "addFiles": "Add Files",
+    "uploadFromComputer": "Upload from computer"
   },
   "viewPdf": {
     "tags": "view,read,annotate,text,image,highlight,edit",
@@ -2067,6 +2072,18 @@
         }
       }
     }
+  },
+  "rightRail": {
+    "closePdf": "Close PDF",
+    "closeSelected": "Close Selected Files",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectByNumber": "Select by Page Numbers",
+    "deleteSelected": "Delete Selected Pages",
+    "toggleTheme": "Toggle Theme",
+    "exportAll": "Export PDF",
+    "downloadSelected": "Download Selected Files",
+    "downloadAll": "Download All"
   },
   "removePassword": {
     "title": "Remove Password",

@@ -162,6 +162,7 @@ export default function Workbench() {
         className="flex-1 min-h-0 relative z-10"
         style={{
           transition: 'opacity 0.15s ease-in-out',
+          marginTop: '1rem',
         }}
       >
         {renderMainContent()}

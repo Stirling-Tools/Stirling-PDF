@@ -11,7 +11,7 @@ import ChangePermissionsSettings from "../components/tools/changePermissions/Cha
 import { useChangePermissionsParameters } from "../hooks/tools/changePermissions/useChangePermissionsParameters";
 import { useChangePermissionsOperation } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
 import { useChangePermissionsTips } from "../components/tooltips/useChangePermissionsTips";
-import { BaseToolProps } from "../types/tool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -95,4 +95,7 @@ const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps
   });
 };
 
-export default ChangePermissions;
+// Static method to get the operation hook for automation
+ChangePermissions.tool = () => useChangePermissionsOperation;
+
+export default ChangePermissions as ToolComponent;

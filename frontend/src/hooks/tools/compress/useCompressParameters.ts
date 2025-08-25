@@ -10,7 +10,7 @@ export interface CompressParameters extends BaseParameters {
   fileSizeUnit: 'KB' | 'MB';
 }
 
-const defaultParameters: CompressParameters = {
+export const defaultParameters: CompressParameters = {
   compressionLevel: 5,
   grayscale: false,
   expectedSize: '',

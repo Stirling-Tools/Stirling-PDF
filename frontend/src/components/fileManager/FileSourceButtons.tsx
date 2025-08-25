@@ -1,7 +1,7 @@
 import React from 'react';
 import { Stack, Text, Button, Group } from '@mantine/core';
 import HistoryIcon from '@mui/icons-material/History';
-import FolderIcon from '@mui/icons-material/Folder';
+import UploadIcon from '@mui/icons-material/Upload';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { useTranslation } from 'react-i18next';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
@@ -10,7 +10,7 @@ interface FileSourceButtonsProps {
   horizontal?: boolean;
 }
 
-const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ 
+const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   horizontal = false
 }) => {
   const { activeSource, onSourceChange, onLocalFileClick } = useFileManagerContext();
@@ -44,11 +44,11 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       >
         {horizontal ? t('fileManager.recent', 'Recent') : t('fileManager.recent', 'Recent')}
       </Button>
-      
+
       <Button
         variant="subtle"
         color='var(--mantine-color-gray-6)'
-        leftSection={<FolderIcon />}
+        leftSection={<UploadIcon />}
         justify={horizontal ? "center" : "flex-start"}
         onClick={onLocalFileClick}
         fullWidth={!horizontal}
@@ -63,9 +63,9 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
           }
         }}
       >
-        {horizontal ? t('fileManager.localFiles', 'Local') : t('fileManager.localFiles', 'Local Files')}
+        {horizontal ? t('fileUpload.uploadFiles', 'Upload') : t('fileUpload.uploadFiles', 'Upload Files')}
       </Button>
-      
+
       <Button
         variant={buttonProps.variant('drive')}
         leftSection={<CloudIcon />}

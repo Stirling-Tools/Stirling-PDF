@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
-  Button, Text, Center, Checkbox, Box, Tooltip, ActionIcon,
+  Button, Text, Center, Box,
   Notification, TextInput, LoadingOverlay, Modal, Alert,
-  Stack, Group
+  Stack, Group, Portal
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions, useCurrentFile, useFileSelection } from "../../contexts/FileContext";
@@ -62,20 +62,19 @@ export interface PageEditorProps {
 const PageEditor = ({
   onFunctionsReady,
 }: PageEditorProps) => {
-  const { t } = useTranslation();
 
   // Use split contexts to prevent re-renders
   const { state, selectors } = useFileState();
   const { actions } = useFileActions();
-  
+
   // Prefer IDs + selectors to avoid array identity churn
   const activeFileIds = state.files.ids;
   const primaryFileId = activeFileIds[0] ?? null;
   const selectedFiles = selectors.getSelectedFiles();
-  
+
   // Stable signature for effects (prevents loops)
   const filesSignature = selectors.getFilesSignature();
-  
+
   // UI state
   const globalProcessing = state.ui.isProcessing;
   const processingProgress = state.ui.processingProgress;
@@ -101,20 +100,20 @@ const PageEditor = ({
     setSelectionMode, setSelectedPageNumbers, setMovingPage, setIsAnimating, setSplitPositions, setExportLoading,
     togglePage, toggleSelectAll, animateReorder
   } = usePageEditorState();
-  
+
   // Grid container ref for positioning split indicators
   const gridContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Undo/Redo state
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-  
+
   // Update undo/redo state
   const updateUndoRedoState = useCallback(() => {
     setCanUndo(undoManagerRef.current.canUndo());
     setCanRedo(undoManagerRef.current.canRedo());
   }, []);
-  
+
   // Set up undo manager callback
   useEffect(() => {
     undoManagerRef.current.setStateChangeCallback(updateUndoRedoState);
@@ -143,12 +142,12 @@ const PageEditor = ({
   const createDeleteCommand = useCallback((pageIds: string[]) => ({
     execute: () => {
       if (!displayDocument) return;
-      
+
       const pagesToDelete = pageIds.map(pageId => {
         const page = displayDocument.pages.find(p => p.id === pageId);
         return page?.pageNumber || 0;
       }).filter(num => num > 0);
-      
+
       if (pagesToDelete.length > 0) {
         const deleteCommand = new DeletePagesCommand(
           pagesToDelete,
@@ -181,8 +180,8 @@ const PageEditor = ({
       command.execute();
     }
   }, []);
-  
-  
+
+
   const handleUndo = useCallback(() => {
     undoManagerRef.current.undo();
   }, []);
@@ -200,13 +199,13 @@ const PageEditor = ({
           return page?.id || '';
         }).filter(id => id)
       : displayDocument.pages.map(p => p.id);
-    
+
     handleRotatePages(pagesToRotate, rotation);
   }, [displayDocument, selectedPageNumbers, selectionMode, handleRotatePages]);
 
   const handleDelete = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
-    
+
     const deleteCommand = new DeletePagesCommand(
       selectedPageNumbers,
       () => displayDocument,
@@ -221,7 +220,7 @@ const PageEditor = ({
 
   const handleDeletePage = useCallback((pageNumber: number) => {
     if (!displayDocument) return;
-    
+
     const deleteCommand = new DeletePagesCommand(
       [pageNumber],
       () => displayDocument,
@@ -236,9 +235,9 @@ const PageEditor = ({
 
   const handleSplit = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
-    
+
     console.log('Toggle split markers at selected page positions:', selectedPageNumbers);
-    
+
     // Convert page numbers to positions (0-based indices)
     const positions: number[] = [];
     selectedPageNumbers.forEach(pageNum => {
@@ -261,7 +260,7 @@ const PageEditor = ({
 
   const handleSplitAll = useCallback(() => {
     if (!displayDocument) return;
-    
+
     const splitAllCommand = new SplitAllCommand(
       displayDocument.pages.length,
       () => splitPositions,
@@ -272,9 +271,9 @@ const PageEditor = ({
 
   const handlePageBreak = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
-    
+
     console.log('Insert page breaks after selected pages:', selectedPageNumbers);
-    
+
     const pageBreakCommand = new PageBreakCommand(
       selectedPageNumbers,
       () => displayDocument,
@@ -286,7 +285,7 @@ const PageEditor = ({
 
   const handlePageBreakAll = useCallback(() => {
     if (!displayDocument) return;
-    
+
     const pageBreakAllCommand = new BulkPageBreakCommand(
       () => displayDocument,
       setEditedDocument,
@@ -297,7 +296,7 @@ const PageEditor = ({
 
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => {
     if (!displayDocument) return;
-    
+
     const reorderCommand = new ReorderPagesCommand(
       sourcePageNumber,
       targetIndex,
@@ -311,12 +310,12 @@ const PageEditor = ({
   // Helper function to collect source files for multi-file export
   const getSourceFiles = useCallback((): Map<string, File> | null => {
     const sourceFiles = new Map<string, File>();
-    
+
     // Check if we have multiple files by looking at active file IDs
     if (activeFileIds.length <= 1) {
       return null; // Use single-file export method
     }
-    
+
     // Collect all source files
     activeFileIds.forEach(fileId => {
       const file = selectors.getFile(fileId);
@@ -324,7 +323,7 @@ const PageEditor = ({
         sourceFiles.set(fileId, file);
       }
     });
-    
+
     return sourceFiles.size > 0 ? sourceFiles : null;
   }, [activeFileIds, selectors]);
 
@@ -332,7 +331,7 @@ const PageEditor = ({
 
   const onExportSelected = useCallback(async () => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
-    
+
     setExportLoading(true);
     try {
       // Step 1: Apply DOM changes to document state first
@@ -342,10 +341,10 @@ const PageEditor = ({
         displayDocument, // Current display order (includes reordering)
         splitPositions // Position-based splits
       );
-      
+
       // For selected pages export, we work with the first document (or single document)
       const documentWithDOMState = Array.isArray(processedDocuments) ? processedDocuments[0] : processedDocuments;
-      
+
       // Step 2: Convert selected page numbers to page IDs from the document with DOM state
       const selectedPageIds = selectedPageNumbers.map(pageNum => {
         const page = documentWithDOMState.pages.find(p => p.pageNumber === pageNum);
@@ -354,9 +353,9 @@ const PageEditor = ({
 
       // Step 3: Export with pdfExportService
       console.log('Exporting selected pages:', selectedPageNumbers, 'with DOM rotations applied');
-      
+
       const sourceFiles = getSourceFiles();
-      const result = sourceFiles 
+      const result = sourceFiles
         ? await pdfExportService.exportPDFMultiFile(
             documentWithDOMState,
             sourceFiles,
@@ -371,7 +370,7 @@ const PageEditor = ({
 
       // Step 4: Download the result
       pdfExportService.downloadFile(result.blob, result.filename);
-      
+
       setExportLoading(false);
     } catch (error) {
       console.error('Export failed:', error);
@@ -381,7 +380,7 @@ const PageEditor = ({
 
   const onExportAll = useCallback(async () => {
     if (!displayDocument) return;
-    
+
     setExportLoading(true);
     try {
       // Step 1: Apply DOM changes to document state first
@@ -391,34 +390,34 @@ const PageEditor = ({
         displayDocument, // Current display order (includes reordering)
         splitPositions // Position-based splits
       );
-      
+
       // Step 2: Check if we have multiple documents (splits) or single document
       if (Array.isArray(processedDocuments)) {
         // Multiple documents (splits) - export as ZIP
         console.log('Exporting multiple split documents:', processedDocuments.length);
         const blobs: Blob[] = [];
         const filenames: string[] = [];
-        
+
         const sourceFiles = getSourceFiles();
         for (const doc of processedDocuments) {
-          const result = sourceFiles 
+          const result = sourceFiles
             ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], { filename: doc.name })
             : await pdfExportService.exportPDF(doc, [], { filename: doc.name });
           blobs.push(result.blob);
           filenames.push(result.filename);
         }
-        
+
         // Create ZIP file
         const JSZip = await import('jszip');
         const zip = new JSZip.default();
-        
+
         blobs.forEach((blob, index) => {
           zip.file(filenames[index], blob);
         });
-        
+
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         const zipFilename = displayDocument.name.replace(/\.pdf$/i, '.zip');
-        
+
         pdfExportService.downloadFile(zipBlob, zipFilename);
       } else {
         // Single document - regular export
@@ -439,7 +438,7 @@ const PageEditor = ({
 
         pdfExportService.downloadFile(result.blob, result.filename);
       }
-      
+
       setExportLoading(false);
     } catch (error) {
       console.error('Export failed:', error);
@@ -450,18 +449,18 @@ const PageEditor = ({
   // Apply DOM changes to document state using dedicated service
   const applyChanges = useCallback(() => {
     if (!displayDocument) return;
-    
+
     // Pass current display document (which includes reordering) to get both reordering AND DOM changes
     const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
       mergedPdfDocument || displayDocument, // Original order
       displayDocument, // Current display order (includes reordering)
       splitPositions // Position-based splits
     );
-    
+
     // For apply changes, we only set the first document if it's an array (splits shouldn't affect document state)
     const documentToSet = Array.isArray(processedDocuments) ? processedDocuments[0] : processedDocuments;
     setEditedDocument(documentToSet);
-    
+
     console.log('Changes applied to document');
   }, [displayDocument, mergedPdfDocument, splitPositions]);
 
@@ -473,10 +472,10 @@ const PageEditor = ({
     setSelectionMode(false);
   }, [actions]);
 
-  // Export preview function - defined after export functions to avoid circular dependency  
+  // Export preview function - defined after export functions to avoid circular dependency
   const handleExportPreview = useCallback((selectedOnly: boolean = false) => {
     if (!displayDocument) return;
-    
+
     // For now, trigger the actual export directly
     // In the original, this would show a preview modal first
     if (selectedOnly) {
@@ -514,7 +513,7 @@ const PageEditor = ({
     }
   }, [
     onFunctionsReady, handleUndo, handleRedo, canUndo, canRedo, handleRotate, handleDelete, handleSplit, handleSplitAll,
-    handlePageBreak, handlePageBreakAll, handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading, 
+    handlePageBreak, handlePageBreakAll, handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading,
     selectionMode, selectedPageNumbers, splitPositions, displayDocument?.pages.length, closePdf
   ]);
 
@@ -552,8 +551,8 @@ const PageEditor = ({
               style={{ minWidth: 300 }}
             />
             <Group>
-              <Button 
-                variant={selectionMode ? "filled" : "outline"} 
+              <Button
+                variant={selectionMode ? "filled" : "outline"}
                 onClick={() => setSelectionMode(!selectionMode)}
               >
                 {selectionMode ? "Exit Selection" : "Select Pages"}
@@ -573,7 +572,7 @@ const PageEditor = ({
 
 
           {/* Split Lines Overlay */}
-          <div 
+          <div
             style={{
               position: 'absolute',
               top: 0,
@@ -590,14 +589,14 @@ const PageEditor = ({
               const ITEM_HEIGHT = 340; // 20rem + gap
               const ITEM_GAP = 24; // 1.5rem
               const ITEMS_PER_ROW = 4; // Default, could be dynamic
-              
+
               const row = Math.floor(position / ITEMS_PER_ROW);
               const col = position % ITEMS_PER_ROW;
-              
+
               // Position after the current item
               const leftPosition = (col + 1) * (ITEM_WIDTH + ITEM_GAP) - ITEM_GAP / 2;
               const topPosition = row * ITEM_HEIGHT + 100; // Offset for header controls
-              
+
               return (
                 <div
                   key={`split-${position}`}
