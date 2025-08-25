@@ -1,136 +1,229 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
-  xmlns:th="https://www.thymeleaf.org">
+      xmlns:th="https://www.thymeleaf.org">
 
 <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{autoRedact.title}, header=#{autoRedact.header})}"></th:block>
+    <th:block th:insert="~{fragments/common :: head(title=#{autoRedact.title}, header=#{autoRedact.header})}"></th:block>
+    <style>
+        .redaction-options-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-text.text-muted {
+            color: #6c757d !important;
+        }
+
+        .btn-primary:focus {
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            outline: 2px solid #0d6efd;
+            outline-offset: 2px;
+        }
+
+        .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            outline: 2px solid #0d6efd;
+            outline-offset: 2px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            outline: 2px solid #0d6efd;
+            outline-offset: 2px;
+        }
+
+        .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
 </head>
 
 <body>
-  <div id="page-container">
+<div id="page-container">
     <div id="content-wrap">
-      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-      <br><br>
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-md-6 bg-card">
-            <div class="tool-header">
-              <svg class="material-symbols-rounded tool-header-icon security">
-                <use xlink:href="/images/redact-auto.svg#icon-redact-auto"></use>
-              </svg>
-              <span class="tool-header-text" th:text="#{autoRedact.header}"></span>
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 bg-card">
+                    <div class="tool-header">
+                        <svg class="material-symbols-rounded tool-header-icon security">
+                            <use xlink:href="/images/redact-auto.svg#icon-redact-auto"></use>
+                        </svg>
+                        <span class="tool-header-text" id="form-title" th:text="#{autoRedact.header}"></span>
+                    </div>
+                                <form aria-labelledby="form-title" enctype="multipart/form-data" id="autoRedactForm"
+                  method="post" th:action="@{'api/v1/security/auto-redact'}">
+                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="listOfText" th:text="#{autoRedact.textsToRedactLabel}"></label>
+                            <textarea class="form-control" id="listOfText" name="listOfText" required rows="4"
+                                      th:placeholder="#{autoRedact.textsToRedactPlaceholder}"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" id="useRegex" name="useRegex" type="checkbox">
+                                <label class="form-check-label" for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" id="wholeWordSearch" name="wholeWordSearch" type="checkbox">
+                                <label class="form-check-label" for="wholeWordSearch" th:text="#{autoRedact.wholeWordSearchLabel}"></label>
+                            </div>
+                        </div>
+
+                        <div class="redaction-options-group">
+                            <label class="form-label fw-bold mb-3">Redaction style</label>
+                            <div class="form-check mb-2">
+                                <input aria-describedby="visual-desc" class="form-check-input" id="visualImage" name="redactionMode" type="radio" value="visual">
+                                <label class="form-check-label" for="visualImage">Visual</label>
+                                <small class="form-text text-muted d-block mt-1" id="visual-desc">Converts to image with visual redactions for maximum security.</small>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input aria-describedby="delete-desc" class="form-check-input" id="deleteText" name="redactionMode" type="radio" value="aggressive">
+                                <label class="form-check-label" for="deleteText">Delete Text</label>
+                                <small class="form-text text-muted d-block mt-1" id="delete-desc">Removes the text completely. This may alter the original layout or leave a gap.</small>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input aria-describedby="keep-desc" checked class="form-check-input" id="keepLayout" name="redactionMode" type="radio" value="moderate">
+                                <label class="form-check-label" for="keepLayout">Keep Layout</label>
+                                <small class="form-text text-muted d-block mt-1" id="keep-desc">Covers text with a redaction box, preserving the page's original design.</small>
+                            </div>
+
+                            <div class="form-check">
+                                <input aria-describedby="guarantee-desc" class="form-check-input" id="guaranteeRedaction" name="convertPDFToImage" type="checkbox">
+                                <label class="form-check-label" for="guaranteeRedaction">PDF image</label>
+                                <small class="form-text text-muted d-block mt-1" id="guarantee-desc">For maximum security, uses an image-based method to ensure text is unrecoverable. May slightly affect document quality.</small>
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="defaultColor" th:text="#{autoRedact.colorLabel}"></label>
+                            <select class="form-select" id="defaultColor" name="defaultColor" onchange="handleColorChange(this.value)">
+                                <option th:text="#{black}" value="#000000">Black</option>
+                                <option th:text="#{white}" value="#FFFFFF">White</option>
+                                <option th:text="#{red}" value="#FF0000">Red</option>
+                                <option th:text="#{green}" value="#00FF00">Green</option>
+                                <option th:text="#{blue}" value="#0000FF">Blue</option>
+                                <option th:text="#{custom}" value="custom">Custom...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="customColorContainer" style="display: none;">
+                            <label class="form-label" for="customColor">Custom Color (Hex)</label>
+                            <input class="form-control" id="customColor" name="redactColor" placeholder="#FF00FF" type="text">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="customPadding" th:text="#{autoRedact.customPaddingLabel}"></label>
+                            <input class="form-control" id="customPadding" max="1" min="0" name="customPadding"
+                                   step="0.1" type="number" value="0.1">
+                        </div>
+
+                        <br>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="ocrLanguage">OCR Language</label>
+                            <select aria-describedby="ocr-desc" class="form-select" id="ocrLanguage" name="ocrLanguage">
+                                <option value="eng">English</option>
+                                <option value="spa">Spanish</option>
+                                <option value="fra">French</option>
+                                <option value="deu">German</option>
+                                <option value="ita">Italian</option>
+                                <option value="por">Portuguese</option>
+                                <option value="rus">Russian</option>
+                                <option value="ara">Arabic</option>
+                                <option value="chi_sim">Chinese (Simplified)</option>
+                                <option value="jpn">Japanese</option>
+                                <option value="kor">Korean</option>
+                                <option value="hin">Hindi</option>
+                            </select>
+                            <small class="form-text text-muted" id="ocr-desc">Used when OCR restoration is needed</small>
+                        </div>
+
+                        <input id="aggressiveMode" name="aggressiveMode" type="hidden" value="false">
+
+                        <div class="mb-3 text-center">
+                            <button class="btn btn-primary" id="submitBtn" th:text="#{autoRedact.submitButton}" type="submit"></button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <form enctype="multipart/form-data" id="autoRedactForm" method="post" th:action="@{'api/v1/security/auto-redact'}">
-              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}"></div>
-              <div class="mb-3">
-                <label for="listOfText" class="form-label" th:text="#{autoRedact.textsToRedactLabel}"></label>
-                <textarea class="form-control" id="listOfText" name="listOfText" rows="4" required
-                  th:placeholder="#{autoRedact.textsToRedactPlaceholder}"></textarea>
-              </div>
-
-              <div class="mb-3">
-                <label for="defaultColor" class="form-label" th:text="#{autoRedact.colorLabel}">Color</label>
-                <select class="form-control" id="defaultColor" name="defaultColor"
-                  onchange="handleColorChange(this.value)">
-                  <option value="#000000" th:text="#{black}">Black</option>
-                  <option value="#FFFFFF" th:text="#{white}">White</option>
-                  <option value="#FF0000" th:text="#{red}">Red</option>
-                  <option value="#00FF00" th:text="#{green}">Green</option>
-                  <option value="#0000FF" th:text="#{blue}">Blue</option>
-                  <option value="custom" th:text="#{custom}">Custom...</option>
-                </select>
-              </div>
-
-              <!-- Custom Color Input -->
-              <div class="mb-3" id="customColorContainer" style="display: none;">
-                <label for="customColor" class="form-label" th:text="#{autoRedact.colorLabel}">Custom Color</label>
-                <input type="text" class="form-control" id="customColor" name="redactColor" placeholder="#FF00FF">
-              </div>
-
-              <script>
-                function handleColorChange(selectedValue) {
-                  const container = document.getElementById('customColorContainer');
-                  const input = document.getElementById('customColor');
-                  if (selectedValue === "custom") {
-                    container.style.display = 'block';
-                    if (!input.value) {
-                      input.value = '#000000';
-                    }
-                  } else {
-                    container.style.display = 'none';
-                    input.value = selectedValue;
-                  }
-                }
-
-                document.addEventListener('DOMContentLoaded', function () {
-                  const redactionModeSelect = document.getElementById('redactionMode');
-                  const aggressiveModeHidden = document.getElementById('aggressiveMode');
-                  const convertToImageCheckbox = document.getElementById('convertPDFToImage');
-                  const defaultColor = document.getElementById('defaultColor');
-
-                  redactionModeSelect.addEventListener('change', function () {
-                    const mode = redactionModeSelect.value;
-                    aggressiveModeHidden.value = (mode === 'aggressive') ? 'true' : 'false';
-                    if (mode === 'visual') {
-                      convertToImageCheckbox.checked = true;
-                    }
-                  });
-
-                  if (defaultColor) {
-                    handleColorChange(defaultColor.value);
-                  }
-
-                  aggressiveModeHidden.value = (redactionModeSelect.value === 'aggressive') ? 'true' : 'false';
-                  if (redactionModeSelect.value === 'visual') {
-                    convertToImageCheckbox.checked = true;
-                  }
-                });
-              </script>
-              <div class="mb-3 form-check">
-                <input type="checkbox" id="useRegex" name="useRegex">
-                <label for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>
-              </div>
-
-              <div class="mb-3 form-check">
-                <input type="checkbox" id="wholeWordSearch" name="wholeWordSearch">
-                <label for="wholeWordSearch" th:text="#{autoRedact.wholeWordSearchLabel}"></label>
-              </div>
-
-              <div class="mb-3">
-                <label for="customPadding" class="form-label" th:text="#{autoRedact.customPaddingLabel}"></label>
-                <input type="number" step="0.1" class="form-control" id="customPadding" name="customPadding"
-                  value="0.1">
-              </div>
-
-              <div class="mb-3 form-check">
-                <input id="convertPDFToImage" name="convertPDFToImage" type="checkbox">
-                <label for="convertPDFToImage" th:text="#{autoRedact.convertPDFToImageLabel}"></label>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label" for="redactionMode" th:text="#{autoRedact.redactionModeLabel}">Redaction Mode</label>
-                <select class="form-control" id="redactionMode" name="redactionMode">
-                  <option th:text="#{autoRedact.redactionMode.moderate}" value="moderate">Moderate - Smart text removal with
-                    fallback
-                  </option>
-                  <option th:text="#{autoRedact.redactionMode.visual}" value="visual">Visual - Black boxes only</option>
-                  <option th:text="#{autoRedact.redactionMode.aggressive}" value="aggressive">Aggressive - Force text removal
-                  </option>
-                </select>
-              </div>
-
-              <!-- Keep for backward compatibility -->
-              <input id="aggressiveMode" name="aggressiveMode" type="hidden" value="false">
-
-              <button type="submit" id="submitBtn" class="btn btn-primary"
-                th:text="#{autoRedact.submitButton}"></button>
-            </form>
-          </div>
         </div>
-      </div>
     </div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
-  </div>
-</body>
+</div>
+<script>
+    function handleColorChange(selectedValue) {
+        const container = document.getElementById('customColorContainer');
+        const input = document.getElementById('customColor');
+        if (selectedValue === "custom") {
+            container.style.display = 'block';
+            if (!input.value) {
+                input.value = '#000000';
+            }
+        } else {
+            container.style.display = 'none';
+            input.value = selectedValue;
+        }
+    }
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const redactionModeRadios = document.querySelectorAll('input[name="redactionMode"]');
+        const aggressiveModeHidden = document.getElementById('aggressiveMode');
+        const guaranteeRedactionCheckbox = document.getElementById('guaranteeRedaction');
+        const defaultColor = document.getElementById('defaultColor');
+
+        function updateMode() {
+            const selectedMode = document.querySelector('input[name="redactionMode"]:checked');
+            if (selectedMode) {
+                // Set aggressive mode for delete text option
+                aggressiveModeHidden.value = selectedMode.value === 'aggressive' ? 'true' : 'false';
+
+                // Handle PDF image checkbox based on selection
+                if (selectedMode.value === 'visual') {
+                    // Visual mode automatically enables PDF image for maximum security
+                    guaranteeRedactionCheckbox.checked = true;
+                } else {
+                    // Delete Text and Keep Layout modes disable PDF image
+                    guaranteeRedactionCheckbox.checked = false;
+                }
+            }
+        }
+
+        redactionModeRadios.forEach(radio => {
+            radio.addEventListener('change', updateMode);
+        });
+
+        if (defaultColor) {
+            handleColorChange(defaultColor.value);
+            // Set initial value for customColor input when a pre-defined color is selected
+            const customColorInput = document.getElementById('customColor');
+            if (defaultColor.value !== 'custom') {
+                customColorInput.value = defaultColor.value;
+            }
+        }
+
+        updateMode();
+    });
+</script>
+</body>
 </html>

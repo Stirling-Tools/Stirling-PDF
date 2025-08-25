@@ -1,6 +1,7 @@
 package stirling.software.SPDF.service;
 
 import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +18,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.imageio.ImageIO;
+
 import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
@@ -25,6 +28,7 @@ import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSNumber;
 import org.apache.pdfbox.cos.COSString;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdfparser.PDFStreamParser;
 import org.apache.pdfbox.pdfwriter.ContentStreamWriter;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -38,6 +42,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -58,6 +63,11 @@ import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempDirectory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @Service
 @Slf4j
@@ -70,10 +80,11 @@ public class RedactionService {
     private static final int FONT_SCALE_FACTOR = 1000;
     private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
     private static final COSString EMPTY_COS_STRING = new COSString("");
-    private static final int MAX_SWEEPS = 5;
+    private static final int MAX_SWEEPS = 3;
     private boolean aggressiveMode = false;
     private Map<Integer, List<AggressiveSegMatch>> aggressiveSegMatches = null;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     private static void redactAreas(
             List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
@@ -98,7 +109,7 @@ public class RedactionService {
         }
 
         for (Map.Entry<Integer, List<RedactionArea>> entry : redactionsByPage.entrySet()) {
-            Integer pageNumber = entry.getKey();
+            int pageNumber = entry.getKey();
             List<RedactionArea> areasForPage = entry.getValue();
             if (pageNumber > allPages.getCount()) {
                 continue;
@@ -110,14 +121,13 @@ public class RedactionService {
                             document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 contentStream.saveGraphicsState();
                 for (RedactionArea redactionArea : areasForPage) {
-                    Color redactColor = decodeOrDefault(redactionArea.getColor());
-                    contentStream.setNonStrokingColor(redactColor);
+                    contentStream.setNonStrokingColor(decodeOrDefault(redactionArea.getColor()));
                     float x = redactionArea.getX().floatValue();
                     float y = redactionArea.getY().floatValue();
                     float width = redactionArea.getWidth().floatValue();
                     float height = redactionArea.getHeight().floatValue();
-                    float pdfY = page.getBBox().getHeight() - y - height;
-                    contentStream.addRect(x, pdfY, width, height);
+                    contentStream.addRect(
+                            x, page.getBBox().getHeight() - y - height, width, height);
                     contentStream.fill();
                 }
                 contentStream.restoreGraphicsState();
@@ -133,11 +143,11 @@ public class RedactionService {
 
         List<Integer> pageNumberList = parsePageNumbers(pageNumbers);
 
-        for (Integer pageNumber : pageNumberList) {
+        for (int pageNumber : pageNumberList) {
             if (pageNumber <= 0 || pageNumber > allPages.getCount()) {
-                continue; // Skip invalid page numbers
+                continue;
             }
-            PDPage page = allPages.get(pageNumber - 1); // Convert to 0-based index
+            PDPage page = allPages.get(pageNumber - 1);
             try (PDPageContentStream contentStream =
                     new PDPageContentStream(
                             document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
@@ -255,55 +265,28 @@ public class RedactionService {
             boolean useRegex,
             boolean wholeWordSearch) {
         try {
-            log.debug("Checking page {} for {} target words", pageIndex + 1, targetWords.size());
-
             for (String term : targetWords) {
                 if (term == null || term.isBlank()) {
-                    log.debug("Skipping empty/null term");
                     continue;
                 }
-
-                log.debug("Searching for term '{}' on page {}", term, pageIndex + 1);
                 TextFinder finder = new TextFinder(term, useRegex, wholeWordSearch);
                 finder.setStartPage(pageIndex + 1);
                 finder.setEndPage(pageIndex + 1);
                 finder.getText(document);
 
                 List<PDFText> foundTexts = finder.getFoundTexts();
-                log.debug(
-                        "Found {} instances of '{}' on page {}",
-                        foundTexts.size(),
-                        term,
-                        pageIndex + 1);
-
                 for (PDFText ft : foundTexts) {
                     if (ft.getPageIndex() == pageIndex) {
-                        log.warn(
-                                "FOUND REMAINING TARGET: '{}' on page {} - text content: '{}'",
-                                term,
-                                pageIndex + 1,
-                                ft.getText() != null ? ft.getText() : "null");
                         return true;
                     }
                 }
 
-                if (!foundTexts.isEmpty()) {
-                    log.debug(
-                            "Found instances but not on target page {} (found on pages: {})",
-                            pageIndex + 1,
-                            foundTexts.stream()
-                                    .map(ft -> String.valueOf(ft.getPageIndex() + 1))
-                                    .distinct()
-                                    .collect(java.util.stream.Collectors.joining(", ")));
-                }
+                if (!foundTexts.isEmpty()) {}
             }
 
-            log.debug("Page {} contains no target words", pageIndex + 1);
             return false;
 
         } catch (Exception e) {
-            log.error("Error checking page {} for targets: {}", pageIndex + 1, e.getMessage());
-            log.warn("Due to error, assuming page {} may still contain targets", pageIndex + 1);
             return true;
         }
     }
@@ -313,28 +296,20 @@ public class RedactionService {
             Set<String> targetWords,
             boolean useRegex,
             boolean wholeWordSearch) {
-        log.debug("Verifying if document still contains targets: {}", targetWords);
-
         try {
             int idx = -1;
             final int numberOfPages = document.getNumberOfPages();
             for (int i = 0; i < numberOfPages; i++) {
                 idx++;
-                log.debug("Checking page {} for remaining targets", idx + 1);
-
                 if (pageStillContainsTargets(
                         document, idx, targetWords, useRegex, wholeWordSearch)) {
-                    log.warn("Page {} still contains target words", idx + 1);
                     return true;
                 }
             }
 
-            log.info("Document verification completed - no targets found");
             return false;
 
         } catch (Exception e) {
-            log.error("Error during document verification: {}", e.getMessage());
-            log.warn("Due to verification error, assuming targets may still exist");
             return true;
         }
     }
@@ -342,56 +317,25 @@ public class RedactionService {
     public static Map<Integer, List<PDFText>> findTextToRedact(
             PDDocument document, String[] listOfText, boolean useRegex, boolean wholeWordSearch) {
         Map<Integer, List<PDFText>> allFoundTextsByPage = new HashMap<>();
-        log.info(
-                "Starting text search with {} terms, useRegex={}, wholeWordSearch={}",
-                listOfText.length,
-                useRegex,
-                wholeWordSearch);
-
-        int totalInstancesFound = 0;
 
         for (String text : listOfText) {
             String t = text.trim();
             if (t.isEmpty()) {
-                log.debug("Skipping empty search term");
                 continue;
             }
-
-            log.info("Searching for term: '{}'", t);
             try {
                 TextFinder finder = new TextFinder(t, useRegex, wholeWordSearch);
                 finder.getText(document);
                 List<PDFText> foundTexts = finder.getFoundTexts();
 
-                log.info("Found {} instances of '{}' across the document", foundTexts.size(), t);
-
                 for (PDFText found : foundTexts) {
                     allFoundTextsByPage
                             .computeIfAbsent(found.getPageIndex(), k -> new ArrayList<>())
                             .add(found);
-
-                    log.debug(
-                            "Found instance on page {}: '{}'",
-                            found.getPageIndex() + 1,
-                            found.getText() != null ? found.getText() : "null");
-                    totalInstancesFound++;
                 }
             } catch (Exception e) {
-                log.error("Error searching for term '{}': {}", t, e.getMessage());
             }
         }
-
-        log.info("Total instances found across all search terms: {}", totalInstancesFound);
-        log.info(
-                "Text found on {} pages out of {} total pages",
-                allFoundTextsByPage.size(),
-                document.getNumberOfPages());
-
-        // Log distribution by page
-        allFoundTextsByPage.forEach(
-                (pageIndex, texts) -> {
-                    log.info("Page {}: {} instances", pageIndex + 1, texts.size());
-                });
 
         return allFoundTextsByPage;
     }
@@ -650,6 +594,122 @@ public class RedactionService {
         return strategy.redact(request);
     }
 
+    private static boolean isTextSafeForRedaction(String text) {
+        if (text == null || text.isEmpty()) return true;
+
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            int codePoint = c;
+
+            if (codePoint >= 65488) {
+                return false;
+            }
+            if (Character.isISOControl(c) && c != '\n' && c != '\t' && c != '\r') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static List<Object> deepCopyTokens(List<Object> original) {
+        List<Object> copy = new ArrayList<>(original.size());
+        for (Object obj : original) {
+            if (obj instanceof COSDictionary dict) {
+                COSDictionary newDict = new COSDictionary();
+                for (COSName key : dict.keySet()) {
+                    newDict.setItem(key, dict.getDictionaryObject(key));
+                }
+                copy.add(newDict);
+            } else if (obj instanceof List<?> nestedList
+                    && !nestedList.isEmpty()
+                    && nestedList.get(0) instanceof Object) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    List<Object> objectList = (List<Object>) nestedList;
+                    copy.add(deepCopyTokens(objectList));
+                } catch (ClassCastException e) {
+                    copy.add(obj);
+                }
+            } else {
+                copy.add(obj);
+            }
+        }
+        return copy;
+    }
+
+    private static TokenModificationResult updateOperatorSafely(
+            List<Object> tokens, int tokenIndex, String originalOperator) {
+        try {
+            int operatorIndex = tokenIndex + 1;
+            if (isValidTokenIndex(tokens, operatorIndex)
+                    && tokens.get(operatorIndex) instanceof Operator op
+                    && op.getName().equals(originalOperator)) {
+                tokens.set(operatorIndex, Operator.getOperator("TJ"));
+            }
+            return TokenModificationResult.success();
+        } catch (Exception e) {
+            return TokenModificationResult.success();
+        }
+    }
+
+    private static WipeResult wipeAllSemanticTextInTokens(List<Object> tokens) {
+        return wipeAllSemanticTextInTokens(tokens, true);
+    }
+
+    public byte[] performVisualRedactionWithOcrRestoration(
+            RedactPdfRequest request,
+            String[] listOfText,
+            boolean useRegex,
+            boolean wholeWordSearch)
+            throws IOException {
+        PDDocument visualRedactedDoc = null;
+        try {
+            visualRedactedDoc = pdfDocumentFactory.load(request.getFileInput());
+            Map<Integer, List<PDFText>> allFound =
+                    findTextToRedact(visualRedactedDoc, listOfText, useRegex, wholeWordSearch);
+            String effectiveColor =
+                    (request.getRedactColor() == null || request.getRedactColor().isBlank())
+                            ? "#000000"
+                            : request.getRedactColor();
+            byte[] visualRedactedBytes =
+                    finalizeRedaction(
+                            visualRedactedDoc,
+                            allFound,
+                            effectiveColor,
+                            request.getCustomPadding(),
+                            true,
+                            false);
+            return performOcrRestoration(visualRedactedBytes, request);
+        } catch (Exception e) {
+            throw new IOException(
+                    "Visual redaction with OCR restoration failed: " + e.getMessage(), e);
+        } finally {
+            if (visualRedactedDoc != null) {
+                try {
+                    visualRedactedDoc.close();
+                } catch (IOException ignore) {
+                }
+            }
+        }
+    }
+
+    private byte[] performOcrRestoration(byte[] redactedPdfBytes, RedactPdfRequest request)
+            throws IOException, InterruptedException {
+        try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
+                TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf")) {
+            java.nio.file.Files.write(tempInputFile.getPath(), redactedPdfBytes);
+            if (isOcrMyPdfAvailable()) {
+                return processWithOcrMyPdfForRestoration(
+                        tempInputFile.getPath(), tempOutputFile.getPath(), request);
+            } else if (isTesseractAvailable()) {
+                return processWithTesseractForRestoration(
+                        tempInputFile.getPath(), tempOutputFile.getPath(), request);
+            }
+            return redactedPdfBytes;
+        }
+    }
+
     private static String getDecodedString(COSString cosString, PDFont font) {
         try {
             String decoded = TextDecodingHelper.tryDecodeWithFont(font, cosString);
@@ -671,7 +731,6 @@ public class RedactionService {
                                         text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                     }
                 } catch (Exception e) {
-                    // Fall through to return newString
                 }
             }
             return newString;
@@ -740,48 +799,26 @@ public class RedactionService {
         return normalized.toString();
     }
 
-    private static boolean isTextSafeForRedaction(String text) {
-        if (text == null || text.isEmpty()) return true;
-
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            int codePoint = c;
-
-            if (codePoint >= 65488) {
-                return false; // Contains problematic high-range characters
-            }
-            if (Character.isISOControl(c) && c != '\n' && c != '\t' && c != '\r') {
-                return false; // Contains problematic control characters
-            }
+    private boolean isOcrMyPdfAvailable() {
+        try {
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
+                            .runCommandWithOutputHandling(Arrays.asList("ocrmypdf", "--version"));
+            return result.getRc() == 0;
+        } catch (Exception e) {
+            return false;
         }
-
-        return true;
     }
 
-    private static List<Object> deepCopyTokens(List<Object> original) {
-        List<Object> copy = new ArrayList<>(original.size());
-        for (Object obj : original) {
-            if (obj instanceof COSDictionary dict) {
-                COSDictionary newDict = new COSDictionary();
-                for (COSName key : dict.keySet()) {
-                    newDict.setItem(key, dict.getDictionaryObject(key));
-                }
-                copy.add(newDict);
-            } else if (obj instanceof List<?> nestedList
-                    && !nestedList.isEmpty()
-                    && nestedList.get(0) instanceof Object) {
-                try {
-                    @SuppressWarnings("unchecked")
-                    List<Object> objectList = (List<Object>) nestedList;
-                    copy.add(deepCopyTokens(objectList));
-                } catch (ClassCastException e) {
-                    copy.add(obj); // Fallback to shallow copy if cast fails
-                }
-            } else {
-                copy.add(obj); // Shallow copy for primitives/operators
-            }
+    private boolean isTesseractAvailable() {
+        try {
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
+                            .runCommandWithOutputHandling(Arrays.asList("tesseract", "--version"));
+            return result.getRc() == 0;
+        } catch (Exception e) {
+            return false;
         }
-        return copy;
     }
 
     private static boolean isFontSuitableForWidthCalculation(PDFont font) {
@@ -1027,15 +1064,43 @@ public class RedactionService {
         return res;
     }
 
-    private float safeGetStringWidth(PDFont font, String text) {
-        // Delegate to WidthCalculator; convert from user-space at fontSize=1 to font units
-        if (font == null || text == null || text.isEmpty()) return 0f;
-        try {
-            float widthAtSize1 = WidthCalculator.calculateAccurateWidth(font, text, 1.0f);
-            return widthAtSize1 * FONT_SCALE_FACTOR; // convert back to font units for callers
-        } catch (Exception e) {
-            return 0f;
+    private byte[] processWithOcrMyPdfForRestoration(
+            java.nio.file.Path inputPath, java.nio.file.Path outputPath, RedactPdfRequest request)
+            throws IOException, InterruptedException {
+        List<String> command =
+                Arrays.asList(
+                        "ocrmypdf",
+                        "--verbose",
+                        "1",
+                        "--output-type",
+                        "pdf",
+                        "--pdf-renderer",
+                        "sandwich",
+                        "--language",
+                        "eng",
+                        "--optimize",
+                        "0",
+                        "--jpeg-quality",
+                        "100",
+                        "--png-quality",
+                        "9",
+                        "--force-ocr",
+                        "--deskew",
+                        "--clean",
+                        "--clean-final",
+                        inputPath.toString(),
+                        outputPath.toString());
+        ProcessExecutorResult result =
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
+                        .runCommandWithOutputHandling(command);
+        if (result.getRc() != 0) {
+            throw new IOException(
+                    "OCRmyPDF restoration failed with return code: "
+                            + result.getRc()
+                            + ". Error: "
+                            + result.getMessages());
         }
+        return java.nio.file.Files.readAllBytes(outputPath);
     }
 
     private static boolean removeSemanticProperties(COSDictionary dict, boolean removeTU) {
@@ -1166,7 +1231,6 @@ public class RedactionService {
                 return WidthCalculator.calculateAccurateWidth(font, text, fontSize);
             }
         } catch (Exception e) {
-            // Width calculation failed
         }
         return 0f;
     }
@@ -1235,166 +1299,56 @@ public class RedactionService {
         }
     }
 
-    public boolean performTextReplacement(
-            PDDocument document,
-            Map<Integer, List<PDFText>> allFoundTextsByPage,
-            String[] listOfText,
-            boolean useRegex,
-            boolean wholeWordSearchBool) {
-        if (allFoundTextsByPage.isEmpty()) {
-            log.info("No text found to redact");
-            return false;
-        }
-        try {
-            Set<String> allSearchTerms =
-                    Arrays.stream(listOfText)
-                            .map(String::trim)
-                            .filter(s -> !s.isEmpty())
-                            .collect(Collectors.toSet());
-
-            log.info(
-                    "Starting text replacement with {} search terms: {}",
-                    allSearchTerms.size(),
-                    allSearchTerms);
-            log.info("Total pages in document: {}", document.getNumberOfPages());
-            log.info("Initial text found on {} pages", allFoundTextsByPage.size());
-
-            // Count initial instances
-            int initialTotalInstances =
-                    allFoundTextsByPage.values().stream().mapToInt(List::size).sum();
-            log.info("Total initial instances to redact: {}", initialTotalInstances);
-
-            int finalSweepCount = 0;
-            for (int sweep = 0; sweep < MAX_SWEEPS; sweep++) {
-                finalSweepCount = sweep + 1;
-                log.info("=== Starting sweep {} of {} ===", sweep + 1, MAX_SWEEPS);
-                int pagesProcessed = 0;
-                int totalModifications = 0;
-
-                for (int pageIndex = 0; pageIndex < document.getNumberOfPages(); pageIndex++) {
-                    PDPage page = document.getPages().get(pageIndex);
-                    List<PDFText> pageFoundTexts =
-                            allFoundTextsByPage.getOrDefault(pageIndex, List.of());
-
-                    log.debug(
-                            "Processing page {} - found {} instances",
-                            pageIndex + 1,
-                            pageFoundTexts.size());
-
-                    List<Object> filtered =
-                            createTokensWithoutTargetText(
-                                    document, page, allSearchTerms, useRegex, wholeWordSearchBool);
-                    writeFilteredContentStream(document, page, filtered);
-
-                    // Count modifications (rough estimate based on token count difference)
-                    int tokenDiff = Math.abs(filtered.size() - getOriginalTokenCount(page));
-                    totalModifications += tokenDiff;
-                    pagesProcessed++;
-
-                    log.debug("Page {} - token modifications: {}", pageIndex + 1, tokenDiff);
-                }
-
-                log.info(
-                        "Sweep {} completed - processed {} pages, total modifications: {}",
-                        sweep + 1,
-                        pagesProcessed,
-                        totalModifications);
-
-                // Check remaining targets
-                boolean stillContainsTargets =
-                        documentStillContainsTargets(
-                                document, allSearchTerms, useRegex, wholeWordSearchBool);
-
-                if (!stillContainsTargets) {
-                    log.info("SUCCESS: All targets removed after {} sweeps", sweep + 1);
-                    break;
-                } else {
-                    log.warn(
-                            "WARNING: Still contains targets after sweep {} - continuing...",
-                            sweep + 1);
-                }
-            }
-
-            // Final verification - run multiple times to catch any missed instances
-            boolean finalCheck = false;
-            for (int verifyAttempt = 0; verifyAttempt < 3; verifyAttempt++) {
-                log.info("Final verification attempt {} of 3", verifyAttempt + 1);
-                finalCheck =
-                        documentStillContainsTargets(
-                                document, allSearchTerms, useRegex, wholeWordSearchBool);
-
-                if (!finalCheck) {
-                    log.info(
-                            "Verification attempt {} passed - no targets found", verifyAttempt + 1);
-                    break;
-                } else {
-                    log.warn("Verification attempt {} found remaining targets", verifyAttempt + 1);
-                    if (verifyAttempt < 2) {
-                        log.info("Performing additional cleanup sweep due to verification failure");
-                        // Try one more sweep
-                        for (PDPage page : document.getPages()) {
-                            List<Object> additionalFiltered =
-                                    createTokensWithoutTargetText(
-                                            document,
-                                            page,
-                                            allSearchTerms,
-                                            useRegex,
-                                            wholeWordSearchBool);
-                            writeFilteredContentStream(document, page, additionalFiltered);
-                        }
+    private byte[] processWithTesseractForRestoration(
+            java.nio.file.Path inputPath, java.nio.file.Path outputPath, RedactPdfRequest request)
+            throws IOException, InterruptedException {
+        try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
+            java.io.File tempOutputDir = new java.io.File(tempDir.getPath().toFile(), "output");
+            java.io.File tempImagesDir = new java.io.File(tempDir.getPath().toFile(), "images");
+            java.io.File finalOutputFile =
+                    new java.io.File(tempDir.getPath().toFile(), "final_output.pdf");
+            tempOutputDir.mkdirs();
+            tempImagesDir.mkdirs();
+            try (PDDocument document = pdfDocumentFactory.load(inputPath.toFile())) {
+                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                int pageCount = document.getNumberOfPages();
+                PDFMergerUtility merger = new PDFMergerUtility();
+                merger.setDestinationFileName(finalOutputFile.toString());
+                for (int pageNum = 0; pageNum < pageCount; pageNum++) {
+                    BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 600);
+                    java.io.File imagePath =
+                            new java.io.File(tempImagesDir, "page_" + pageNum + ".png");
+                    ImageIO.write(image, "png", imagePath);
+                    List<String> command =
+                            Arrays.asList(
+                                    "tesseract",
+                                    imagePath.toString(),
+                                    new java.io.File(tempOutputDir, "page_" + pageNum).toString(),
+                                    "-l",
+                                    "eng",
+                                    "--dpi",
+                                    "600",
+                                    "--psm",
+                                    "1",
+                                    "pdf");
+                    ProcessExecutorResult result =
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
+                                    .runCommandWithOutputHandling(command);
+                    if (result.getRc() != 0) {
+                        throw new IOException(
+                                "Tesseract restoration failed with return code: " + result.getRc());
                     }
+                    java.io.File pageOutputPath =
+                            new java.io.File(tempOutputDir, "page_" + pageNum + ".pdf");
+                    merger.addSource(pageOutputPath);
                 }
+                merger.mergeDocuments(null);
+                java.nio.file.Files.copy(
+                        finalOutputFile.toPath(),
+                        outputPath,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
-
-            if (finalCheck) {
-                log.error(
-                        "FAILURE: Document still contains targets after {} sweeps and {} verification attempts. Falling back to visual redaction.",
-                        MAX_SWEEPS,
-                        3);
-                log.error("Remaining search terms: {}", allSearchTerms);
-
-                // Log detailed information about what was found
-                log.error("=== DETAILED FAILURE ANALYSIS ===");
-                for (int pageIdx = 0; pageIdx < document.getNumberOfPages(); pageIdx++) {
-                    for (String term : allSearchTerms) {
-                        try {
-                            TextFinder finder = new TextFinder(term, useRegex, wholeWordSearchBool);
-                            finder.setStartPage(pageIdx + 1);
-                            finder.setEndPage(pageIdx + 1);
-                            finder.getText(document);
-
-                            for (PDFText found : finder.getFoundTexts()) {
-                                if (found.getPageIndex() == pageIdx) {
-                                    log.error(
-                                            "REMAINING: '{}' found on page {} at position ({}, {})",
-                                            term,
-                                            pageIdx + 1,
-                                            found.getX1(),
-                                            found.getY1());
-                                }
-                            }
-                        } catch (Exception e) {
-                            log.error(
-                                    "Error during failure analysis for term '{}' on page {}: {}",
-                                    term,
-                                    pageIdx + 1,
-                                    e.getMessage());
-                        }
-                    }
-                }
-                log.error("=== END FAILURE ANALYSIS ===");
-
-                return true; // Return true to indicate fallback needed
-            } else {
-                log.info(
-                        "SUCCESS: All text redaction completed successfully after {} sweeps",
-                        finalSweepCount);
-                return false; // Return false to indicate success
-            }
-
-        } catch (Exception e) {
-            log.error("Exception during text replacement: {}", e.getMessage(), e);
-            return true;
+            return java.nio.file.Files.readAllBytes(outputPath);
         }
     }
 
@@ -1460,22 +1414,16 @@ public class RedactionService {
                 }
             }
         } catch (Exception e) {
-            // Failed to add spacing adjustment
         }
     }
 
-    private static TokenModificationResult updateOperatorSafely(
-            List<Object> tokens, int tokenIndex, String originalOperator) {
+    private float safeGetStringWidth(PDFont font, String text) {
+        if (font == null || text == null || text.isEmpty()) return 0f;
         try {
-            int operatorIndex = tokenIndex + 1;
-            if (isValidTokenIndex(tokens, operatorIndex)
-                    && tokens.get(operatorIndex) instanceof Operator op
-                    && op.getName().equals(originalOperator)) {
-                tokens.set(operatorIndex, Operator.getOperator("TJ"));
-            }
-            return TokenModificationResult.success();
+            float widthAtSize1 = WidthCalculator.calculateAccurateWidth(font, text, 1.0f);
+            return widthAtSize1 * FONT_SCALE_FACTOR;
         } catch (Exception e) {
-            return TokenModificationResult.success(); // Non-critical failure
+            return 0f;
         }
     }
 
@@ -1519,9 +1467,7 @@ public class RedactionService {
                     float adjustment = wOrig - wMod;
                     if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
                         float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
-                        // If next token is a number, combine; otherwise insert new number
                         if (i + 1 < size && redactedArray.get(i + 1) instanceof COSNumber num) {
-                            // Skip adding the next separately and add combined value
                             i++;
                             float combined = num.floatValue() + kerning;
                             out.add(new COSFloat(combined));
@@ -1661,7 +1607,6 @@ public class RedactionService {
         List<TextSegment> textSegments = extractTextSegments(page, tokens, this.aggressiveMode);
         log.debug("Extracted {} text segments from tokens", textSegments.size());
 
-        // Log extracted text content for debugging
         if (!textSegments.isEmpty()) {
             StringBuilder allText = new StringBuilder();
             boolean hasProblematicChars = false;
@@ -1733,9 +1678,161 @@ public class RedactionService {
         return problematicRatio > 0.3;
     }
 
-    private static WipeResult wipeAllSemanticTextInTokens(List<Object> tokens) {
-        return wipeAllSemanticTextInTokens(
-                tokens, true); // Default to removing TU for backward compatibility
+    public boolean performTextReplacement(
+            PDDocument document,
+            Map<Integer, List<PDFText>> allFoundTextsByPage,
+            String[] listOfText,
+            boolean useRegex,
+            boolean wholeWordSearchBool) {
+        if (allFoundTextsByPage.isEmpty()) {
+            log.info("No text found to redact");
+            return false;
+        }
+        try {
+            Set<String> allSearchTerms =
+                    Arrays.stream(listOfText)
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .collect(Collectors.toSet());
+
+            log.info(
+                    "Starting text replacement with {} search terms: {}",
+                    allSearchTerms.size(),
+                    allSearchTerms);
+            log.info("Total pages in document: {}", document.getNumberOfPages());
+            log.info("Initial text found on {} pages", allFoundTextsByPage.size());
+
+            int initialTotalInstances =
+                    allFoundTextsByPage.values().stream().mapToInt(List::size).sum();
+            log.info("Total initial instances to redact: {}", initialTotalInstances);
+
+            int finalSweepCount = 0;
+            for (int sweep = 0; sweep < MAX_SWEEPS; sweep++) {
+                finalSweepCount = sweep + 1;
+                log.info("=== Starting sweep {} of {} ===", sweep + 1, MAX_SWEEPS);
+                int pagesProcessed = 0;
+                int totalModifications = 0;
+
+                for (int pageIndex = 0; pageIndex < document.getNumberOfPages(); pageIndex++) {
+                    PDPage page = document.getPages().get(pageIndex);
+                    List<PDFText> pageFoundTexts =
+                            allFoundTextsByPage.getOrDefault(pageIndex, List.of());
+
+                    log.debug(
+                            "Processing page {} - found {} instances",
+                            pageIndex + 1,
+                            pageFoundTexts.size());
+
+                    List<Object> filtered =
+                            createTokensWithoutTargetText(
+                                    document, page, allSearchTerms, useRegex, wholeWordSearchBool);
+                    writeFilteredContentStream(document, page, filtered);
+
+                    int tokenDiff = Math.abs(filtered.size() - getOriginalTokenCount(page));
+                    totalModifications += tokenDiff;
+                    pagesProcessed++;
+
+                    log.debug("Page {} - token modifications: {}", pageIndex + 1, tokenDiff);
+                }
+
+                log.info(
+                        "Sweep {} completed - processed {} pages, total modifications: {}",
+                        sweep + 1,
+                        pagesProcessed,
+                        totalModifications);
+
+                boolean stillContainsTargets =
+                        documentStillContainsTargets(
+                                document, allSearchTerms, useRegex, wholeWordSearchBool);
+
+                if (!stillContainsTargets) {
+                    log.info("SUCCESS: All targets removed after {} sweeps", sweep + 1);
+                    break;
+                } else {
+                    log.warn(
+                            "WARNING: Still contains targets after sweep {} - continuing...",
+                            sweep + 1);
+                }
+            }
+
+            boolean finalCheck = false;
+            for (int verifyAttempt = 0; verifyAttempt < 3; verifyAttempt++) {
+                log.info("Final verification attempt {} of 3", verifyAttempt + 1);
+                finalCheck =
+                        documentStillContainsTargets(
+                                document, allSearchTerms, useRegex, wholeWordSearchBool);
+
+                if (!finalCheck) {
+                    log.info(
+                            "Verification attempt {} passed - no targets found", verifyAttempt + 1);
+                    break;
+                } else {
+                    log.warn("Verification attempt {} found remaining targets", verifyAttempt + 1);
+                    if (verifyAttempt < 2) {
+                        log.info("Performing additional cleanup sweep due to verification failure");
+                        for (PDPage page : document.getPages()) {
+                            List<Object> additionalFiltered =
+                                    createTokensWithoutTargetText(
+                                            document,
+                                            page,
+                                            allSearchTerms,
+                                            useRegex,
+                                            wholeWordSearchBool);
+                            writeFilteredContentStream(document, page, additionalFiltered);
+                        }
+                    }
+                }
+            }
+
+            if (finalCheck) {
+                log.error(
+                        "FAILURE: Document still contains targets after {} sweeps and {} verification attempts. Falling back to visual redaction with OCR restoration.",
+                        MAX_SWEEPS,
+                        3);
+                log.error("Remaining search terms: {}", allSearchTerms);
+
+                log.error("=== DETAILED FAILURE ANALYSIS ===");
+                for (int pageIdx = 0; pageIdx < document.getNumberOfPages(); pageIdx++) {
+                    for (String term : allSearchTerms) {
+                        try {
+                            TextFinder finder = new TextFinder(term, useRegex, wholeWordSearchBool);
+                            finder.setStartPage(pageIdx + 1);
+                            finder.setEndPage(pageIdx + 1);
+                            finder.getText(document);
+
+                            for (PDFText found : finder.getFoundTexts()) {
+                                if (found.getPageIndex() == pageIdx) {
+                                    log.error(
+                                            "REMAINING: '{}' found on page {} at position ({}, {})",
+                                            term,
+                                            pageIdx + 1,
+                                            found.getX1(),
+                                            found.getY1());
+                                }
+                            }
+                        } catch (Exception e) {
+                            log.error(
+                                    "Error during failure analysis for term '{}' on page {}: {}",
+                                    term,
+                                    pageIdx + 1,
+                                    e.getMessage());
+                        }
+                    }
+                }
+                log.error("=== END FAILURE ANALYSIS ===");
+
+                return true;
+            } else {
+                log.info(
+                        "SUCCESS: All text redaction completed successfully after {} sweeps",
+                        finalSweepCount);
+                return false;
+            }
+
+        } catch (Exception e) {
+            log.error("Exception during text replacement: {}", e.getMessage(), e);
+            return true;
+        }
     }
 
     private COSArray createRedactedTJArray(
@@ -1905,7 +2002,6 @@ public class RedactionService {
             log.warn("3. Search terms not matching extracted text");
             log.warn("4. Whole word search filtering out matches");
 
-            // Log some debugging info
             if (!segments.isEmpty()) {
                 log.warn("Sample segment text: '{}'", segments.get(0).getText());
                 log.warn("Target words: {}", targetWords);
@@ -2010,7 +2106,6 @@ public class RedactionService {
                         log.debug("Redacting TJ operator at token index {}", segment.tokenIndex);
                         COSArray redacted =
                                 redactTJArrayByDecodedRanges(segment.font, arr, segMatches);
-                        // Inject kerning adjustments per string element to preserve layout
                         COSArray withKerning = buildKerningAdjustedTJArray(arr, redacted, segment);
                         newTokens.set(segment.tokenIndex, withKerning);
                         totalModifications++;
@@ -2529,7 +2624,6 @@ public class RedactionService {
             try {
                 performEmergencyFallback(tokens, segment.tokenIndex);
             } catch (Exception emergencyError) {
-                // Final fallback failed - continue processing
             }
         }
     }
@@ -2562,7 +2656,7 @@ public class RedactionService {
         if (!this.aggressiveMode
                 && segment.getFont() != null
                 && !TextEncodingHelper.isTextSegmentRemovable(segment.getFont(), originalText)) {
-            newArray.add(cosString); // Keep original COSString to preserve encoding
+            newArray.add(cosString);
             return;
         }
 
@@ -2572,7 +2666,7 @@ public class RedactionService {
         List<MatchRange> sortedMatches =
                 matches.stream().sorted(Comparator.comparingInt(MatchRange::getStartPos)).toList();
 
-        int cumulativeOffset = 0; // Track cumulative text changes
+        int cumulativeOffset = 0;
 
         for (MatchRange match : sortedMatches) {
             int stringStartInPage = segment.getStartPos() + textOffsetInSegment;
@@ -2668,7 +2762,7 @@ public class RedactionService {
     }
 
     private int wipeAllTextInResources(PDDocument document, PDResources resources) {
-        int totalMods = 0; // aggregated but currently not returned to caller
+        int totalMods = 0;
         try {
             totalMods += wipeAllSemanticTextInProperties(resources);
             for (COSName xobjName : resources.getXObjectNames()) {
@@ -2685,7 +2779,6 @@ public class RedactionService {
         return totalMods;
     }
 
-    // Helper classes
     private record WidthMeasurement(float width, boolean valid) {
 
         public static WidthMeasurement invalid() {

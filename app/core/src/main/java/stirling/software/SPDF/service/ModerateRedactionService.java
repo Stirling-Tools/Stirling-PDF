@@ -6,11 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
+@Service
 class ModerateRedactionService implements RedactionModeStrategy {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -46,17 +48,9 @@ class ModerateRedactionService implements RedactionModeStrategy {
                             ? "#000000"
                             : request.getRedactColor();
             if (fallbackToBoxOnly) {
-                fallback = pdfDocumentFactory.load(request.getFileInput());
-                allFound =
-                        RedactionService.findTextToRedact(
-                                fallback, listOfText, useRegex, wholeWord);
-                return RedactionService.finalizeRedaction(
-                        fallback,
-                        allFound,
-                        effectiveColor,
-                        request.getCustomPadding(),
-                        request.getConvertPDFToImage(),
-                        false);
+                // Use the new visual redaction with OCR restoration fallback
+                return helper.performVisualRedactionWithOcrRestoration(
+                        request, listOfText, useRegex, wholeWord);
             }
             return RedactionService.finalizeRedaction(
                     doc,
