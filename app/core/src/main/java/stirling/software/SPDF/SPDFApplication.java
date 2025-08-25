@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.UrlUtils;
 
 @Slf4j
@@ -44,16 +43,15 @@ public class SPDFApplication {
 
     private final AppConfig appConfig;
     private final Environment env;
-    private final ApplicationProperties applicationProperties;
-
-    // private final WebBrowser webBrowser; // Removed - desktop UI eliminated
+    private final WebBrowser webBrowser;
 
     public SPDFApplication(
-            AppConfig appConfig, Environment env, ApplicationProperties applicationProperties) {
+            AppConfig appConfig,
+            Environment env,
+            @Autowired(required = false) WebBrowser webBrowser) {
         this.appConfig = appConfig;
         this.env = env;
-        this.applicationProperties = applicationProperties;
-        // this.webBrowser = webBrowser; // Removed - desktop UI eliminated
+        this.webBrowser = webBrowser;
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {

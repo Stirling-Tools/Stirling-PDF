@@ -57,7 +57,6 @@ public class AppConfig {
         return v2Enabled;
     }
 
-    /* Commented out Thymeleaf template engine bean - to be removed when frontend migration is complete
     @Bean
     @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")
     public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {

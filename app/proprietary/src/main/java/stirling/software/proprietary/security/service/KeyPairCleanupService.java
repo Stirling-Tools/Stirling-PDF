@@ -8,7 +8,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+<<<<<<< HEAD
 import org.springframework.beans.factory.annotation.Autowired;
+=======
+>>>>>>> origin
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -30,7 +33,10 @@ public class KeyPairCleanupService {
     private final KeyPersistenceService keyPersistenceService;
     private final ApplicationProperties.Security.Jwt jwtProperties;
 
+<<<<<<< HEAD
     @Autowired
+=======
+>>>>>>> origin
     public KeyPairCleanupService(
             KeyPersistenceService keyPersistenceService,
             ApplicationProperties applicationProperties) {

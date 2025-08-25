@@ -7,15 +7,11 @@
       "Bash(grep:*)",
       "Bash(cat:*)",
       "Bash(find:*)",
-      "Bash(npm test)",
-      "Bash(npm test:*)",
-      "Bash(ls:*)",
-      "Bash(npx tsc:*)",
-      "Bash(node:*)",
-      "Bash(npm run dev:*)",
-      "Bash(sed:*)",
-      "Bash(cp:*)",
-      "Bash(rm:*)"
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(strings:*)",
+      "Bash(pkill:*)",
+      "Bash(true)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
