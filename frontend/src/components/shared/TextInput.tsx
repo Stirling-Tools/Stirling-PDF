@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { useMantineColorScheme } from '@mantine/core';
+import LocalIcon from './LocalIcon';
 import styles from './textInput/TextInput.module.css';
 
 /**
@@ -96,7 +97,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
           style={{ color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382' }}
           aria-label="Clear input"
         >
-          <span className="material-symbols-rounded">close</span>
+          <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
         </button>
       )}
     </div>

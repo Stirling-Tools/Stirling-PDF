@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { ActionIcon, Divider, Popover } from '@mantine/core';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import LocalIcon from './LocalIcon';
 import './rightRail/RightRail.css';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useRightRail } from '../../contexts/RightRailContext';
@@ -234,9 +234,7 @@ export default function RightRail() {
                   onClick={handleSelectAll}
                   disabled={currentView === 'viewer' || totalItems === 0 || selectedCount === totalItems}
                 >
-                  <span className="material-symbols-rounded">
-                    select_all
-                  </span>
+                  <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
               </div>
             </Tooltip>
@@ -251,9 +249,7 @@ export default function RightRail() {
                   onClick={handleDeselectAll}
                   disabled={currentView === 'viewer' || selectedCount === 0}
                 >
-                  <span className="material-symbols-rounded">
-                    crop_square
-                  </span>
+                  <LocalIcon icon="crop-square-outline" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
               </div>
             </Tooltip>
@@ -273,9 +269,7 @@ export default function RightRail() {
                           disabled={!pageControlsVisible || totalItems === 0}
                           aria-label={typeof t === 'function' ? t('rightRail.selectByNumber', 'Select by Page Numbers') : 'Select by Page Numbers'}
                         >
-                          <span className="material-symbols-rounded">
-                            pin_end
-                          </span>
+                          <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
                         </ActionIcon>
                       </div>
                   </Popover.Target>
@@ -309,7 +303,7 @@ export default function RightRail() {
                       disabled={!pageControlsVisible || (Array.isArray(selectedPageNumbers) ? selectedPageNumbers.length === 0 : true)}
                       aria-label={typeof t === 'function' ? t('rightRail.deleteSelected', 'Delete Selected Pages') : 'Delete Selected Pages'}
                     >
-                      <span className="material-symbols-rounded">delete</span>
+                      <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />
                     </ActionIcon>
                   </div>
               </div>
@@ -331,7 +325,7 @@ export default function RightRail() {
                     (currentView === 'pageEditor' && (activeFiles.length === 0 || !pageEditorFunctions?.closePdf))
                   }
                 >
-                  <CloseRoundedIcon />
+                  <LocalIcon icon="close-rounded" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
               </div>
             </Tooltip>
@@ -349,7 +343,7 @@ export default function RightRail() {
               className="right-rail-icon"
               onClick={toggleTheme}
             >
-              <span className="material-symbols-rounded">contrast</span>
+              <LocalIcon icon="contrast" width="1.5rem" height="1.5rem" />
             </ActionIcon>
           </Tooltip>
 
@@ -368,9 +362,7 @@ export default function RightRail() {
                 onClick={handleExportAll}
                 disabled={currentView === 'viewer' || totalItems === 0}
               >
-                <span className="material-symbols-rounded">
-                  download
-                </span>
+                <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
               </ActionIcon>
             </div>
           </Tooltip>

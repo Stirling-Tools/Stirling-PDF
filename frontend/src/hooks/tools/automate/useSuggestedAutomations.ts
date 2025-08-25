@@ -1,10 +1,14 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import StarIcon from '@mui/icons-material/Star';
-import CompressIcon from '@mui/icons-material/Compress';
-import SecurityIcon from '@mui/icons-material/Security';
-import TextFieldsIcon from '@mui/icons-material/TextFields';
+import React from 'react';
+import LocalIcon from '../../../components/shared/LocalIcon';
 import { SuggestedAutomation } from '../../../types/automation';
+
+// Create icon components
+const CompressIcon = () => React.createElement(LocalIcon, { icon: 'compress', width: '1.5rem', height: '1.5rem' });
+const TextFieldsIcon = () => React.createElement(LocalIcon, { icon: 'text-fields', width: '1.5rem', height: '1.5rem' });
+const SecurityIcon = () => React.createElement(LocalIcon, { icon: 'security', width: '1.5rem', height: '1.5rem' });
+const StarIcon = () => React.createElement(LocalIcon, { icon: 'star', width: '1.5rem', height: '1.5rem' });
 
 export function useSuggestedAutomations(): SuggestedAutomation[] {
   const { t } = useTranslation();
