@@ -22,6 +22,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "@atlaskit/pragmatic-drag-and-drop",
+            "moduleUrl": "https://github.com/atlassian/pragmatic-drag-and-drop",
+            "moduleVersion": "1.7.4",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "@babel/code-frame",
             "moduleUrl": "https://github.com/babel/babel",
             "moduleVersion": "7.27.1",
@@ -59,7 +66,7 @@
         {
             "moduleName": "@babel/parser",
             "moduleUrl": "https://github.com/babel/babel",
-            "moduleVersion": "7.27.3",
+            "moduleVersion": "7.28.3",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
@@ -87,7 +94,7 @@
         {
             "moduleName": "@babel/types",
             "moduleUrl": "https://github.com/babel/babel",
-            "moduleVersion": "7.27.3",
+            "moduleVersion": "7.28.2",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
@@ -214,6 +221,20 @@
             "moduleName": "@floating-ui/utils",
             "moduleUrl": "https://github.com/floating-ui/floating-ui",
             "moduleVersion": "0.2.9",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@iconify/react",
+            "moduleUrl": "https://github.com/iconify/iconify",
+            "moduleVersion": "6.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@iconify/types",
+            "moduleUrl": "https://github.com/iconify/iconify",
+            "moduleVersion": "2.0.0",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
@@ -400,6 +421,20 @@
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
         {
+            "moduleName": "@tanstack/react-virtual",
+            "moduleUrl": "https://github.com/TanStack/virtual",
+            "moduleVersion": "3.13.12",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@tanstack/virtual-core",
+            "moduleUrl": "https://github.com/TanStack/virtual",
+            "moduleVersion": "3.13.12",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
             "moduleName": "@testing-library/dom",
             "moduleUrl": "https://github.com/testing-library/dom-testing-library",
             "moduleVersion": "10.4.0",
@@ -564,6 +599,13 @@
             "moduleName": "balanced-match",
             "moduleUrl": "https://github.com/juliangruber/balanced-match",
             "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "bind-event-listener",
+            "moduleUrl": "https://github.com/alexreardon/bind-event-listener",
+            "moduleVersion": "3.0.0",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
@@ -1247,13 +1289,6 @@
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
         {
-            "moduleName": "material-symbols",
-            "moduleUrl": "https://github.com/marella/material-symbols",
-            "moduleVersion": "0.33.0",
-            "moduleLicense": "Apache-2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        {
             "moduleName": "math-intrinsics",
             "moduleUrl": "https://github.com/es-shims/math-intrinsics",
             "moduleVersion": "1.1.0",
@@ -1494,7 +1529,7 @@
         {
             "moduleName": "postcss",
             "moduleUrl": "https://github.com/postcss/postcss",
-            "moduleVersion": "8.5.3",
+            "moduleVersion": "8.5.6",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
@@ -1523,6 +1558,13 @@
             "moduleName": "proxy-from-env",
             "moduleUrl": "https://github.com/Rob--W/proxy-from-env",
             "moduleVersion": "1.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "raf-schd",
+            "moduleUrl": "https://github.com/alexreardon/raf-schd",
+            "moduleVersion": "4.0.3",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
