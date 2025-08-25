@@ -4,18 +4,25 @@ import { Dropzone } from '@mantine/dropzone';
 import AddIcon from '@mui/icons-material/Add';
 import { useTranslation } from 'react-i18next';
 import { useFileHandler } from '../../hooks/useFileHandler';
+import { useFilesModalContext } from '../../contexts/FilesModalContext';
 
 const LandingPage = () => {
   const { addMultipleFiles } = useFileHandler();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { colorScheme } = useMantineColorScheme();
   const { t } = useTranslation();
+  const { openFilesModal } = useFilesModalContext();
+  const [isUploadHover, setIsUploadHover] = React.useState(false);
 
   const handleFileDrop = async (files: File[]) => {
     await addMultipleFiles(files);
   };
 
-  const handleAddFilesClick = () => {
+  const handleOpenFilesModal = () => {
+    openFilesModal();
+  };
+
+  const handleNativeUploadClick = () => {
     fileInputRef.current?.click();
   };
 
@@ -44,7 +51,7 @@ const LandingPage = () => {
           borderRadius: '0.5rem 0.5rem 0 0',
           filter: 'var(--drop-shadow-filter)',
           backgroundColor: 'var(--landing-paper-bg)',
-          transition: 'background-color 0.2s ease',
+          transition: 'background-color 0.4s ease',
         }}
         activateOnClick={false}
         styles={{
@@ -99,26 +106,73 @@ const LandingPage = () => {
               />
             </Group>
 
-            {/* Add Files Button */}
-            <Button
+            {/* Add Files + Native Upload Buttons */}
+            <div
               style={{
-                backgroundColor: 'var(--landing-button-bg)',
-                color: 'var(--landing-button-color)',
-                border: '1px solid var(--landing-button-border)',
-                borderRadius: '2rem',
-                height: '38px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.6rem',
                 width: '80%',
                 marginTop: '0.8rem',
-                marginBottom: '0.8rem',
-
+                marginBottom: '0.8rem'
               }}
-              onClick={handleAddFilesClick}
+              onMouseLeave={() => setIsUploadHover(false)}
             >
-              <AddIcon className="text-[var(--accent-interactive)]" />
-              <span>
-                {t('fileUpload.uploadFiles', 'Upload Files')}
-              </span>
-            </Button>
+              <Button
+                style={{
+                  backgroundColor: 'var(--landing-button-bg)',
+                  color: 'var(--landing-button-color)',
+                  border: '1px solid var(--landing-button-border)',
+                  borderRadius: '2rem',
+                  height: '38px',
+                  paddingLeft: isUploadHover ? 0 : '1rem',
+                  paddingRight: isUploadHover ? 0 : '1rem',
+                  width: isUploadHover ? '58px' : 'calc(100% - 58px - 0.6rem)',
+                  minWidth: isUploadHover ? '58px' : undefined,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'width .5s ease, padding .5s ease'
+                }}
+                onClick={handleOpenFilesModal}
+                onMouseEnter={() => setIsUploadHover(false)}
+              >
+                <AddIcon className="text-[var(--accent-interactive)]" />
+                {!isUploadHover && (
+                  <span>
+                    {t('landing.addFiles', 'Add Files')}
+                  </span>
+                )}
+              </Button>
+              <Button
+                aria-label="Upload"
+                style={{
+                  backgroundColor: 'var(--landing-button-bg)',
+                  color: 'var(--landing-button-color)',
+                  border: '1px solid var(--landing-button-border)',
+                  borderRadius: '1rem',
+                  height: '38px',
+                  width: isUploadHover ? 'calc(100% - 50px)' : '58px',
+                  minWidth: '58px',
+                  paddingLeft: isUploadHover ? '1rem' : 0,
+                  paddingRight: isUploadHover ? '1rem' : 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'width .5s ease, padding .5s ease'
+                }}
+                onClick={handleNativeUploadClick}
+                onMouseEnter={() => setIsUploadHover(true)}
+              >
+                <span className="material-symbols-rounded" style={{ fontSize: '1.25rem', color: 'var(--accent-interactive)' }}>upload</span>
+                {isUploadHover && (
+                  <span style={{ marginLeft: '.5rem' }}>
+                    {t('landing.uploadFromComputer', 'Upload from computer')}
+                  </span>
+                )}
+              </Button>
+            </div>
 
             {/* Hidden file input for native file picker */}
             <input
