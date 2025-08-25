@@ -1,14 +1,13 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { Text, Stack, Group, ActionIcon } from '@mantine/core';
-import DeleteIcon from '@mui/icons-material/Delete';
-import SettingsIcon from '@mui/icons-material/Settings';
-import CloseIcon from '@mui/icons-material/Close';
-import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
-import { AutomationTool } from '../../../types/automation';
-import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
-import ToolSelector from './ToolSelector';
-import AutomationEntry from './AutomationEntry';
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { Text, Stack, Group, ActionIcon } from "@mantine/core";
+import SettingsIcon from "@mui/icons-material/Settings";
+import CloseIcon from "@mui/icons-material/Close";
+import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
+import { AutomationTool } from "../../../types/automation";
+import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
+import ToolSelector from "./ToolSelector";
+import AutomationEntry from "./AutomationEntry";
 
 interface ToolListProps {
   tools: AutomationTool[];
@@ -29,35 +28,39 @@ export default function ToolList({
   onToolConfigure,
   onToolAdd,
   getToolName,
-  getToolDefaultParameters
+  getToolDefaultParameters,
 }: ToolListProps) {
   const { t } = useTranslation();
 
   const handleToolSelect = (index: number, newOperation: string) => {
     const defaultParams = getToolDefaultParameters(newOperation);
-    
+
     onToolUpdate(index, {
       operation: newOperation,
       name: getToolName(newOperation),
       configured: false,
-      parameters: defaultParams
+      parameters: defaultParams,
     });
   };
 
   return (
     <div>
-      <Text size="sm" fw={500} mb="xs" style={{ color: 'var(--mantine-color-text)' }}>
-        {t('automate.creation.tools.selected', 'Selected Tools')} ({tools.length})
+      <Text size="sm" fw={500} mb="xs" style={{ color: "var(--mantine-color-text)" }}>
+        {t("automate.creation.tools.selected", "Selected Tools")} ({tools.length})
       </Text>
       <Stack gap="0">
         {tools.map((tool, index) => (
           <React.Fragment key={tool.id}>
             <div
               style={{
-                border: '1px solid var(--mantine-color-gray-2)',
-                borderRadius: 'var(--mantine-radius-sm)',
-                position: 'relative',
-                padding: 'var(--mantine-spacing-xs)'
+                border: "1px solid var(--mantine-color-gray-2)",
+                borderRadius: tool.operation && !tool.configured
+                  ? "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0"
+                  : "var(--mantine-radius-lg)",
+                backgroundColor: "var(--mantine-color-gray-2)",
+                position: "relative",
+                padding: "var(--mantine-spacing-xs)",
+                borderBottomWidth: tool.operation && !tool.configured ? "0" : "1px",
               }}
             >
               {/* Delete X in top right */}
@@ -65,26 +68,26 @@ export default function ToolList({
                 variant="subtle"
                 size="xs"
                 onClick={() => onToolRemove(index)}
-                title={t('automate.creation.tools.remove', 'Remove tool')}
+                title={t("automate.creation.tools.remove", "Remove tool")}
                 style={{
-                  position: 'absolute',
-                  top: '4px',
-                  right: '4px',
+                  position: "absolute",
+                  top: "4px",
+                  right: "4px",
                   zIndex: 1,
-                  color: 'var(--mantine-color-gray-6)'
+                  color: "var(--mantine-color-gray-6)",
                 }}
               >
-                <CloseIcon style={{ fontSize: 12 }} />
+                <CloseIcon style={{ fontSize: 16 }} />
               </ActionIcon>
 
-              <div style={{ paddingRight: '1.25rem' }}>
+              <div style={{ paddingRight: "1.25rem" }}>
                 {/* Tool Selection Dropdown with inline settings cog */}
                 <Group gap="xs" align="center" wrap="nowrap">
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <ToolSelector
                       key={`tool-selector-${tool.id}`}
                       onSelect={(newOperation) => handleToolSelect(index, newOperation)}
-                      excludeTools={['automate']}
+                      excludeTools={["automate"]}
                       toolRegistry={toolRegistry}
                       selectedValue={tool.operation}
                       placeholder={tool.name}
@@ -97,26 +100,37 @@ export default function ToolList({
                       variant="subtle"
                       size="sm"
                       onClick={() => onToolConfigure(index)}
-                      title={t('automate.creation.tools.configure', 'Configure tool')}
-                      style={{ color: 'var(--mantine-color-gray-6)' }}
+                      title={t("automate.creation.tools.configure", "Configure tool")}
+                      style={{ color: "var(--mantine-color-gray-6)" }}
                     >
                       <SettingsIcon style={{ fontSize: 16 }} />
                     </ActionIcon>
                   )}
                 </Group>
-
-                {/* Configuration status underneath */}
-                {tool.operation && !tool.configured && (
-                  <Text pl="md" size="xs" c="dimmed" mt="xs">
-                    {t('automate.creation.tools.notConfigured', "! Not Configured")}
-                  </Text>
-                )}
               </div>
             </div>
-
+            {/* Configuration status underneath */}
+            {tool.operation && !tool.configured && (
+              <div
+                style={{
+                  width: "100%",
+                  border: "1px solid var(--mantine-color-gray-2)",
+                  borderTop: "none",
+                  borderRadius: "0 0 var(--mantine-radius-lg) var(--mantine-radius-lg)",
+                  backgroundColor: "var(--active-bg)",
+                  padding: "var(--mantine-spacing-xs)",
+                }}
+              >
+                <Text pl="md" size="xs" >
+                  {t("automate.creation.tools.notConfigured", "! Not Configured")}
+                </Text>
+              </div>
+            )}
             {index < tools.length - 1 && (
-              <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                <Text size="xs" c="dimmed">↓</Text>
+              <div style={{ textAlign: "center", padding: "8px 0" }}>
+                <Text size="xs" c="dimmed">
+                  ↓
+                </Text>
               </div>
             )}
           </React.Fragment>
@@ -124,19 +138,23 @@ export default function ToolList({
 
         {/* Arrow before Add Tool Button */}
         {tools.length > 0 && (
-          <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <Text size="xs" c="dimmed">↓</Text>
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <Text size="xs" c="dimmed">
+              ↓
+            </Text>
           </div>
         )}
 
         {/* Add Tool Button */}
-        <div style={{
-          border: '1px solid var(--mantine-color-gray-2)',
-          borderRadius: 'var(--mantine-radius-sm)',
-          overflow: 'hidden'
-        }}>
+        <div
+          style={{
+            border: "1px solid var(--mantine-color-gray-2)",
+            borderRadius: "var(--mantine-radius-sm)",
+            overflow: "hidden",
+          }}
+        >
           <AutomationEntry
-            title={t('automate.creation.tools.addTool', 'Add Tool')}
+            title={t("automate.creation.tools.addTool", "Add Tool")}
             badgeIcon={AddCircleOutline}
             operations={[]}
             onClick={onToolAdd}

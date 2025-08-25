@@ -9,9 +9,10 @@ interface ToolButtonProps {
   tool: ToolRegistryEntry;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  rounded?: boolean;
 }
 
-const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect }) => {
+const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, rounded = false }) => {
   const handleClick = (id: string) => {
     if (tool.link) {
       // Open external link in new tab
@@ -33,7 +34,17 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
         fullWidth
         justify="flex-start"
         className="tool-button"
-        styles={{ root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)" } }}
+        styles={{ 
+          root: { 
+            borderRadius: rounded ? 'var(--mantine-radius-lg)' : 0, 
+            color: "var(--tools-text-and-icon-color)",
+            ...(rounded && {
+              '&:hover': {
+                borderRadius: 'var(--mantine-radius-lg)',
+              }
+            })
+          } 
+        }}
       >
         <FitText
           text={tool.name}
