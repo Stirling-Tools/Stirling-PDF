@@ -293,7 +293,6 @@ const PageEditor = ({
     // If equal (50/50), default to adding splits
     const shouldRemoveSplits = existingSplitsCount > noSplitsCount;
     
-    console.log(`Smart split toggle: ${existingSplitsCount} with splits, ${noSplitsCount} without splits → will ${shouldRemoveSplits ? 'remove' : 'add'} splits`);
 
     const newSplitPositions = new Set(splitPositions);
     
@@ -320,32 +319,50 @@ const PageEditor = ({
   const handleSplitAll = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
 
-    console.log('Toggle split markers at selected page positions:', selectedPageNumbers);
-
-    // Convert page numbers to positions (0-based indices)
-    const positions: number[] = [];
+    // Convert selected page numbers to split positions (0-based indices)
+    const selectedPositions: number[] = [];
     selectedPageNumbers.forEach(pageNum => {
       const pageIndex = displayDocument.pages.findIndex(p => p.pageNumber === pageNum);
       if (pageIndex !== -1 && pageIndex < displayDocument.pages.length - 1) {
         // Only allow splits before the last page
-        positions.push(pageIndex);
+        selectedPositions.push(pageIndex);
       }
     });
 
-    if (positions.length > 0) {
-      const bulkSplitCommand = new BulkSplitCommand(
-        positions,
-        () => splitPositions,
-        setSplitPositions
-      );
-      undoManagerRef.current.executeCommand(bulkSplitCommand);
+    if (selectedPositions.length === 0) return;
+
+    // Smart toggle logic: follow the majority, default to adding splits if equal
+    const existingSplitsCount = selectedPositions.filter(pos => splitPositions.has(pos)).length;
+    const noSplitsCount = selectedPositions.length - existingSplitsCount;
+    
+    // Remove splits only if majority already have splits
+    // If equal (50/50), default to adding splits
+    const shouldRemoveSplits = existingSplitsCount > noSplitsCount;
+    
+    const newSplitPositions = new Set(splitPositions);
+    
+    if (shouldRemoveSplits) {
+      // Remove splits from all selected positions
+      selectedPositions.forEach(pos => newSplitPositions.delete(pos));
+    } else {
+      // Add splits to all selected positions
+      selectedPositions.forEach(pos => newSplitPositions.add(pos));
     }
-  }, [selectedPageNumbers, displayDocument, splitPositions]);
+
+    // Create a custom command that sets the final state directly
+    const smartSplitCommand = {
+      execute: () => setSplitPositions(newSplitPositions),
+      undo: () => setSplitPositions(splitPositions),
+      description: shouldRemoveSplits 
+        ? `Remove ${selectedPositions.length} split(s)` 
+        : `Add ${selectedPositions.length - existingSplitsCount} split(s)`
+    };
+
+    undoManagerRef.current.executeCommand(smartSplitCommand);
+  }, [selectedPageNumbers, displayDocument, splitPositions, setSplitPositions]);
 
   const handlePageBreak = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
-
-    console.log('Insert page breaks after selected pages:', selectedPageNumbers);
 
     const pageBreakCommand = new PageBreakCommand(
       selectedPageNumbers,
@@ -358,8 +375,6 @@ const PageEditor = ({
 
   const handlePageBreakAll = useCallback(() => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
-
-    console.log('Insert page breaks after selected pages:', selectedPageNumbers);
 
     const pageBreakCommand = new PageBreakCommand(
       selectedPageNumbers,
@@ -440,7 +455,6 @@ const PageEditor = ({
     setExportLoading(true);
     try {
       // Step 1: Apply DOM changes to document state first
-      console.log('Applying DOM changes before export...');
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
         mergedPdfDocument || displayDocument, // Original order
         displayDocument, // Current display order (includes reordering)
@@ -457,7 +471,6 @@ const PageEditor = ({
       }).filter(id => id);
 
       // Step 3: Export with pdfExportService
-      console.log('Exporting selected pages:', selectedPageNumbers, 'with DOM rotations applied');
 
       const sourceFiles = getSourceFiles();
       const exportFilename = getExportFilename();
@@ -490,7 +503,6 @@ const PageEditor = ({
     setExportLoading(true);
     try {
       // Step 1: Apply DOM changes to document state first
-      console.log('Applying DOM changes before export...');
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
         mergedPdfDocument || displayDocument, // Original order
         displayDocument, // Current display order (includes reordering)
@@ -500,7 +512,6 @@ const PageEditor = ({
       // Step 2: Check if we have multiple documents (splits) or single document
       if (Array.isArray(processedDocuments)) {
         // Multiple documents (splits) - export as ZIP
-        console.log('Exporting multiple split documents:', processedDocuments.length);
         const blobs: Blob[] = [];
         const filenames: string[] = [];
 
@@ -533,7 +544,6 @@ const PageEditor = ({
         pdfExportService.downloadFile(zipBlob, zipFilename);
       } else {
         // Single document - regular export
-        console.log('Exporting as single PDF');
         const sourceFiles = getSourceFiles();
         const exportFilename = getExportFilename();
         const result = sourceFiles
@@ -574,7 +584,6 @@ const PageEditor = ({
     const documentToSet = Array.isArray(processedDocuments) ? processedDocuments[0] : processedDocuments;
     setEditedDocument(documentToSet);
 
-    console.log('Changes applied to document');
   }, [displayDocument, mergedPdfDocument, splitPositions]);
 
 
