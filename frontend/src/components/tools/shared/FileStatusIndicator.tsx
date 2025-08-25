@@ -3,7 +3,6 @@ import { Text, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import FolderIcon from '@mui/icons-material/Folder';
 import UploadIcon from '@mui/icons-material/Upload';
-import AddIcon from '@mui/icons-material/Add';
 import { useFilesModalContext } from "../../../contexts/FilesModalContext";
 import { useAllFiles } from "../../../contexts/FileContext";
 import { useFileManager } from "../../../hooks/useFileManager";
@@ -81,7 +80,7 @@ const FileStatusIndicator = ({
             onClick={openFilesModal}
             style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
           >
-            <AddIcon style={{ fontSize: '0.875rem' }} />
+            <FolderIcon style={{ fontSize: '0.875rem' }} />
             {t("files.addFiles", "Add files")}
           </Anchor>
         </Text>
@@ -116,7 +115,7 @@ const FileStatusIndicator = ({
             onClick={openFilesModal}
             style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
           >
-            <AddIcon style={{ fontSize: '0.875rem' }} />
+            <FolderIcon style={{ fontSize: '0.875rem' }} />
             {t("files.addFiles", "Add files")}
           </Anchor>
         </Text>
