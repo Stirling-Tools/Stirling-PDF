@@ -48,7 +48,11 @@
   "filesSelected": "{{count}} files selected",
   "files": {
     "title": "Files",
-    "placeholder": "Select a PDF file in the main view to get started"
+    "placeholder": "Select a PDF file in the main view to get started",
+    "upload": "Upload",
+    "addFiles": "Add files",
+    "noFiles": "No files uploaded. ",
+    "selectFromWorkbench": "Select files from the workbench or "
   },
   "noFavourites": "No favourites added",
   "downloadComplete": "Download Complete",
