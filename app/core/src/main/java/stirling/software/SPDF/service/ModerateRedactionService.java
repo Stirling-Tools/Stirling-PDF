@@ -29,49 +29,36 @@ class ModerateRedactionService implements RedactionModeStrategy {
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWord = Boolean.TRUE.equals(request.getWholeWordSearch());
 
-        PDDocument doc = null;
-        PDDocument fallback = null;
-        try {
-            doc = pdfDocumentFactory.load(request.getFileInput());
+        try (PDDocument doc = pdfDocumentFactory.load(request.getFileInput())) {
             Map<Integer, List<PDFText>> allFound =
                     RedactionService.findTextToRedact(doc, listOfText, useRegex, wholeWord);
             if (allFound.isEmpty()) {
-                try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                    doc.save(baos);
-                    return baos.toByteArray();
-                }
+                return toByteArray(doc);
             }
+
             boolean fallbackToBoxOnly =
                     helper.performTextReplacement(doc, allFound, listOfText, useRegex, wholeWord);
-            String effectiveColor =
-                    (request.getRedactColor() == null || request.getRedactColor().isBlank())
-                            ? "#000000"
-                            : request.getRedactColor();
             if (fallbackToBoxOnly) {
-                // Use the new visual redaction with OCR restoration fallback
                 return helper.performVisualRedactionWithOcrRestoration(
                         request, listOfText, useRegex, wholeWord);
             }
+
             return RedactionService.finalizeRedaction(
                     doc,
                     allFound,
-                    effectiveColor,
+                    request.getRedactColor(),
                     request.getCustomPadding(),
                     request.getConvertPDFToImage(),
                     false);
         } catch (Exception e) {
             throw new IOException("Moderate redaction failed: " + e.getMessage(), e);
-        } finally {
-            if (doc != null)
-                try {
-                    doc.close();
-                } catch (IOException ignore) {
-                }
-            if (fallback != null)
-                try {
-                    fallback.close();
-                } catch (IOException ignore) {
-                }
+        }
+    }
+
+    private byte[] toByteArray(PDDocument doc) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            doc.save(baos);
+            return baos.toByteArray();
         }
     }
 }

@@ -5,9 +5,16 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.regex.Pattern;
+
 @Slf4j
 @UtilityClass
 public class TextEncodingHelper {
+
+    private final Pattern PATTERN = Pattern.compile("^[A-Z]+$");
+    private final Pattern REGEX = Pattern.compile("^[A-Z]{6}\\+.*");
+    private final Pattern REGEXP = Pattern.compile("^[A-Z]{5}\\+.*");
+    private final Pattern PATTERN1 = Pattern.compile("^[A-Z]{4}\\+.*");
 
     public boolean canEncodeCharacters(PDFont font, String text) {
         if (font == null || text == null) {
@@ -421,21 +428,21 @@ public class TextEncodingHelper {
             return false;
         }
 
-        if (fontName.matches("^[A-Z]{6}\\+.*")) {
+        if (REGEX.matcher(fontName).matches()) {
             return true;
         }
 
-        if (fontName.matches("^[A-Z]{5}\\+.*")) {
+        if (REGEXP.matcher(fontName).matches()) {
             return true;
         }
 
-        if (fontName.matches("^[A-Z]{4}\\+.*")) {
+        if (PATTERN1.matcher(fontName).matches()) {
             return true;
         }
 
         if (fontName.contains("+")) {
             String prefix = fontName.split("\\+")[0];
-            if (prefix.matches("^[A-Z]+$") && prefix.length() >= 4) {
+            if (PATTERN.matcher(prefix).matches() && prefix.length() >= 4) {
                 return true;
             }
         }
@@ -510,68 +517,4 @@ public class TextEncodingHelper {
         return false;
     }
 
-    public boolean canEncodeAnyCharacter(PDFont font) {
-        if (font == null) {
-            return false;
-        }
-
-        String[] testStrings = {
-            "a", "A", "0", " ", ".", "!", "e", "i", "o", "u", "n", "t", "r", "s", "l", "1", "2",
-            "3", "4", "5", "6", "7", "8", "9", ",", ".", ";", ":", "?", "!", "(", ")", "[", "]",
-            "{", "}", "hello", "test", "sample", "abc", "123", "ABC"
-        };
-
-        for (String testStr : testStrings) {
-            try {
-                byte[] encoded = font.encode(testStr);
-                if (encoded.length > 0) {
-                    return true;
-                }
-            } catch (Exception e) {
-            }
-        }
-
-        for (int code = 0; code <= 0xFFFF; code += 100) {
-            try {
-                String testStr = String.valueOf((char) code);
-                byte[] encoded = font.encode(testStr);
-                if (encoded.length > 0) {
-                    return true;
-                }
-            } catch (Exception e) {
-            }
-        }
-
-        return false;
-    }
-
-    public boolean isValidFont(PDFont font) {
-        if (font == null) {
-            return false;
-        }
-
-        try {
-            String name = font.getName();
-            if (name != null && !name.trim().isEmpty()) {
-                return true;
-            }
-        } catch (Exception e) {
-        }
-
-        try {
-            if (canCalculateBasicWidths(font)) {
-                return true;
-            }
-        } catch (Exception e) {
-        }
-
-        try {
-            if (canEncodeAnyCharacter(font)) {
-                return true;
-            }
-        } catch (Exception e) {
-        }
-
-        return false;
-    }
 }

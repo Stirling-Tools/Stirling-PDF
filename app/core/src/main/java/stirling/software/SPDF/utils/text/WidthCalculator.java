@@ -80,10 +80,6 @@ public class WidthCalculator {
                 Float charWidth =
                         calculateSingleCharacterWidth(font, character, fontSize, codePoint);
 
-                if (charWidth == null) {
-                    return null;
-                }
-
                 totalWidth += charWidth;
                 if (previousCodePoint != -1) {
                     totalWidth += calculateKerning(font, previousCodePoint, codePoint, fontSize);
@@ -203,9 +199,6 @@ public class WidthCalculator {
 
                 Float charWidth =
                         calculateGlyphWidthComprehensively(font, character, codePoint, fontSize);
-                if (charWidth == null) {
-                    return null;
-                }
 
                 totalWidth += charWidth;
                 i += Character.charCount(codePoint);
@@ -513,65 +506,5 @@ public class WidthCalculator {
         }
 
         return false;
-    }
-
-    public float calculateMinimumTextWidth(PDFont font, String text, float fontSize) {
-        if (font == null || text == null || text.isEmpty() || fontSize <= 0) {
-            return 0;
-        }
-
-        try {
-            float minWidth = calculateAccurateWidth(font, text, fontSize);
-            if (minWidth > 0) {
-                return minWidth * 0.8f;
-            }
-        } catch (Exception e) {
-        }
-
-        return text.length() * fontSize * 0.3f;
-    }
-
-    public float calculateMaximumTextWidth(PDFont font, String text, float fontSize) {
-        if (font == null || text == null || text.isEmpty() || fontSize <= 0) {
-            return 0;
-        }
-
-        try {
-            float maxWidth = calculateAccurateWidth(font, text, fontSize);
-            if (maxWidth > 0) {
-                return maxWidth * 1.2f;
-            }
-        } catch (Exception e) {
-        }
-
-        return text.length() * fontSize * 1.0f;
-    }
-
-    public boolean canCalculateWidthForText(PDFont font, String text) {
-        if (font == null || text == null) {
-            return false;
-        }
-
-        if (text.isEmpty()) {
-            return true;
-        }
-
-        try {
-            Float width = calculateDirectWidth(font, text, 12f);
-            if (width != null) {
-                return true;
-            }
-        } catch (Exception e) {
-        }
-
-        try {
-            Float width = calculateCharacterByCharacterWidth(font, text, 12f);
-            if (width != null) {
-                return true;
-            }
-        } catch (Exception e) {
-        }
-
-        return true;
     }
 }
