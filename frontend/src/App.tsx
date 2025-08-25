@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 // Import global styles
 import "./styles/tailwind.css";
 import "./index.css";
+import { RightRailProvider } from "./contexts/RightRailContext";
 
 // Loading component for i18next suspense
 const LoadingFallback = () => (
@@ -38,7 +39,9 @@ export default function App() {
               <FilesModalProvider>
                 <ToolWorkflowProvider>
                   <SidebarProvider>
+                    <RightRailProvider>
                     <HomePage />
+                    </RightRailProvider>
                   </SidebarProvider>
                 </ToolWorkflowProvider>
               </FilesModalProvider>
