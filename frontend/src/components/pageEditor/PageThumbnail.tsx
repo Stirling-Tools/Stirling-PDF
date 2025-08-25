@@ -379,8 +379,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           className={styles.pageNumber}
           size="sm"
           fw={500}
-          c="white"
           style={{
+            color: 'white', // Keep white for page numbers as they have colored backgrounds
             position: 'absolute',
             top: 5,
             left: 5,
@@ -402,7 +402,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             bottom: 8,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: 'var(--mantine-color-default-hover)',
+            border: '1px solid rgba(128, 128, 128, 0.3)',
             padding: '6px 12px',
             borderRadius: 20,
             opacity: 0,
@@ -421,7 +422,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             <ActionIcon
               size="md"
               variant="subtle"
-              c="white"
+              style={{ color: 'var(--mantine-color-dimmed)' }}
               disabled={index === 0}
               onClick={(e) => {
                 e.stopPropagation();
@@ -444,7 +445,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             <ActionIcon
               size="md"
               variant="subtle"
-              c="white"
+              style={{ color: 'var(--mantine-color-dimmed)' }}
               disabled={index === totalPages - 1}
               onClick={(e) => {
                 e.stopPropagation();
@@ -467,7 +468,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             <ActionIcon
               size="md"
               variant="subtle"
-              c="white"
+              style={{ color: 'var(--mantine-color-dimmed)' }}
               onClick={handleRotateLeft}
             >
               <RotateLeftIcon style={{ fontSize: 20 }} />
@@ -478,7 +479,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             <ActionIcon
               size="md"
               variant="subtle"
-              c="white"
+              style={{ color: 'var(--mantine-color-dimmed)' }}
               onClick={handleRotateRight}
             >
               <RotateRightIcon style={{ fontSize: 20 }} />
@@ -501,7 +502,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
               <ActionIcon
                 size="md"
                 variant="subtle"
-                c="white"
+                style={{ color: 'var(--mantine-color-dimmed)' }}
                 onClick={handleSplit}
               >
                 <ContentCutIcon style={{ fontSize: 20 }} />

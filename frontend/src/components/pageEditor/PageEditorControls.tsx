@@ -132,12 +132,12 @@ const PageEditorControls = ({
 
         {/* Undo/Redo */}
         <Tooltip label="Undo">
-          <ActionIcon onClick={onUndo} disabled={!canUndo} size="lg">
+          <ActionIcon onClick={onUndo} disabled={!canUndo} variant="subtle" radius="md" size="lg">
             <UndoIcon />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Redo">
-          <ActionIcon onClick={onRedo} disabled={!canRedo} size="lg">
+          <ActionIcon onClick={onRedo} disabled={!canRedo} variant="subtle" radius="md" size="lg">
             <RedoIcon />
           </ActionIcon>
         </Tooltip>
@@ -149,8 +149,9 @@ const PageEditorControls = ({
           <ActionIcon
             onClick={() => onRotate('left')}
             disabled={selectionMode && selectedPages.length === 0}
-            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
-            color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
             size="lg"
           >
             <RotateLeftIcon />
@@ -160,8 +161,9 @@ const PageEditorControls = ({
           <ActionIcon
             onClick={() => onRotate('right')}
             disabled={selectionMode && selectedPages.length === 0}
-            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
-            color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
             size="lg"
           >
             <RotateRightIcon />
@@ -172,9 +174,9 @@ const PageEditorControls = ({
             <ActionIcon
               onClick={onDelete}
               disabled={selectedPages.length === 0}
-              color="red"
-              variant={selectedPages.length > 0 ? "light" : "default"}
-              size="lg"
+              variant={selectedPages.length > 0 ? "light" : "subtle"}
+              radius="md"
+            size="lg"
             >
               <DeleteIcon />
             </ActionIcon>
@@ -184,8 +186,9 @@ const PageEditorControls = ({
           <ActionIcon
             onClick={selectionMode ? onSplit : onSplitAll}
             disabled={selectionMode && selectedPages.length === 0}
-            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
-            color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
             size="lg"
           >
             <ContentCutIcon />
@@ -195,8 +198,9 @@ const PageEditorControls = ({
           <ActionIcon
             onClick={selectionMode ? onPageBreak : onPageBreakAll}
             disabled={selectionMode && selectedPages.length === 0}
-            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
-            color={selectionMode && selectedPages.length > 0 ? "orange" : undefined}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
             size="lg"
           >
             <InsertPageBreakIcon />
@@ -209,9 +213,9 @@ const PageEditorControls = ({
             <ActionIcon
               onClick={onExportSelected}
               disabled={exportLoading || selectedPages.length === 0}
-              color="blue"
-              variant={selectedPages.length > 0 ? "light" : "default"}
-              size="lg"
+              variant={selectedPages.length > 0 ? "light" : "subtle"}
+              radius="md"
+            size="lg"
             >
               <DownloadIcon />
             </ActionIcon>
@@ -221,8 +225,8 @@ const PageEditorControls = ({
           <ActionIcon
             onClick={onExportAll}
             disabled={exportLoading}
-            color="green"
             variant="light"
+            radius="md"
             size="lg"
           >
             <DownloadIcon />
