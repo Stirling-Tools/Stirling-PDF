@@ -1,14 +1,13 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
-  Button, Text, Center, Checkbox, Box, Tooltip, ActionIcon,
+  Button, Text, Center, Box,
   Notification, TextInput, LoadingOverlay, Modal, Alert,
-  Stack, Group
+  Stack, Group, Portal
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions, useCurrentFile, useFileSelection } from "../../contexts/FileContext";
 import { ModeType } from "../../contexts/NavigationContext";
 import { PDFDocument, PDFPage } from "../../types/pageEditor";
-import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
 import {
   RotatePagesCommand,
@@ -56,7 +55,6 @@ export interface PageEditorProps {
 const PageEditor = ({
   onFunctionsReady,
 }: PageEditorProps) => {
-  const { t } = useTranslation();
 
   // Use split contexts to prevent re-renders
   const { state, selectors } = useFileState();
@@ -241,19 +239,26 @@ const PageEditor = ({
   const [exportLoading, setExportLoading] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportPreview, setExportPreview] = useState<{pageCount: number; splitCount: number; estimatedSize: string} | null>(null);
+  const [exportSelectedOnly, setExportSelectedOnly] = useState<boolean>(false);
 
   // Animation state
   const [movingPage, setMovingPage] = useState<number | null>(null);
-  const [pagePositions, setPagePositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const [isAnimating, setIsAnimating] = useState(false);
-  const pageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const fileInputRef = useRef<() => void>(null);
 
   // Undo/Redo system
   const { executeCommand, undo, redo, canUndo, canRedo } = useUndoRedo();
 
+  // Track whether the user has manually edited the filename to avoid auto-overwrites
+  const userEditedFilename = useRef(false);
+
+  // Reset user edit flag when the active files change, so defaults can be applied for new docs
+  useEffect(() => {
+    userEditedFilename.current = false;
+  }, [filesSignature]);
+
   // Set initial filename when document changes - use stable signature
   useEffect(() => {
+    if (userEditedFilename.current) return; // Do not overwrite user-typed filename
     if (mergedPdfDocument) {
       if (activeFileIds.length === 1 && primaryFileId) {
         const record = selectors.getFileRecord(primaryFileId);
@@ -838,14 +843,18 @@ const PageEditor = ({
   const handleDelete = useCallback(() => {
     if (!displayDocument) return;
 
-    const pagesToDelete = selectionMode
-      ? selectedPageNumbers.map(pageNum => {
-          const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
-          return page?.id || '';
-        }).filter(id => id)
+    const hasSelectedPages = selectedPageNumbers.length > 0;
+
+    const pagesToDelete = (selectionMode || hasSelectedPages)
+      ? selectedPageNumbers
+          .map(pageNum => {
+            const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
+            return page?.id || '';
+          })
+          .filter(id => id)
       : displayDocument.pages.map(p => p.id);
 
-    if (selectionMode && selectedPageNumbers.length === 0) return;
+    if ((selectionMode || hasSelectedPages) && selectedPageNumbers.length === 0) return;
 
     const command = new DeletePagesCommand(
       displayDocument,
@@ -857,7 +866,7 @@ const PageEditor = ({
     if (selectionMode) {
       actions.setSelectedPages([]);
     }
-    const pageCount = selectionMode ? selectedPageNumbers.length : displayDocument.pages.length;
+    const pageCount = (selectionMode || hasSelectedPages) ? selectedPageNumbers.length : displayDocument.pages.length;
     setStatus(`Deleted ${pageCount} pages`);
   }, [displayDocument, selectedPageNumbers, selectionMode, executeCommand, setPdfDocument, actions]);
 
@@ -885,49 +894,52 @@ const PageEditor = ({
   }, [displayDocument, selectedPageNumbers, selectionMode, executeCommand, setPdfDocument]);
 
   const showExportPreview = useCallback((selectedOnly: boolean = false) => {
-    if (!mergedPdfDocument) return;
+    const doc = editedDocument || mergedPdfDocument;
+    if (!doc) return;
 
     // Convert page numbers to page IDs for export service
     const exportPageIds = selectedOnly
       ? selectedPageNumbers.map(pageNum => {
-          const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
+          const page = doc.pages.find(p => p.pageNumber === pageNum);
           return page?.id || '';
         }).filter(id => id)
       : [];
 
-
-    const preview = pdfExportService.getExportInfo(mergedPdfDocument, exportPageIds, selectedOnly);
+    const preview = pdfExportService.getExportInfo(doc, exportPageIds, selectedOnly);
     setExportPreview(preview);
+    setExportSelectedOnly(selectedOnly);
     setShowExportModal(true);
-  }, [mergedPdfDocument, selectedPageNumbers]);
+  }, [editedDocument, mergedPdfDocument, selectedPageNumbers]);
 
   const handleExport = useCallback(async (selectedOnly: boolean = false) => {
-    if (!mergedPdfDocument) return;
+    const doc = editedDocument || mergedPdfDocument;
+    if (!doc) return;
 
     setExportLoading(true);
     try {
       // Convert page numbers to page IDs for export service
       const exportPageIds = selectedOnly
         ? selectedPageNumbers.map(pageNum => {
-            const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
+            const page = doc.pages.find(p => p.pageNumber === pageNum);
             return page?.id || '';
           }).filter(id => id)
         : [];
 
 
-      const errors = pdfExportService.validateExport(mergedPdfDocument, exportPageIds, selectedOnly);
+      const errors = pdfExportService.validateExport(doc, exportPageIds, selectedOnly);
       if (errors.length > 0) {
         setStatus(errors.join(', '));
         return;
       }
 
-      const hasSplitMarkers = mergedPdfDocument.pages.some(page => page.splitBefore);
+      const hasSplitMarkers = doc.pages.some(page => page.splitBefore);
 
       if (hasSplitMarkers) {
-        const result = await pdfExportService.exportPDF(mergedPdfDocument, exportPageIds, {
+        const result = await pdfExportService.exportPDF(doc, exportPageIds, {
           selectedOnly,
           filename,
-          splitDocuments: true
+          splitDocuments: true,
+          appendSuffix: false
         }) as { blobs: Blob[]; filenames: string[] };
 
         result.blobs.forEach((blob, index) => {
@@ -938,9 +950,10 @@ const PageEditor = ({
 
         setStatus(`Exported ${result.blobs.length} split documents`);
       } else {
-        const result = await pdfExportService.exportPDF(mergedPdfDocument, exportPageIds, {
+        const result = await pdfExportService.exportPDF(doc, exportPageIds, {
           selectedOnly,
-          filename
+          filename,
+          appendSuffix: false
         }) as { blob: Blob; filename: string };
 
         pdfExportService.downloadFile(result.blob, result.filename);
@@ -953,7 +966,7 @@ const PageEditor = ({
     } finally {
       setExportLoading(false);
     }
-  }, [mergedPdfDocument, selectedPageNumbers, filename]);
+  }, [editedDocument, mergedPdfDocument, selectedPageNumbers, filename]);
 
   const handleUndo = useCallback(() => {
     if (undo()) {
@@ -1240,59 +1253,13 @@ const PageEditor = ({
               </div>
             </Box>
           )}
-
-          <Group mb="md">
             <TextInput
+              label="Filename"
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
               placeholder="Enter filename"
-              style={{ minWidth: 200 }}
+              style={{ minWidth: 200, maxWidth: 200, marginLeft: "1rem"}}
             />
-            <Button
-              onClick={toggleSelectionMode}
-              variant={selectionMode ? "filled" : "outline"}
-              color={selectionMode ? "blue" : "gray"}
-              styles={{
-                root: {
-                  transition: 'all 0.2s ease',
-                  ...(selectionMode && {
-                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-                  })
-                }
-              }}
-            >
-              {selectionMode ? "Exit Selection" : "Select Pages"}
-            </Button>
-            {selectionMode && (
-              <>
-                <Button onClick={selectAll} variant="light">Select All</Button>
-                <Button onClick={deselectAll} variant="light">Deselect All</Button>
-              </>
-            )}
-
-
-            {/* Apply Changes Button */}
-            {hasUnsavedChanges && (
-              <Button
-                onClick={applyChanges}
-                color="green"
-                variant="filled"
-                style={{ marginLeft: 'auto' }}
-              >
-                Apply Changes
-              </Button>
-            )}
-          </Group>
-
-          {selectionMode && (
-            <BulkSelectionPanel
-              csvInput={csvInput}
-              setCsvInput={setCsvInput}
-              selectedPages={selectedPageNumbers}
-              onUpdatePagesFromCSV={updatePagesFromCSV}
-            />
-          )}
-
 
 
         <DragDropGrid
@@ -1386,8 +1353,7 @@ const PageEditor = ({
                   loading={exportLoading}
                   onClick={() => {
                     setShowExportModal(false);
-                    const selectedOnly = exportPreview.pageCount < (mergedPdfDocument?.pages.length || 0);
-                    handleExport(selectedOnly);
+                    handleExport(exportSelectedOnly);
                   }}
                 >
                   Export PDF
@@ -1446,14 +1412,16 @@ const PageEditor = ({
         </Modal>
 
       {status && (
+      <Portal>
         <Notification
           color="blue"
           mt="md"
           onClose={() => setStatus(null)}
-          style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}
+          style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 10000 }}
         >
           {status}
         </Notification>
+      </Portal>
       )}
       
       {error && (
