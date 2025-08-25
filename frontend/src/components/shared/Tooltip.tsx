@@ -172,7 +172,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           }}
           title="Close tooltip"
         >
-          <LocalIcon icon="close-rounded" width="20" height="20" />
+          <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
         </button>
       )}
       {arrow && getArrowClass() && (

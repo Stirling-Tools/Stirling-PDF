@@ -2,9 +2,6 @@ import React, { useState, useRef, forwardRef, useEffect } from "react";
 import { ActionIcon, Stack, Divider } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import LocalIcon from './LocalIcon';
-import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
-import SettingsIcon from "@mui/icons-material/SettingsRounded";
-import FolderIcon from "@mui/icons-material/FolderRounded";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import AppConfigModal from './AppConfigModal';
 import { useIsOverflowing } from '../../hooks/useIsOverflowing';
@@ -45,7 +42,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'read',
       name: t("quickAccess.read", "Read"),
-      icon: <MenuBookIcon sx={{ fontSize: "1.5rem" }} />,
+      icon: <LocalIcon icon="menu-book-rounded" width="1.5rem" height="1.5rem" />,
       size: 'lg',
       isRound: false,
       type: 'navigation',
@@ -58,7 +55,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'sign',
       name: t("quickAccess.sign", "Sign"),
-      icon: <LocalIcon icon="signature-rounded" width="20" height="20" />,
+      icon: <LocalIcon icon="signature-rounded" width="1.25rem" height="1.25rem" />,
       size: 'lg',
       isRound: false,
       type: 'navigation',
@@ -70,7 +67,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
-      icon: <LocalIcon icon="automation" width="20" height="20" />,
+      icon: <LocalIcon icon="automation-outline" width="1.25rem" height="1.25rem" />,
       size: 'lg',
       isRound: false,
       type: 'navigation',
@@ -82,7 +79,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'files',
       name: t("quickAccess.files", "Files"),
-      icon: <FolderIcon sx={{ fontSize: "1.25rem" }} />,
+      icon: <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />,
       isRound: true,
       size: 'lg',
       type: 'modal',
@@ -91,7 +88,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'activity',
       name: t("quickAccess.activity", "Activity"),
-      icon: <LocalIcon icon="vital-signs-rounded" width="20" height="20" />,
+      icon: <LocalIcon icon="vital-signs-rounded" width="1.25rem" height="1.25rem" />,
       isRound: true,
       size: 'lg',
       type: 'navigation',
@@ -100,7 +97,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'config',
       name: t("quickAccess.config", "Config"),
-      icon: <SettingsIcon sx={{ fontSize: "1rem" }} />,
+      icon: <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
       size: 'lg',
       type: 'modal',
       onClick: () => {

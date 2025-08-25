@@ -75,7 +75,7 @@ const ToolSearch = ({
         value={value}
         onChange={handleSearchChange}
         placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
-        icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="24" height="24" />}
+        icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
         autoComplete="off"
 
       />

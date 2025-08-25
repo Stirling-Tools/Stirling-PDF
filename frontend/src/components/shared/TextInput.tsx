@@ -97,7 +97,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
           style={{ color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382' }}
           aria-label="Clear input"
         >
-          <LocalIcon icon="close-rounded" width="20" height="20" />
+          <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
         </button>
       )}
     </div>

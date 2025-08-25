@@ -1,19 +1,26 @@
 import React from 'react';
 import { addCollection, Icon } from '@iconify/react';
 
-// Try to import the icon set - it will be auto-generated
-let iconSet: any = null;
+// Try to load icons at import time
 let iconsLoaded = false;
+let localIconCount = 0;
 
-try {
-  iconSet = require('../../assets/material-symbols-icons.json');
-  if (!iconsLoaded && iconSet) {
-    addCollection(iconSet);
-    iconsLoaded = true;
+// Use a simple try/catch for the icon loading
+(async () => {
+  try {
+    const iconModule = await import('../../assets/material-symbols-icons.json');
+    const iconSet = iconModule.default || iconModule;
+    if (iconSet) {
+      addCollection(iconSet);
+      iconsLoaded = true;
+      localIconCount = Object.keys(iconSet.icons || {}).length;
+      console.info(`✅ Local icons loaded: ${localIconCount} icons (${Math.round(JSON.stringify(iconSet).length / 1024)}KB)`);
+    }
+  } catch (error) {
+    // Silently fail - icons will fallback to CDN
+    console.info('ℹ️  Local icons not available - using CDN fallback');
   }
-} catch (error) {
-  console.warn('Local icon set not found. Run `npm run generate-icons` to create it.');
-}
+})();
 
 interface LocalIconProps {
   icon: string;
@@ -33,11 +40,17 @@ export const LocalIcon: React.FC<LocalIconProps> = ({ icon, ...props }) => {
     ? icon 
     : `material-symbols:${icon}`;
   
-  // Fallback if icons haven't been loaded yet
-  if (!iconsLoaded || !iconSet) {
-    return <span style={{ display: 'inline-block', width: props.width || 24, height: props.height || 24 }} />;
+  // Development logging (only in dev mode)
+  if (process.env.NODE_ENV === 'development') {
+    const logKey = `icon-${iconName}`;
+    if (!sessionStorage.getItem(logKey)) {
+      const source = iconsLoaded ? 'local' : 'CDN';
+      console.debug(`🎯 Icon: ${iconName} (${source})`);
+      sessionStorage.setItem(logKey, 'logged');
+    }
   }
   
+  // Always render the icon - Iconify will use local if available, CDN if not
   return <Icon icon={iconName} {...props} />;
 };
 
