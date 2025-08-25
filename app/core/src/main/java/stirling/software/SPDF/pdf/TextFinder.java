@@ -10,23 +10,23 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
-import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
 
+@Slf4j
 public class TextFinder extends PDFTextStripper {
 
     private final String searchTerm;
     private final boolean useRegex;
     private final boolean wholeWordSearch;
-    @Getter private final List<PDFText> foundTexts = new ArrayList<>();
+    private final List<PDFText> foundTexts = new ArrayList<>();
 
     private final List<TextPosition> pageTextPositions = new ArrayList<>();
     private final StringBuilder pageTextBuilder = new StringBuilder();
 
     public TextFinder(String searchTerm, boolean useRegex, boolean wholeWordSearch)
             throws IOException {
-        super();
         this.searchTerm = searchTerm;
         this.useRegex = useRegex;
         this.wholeWordSearch = wholeWordSearch;
@@ -42,39 +42,20 @@ public class TextFinder extends PDFTextStripper {
 
     @Override
     protected void writeString(String text, List<TextPosition> textPositions) {
-        for (TextPosition tp : textPositions) {
-            if (tp == null) continue;
-            String u = tp.getUnicode();
-            if (u == null) continue;
-            for (int i = 0; i < u.length(); ) {
-                int cp = u.codePointAt(i);
-                pageTextBuilder.append(Character.toChars(cp));
-                // Add one position per code unit appended (1-2 chars depending on surrogate)
-                int codeUnits = Character.charCount(cp);
-                for (int k = 0; k < codeUnits; k++) {
-                    pageTextPositions.add(tp);
-                }
-                i += codeUnits;
-            }
-        }
+        pageTextBuilder.append(text);
+        pageTextPositions.addAll(textPositions);
     }
 
     @Override
     protected void writeWordSeparator() {
-        String sep = getWordSeparator();
-        pageTextBuilder.append(sep);
-        for (int i = 0; i < sep.length(); i++) {
-            pageTextPositions.add(null);
-        }
+        pageTextBuilder.append(getWordSeparator());
+        pageTextPositions.add(null); // Placeholder for separator
     }
 
     @Override
     protected void writeLineSeparator() {
-        String sep = getLineSeparator();
-        pageTextBuilder.append(sep);
-        for (int i = 0; i < sep.length(); i++) {
-            pageTextPositions.add(null);
-        }
+        pageTextBuilder.append(getLineSeparator());
+        pageTextPositions.add(null); // Placeholder for separator
     }
 
     @Override
@@ -86,12 +67,10 @@ public class TextFinder extends PDFTextStripper {
         }
 
         String processedSearchTerm = this.searchTerm.trim();
-
         if (processedSearchTerm.isEmpty()) {
             super.endPage(page);
             return;
         }
-
         String regex = this.useRegex ? processedSearchTerm : "\\Q" + processedSearchTerm + "\\E";
         if (this.wholeWordSearch) {
             if (processedSearchTerm.length() == 1
@@ -107,9 +86,26 @@ public class TextFinder extends PDFTextStripper {
         Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
         Matcher matcher = pattern.matcher(text);
 
+        log.debug(
+                "Searching for '{}' in page {} with regex '{}' (wholeWord: {}, useRegex: {})",
+                processedSearchTerm,
+                getCurrentPageNo(),
+                regex,
+                wholeWordSearch,
+                useRegex);
+
+        int matchCount = 0;
         while (matcher.find()) {
+            matchCount++;
             int matchStart = matcher.start();
             int matchEnd = matcher.end();
+
+            log.debug(
+                    "Found match #{} at positions {}-{}: '{}'",
+                    matchCount,
+                    matchStart,
+                    matchEnd,
+                    matcher.group());
 
             float minX = Float.MAX_VALUE;
             float minY = Float.MAX_VALUE;
@@ -118,7 +114,13 @@ public class TextFinder extends PDFTextStripper {
             boolean foundPosition = false;
 
             for (int i = matchStart; i < matchEnd; i++) {
-                if (i >= pageTextPositions.size()) continue;
+                if (i >= pageTextPositions.size()) {
+                    log.debug(
+                            "Position index {} exceeds available positions ({})",
+                            i,
+                            pageTextPositions.size());
+                    continue;
+                }
                 TextPosition pos = pageTextPositions.get(i);
                 if (pos != null) {
                     foundPosition = true;
@@ -130,6 +132,11 @@ public class TextFinder extends PDFTextStripper {
             }
 
             if (!foundPosition && matchStart < pageTextPositions.size()) {
+                log.debug(
+                        "Attempting to find nearby positions for match at {}-{}",
+                        matchStart,
+                        matchEnd);
+
                 for (int i = Math.max(0, matchStart - 5);
                         i < Math.min(pageTextPositions.size(), matchEnd + 5);
                         i++) {
@@ -154,12 +161,34 @@ public class TextFinder extends PDFTextStripper {
                                 maxX,
                                 maxY,
                                 matcher.group()));
+                log.debug(
+                        "Added PDFText for match: page={}, bounds=({},{},{},{}), text='{}'",
+                        getCurrentPageNo() - 1,
+                        minX,
+                        minY,
+                        maxX,
+                        maxY,
+                        matcher.group());
             } else {
-                // no position info
+                log.warn(
+                        "Found text match '{}' but no valid position data at {}-{}",
+                        matcher.group(),
+                        matchStart,
+                        matchEnd);
             }
         }
 
+        log.debug(
+                "Page {} search complete: found {} matches for '{}'",
+                getCurrentPageNo(),
+                matchCount,
+                processedSearchTerm);
+
         super.endPage(page);
+    }
+
+    public List<PDFText> getFoundTexts() {
+        return foundTexts;
     }
 
     public String getDebugInfo() {
