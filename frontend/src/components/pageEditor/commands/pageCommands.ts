@@ -454,7 +454,20 @@ export class PageBreakCommand extends DOMCommand {
     };
 
     this.setDocument(updatedDocument);
-    this.setSelectedPages([]);
+    
+    // Maintain existing selection by mapping original selected pages to their new positions
+    const updatedSelection: number[] = [];
+    this.selectedPageNumbers.forEach(originalPageNum => {
+      // Find the original page by matching the page ID from the original document
+      const originalPage = this.originalDocument?.pages[originalPageNum - 1];
+      if (originalPage) {
+        const foundPage = newPages.find(page => page.id === originalPage.id && !page.isBlankPage);
+        if (foundPage) {
+          updatedSelection.push(foundPage.pageNumber);
+        }
+      }
+    });
+    this.setSelectedPages(updatedSelection);
   }
 
   undo(): void {
@@ -470,11 +483,13 @@ export class PageBreakCommand extends DOMCommand {
 export class BulkPageBreakCommand extends DOMCommand {
   private insertedPages: PDFPage[] = [];
   private originalDocument: PDFDocument | null = null;
+  private originalSelectedPages: number[] = [];
 
   constructor(
     private getCurrentDocument: () => PDFDocument | null,
     private setDocument: (doc: PDFDocument) => void,
-    private setSelectedPages: (pages: number[]) => void
+    private setSelectedPages: (pages: number[]) => void,
+    private getSelectedPages: () => number[]
   ) {
     super();
   }
@@ -482,6 +497,9 @@ export class BulkPageBreakCommand extends DOMCommand {
   execute(): void {
     const currentDoc = this.getCurrentDocument();
     if (!currentDoc) return;
+
+    // Store original selection to restore later
+    this.originalSelectedPages = this.getSelectedPages();
 
     // Store original state for undo
     this.originalDocument = {
@@ -524,7 +542,20 @@ export class BulkPageBreakCommand extends DOMCommand {
     };
 
     this.setDocument(updatedDocument);
-    this.setSelectedPages([]);
+    
+    // Maintain existing selection by mapping original selected pages to their new positions
+    const updatedSelection: number[] = [];
+    this.originalSelectedPages.forEach(originalPageNum => {
+      // Find the original page by matching the page ID from the original document
+      const originalPage = this.originalDocument?.pages[originalPageNum - 1];
+      if (originalPage) {
+        const foundPage = newPages.find(page => page.id === originalPage.id && !page.isBlankPage);
+        if (foundPage) {
+          updatedSelection.push(foundPage.pageNumber);
+        }
+      }
+    });
+    this.setSelectedPages(updatedSelection);
   }
 
   undo(): void {
