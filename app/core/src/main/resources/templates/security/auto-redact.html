@@ -73,7 +73,7 @@
                         <div class="redaction-options-group">
                             <label class="form-label fw-bold mb-3" th:text="#{autoRedact.redactionStyleLabel}"></label>
                             <div class="form-check mb-2">
-                                <input aria-describedby="visual-desc" class="form-check-input" id="visualImage" name="redactionMode" type="radio" value="visual">
+                                <input aria-describedby="visual-desc" checked class="form-check-input" id="visualImage" name="redactionMode" type="radio" value="visual">
                                 <label class="form-check-label" for="visualImage" th:text="#{autoRedact.visualRedactionLabel}">Visual</label>
                                 <small class="form-text text-muted d-block mt-1" id="visual-desc" th:text="#{autoRedact.visualRedactionDescription}">Converts to image with visual redactions for maximum security.</small>
                             </div>
@@ -83,7 +83,7 @@
                                 <small class="form-text text-muted d-block mt-1" id="delete-desc" th:text="#{autoRedact.deleteTextDescription}">Removes the text completely. This may alter the original layout or leave a gap.</small>
                             </div>
                             <div class="form-check mb-3">
-                                <input aria-describedby="keep-desc" checked class="form-check-input" id="keepLayout" name="redactionMode" type="radio" value="moderate">
+                                <input aria-describedby="keep-desc" class="form-check-input" id="keepLayout" name="redactionMode" type="radio" value="moderate">
                                 <label class="form-check-label" for="keepLayout" th:text="#{autoRedact.keepLayoutLabel}">Keep Layout</label>
                                 <small class="form-text text-muted d-block mt-1" id="keep-desc" th:text="#{autoRedact.keepLayoutDescription}">Covers text with a redaction box, preserving the page's original design.</small>
                             </div>
@@ -126,7 +126,7 @@
                             <label class="form-label" for="languages">OCR Languages</label>
                             <div id="languages">
                                 <div class="form-check" th:each="language, iterStat : ${languages}">
-                                    <input onchange="handleLangSelection()" required th:id="${'language-' + language}" th:name="languages" th:value="${language}" type="checkbox" />
+                                    <input onchange="handleLangSelection()" required th:checked="${language == 'eng'}" th:id="${'language-' + language}" th:name="languages" th:value="${language}" type="checkbox" />
                                     <label th:for="${'language-' + language}" th:text="${language}"></label>
                                 </div>
                             </div>
@@ -275,6 +275,9 @@
 
     // Initialize language list ordering & labels
     prioritizeLanguages();
+    
+    // Handle pre-selected English language
+    handleLangSelection();
     });
 </script>
 </body>
