@@ -106,6 +106,12 @@
   --icon-config-bg: #9CA3AF;
   --icon-config-color: #FFFFFF;
 
+  /* RightRail (light) */
+  --right-rail-bg: #F5F6F8;           /* light background */
+  --right-rail-foreground: #CDD4E1;   /* panel behind custom tool icons */
+  --right-rail-icon: #4B5563;         /* icon color */
+  --right-rail-icon-disabled: #CECECE;/* disabled icon */
+
   /* Colors for tooltips */
   --tooltip-title-bg: #DBEFFF;
   --tooltip-title-color: #31528E;
@@ -233,6 +239,12 @@
   /* Inactive icon colors for dark mode */
   --icon-inactive-bg: #2A2F36;
   --icon-inactive-color: #6E7581;
+
+  /* RightRail (dark) */
+  --right-rail-bg: #1F2329;           /* dark background */
+  --right-rail-foreground: #2A2F36;   /* panel behind custom tool icons */
+  --right-rail-icon: #BCBEBF;         /* icon color */
+  --right-rail-icon-disabled: #43464B;/* disabled icon */
 
   /* Dark mode tooltip colors */
   --tooltip-title-bg: #4B525A;
