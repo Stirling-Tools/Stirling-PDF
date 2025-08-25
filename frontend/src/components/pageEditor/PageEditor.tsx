@@ -327,7 +327,22 @@ const PageEditor = ({
     return sourceFiles.size > 0 ? sourceFiles : null;
   }, [activeFileIds, selectors]);
 
+  // Helper function to generate proper filename for exports
+  const getExportFilename = useCallback((): string => {
+    if (activeFileIds.length <= 1) {
+      // Single file - use original name
+      return displayDocument?.name || 'document.pdf';
+    }
 
+    // Multiple files - use first file name with " (merged)" suffix
+    const firstFile = selectors.getFile(activeFileIds[0]);
+    if (firstFile) {
+      const baseName = firstFile.name.replace(/\.pdf$/i, '');
+      return `${baseName} (merged).pdf`;
+    }
+
+    return 'merged-document.pdf';
+  }, [activeFileIds, selectors, displayDocument]);
 
   const onExportSelected = useCallback(async () => {
     if (!displayDocument || selectedPageNumbers.length === 0) return;
@@ -355,17 +370,18 @@ const PageEditor = ({
       console.log('Exporting selected pages:', selectedPageNumbers, 'with DOM rotations applied');
 
       const sourceFiles = getSourceFiles();
+      const exportFilename = getExportFilename();
       const result = sourceFiles
         ? await pdfExportService.exportPDFMultiFile(
             documentWithDOMState,
             sourceFiles,
             selectedPageIds,
-            { selectedOnly: true, filename: documentWithDOMState.name }
+            { selectedOnly: true, filename: exportFilename }
           )
         : await pdfExportService.exportPDF(
             documentWithDOMState,
             selectedPageIds,
-            { selectedOnly: true, filename: documentWithDOMState.name }
+            { selectedOnly: true, filename: exportFilename }
           );
 
       // Step 4: Download the result
@@ -376,7 +392,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, selectedPageNumbers, mergedPdfDocument, splitPositions, getSourceFiles]);
+  }, [displayDocument, selectedPageNumbers, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename]);
 
   const onExportAll = useCallback(async () => {
     if (!displayDocument) return;
@@ -399,10 +415,11 @@ const PageEditor = ({
         const filenames: string[] = [];
 
         const sourceFiles = getSourceFiles();
+        const exportFilename = getExportFilename();
         for (const doc of processedDocuments) {
           const result = sourceFiles
-            ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], { filename: doc.name })
-            : await pdfExportService.exportPDF(doc, [], { filename: doc.name });
+            ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], { filename: exportFilename })
+            : await pdfExportService.exportPDF(doc, [], { filename: exportFilename });
           blobs.push(result.blob);
           filenames.push(result.filename);
         }
@@ -416,24 +433,25 @@ const PageEditor = ({
         });
 
         const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const zipFilename = displayDocument.name.replace(/\.pdf$/i, '.zip');
+        const zipFilename = exportFilename.replace(/\.pdf$/i, '.zip');
 
         pdfExportService.downloadFile(zipBlob, zipFilename);
       } else {
         // Single document - regular export
         console.log('Exporting as single PDF');
         const sourceFiles = getSourceFiles();
+        const exportFilename = getExportFilename();
         const result = sourceFiles
           ? await pdfExportService.exportPDFMultiFile(
               processedDocuments,
               sourceFiles,
               [],
-              { selectedOnly: false, filename: processedDocuments.name }
+              { selectedOnly: false, filename: exportFilename }
             )
           : await pdfExportService.exportPDF(
               processedDocuments,
               [],
-              { selectedOnly: false, filename: processedDocuments.name }
+              { selectedOnly: false, filename: exportFilename }
             );
 
         pdfExportService.downloadFile(result.blob, result.filename);
@@ -444,7 +462,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, mergedPdfDocument, splitPositions, getSourceFiles]);
+  }, [displayDocument, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename]);
 
   // Apply DOM changes to document state using dedicated service
   const applyChanges = useCallback(() => {
@@ -543,32 +561,6 @@ const PageEditor = ({
 
       {displayDocument && (
         <Box ref={gridContainerRef} p={0} style={{ position: 'relative' }}>
-          {/* File name and basic controls */}
-          <Group mb="md" p="md" justify="space-between">
-            <TextInput
-              placeholder="Enter filename"
-              defaultValue={displayDocument.name.replace(/\.pdf$/i, '')}
-              style={{ minWidth: 300 }}
-            />
-            <Group>
-              <Button
-                variant={selectionMode ? "filled" : "outline"}
-                onClick={() => setSelectionMode(!selectionMode)}
-              >
-                {selectionMode ? "Exit Selection" : "Select Pages"}
-              </Button>
-              {selectionMode && (
-                <>
-                  <Button variant="outline" onClick={() => toggleSelectAll(displayDocument?.pages.length || 0)}>
-                    {selectedPageNumbers.length === displayDocument.pages.length ? "Deselect All" : "Select All"}
-                  </Button>
-                  <Text size="sm" c="dimmed">
-                    {selectedPageNumbers.length} selected
-                  </Text>
-                </>
-              )}
-            </Group>
-          </Group>
 
 
           {/* Split Lines Overlay */}

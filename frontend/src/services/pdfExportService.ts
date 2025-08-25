@@ -31,7 +31,7 @@ export class PDFExportService {
       const originalPDFBytes = await pdfDocument.file.arrayBuffer();
       const sourceDoc = await PDFLibDocument.load(originalPDFBytes);
       const blob = await this.createSingleDocument(sourceDoc, pagesToExport);
-      const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly);
+      const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly, false);
 
       return { blob, filename: exportFilename };
     } catch (error) {
@@ -62,7 +62,7 @@ export class PDFExportService {
       }
 
       const blob = await this.createMultiSourceDocument(sourceFiles, pagesToExport);
-      const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly);
+      const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly, false);
 
       return { blob, filename: exportFilename };
     } catch (error) {
