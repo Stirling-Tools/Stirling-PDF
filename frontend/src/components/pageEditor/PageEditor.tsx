@@ -620,7 +620,7 @@ const PageEditor = ({
               
               // Position split line between pages (after the current page)
               const leftPosition = col * itemWithGap + ITEM_WIDTH + (ITEM_GAP / 2);
-              const topPosition = row * ITEM_HEIGHT;
+              const topPosition = row * ITEM_HEIGHT + (ITEM_HEIGHT * 0.05); // Center vertically (5% offset since page is 90% height)
 
               return (
                 <div
@@ -630,7 +630,7 @@ const PageEditor = ({
                     left: leftPosition,
                     top: topPosition,
                     width: '1px',
-                    height: GRID_CONSTANTS.ITEM_WIDTH, // Match item height
+                    height: `calc(${GRID_CONSTANTS.ITEM_HEIGHT} * 0.9)`, // Match page container height (90%)
                     borderLeft: '1px dashed #3b82f6'
                   }}
                 />
