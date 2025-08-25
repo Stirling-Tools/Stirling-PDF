@@ -61,6 +61,7 @@ export class DocumentManipulationService {
     // Find split points - pages with splitAfter create split points AFTER them
     document.pages.forEach((page, index) => {
       if (page.splitAfter) {
+        console.log(`Found split marker at page ${page.pageNumber} (index ${index}), adding split point at ${index + 1}`);
         splitPoints.push(index + 1);
       }
     });
@@ -70,11 +71,17 @@ export class DocumentManipulationService {
       splitPoints.push(document.pages.length);
     }
     
+    console.log('Final split points:', splitPoints);
+    console.log('Total pages to split:', document.pages.length);
+    
     let startIndex = 0;
     let partNumber = 1;
     
     for (const endIndex of splitPoints) {
       const segmentPages = document.pages.slice(startIndex, endIndex);
+      
+      console.log(`Creating split document ${partNumber}: pages ${startIndex}-${endIndex-1} (${segmentPages.length} pages)`);
+      console.log(`Split document ${partNumber} page numbers:`, segmentPages.map(p => p.pageNumber));
       
       if (segmentPages.length > 0) {
         documents.push({

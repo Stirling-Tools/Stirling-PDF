@@ -441,11 +441,16 @@ const PageEditor = ({
         const filenames: string[] = [];
 
         const sourceFiles = getSourceFiles();
-        const exportFilename = getExportFilename();
-        for (const doc of processedDocuments) {
+        const baseExportFilename = getExportFilename();
+        const baseName = baseExportFilename.replace(/\.pdf$/i, '');
+        
+        for (let i = 0; i < processedDocuments.length; i++) {
+          const doc = processedDocuments[i];
+          const partFilename = `${baseName}_part_${i + 1}.pdf`;
+          
           const result = sourceFiles
-            ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], { filename: exportFilename })
-            : await pdfExportService.exportPDF(doc, [], { filename: exportFilename });
+            ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], { filename: partFilename })
+            : await pdfExportService.exportPDF(doc, [], { filename: partFilename });
           blobs.push(result.blob);
           filenames.push(result.filename);
         }
@@ -459,7 +464,7 @@ const PageEditor = ({
         });
 
         const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const zipFilename = exportFilename.replace(/\.pdf$/i, '.zip');
+        const zipFilename = baseExportFilename.replace(/\.pdf$/i, '.zip');
 
         pdfExportService.downloadFile(zipBlob, zipFilename);
       } else {
