@@ -205,7 +205,7 @@ const PageThumbnail = React.memo(({
       }}
       draggable={false}
     >
-      {selectionMode && (
+      {
         <div
           className={styles.checkboxContainer}
           style={{
@@ -213,10 +213,9 @@ const PageThumbnail = React.memo(({
             top: 8,
             right: 8,
             zIndex: 10,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            border: '1px solid #ccc',
+            backgroundColor: 'white',
             borderRadius: '4px',
-            padding: '4px',
+            padding: '2px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             pointerEvents: 'auto',
             cursor: 'pointer'
@@ -239,7 +238,7 @@ const PageThumbnail = React.memo(({
             size="sm"
           />
         </div>
-      )}
+      }
 
       <div className="page-container w-[90%] h-[90%]" draggable={false}>
         <div

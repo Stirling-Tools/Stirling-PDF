@@ -160,7 +160,7 @@
 .tooltip-arrow-top {
   top: -0.25rem;
   left: 50%;
-  transform: translateX(-50%) rotate(45deg);
+  transform: translateX(-50%) rotate(-135deg);
   border-top: none;
   border-left: none;
 }
