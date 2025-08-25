@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, Button, ScrollArea, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { supportedLanguages } from '../../i18n';
-import LanguageIcon from '@mui/icons-material/Language';
+import LocalIcon from './LocalIcon';
 import styles from './LanguageSelector.module.css';
 
 interface LanguageSelectorProps {
@@ -105,13 +105,13 @@ const LanguageSelector = ({ position = 'bottom-start', offset = 8, compact = fal
               }
             }}
           >
-            <span className="material-symbols-rounded">language</span>
+            <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
           </ActionIcon>
         ) : (
           <Button
             variant="subtle"
             size="sm"
-            leftSection={<LanguageIcon style={{ fontSize: 18 }} />}
+            leftSection={<LocalIcon icon="language" width="1.5rem" height="1.5rem" />}
             styles={{
               root: {
                 border: 'none',
