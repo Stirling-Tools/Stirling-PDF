@@ -1,11 +1,11 @@
 package stirling.software.SPDF.utils.text;
 
+import java.util.regex.Pattern;
+
 import org.apache.pdfbox.pdmodel.font.PDFont;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.regex.Pattern;
 
 @Slf4j
 @UtilityClass
@@ -516,5 +516,4 @@ public class TextEncodingHelper {
 
         return false;
     }
-
 }

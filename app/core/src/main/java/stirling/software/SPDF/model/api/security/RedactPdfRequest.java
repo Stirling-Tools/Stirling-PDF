@@ -1,5 +1,7 @@
 package stirling.software.SPDF.model.api.security;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
@@ -53,4 +55,10 @@ public class RedactPdfRequest extends PDFFile {
             allowableValues = {"moderate", "visual", "aggressive"},
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String redactionMode;
+
+    @Schema(
+            description =
+                    "List of OCR languages to use for restoration when needed (Tesseract codes like 'eng', 'deu')",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private List<String> languages;
 }

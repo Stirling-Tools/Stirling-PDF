@@ -23,6 +23,15 @@
             background-color: #0d6efd;
             border-color: #0d6efd;
         }
+
+        /* OCR language list styling */
+        #languages {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--md-sys-color-surface-3);
+            border-radius: 5px;
+            padding: 10px;
+        }
     </style>
 </head>
 
@@ -62,27 +71,27 @@
                         </div>
 
                         <div class="redaction-options-group">
-                            <label class="form-label fw-bold mb-3">Redaction style</label>
+                            <label class="form-label fw-bold mb-3" th:text="#{autoRedact.redactionStyleLabel}"></label>
                             <div class="form-check mb-2">
                                 <input aria-describedby="visual-desc" class="form-check-input" id="visualImage" name="redactionMode" type="radio" value="visual">
-                                <label class="form-check-label" for="visualImage">Visual</label>
-                                <small class="form-text text-muted d-block mt-1" id="visual-desc">Converts to image with visual redactions for maximum security.</small>
+                                <label class="form-check-label" for="visualImage" th:text="#{autoRedact.visualRedactionLabel}">Visual</label>
+                                <small class="form-text text-muted d-block mt-1" id="visual-desc" th:text="#{autoRedact.visualRedactionDescription}">Converts to image with visual redactions for maximum security.</small>
                             </div>
                             <div class="form-check mb-2">
                                 <input aria-describedby="delete-desc" class="form-check-input" id="deleteText" name="redactionMode" type="radio" value="aggressive">
-                                <label class="form-check-label" for="deleteText">Delete Text</label>
-                                <small class="form-text text-muted d-block mt-1" id="delete-desc">Removes the text completely. This may alter the original layout or leave a gap.</small>
+                                <label class="form-check-label" for="deleteText" th:text="#{autoRedact.deleteTextLabel}">Delete Text</label>
+                                <small class="form-text text-muted d-block mt-1" id="delete-desc" th:text="#{autoRedact.deleteTextDescription}">Removes the text completely. This may alter the original layout or leave a gap.</small>
                             </div>
                             <div class="form-check mb-3">
                                 <input aria-describedby="keep-desc" checked class="form-check-input" id="keepLayout" name="redactionMode" type="radio" value="moderate">
-                                <label class="form-check-label" for="keepLayout">Keep Layout</label>
-                                <small class="form-text text-muted d-block mt-1" id="keep-desc">Covers text with a redaction box, preserving the page's original design.</small>
+                                <label class="form-check-label" for="keepLayout" th:text="#{autoRedact.keepLayoutLabel}">Keep Layout</label>
+                                <small class="form-text text-muted d-block mt-1" id="keep-desc" th:text="#{autoRedact.keepLayoutDescription}">Covers text with a redaction box, preserving the page's original design.</small>
                             </div>
 
                             <div class="form-check">
                                 <input aria-describedby="guarantee-desc" class="form-check-input" id="guaranteeRedaction" name="convertPDFToImage" type="checkbox">
-                                <label class="form-check-label" for="guaranteeRedaction">PDF image</label>
-                                <small class="form-text text-muted d-block mt-1" id="guarantee-desc">For maximum security, uses an image-based method to ensure text is unrecoverable. May slightly affect document quality.</small>
+                                <label class="form-check-label" for="guaranteeRedaction" th:text="#{autoRedact.pdfImageLabel}">PDF image</label>
+                                <small class="form-text text-muted d-block mt-1" id="guarantee-desc" th:text="#{autoRedact.pdfImageDescription}">For maximum security, uses an image-based method to ensure text is unrecoverable. May slightly affect document quality.</small>
                             </div>
                         </div>
 
@@ -113,22 +122,14 @@
 
                         <br>
 
-                        <div class="mb-3">
-                            <label class="form-label" for="ocrLanguage">OCR Language</label>
-                            <select aria-describedby="ocr-desc" class="form-select" id="ocrLanguage" name="ocrLanguage">
-                                <option value="eng">English</option>
-                                <option value="spa">Spanish</option>
-                                <option value="fra">French</option>
-                                <option value="deu">German</option>
-                                <option value="ita">Italian</option>
-                                <option value="por">Portuguese</option>
-                                <option value="rus">Russian</option>
-                                <option value="ara">Arabic</option>
-                                <option value="chi_sim">Chinese (Simplified)</option>
-                                <option value="jpn">Japanese</option>
-                                <option value="kor">Korean</option>
-                                <option value="hin">Hindi</option>
-                            </select>
+                        <div class="mb-3" th:if="${#lists.size(languages) > 0}">
+                            <label class="form-label" for="languages">OCR Languages</label>
+                            <div id="languages">
+                                <div class="form-check" th:each="language, iterStat : ${languages}">
+                                    <input onchange="handleLangSelection()" required th:id="${'language-' + language}" th:name="languages" th:value="${language}" type="checkbox" />
+                                    <label th:for="${'language-' + language}" th:text="${language}"></label>
+                                </div>
+                            </div>
                             <small class="form-text text-muted" id="ocr-desc">Used when OCR restoration is needed</small>
                         </div>
 
@@ -144,7 +145,7 @@
     </div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
 </div>
-<script>
+<script th:inline="javascript">
     function handleColorChange(selectedValue) {
         const container = document.getElementById('customColorContainer');
         const input = document.getElementById('customColor');
@@ -159,7 +160,83 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+        function handleLangSelection() {
+                let checkboxes = document.getElementsByName("languages");
+                let selected = false;
+                for (let i = 0; i < checkboxes.length; i++) {
+                        if (checkboxes[i].checked) {
+                                selected = true;
+                                checkboxes[i].setAttribute('required', 'false');
+                        }
+                }
+                if (selected) {
+                        for (let i = 0; i < checkboxes.length; i++) {
+                                checkboxes[i].removeAttribute('required');
+                        }
+                } else {
+                        for (let i = 0; i < checkboxes.length; i++) {
+                                checkboxes[i].setAttribute('required', 'true');
+                        }
+                }
+        }
+
+        // Translations for language names
+        const languageTranslations = {};
+        /*[# th:each="lang : ${languages}"]*/
+            languageTranslations['[(${lang})]'] = /*[[#{${'lang.' + lang}}]]*/[(${lang})];
+        /*[/]*/
+
+        const localeToTesseract = {
+            'en': 'eng', 'fr': 'fra', 'de': 'deu', 'es': 'spa', 'it': 'ita', 'pt': 'por', 'ru': 'rus',
+            'zh': 'chi_sim', 'ja': 'jpn', 'ko': 'kor', 'ar': 'ara', 'hi': 'hin', 'nl': 'nld', 'cs': 'ces',
+            'pl': 'pol', 'tr': 'tur', 'uk': 'ukr', 'vi': 'vie', 'sv': 'swe', 'no': 'nor', 'fi': 'fin',
+            'da': 'dan', 'el': 'ell', 'he': 'heb', 'hu': 'hun', 'bg': 'bul', 'ro': 'ron', 'hr': 'hrv',
+            'sk': 'slk', 'id': 'ind', 'th': 'tha', 'sl': 'slv'
+        };
+
+        function getTranslatedLanguageName(shortCode) {
+            return languageTranslations[shortCode] || shortCode;
+        }
+
+        function prioritizeLanguages() {
+            const languageContainer = document.getElementById('languages');
+            if (!languageContainer) return;
+            const formChecks = Array.from(languageContainer.getElementsByClassName('form-check'));
+            if (formChecks.length === 0) return;
+            formChecks.forEach(element => {
+                const label = element.querySelector('label');
+                if (label) {
+                    const langCode = label.getAttribute('for').split('-')[1];
+                    label.textContent = getTranslatedLanguageName(langCode);
+                }
+            });
+            const browserLanguage = document.documentElement.lang || navigator.language || navigator.userLanguage;
+            const uiLanguage = document.documentElement.getAttribute('data-language') || browserLanguage;
+            const primaryLanguageCode = (uiLanguage || '').split(/[-_]/)[0].toLowerCase();
+            const tesseractPrimaryCode = localeToTesseract[primaryLanguageCode];
+            const priorityLanguages = [];
+            if (tesseractPrimaryCode) priorityLanguages.push(tesseractPrimaryCode);
+            if (tesseractPrimaryCode !== 'eng') priorityLanguages.push('eng');
+            const sortedElements = formChecks.sort((a, b) => {
+                const aInput = a.querySelector('input');
+                const bInput = b.querySelector('input');
+                if (!aInput || !bInput) return 0;
+                const aLangCode = aInput.id.split('-')[1];
+                const bLangCode = bInput.id.split('-')[1];
+                const aIsPriority = priorityLanguages.includes(aLangCode);
+                const bIsPriority = priorityLanguages.includes(bLangCode);
+                if (aIsPriority && !bIsPriority) return -1;
+                if (!aIsPriority && bIsPriority) return 1;
+                if (aIsPriority && bIsPriority) {
+                    return priorityLanguages.indexOf(aLangCode) - priorityLanguages.indexOf(bLangCode);
+                }
+                return getTranslatedLanguageName(aLangCode).localeCompare(getTranslatedLanguageName(bLangCode));
+            });
+            languageContainer.innerHTML = '';
+            sortedElements.forEach(element => languageContainer.appendChild(element));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
         const redactionModeRadios = document.querySelectorAll('input[name="redactionMode"]');
         const aggressiveModeHidden = document.getElementById('aggressiveMode');
         const guaranteeRedactionCheckbox = document.getElementById('guaranteeRedaction');
@@ -188,7 +265,6 @@
 
         if (defaultColor) {
             handleColorChange(defaultColor.value);
-            // Set initial value for customColor input when a pre-defined color is selected
             const customColorInput = document.getElementById('customColor');
             if (defaultColor.value !== 'custom') {
                 customColorInput.value = defaultColor.value;
@@ -196,6 +272,9 @@
         }
 
         updateMode();
+
+    // Initialize language list ordering & labels
+    prioritizeLanguages();
     });
 </script>
 </body>
