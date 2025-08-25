@@ -62,7 +62,6 @@ const FileStatusIndicator = ({
     if (!hasRecentFiles) {
       return (
         <Text size="sm" c="dimmed">
-          {t("files.noFiles", "No files uploaded. ")}{" "}
           <Anchor
             size="sm"
             onClick={handleNativeUpload}
@@ -77,7 +76,6 @@ const FileStatusIndicator = ({
       // If there are recent files, show add files button
       return (
         <Text size="sm" c="dimmed">
-          {t("files.noFiles", "No files uploaded. ")}{" "}
           <Anchor
             size="sm"
             onClick={openFilesModal}
