@@ -53,6 +53,9 @@ export interface PageEditorFunctions {
   handleSplitAll: () => void;
   handlePageBreak: () => void;
   handlePageBreakAll: () => void;
+  handleSelectAll: () => void;
+  handleDeselectAll: () => void;
+  handleSetSelectedPages: (pageNumbers: number[]) => void;
   onExportSelected: () => void;
   onExportAll: () => void;
   exportLoading: boolean;

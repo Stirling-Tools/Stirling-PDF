@@ -320,6 +320,20 @@ const PageEditor = ({
     undoManagerRef.current.executeCommand(pageBreakAllCommand);
   }, [displayDocument]);
 
+  const handleSelectAll = useCallback(() => {
+    if (!displayDocument) return;
+    const allPageNumbers = Array.from({ length: displayDocument.pages.length }, (_, i) => i + 1);
+    setSelectedPageNumbers(allPageNumbers);
+  }, [displayDocument]);
+
+  const handleDeselectAll = useCallback(() => {
+    setSelectedPageNumbers([]);
+  }, []);
+
+  const handleSetSelectedPages = useCallback((pageNumbers: number[]) => {
+    setSelectedPageNumbers(pageNumbers);
+  }, []);
+
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => {
     if (!displayDocument) return;
 
@@ -548,6 +562,9 @@ const PageEditor = ({
         handleSplitAll,
         handlePageBreak,
         handlePageBreakAll,
+        handleSelectAll,
+        handleDeselectAll,
+        handleSetSelectedPages,
         showExportPreview: handleExportPreview,
         onExportSelected,
         onExportAll,
@@ -562,7 +579,7 @@ const PageEditor = ({
     }
   }, [
     onFunctionsReady, handleUndo, handleRedo, canUndo, canRedo, handleRotate, handleDelete, handleSplit, handleSplitAll,
-    handlePageBreak, handlePageBreakAll, handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading,
+    handlePageBreak, handlePageBreakAll, handleSelectAll, handleDeselectAll, handleSetSelectedPages, handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading,
     selectionMode, selectedPageNumbers, splitPositions, displayDocument?.pages.length, closePdf
   ]);
 

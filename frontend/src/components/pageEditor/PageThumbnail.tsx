@@ -226,14 +226,12 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   // Handle click vs drag differentiation
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!selectionMode) return;
-
     setIsMouseDown(true);
     setMouseStartPos({ x: e.clientX, y: e.clientY });
-  }, [selectionMode]);
+  }, []);
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (!selectionMode || !isMouseDown || !mouseStartPos) {
+    if (!isMouseDown || !mouseStartPos) {
       setIsMouseDown(false);
       setMouseStartPos(null);
       return;
@@ -251,7 +249,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
     setIsMouseDown(false);
     setMouseStartPos(null);
-  }, [selectionMode, isMouseDown, mouseStartPos, isDragging, page.pageNumber, onTogglePage]);
+  }, [isMouseDown, mouseStartPos, isDragging, page.pageNumber, onTogglePage]);
 
   const handleMouseLeave = useCallback(() => {
     setIsMouseDown(false);
