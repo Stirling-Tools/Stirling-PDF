@@ -13,6 +13,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 import ToolConfigurationModal from './ToolConfigurationModal';
 import ToolList from './ToolList';
+import IconSelector from './IconSelector';
 import { AutomationConfig, AutomationMode, AutomationTool } from '../../../types/automation';
 import { useAutomationForm } from '../../../hooks/tools/automate/useAutomationForm';
 
@@ -31,6 +32,8 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   const {
     automationName,
     setAutomationName,
+    automationIcon,
+    setAutomationIcon,
     selectedTools,
     addTool,
     removeTool,
@@ -101,6 +104,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     const automationData = {
       name: automationName.trim(),
       description: '',
+      icon: automationIcon,
       operations: selectedTools.map(tool => ({
         operation: tool.operation,
         parameters: tool.parameters || {}
@@ -149,18 +153,26 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       <Divider mb="md" />
 
       <Stack gap="md">
-        {/* Automation Name */}
-        <Stack gap="xs">
-        <Text size="sm" fw={500} mb="xs" style={{ color: "var(--mantine-color-text)" }}>
-            {t('automate.creation.name.label', 'Automation Name')} *
-        </Text>
-        <TextInput
-          placeholder={t('automate.creation.name.placeholder', 'My Automation')}
-          value={automationName}
-          onChange={(e) => setAutomationName(e.currentTarget.value)}
-          size="sm"
-        />
-        </Stack>
+        {/* Automation Name and Icon */}
+        <Group gap="xs" align="flex-start">
+          <Stack gap="xs" style={{ flex: 1 }}>
+            <Text size="sm" fw={500} mb="xs" style={{ color: "var(--mantine-color-text)" }}>
+              {t('automate.creation.name.label', 'Automation Name')} *
+            </Text>
+            <TextInput
+              placeholder={t('automate.creation.name.placeholder', 'My Automation')}
+              value={automationName}
+              onChange={(e) => setAutomationName(e.currentTarget.value)}
+              size="sm"
+            />
+          </Stack>
+
+          <IconSelector
+            value={automationIcon || 'SettingsIcon'}
+            onChange={setAutomationIcon}
+            size="sm"
+          />
+        </Group>
 
 
         {/* Selected Tools List */}

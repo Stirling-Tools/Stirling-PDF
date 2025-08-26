@@ -6,6 +6,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AutomationEntry from "./AutomationEntry";
 import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSuggestedAutomations";
 import { AutomationConfig, SuggestedAutomation } from "../../../types/automation";
+import { iconMap } from './iconMap';
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -42,18 +43,21 @@ export default function AutomationSelection({
         keepIconColor={true}
       />
       {/* Saved Automations */}
-      {savedAutomations.map((automation) => (
-        <AutomationEntry
-          key={automation.id}
-          title={automation.name}
-          badgeIcon={SettingsIcon}
-          operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
-          onClick={() => onRun(automation)}
-          showMenu={true}
-          onEdit={() => onEdit(automation)}
-          onDelete={() => onDelete(automation)}
-        />
-      ))}
+      {savedAutomations.map((automation) => {
+        const IconComponent = automation.icon ? iconMap[automation.icon as keyof typeof iconMap] : SettingsIcon;
+        return (
+          <AutomationEntry
+            key={automation.id}
+            title={automation.name}
+            badgeIcon={IconComponent || SettingsIcon}
+            operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
+            onClick={() => onRun(automation)}
+            showMenu={true}
+            onEdit={() => onEdit(automation)}
+            onDelete={() => onDelete(automation)}
+          />
+        );
+      })}
       <Divider pb='sm' />
 
       {/* Suggested Automations */}

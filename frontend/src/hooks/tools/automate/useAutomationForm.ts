@@ -14,6 +14,7 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
   const { t } = useTranslation();
   
   const [automationName, setAutomationName] = useState('');
+  const [automationIcon, setAutomationIcon] = useState<string>('');
   const [selectedTools, setSelectedTools] = useState<AutomationTool[]>([]);
 
   const getToolName = useCallback((operation: string) => {
@@ -33,6 +34,7 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
   useEffect(() => {
     if ((mode === AutomationMode.SUGGESTED || mode === AutomationMode.EDIT) && existingAutomation) {
       setAutomationName(existingAutomation.name || '');
+      setAutomationIcon(existingAutomation.icon || '');
 
       const operations = existingAutomation.operations || [];
       const tools = operations.map((op, index) => {
@@ -101,6 +103,8 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
   return {
     automationName,
     setAutomationName,
+    automationIcon,
+    setAutomationIcon,
     selectedTools,
     setSelectedTools,
     addTool,
