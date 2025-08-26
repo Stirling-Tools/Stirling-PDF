@@ -270,8 +270,6 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
-          secrets: |
-            npmrc=//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
 
       - name: Build and push V2 backend image
         if: steps.check-backend.outputs.exists == 'false'
