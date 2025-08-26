@@ -19,13 +19,13 @@ interface PageThumbnailProps {
   index: number;
   totalPages: number;
   originalFile?: File;
-  selectedPages: number[];
+  selectedPageIds: string[];
   selectionMode: boolean;
   movingPage: number | null;
   isAnimating: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => void;
-  onTogglePage: (pageNumber: number) => void;
+  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
+  onTogglePage: (pageId: string) => void;
   onAnimateReorder: () => void;
   onExecuteCommand: (command: { execute: () => void }) => void;
   onSetStatus: (status: string) => void;
@@ -45,7 +45,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   index,
   totalPages,
   originalFile,
-  selectedPages,
+  selectedPageIds,
   selectionMode,
   movingPage,
   isAnimating,
@@ -139,7 +139,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         getInitialData: () => ({
           pageNumber: page.pageNumber,
           pageId: page.id,
-          selectedPages: [page.pageNumber]
+          selectedPageIds: [page.id]
         }),
         onDragStart: () => {
           setIsDragging(true);
@@ -185,7 +185,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         (dragElementRef.current as any).__dragCleanup();
       }
     }
-  }, [page.id, page.pageNumber, pageRefs, selectionMode, selectedPages, pdfDocument.pages, onReorderPages]);
+  }, [page.id, page.pageNumber, pageRefs, selectionMode, selectedPageIds, pdfDocument.pages, onReorderPages]);
 
   // DOM command handlers
   const handleRotateLeft = useCallback((e: React.MouseEvent) => {
@@ -263,12 +263,12 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
     // If mouse moved less than 5 pixels, consider it a click (not a drag)
     if (distance < 5 && !isDragging) {
-      onTogglePage(page.pageNumber);
+      onTogglePage(page.id);
     }
 
     setIsMouseDown(false);
     setMouseStartPos(null);
-  }, [isMouseDown, mouseStartPos, isDragging, page.pageNumber, onTogglePage]);
+  }, [isMouseDown, mouseStartPos, isDragging, page.id, onTogglePage]);
 
   const handleMouseLeave = useCallback(() => {
     setIsMouseDown(false);
@@ -323,7 +323,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
-            onTogglePage(page.pageNumber);
+            onTogglePage(page.id);
           }}
           onMouseUp={(e) => e.stopPropagation()}
           onDragStart={(e) => {
@@ -332,7 +332,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           }}
         >
           <Checkbox
-            checked={Array.isArray(selectedPages) ? selectedPages.includes(page.pageNumber) : false}
+            checked={Array.isArray(selectedPageIds) ? selectedPageIds.includes(page.id) : false}
             onChange={() => {
               // Selection is handled by container mouseDown
             }}

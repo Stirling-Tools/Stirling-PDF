@@ -37,7 +37,8 @@ interface PageEditorControlsProps {
 
   // Selection state
   selectionMode: boolean;
-  selectedPages: number[];
+  selectedPageIds: string[];
+  displayDocument?: { pages: { id: string; pageNumber: number }[] };
   
   // Split state (for tooltip logic)
   splitPositions?: Set<number>;
@@ -59,18 +60,23 @@ const PageEditorControls = ({
   onExportAll,
   exportLoading,
   selectionMode,
-  selectedPages,
+  selectedPageIds,
+  displayDocument,
   splitPositions,
   totalPages
 }: PageEditorControlsProps) => {
   // Calculate split tooltip text using smart toggle logic
   const getSplitTooltip = () => {
-    if (!splitPositions || !totalPages || selectedPages.length === 0) {
+    if (!splitPositions || !totalPages || selectedPageIds.length === 0) {
       return "Split Selected";
     }
     
     // Convert selected pages to split positions (same logic as handleSplit)
-    const selectedSplitPositions = selectedPages.map(pageNum => pageNum - 1).filter(pos => pos < totalPages - 1);
+    const selectedPageNumbers = displayDocument ? selectedPageIds.map(id => {
+      const page = displayDocument.pages.find(p => p.id === id);
+      return page?.pageNumber || 0;
+    }).filter(num => num > 0) : [];
+    const selectedSplitPositions = selectedPageNumbers.map(pageNum => pageNum - 1).filter(pos => pos < totalPages - 1);
     
     if (selectedSplitPositions.length === 0) {
       return "Split Selected";
@@ -97,8 +103,8 @@ const PageEditorControls = ({
 
   // Calculate page break tooltip text
   const getPageBreakTooltip = () => {
-    return selectedPages.length > 0 
-      ? `Insert ${selectedPages.length} Page Break${selectedPages.length > 1 ? 's' : ''}`
+    return selectedPageIds.length > 0 
+      ? `Insert ${selectedPageIds.length} Page Break${selectedPageIds.length > 1 ? 's' : ''}`
       : "Insert Page Breaks";
   };
 
@@ -157,7 +163,7 @@ const PageEditorControls = ({
         <Tooltip label="Rotate Selected Left">
           <ActionIcon
             onClick={() => onRotate('left')}
-            disabled={selectedPages.length === 0}
+            disabled={selectedPageIds.length === 0}
             variant="subtle"
             style={{ color: 'var(--mantine-color-dimmed)' }}
             radius="md"
@@ -169,7 +175,7 @@ const PageEditorControls = ({
         <Tooltip label="Rotate Selected Right">
           <ActionIcon
             onClick={() => onRotate('right')}
-            disabled={selectedPages.length === 0}
+            disabled={selectedPageIds.length === 0}
             variant="subtle"
             style={{ color: 'var(--mantine-color-dimmed)' }}
             radius="md"
@@ -181,7 +187,7 @@ const PageEditorControls = ({
         <Tooltip label="Delete Selected">
           <ActionIcon
             onClick={onDelete}
-            disabled={selectedPages.length === 0}
+            disabled={selectedPageIds.length === 0}
             variant="subtle"
             style={{ color: 'var(--mantine-color-dimmed)' }}
             radius="md"
@@ -193,7 +199,7 @@ const PageEditorControls = ({
         <Tooltip label={getSplitTooltip()}>
           <ActionIcon
             onClick={onSplit}
-            disabled={selectedPages.length === 0}
+            disabled={selectedPageIds.length === 0}
             variant="subtle"
             style={{ color: 'var(--mantine-color-dimmed)' }}
             radius="md"
@@ -205,7 +211,7 @@ const PageEditorControls = ({
         <Tooltip label={getPageBreakTooltip()}>
           <ActionIcon
             onClick={onPageBreak}
-            disabled={selectedPages.length === 0}
+            disabled={selectedPageIds.length === 0}
             variant="subtle"
             style={{ color: 'var(--mantine-color-dimmed)' }}
             radius="md"
