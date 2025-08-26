@@ -51,7 +51,6 @@
     "placeholder": "Select a PDF file in the main view to get started",
     "upload": "Upload",
     "addFiles": "Add files",
-    "noFiles": "No files uploaded. ",
     "selectFromWorkbench": "Select files from the workbench or "
   },
   "noFavourites": "No favourites added",
@@ -996,7 +995,6 @@
     },
     "submit": "Change"
   },
-  
   "removePages": {
     "tags": "Remove pages,delete pages",
     "title": "Remove Pages",
@@ -1113,7 +1111,88 @@
     },
     "help": "Please read this documentation on how to use this for other languages and/or use not in docker",
     "credit": "This service uses qpdf and Tesseract for OCR.",
-    "submit": "Process PDF with OCR"
+    "submit": "Process PDF with OCR",
+    "operation": {
+      "submit": "Process OCR and Review"
+    },
+    "results": {
+      "title": "OCR Results"
+    },
+    "languagePicker": {
+      "additionalLanguages": "Looking for additional languages?",
+      "viewSetupGuide": "View setup guide →"
+    },
+    "settings": {
+      "title": "Settings",
+      "ocrMode": {
+        "label": "OCR Mode",
+        "auto": "Auto (skip text layers)",
+        "force": "Force (re-OCR all, replace text)",
+        "strict": "Strict (abort if text found)"
+      },
+      "languages": {
+        "label": "Languages",
+        "placeholder": "Select languages"
+      },
+      "compatibilityMode": {
+        "label": "Compatibility Mode"
+      },
+      "advancedOptions": {
+        "label": "Processing Options",
+        "sidecar": "Create a text file",
+        "deskew": "Deskew pages",
+        "clean": "Clean input file",
+        "cleanFinal": "Clean final output"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "OCR Settings Overview"
+      },
+      "mode": {
+        "title": "OCR Mode",
+        "text": "Optical Character Recognition (OCR) helps you turn scanned or screenshotted pages into text you can search, copy, or highlight.",
+        "bullet1": "Auto skips pages that already contain text layers.",
+        "bullet2": "Force re-OCRs every page and replaces all the text.",
+        "bullet3": "Strict halts if any selectable text is found."
+      },
+      "languages": {
+        "title": "Languages",
+        "text": "Improve OCR accuracy by specifying the expected languages. Choose one or more languages to guide detection."
+      },
+      "output": {
+        "title": "Output",
+        "text": "Decide how you want the text output formatted:",
+        "bullet1": "Searchable PDF embeds text behind the original image.",
+        "bullet2": "HOCR XML returns a structured machine-readable file.",
+        "bullet3": "Plain-text sidecar creates a separate .txt file with raw content."
+      },
+      "advanced": {
+        "header": {
+          "title": "Advanced OCR Processing"
+        },
+        "compatibility": {
+          "title": "Compatibility Mode",
+          "text": "Uses OCR 'sandwich PDF' mode: results in larger files, but more reliable with certain languages and older PDF software. By default we use hOCR for smaller, modern PDFs."
+        },
+        "sidecar": {
+          "title": "Create Text File",
+          "text": "Generates a separate .txt file alongside the PDF containing all extracted text content for easy access and processing."
+        },
+        "deskew": {
+          "title": "Deskew Pages",
+          "text": "Automatically corrects skewed or tilted pages to improve OCR accuracy. Useful for scanned documents that weren't perfectly aligned."
+        },
+        "clean": {
+          "title": "Clean Input File",
+          "text": "Preprocesses the input by removing noise, enhancing contrast, and optimising the image for better OCR recognition before processing."
+        },
+        "cleanFinal": {
+          "title": "Clean Final Output",
+          "text": "Post-processes the final PDF by removing OCR artefacts and optimising the text layer for better readability and smaller file size."
+        }
+      }
+    }
   },
   "extractImages": {
     "tags": "picture,photo,save,archive,zip,capture,grab",
@@ -2047,7 +2126,7 @@
     "selectedCount": "{{count}} selected",
     "download": "Download",
     "delete": "Delete",
-    "unsupported":"Unsupported"
+    "unsupported": "Unsupported"
   },
   "storage": {
     "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",
@@ -2219,78 +2298,85 @@
     }
   },
   "automate": {
-      "title": "Automate",
-      "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks.",
-      "invalidStep": "Invalid step",
-      "files": {
-        "placeholder": "Select files to process with this automation"
+    "title": "Automate",
+    "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks.",
+    "invalidStep": "Invalid step",
+    "files": {
+      "placeholder": "Select files to process with this automation"
+    },
+    "selection": {
+      "title": "Automation Selection",
+      "saved": {
+        "title": "Saved"
       },
-      "selection": {
-        "title": "Automation Selection",
-        "saved": {
-          "title": "Saved"
-        },
-        "createNew": {
-          "title": "Create New Automation"
-        },
-        "suggested": {
-          "title": "Suggested"
-        }
+      "createNew": {
+        "title": "Create New Automation"
       },
-      "creation": {
-        "createTitle": "Create Automation",
-        "editTitle": "Edit Automation",
-        "description": "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
-        "name": {
-          "placeholder": "Automation name"
-        },
-        "tools": {
-          "selectTool": "Select a tool...",
-          "selected": "Selected Tools",
-          "remove": "Remove tool",
-          "configure": "Configure tool",
-          "notConfigured": "! Not Configured",
-          "addTool": "Add Tool",
-          "add": "Add a tool..."
-        },
-        "save": "Save Automation",
-        "unsavedChanges": {
-          "title": "Unsaved Changes",
-          "message": "You have unsaved changes. Are you sure you want to go back? All changes will be lost.",
-          "cancel": "Cancel",
-          "confirm": "Go Back"
-        }
+      "suggested": {
+        "title": "Suggested"
+      }
+    },
+    "creation": {
+      "createTitle": "Create Automation",
+      "editTitle": "Edit Automation",
+      "intro": "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
+      "name": {
+        "label": "Automation Name",
+        "placeholder": "My Automation"
       },
-      "run": {
-        "title": "Run Automation"
+      "description": {
+        "label": "Description (optional)",
+        "placeholder": "Describe what this automation does..."
       },
-      "sequence": {
-        "unnamed": "Unnamed Automation",
-        "steps": "{{count}} steps",
-        "running": "Running Automation...",
-        "run": "Run Automation",
-        "finish": "Finish"
+      "tools": {
+        "selectTool": "Select a tool...",
+        "selected": "Selected Tools",
+        "remove": "Remove tool",
+        "configure": "Configure tool",
+        "notConfigured": "! Not Configured",
+        "addTool": "Add Tool",
+        "add": "Add a tool..."
       },
-      "reviewTitle": "Automation Results",
-      "config": {
-        "loading": "Loading tool configuration...",
-        "noSettings": "This tool does not have configurable settings.",
-        "title": "Configure {{toolName}}",
-        "description": "Configure the settings for this tool. These settings will be applied when the automation runs.",
+      "save": "Save Automation",
+      "unsavedChanges": {
+        "title": "Unsaved Changes",
+        "message": "You have unsaved changes. Are you sure you want to go back? All changes will be lost.",
         "cancel": "Cancel",
-        "save": "Save Configuration"
+        "confirm": "Go Back"
       },
-      "copyToSaved": "Copy to Saved"
-    }
+      "icon": {
+        "label": "Icon"
+      }
+    },
+    "run": {
+      "title": "Run Automation"
+    },
+    "sequence": {
+      "unnamed": "Unnamed Automation",
+      "steps": "{{count}} steps",
+      "running": "Running Automation...",
+      "run": "Run Automation",
+      "finish": "Finish"
+    },
+    "reviewTitle": "Automation Results",
+    "config": {
+      "loading": "Loading tool configuration...",
+      "noSettings": "This tool does not have configurable settings.",
+      "title": "Configure {{toolName}}",
+      "description": "Configure the settings for this tool. These settings will be applied when the automation runs.",
+      "cancel": "Cancel",
+      "save": "Save Configuration"
+    },
+    "copyToSaved": "Copy to Saved"
   },
   "automation": {
     "suggested": {
       "securePdfIngestion": "Secure PDF Ingestion",
       "securePdfIngestionDesc": "Comprehensive PDF processing workflow that sanitises documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimises file size.",
-      "emailPreparation": "Email Preparation", 
+      "emailPreparation": "Email Preparation",
       "emailPreparationDesc": "Optimises PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy.",
       "secureWorkflow": "Security Workflow",
-      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access.",
+      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default.",
       "processImages": "Process Images",
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
