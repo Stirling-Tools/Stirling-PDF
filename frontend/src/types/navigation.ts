@@ -33,7 +33,7 @@ export const isValidMode = (mode: string): mode is ModeType => {
   return validModes.includes(mode as ModeType);
 };
 
-export const getDefaultMode = (): ModeType => 'pageEditor';
+export const getDefaultMode = (): ModeType => 'fileEditor';
 
 // Route parsing result
 export interface ToolRoute {

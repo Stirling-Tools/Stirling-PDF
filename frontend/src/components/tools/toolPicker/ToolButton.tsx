@@ -9,6 +9,7 @@ interface ToolButtonProps {
   tool: ToolRegistryEntry;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  rounded?: boolean;
 }
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect }) => {
