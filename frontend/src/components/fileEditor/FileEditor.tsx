@@ -12,8 +12,8 @@ import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
-import styles from '../pageEditor/PageEditor.module.css';
-import FileThumbnail from '../pageEditor/FileThumbnail';
+import styles from './FileEditor.module.css';
+import FileEditorThumbnail from './FileEditorThumbnail';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
 
@@ -527,7 +527,7 @@ const FileEditor = ({
               if (!fileItem) return null;
               
               return (
-                <FileThumbnail
+                <FileEditorThumbnail
                   key={record.id}
                   file={fileItem}
                   index={index}

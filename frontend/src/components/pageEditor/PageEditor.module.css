@@ -57,9 +57,25 @@
   0%, 100% {
     opacity: 1;
   }
-  .actionRow:hover { background: var(--hover-bg); }
-  .actionDanger { color: var(--text-brand-accent); }
-  .actionsDivider { height: 1px; background: var(--border-default); margin: 4px 0; }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Action styles */
+.actionRow:hover { 
+  background: var(--hover-bg); 
+}
+
+.actionDanger { 
+  color: var(--text-brand-accent); 
+}
+
+.actionsDivider { 
+  height: 1px; 
+  background: var(--border-default); 
+  margin: 4px 0; 
+}
 
 .pinIndicator {
   position: absolute;
