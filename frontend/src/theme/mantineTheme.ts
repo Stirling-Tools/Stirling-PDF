@@ -109,7 +109,26 @@ export const mantineTheme = createTheme({
     },
 
     TextInput: {
-      styles: {
+      styles: (theme: any) => ({
+        input: {
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-default)',
+          color: 'var(--text-primary)',
+          outline: 'white',
+          '&:focus': {
+            borderColor: 'var(--color-primary-500)',
+            boxShadow: '0 0 0 1px var(--color-primary-500)',
+          },
+        },
+        label: {
+          color: 'var(--text-secondary)',
+          fontWeight: 'var(--font-weight-medium)',
+        },
+      }),
+    },
+
+     PasswordInput: {
+      styles: (theme: any) => ({
         input: {
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
@@ -123,7 +142,7 @@ export const mantineTheme = createTheme({
           color: 'var(--text-secondary)',
           fontWeight: 'var(--font-weight-medium)',
         },
-      },
+      }),
     },
 
     Select: {

@@ -148,20 +148,19 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   return (
     <div>
         <Text size="sm" mb="md" p="md"  style={{borderRadius:'var(--mantine-radius-md)', background: 'var(--color-gray-200)', color: 'var(--mantine-color-text)' }}>
-        {t("automate.creation.description", "Automations run tools sequentially. To get started, add tools in the order you want them to run.")}
+            {t("automate.creation.description", "Automations run tools sequentially. To get started, add tools in the order you want them to run.")}
         </Text>
       <Divider mb="md" />
 
       <Stack gap="md">
         {/* Automation Name and Icon */}
-        <Group gap="xs" align="flex-start">
+        <Group gap="xs" align="flex-end">
           <Stack gap="xs" style={{ flex: 1 }}>
-            <Text size="sm" fw={500} mb="xs" style={{ color: "var(--mantine-color-text)" }}>
-              {t('automate.creation.name.label', 'Automation Name')} *
-            </Text>
             <TextInput
               placeholder={t('automate.creation.name.placeholder', 'My Automation')}
               value={automationName}
+              withAsterisk
+              label={t('automate.creation.name.label', 'Automation Name')}
               onChange={(e) => setAutomationName(e.currentTarget.value)}
               size="sm"
             />

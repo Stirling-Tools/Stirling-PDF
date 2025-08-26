@@ -22,11 +22,10 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
   };
 
   const iconSize = size === "sm" ? 16 : size === "md" ? 18 : 20;
-  const actionIconSize = size === "sm" ? "sm" : size === "md" ? "md" : "lg";
 
   return (
-    <Stack gap="xs">
-      <Text size="sm" fw={500} mb="xs" style={{ color: "var(--mantine-color-text)" }}>
+    <Stack gap="1px">
+      <Text size="sm" fw={600} style={{ color: "var(--mantine-color-primary)" }}>
         {t("automate.creation.icon.label", "Icon")}
       </Text>
 
