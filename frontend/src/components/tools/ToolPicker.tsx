@@ -25,19 +25,39 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const quickAccessRef = useRef<HTMLDivElement>(null);
   const allToolsRef = useRef<HTMLDivElement>(null);
 
-  // On resize adjust headers height to offset height
+  // Keep header heights in sync with any dynamic size changes
   useLayoutEffect(() => {
     const update = () => {
       if (quickHeaderRef.current) {
-        setQuickHeaderHeight(quickHeaderRef.current.offsetHeight);
+        setQuickHeaderHeight(quickHeaderRef.current.offsetHeight || 0);
       }
       if (allHeaderRef.current) {
-        setAllHeaderHeight(allHeaderRef.current.offsetHeight);
+        setAllHeaderHeight(allHeaderRef.current.offsetHeight || 0);
       }
     };
+
     update();
+
+    // Update on window resize
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+
+    // Update on element resize (e.g., font load, badge count change, zoom)
+    const observers: ResizeObserver[] = [];
+    if (typeof ResizeObserver !== "undefined") {
+      const observe = (el: HTMLDivElement | null, cb: () => void) => {
+        if (!el) return;
+        const ro = new ResizeObserver(() => cb());
+        ro.observe(el);
+        observers.push(ro);
+      };
+      observe(quickHeaderRef.current, update);
+      observe(allHeaderRef.current, update);
+    }
+
+    return () => {
+      window.removeEventListener("resize", update);
+      observers.forEach(o => o.disconnect());
+    };
   }, []);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
@@ -85,7 +105,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
           overflowY: "auto",
           overflowX: "hidden",
           minHeight: 0,
-          height: "100%"
+          height: "100%",
+          marginTop: -2
         }}
         className="tool-picker-scrollable"
       >
@@ -109,7 +130,6 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 zIndex: 2,
                 borderTop: `0.0625rem solid var(--tool-header-border)`,
                 borderBottom: `0.0625rem solid var(--tool-header-border)`,
-                marginBottom: -1,
                 padding: "0.5rem 1rem",
                 fontWeight: 700,
                 background: "var(--tool-header-bg)",
@@ -117,7 +137,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between"
+                justifyContent: "space-between",
               }}
               onClick={() => scrollTo(quickAccessRef)}
             >
@@ -152,7 +172,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               ref={allHeaderRef}
               style={{
                 position: "sticky",
-                top: quickSection ? quickHeaderHeight - 1: 0,
+                top: quickSection ? quickHeaderHeight -1 : 0,
                 zIndex: 2,
                 borderTop: `0.0625rem solid var(--tool-header-border)`,
                 borderBottom: `0.0625rem solid var(--tool-header-border)`,

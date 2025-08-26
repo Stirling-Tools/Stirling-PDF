@@ -106,6 +106,12 @@
   --icon-config-bg: #9CA3AF;
   --icon-config-color: #FFFFFF;
 
+  /* RightRail (light) */
+  --right-rail-bg: #F5F6F8;           /* light background */
+  --right-rail-foreground: #CDD4E1;   /* panel behind custom tool icons */
+  --right-rail-icon: #4B5563;         /* icon color */
+  --right-rail-icon-disabled: #CECECE;/* disabled icon */
+
   /* Colors for tooltips */
   --tooltip-title-bg: #DBEFFF;
   --tooltip-title-color: #31528E;
@@ -156,10 +162,22 @@
   --landing-drop-inner-paper-bg: #BBDEFB;
   --landing-drop-inner-paper-border: #90CAF9;
 
+  /* selected file header colors */
+  --header-selected-bg: #1E88E5; /* light mode selected header matches dark */
+  --header-selected-fg: #FFFFFF;
+  --file-card-bg: #FFFFFF;  /* file card background (light/dark paired) */
+
   /* shadows */
   --drop-shadow-color: rgba(0, 0, 0, 0.08);
   --drop-shadow-color-strong: rgba(0, 0, 0, 0.04);
   --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(0, 0, 0, 0.08)) drop-shadow(0 0.6rem 0.6rem rgba(0, 0, 0, 0.06)) drop-shadow(0 1.2rem 1rem rgba(0, 0, 0, 0.04));
+
+  /* Light mode card hover and selection */
+  --header-hover-bg: #3B4B6E; /* same family as selected, a touch muted for hover */
+  --card-selected-border: #3FAFFF; /* slightly more blue than dark mode header */
+  --checkbox-border: #2F83BF;
+  --checkbox-checked-bg: #3FAFFF;
+  --checkbox-tick: #FFFFFF;
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -234,6 +252,12 @@
   --icon-inactive-bg: #2A2F36;
   --icon-inactive-color: #6E7581;
 
+  /* RightRail (dark) */
+  --right-rail-bg: #1F2329;           /* dark background */
+  --right-rail-foreground: #2A2F36;   /* panel behind custom tool icons */
+  --right-rail-icon: #BCBEBF;         /* icon color */
+  --right-rail-icon-disabled: #43464B;/* disabled icon */
+
   /* Dark mode tooltip colors */
   --tooltip-title-bg: #4B525A;
   --tooltip-title-color: #fff;
@@ -259,6 +283,12 @@
   --landing-drop-paper-bg: #1A2332;
   --landing-drop-inner-paper-bg: #2A3441;
   --landing-drop-inner-paper-border: #3A4451;
+
+  /* selected file header colors for dark */
+  --header-selected-bg: #1E88E5;
+  --header-selected-fg: #FFFFFF;
+  /* file card background (dark) */
+  --file-card-bg: #1F2329;
 
   /* shadows */
   --drop-shadow-color: rgba(255, 255, 255, 0.08);

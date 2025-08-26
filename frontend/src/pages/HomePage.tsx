@@ -9,6 +9,7 @@ import { getBaseUrl } from "../constants/app";
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
+import RightRail from "../components/shared/RightRail";
 import FileManager from "../components/FileManager";
 
 
@@ -46,6 +47,7 @@ export default function HomePage() {
         ref={quickAccessRef} />
       <ToolPanel />
       <Workbench />
+      <RightRail />
       <FileManager selectedTool={selectedTool as any /* FIX ME */} />
     </Group>
   );

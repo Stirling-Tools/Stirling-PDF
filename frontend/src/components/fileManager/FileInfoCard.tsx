@@ -17,7 +17,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
 
   return (
     <Card withBorder p={0} h={`calc(${modalHeight} * 0.32 - 1rem)`} style={{ flex: 1, overflow: 'hidden' }}>
-      <Box bg="blue.6" p="sm" style={{ borderTopLeftRadius: 'var(--mantine-radius-md)', borderTopRightRadius: 'var(--mantine-radius-md)' }}>
+      <Box bg="gray.4" p="sm" style={{ borderTopLeftRadius: 'var(--mantine-radius-md)', borderTopRightRadius: 'var(--mantine-radius-md)' }}>
         <Text size="sm" fw={500} ta="center" c="white">
           {t('fileManager.details', 'File Details')}
         </Text>
@@ -31,7 +31,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
             </Text>
           </Group>
           <Divider />
-          
+
           <Group justify="space-between" py="xs">
             <Text size="sm" c="dimmed">{t('fileManager.fileFormat', 'Format')}</Text>
             {currentFile ? (
@@ -43,7 +43,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
             )}
           </Group>
           <Divider />
-          
+
           <Group justify="space-between" py="xs">
             <Text size="sm" c="dimmed">{t('fileManager.fileSize', 'Size')}</Text>
             <Text size="sm" fw={500}>
@@ -51,7 +51,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
             </Text>
           </Group>
           <Divider />
-          
+
           <Group justify="space-between" py="xs">
             <Text size="sm" c="dimmed">{t('fileManager.fileVersion', 'Version')}</Text>
             <Text size="sm" fw={500}>

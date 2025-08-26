@@ -1,23 +1,64 @@
-import React, { useState, useCallback, useMemo } from "react";
-import { Button, SegmentedControl, Loader } from "@mantine/core";
+import React, { useState, useCallback } from "react";
+import { SegmentedControl, Loader } from "@mantine/core";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
-import LanguageSelector from "./LanguageSelector";
 import rainbowStyles from '../../styles/rainbow.module.css';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
-import { Group } from "@mantine/core";
-import { ModeType } from '../../contexts/NavigationContext';
+import { ModeType, isValidMode } from '../../contexts/NavigationContext';
 
-// Stable view option objects that don't recreate on every render
-const VIEW_OPTIONS_BASE = [
-  { value: "viewer", icon: VisibilityIcon },
-  { value: "pageEditor", icon: EditNoteIcon },
-  { value: "fileEditor", icon: FolderIcon },
-] as const;
+const viewOptionStyle = {
+  display: 'inline-flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+  whiteSpace: 'nowrap',
+  paddingTop: '0.3rem',
+}
+
+
+// Create view options with icons and loading states
+const createViewOptions = (switchingTo: ModeType | null) => [
+  {
+    label: (
+      <div style={viewOptionStyle as React.CSSProperties}>
+        {switchingTo === "viewer" ? (
+          <Loader size="xs" />
+        ) : (
+          <VisibilityIcon fontSize="small" />
+        )}
+        <span>Viewer</span>
+      </div>
+    ),
+    value: "viewer",
+  },
+  {
+    label: (
+      <div style={viewOptionStyle as React.CSSProperties}>
+        {switchingTo === "pageEditor" ? (
+          <Loader size="xs" />
+        ) : (
+          <EditNoteIcon fontSize="small" />
+        )}
+        <span>Page Editor</span>
+      </div>
+    ),
+    value: "pageEditor",
+  },
+  {
+    label: (
+      <div style={viewOptionStyle as React.CSSProperties}>
+        {switchingTo === "fileEditor" ? (
+          <Loader size="xs" />
+        ) : (
+          <FolderIcon fontSize="small" />
+        )}
+        <span>File Manager</span>
+      </div>
+    ),
+    value: "fileEditor",
+  },
+];
 
 interface TopControlsProps {
   currentView: ModeType;
@@ -30,90 +71,60 @@ const TopControls = ({
   setCurrentView,
   selectedToolKey,
 }: TopControlsProps) => {
-  const { themeMode, isRainbowMode, isToggleDisabled, toggleTheme } = useRainbowThemeContext();
-  const [switchingTo, setSwitchingTo] = useState<string | null>(null);
+  const { isRainbowMode } = useRainbowThemeContext();
+  const [switchingTo, setSwitchingTo] = useState<ModeType | null>(null);
 
   const isToolSelected = selectedToolKey !== null;
 
   const handleViewChange = useCallback((view: string) => {
-    // Guard against redundant changes
-    if (view === currentView) return;
-    
+    if (!isValidMode(view)) {
+      // Ignore invalid values defensively
+      return;
+    }
+    const mode = view as ModeType;
+
     // Show immediate feedback
-    setSwitchingTo(view);
+    setSwitchingTo(mode as ModeType);
 
     // Defer the heavy view change to next frame so spinner can render
     requestAnimationFrame(() => {
       // Give the spinner one more frame to show
       requestAnimationFrame(() => {
-        setCurrentView(view as ModeType);
-        
+        setCurrentView(mode as ModeType);
+
         // Clear the loading state after view change completes
         setTimeout(() => setSwitchingTo(null), 300);
       });
     });
-  }, [setCurrentView, currentView]);
-
-  // Memoize the SegmentedControl data with stable references
-  const viewOptions = useMemo(() => 
-    VIEW_OPTIONS_BASE.map(option => ({
-      value: option.value,
-      label: (
-        <Group gap={option.value === "viewer" ? 5 : 4}>
-          {switchingTo === option.value ? (
-            <Loader size="xs" />
-          ) : (
-            <option.icon fontSize="small" />
-          )}
-        </Group>
-      )
-    })), [switchingTo]);
-
-  const getThemeIcon = () => {
-    if (isRainbowMode) return <AutoAwesomeIcon className={rainbowStyles.rainbowText} />;
-    if (themeMode === "dark") return <LightModeIcon />;
-    return <DarkModeIcon />;
-  };
+  }, [setCurrentView]);
 
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
-      <div className={`absolute left-4 pointer-events-auto flex gap-2 items-center ${
-        isToolSelected ? 'top-4' : 'top-1/2 -translate-y-1/2'
-      }`}>
-        <Button
-          onClick={toggleTheme}
-          variant="subtle"
-          size="md"
-          aria-label="Toggle theme"
-          disabled={isToggleDisabled}
-          className={isRainbowMode ? rainbowStyles.rainbowButton : ''}
-          title={
-            isToggleDisabled
-              ? "Button disabled for 3 seconds..."
-              : isRainbowMode
-                ? "Rainbow Mode Active! Click to exit"
-                : "Toggle theme (click rapidly 6 times for a surprise!)"
-          }
-          style={isToggleDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-        >
-          {getThemeIcon()}
-        </Button>
-        <LanguageSelector />
-      </div>
       {!isToolSelected && (
-        <div className="flex justify-center items-center h-full pointer-events-auto">
+        <div className="flex justify-center mt-[0.5rem]">
             <SegmentedControl
-              data={viewOptions}
+              data={createViewOptions(switchingTo)}
               value={currentView}
               onChange={handleViewChange}
               color="blue"
               radius="xl"
-              size="md"
               fullWidth
               className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
               style={{
                 transition: 'all 0.2s ease',
                 opacity: switchingTo ? 0.8 : 1,
+                pointerEvents: 'auto'
+              }}
+              styles={{
+                root: {
+                  borderRadius: 9999,
+                },
+                control: {
+                  borderRadius: 9999,
+                },
+                indicator: {
+                  borderRadius: 9999,
+                },
               }}
             />
         </div>

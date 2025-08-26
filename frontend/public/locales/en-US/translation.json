@@ -55,6 +55,7 @@
   "bored": "Bored Waiting?",
   "alphabet": "Alphabet",
   "downloadPdf": "Download PDF",
+
   "text": "Text",
   "font": "Font",
   "selectFillter": "-- Select --",
@@ -606,6 +607,10 @@
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }
+  },
+  "landing": {
+    "addFiles": "Add Files",
+    "uploadFromComputer": "Upload from computer"
   },
   "viewPdf": {
     "tags": "view,read,annotate,text,image,highlight,edit",
@@ -2068,6 +2073,18 @@
       }
     }
   },
+  "rightRail": {
+    "closePdf": "Close PDF",
+    "closeSelected": "Close Selected Files",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectByNumber": "Select by Page Numbers",
+    "deleteSelected": "Delete Selected Pages",
+    "toggleTheme": "Toggle Theme",
+    "exportAll": "Export PDF",
+    "downloadSelected": "Download Selected Files",
+    "downloadAll": "Download All"
+  },
   "removePassword": {
     "title": "Remove Password",
     "desc": "Remove password protection from your PDF document.",
@@ -2089,5 +2106,20 @@
     "results": {
       "title": "Decrypted PDFs"
     }
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "Secure PDF Ingestion",
+      "securePdfIngestionDesc": "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size.",
+      "emailPreparation": "Email Preparation", 
+      "emailPreparationDesc": "Optimizes PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy.",
+      "secureWorkflow": "Security Workflow",
+      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access.",
+      "processImages": "Process Images",
+      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
+    }
+  },
+  "automate": {
+    "copyToSaved": "Copy to Saved"
   }
 }

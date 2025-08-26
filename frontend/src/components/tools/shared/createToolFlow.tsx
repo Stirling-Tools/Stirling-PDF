@@ -3,6 +3,7 @@ import { Stack } from '@mantine/core';
 import { createToolSteps, ToolStepProvider } from './ToolStep';
 import OperationButton from './OperationButton';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
+import { ToolWorkflowTitle, ToolWorkflowTitleProps } from './ToolWorkflowTitle';
 
 export interface FilesStepConfig {
   selectedFiles: File[];
@@ -46,7 +47,10 @@ export interface ReviewStepConfig {
   testId?: string;
 }
 
+export interface TitleConfig extends ToolWorkflowTitleProps {}
+
 export interface ToolFlowConfig {
+  title?: TitleConfig;
   files: FilesStepConfig;
   steps: MiddleStepConfig[];
   executeButton?: ExecuteButtonConfig;
@@ -62,8 +66,11 @@ export function createToolFlow(config: ToolFlowConfig) {
   const steps = createToolSteps();
 
   return (
-    <Stack gap="sm" p="sm" h="95vh" w="100%" style={{ overflow: 'auto' }}>
+    <Stack gap="sm" p="sm" >
+    {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
       <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>
+        {config.title && <ToolWorkflowTitle {...config.title} />}
+
         {/* Files Step */}
         {config.files.isVisible !== false && steps.createFilesStep({
           selectedFiles: config.files.selectedFiles,

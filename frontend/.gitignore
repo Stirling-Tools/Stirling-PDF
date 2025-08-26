@@ -25,3 +25,7 @@ yarn-error.log*
 
 playwright-report
 test-results
+
+# auto-generated files
+/src/assets/material-symbols-icons.json
+/src/assets/material-symbols-icons.d.ts

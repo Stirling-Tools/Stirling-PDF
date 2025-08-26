@@ -161,8 +161,8 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
     }
     lastToggleTime.current = currentTime;
 
-    // Easter egg: Activate rainbow mode after 6 rapid toggles
-    if (toggleCount.current >= 6) {
+    // Easter egg: Activate rainbow mode after 10 rapid toggles
+    if (toggleCount.current >= 10) {
       setThemeMode('rainbow');
       console.log('🌈 RAINBOW MODE ACTIVATED! 🌈 You found the secret easter egg!');
       console.log('🌈 Button will be disabled for 3 seconds, then click once to exit!');
