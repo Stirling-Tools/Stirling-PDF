@@ -9,7 +9,7 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
-import styles from './PageEditor.module.css';
+import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
 
 interface FileItem {
@@ -21,7 +21,7 @@ interface FileItem {
   modifiedAt?: number | string | Date;
 }
 
-interface FileThumbnailProps {
+interface FileEditorThumbnailProps {
   file: FileItem;
   index: number;
   totalFiles: number;
@@ -37,7 +37,7 @@ interface FileThumbnailProps {
   isSupported?: boolean;
 }
 
-const FileThumbnail = ({
+const FileEditorThumbnail = ({
   file,
   index,
   selectedFiles,
@@ -48,7 +48,7 @@ const FileThumbnail = ({
   onReorderFiles,
   onDownloadFile,
   isSupported = true,
-}: FileThumbnailProps) => {
+}: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
   const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
 
@@ -331,47 +331,60 @@ const FileThumbnail = ({
         </div>
       )}
 
-      {/* File content area */}
-      <div className="file-container w-[90%] h-[80%] relative">
-        {/* Stacked file effect - multiple shadows to simulate pages */}
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'var(--mantine-color-gray-1)',
-            borderRadius: 6,
-            border: '1px solid var(--mantine-color-gray-3)',
-            padding: 4,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            boxShadow: '2px 2px 0 rgba(0,0,0,0.1), 4px 4px 0 rgba(0,0,0,0.05)'
-          }}
+      {/* Title + meta line */}
+      <div 
+      style={{
+        padding: '0.5rem',
+        textAlign: 'center',
+        background: 'var(--file-card-bg)',
+        marginTop: '0.5rem',
+        marginBottom: '0.5rem',
+      }}>
+        <Text size="lg" fw={700} className={styles.title} lineClamp={2}>
+          {file.name}
+        </Text>
+        <Text
+          size="sm"
+          c="dimmed"
+          className={styles.meta}
+          lineClamp={3}
+          title={`${extUpper || 'FILE'} • ${prettySize}`}
         >
+          {/* e.g., Jan 29, 2025 - PDF file - 3 Pages */}
+          {dateLabel}
+          {extUpper ? ` - ${extUpper} file` : ''}
+          {pageLabel ? ` - ${pageLabel}` : ''}
+        </Text>
+      </div>
+
+      {/* Preview area */}
+      <div className={`${styles.previewBox} mx-6 mb-4 relative flex-1`}>
+        <div className={styles.previewPaper}>
           {file.thumbnail && (
             <img
               src={file.thumbnail}
               alt={file.name}
               draggable={false}
+              loading="lazy"
+              decoding="async"
               onError={(e) => {
-                // Hide broken image if blob URL was revoked
-                const img = e.target as HTMLImageElement;
+                const img = e.currentTarget;
                 img.style.display = 'none';
+                img.parentElement?.setAttribute('data-thumb-missing', 'true');
               }}
-            style={{
-              maxWidth: '80%',
-              maxHeight: '80%',
-              objectFit: 'contain',
-              borderRadius: 0,
-              background: '#ffffff',
-              border: '1px solid var(--border-default)',
-              display: 'block',
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              alignSelf: 'start'
-            }}
-          />
+              style={{
+                maxWidth: '80%',
+                maxHeight: '80%',
+                objectFit: 'contain',
+                borderRadius: 0,
+                background: '#ffffff',
+                border: '1px solid var(--border-default)',
+                display: 'block',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                alignSelf: 'start'
+              }}
+            />
           )}
         </div>
 
@@ -391,4 +404,4 @@ const FileThumbnail = ({
   );
 };
 
-export default React.memo(FileThumbnail);
+export default React.memo(FileEditorThumbnail);

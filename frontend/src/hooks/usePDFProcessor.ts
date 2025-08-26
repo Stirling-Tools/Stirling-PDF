@@ -77,6 +77,7 @@ export function usePDFProcessor() {
         pages.push({
           id: `${file.name}-page-${i}`,
           pageNumber: i,
+          originalPageNumber: i,
           thumbnail: null, // Will be loaded lazily
           rotation: 0,
           selected: false

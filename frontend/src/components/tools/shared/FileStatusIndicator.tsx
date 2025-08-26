@@ -77,7 +77,7 @@ const FileStatusIndicator = ({
         <Text size="sm" c="dimmed">
           <Anchor
             size="sm"
-            onClick={openFilesModal}
+            onClick={() => openFilesModal()}
             style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
           >
             <FolderIcon style={{ fontSize: '0.875rem' }} />
@@ -112,7 +112,7 @@ const FileStatusIndicator = ({
           {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
           <Anchor
             size="sm"
-            onClick={openFilesModal}
+            onClick={() => openFilesModal()}
             style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
           >
             <FolderIcon style={{ fontSize: '0.875rem' }} />

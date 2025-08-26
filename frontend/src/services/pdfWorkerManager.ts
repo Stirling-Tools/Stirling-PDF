@@ -12,7 +12,7 @@ class PDFWorkerManager {
   private static instance: PDFWorkerManager;
   private activeDocuments = new Set<any>();
   private workerCount = 0;
-  private maxWorkers = 3; // Limit concurrent workers
+  private maxWorkers = 10; // Limit concurrent workers
   private isInitialized = false;
 
   private constructor() {
@@ -33,7 +33,6 @@ class PDFWorkerManager {
     if (!this.isInitialized) {
       GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
       this.isInitialized = true;
-      console.log('🏭 PDF.js worker initialized');
     }
   }
 
@@ -52,7 +51,6 @@ class PDFWorkerManager {
   ): Promise<any> {
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
-      console.warn(`🏭 PDF Worker limit reached (${this.maxWorkers}), waiting for available worker...`);
       await this.waitForAvailableWorker();
     }
 
@@ -89,8 +87,6 @@ class PDFWorkerManager {
       this.activeDocuments.add(pdf);
       this.workerCount++;
       
-      console.log(`🏭 PDF document created (active: ${this.activeDocuments.size}/${this.maxWorkers})`);
-      
       return pdf;
     } catch (error) {
       // If document creation fails, make sure to clean up the loading task
@@ -98,7 +94,6 @@ class PDFWorkerManager {
         try {
           loadingTask.destroy();
         } catch (destroyError) {
-          console.warn('🏭 Error destroying failed loading task:', destroyError);
         }
       }
       throw error;
@@ -114,10 +109,7 @@ class PDFWorkerManager {
         pdf.destroy();
         this.activeDocuments.delete(pdf);
         this.workerCount = Math.max(0, this.workerCount - 1);
-        
-        console.log(`🏭 PDF document destroyed (active: ${this.activeDocuments.size}/${this.maxWorkers})`);
       } catch (error) {
-        console.warn('🏭 Error destroying PDF document:', error);
         // Still remove from tracking even if destroy failed
         this.activeDocuments.delete(pdf);
         this.workerCount = Math.max(0, this.workerCount - 1);
@@ -129,8 +121,6 @@ class PDFWorkerManager {
    * Destroy all active PDF documents
    */
   destroyAllDocuments(): void {
-    console.log(`🏭 Destroying all PDF documents (${this.activeDocuments.size} active)`);
-    
     const documentsToDestroy = Array.from(this.activeDocuments);
     documentsToDestroy.forEach(pdf => {
       this.destroyDocument(pdf);
@@ -138,8 +128,6 @@ class PDFWorkerManager {
     
     this.activeDocuments.clear();
     this.workerCount = 0;
-    
-    console.log('🏭 All PDF documents destroyed');
   }
 
   /**
@@ -173,29 +161,23 @@ class PDFWorkerManager {
    * Force cleanup of all workers (emergency cleanup)
    */
   emergencyCleanup(): void {
-    console.warn('🏭 Emergency PDF worker cleanup initiated');
-    
     // Force destroy all documents
     this.activeDocuments.forEach(pdf => {
       try {
         pdf.destroy();
       } catch (error) {
-        console.warn('🏭 Emergency cleanup - error destroying document:', error);
       }
     });
     
     this.activeDocuments.clear();
     this.workerCount = 0;
-    
-    console.warn('🏭 Emergency cleanup completed');
   }
 
   /**
    * Set maximum concurrent workers
    */
   setMaxWorkers(max: number): void {
-    this.maxWorkers = Math.max(1, Math.min(max, 10)); // Between 1-10 workers
-    console.log(`🏭 Max workers set to ${this.maxWorkers}`);
+    this.maxWorkers = Math.max(1, Math.min(max, 15)); // Between 1-15 workers for multi-file support
   }
 }
 

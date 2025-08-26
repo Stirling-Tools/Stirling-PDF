@@ -1,43 +1,46 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { Text, Checkbox, Tooltip, ActionIcon, Loader } from '@mantine/core';
+import { Text, Checkbox, Tooltip, ActionIcon } from '@mantine/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
+import AddIcon from '@mui/icons-material/Add';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { PDFPage, PDFDocument } from '../../types/pageEditor';
-import { RotatePagesCommand, DeletePagesCommand, ToggleSplitCommand } from '../../commands/pageCommands';
-import { Command } from '../../hooks/useUndoRedo';
-import { useFileState } from '../../contexts/FileContext';
 import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
+import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import styles from './PageEditor.module.css';
+
 
 interface PageThumbnailProps {
   page: PDFPage;
   index: number;
   totalPages: number;
-  originalFile?: File; // For lazy thumbnail generation
+  originalFile?: File;
   selectedPages: number[];
   selectionMode: boolean;
   movingPage: number | null;
   isAnimating: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  onTogglePage: (pageNumber: number) => void;
-  onAnimateReorder: (pageNumber: number, targetIndex: number) => void;
-  onExecuteCommand: (command: Command) => void;
-  onSetStatus: (status: string) => void;
-  onSetMovingPage: (pageNumber: number | null) => void;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => void;
-  RotatePagesCommand: typeof RotatePagesCommand;
-  DeletePagesCommand: typeof DeletePagesCommand;
-  ToggleSplitCommand: typeof ToggleSplitCommand;
+  onTogglePage: (pageNumber: number) => void;
+  onAnimateReorder: () => void;
+  onExecuteCommand: (command: { execute: () => void }) => void;
+  onSetStatus: (status: string) => void;
+  onSetMovingPage: (page: number | null) => void;
+  onDeletePage: (pageNumber: number) => void;
+  createRotateCommand: (pageIds: string[], rotation: number) => { execute: () => void };
+  createDeleteCommand: (pageIds: string[]) => { execute: () => void };
+  createSplitCommand: (position: number) => { execute: () => void };
   pdfDocument: PDFDocument;
   setPdfDocument: (doc: PDFDocument) => void;
+  splitPositions: Set<number>;
+  onInsertFiles?: (files: File[], insertAfterPage: number) => void;
 }
 
-const PageThumbnail = React.memo(({
+const PageThumbnail: React.FC<PageThumbnailProps> = ({
   page,
   index,
   totalPages,
@@ -47,114 +50,122 @@ const PageThumbnail = React.memo(({
   movingPage,
   isAnimating,
   pageRefs,
+  onReorderPages,
   onTogglePage,
   onAnimateReorder,
   onExecuteCommand,
   onSetStatus,
   onSetMovingPage,
-  onReorderPages,
-  RotatePagesCommand,
-  DeletePagesCommand,
-  ToggleSplitCommand,
+  onDeletePage,
+  createRotateCommand,
+  createDeleteCommand,
+  createSplitCommand,
   pdfDocument,
   setPdfDocument,
+  splitPositions,
+  onInsertFiles,
 }: PageThumbnailProps) => {
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const dragElementRef = useRef<HTMLDivElement>(null);
-  const { state, selectors } = useFileState();
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
+  const { openFilesModal } = useFilesModalContext();
 
-  // Update thumbnail URL when page prop changes - prevent redundant updates
+  // Calculate document aspect ratio from first non-blank page
+  const getDocumentAspectRatio = useCallback(() => {
+    // Find first non-blank page with a thumbnail to get aspect ratio
+    const firstRealPage = pdfDocument.pages.find(p => !p.isBlankPage && p.thumbnail);
+    if (firstRealPage?.thumbnail) {
+      // Try to get aspect ratio from an actual thumbnail image
+      // For now, default to A4 but could be enhanced to measure image dimensions
+      return '1 / 1.414'; // A4 ratio as fallback
+    }
+    return '1 / 1.414'; // Default A4 ratio
+  }, [pdfDocument.pages]);
+
+  // Update thumbnail URL when page prop changes
   useEffect(() => {
     if (page.thumbnail && page.thumbnail !== thumbnailUrl) {
-      console.log(`📸 PageThumbnail: Updating thumbnail URL for page ${page.pageNumber}`, page.thumbnail.substring(0, 50) + '...');
       setThumbnailUrl(page.thumbnail);
     }
-  }, [page.thumbnail, page.id]); // Remove thumbnailUrl dependency to prevent redundant cycles
+  }, [page.thumbnail, thumbnailUrl]);
 
-  // Request thumbnail generation if not available (optimized for performance)
+  // Request thumbnail if missing (on-demand, virtualized approach)
   useEffect(() => {
-    if (thumbnailUrl || !originalFile) {
-      return; // Skip if we already have a thumbnail or no original file
+    let isCancelled = false;
+
+    // If we already have a thumbnail, use it
+    if (page.thumbnail) {
+      setThumbnailUrl(page.thumbnail);
+      return;
     }
 
-    // Check cache first without async call
+    // Check cache first
     const cachedThumbnail = getThumbnailFromCache(page.id);
     if (cachedThumbnail) {
       setThumbnailUrl(cachedThumbnail);
       return;
     }
 
-    let cancelled = false;
+    // Request thumbnail generation if we have the original file
+    if (originalFile) {
+      const pageNumber = page.originalPageNumber;
 
-    const loadThumbnail = async () => {
-      try {
-        const thumbnail = await requestThumbnail(page.id, originalFile, page.pageNumber);
-        
-        // Only update if component is still mounted and we got a result
-        if (!cancelled && thumbnail) {
-          setThumbnailUrl(thumbnail);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.warn(`📸 PageThumbnail: Failed to load thumbnail for page ${page.pageNumber}:`, error);
-        }
-      }
-    };
+      requestThumbnail(page.id, originalFile, pageNumber)
+        .then(thumbnail => {
+          if (!isCancelled && thumbnail) {
+            setThumbnailUrl(thumbnail);
+          }
+        })
+        .catch(error => {
+          console.warn(`Failed to generate thumbnail for ${page.id}:`, error);
+        });
+    }
 
-    loadThumbnail();
-
-    // Cleanup function to prevent state updates after unmount
     return () => {
-      cancelled = true;
+      isCancelled = true;
     };
-  }, [page.id, originalFile, requestThumbnail, getThumbnailFromCache]); // Removed thumbnailUrl to prevent loops
-
+  }, [page.id, page.thumbnail, originalFile, getThumbnailFromCache, requestThumbnail]);
 
   const pageElementRef = useCallback((element: HTMLDivElement | null) => {
     if (element) {
       pageRefs.current.set(page.id, element);
       dragElementRef.current = element;
-      
+
       const dragCleanup = draggable({
         element,
         getInitialData: () => ({
           pageNumber: page.pageNumber,
           pageId: page.id,
-          selectedPages: selectionMode && selectedPages.includes(page.pageNumber) 
-            ? selectedPages 
-            : [page.pageNumber]
+          selectedPages: [page.pageNumber]
         }),
         onDragStart: () => {
           setIsDragging(true);
         },
         onDrop: ({ location }) => {
           setIsDragging(false);
-          
+
           if (location.current.dropTargets.length === 0) {
             return;
           }
-          
+
           const dropTarget = location.current.dropTargets[0];
           const targetData = dropTarget.data;
-          
+
           if (targetData.type === 'page') {
             const targetPageNumber = targetData.pageNumber as number;
             const targetIndex = pdfDocument.pages.findIndex(p => p.pageNumber === targetPageNumber);
             if (targetIndex !== -1) {
-              const pagesToMove = selectionMode && selectedPages.includes(page.pageNumber)
-                ? selectedPages
-                : undefined;
-              onReorderPages(page.pageNumber, targetIndex, pagesToMove);
+              onReorderPages(page.pageNumber, targetIndex, undefined);
             }
           }
         }
       });
 
       element.style.cursor = 'grab';
-      
-      
+
       const dropCleanup = dropTargetForElements({
         element,
         getData: () => ({
@@ -163,7 +174,7 @@ const PageThumbnail = React.memo(({
         }),
         onDrop: ({ source }) => {}
       });
-      
+
       (element as any).__dragCleanup = () => {
         dragCleanup();
         dropCleanup();
@@ -176,15 +187,103 @@ const PageThumbnail = React.memo(({
     }
   }, [page.id, page.pageNumber, pageRefs, selectionMode, selectedPages, pdfDocument.pages, onReorderPages]);
 
+  // DOM command handlers
+  const handleRotateLeft = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Use the command system for undo/redo support
+    const command = createRotateCommand([page.id], -90);
+    onExecuteCommand(command);
+    onSetStatus(`Rotated page ${page.pageNumber} left`);
+  }, [page.id, page.pageNumber, onExecuteCommand, onSetStatus, createRotateCommand]);
+
+  const handleRotateRight = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Use the command system for undo/redo support
+    const command = createRotateCommand([page.id], 90);
+    onExecuteCommand(command);
+    onSetStatus(`Rotated page ${page.pageNumber} right`);
+  }, [page.id, page.pageNumber, onExecuteCommand, onSetStatus, createRotateCommand]);
+
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDeletePage(page.pageNumber);
+    onSetStatus(`Deleted page ${page.pageNumber}`);
+  }, [page.pageNumber, onDeletePage, onSetStatus]);
+
+  const handleSplit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Create a command to toggle split at this position
+    const command = createSplitCommand(index);
+    onExecuteCommand(command);
+
+    const hasSplit = splitPositions.has(index);
+    const action = hasSplit ? 'removed' : 'added';
+    onSetStatus(`Split marker ${action} after position ${index + 1}`);
+  }, [index, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand]);
+
+  const handleInsertFileAfter = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (onInsertFiles) {
+      // Open file manager modal with custom handler for page insertion
+      openFilesModal({
+        insertAfterPage: page.pageNumber,
+        customHandler: (files: File[], insertAfterPage?: number) => {
+          if (insertAfterPage !== undefined) {
+            onInsertFiles(files, insertAfterPage);
+          }
+        }
+      });
+      onSetStatus(`Select files to insert after page ${page.pageNumber}`);
+    } else {
+      // Fallback to normal file handling
+      openFilesModal({ insertAfterPage: page.pageNumber });
+      onSetStatus(`Select files to insert after page ${page.pageNumber}`);
+    }
+  }, [openFilesModal, page.pageNumber, onSetStatus, onInsertFiles]);
+
+  // Handle click vs drag differentiation
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsMouseDown(true);
+    setMouseStartPos({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (!isMouseDown || !mouseStartPos) {
+      setIsMouseDown(false);
+      setMouseStartPos(null);
+      return;
+    }
+
+    // Calculate distance moved
+    const deltaX = Math.abs(e.clientX - mouseStartPos.x);
+    const deltaY = Math.abs(e.clientY - mouseStartPos.y);
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    // If mouse moved less than 5 pixels, consider it a click (not a drag)
+    if (distance < 5 && !isDragging) {
+      onTogglePage(page.pageNumber);
+    }
+
+    setIsMouseDown(false);
+    setMouseStartPos(null);
+  }, [isMouseDown, mouseStartPos, isDragging, page.pageNumber, onTogglePage]);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsMouseDown(false);
+    setMouseStartPos(null);
+  }, []);
 
   return (
     <div
       ref={pageElementRef}
+      data-page-id={page.id}
       data-page-number={page.pageNumber}
       className={`
         ${styles.pageContainer}
         !rounded-lg
-        cursor-grab
+        ${selectionMode ? 'cursor-pointer' : 'cursor-grab'}
         select-none
         w-[20rem]
         h-[20rem]
@@ -204,6 +303,9 @@ const PageThumbnail = React.memo(({
         transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
       }}
       draggable={false}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
     >
       {
         <div
@@ -217,25 +319,25 @@ const PageThumbnail = React.memo(({
             borderRadius: '4px',
             padding: '2px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            pointerEvents: 'auto',
-            cursor: 'pointer'
+            pointerEvents: 'auto'
           }}
-          onMouseDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            onTogglePage(page.pageNumber);
+          }}
+          onMouseUp={(e) => e.stopPropagation()}
           onDragStart={(e) => {
             e.preventDefault();
             e.stopPropagation();
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePage(page.pageNumber);
           }}
         >
           <Checkbox
             checked={Array.isArray(selectedPages) ? selectedPages.includes(page.pageNumber) : false}
             onChange={() => {
-              // onChange is handled by the parent div click
+              // Selection is handled by container mouseDown
             }}
             size="sm"
+            style={{ pointerEvents: 'none' }}
           />
         </div>
       }
@@ -254,7 +356,23 @@ const PageThumbnail = React.memo(({
             justifyContent: 'center'
           }}
         >
-          {thumbnailUrl ? (
+          {page.isBlankPage ? (
+            <div style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <div style={{
+                width: '70%',
+                aspectRatio: getDocumentAspectRatio(),
+                backgroundColor: 'white',
+                border: '1px solid #e9ecef',
+                borderRadius: 2
+              }}></div>
+            </div>
+          ) : thumbnailUrl ? (
             <img
               src={thumbnailUrl}
               alt={`Page ${page.pageNumber}`}
@@ -280,12 +398,12 @@ const PageThumbnail = React.memo(({
           className={styles.pageNumber}
           size="sm"
           fw={500}
-          c="white"
           style={{
+            color: 'var(--mantine-color-white)', // Use theme token for consistency
             position: 'absolute',
             top: 5,
             left: 5,
-            background: 'rgba(162, 201, 255, 0.8)',
+            background: page.isBlankPage ? 'rgba(255, 165, 0, 0.8)' : 'rgba(162, 201, 255, 0.8)',
             padding: '6px 8px',
             borderRadius: 8,
             zIndex: 2,
@@ -303,7 +421,8 @@ const PageThumbnail = React.memo(({
             bottom: 8,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: 'var(--bg-toolbar)',
+            border: '1px solid var(--border-default)',
             padding: '6px 12px',
             borderRadius: 20,
             opacity: 0,
@@ -314,19 +433,23 @@ const PageThumbnail = React.memo(({
             alignItems: 'center',
             whiteSpace: 'nowrap'
           }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <Tooltip label="Move Left">
             <ActionIcon
               size="md"
               variant="subtle"
-              c="white"
+              style={{ color: 'var(--mantine-color-dimmed)' }}
               disabled={index === 0}
               onClick={(e) => {
                 e.stopPropagation();
                 if (index > 0 && !movingPage && !isAnimating) {
                   onSetMovingPage(page.pageNumber);
-                  onAnimateReorder(page.pageNumber, index - 1);
-                  setTimeout(() => onSetMovingPage(null), 500);
+                  // Actually move the page left (swap with previous page)
+                  onReorderPages(page.pageNumber, index - 1);
+                  setTimeout(() => onSetMovingPage(null), 650);
                   onSetStatus(`Moved page ${page.pageNumber} left`);
                 }
               }}
@@ -339,14 +462,15 @@ const PageThumbnail = React.memo(({
             <ActionIcon
               size="md"
               variant="subtle"
-              c="white"
+              style={{ color: 'var(--mantine-color-dimmed)' }}
               disabled={index === totalPages - 1}
               onClick={(e) => {
                 e.stopPropagation();
                 if (index < totalPages - 1 && !movingPage && !isAnimating) {
                   onSetMovingPage(page.pageNumber);
-                  onAnimateReorder(page.pageNumber, index + 1);
-                  setTimeout(() => onSetMovingPage(null), 500);
+                  // Actually move the page right (swap with next page)
+                  onReorderPages(page.pageNumber, index + 1);
+                  setTimeout(() => onSetMovingPage(null), 650);
                   onSetStatus(`Moved page ${page.pageNumber} right`);
                 }
               }}
@@ -359,18 +483,8 @@ const PageThumbnail = React.memo(({
             <ActionIcon
               size="md"
               variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                const command = new RotatePagesCommand(
-                  pdfDocument,
-                  setPdfDocument,
-                  [page.id],
-                  -90
-                );
-                onExecuteCommand(command);
-                onSetStatus(`Rotated page ${page.pageNumber} left`);
-              }}
+              style={{ color: 'var(--mantine-color-dimmed)' }}
+              onClick={handleRotateLeft}
             >
               <RotateLeftIcon style={{ fontSize: 20 }} />
             </ActionIcon>
@@ -380,18 +494,8 @@ const PageThumbnail = React.memo(({
             <ActionIcon
               size="md"
               variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                const command = new RotatePagesCommand(
-                  pdfDocument,
-                  setPdfDocument,
-                  [page.id],
-                  90
-                );
-                onExecuteCommand(command);
-                onSetStatus(`Rotated page ${page.pageNumber} right`);
-              }}
+              style={{ color: 'var(--mantine-color-dimmed)' }}
+              onClick={handleRotateRight}
             >
               <RotateRightIcon style={{ fontSize: 20 }} />
             </ActionIcon>
@@ -402,66 +506,41 @@ const PageThumbnail = React.memo(({
               size="md"
               variant="subtle"
               c="red"
-              onClick={(e) => {
-                e.stopPropagation();
-                const command = new DeletePagesCommand(
-                  pdfDocument,
-                  setPdfDocument,
-                  [page.id]
-                );
-                onExecuteCommand(command);
-                onSetStatus(`Deleted page ${page.pageNumber}`);
-              }}
+              onClick={handleDelete}
             >
               <DeleteIcon style={{ fontSize: 20 }} />
             </ActionIcon>
           </Tooltip>
 
-          {index > 0 && (
-            <Tooltip label="Split Here">
+          {index < totalPages - 1 && (
+            <Tooltip label="Split After">
               <ActionIcon
                 size="md"
                 variant="subtle"
-                c="white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const command = new ToggleSplitCommand(
-                    pdfDocument,
-                    setPdfDocument,
-                    [page.id]
-                  );
-                  onExecuteCommand(command);
-                  onSetStatus(`Split marker toggled for page ${page.pageNumber}`);
-                }}
+                style={{ color: 'var(--mantine-color-dimmed)' }}
+                onClick={handleSplit}
               >
                 <ContentCutIcon style={{ fontSize: 20 }} />
               </ActionIcon>
             </Tooltip>
           )}
+
+          <Tooltip label="Insert File After">
+            <ActionIcon
+              size="md"
+              variant="subtle"
+              style={{ color: 'var(--mantine-color-dimmed)' }}
+              onClick={handleInsertFileAfter}
+            >
+              <AddIcon style={{ fontSize: 20 }} />
+            </ActionIcon>
+          </Tooltip>
         </div>
 
       </div>
+
     </div>
   );
-}, (prevProps, nextProps) => {
-  // Helper for shallow array comparison
-  const arraysEqual = (a: number[], b: number[]) => {
-    return a.length === b.length && a.every((val, i) => val === b[i]);
-  };
-
-  // Only re-render if essential props change
-  return (
-    prevProps.page.id === nextProps.page.id &&
-    prevProps.page.pageNumber === nextProps.page.pageNumber &&
-    prevProps.page.rotation === nextProps.page.rotation &&
-    prevProps.page.thumbnail === nextProps.page.thumbnail &&
-    // Shallow compare selectedPages array for better stability
-    (prevProps.selectedPages === nextProps.selectedPages || 
-     arraysEqual(prevProps.selectedPages, nextProps.selectedPages)) &&
-    prevProps.selectionMode === nextProps.selectionMode &&
-    prevProps.movingPage === nextProps.movingPage &&
-    prevProps.isAnimating === nextProps.isAnimating
-  );
-});
+};
 
 export default PageThumbnail;

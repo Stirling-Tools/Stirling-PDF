@@ -111,11 +111,15 @@ export default function Workbench() {
                 onRotate={pageEditorFunctions.handleRotate}
                 onDelete={pageEditorFunctions.handleDelete}
                 onSplit={pageEditorFunctions.handleSplit}
-                onExportSelected={pageEditorFunctions.onExportSelected}
+                onSplitAll={pageEditorFunctions.handleSplitAll}
+                onPageBreak={pageEditorFunctions.handlePageBreak}
+                onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
                 onExportAll={pageEditorFunctions.onExportAll}
                 exportLoading={pageEditorFunctions.exportLoading}
                 selectionMode={pageEditorFunctions.selectionMode}
                 selectedPages={pageEditorFunctions.selectedPages}
+                splitPositions={pageEditorFunctions.splitPositions}
+                totalPages={pageEditorFunctions.totalPages}
               />
             )}
           </>

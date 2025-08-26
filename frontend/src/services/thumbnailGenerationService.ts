@@ -40,7 +40,7 @@ export class ThumbnailGenerationService {
   private pdfDocumentCache = new Map<string, CachedPDFDocument>();
   private maxPdfCacheSize = 10; // Keep up to 10 PDF documents cached
 
-  constructor(private maxWorkers: number = 3) {
+  constructor(private maxWorkers: number = 10) {
     // PDF rendering requires DOM access, so we use optimized main thread processing
   }
 
@@ -207,6 +207,9 @@ export class ThumbnailGenerationService {
     
     // Release reference to PDF document (don't destroy - keep in cache)
     this.releasePDFDocument(fileId);
+    
+    this.cleanupCompletedDocument(fileId);
+    
     return allResults;
   }
 
@@ -284,6 +287,18 @@ export class ThumbnailGenerationService {
   clearPDFCacheForFile(fileId: string): void {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
+      pdfWorkerManager.destroyDocument(cached.pdf);
+      this.pdfDocumentCache.delete(fileId);
+    }
+  }
+
+  /**
+   * Clean up a PDF document from cache when thumbnail generation is complete
+   * This frees up workers faster for better performance
+   */
+  cleanupCompletedDocument(fileId: string): void {
+    const cached = this.pdfDocumentCache.get(fileId);
+    if (cached && cached.refCount <= 0) {
       pdfWorkerManager.destroyDocument(cached.pdf);
       this.pdfDocumentCache.delete(fileId);
     }
