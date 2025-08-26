@@ -3,6 +3,7 @@ package stirling.software.SPDF.service;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
@@ -187,7 +188,7 @@ public class RedactionService {
             return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
 
         } catch (Exception e) {
-            return " ".repeat(Math.max(1, originalWord.length()));
+            return " ".repeat(originalWord.length());
         }
     }
 
@@ -218,20 +219,8 @@ public class RedactionService {
         } catch (Exception e) {
             log.debug("Error creating placeholder with width: {}", e.getMessage());
             String result = createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
-            return result != null ? result : " ".repeat(Math.max(1, originalWord.length()));
+            return result != null ? result : " ".repeat(originalWord.length());
         }
-    }
-
-    public static Set<ScrubOption> createPrivacyScrubOptions() {
-        return Set.of(
-                ScrubOption.REMOVE_ACTUALTEXT,
-                ScrubOption.REMOVE_ALT,
-                ScrubOption.REMOVE_TU,
-                ScrubOption.NORMALIZE_WHITESPACE);
-    }
-
-    public static Set<ScrubOption> createBasicScrubOptions() {
-        return Set.of(ScrubOption.NORMALIZE_WHITESPACE);
     }
 
     private static void redactAreas(
@@ -814,42 +803,6 @@ public class RedactionService {
         return strategy.redact(request);
     }
 
-    public byte[] redactPdfWithSemanticScrubbing(
-            RedactPdfRequest request, Set<ScrubOption> scrubOptions) throws IOException {
-
-        String mode = request.getRedactionMode();
-        if (mode == null || mode.isBlank()) {
-            mode = "moderate";
-        }
-
-        RedactionModeStrategy strategy =
-                switch (mode.toLowerCase()) {
-                    case "visual" -> new VisualRedactionService(pdfDocumentFactory, this);
-                    case "aggressive" -> new AggressiveRedactionService(pdfDocumentFactory, this);
-                    default -> new ModerateRedactionService(pdfDocumentFactory, this);
-                };
-
-        byte[] redactedBytes = strategy.redact(request);
-
-        if (scrubOptions != null && !scrubOptions.isEmpty()) {
-            try (PDDocument document = pdfDocumentFactory.load(redactedBytes)) {
-                DefaultSemanticScrubber scrubber = new DefaultSemanticScrubber();
-                scrubber.scrub(document, scrubOptions);
-                try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-                    document.save(output);
-                    return output.toByteArray();
-                }
-            } catch (Exception e) {
-                log.warn(
-                        "Semantic scrubbing failed, returning redacted document without scrubbing",
-                        e);
-                return redactedBytes;
-            }
-        }
-
-        return redactedBytes;
-    }
-
     private static TokenModificationResult convertToTJWithAdjustment(
             List<Object> tokens,
             int tokenIndex,
@@ -1136,58 +1089,13 @@ public class RedactionService {
         return sanitized.toString();
     }
 
-    private byte[] processWithTesseractForRestoration(
-            java.nio.file.Path inputPath, java.nio.file.Path outputPath, RedactPdfRequest request)
-            throws IOException, InterruptedException {
-        try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
-            java.io.File tempOutputDir = new java.io.File(tempDir.getPath().toFile(), "output");
-            java.io.File tempImagesDir = new java.io.File(tempDir.getPath().toFile(), "images");
-            java.io.File finalOutputFile =
-                    new java.io.File(tempDir.getPath().toFile(), "final_output.pdf");
-            tempOutputDir.mkdirs();
-            tempImagesDir.mkdirs();
-            try (PDDocument document = pdfDocumentFactory.load(inputPath.toFile())) {
-                PDFRenderer pdfRenderer = new PDFRenderer(document);
-                int pageCount = document.getNumberOfPages();
-                PDFMergerUtility merger = new PDFMergerUtility();
-                merger.setDestinationFileName(finalOutputFile.toString());
-                for (int pageNum = 0; pageNum < pageCount; pageNum++) {
-                    BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 600);
-                    java.io.File imagePath =
-                            new java.io.File(tempImagesDir, "page_" + pageNum + ".png");
-                    ImageIO.write(image, "png", imagePath);
-                    List<String> command =
-                            new ArrayList<>(
-                                    Arrays.asList(
-                                            "tesseract",
-                                            imagePath.toString(),
-                                            new java.io.File(tempOutputDir, "page_" + pageNum)
-                                                    .toString(),
-                                            "-l",
-                                            buildLanguageOption(request),
-                                            "--dpi",
-                                            "600",
-                                            "--psm",
-                                            "1",
-                                            "pdf"));
-                    ProcessExecutorResult result =
-                            ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
-                                    .runCommandWithOutputHandling(command);
-                    if (result.getRc() != 0) {
-                        throw new IOException(
-                                "Tesseract restoration failed with return code: " + result.getRc());
-                    }
-                    java.io.File pageOutputPath =
-                            new java.io.File(tempOutputDir, "page_" + pageNum + ".pdf");
-                    merger.addSource(pageOutputPath);
-                }
-                merger.mergeDocuments(null);
-                java.nio.file.Files.copy(
-                        finalOutputFile.toPath(),
-                        outputPath,
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            }
-            return java.nio.file.Files.readAllBytes(outputPath);
+    private static float safeGetStringWidth(PDFont font, String text) {
+        if (font == null || text == null || text.isEmpty()) return 0f;
+        try {
+            float widthAtSize1 = WidthCalculator.calculateAccurateWidth(font, text, 1.0f);
+            return widthAtSize1 * FONT_SCALE_FACTOR;
+        } catch (Exception e) {
+            return 0f;
         }
     }
 
@@ -1694,98 +1602,34 @@ public class RedactionService {
         }
     }
 
-    public List<Object> createTokensWithoutTargetText(
-            PDDocument document,
-            PDPage page,
-            Set<String> targetWords,
-            boolean useRegex,
-            boolean wholeWordSearch)
-            throws IOException {
+    private static float calculateMaxReasonableAdjustment(TextSegment segment, String text) {
+        float fontSize = segment.getFontSize();
+        float baseLimit = text.length() * fontSize * 2f;
 
-        PDFStreamParser parser = new PDFStreamParser(page);
-        List<Object> tokens = parseAllTokens(parser);
-        int tokenCount = tokens.size();
-
-        if (tokenCount == 0 && !targetWords.isEmpty()) {
-
-            try {
-                TextFinder directFinder = new TextFinder("", false, false);
-                directFinder.setStartPage(document.getPages().indexOf(page) + 1);
-                directFinder.setEndPage(document.getPages().indexOf(page) + 1);
-                directFinder.getText(document);
-
-                StringBuilder pageText = new StringBuilder();
-                for (PDFText pdfText : directFinder.getFoundTexts()) {
-                    if (pdfText.getText() != null) {
-                        pageText.append(pdfText.getText()).append(" ");
-                    }
-                }
-
-                String extractedText = pageText.toString().trim();
-                for (String word : targetWords) {
-                    if (extractedText.toLowerCase().contains(word.toLowerCase())) {}
-                }
-
-            } catch (Exception e) {
+        try {
+            float avgCharWidth =
+                    safeGetStringWidth(segment.getFont(), "M") / FONT_SCALE_FACTOR * fontSize;
+            if (avgCharWidth > 0) {
+                baseLimit = Math.max(baseLimit, text.length() * avgCharWidth * 1.5f);
             }
+        } catch (Exception e) {
         }
-
-        PDResources resources = page.getResources();
-        if (resources != null) {
-            processPageXObjects(
-                    document,
-                    resources,
-                    targetWords,
-                    useRegex,
-                    wholeWordSearch,
-                    this.aggressiveMode);
-        }
-
-        List<TextSegment> textSegments =
-                extractTextSegmentsFromTokens(page.getResources(), tokens, this.aggressiveMode);
-
-        if (!textSegments.isEmpty()) {
-            StringBuilder allText = new StringBuilder();
-            boolean hasProblematicChars = false;
-
-            for (TextSegment seg : textSegments) {
-                if (seg.getText() != null && !seg.getText().trim().isEmpty()) {
-                    String segmentText = seg.getText();
-                    if (!isTextSafeForRedaction(segmentText)) {
-                        hasProblematicChars = true;
-                        segmentText = normalizeTextForRedaction(segmentText);
-                    }
-                    allText.append(segmentText).append(" ");
-                }
-            }
-
-            String completeText = allText.toString().trim();
-            if (!completeText.isEmpty()) {
-                if (hasProblematicChars) {}
-            }
-        }
-
-        List<MatchRange> matches;
-        if (this.aggressiveMode) {
-            matches =
-                    findAllMatchesAggressive(
-                            textSegments, tokens, targetWords, useRegex, wholeWordSearch);
-        } else {
-            matches = findMatchesInSegments(textSegments, targetWords, useRegex, wholeWordSearch);
-        }
-
-        List<Object> resultTokens = applyRedactionsToTokens(tokens, textSegments, matches);
-        int modifications = tokens.size() - resultTokens.size();
-        return resultTokens;
+        return baseLimit;
     }
 
-    private float safeGetStringWidth(PDFont font, String text) {
-        if (font == null || text == null || text.isEmpty()) return 0f;
+    private static String createSafeReplacement(String originalPart, TextSegment segment) {
         try {
-            float widthAtSize1 = WidthCalculator.calculateAccurateWidth(font, text, 1.0f);
-            return widthAtSize1 * FONT_SCALE_FACTOR;
+            if (segment.getFont() != null && segment.getFontSize() > 0) {
+                float originalWidth =
+                        calculateSafeWidth(originalPart, segment.getFont(), segment.getFontSize());
+                if (originalWidth > 0) {
+                    return createPlaceholderWithWidth(
+                            originalPart, originalWidth, segment.getFont(), segment.getFontSize());
+                }
+            }
+            return createPlaceholderWithFont(originalPart, segment.getFont());
         } catch (Exception e) {
-            return 0f;
+            return " ".repeat(Math.max(1, originalPart.length()));
         }
     }
 
@@ -1904,19 +1748,26 @@ public class RedactionService {
         return Math.abs(adjustment) > maxReasonable ? 0f : adjustment;
     }
 
-    private float calculateMaxReasonableAdjustment(TextSegment segment, String text) {
-        float fontSize = segment.getFontSize();
-        float baseLimit = text.length() * fontSize * 2f;
-
+    private static WidthMeasurement measureTextWidth(PDFont font, String text, float fontSize) {
         try {
-            float avgCharWidth =
-                    safeGetStringWidth(segment.getFont(), "M") / FONT_SCALE_FACTOR * fontSize;
-            if (avgCharWidth > 0) {
-                baseLimit = Math.max(baseLimit, text.length() * avgCharWidth * 1.5f);
+            float fontUnits = safeGetStringWidth(font, text);
+            if (fontUnits < 0) return WidthMeasurement.invalid();
+
+            float actualWidth = (fontUnits / FONT_SCALE_FACTOR) * fontSize;
+            float characterSumWidth = calculateCharacterSumWidth(font, text);
+
+            if (characterSumWidth > 0) {
+                float characterActualWidth = (characterSumWidth / FONT_SCALE_FACTOR) * fontSize;
+                if (actualWidth != 0
+                        && Math.abs(actualWidth - characterActualWidth) / actualWidth > 0.1f) {
+                    actualWidth = Math.max(actualWidth, characterActualWidth);
+                }
             }
+
+            return new WidthMeasurement(actualWidth, true);
         } catch (Exception e) {
+            return WidthMeasurement.invalid();
         }
-        return baseLimit;
     }
 
     private void processFormXObject(
@@ -2149,20 +2000,10 @@ public class RedactionService {
         }
     }
 
-    private String createSafeReplacement(String originalPart, TextSegment segment) {
-        try {
-            if (segment.getFont() != null && segment.getFontSize() > 0) {
-                float originalWidth =
-                        calculateSafeWidth(originalPart, segment.getFont(), segment.getFontSize());
-                if (originalWidth > 0) {
-                    return createPlaceholderWithWidth(
-                            originalPart, originalWidth, segment.getFont(), segment.getFontSize());
-                }
-            }
-            return createPlaceholderWithFont(originalPart, segment.getFont());
-        } catch (Exception e) {
-            return " ".repeat(Math.max(1, originalPart.length()));
-        }
+    private static String handleTjOperator(Object token, PDFont font) {
+        return (token instanceof COSString cosString)
+                ? extractStringWithFallbacks(cosString, font)
+                : "";
     }
 
     private List<Object> applyRedactionsToTokens(
@@ -2356,26 +2197,11 @@ public class RedactionService {
         return segments;
     }
 
-    private WidthMeasurement measureTextWidth(PDFont font, String text, float fontSize) {
-        try {
-            float fontUnits = safeGetStringWidth(font, text);
-            if (fontUnits < 0) return WidthMeasurement.invalid();
-
-            float actualWidth = (fontUnits / FONT_SCALE_FACTOR) * fontSize;
-            float characterSumWidth = calculateCharacterSumWidth(font, text);
-
-            if (characterSumWidth > 0) {
-                float characterActualWidth = (characterSumWidth / FONT_SCALE_FACTOR) * fontSize;
-                if (actualWidth != 0
-                        && Math.abs(actualWidth - characterActualWidth) / actualWidth > 0.1f) {
-                    actualWidth = Math.max(actualWidth, characterActualWidth);
-                }
-            }
-
-            return new WidthMeasurement(actualWidth, true);
-        } catch (Exception e) {
-            return WidthMeasurement.invalid();
-        }
+    private static String handleQuotedOperator(Object token, PDFont font) {
+        // Do not add an extra newline; it shifts indices and breaks match ranges
+        return (token instanceof COSString cosString)
+                ? extractStringWithFallbacks(cosString, font)
+                : "";
     }
 
     private List<MatchRange> findAllMatchesAggressive(
@@ -2543,20 +2369,7 @@ public class RedactionService {
         return result;
     }
 
-    private String handleTjOperator(Object token, PDFont font) {
-        return (token instanceof COSString cosString)
-                ? extractStringWithFallbacks(cosString, font)
-                : "";
-    }
-
-    private String handleQuotedOperator(Object token, PDFont font) {
-        // Do not add an extra newline; it shifts indices and breaks match ranges
-        return (token instanceof COSString cosString)
-                ? extractStringWithFallbacks(cosString, font)
-                : "";
-    }
-
-    private String handleTJOperator(Object token, PDFont font) {
+    private static String handleTJOperator(Object token, PDFont font) {
         if (!(token instanceof COSArray cosArray)) return "";
 
         StringBuilder textBuilder = new StringBuilder();
@@ -2572,14 +2385,14 @@ public class RedactionService {
         return textBuilder.toString();
     }
 
-    private void mapStartToEnd(
-            List<TextSegment> segments,
-            List<MatchRange> result,
-            Map<Integer, List<AggressiveSegMatch>> perSegMatches,
-            List<Integer> decStarts,
-            List<Integer> decEnds,
-            int gStart,
-            int gEnd) {
+    private static void mapStartToEnd(
+        List<TextSegment> segments,
+        List<MatchRange> result,
+        Map<Integer, List<AggressiveSegMatch>> perSegMatches,
+        List<Integer> decStarts,
+        List<Integer> decEnds,
+        int gStart,
+        int gEnd) {
         for (int sIdx = 0; sIdx < segments.size(); sIdx++) {
             int sStart = decStarts.get(sIdx);
             int sEnd = decEnds.get(sIdx);
@@ -2599,26 +2412,8 @@ public class RedactionService {
         }
     }
 
-    private TokenModificationResult modifyTJOperator(
-            List<Object> tokens, Object token, TextSegment segment, List<MatchRange> matches) {
-        if (!(token instanceof COSArray originalArray)) {
-            return TokenModificationResult.failure("Expected COSArray for TJ operator");
-        }
-
-        try {
-            COSArray newArray = createRedactedTJArray(originalArray, segment, matches);
-            if (!isValidTJArray(newArray)) {
-                return TokenModificationResult.failure("Generated invalid TJ array");
-            }
-            tokens.set(segment.tokenIndex, newArray);
-            return TokenModificationResult.success();
-        } catch (Exception e) {
-            return TokenModificationResult.failure("TJ modification failed: " + e.getMessage());
-        }
-    }
-
-    private WidthCalculationResult calculatePreciseWidthAdjustment(
-            TextSegment segment, List<MatchRange> matches, String text) {
+    private static WidthCalculationResult calculatePreciseWidthAdjustment(
+        TextSegment segment, List<MatchRange> matches, String text) {
         float totalOriginalWidth = 0f, totalPlaceholderWidth = 0f;
         int processedMatches = 0;
         List<String> warnings = new ArrayList<>();
@@ -2665,7 +2460,7 @@ public class RedactionService {
                 totalOriginalWidth - totalPlaceholderWidth, processedMatches, warnings);
     }
 
-    private String createSafePlaceholder(String originalText, TextSegment segment) {
+    private static String createSafePlaceholder(String originalText, TextSegment segment) {
         try {
             return createPlaceholderWithWidth(
                     originalText,
@@ -2675,6 +2470,63 @@ public class RedactionService {
                     segment.getFontSize());
         } catch (Exception e) {
             return " ".repeat(Math.max(1, originalText.length()));
+        }
+    }
+
+    private TokenModificationResult modifyTJOperator(
+            List<Object> tokens, Object token, TextSegment segment, List<MatchRange> matches) {
+        if (!(token instanceof COSArray originalArray)) {
+            return TokenModificationResult.failure("Expected COSArray for TJ operator");
+        }
+
+        try {
+            COSArray newArray = createRedactedTJArray(originalArray, segment, matches);
+            if (!isValidTJArray(newArray)) {
+                return TokenModificationResult.failure("Generated invalid TJ array");
+            }
+            tokens.set(segment.tokenIndex, newArray);
+            return TokenModificationResult.success();
+        } catch (Exception e) {
+            return TokenModificationResult.failure("TJ modification failed: " + e.getMessage());
+        }
+    }
+
+    private static String extractStringWithFallbacks(COSString cosString, PDFont font) {
+        if (cosString == null) return "";
+
+        try {
+            String text = cosString.getString();
+            if (!text.trim().isEmpty() && !isGibberish(text)) return text;
+
+            if (font != null) {
+                String fontBasedText = tryFontBasedExtraction(cosString, font);
+                if (fontBasedText != null && !isGibberish(fontBasedText)) return fontBasedText;
+            }
+
+            String encodingFallback = tryEncodingFallbacks(cosString);
+            if (encodingFallback != null && !isGibberish(encodingFallback)) return encodingFallback;
+
+            return sanitizeText(text);
+        } catch (Exception e) {
+            return "\uFFFD";
+        }
+    }
+
+    private static void addSpacingAdjustment(
+        COSArray array, TextSegment segment, String originalText, String modifiedText) {
+        try {
+            if (array == null || segment == null || segment.getFont() == null) return;
+            if (Objects.equals(originalText, modifiedText)) return;
+
+            float wOrig =
+                    calculateSafeWidth(originalText, segment.getFont(), segment.getFontSize());
+            float wMod = calculateSafeWidth(modifiedText, segment.getFont(), segment.getFontSize());
+            float adjustment = wOrig - wMod;
+            if (Math.abs(adjustment) <= PRECISION_THRESHOLD) return;
+
+            float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
+            array.add(new COSFloat(kerning));
+        } catch (Exception ignored) {
         }
     }
 
@@ -2803,43 +2655,141 @@ public class RedactionService {
         }
     }
 
-    private String extractStringWithFallbacks(COSString cosString, PDFont font) {
-        if (cosString == null) return "";
-
-        try {
-            String text = cosString.getString();
-            if (!text.trim().isEmpty() && !isGibberish(text)) return text;
-
-            if (font != null) {
-                String fontBasedText = tryFontBasedExtraction(cosString, font);
-                if (fontBasedText != null && !isGibberish(fontBasedText)) return fontBasedText;
+    private byte[] processWithTesseractForRestoration(
+            java.nio.file.Path inputPath, java.nio.file.Path outputPath, RedactPdfRequest request)
+            throws IOException, InterruptedException {
+        try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
+            java.io.File tempOutputDir = new java.io.File(tempDir.getPath().toFile(), "output");
+            java.io.File tempImagesDir = new java.io.File(tempDir.getPath().toFile(), "images");
+            java.io.File finalOutputFile =
+                    new java.io.File(tempDir.getPath().toFile(), "final_output.pdf");
+            tempOutputDir.mkdirs();
+            tempImagesDir.mkdirs();
+            try (PDDocument document = pdfDocumentFactory.load(inputPath.toFile())) {
+                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                int pageCount = document.getNumberOfPages();
+                PDFMergerUtility merger = new PDFMergerUtility();
+                merger.setDestinationFileName(finalOutputFile.toString());
+                for (int pageNum = 0; pageNum < pageCount; pageNum++) {
+                    BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 600);
+                    File imagePath =
+                            new File(tempImagesDir, "page_" + pageNum + ".png");
+                    ImageIO.write(image, "png", imagePath);
+                    List<String> command =
+                            new ArrayList<>(
+                                    Arrays.asList(
+                                            "tesseract",
+                                            imagePath.toString(),
+                                            new File(tempOutputDir, "page_" + pageNum)
+                                                    .toString(),
+                                            "-l",
+                                            buildLanguageOption(request),
+                                            "--dpi",
+                                            "600",
+                                            "--psm",
+                                            "1",
+                                            "pdf"));
+                    ProcessExecutorResult result =
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
+                                    .runCommandWithOutputHandling(command);
+                    if (result.getRc() != 0) {
+                        throw new IOException(
+                                "Tesseract restoration failed with return code: " + result.getRc());
+                    }
+                    java.io.File pageOutputPath =
+                            new java.io.File(tempOutputDir, "page_" + pageNum + ".pdf");
+                    merger.addSource(pageOutputPath);
+                }
+                merger.mergeDocuments(null);
+                java.nio.file.Files.copy(
+                        finalOutputFile.toPath(),
+                        outputPath,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
-
-            String encodingFallback = tryEncodingFallbacks(cosString);
-            if (encodingFallback != null && !isGibberish(encodingFallback)) return encodingFallback;
-
-            return sanitizeText(text);
-        } catch (Exception e) {
-            return "\uFFFD";
+            return java.nio.file.Files.readAllBytes(outputPath);
         }
     }
 
-    private void addSpacingAdjustment(
-            COSArray array, TextSegment segment, String originalText, String modifiedText) {
-        try {
-            if (array == null || segment == null || segment.getFont() == null) return;
-            if (Objects.equals(originalText, modifiedText)) return;
+    public List<Object> createTokensWithoutTargetText(
+            PDDocument document,
+            PDPage page,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch)
+            throws IOException {
 
-            float wOrig =
-                    calculateSafeWidth(originalText, segment.getFont(), segment.getFontSize());
-            float wMod = calculateSafeWidth(modifiedText, segment.getFont(), segment.getFontSize());
-            float adjustment = wOrig - wMod;
-            if (Math.abs(adjustment) <= PRECISION_THRESHOLD) return;
+        PDFStreamParser parser = new PDFStreamParser(page);
+        List<Object> tokens = parseAllTokens(parser);
+        int tokenCount = tokens.size();
 
-            float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
-            array.add(new COSFloat(kerning));
-        } catch (Exception ignored) {
+        if (tokenCount == 0 && !targetWords.isEmpty()) {
+
+            try {
+                TextFinder directFinder = new TextFinder("", false, false);
+                directFinder.setStartPage(document.getPages().indexOf(page) + 1);
+                directFinder.setEndPage(document.getPages().indexOf(page) + 1);
+                directFinder.getText(document);
+
+                StringBuilder pageText = new StringBuilder();
+                for (PDFText pdfText : directFinder.getFoundTexts()) {
+                    if (pdfText.getText() != null) {
+                        pageText.append(pdfText.getText()).append(" ");
+                    }
+                }
+
+                String extractedText = pageText.toString().trim();
+                for (String word : targetWords) {
+                    if (extractedText.toLowerCase().contains(word.toLowerCase())) {}
+                }
+
+            } catch (Exception e) {
+            }
         }
+
+        PDResources resources = page.getResources();
+        if (resources != null) {
+            processPageXObjects(
+                    document,
+                    resources,
+                    targetWords,
+                    useRegex,
+                    wholeWordSearch,
+                    this.aggressiveMode);
+        }
+
+        List<TextSegment> textSegments =
+                extractTextSegmentsFromTokens(page.getResources(), tokens, this.aggressiveMode);
+
+        if (!textSegments.isEmpty()) {
+            StringBuilder allText = new StringBuilder();
+            boolean hasProblematicChars = false;
+
+            for (TextSegment seg : textSegments) {
+                if (seg.getText() != null && !seg.getText().trim().isEmpty()) {
+                    String segmentText = seg.getText();
+                    if (!isTextSafeForRedaction(segmentText)) {
+                        hasProblematicChars = true;
+                        segmentText = normalizeTextForRedaction(segmentText);
+                    }
+                    allText.append(segmentText).append(" ");
+                }
+            }
+
+            String completeText = allText.toString().trim();
+            if (!completeText.isEmpty() && hasProblematicChars) {}
+
+        }
+
+        List<MatchRange> matches;
+        if (this.aggressiveMode) {
+            matches =
+                    findAllMatchesAggressive(
+                            textSegments, tokens, targetWords, useRegex, wholeWordSearch);
+        } else {
+            matches = findMatchesInSegments(textSegments, targetWords, useRegex, wholeWordSearch);
+        }
+
+        return applyRedactionsToTokens(tokens, textSegments, matches);
     }
 
     private void wipeAllTextInXObjects(PDDocument document, PDResources resources) {
@@ -2884,41 +2834,6 @@ public class RedactionService {
 
         public static WidthMeasurement invalid() {
             return new WidthMeasurement(0f, false);
-        }
-    }
-
-    public byte[] performEnhancedRedaction(
-            RedactPdfRequest request,
-            String[] targetText,
-            Set<ScrubOption> scrubOptions,
-            FallbackStrategy fontStrategy)
-            throws IOException {
-
-        byte[] result = redactPdfWithSemanticScrubbing(request, scrubOptions);
-        return result;
-    }
-
-    public boolean validateFontCoverage(PDFont font, String text) {
-        if (font == null || text == null || text.isEmpty()) {
-            return false;
-        }
-
-        try {
-            GlyphCoverageProbe probe = new GlyphCoverageProbe(font);
-
-            for (int i = 0; i < text.length(); ) {
-                int codePoint = text.codePointAt(i);
-                if (!probe.hasGlyph(codePoint)) {
-
-                    return false;
-                }
-                i += Character.charCount(codePoint);
-            }
-
-            return true;
-        } catch (Exception e) {
-
-            return false;
         }
     }
 
@@ -3025,7 +2940,6 @@ public class RedactionService {
     }
 
     public interface SemanticScrubber {
-        void scrub(PDDocument document, Set<ScrubOption> options);
     }
 
     private static class GlyphCoverageProbe {
@@ -3138,15 +3052,14 @@ public class RedactionService {
             }
         }
 
-        private float getLegacySumFallback(int codePoint, float fontSize) {
+        private static float getLegacySumFallback(int codePoint, float fontSize) {
             return fontSize * 0.6f;
         }
     }
 
     public static class DefaultSemanticScrubber implements SemanticScrubber {
 
-        @Override
-        public void scrub(PDDocument document, Set<ScrubOption> options) {
+        private void scrub(PDDocument document, Set<ScrubOption> options) {
             if (document == null || options == null || options.isEmpty()) {
                 return;
             }
