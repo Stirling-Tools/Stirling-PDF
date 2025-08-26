@@ -2279,6 +2279,20 @@
         "description": "Configure the settings for this tool. These settings will be applied when the automation runs.",
         "cancel": "Cancel",
         "save": "Save Configuration"
-      }
+      },
+      "copyToSaved": "Copy to Saved"
     }
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "Secure PDF Ingestion",
+      "securePdfIngestionDesc": "Comprehensive PDF processing workflow that sanitises documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimises file size.",
+      "emailPreparation": "Email Preparation", 
+      "emailPreparationDesc": "Optimises PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy.",
+      "secureWorkflow": "Security Workflow",
+      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access.",
+      "processImages": "Process Images",
+      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
+    }
+  }
 }

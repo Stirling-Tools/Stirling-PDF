@@ -28,7 +28,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const automateOperation = useAutomateOperation();
   const toolRegistry = useFlatToolRegistry();
   const hasResults = automateOperation.files.length > 0 || automateOperation.downloadUrl !== null;
-  const { savedAutomations, deleteAutomation, refreshAutomations } = useSavedAutomations();
+  const { savedAutomations, deleteAutomation, refreshAutomations, copyFromSuggested } = useSavedAutomations();
 
   const handleStepChange = (data: AutomationStepData) => {
     // If navigating away from run step, reset automation results
@@ -77,6 +77,14 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               } catch (error) {
                 console.error('Failed to delete automation:', error);
                 onError?.(`Failed to delete automation: ${automation.name}`);
+              }
+            }}
+            onCopyFromSuggested={async (suggestedAutomation) => {
+              try {
+                await copyFromSuggested(suggestedAutomation);
+              } catch (error) {
+                console.error('Failed to copy suggested automation:', error);
+                onError?.(`Failed to copy automation: ${suggestedAutomation.name}`);
               }
             }}
           />

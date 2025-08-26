@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AutomationConfig } from '../../../services/automationStorage';
+import { SuggestedAutomation } from '../../../types/automation';
 
 export interface SavedAutomation extends AutomationConfig {}
 
@@ -40,6 +41,26 @@ export function useSavedAutomations() {
     }
   }, [refreshAutomations]);
 
+  const copyFromSuggested = useCallback(async (suggestedAutomation: SuggestedAutomation) => {
+    try {
+      const { automationStorage } = await import('../../../services/automationStorage');
+      
+      // Convert suggested automation to saved automation format
+      const savedAutomation = {
+        name: suggestedAutomation.name,
+        description: suggestedAutomation.description,
+        operations: suggestedAutomation.operations
+      };
+      
+      await automationStorage.saveAutomation(savedAutomation);
+      // Refresh the list after saving
+      refreshAutomations();
+    } catch (err) {
+      console.error('Error copying suggested automation:', err);
+      throw err;
+    }
+  }, [refreshAutomations]);
+
   // Load automations on mount
   useEffect(() => {
     loadSavedAutomations();
@@ -50,6 +71,7 @@ export function useSavedAutomations() {
     loading,
     error,
     refreshAutomations,
-    deleteAutomation
+    deleteAutomation,
+    copyFromSuggested
   };
 }
