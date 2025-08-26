@@ -134,7 +134,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   const setPreviewFile = useCallback((file: File | null) => {
     dispatch({ type: 'SET_PREVIEW_FILE', payload: file });
-  }, []);
+    if (file) {
+      actions.setMode('viewer');
+    }
+  }, [actions]);
 
   const setPageEditorFunctions = useCallback((functions: PageEditorFunctions | null) => {
     dispatch({ type: 'SET_PAGE_EDITOR_FUNCTIONS', payload: functions });
