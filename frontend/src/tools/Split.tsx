@@ -56,8 +56,8 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleSettingsReset = () => {
     splitOperation.resetResults();
-    splitParams.resetParameters();
-  };
+    onPreviewFile?.(null);
+    };
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = splitOperation.files.length > 0 || splitOperation.downloadUrl !== null;

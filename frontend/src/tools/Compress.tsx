@@ -50,8 +50,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleSettingsReset = () => {
     compressOperation.resetResults();
-    compressParams.resetParameters();
-  };
+    onPreviewFile?.(null);  };
 
 
 
