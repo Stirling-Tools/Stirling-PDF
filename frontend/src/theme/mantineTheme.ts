@@ -114,7 +114,6 @@ export const mantineTheme = createTheme({
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
           color: 'var(--text-primary)',
-          outline: 'white',
           '&:focus': {
             borderColor: 'var(--color-primary-500)',
             boxShadow: '0 0 0 1px var(--color-primary-500)',
