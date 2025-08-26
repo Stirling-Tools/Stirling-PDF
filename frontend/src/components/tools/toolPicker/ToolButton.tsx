@@ -27,14 +27,14 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
       <Button
         variant={isSelected ? "filled" : "subtle"}
         onClick={()=> handleClick(id)}
-        size="md"
+        size="sm"
         radius="md"
-        leftSection={<div className="tool-button-icon" style={{ color: "var(--tools-text-and-icon-color)" }}>{tool.icon}</div>}
         fullWidth
         justify="flex-start"
         className="tool-button"
         styles={{ root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)" } }}
       >
+        <div className="tool-button-icon" style={{ color: "var(--tools-text-and-icon-color)", marginRight: "0.5rem", transform: "scale(0.8)", transformOrigin: "center" }}>{tool.icon}</div>
         <FitText
           text={tool.name}
           lines={1}

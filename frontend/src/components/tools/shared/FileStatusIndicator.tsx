@@ -12,7 +12,6 @@ export interface FileStatusIndicatorProps {
 
 const FileStatusIndicator = ({
   selectedFiles = [],
-  placeholder,
 }: FileStatusIndicatorProps) => {
   const { t } = useTranslation();
   const { openFilesModal } = useFilesModalContext();
@@ -22,7 +21,6 @@ const FileStatusIndicator = ({
   if (workbenchFiles.length === 0) {
     return (
       <Text size="sm" c="dimmed">
-        {t("files.noFiles", "No files uploaded. ")}{" "}
         <Anchor
           size="sm"
           onClick={openFilesModal}
