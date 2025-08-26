@@ -25,7 +25,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     splitOperation.resetResults();
     onPreviewFile?.(null);
-  }, [splitParams.parameters, selectedFiles]); 
+  }, [splitParams.parameters, selectedFiles]);
   const handleSplit = async () => {
     try {
       await splitOperation.executeOperation(splitParams.parameters, selectedFiles);
@@ -42,12 +42,6 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "split");
-  };
-
-  const handleSettingsReset = () => {
-    splitOperation.resetResults();
-    onPreviewFile?.(null);
-    actions.setMode("split");
   };
 
   const hasFiles = selectedFiles.length > 0;
