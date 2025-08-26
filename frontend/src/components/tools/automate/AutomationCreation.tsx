@@ -6,6 +6,7 @@ import {
   Stack,
   Group,
   TextInput,
+  Textarea,
   Divider,
   Modal
 } from '@mantine/core';
@@ -32,6 +33,8 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   const {
     automationName,
     setAutomationName,
+    automationDescription,
+    setAutomationDescription,
     automationIcon,
     setAutomationIcon,
     selectedTools,
@@ -103,7 +106,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
     const automationData = {
       name: automationName.trim(),
-      description: '',
+      description: automationDescription.trim(),
       icon: automationIcon,
       operations: selectedTools.map(tool => ({
         operation: tool.operation,
@@ -172,6 +175,16 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
             size="sm"
           />
         </Group>
+
+        {/* Automation Description */}
+        <Textarea
+          placeholder={t('automate.creation.description.placeholder', 'Describe what this automation does...')}
+          value={automationDescription}
+          label={t('automate.creation.description.label', 'Description')}
+          onChange={(e) => setAutomationDescription(e.currentTarget.value)}
+          size="sm"
+          rows={3}
+        />
 
 
         {/* Selected Tools List */}

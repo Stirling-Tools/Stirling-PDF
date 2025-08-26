@@ -64,7 +64,8 @@ export default function AutomationEntry({
 
   // Create tooltip content with description and tool chain
   const createTooltipContent = () => {
-    if (!description) return null;
+    // Show tooltip if there's a description OR if there are operations to show in the chain
+    if (!description && operations.length === 0) return null;
 
     const toolChain = operations.map((op, index) => (
       <React.Fragment key={`${op}-${index}`}>
@@ -93,12 +94,16 @@ export default function AutomationEntry({
 
     return (
       <div style={{ minWidth: '400px', width: 'auto' }}>
-        <Text size="sm" mb={8} style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
-          {description}
-        </Text>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-          {toolChain}
-        </div>
+        {description && (
+          <Text size="sm" mb={8} style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+            {description}
+          </Text>
+        )}
+        {operations.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+            {toolChain}
+          </div>
+        )}
       </div>
     );
   };
@@ -234,8 +239,10 @@ export default function AutomationEntry({
     </Box>
   );
 
-  // Only show tooltip if description exists, otherwise return plain content
-  return description ? (
+  // Show tooltip if there's a description OR operations to display
+  const shouldShowTooltip = description || operations.length > 0;
+  
+  return shouldShowTooltip ? (
     <Tooltip 
       content={createTooltipContent()} 
       position="right" 

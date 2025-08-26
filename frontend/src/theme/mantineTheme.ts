@@ -107,6 +107,23 @@ export const mantineTheme = createTheme({
         },
       },
     },
+    Textarea: {
+      styles: (theme: any) => ({
+        input: {
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-default)',
+          color: 'var(--text-primary)',
+          '&:focus': {
+            borderColor: 'var(--color-primary-500)',
+            boxShadow: '0 0 0 1px var(--color-primary-500)',
+          },
+        },
+        label: {
+          color: 'var(--text-secondary)',
+          fontWeight: 'var(--font-weight-medium)',
+        },
+      }),
+    },
 
     TextInput: {
       styles: (theme: any) => ({

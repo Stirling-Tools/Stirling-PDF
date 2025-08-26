@@ -53,6 +53,7 @@ export default function AutomationSelection({
           <AutomationEntry
             key={automation.id}
             title={automation.name}
+            description={automation.description}
             badgeIcon={IconComponent || SettingsIcon}
             operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
             onClick={() => onRun(automation)}
