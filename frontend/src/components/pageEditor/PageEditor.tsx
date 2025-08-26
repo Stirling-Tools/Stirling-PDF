@@ -7,7 +7,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions, useCurrentFile, useFileSelection } from "../../contexts/FileContext";
 import { ModeType } from "../../contexts/NavigationContext";
-import { PDFDocument, PDFPage } from "../../types/pageEditor";
+import { PDFDocument, PDFPage, PageEditorFunctions } from "../../types/pageEditor";
 import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
@@ -36,31 +36,7 @@ import { usePageDocument } from './hooks/usePageDocument';
 import { usePageEditorState } from './hooks/usePageEditorState';
 
 export interface PageEditorProps {
-  onFunctionsReady?: (functions: {
-    handleUndo: () => void;
-    handleRedo: () => void;
-    canUndo: boolean;
-    canRedo: boolean;
-    handleRotate: (direction: 'left' | 'right') => void;
-    handleDelete: () => void;
-    handleSplit: () => void;
-    handleSplitAll: () => void;
-    handlePageBreak: () => void;
-    handlePageBreakAll: () => void;
-    handleSelectAll: () => void;
-    handleDeselectAll: () => void;
-    handleSetSelectedPages: (pageNumbers: number[]) => void;
-    showExportPreview: (selectedOnly: boolean) => void;
-    onExportSelected: () => void;
-    onExportAll: () => void;
-    applyChanges: () => void;
-    exportLoading: boolean;
-    selectionMode: boolean;
-    selectedPages: number[];
-    splitPositions: Set<number>;
-    totalPages: number;
-    closePdf: () => void;
-  }) => void;
+  onFunctionsReady?: (functions: PageEditorFunctions) => void;
 }
 
 const PageEditor = ({
@@ -100,8 +76,8 @@ const PageEditor = ({
 
   // UI state management
   const {
-    selectionMode, selectedPageNumbers, movingPage, isAnimating, splitPositions, exportLoading,
-    setSelectionMode, setSelectedPageNumbers, setMovingPage, setIsAnimating, setSplitPositions, setExportLoading,
+    selectionMode, selectedPageIds, movingPage, isAnimating, splitPositions, exportLoading,
+    setSelectionMode, setSelectedPageIds, setMovingPage, setIsAnimating, setSplitPositions, setExportLoading,
     togglePage, toggleSelectAll, animateReorder
   } = usePageEditorState();
 
@@ -152,17 +128,40 @@ const PageEditor = ({
 
   // Interface functions for parent component
   const displayDocument = editedDocument || mergedPdfDocument;
+  
+  // Utility functions to convert between page IDs and page numbers
+  const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
+    if (!displayDocument) return [];
+    return pageIds.map(id => {
+      const page = displayDocument.pages.find(p => p.id === id);
+      return page?.pageNumber || 0;
+    }).filter(num => num > 0);
+  }, [displayDocument]);
+  
+  const getPageIdsFromNumbers = useCallback((pageNumbers: number[]): string[] => {
+    if (!displayDocument) return [];
+    return pageNumbers.map(num => {
+      const page = displayDocument.pages.find(p => p.pageNumber === num);
+      return page?.id || '';
+    }).filter(id => id !== '');
+  }, [displayDocument]);
+  
+  // Convert selectedPageIds to numbers for components that still need numbers
+  const selectedPageNumbers = useMemo(() => 
+    getPageNumbersFromIds(selectedPageIds), 
+    [selectedPageIds, getPageNumbersFromIds]
+  );
 
   // Select all pages by default when document initially loads
   const hasInitializedSelection = useRef(false);
   useEffect(() => {
     if (displayDocument && displayDocument.pages.length > 0 && !hasInitializedSelection.current) {
-      const allPageNumbers = Array.from({ length: displayDocument.pages.length }, (_, i) => i + 1);
-      setSelectedPageNumbers(allPageNumbers);
+      const allPageIds = displayDocument.pages.map(p => p.id);
+      setSelectedPageIds(allPageIds);
       setSelectionMode(true);
       hasInitializedSelection.current = true;
     }
-  }, [displayDocument, setSelectedPageNumbers, setSelectionMode]);
+  }, [displayDocument, setSelectedPageIds, setSelectionMode]);
 
   // DOM-first command handlers
   const handleRotatePages = useCallback((pageIds: string[], rotation: number) => {
@@ -192,15 +191,18 @@ const PageEditor = ({
           pagesToDelete,
           () => displayDocument,
           setEditedDocument,
-          setSelectedPageNumbers,
+          (pageNumbers: number[]) => {
+            const pageIds = getPageIdsFromNumbers(pageNumbers);
+            setSelectedPageIds(pageIds);
+          },
           () => splitPositions,
           setSplitPositions,
-          () => selectedPageNumbers
+          () => getPageNumbersFromIds(selectedPageIds)
         );
         undoManagerRef.current.executeCommand(deleteCommand);
       }
     }
-  }), [displayDocument, splitPositions, selectedPageNumbers]);
+  }), [displayDocument, splitPositions, selectedPageIds, getPageNumbersFromIds]);
 
   const createSplitCommand = useCallback((position: number) => ({
     execute: () => {
@@ -230,30 +232,32 @@ const PageEditor = ({
   }, []);
 
   const handleRotate = useCallback((direction: 'left' | 'right') => {
-    if (!displayDocument || selectedPageNumbers.length === 0) return;
+    if (!displayDocument || selectedPageIds.length === 0) return;
     const rotation = direction === 'left' ? -90 : 90;
-    const pagesToRotate = selectedPageNumbers.map(pageNum => {
-      const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
-      return page?.id || '';
-    }).filter(id => id);
-
-    handleRotatePages(pagesToRotate, rotation);
-  }, [displayDocument, selectedPageNumbers, handleRotatePages]);
+    
+    handleRotatePages(selectedPageIds, rotation);
+  }, [displayDocument, selectedPageIds, handleRotatePages]);
 
   const handleDelete = useCallback(() => {
-    if (!displayDocument || selectedPageNumbers.length === 0) return;
+    if (!displayDocument || selectedPageIds.length === 0) return;
+
+    // Convert selected page IDs to page numbers for the command
+    const selectedPageNumbers = getPageNumbersFromIds(selectedPageIds);
 
     const deleteCommand = new DeletePagesCommand(
       selectedPageNumbers,
       () => displayDocument,
       setEditedDocument,
-      setSelectedPageNumbers,
+      (pageNumbers: number[]) => {
+        const pageIds = getPageIdsFromNumbers(pageNumbers);
+        setSelectedPageIds(pageIds);
+      },
       () => splitPositions,
       setSplitPositions,
       () => selectedPageNumbers
     );
     undoManagerRef.current.executeCommand(deleteCommand);
-  }, [selectedPageNumbers, displayDocument, splitPositions]);
+  }, [selectedPageIds, displayDocument, splitPositions, getPageNumbersFromIds, getPageIdsFromNumbers]);
 
   const handleDeletePage = useCallback((pageNumber: number) => {
     if (!displayDocument) return;
@@ -262,18 +266,22 @@ const PageEditor = ({
       [pageNumber],
       () => displayDocument,
       setEditedDocument,
-      setSelectedPageNumbers,
+      (pageNumbers: number[]) => {
+        const pageIds = getPageIdsFromNumbers(pageNumbers);
+        setSelectedPageIds(pageIds);
+      },
       () => splitPositions,
       setSplitPositions,
-      () => selectedPageNumbers
+      () => getPageNumbersFromIds(selectedPageIds)
     );
     undoManagerRef.current.executeCommand(deleteCommand);
-  }, [displayDocument, splitPositions, selectedPageNumbers]);
+  }, [displayDocument, splitPositions, selectedPageIds, getPageNumbersFromIds]);
 
   const handleSplit = useCallback(() => {
-    if (!displayDocument || selectedPageNumbers.length === 0) return;
+    if (!displayDocument || selectedPageIds.length === 0) return;
 
-    // Convert selected page numbers to split positions (0-based indices)
+    // Convert selected page IDs to page numbers, then to split positions (0-based indices)
+    const selectedPageNumbers = getPageNumbersFromIds(selectedPageIds);
     const selectedPositions: number[] = [];
     selectedPageNumbers.forEach(pageNum => {
       const pageIndex = displayDocument.pages.findIndex(p => p.pageNumber === pageNum);
@@ -314,12 +322,13 @@ const PageEditor = ({
     };
 
     undoManagerRef.current.executeCommand(smartSplitCommand);
-  }, [selectedPageNumbers, displayDocument, splitPositions, setSplitPositions]);
+  }, [selectedPageIds, displayDocument, splitPositions, setSplitPositions, getPageNumbersFromIds]);
 
   const handleSplitAll = useCallback(() => {
-    if (!displayDocument || selectedPageNumbers.length === 0) return;
+    if (!displayDocument || selectedPageIds.length === 0) return;
 
-    // Convert selected page numbers to split positions (0-based indices)
+    // Convert selected page IDs to page numbers, then to split positions (0-based indices)
+    const selectedPageNumbers = getPageNumbersFromIds(selectedPageIds);
     const selectedPositions: number[] = [];
     selectedPageNumbers.forEach(pageNum => {
       const pageIndex = displayDocument.pages.findIndex(p => p.pageNumber === pageNum);
@@ -359,31 +368,35 @@ const PageEditor = ({
     };
 
     undoManagerRef.current.executeCommand(smartSplitCommand);
-  }, [selectedPageNumbers, displayDocument, splitPositions, setSplitPositions]);
+  }, [selectedPageIds, displayDocument, splitPositions, setSplitPositions, getPageNumbersFromIds]);
 
   const handlePageBreak = useCallback(() => {
-    if (!displayDocument || selectedPageNumbers.length === 0) return;
+    if (!displayDocument || selectedPageIds.length === 0) return;
+
+    // Convert selected page IDs to page numbers for the command
+    const selectedPageNumbers = getPageNumbersFromIds(selectedPageIds);
 
     const pageBreakCommand = new PageBreakCommand(
       selectedPageNumbers,
       () => displayDocument,
-      setEditedDocument,
-      setSelectedPageNumbers
+      setEditedDocument
     );
     undoManagerRef.current.executeCommand(pageBreakCommand);
-  }, [selectedPageNumbers, displayDocument]);
+  }, [selectedPageIds, displayDocument, getPageNumbersFromIds]);
 
   const handlePageBreakAll = useCallback(() => {
-    if (!displayDocument || selectedPageNumbers.length === 0) return;
+    if (!displayDocument || selectedPageIds.length === 0) return;
+
+    // Convert selected page IDs to page numbers for the command
+    const selectedPageNumbers = getPageNumbersFromIds(selectedPageIds);
 
     const pageBreakCommand = new PageBreakCommand(
       selectedPageNumbers,
       () => displayDocument,
-      setEditedDocument,
-      setSelectedPageNumbers
+      setEditedDocument
     );
     undoManagerRef.current.executeCommand(pageBreakCommand);
-  }, [selectedPageNumbers, displayDocument]);
+  }, [selectedPageIds, displayDocument, getPageNumbersFromIds]);
 
   const handleInsertFiles = useCallback(async (files: File[], insertAfterPage: number) => {
     if (!displayDocument || files.length === 0) return;
@@ -400,20 +413,24 @@ const PageEditor = ({
 
   const handleSelectAll = useCallback(() => {
     if (!displayDocument) return;
-    const allPageNumbers = Array.from({ length: displayDocument.pages.length }, (_, i) => i + 1);
-    setSelectedPageNumbers(allPageNumbers);
-  }, [displayDocument]);
+    const allPageIds = displayDocument.pages.map(p => p.id);
+    toggleSelectAll(allPageIds);
+  }, [displayDocument, toggleSelectAll]);
 
   const handleDeselectAll = useCallback(() => {
-    setSelectedPageNumbers([]);
-  }, []);
+    setSelectedPageIds([]);
+  }, [setSelectedPageIds]);
 
   const handleSetSelectedPages = useCallback((pageNumbers: number[]) => {
-    setSelectedPageNumbers(pageNumbers);
-  }, []);
+    const pageIds = getPageIdsFromNumbers(pageNumbers);
+    setSelectedPageIds(pageIds);
+  }, [getPageIdsFromNumbers, setSelectedPageIds]);
 
-  const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => {
+  const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => {
     if (!displayDocument) return;
+
+    // Convert selectedPageIds to page numbers for the reorder command
+    const selectedPages = selectedPageIds ? getPageNumbersFromIds(selectedPageIds) : undefined;
 
     const reorderCommand = new ReorderPagesCommand(
       sourcePageNumber,
@@ -423,7 +440,7 @@ const PageEditor = ({
       setEditedDocument
     );
     undoManagerRef.current.executeCommand(reorderCommand);
-  }, [displayDocument]);
+  }, [displayDocument, getPageNumbersFromIds]);
 
   // Helper function to collect source files for multi-file export
   const getSourceFiles = useCallback((): Map<string, File> | null => {
@@ -466,7 +483,7 @@ const PageEditor = ({
   }, [activeFileIds, selectors, displayDocument]);
 
   const onExportSelected = useCallback(async () => {
-    if (!displayDocument || selectedPageNumbers.length === 0) return;
+    if (!displayDocument || selectedPageIds.length === 0) return;
 
     setExportLoading(true);
     try {
@@ -480,11 +497,11 @@ const PageEditor = ({
       // For selected pages export, we work with the first document (or single document)
       const documentWithDOMState = Array.isArray(processedDocuments) ? processedDocuments[0] : processedDocuments;
 
-      // Step 2: Convert selected page numbers to page IDs from the document with DOM state
-      const selectedPageIds = selectedPageNumbers.map(pageNum => {
-        const page = documentWithDOMState.pages.find(p => p.pageNumber === pageNum);
-        return page?.id || '';
-      }).filter(id => id);
+      // Step 2: Use the already selected page IDs
+      // Filter to only include IDs that exist in the document with DOM state
+      const validSelectedPageIds = selectedPageIds.filter(pageId => 
+        documentWithDOMState.pages.some(p => p.id === pageId)
+      );
 
       // Step 3: Export with pdfExportService
 
@@ -494,12 +511,12 @@ const PageEditor = ({
         ? await pdfExportService.exportPDFMultiFile(
             documentWithDOMState,
             sourceFiles,
-            selectedPageIds,
+            validSelectedPageIds,
             { selectedOnly: true, filename: exportFilename }
           )
         : await pdfExportService.exportPDF(
             documentWithDOMState,
-            selectedPageIds,
+            validSelectedPageIds,
             { selectedOnly: true, filename: exportFilename }
           );
 
@@ -511,7 +528,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, selectedPageNumbers, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename]);
+  }, [displayDocument, selectedPageIds, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename]);
 
   const onExportAll = useCallback(async () => {
     if (!displayDocument) return;
@@ -606,7 +623,7 @@ const PageEditor = ({
   const closePdf = useCallback(() => {
     actions.clearAllFiles();
     undoManagerRef.current.clear();
-    setSelectedPageNumbers([]);
+    setSelectedPageIds([]);
     setSelectionMode(false);
   }, [actions]);
 
@@ -646,7 +663,8 @@ const PageEditor = ({
         applyChanges,
         exportLoading,
         selectionMode,
-        selectedPages: selectedPageNumbers,
+        selectedPageIds,
+        displayDocument: displayDocument || undefined,
         splitPositions,
         totalPages: displayDocument?.pages.length || 0,
         closePdf,
@@ -655,7 +673,7 @@ const PageEditor = ({
   }, [
     onFunctionsReady, handleUndo, handleRedo, canUndo, canRedo, handleRotate, handleDelete, handleSplit, handleSplitAll,
     handlePageBreak, handlePageBreakAll, handleSelectAll, handleDeselectAll, handleSetSelectedPages, handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading,
-    selectionMode, selectedPageNumbers, splitPositions, displayDocument?.pages.length, closePdf
+    selectionMode, selectedPageIds, splitPositions, displayDocument?.pages.length, closePdf
   ]);
 
   // Display all pages - use edited or original document
@@ -745,7 +763,7 @@ const PageEditor = ({
           {/* Pages Grid */}
           <DragDropGrid
             items={displayedPages}
-            selectedItems={selectedPageNumbers}
+            selectedItems={selectedPageIds}
             selectionMode={selectionMode}
             isAnimating={isAnimating}
             onReorderPages={handleReorderPages}
@@ -756,7 +774,7 @@ const PageEditor = ({
                 index={index}
                 totalPages={displayDocument.pages.length}
                 originalFile={(page as any).originalFileId ? selectors.getFile((page as any).originalFileId) : undefined}
-                selectedPages={selectedPageNumbers}
+                selectedPageIds={selectedPageIds}
                 selectionMode={selectionMode}
                 movingPage={movingPage}
                 isAnimating={isAnimating}

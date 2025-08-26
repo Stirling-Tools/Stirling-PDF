@@ -11,8 +11,6 @@ interface RainbowThemeHook {
   deactivateRainbow: () => void;
 }
 
-const allowRainbowMode = false; // Override to allow/disallow fun
-
 export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): RainbowThemeHook {
   // Get theme from localStorage or use initial
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
@@ -37,11 +35,11 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
   // Save theme to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('stirling-theme', themeMode);
-
+    
     // Apply rainbow class to body if in rainbow mode
     if (themeMode === 'rainbow') {
       document.body.classList.add('rainbow-mode-active');
-
+      
       // Show easter egg notification
       showRainbowNotification();
     } else {
@@ -79,7 +77,7 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
       pointer-events: none;
       transition: opacity 0.3s ease;
     `;
-
+    
     document.body.appendChild(notification);
 
     // Auto-remove notification after 3 seconds
@@ -123,7 +121,7 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
       pointer-events: none;
       transition: opacity 0.3s ease;
     `;
-
+    
     document.body.appendChild(notification);
 
     // Auto-remove notification after 2 seconds
@@ -146,7 +144,7 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
     }
 
     const currentTime = Date.now();
-
+    
     // Simple exit from rainbow mode with single click (after cooldown period)
     if (themeMode === 'rainbow') {
       setThemeMode('light');
@@ -154,7 +152,7 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
       showExitNotification();
       return;
     }
-
+    
     // Reset counter if too much time has passed (2.5 seconds)
     if (currentTime - lastToggleTime.current > 2500) {
       toggleCount.current = 1;
@@ -164,18 +162,18 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
     lastToggleTime.current = currentTime;
 
     // Easter egg: Activate rainbow mode after 10 rapid toggles
-    if (allowRainbowMode && toggleCount.current >= 10) {
+    if (toggleCount.current >= 10) {
       setThemeMode('rainbow');
       console.log('🌈 RAINBOW MODE ACTIVATED! 🌈 You found the secret easter egg!');
       console.log('🌈 Button will be disabled for 3 seconds, then click once to exit!');
-
+      
       // Disable toggle for 3 seconds
       setIsToggleDisabled(true);
       setTimeout(() => {
         setIsToggleDisabled(false);
         console.log('🌈 Theme toggle re-enabled! Click once to exit rainbow mode.');
       }, 3000);
-
+      
       // Reset counter
       toggleCount.current = 0;
       return;
