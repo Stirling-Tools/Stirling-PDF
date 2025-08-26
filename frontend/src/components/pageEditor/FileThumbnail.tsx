@@ -184,6 +184,37 @@ const FileThumbnail = ({
     return () => window.removeEventListener('resize', update);
   }, []);
 
+  // Close the actions dropdown when hovering outside this file card (and its dropdown)
+  useEffect(() => {
+    if (!showActions) return;
+
+    const isInsideCard = (target: EventTarget | null) => {
+      const container = dragElementRef.current;
+      if (!container) return false;
+      return target instanceof Node && container.contains(target);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isInsideCard(e.target)) {
+        setShowActions(false);
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      // On touch devices, close if the touch target is outside the card
+      if (!isInsideCard(e.target)) {
+        setShowActions(false);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, [showActions]);
+
   // ---- Card interactions ----
   const handleCardClick = () => {
     if (!isSupported) return;
