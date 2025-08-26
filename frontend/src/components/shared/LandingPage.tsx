@@ -36,7 +36,7 @@ const LandingPage = () => {
   };
 
   return (
-    <Container size="lg" p={0} h="100%" className="flex items-center justify-center" style={{ position: 'relative' }}>
+    <Container size="70rem" p={0} h="102%" className="flex items-center justify-center" style={{ position: 'relative' }}>
       {/* White PDF Page Background */}
       <Dropzone
         onDrop={handleFileDrop}
@@ -48,7 +48,7 @@ const LandingPage = () => {
           left: '50%',
           transform: 'translateX(-50%)',
           bottom: 0,
-          borderRadius: '0.5rem 0.5rem 0 0',
+          borderRadius: '0.25rem 0.25rem 0 0',
           filter: 'var(--drop-shadow-filter)',
           backgroundColor: 'var(--landing-paper-bg)',
           transition: 'background-color 0.4s ease',
@@ -66,7 +66,7 @@ const LandingPage = () => {
           style={{
             position: 'absolute',
             top: 0,
-            right: ".5rem",
+            right: 0,
             zIndex: 10,
 
           }}
@@ -75,15 +75,13 @@ const LandingPage = () => {
             src={colorScheme === 'dark' ? '/branding/StirlingPDFLogoNoTextDark.svg' : '/branding/StirlingPDFLogoNoTextLight.svg'}
             alt="Stirling PDF Logo"
             style={{
-              width: '10rem',
               height: 'auto',
               pointerEvents: 'none',
-              marginTop: '-0.5rem'
             }}
           />
         </div>
         <div
-          className={`min-h-[25vh] flex flex-col items-center justify-center px-8 py-8 w-full min-w-[360px] border transition-all duration-200 dropzone-inner relative`}
+          className={`min-h-[45vh] flex flex-col items-center justify-center px-8 py-8 w-full min-w-[30rem] max-w-[calc(100%-2rem)] border transition-all duration-200 dropzone-inner relative`}
           style={{
             borderRadius: '0.5rem',
             backgroundColor: 'var(--landing-inner-paper-bg)',
