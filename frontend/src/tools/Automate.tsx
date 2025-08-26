@@ -14,7 +14,7 @@ import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperati
 import { BaseToolProps } from "../types/tool";
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 import { useSavedAutomations } from "../hooks/tools/automate/useSavedAutomations";
-import { AutomationConfig, AutomationStepData, AutomationMode } from "../types/automation";
+import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep } from "../types/automation";
 import { AUTOMATION_STEPS } from "../constants/automation";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -22,7 +22,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { selectedFiles } = useFileSelection();
   const { setMode } = useNavigation();
 
-  const [currentStep, setCurrentStep] = useState<'selection' | 'creation' | 'run'>(AUTOMATION_STEPS.SELECTION);
+  const [currentStep, setCurrentStep] = useState<AutomationStep>(AUTOMATION_STEPS.SELECTION);
   const [stepData, setStepData] = useState<AutomationStepData>({ step: AUTOMATION_STEPS.SELECTION });
 
   const automateOperation = useAutomateOperation();
@@ -64,7 +64,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 'selection':
+      case AUTOMATION_STEPS.SELECTION:
         return (
           <AutomationSelection
             savedAutomations={savedAutomations}
@@ -82,7 +82,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           />
         );
 
-      case 'creation':
+      case AUTOMATION_STEPS.CREATION:
         if (!stepData.mode) {
           console.error('Creation mode is undefined');
           return null;
@@ -100,7 +100,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           />
         );
 
-      case 'run':
+      case AUTOMATION_STEPS.RUN:
         if (!stepData.automation) {
           console.error('Automation config is undefined');
           return null;
