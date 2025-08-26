@@ -12,10 +12,10 @@ interface DragDropItem {
 
 interface DragDropGridProps<T extends DragDropItem> {
   items: T[];
-  selectedItems: number[];
+  selectedItems: string[];
   selectionMode: boolean;
   isAnimating: boolean;
-  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPages?: number[]) => void;
+  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
   renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>) => React.ReactNode;
   renderSplitMarker?: (item: T, index: number) => React.ReactNode;
 }
