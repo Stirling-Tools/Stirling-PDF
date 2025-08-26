@@ -996,6 +996,7 @@
     },
     "submit": "Change"
   },
+  
   "removePages": {
     "tags": "Remove pages,delete pages",
     "title": "Remove Pages",
@@ -1112,88 +1113,7 @@
     },
     "help": "Please read this documentation on how to use this for other languages and/or use not in docker",
     "credit": "This service uses qpdf and Tesseract for OCR.",
-    "submit": "Process PDF with OCR",
-    "operation": {
-      "submit": "Process OCR and Review"
-    },
-    "results": {
-      "title": "OCR Results"
-    },
-    "languagePicker": {
-      "additionalLanguages": "Looking for additional languages?",
-      "viewSetupGuide": "View setup guide →"
-    },
-    "settings": {
-      "title": "Settings",
-      "ocrMode": {
-        "label": "OCR Mode",
-        "auto": "Auto (skip text layers)",
-        "force": "Force (re-OCR all, replace text)",
-        "strict": "Strict (abort if text found)"
-      },
-      "languages": {
-        "label": "Languages",
-        "placeholder": "Select languages"
-      },
-      "compatibilityMode": {
-        "label": "Compatibility Mode"
-      },
-      "advancedOptions": {
-        "label": "Processing Options",
-        "sidecar": "Create a text file",
-        "deskew": "Deskew pages",
-        "clean": "Clean input file",
-        "cleanFinal": "Clean final output"
-      }
-    },
-    "tooltip": {
-      "header": {
-        "title": "OCR Settings Overview"
-      },
-      "mode": {
-        "title": "OCR Mode",
-        "text": "Optical Character Recognition (OCR) helps you turn scanned or screenshotted pages into text you can search, copy, or highlight.",
-        "bullet1": "Auto skips pages that already contain text layers.",
-        "bullet2": "Force re-OCRs every page and replaces all the text.",
-        "bullet3": "Strict halts if any selectable text is found."
-      },
-      "languages": {
-        "title": "Languages",
-        "text": "Improve OCR accuracy by specifying the expected languages. Choose one or more languages to guide detection."
-      },
-      "output": {
-        "title": "Output",
-        "text": "Decide how you want the text output formatted:",
-        "bullet1": "Searchable PDF embeds text behind the original image.",
-        "bullet2": "HOCR XML returns a structured machine-readable file.",
-        "bullet3": "Plain-text sidecar creates a separate .txt file with raw content."
-      },
-      "advanced": {
-        "header": {
-          "title": "Advanced OCR Processing"
-        },
-        "compatibility": {
-          "title": "Compatibility Mode",
-          "text": "Uses OCR 'sandwich PDF' mode: results in larger files, but more reliable with certain languages and older PDF software. By default we use hOCR for smaller, modern PDFs."
-        },
-        "sidecar": {
-          "title": "Create Text File",
-          "text": "Generates a separate .txt file alongside the PDF containing all extracted text content for easy access and processing."
-        },
-        "deskew": {
-          "title": "Deskew Pages",
-          "text": "Automatically corrects skewed or tilted pages to improve OCR accuracy. Useful for scanned documents that weren't perfectly aligned."
-        },
-        "clean": {
-          "title": "Clean Input File",
-          "text": "Preprocesses the input by removing noise, enhancing contrast, and optimising the image for better OCR recognition before processing."
-        },
-        "cleanFinal": {
-          "title": "Clean Final Output",
-          "text": "Post-processes the final PDF by removing OCR artefacts and optimising the text layer for better readability and smaller file size."
-        }
-      }
-    }
+    "submit": "Process PDF with OCR"
   },
   "extractImages": {
     "tags": "picture,photo,save,archive,zip,capture,grab",
