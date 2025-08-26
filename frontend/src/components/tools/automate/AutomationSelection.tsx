@@ -5,7 +5,7 @@ import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AutomationEntry from "./AutomationEntry";
 import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSuggestedAutomations";
-import { AutomationConfig } from "../../../types/automation";
+import { AutomationConfig, SuggestedAutomation } from "../../../types/automation";
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -13,6 +13,7 @@ interface AutomationSelectionProps {
   onRun: (automation: AutomationConfig) => void;
   onEdit: (automation: AutomationConfig) => void;
   onDelete: (automation: AutomationConfig) => void;
+  onCopyFromSuggested: (automation: SuggestedAutomation) => void;
 }
 
 export default function AutomationSelection({ 
@@ -20,7 +21,8 @@ export default function AutomationSelection({
   onCreateNew, 
   onRun, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onCopyFromSuggested
 }: AutomationSelectionProps) {
   const { t } = useTranslation();
   const suggestedAutomations = useSuggestedAutomations();
@@ -63,9 +65,12 @@ export default function AutomationSelection({
           {suggestedAutomations.map((automation) => (
             <AutomationEntry
               key={automation.id}
+              title={automation.name}
               badgeIcon={automation.icon}
               operations={automation.operations.map(op => op.operation)}
               onClick={() => onRun(automation)}
+              showMenu={true}
+              onCopy={() => onCopyFromSuggested(automation)}
             />
           ))}
         </Stack>

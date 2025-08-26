@@ -4,6 +4,7 @@ import { Button, Group, Text, ActionIcon, Menu, Box } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 interface AutomationEntryProps {
   /** Optional title for the automation (usually for custom ones) */
@@ -22,6 +23,8 @@ interface AutomationEntryProps {
   onEdit?: () => void;
   /** Delete handler */
   onDelete?: () => void;
+  /** Copy handler (for suggested automations) */
+  onCopy?: () => void;
 }
 
 export default function AutomationEntry({
@@ -32,7 +35,8 @@ export default function AutomationEntry({
   keepIconColor = false,
   showMenu = false,
   onEdit,
-  onDelete
+  onDelete,
+  onCopy
 }: AutomationEntryProps) {
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
@@ -132,6 +136,17 @@ export default function AutomationEntry({
             </Menu.Target>
 
             <Menu.Dropdown>
+              {onCopy && (
+                <Menu.Item
+                  leftSection={<ContentCopyIcon style={{ fontSize: 16 }} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCopy();
+                  }}
+                >
+                  {t('automate.copyToSaved', 'Copy to Saved')}
+                </Menu.Item>
+              )}
               {onEdit && (
                 <Menu.Item
                   leftSection={<EditIcon style={{ fontSize: 16 }} />}

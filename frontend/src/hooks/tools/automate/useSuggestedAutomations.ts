@@ -17,9 +17,60 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
     const now = new Date().toISOString();
     return [
       {
-        id: "compress-and-split",
-        name: t("automation.suggested.compressAndSplit", "Compress & Split"),
-        description: t("automation.suggested.compressAndSplitDesc", "Compress PDFs and split them by pages"),
+        id: "secure-pdf-ingestion",
+        name: t("automation.suggested.securePdfIngestion", "Secure PDF Ingestion"),
+        description: t("automation.suggested.securePdfIngestionDesc", "Sanitise → OCR/Cleanup → PDF/A → Compress"),
+        operations: [
+          {
+            operation: "sanitize",
+            parameters: {
+              removeJavaScript: true,
+              removeEmbeddedFiles: true,
+              removeXMPMetadata: true,
+              removeMetadata: true,
+              removeLinks: false,
+              removeFonts: false,
+            }
+          },
+          {
+            operation: "ocr",
+            parameters: {
+              languages: ['eng'],
+              ocrType: 'skip-text',
+              ocrRenderType: 'hocr',
+              additionalOptions: ['clean', 'cleanFinal'],
+            }
+          },
+          {
+            operation: "convert",
+            parameters: {
+              fromExtension: 'pdf',
+              toExtension: 'pdfa',
+              pdfaOptions: {
+                outputFormat: 'pdfa-1',
+              }
+            }
+          },
+          {
+            operation: "compress",
+            parameters: {
+              compressionLevel: 5,
+              grayscale: false,
+              expectedSize: '',
+              compressionMethod: 'quality',
+              fileSizeValue: '',
+              fileSizeUnit: 'MB',
+            }
+          }
+        ],
+        createdAt: now,
+        updatedAt: now,
+        icon: SecurityIcon,
+      },
+      {
+        id: "email-preparation",
+        name: t("automation.suggested.emailPreparation", "Email Preparation"),
+        description: t("automation.suggested.emailPreparationDesc", "Compress → Split by Size 20MB → Sanitize metadata"),
         operations: [
           {
             operation: "compress",
@@ -36,40 +87,32 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
             operation: "splitPdf",
             parameters: {
               mode: 'bySizeOrCount',
-              pages: '1',
-              hDiv: '2',
-              vDiv: '2',
+              pages: '',
+              hDiv: '1',
+              vDiv: '1',
               merge: false,
-              splitType: 'pages',
-              splitValue: '1',
+              splitType: 'size',
+              splitValue: '20MB',
               bookmarkLevel: '1',
               includeMetadata: false,
               allowDuplicates: false,
+            }
+          },
+          {
+            operation: "sanitize",
+            parameters: {
+              removeJavaScript: false,
+              removeEmbeddedFiles: false,
+              removeXMPMetadata: true,
+              removeMetadata: true,
+              removeLinks: false,
+              removeFonts: false,
             }
           }
         ],
         createdAt: now,
         updatedAt: now,
         icon: CompressIcon,
-      },
-      {
-        id: "ocr-workflow",
-        name: t("automation.suggested.ocrWorkflow", "OCR Processing"),
-        description: t("automation.suggested.ocrWorkflowDesc", "Extract text from PDFs using OCR technology"),
-        operations: [
-          {
-            operation: "ocr",
-            parameters: {
-              languages: ['eng'],
-              ocrType: 'skip-text',
-              ocrRenderType: 'hocr',
-              additionalOptions: [],
-            }
-          }
-        ],
-        createdAt: now,
-        updatedAt: now,
-        icon: TextFieldsIcon,
       },
       {
         id: "secure-workflow",

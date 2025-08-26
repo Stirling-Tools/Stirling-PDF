@@ -2106,5 +2106,20 @@
     "results": {
       "title": "Decrypted PDFs"
     }
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "Secure PDF Ingestion",
+      "securePdfIngestionDesc": "Sanitise → OCR/Cleanup → PDF/A → Compress",
+      "emailPreparation": "Email Preparation", 
+      "emailPreparationDesc": "Compress → Split by Size 20MB → Sanitize metadata",
+      "secureWorkflow": "Security Workflow",
+      "secureWorkflowDesc": "Sanitize PDFs and add password protection",
+      "optimizationWorkflow": "Optimization Workflow",
+      "optimizationWorkflowDesc": "Repair and compress PDFs for better performance"
+    }
+  },
+  "automate": {
+    "copyToSaved": "Copy to Saved"
   }
 }
