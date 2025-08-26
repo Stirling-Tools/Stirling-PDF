@@ -91,15 +91,6 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
-      - name: Create .npmrc for Docker build
-        if: steps.check-frontend.outputs.exists == 'false'
-        run: |
-          if [ "${{ secrets.NPM_TOKEN }}" != "" ]; then
-            echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > /tmp/.npmrc
-          else
-            touch /tmp/.npmrc
-          fi
-
       - name: Build and push frontend image
         if: steps.check-frontend.outputs.exists == 'false'
         uses: docker/build-push-action@v6
@@ -113,7 +104,7 @@ jobs:
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
           secrets: |
-            npmrc=/tmp/.npmrc
+            npmrc=//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
       
       - name: Build and push backend image
         if: steps.check-backend.outputs.exists == 'false'

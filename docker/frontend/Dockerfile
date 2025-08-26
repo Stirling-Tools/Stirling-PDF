@@ -7,9 +7,9 @@ WORKDIR /app
 COPY frontend/package*.json ./
 
 # Install dependencies (uses .npmrc secret if available, otherwise anonymous)
-RUN --mount=type=secret,id=npmrc,target=/tmp/.npmrc \
-    if [ -s /tmp/.npmrc ]; then \
-      cp /tmp/.npmrc /root/.npmrc; \
+RUN --mount=type=secret,id=npmrc \
+    if [ -s /run/secrets/npmrc ]; then \
+      echo "$(cat /run/secrets/npmrc)" > /root/.npmrc; \
     fi && \
     npm ci && \
     rm -f /root/.npmrc
@@ -18,9 +18,9 @@ RUN --mount=type=secret,id=npmrc,target=/tmp/.npmrc \
 COPY frontend .
 
 # Build the application (uses .npmrc secret if available, otherwise anonymous)
-RUN --mount=type=secret,id=npmrc,target=/tmp/.npmrc \
-    if [ -s /tmp/.npmrc ]; then \
-      cp /tmp/.npmrc /root/.npmrc; \
+RUN --mount=type=secret,id=npmrc \
+    if [ -s /run/secrets/npmrc ]; then \
+      echo "$(cat /run/secrets/npmrc)" > /root/.npmrc; \
     fi && \
     npm run build && \
     rm -f /root/.npmrc
