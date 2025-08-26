@@ -40,7 +40,7 @@ import OCRSettings from '../components/tools/ocr/OCRSettings';
 import ConvertSettings from '../components/tools/convert/ConvertSettings';
 import ChangePermissionsSettings from '../components/tools/changePermissions/ChangePermissionsSettings';
 
-const showPlaceholderTools = false; // For development purposes. Allows seeing the full list of tools, even if they're unimplemented
+const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -671,14 +671,13 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     if (showPlaceholderTools) {
       return allTools;
-    } else {
-      const filteredTools = Object.keys(allTools)
-        .filter(key => allTools[key].component !== null || allTools[key].link)
-        .reduce((obj, key) => {
-          obj[key] = allTools[key];
-          return obj;
-        }, {} as ToolRegistry);
-      return filteredTools;
     }
+    const filteredTools = Object.keys(allTools)
+      .filter(key => allTools[key].component !== null || allTools[key].link)
+      .reduce((obj, key) => {
+        obj[key] = allTools[key];
+        return obj;
+      }, {} as ToolRegistry);
+    return filteredTools;
   }, [t]); // Only re-compute when translations change
 }
