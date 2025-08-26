@@ -45,19 +45,14 @@ export default function RightRail() {
     }
 
     if (currentView === 'pageEditor') {
-      let totalItems = 0;
-      fileRecords.forEach(rec => {
-        const pf = rec.processedFile;
-        if (pf) {
-          totalItems += (pf.totalPages as number) || (pf.pages?.length || 0);
-        }
-      });
-      const selectedCount = Array.isArray(selectedPageNumbers) ? selectedPageNumbers.length : 0;
+      // Use PageEditor's own state
+      const totalItems = pageEditorFunctions?.totalPages || 0;
+      const selectedCount = pageEditorFunctions?.selectedPages?.length || 0;
       return { totalItems, selectedCount };
     }
 
     return { totalItems: 0, selectedCount: 0 };
-  }, [currentView, activeFiles, fileRecords, selectedFileIds, selectedPageNumbers]);
+  }, [currentView, activeFiles, selectedFileIds, pageEditorFunctions]);
 
   const { totalItems, selectedCount } = getSelectionState();
 
@@ -70,19 +65,10 @@ export default function RightRail() {
     }
 
     if (currentView === 'pageEditor') {
-      let totalPages = 0;
-      fileRecords.forEach(rec => {
-        const pf = rec.processedFile;
-        if (pf) {
-          totalPages += (pf.totalPages as number) || (pf.pages?.length || 0);
-        }
-      });
-
-      if (totalPages > 0) {
-        setSelectedPages(Array.from({ length: totalPages }, (_, i) => i + 1));
-      }
+      // Use PageEditor's select all function
+      pageEditorFunctions?.handleSelectAll?.();
     }
-  }, [currentView, state.files.ids, fileRecords, setSelectedFiles, setSelectedPages]);
+  }, [currentView, state.files.ids, setSelectedFiles, pageEditorFunctions]);
 
   const handleDeselectAll = useCallback(() => {
     if (currentView === 'fileEditor' || currentView === 'viewer') {
@@ -90,9 +76,10 @@ export default function RightRail() {
       return;
     }
     if (currentView === 'pageEditor') {
-      setSelectedPages([]);
+      // Use PageEditor's deselect all function
+      pageEditorFunctions?.handleDeselectAll?.();
     }
-  }, [currentView, setSelectedFiles, setSelectedPages]);
+  }, [currentView, setSelectedFiles, pageEditorFunctions]);
 
   const handleExportAll = useCallback(() => {
     if (currentView === 'fileEditor' || currentView === 'viewer') {
@@ -151,24 +138,21 @@ export default function RightRail() {
 
   const updatePagesFromCSV = useCallback(() => {
     const rawPages = parseCSVInput(csvInput);
-    // Determine max page count from processed records
-    const maxPages = fileRecords.reduce((sum, rec) => {
-      const pf = rec.processedFile;
-      if (!pf) return sum;
-      return sum + ((pf.totalPages as number) || (pf.pages?.length || 0));
-    }, 0);
+    // Use PageEditor's total pages for validation
+    const maxPages = pageEditorFunctions?.totalPages || 0;
     const normalized = Array.from(new Set(rawPages.filter(n => Number.isFinite(n) && n > 0 && n <= maxPages))).sort((a,b)=>a-b);
-    setSelectedPages(normalized);
-  }, [csvInput, parseCSVInput, fileRecords, setSelectedPages]);
+    // Use PageEditor's function to set selected pages
+    pageEditorFunctions?.handleSetSelectedPages?.(normalized);
+  }, [csvInput, parseCSVInput, pageEditorFunctions]);
 
-  // Sync csvInput with selectedPageNumbers changes
+  // Sync csvInput with PageEditor's selected pages
   useEffect(() => {
-    const sortedPageNumbers = Array.isArray(selectedPageNumbers)
-      ? [...selectedPageNumbers].sort((a, b) => a - b)
+    const sortedPageNumbers = Array.isArray(pageEditorFunctions?.selectedPages)
+      ? [...pageEditorFunctions.selectedPages].sort((a, b) => a - b)
       : [];
     const newCsvInput = sortedPageNumbers.join(', ');
     setCsvInput(newCsvInput);
-  }, [selectedPageNumbers]);
+  }, [pageEditorFunctions?.selectedPages]);
 
   // Clear CSV input when files change (use stable signature to avoid ref churn)
   useEffect(() => {
@@ -278,7 +262,7 @@ export default function RightRail() {
                       <BulkSelectionPanel
                         csvInput={csvInput}
                         setCsvInput={setCsvInput}
-                        selectedPages={Array.isArray(selectedPageNumbers) ? selectedPageNumbers : []}
+                        selectedPages={Array.isArray(pageEditorFunctions?.selectedPages) ? pageEditorFunctions.selectedPages : []}
                         onUpdatePagesFromCSV={updatePagesFromCSV}
                       />
                     </div>
@@ -299,8 +283,8 @@ export default function RightRail() {
                       variant="subtle"
                       radius="md"
                       className="right-rail-icon"
-                      onClick={() => { pageEditorFunctions?.handleDelete?.(); setSelectedPages([]); }}
-                      disabled={!pageControlsVisible || (Array.isArray(selectedPageNumbers) ? selectedPageNumbers.length === 0 : true)}
+                      onClick={() => { pageEditorFunctions?.handleDelete?.(); }}
+                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPages?.length || 0) === 0}
                       aria-label={typeof t === 'function' ? t('rightRail.deleteSelected', 'Delete Selected Pages') : 'Delete Selected Pages'}
                     >
                       <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />
@@ -309,6 +293,26 @@ export default function RightRail() {
               </div>
               </Tooltip>
 
+            )}
+
+            {/* Export Selected Pages - page editor only */}
+            {pageControlsMounted && (
+              <Tooltip content={t('rightRail.exportSelected', 'Export Selected Pages')} position="left" offset={12} arrow>
+                <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
+                  <div style={{ display: 'inline-flex' }}>
+                    <ActionIcon
+                      variant="subtle"
+                      radius="md"
+                      className="right-rail-icon"
+                      onClick={() => { pageEditorFunctions?.onExportSelected?.(); }}
+                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPages?.length || 0) === 0 || pageEditorFunctions?.exportLoading}
+                      aria-label={typeof t === 'function' ? t('rightRail.exportSelected', 'Export Selected Pages') : 'Export Selected Pages'}
+                    >
+                      <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
+                    </ActionIcon>
+                  </div>
+                </div>
+              </Tooltip>
             )}
 
             {/* Close (File Editor: Close Selected | Page Editor: Close PDF) */}
