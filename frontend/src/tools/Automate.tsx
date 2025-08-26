@@ -88,6 +88,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 onError?.(`Failed to copy automation: ${suggestedAutomation.name}`);
               }
             }}
+            toolRegistry={toolRegistry}
           />
         );
 

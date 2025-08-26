@@ -7,6 +7,7 @@ import AutomationEntry from "./AutomationEntry";
 import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSuggestedAutomations";
 import { AutomationConfig, SuggestedAutomation } from "../../../types/automation";
 import { iconMap } from './iconMap';
+import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -15,6 +16,7 @@ interface AutomationSelectionProps {
   onEdit: (automation: AutomationConfig) => void;
   onDelete: (automation: AutomationConfig) => void;
   onCopyFromSuggested: (automation: SuggestedAutomation) => void;
+  toolRegistry: Record<string, ToolRegistryEntry>;
 }
 
 export default function AutomationSelection({ 
@@ -23,7 +25,8 @@ export default function AutomationSelection({
   onRun, 
   onEdit, 
   onDelete,
-  onCopyFromSuggested
+  onCopyFromSuggested,
+  toolRegistry
 }: AutomationSelectionProps) {
   const { t } = useTranslation();
   const suggestedAutomations = useSuggestedAutomations();
@@ -41,6 +44,7 @@ export default function AutomationSelection({
         operations={[]}
         onClick={onCreateNew}
         keepIconColor={true}
+        toolRegistry={toolRegistry}
       />
       {/* Saved Automations */}
       {savedAutomations.map((automation) => {
@@ -55,6 +59,7 @@ export default function AutomationSelection({
             showMenu={true}
             onEdit={() => onEdit(automation)}
             onDelete={() => onDelete(automation)}
+            toolRegistry={toolRegistry}
           />
         );
       })}
@@ -76,6 +81,7 @@ export default function AutomationSelection({
               onClick={() => onRun(automation)}
               showMenu={true}
               onCopy={() => onCopyFromSuggested(automation)}
+              toolRegistry={toolRegistry}
             />
           ))}
         </Stack>

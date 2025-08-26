@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Tooltip } from '../../shared/Tooltip';
+import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 
 interface AutomationEntryProps {
   /** Optional title for the automation (usually for custom ones) */
@@ -28,6 +29,8 @@ interface AutomationEntryProps {
   onDelete?: () => void;
   /** Copy handler (for suggested automations) */
   onCopy?: () => void;
+  /** Tool registry to resolve operation names */
+  toolRegistry?: Record<string, ToolRegistryEntry>;
 }
 
 export default function AutomationEntry({
@@ -40,7 +43,8 @@ export default function AutomationEntry({
   showMenu = false,
   onEdit,
   onDelete,
-  onCopy
+  onCopy,
+  toolRegistry
 }: AutomationEntryProps) {
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
@@ -48,6 +52,15 @@ export default function AutomationEntry({
 
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
+
+  // Helper function to resolve tool display names
+  const getToolDisplayName = (operation: string): string => {
+    if (toolRegistry?.[operation]?.name) {
+      return toolRegistry[operation].name;
+    }
+    // Fallback to translation or operation key
+    return t(`${operation}.title`, operation);
+  };
 
   // Create tooltip content with description and tool chain
   const createTooltipContent = () => {
@@ -68,7 +81,7 @@ export default function AutomationEntry({
             whiteSpace: 'nowrap'
           }}
         >
-          {t(`${op}.title`, op)}
+          {getToolDisplayName(op)}
         </Text>
         {index < operations.length - 1 && (
           <Text component="span" size="sm" mx={4}>
@@ -122,7 +135,7 @@ export default function AutomationEntry({
             {operations.map((op, index) => (
               <React.Fragment key={`${op}-${index}`}>
                 <Text size="xs" style={{ color: 'var(--mantine-color-text)' }}>
-                  {t(`${op}.title`, op)}
+                  {getToolDisplayName(op)}
                 </Text>
 
                 {index < operations.length - 1 && (
