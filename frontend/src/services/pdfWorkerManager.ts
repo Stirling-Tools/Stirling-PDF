@@ -94,7 +94,6 @@ class PDFWorkerManager {
         try {
           loadingTask.destroy();
         } catch (destroyError) {
-          // Silent cleanup failure
         }
       }
       throw error;
@@ -167,7 +166,6 @@ class PDFWorkerManager {
       try {
         pdf.destroy();
       } catch (error) {
-        // Silent cleanup
       }
     });
     

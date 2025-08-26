@@ -58,7 +58,7 @@ export class DocumentManipulationService {
     const documents: PDFDocument[] = [];
     const splitPoints: number[] = [];
     
-    // Find split points - pages with splitAfter create split points AFTER them
+    // Find split points
     document.pages.forEach((page, index) => {
       if (page.splitAfter) {
         console.log(`Found split marker at page ${page.pageNumber} (index ${index}), adding split point at ${index + 1}`);
@@ -117,8 +117,6 @@ export class DocumentManipulationService {
     // Apply rotation changes from DOM
     updatedPage.rotation = this.getRotationFromDOM(pageElement, page);
     
-    // Apply split marker changes from document state (already handled by commands)
-    // Split markers are already updated by ToggleSplitCommand, so no DOM reading needed
     
     return updatedPage;
   }

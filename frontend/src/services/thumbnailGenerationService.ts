@@ -208,8 +208,6 @@ export class ThumbnailGenerationService {
     // Release reference to PDF document (don't destroy - keep in cache)
     this.releasePDFDocument(fileId);
     
-    // Optionally clean up PDF document from cache to free workers faster
-    // This can be called after thumbnail generation is complete for a file
     this.cleanupCompletedDocument(fileId);
     
     return allResults;

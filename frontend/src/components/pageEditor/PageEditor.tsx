@@ -698,13 +698,15 @@ const PageEditor = ({
               zIndex: 10
             }}
           >
-            {Array.from(splitPositions).map((position) => {
-              // Match DragDropGrid's layout calculations exactly
+            {(() => {
+              // Calculate remToPx once outside the map to avoid layout thrashing
               const containerWidth = containerDimensions.width;
               const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
               const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx;
               const ITEM_HEIGHT = parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx;
               const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx;
+              
+              return Array.from(splitPositions).map((position) => {
               
               // Calculate items per row using DragDropGrid's logic
               const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
@@ -736,7 +738,8 @@ const PageEditor = ({
                   }}
                 />
               );
-            })}
+              });
+            })()}
           </div>
 
           {/* Pages Grid */}
