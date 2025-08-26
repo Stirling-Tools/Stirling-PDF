@@ -51,6 +51,10 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Configure npm with token (if available)
+        if: secrets.NPM_TOKEN != ''
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
@@ -58,6 +62,10 @@ jobs:
       - name: Generate frontend license report
         working-directory: frontend
         run: npm run generate-licenses
+        
+      - name: Clean up npmrc
+        if: always() && secrets.NPM_TOKEN != ''
+        run: rm -f ~/.npmrc
 
       - name: Check for license warnings
         run: |

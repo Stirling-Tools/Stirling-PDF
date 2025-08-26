@@ -132,6 +132,10 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           cache: 'npm'
+          
+      - name: Configure npm with token (if available)
+        if: secrets.NPM_TOKEN != ''
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Run TestDriver.ai
         uses: testdriverai/action@f0d0f45fdd684db628baa843fe9313f3ca3a8aa8 #1.1.3
@@ -148,6 +152,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FORCE_COLOR: "3"
+          
+      - name: Clean up npmrc
+        if: always() && secrets.NPM_TOKEN != ''
+        run: rm -f ~/.npmrc
 
   cleanup:
     needs: [deploy, test]
