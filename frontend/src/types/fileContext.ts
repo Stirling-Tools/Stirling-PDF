@@ -224,6 +224,7 @@ export interface FileContextActions {
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
+  clearAllData: () => Promise<void>;
 
   // File pinning
   pinFile: (file: File) => void;

@@ -231,10 +231,10 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   const handleInsertFileAfter = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (onInsertFiles) {
       // Open file manager modal with custom handler for page insertion
-      openFilesModal({ 
+      openFilesModal({
         insertAfterPage: page.pageNumber,
         customHandler: (files: File[], insertAfterPage?: number) => {
           if (insertAfterPage !== undefined) {
@@ -364,7 +364,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           }}
         >
           {page.isBlankPage ? (
-            <div style={{ 
+            <div style={{
               width: '100%',
               height: '100%',
               display: 'flex',
@@ -406,7 +406,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           size="sm"
           fw={500}
           style={{
-            color: 'white', // Keep white for page numbers as they have colored backgrounds
+            color: 'var(--mantine-color-white)', // Use theme token for consistency
             position: 'absolute',
             top: 5,
             left: 5,
