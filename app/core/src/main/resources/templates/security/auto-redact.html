@@ -210,7 +210,11 @@
                 }
         }
 
-    // Helper to get translated language from data attribute
+    // Language translations map populated by Thymeleaf for available OCR languages
+        const languageTranslations = {};
+        /*[# th:each="lang : ${languages}"]*/
+        languageTranslations['[(${lang})]'] = /*[[#{${'lang.' + lang}}]]*/'[(${lang})]';
+        /*[/]*/
 
         const localeToTesseract = {
             'en': 'eng', 'fr': 'fra', 'de': 'deu', 'es': 'spa', 'it': 'ita', 'pt': 'por', 'ru': 'rus',
@@ -221,9 +225,10 @@
         };
 
         function getTranslatedLanguageName(shortCode) {
-            // Try to find a label with matching code and read its data-lang-name
-            const label = document.querySelector(`#languages label[for="language-${shortCode}"]`);
-            return (label && (label.dataset.langName || label.textContent)) || shortCode;
+            // Use Thymeleaf-provided map; fall back to code when translation missing
+            const name = languageTranslations[shortCode];
+            if (name && !/^\?{2,}.+\?{2,}$/.test(name)) return name;
+            return shortCode;
         }
 
         function prioritizeLanguages() {
@@ -235,9 +240,8 @@
                 const label = element.querySelector('label');
                 if (label) {
                     const langCode = label.getAttribute('for').split('-')[1];
-                    // Display translated name if available
-                    const translated = label.dataset.langName;
-                    if (translated) label.textContent = translated;
+                    // Always set from translations map; gracefully falls back to code
+                    label.textContent = getTranslatedLanguageName(langCode);
                 }
             });
             const browserLanguage = document.documentElement.lang || navigator.language || navigator.userLanguage;

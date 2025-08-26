@@ -814,10 +814,6 @@ public class RedactionService {
         return strategy.redact(request);
     }
 
-    /**
-     * Enhanced redaction with semantic scrubbing Integrates the PDFBox enhancement plan for both
-     * text redaction and metadata cleanup
-     */
     public byte[] redactPdfWithSemanticScrubbing(
             RedactPdfRequest request, Set<ScrubOption> scrubOptions) throws IOException {
 
@@ -826,7 +822,6 @@ public class RedactionService {
             mode = "moderate";
         }
 
-        // Perform standard redaction first
         RedactionModeStrategy strategy =
                 switch (mode.toLowerCase()) {
                     case "visual" -> new VisualRedactionService(pdfDocumentFactory, this);
@@ -836,13 +831,10 @@ public class RedactionService {
 
         byte[] redactedBytes = strategy.redact(request);
 
-        // Apply semantic scrubbing to the redacted document
         if (scrubOptions != null && !scrubOptions.isEmpty()) {
             try (PDDocument document = pdfDocumentFactory.load(redactedBytes)) {
                 DefaultSemanticScrubber scrubber = new DefaultSemanticScrubber();
                 scrubber.scrub(document, scrubOptions);
-
-                // Save the scrubbed document
                 try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
                     document.save(output);
                     return output.toByteArray();
@@ -858,20 +850,32 @@ public class RedactionService {
         return redactedBytes;
     }
 
-    public byte[] applySemanticScrubbing(MultipartFile file, Set<ScrubOption> scrubOptions)
-            throws IOException {
-        if (scrubOptions == null || scrubOptions.isEmpty()) {
-            return file.getBytes(); // No scrubbing requested
-        }
-
-        try (PDDocument document = pdfDocumentFactory.load(file)) {
-            DefaultSemanticScrubber scrubber = new DefaultSemanticScrubber();
-            scrubber.scrub(document, scrubOptions);
-
-            try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-                document.save(output);
-                return output.toByteArray();
+    private static TokenModificationResult convertToTJWithAdjustment(
+            List<Object> tokens,
+            int tokenIndex,
+            String originalOperator,
+            String newText,
+            float adjustment,
+            TextSegment segment) {
+        try {
+            if (!isValidTokenIndex(tokens, tokenIndex) || segment == null) {
+                return TokenModificationResult.failure("Invalid token index or segment");
             }
+            COSArray array = new COSArray();
+            COSString cos =
+                    newText == null || newText.isEmpty()
+                            ? EMPTY_COS_STRING
+                            : new COSString(newText);
+            array.add(cos);
+            if (segment.getFontSize() > 0) {
+                float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
+                array.add(new COSFloat(kerning));
+            }
+            tokens.set(tokenIndex, array);
+            updateOperatorSafely(tokens, tokenIndex, originalOperator);
+            return TokenModificationResult.success();
+        } catch (Exception e) {
+            return TokenModificationResult.failure("Conversion to TJ failed: " + e.getMessage());
         }
     }
 
@@ -932,6 +936,60 @@ public class RedactionService {
         } catch (Exception e) {
             return TokenModificationResult.success();
         }
+    }
+
+    private static List<MatchRange> findMatchesInSegments(
+            List<TextSegment> segments,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch) {
+        List<MatchRange> allMatches = new ArrayList<>();
+        List<Pattern> patterns =
+                TextFinderUtils.createOptimizedSearchPatterns(
+                        targetWords, useRegex, wholeWordSearch);
+
+        int totalMatchesFound = 0;
+
+        for (int i = 0; i < segments.size(); i++) {
+            TextSegment segment = segments.get(i);
+            String segmentText = segment.getText();
+            if (segmentText == null || segmentText.isEmpty()) {
+                continue;
+            }
+
+            if (segment.getFont() != null
+                    && !TextEncodingHelper.isTextSegmentRemovable(segment.getFont(), segmentText)) {
+                continue;
+            }
+
+            int segmentMatches = 0;
+            for (Pattern pattern : patterns) {
+                try {
+                    var matcher = pattern.matcher(segmentText);
+                    while (matcher.find()) {
+                        int matchStart = matcher.start();
+                        int matchEnd = matcher.end();
+
+                        if (matchStart >= 0
+                                && matchEnd <= segmentText.length()
+                                && matchStart < matchEnd) {
+                            String matchedText = segmentText.substring(matchStart, matchEnd);
+
+                            allMatches.add(
+                                    new MatchRange(
+                                            segment.getStartPos() + matchStart,
+                                            segment.getStartPos() + matchEnd));
+                            segmentMatches++;
+                            totalMatchesFound++;
+                        }
+                    }
+                } catch (Exception e) {
+                }
+            }
+        }
+        allMatches.sort(Comparator.comparingInt(MatchRange::getStartPos));
+
+        return allMatches;
     }
 
     private static WipeResult wipeAllSemanticTextInTokens(List<Object> tokens) {
@@ -1195,99 +1253,21 @@ public class RedactionService {
         }
     }
 
-    private static List<MatchRange> findMatchesInSegments(
-            List<TextSegment> segments,
-            Set<String> targetWords,
-            boolean useRegex,
-            boolean wholeWordSearch) {
-        List<MatchRange> allMatches = new ArrayList<>();
-        List<Pattern> patterns =
-                TextFinderUtils.createOptimizedSearchPatterns(
-                        targetWords, useRegex, wholeWordSearch);
-
-        log.debug("Searching for {} patterns in {} segments", patterns.size(), segments.size());
-
-        int totalMatchesFound = 0;
-
-        for (int i = 0; i < segments.size(); i++) {
-            TextSegment segment = segments.get(i);
-            String segmentText = segment.getText();
-            if (segmentText == null || segmentText.isEmpty()) {
-                log.debug("Skipping empty segment {}", i);
-                continue;
-            }
-
-            log.debug("Processing segment {}: '{}'", i, segmentText);
-
-            if (segment.getFont() != null
-                    && !TextEncodingHelper.isTextSegmentRemovable(segment.getFont(), segmentText)) {
-                log.debug(
-                        "Skipping segment {} - font not removable: {}",
-                        i,
-                        segment.getFont().getName());
-                continue;
-            }
-
-            int segmentMatches = 0;
-            for (Pattern pattern : patterns) {
-                try {
-                    log.debug(
-                            "Matching pattern '{}' against segment text '{}'",
-                            pattern.pattern(),
-                            segmentText);
-                    var matcher = pattern.matcher(segmentText);
-                    while (matcher.find()) {
-                        int matchStart = matcher.start();
-                        int matchEnd = matcher.end();
-
-                        log.debug(
-                                "Found match in segment {}: positions {}-{}",
-                                i,
-                                matchStart,
-                                matchEnd);
-
-                        if (matchStart >= 0
-                                && matchEnd <= segmentText.length()
-                                && matchStart < matchEnd) {
-                            String matchedText = segmentText.substring(matchStart, matchEnd);
-                            log.debug("Matched text: '{}'", matchedText);
-
-                            allMatches.add(
-                                    new MatchRange(
-                                            segment.getStartPos() + matchStart,
-                                            segment.getStartPos() + matchEnd));
-                            segmentMatches++;
-                            totalMatchesFound++;
-                        }
-                    }
-                } catch (Exception e) {
-                    log.error("Error matching pattern in segment {}: {}", i, e.getMessage());
-                }
-            }
-
-            if (segmentMatches > 0) {
-                log.info("Segment {} had {} matches", i, segmentMatches);
-            }
+    public byte[] applySemanticScrubbing(MultipartFile file, Set<ScrubOption> scrubOptions)
+            throws IOException {
+        if (scrubOptions == null || scrubOptions.isEmpty()) {
+            return file.getBytes();
         }
 
-        log.info("Total matches found across all segments: {}", totalMatchesFound);
-        allMatches.sort(Comparator.comparingInt(MatchRange::getStartPos));
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
+            DefaultSemanticScrubber scrubber = new DefaultSemanticScrubber();
+            scrubber.scrub(document, scrubOptions);
 
-        if (allMatches.isEmpty()) {
-            log.warn("No matches found in segments. This might indicate:");
-            log.warn("1. Text encoding issues preventing proper extraction");
-            log.warn("2. Font compatibility issues");
-            log.warn("3. Search terms not matching extracted text");
-            log.warn("4. Whole word search filtering out matches");
-
-            if (!segments.isEmpty()) {
-                log.warn("Sample segment text: '{}'", segments.get(0).getText());
-                log.warn("Target words: {}", targetWords);
-                log.warn("Use regex: {}, Whole word search: {}", useRegex, wholeWordSearch);
+            try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                document.save(output);
+                return output.toByteArray();
             }
         }
-
-        return allMatches;
     }
 
     private static float calculateCharacterSumWidth(PDFont font, String text) {
@@ -1721,18 +1701,12 @@ public class RedactionService {
             boolean useRegex,
             boolean wholeWordSearch)
             throws IOException {
-        log.debug("Processing page with {} target words: {}", targetWords.size(), targetWords);
 
         PDFStreamParser parser = new PDFStreamParser(page);
         List<Object> tokens = parseAllTokens(parser);
         int tokenCount = tokens.size();
 
-        log.debug("Parsed {} tokens from page content stream", tokenCount);
-
         if (tokenCount == 0 && !targetWords.isEmpty()) {
-            log.warn(
-                    "No tokens parsed from page content stream - this might indicate encoding issues");
-            log.warn("Attempting alternative verification for target words: {}", targetWords);
 
             try {
                 TextFinder directFinder = new TextFinder("", false, false);
@@ -1748,22 +1722,16 @@ public class RedactionService {
                 }
 
                 String extractedText = pageText.toString().trim();
-                log.debug("Alternative text extraction found: '{}'", extractedText);
-
                 for (String word : targetWords) {
-                    if (extractedText.toLowerCase().contains(word.toLowerCase())) {
-                        log.warn("Found target word '{}' via alternative extraction method", word);
-                    }
+                    if (extractedText.toLowerCase().contains(word.toLowerCase())) {}
                 }
 
             } catch (Exception e) {
-                log.error("Alternative text extraction failed: {}", e.getMessage());
             }
         }
 
         PDResources resources = page.getResources();
         if (resources != null) {
-            log.debug("Processing XObjects for page");
             processPageXObjects(
                     document,
                     resources,
@@ -1775,7 +1743,6 @@ public class RedactionService {
 
         List<TextSegment> textSegments =
                 extractTextSegmentsFromTokens(page.getResources(), tokens, this.aggressiveMode);
-        log.debug("Extracted {} text segments from tokens", textSegments.size());
 
         if (!textSegments.isEmpty()) {
             StringBuilder allText = new StringBuilder();
@@ -1787,8 +1754,6 @@ public class RedactionService {
                     if (!isTextSafeForRedaction(segmentText)) {
                         hasProblematicChars = true;
                         segmentText = normalizeTextForRedaction(segmentText);
-                        log.debug(
-                                "Normalized problematic text in segment: original contained encoding issues");
                     }
                     allText.append(segmentText).append(" ");
                 }
@@ -1796,84 +1761,22 @@ public class RedactionService {
 
             String completeText = allText.toString().trim();
             if (!completeText.isEmpty()) {
-                log.debug("Complete extracted text: '{}'", completeText);
-                if (hasProblematicChars) {
-                    log.info("Applied character normalization to handle encoding issues");
-                }
+                if (hasProblematicChars) {}
             }
         }
 
         List<MatchRange> matches;
         if (this.aggressiveMode) {
-            log.debug("Using aggressive mode for matching");
             matches =
                     findAllMatchesAggressive(
                             textSegments, tokens, targetWords, useRegex, wholeWordSearch);
         } else {
-            log.debug("Using moderate mode for matching");
             matches = findMatchesInSegments(textSegments, targetWords, useRegex, wholeWordSearch);
-        }
-
-        log.info("Found {} matches to redact", matches.size());
-        if (!matches.isEmpty()) {
-            log.debug("Match ranges: {}", matches);
         }
 
         List<Object> resultTokens = applyRedactionsToTokens(tokens, textSegments, matches);
         int modifications = tokens.size() - resultTokens.size();
-        log.debug(
-                "Applied redactions - original tokens: {}, result tokens: {}, modifications: {}",
-                tokens.size(),
-                resultTokens.size(),
-                modifications);
-
         return resultTokens;
-    }
-
-    private static TokenModificationResult convertToTJWithAdjustment(
-            List<Object> tokens,
-            int tokenIndex,
-            String originalOperator,
-            String newText,
-            float adjustment,
-            TextSegment segment) {
-        try {
-            COSArray newArray = new COSArray();
-            newArray.add(new COSString(newText));
-
-            if (segment.getFontSize() > 0) {
-                float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
-                if (Math.abs(kerning) <= 10000f) {
-                    newArray.add(new COSFloat(kerning));
-                }
-            }
-
-            tokens.set(tokenIndex, newArray);
-            return updateOperatorSafely(tokens, tokenIndex, originalOperator);
-        } catch (Exception e) {
-            return TokenModificationResult.failure("TJ conversion failed: " + e.getMessage());
-        }
-    }
-
-    private static void addSpacingAdjustment(
-            COSArray newArray, TextSegment segment, String originalText, String modifiedText) {
-        try {
-            if (segment.getFont() == null || segment.getFontSize() <= 0) return;
-
-            float originalWidth =
-                    calculateSafeWidth(originalText, segment.getFont(), segment.getFontSize());
-            float modifiedWidth =
-                    calculateSafeWidth(modifiedText, segment.getFont(), segment.getFontSize());
-            float adjustment = originalWidth - modifiedWidth;
-
-            if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
-                float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR * 1.10f;
-                if (Math.abs(kerning) < 1000) {
-                    newArray.add(new COSFloat(kerning));
-                }
-            }
-        } catch (Exception e) {
-        }
     }
 
     private float safeGetStringWidth(PDFont font, String text) {
@@ -2104,7 +2007,7 @@ public class RedactionService {
                 || allFoundTextsByPage == null
                 || allFoundTextsByPage.isEmpty()
                 || listOfText == null) {
-            log.info("No text found to redact or invalid input parameters");
+
             return false;
         }
 
@@ -2116,18 +2019,16 @@ public class RedactionService {
                         .collect(Collectors.toSet());
 
         if (allSearchTerms.isEmpty()) {
-            log.info("No valid search terms provided");
+
             return false;
         }
-
-        log.info("Starting text replacement with {} search terms", allSearchTerms.size());
 
         for (int sweep = 0; sweep < MAX_SWEEPS; sweep++) {
             processPages(document, allSearchTerms, useRegex, wholeWordSearchBool);
 
             if (!documentStillContainsTargets(
                     document, allSearchTerms, useRegex, wholeWordSearchBool)) {
-                log.info("SUCCESS: All targets removed after {} sweeps", sweep + 1);
+
                 return false;
             }
         }
@@ -2142,7 +2043,6 @@ public class RedactionService {
             }
         }
 
-        log.error("FAILURE: Document still contains targets after {} sweeps", MAX_SWEEPS);
         return true;
     }
 
@@ -2267,20 +2167,14 @@ public class RedactionService {
 
     private List<Object> applyRedactionsToTokens(
             List<Object> tokens, List<TextSegment> textSegments, List<MatchRange> matches) {
-        log.debug(
-                "Applying redactions to {} tokens with {} matches across {} segments",
-                tokens.size(),
-                matches.size(),
-                textSegments.size());
 
         List<Object> newTokens = new ArrayList<>(tokens);
-        int totalModifications = 0;
 
         if (this.aggressiveMode) {
-            log.debug("Using aggressive mode for token redaction");
+
             Map<Integer, List<AggressiveSegMatch>> perSeg = this.aggressiveSegMatches;
             if (perSeg != null && !perSeg.isEmpty()) {
-                log.debug("Processing {} aggressive segments", perSeg.size());
+
                 List<Integer> segIndices = new ArrayList<>(perSeg.keySet());
                 segIndices.sort(
                         (a, b) ->
@@ -2294,26 +2188,17 @@ public class RedactionService {
                         continue;
                     }
 
-                    log.debug(
-                            "Processing aggressive segment {} with {} matches",
-                            segIndex,
-                            segMatches.size());
                     Object token = newTokens.get(segment.tokenIndex);
                     String opName = segment.operatorName;
                     if (("Tj".equals(opName) || "'".equals(opName) || "\"".equals(opName))
                             && token instanceof COSString cs) {
-                        log.debug(
-                                "Redacting Tj/TjQuote operator at token index {}",
-                                segment.tokenIndex);
+
                         COSString redacted =
                                 redactCosStringByDecodedRanges(segment.font, cs, segMatches);
                         if (segment.font != null && segment.fontSize > 0) {
                             String originalText = getDecodedString(cs, segment.font);
                             String modifiedText = getDecodedString(redacted, segment.font);
-                            log.debug(
-                                    "Original text: '{}', Modified text: '{}'",
-                                    originalText,
-                                    modifiedText);
+
                             float wOrig =
                                     calculateSafeWidth(
                                             originalText, segment.font, segment.fontSize);
@@ -2322,7 +2207,7 @@ public class RedactionService {
                                             modifiedText, segment.font, segment.fontSize);
                             float adjustment = wOrig - wMod;
                             if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
-                                log.debug("Applying kerning adjustment: {}", adjustment);
+
                                 COSArray arr = new COSArray();
                                 arr.add(redacted);
                                 float kerning =
@@ -2330,30 +2215,25 @@ public class RedactionService {
                                 arr.add(new COSFloat(kerning));
                                 newTokens.set(segment.tokenIndex, arr);
                                 updateOperatorSafely(newTokens, segment.tokenIndex, opName);
-                                totalModifications++;
                             } else {
                                 newTokens.set(segment.tokenIndex, redacted);
-                                totalModifications++;
                             }
                         } else {
                             newTokens.set(segment.tokenIndex, redacted);
-                            totalModifications++;
                         }
                     } else if ("TJ".equals(opName) && token instanceof COSArray arr) {
-                        log.debug("Redacting TJ operator at token index {}", segment.tokenIndex);
+
                         COSArray redacted =
                                 redactTJArrayByDecodedRanges(segment.font, arr, segMatches);
                         COSArray withKerning = buildKerningAdjustedTJArray(arr, redacted, segment);
                         newTokens.set(segment.tokenIndex, withKerning);
-                        totalModifications++;
                     }
                 }
-                log.info("Aggressive mode completed - {} modifications made", totalModifications);
+
                 return newTokens;
             }
         }
 
-        log.debug("Using moderate mode for token redaction");
         Map<Integer, List<MatchRange>> matchesBySegment = new HashMap<>();
         for (MatchRange match : matches) {
             for (int i = 0; i < textSegments.size(); i++) {
@@ -2366,10 +2246,7 @@ public class RedactionService {
             }
         }
 
-        log.debug("Matches distributed across {} segments", matchesBySegment.size());
-        matchesBySegment.forEach(
-                (segIdx, matchList) ->
-                        log.debug("Segment {}: {} matches", segIdx, matchList.size()));
+        // removed noop forEach
 
         List<ModificationTask> tasks = new ArrayList<>();
         for (Map.Entry<Integer, List<MatchRange>> entry : matchesBySegment.entrySet()) {
@@ -2377,12 +2254,12 @@ public class RedactionService {
             List<MatchRange> segmentMatches = entry.getValue();
 
             if (segmentIndex < 0 || segmentIndex >= textSegments.size()) {
-                log.warn("Invalid segment index: {}", segmentIndex);
+
                 continue;
             }
             TextSegment segment = textSegments.get(segmentIndex);
             if (segment == null) {
-                log.warn("Null segment at index: {}", segmentIndex);
+
                 continue;
             }
 
@@ -2390,39 +2267,24 @@ public class RedactionService {
                 if ("Tj".equals(segment.operatorName)
                         || "'".equals(segment.operatorName)
                         || "\"".equals(segment.operatorName)) {
-                    log.debug(
-                            "Creating modification task for Tj operator at segment {}",
-                            segmentIndex);
+
                     String newText = applyRedactionsToSegmentText(segment, segmentMatches);
                     if (newText == null) newText = "";
                     float adjustment = calculateWidthAdjustment(segment, segmentMatches);
                     tasks.add(new ModificationTask(segment, newText, adjustment));
-                    log.debug(
-                            "Task created: original='{}', new='{}', adjustment={}",
-                            segment.getText(),
-                            newText,
-                            adjustment);
+
                 } else if ("TJ".equals(segment.operatorName)) {
-                    log.debug(
-                            "Creating modification task for TJ operator at segment {}",
-                            segmentIndex);
+
                     tasks.add(new ModificationTask(segment, "", 0));
                 }
             } catch (Exception e) {
-                log.error(
-                        "Error creating modification task for segment {}: {}",
-                        segmentIndex,
-                        e.getMessage());
+
             }
         }
 
-        log.info("Created {} modification tasks", tasks.size());
         tasks.sort((a, b) -> Integer.compare(b.segment.tokenIndex, a.segment.tokenIndex));
 
         int maxTasksToProcess = Math.min(tasks.size(), 1000);
-        log.debug("Processing {} out of {} tasks (limit: 1000)", maxTasksToProcess, tasks.size());
-
-        int successfulModifications = 0;
         for (int i = 0; i < maxTasksToProcess && i < tasks.size(); i++) {
             ModificationTask task = tasks.get(i);
             try {
@@ -2431,38 +2293,21 @@ public class RedactionService {
                                 textSegments.indexOf(task.segment), Collections.emptyList());
 
                 if (task.segment.tokenIndex >= newTokens.size()) {
-                    log.warn(
-                            "Token index {} out of bounds (size: {})",
-                            task.segment.tokenIndex,
-                            newTokens.size());
+
                     continue;
                 }
                 if (task.segment.getText() == null || task.segment.getText().isEmpty()) {
-                    log.debug("Skipping empty text segment at index {}", task.segment.tokenIndex);
+
                     continue;
                 }
 
-                log.debug(
-                        "Applying redaction to token {}: '{}' -> '{}'",
-                        task.segment.tokenIndex,
-                        task.segment.getText(),
-                        task.newText);
-
                 modifyTokenForRedaction(
                         newTokens, task.segment, task.newText, task.adjustment, segmentMatches);
-                successfulModifications++;
-                totalModifications++;
 
             } catch (Exception e) {
-                log.error("Error applying redaction to task {}: {}", i, e.getMessage());
+
             }
         }
-
-        log.info(
-                "Redaction completed - {} successful modifications out of {} tasks",
-                successfulModifications,
-                tasks.size());
-        log.info("Total modifications made: {}", totalModifications);
 
         return newTokens;
     }
@@ -2981,6 +2826,24 @@ public class RedactionService {
         }
     }
 
+    private void addSpacingAdjustment(
+            COSArray array, TextSegment segment, String originalText, String modifiedText) {
+        try {
+            if (array == null || segment == null || segment.getFont() == null) return;
+            if (Objects.equals(originalText, modifiedText)) return;
+
+            float wOrig =
+                    calculateSafeWidth(originalText, segment.getFont(), segment.getFontSize());
+            float wMod = calculateSafeWidth(modifiedText, segment.getFont(), segment.getFontSize());
+            float adjustment = wOrig - wMod;
+            if (Math.abs(adjustment) <= PRECISION_THRESHOLD) return;
+
+            float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
+            array.add(new COSFloat(kerning));
+        } catch (Exception ignored) {
+        }
+    }
+
     private void wipeAllTextInXObjects(PDDocument document, PDResources resources) {
         try {
             for (COSName xobjName : resources.getXObjectNames()) {
@@ -3033,14 +2896,7 @@ public class RedactionService {
             FallbackStrategy fontStrategy)
             throws IOException {
 
-        log.info(
-                "Starting enhanced redaction with {} targets and {} scrub options",
-                targetText.length,
-                scrubOptions.size());
-
         byte[] result = redactPdfWithSemanticScrubbing(request, scrubOptions);
-
-        log.info("Enhanced redaction completed successfully");
         return result;
     }
 
@@ -3055,8 +2911,7 @@ public class RedactionService {
             for (int i = 0; i < text.length(); ) {
                 int codePoint = text.codePointAt(i);
                 if (!probe.hasGlyph(codePoint)) {
-                    log.debug(
-                            "Font {} missing glyph for code point: {}", font.getName(), codePoint);
+
                     return false;
                 }
                 i += Character.charCount(codePoint);
@@ -3064,7 +2919,7 @@ public class RedactionService {
 
             return true;
         } catch (Exception e) {
-            log.debug("Error validating font coverage", e);
+
             return false;
         }
     }
@@ -3197,12 +3052,12 @@ public class RedactionService {
                                 coverage.add(cid);
                             }
                         } catch (Exception e) {
-                            // Glyph not available
+
                         }
                     }
                 }
             } catch (Exception e) {
-                log.debug("Could not build glyph coverage for font: {}", font.getName(), e);
+
             }
             return coverage;
         }
@@ -3228,7 +3083,7 @@ public class RedactionService {
                     String charStr = new String(Character.toChars(codePoint));
                     return font.getStringWidth(charStr) / FONT_SCALE_FACTOR * fontSize;
                 } catch (Exception e) {
-                    // Fall through
+
                 }
             }
             return switch (strategy) {
@@ -3266,7 +3121,7 @@ public class RedactionService {
                             validChars++;
                         }
                     } catch (Exception e) {
-                        // Skip
+
                     }
                 }
 
@@ -3298,8 +3153,6 @@ public class RedactionService {
                 return;
             }
 
-            log.info("Starting semantic scrub with options: {}", options);
-
             try {
                 scrubStructureTree(document, options);
 
@@ -3309,9 +3162,8 @@ public class RedactionService {
                     scrubAnnotations(document, options);
                 }
 
-                log.info("Semantic scrub completed successfully");
             } catch (Exception e) {
-                log.error("Error during semantic scrub", e);
+
             }
         }
 
@@ -3324,7 +3176,7 @@ public class RedactionService {
                     scrubStructureElement(structRoot, options);
                 }
             } catch (Exception e) {
-                log.debug("Could not scrub structure tree", e);
+
             }
         }
 
@@ -3394,7 +3246,7 @@ public class RedactionService {
                     }
                 }
             } catch (Exception e) {
-                log.debug("Could not scrub annotations", e);
+
             }
         }
     }
