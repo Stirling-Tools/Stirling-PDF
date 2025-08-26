@@ -55,6 +55,7 @@ export interface FileRecord {
   blobUrl?: string;
   createdAt?: number;
   processedFile?: ProcessedFileMetadata;
+  insertAfterPageId?: string; // Page ID after which this file should be inserted
   isPinned?: boolean;
   // Note: File object stored in provider ref, not in state
 }
@@ -216,13 +217,14 @@ export type FileContextAction =
 
 export interface FileContextActions {
   // File management - lightweight actions only
-  addFiles: (files: File[]) => Promise<File[]>;
+  addFiles: (files: File[], options?: { insertAfterPageId?: string }) => Promise<File[]>;
   addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<File[]>;
   addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => Promise<File[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
+  clearAllData: () => Promise<void>;
 
   // File pinning
   pinFile: (file: File) => void;

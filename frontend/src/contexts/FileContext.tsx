@@ -73,8 +73,8 @@ function FileContextInner({
   }, []);
 
   // File operations using unified addFiles helper with persistence
-  const addRawFiles = useCallback(async (files: File[]): Promise<File[]> => {
-    const addedFilesWithIds = await addFiles('raw', { files }, stateRef, filesRef, dispatch, lifecycleManager);
+  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string }): Promise<File[]> => {
+    const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
     
     // Persist to IndexedDB if enabled
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
@@ -167,7 +167,16 @@ function FileContextInner({
       filesRef.current.clear();
       dispatch({ type: 'RESET_CONTEXT' });
       
-      // Clear IndexedDB if enabled
+      // Don't clear IndexedDB automatically - only clear in-memory state
+      // IndexedDB should only be cleared when explicitly requested by user
+    },
+    clearAllData: async () => {
+      // First clear all files from memory
+      lifecycleManager.cleanupAllFiles();
+      filesRef.current.clear();
+      dispatch({ type: 'RESET_CONTEXT' });
+      
+      // Then clear IndexedDB storage
       if (indexedDB && enablePersistence) {
         try {
           await indexedDB.clearAll();
