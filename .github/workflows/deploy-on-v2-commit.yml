@@ -91,8 +91,8 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
-      - name: Build and push frontend image (with NPM token)
-        if: steps.check-frontend.outputs.exists == 'false' && secrets.NPM_TOKEN != ''
+      - name: Build and push frontend image
+        if: steps.check-frontend.outputs.exists == 'false'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -105,19 +105,6 @@ jobs:
           platforms: linux/amd64
           secrets: |
             npmrc=//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
-
-      - name: Build and push frontend image (anonymous)
-        if: steps.check-frontend.outputs.exists == 'false' && secrets.NPM_TOKEN == ''
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./docker/frontend/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
-          build-args: VERSION_TAG=v2-alpha
-          platforms: linux/amd64
       
       - name: Build and push backend image
         if: steps.check-backend.outputs.exists == 'false'
