@@ -19,7 +19,7 @@ export const renderToolButtons = (
     {showSubcategoryHeader && (
       <SubcategoryHeader label={getSubcategoryLabel(t, subcategory.subcategoryId)} />
     )}
-    <Stack gap="xs">
+    <div>
       {subcategory.tools.map(({ id, tool }) => (
         <ToolButton
           key={id}
@@ -29,6 +29,6 @@ export const renderToolButtons = (
           onSelect={onSelect}
         />
       ))}
-    </Stack>
+    </div>
   </Box>
 );

@@ -64,7 +64,9 @@ export function useToolSections(filteredTools: [string /* FIX ME: Should be Tool
         Object.entries(subs).forEach(([s, tools]) => {
           const subcategoryId = s as SubcategoryId;
           if (!quick[subcategoryId]) quick[subcategoryId] = [];
-          quick[subcategoryId].push(...tools);
+          // Only include ready tools (have a component or external link) in Quick Access
+          const readyTools = tools.filter(({ tool }) => tool.component !== null || !!tool.link);
+          quick[subcategoryId].push(...readyTools);
         });
       }
     });

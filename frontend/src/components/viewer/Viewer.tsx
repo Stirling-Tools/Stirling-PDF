@@ -550,12 +550,14 @@ const Viewer = ({
               justifyContent: "center",
               pointerEvents: "none",
               background: "transparent",
+
             }}
           >
             <Paper
               radius="xl xl 0 0"
               shadow="sm"
               p={12}
+              pb={24}
               style={{
                 display: "flex",
                 alignItems: "center",

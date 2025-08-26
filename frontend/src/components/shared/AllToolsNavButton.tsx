@@ -26,7 +26,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
 
   const iconNode = (
     <span className="iconContainer">
-      <AppsIcon sx={{ fontSize: '1.5rem' }} />
+      <AppsIcon sx={{ fontSize: '2rem' }} />
     </span>
   );
 

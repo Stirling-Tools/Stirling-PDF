@@ -41,7 +41,7 @@ export default function ToolPanel() {
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       }`}
       style={{
-        width: isPanelVisible ? '20rem' : '0',
+        width: isPanelVisible ? '18.5rem' : '0',
         padding: '0'
       }}
     >
