@@ -2246,8 +2246,6 @@ public class RedactionService {
             }
         }
 
-        // removed noop forEach
-
         List<ModificationTask> tasks = new ArrayList<>();
         for (Map.Entry<Integer, List<MatchRange>> entry : matchesBySegment.entrySet()) {
             int segmentIndex = entry.getKey();
