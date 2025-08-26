@@ -27,3 +27,6 @@ project: &project
   - gradlew.bat
   - launch4jConfig.xml
   - settings.gradle
+  - frontend/**
+  - docker/**
+  - testing/**
