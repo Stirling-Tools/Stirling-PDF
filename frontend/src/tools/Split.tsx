@@ -44,6 +44,11 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     sessionStorage.setItem("previousMode", "split");
   };
 
+  const handleSettingsReset = () => {
+    splitOperation.resetResults();
+    splitParams.resetParameters();
+  };
+
   const hasFiles = selectedFiles.length > 0;
   const hasResults = splitOperation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;

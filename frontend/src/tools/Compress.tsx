@@ -48,6 +48,11 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     sessionStorage.setItem("previousMode", "compress");
   };
 
+  const handleSettingsReset = () => {
+    compressOperation.resetResults();
+    compressParams.resetParameters();
+  };
+
 
 
   const hasFiles = selectedFiles.length > 0;
