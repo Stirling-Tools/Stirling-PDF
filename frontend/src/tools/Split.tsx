@@ -23,9 +23,18 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(splitParams.getEndpointName());
 
   useEffect(() => {
+    // Only reset results when parameters change, not when files change
     splitOperation.resetResults();
     onPreviewFile?.(null);
-  }, [splitParams.parameters, selectedFiles]); 
+  }, [splitParams.parameters]);
+
+  useEffect(() => {
+    // Reset results when selected files change (user selected different files)
+    if (selectedFiles.length > 0) {
+      splitOperation.resetResults();
+      onPreviewFile?.(null);
+    }
+  }, [selectedFiles]);
   const handleSplit = async () => {
     try {
       await splitOperation.executeOperation(splitParams.parameters, selectedFiles);
@@ -51,7 +60,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = splitOperation.downloadUrl !== null;
+  const hasResults = splitOperation.files.length > 0 || splitOperation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
 
   return createToolFlow({

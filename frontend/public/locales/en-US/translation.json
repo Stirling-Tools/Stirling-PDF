@@ -2111,10 +2111,10 @@
     "suggested": {
       "securePdfIngestion": "Secure PDF Ingestion",
       "securePdfIngestionDesc": "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size.",
-      "emailPreparation": "Email Preparation", 
+      "emailPreparation": "Email Preparation",
       "emailPreparationDesc": "Optimizes PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy.",
       "secureWorkflow": "Security Workflow",
-      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access.",
+      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access. Password is set to 'password' by default.",
       "processImages": "Process Images",
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }

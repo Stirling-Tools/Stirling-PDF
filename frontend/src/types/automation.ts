@@ -11,6 +11,7 @@ export interface AutomationConfig {
   id: string;
   name: string;
   description?: string;
+  icon?: string;
   operations: AutomationOperation[];
   createdAt: string;
   updatedAt: string;

@@ -51,7 +51,6 @@
     "placeholder": "Select a PDF file in the main view to get started",
     "upload": "Upload",
     "addFiles": "Add files",
-    "noFiles": "No files uploaded. ",
     "selectFromWorkbench": "Select files from the workbench or "
   },
   "noFavourites": "No favourites added",
@@ -2320,9 +2319,14 @@
     "creation": {
       "createTitle": "Create Automation",
       "editTitle": "Edit Automation",
-      "description": "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
+      "intro": "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
       "name": {
-        "placeholder": "Automation name"
+        "label": "Automation Name",
+        "placeholder": "My Automation"
+      },
+      "description": {
+        "label": "Description (optional)",
+        "placeholder": "Describe what this automation does..."
       },
       "tools": {
         "selectTool": "Select a tool...",
@@ -2339,6 +2343,9 @@
         "message": "You have unsaved changes. Are you sure you want to go back? All changes will be lost.",
         "cancel": "Cancel",
         "confirm": "Go Back"
+      },
+      "icon": {
+        "label": "Icon"
       }
     },
     "run": {
@@ -2369,7 +2376,7 @@
       "emailPreparation": "Email Preparation",
       "emailPreparationDesc": "Optimises PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy.",
       "secureWorkflow": "Security Workflow",
-      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access.",
+      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default.",
       "processImages": "Process Images",
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }

@@ -63,22 +63,24 @@ export default function ToolList({
                 borderBottomWidth: tool.operation && !tool.configured ? "0" : "1px",
               }}
             >
-              {/* Delete X in top right */}
-              <ActionIcon
-                variant="subtle"
-                size="xs"
-                onClick={() => onToolRemove(index)}
-                title={t("automate.creation.tools.remove", "Remove tool")}
-                style={{
-                  position: "absolute",
-                  top: "4px",
-                  right: "4px",
-                  zIndex: 1,
-                  color: "var(--mantine-color-gray-6)",
-                }}
-              >
-                <CloseIcon style={{ fontSize: 16 }} />
-              </ActionIcon>
+              {/* Delete X in top right - only show for tools after the first 2 */}
+              {index > 1 && (
+                <ActionIcon
+                  variant="subtle"
+                  size="xs"
+                  onClick={() => onToolRemove(index)}
+                  title={t("automate.creation.tools.remove", "Remove tool")}
+                  style={{
+                    position: "absolute",
+                    top: "4px",
+                    right: "4px",
+                    zIndex: 1,
+                    color: "var(--mantine-color-gray-6)",
+                  }}
+                >
+                  <CloseIcon style={{ fontSize: 16 }} />
+                </ActionIcon>
+              )}
 
               <div style={{ paddingRight: "1.25rem" }}>
                 {/* Tool Selection Dropdown with inline settings cog */}

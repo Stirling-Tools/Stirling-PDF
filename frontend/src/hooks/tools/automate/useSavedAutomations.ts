@@ -45,10 +45,27 @@ export function useSavedAutomations() {
     try {
       const { automationStorage } = await import('../../../services/automationStorage');
       
+      // Map suggested automation icons to MUI icon keys
+      const getIconKey = (suggestedIcon: {id: string}): string => {
+        // Check the automation ID or name to determine the appropriate icon
+        switch (suggestedAutomation.id) {
+          case 'secure-pdf-ingestion':
+          case 'secure-workflow':
+            return 'SecurityIcon'; // Security icon for security workflows
+          case 'email-preparation':
+            return 'CompressIcon'; // Compression icon
+          case 'process-images':
+            return 'StarIcon'; // Star icon for process images
+          default:
+            return 'SettingsIcon'; // Default fallback
+        }
+      };
+      
       // Convert suggested automation to saved automation format
       const savedAutomation = {
         name: suggestedAutomation.name,
         description: suggestedAutomation.description,
+        icon: getIconKey(suggestedAutomation.icon),
         operations: suggestedAutomation.operations
       };
       

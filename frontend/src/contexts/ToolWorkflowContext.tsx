@@ -86,6 +86,10 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   selectTool: (toolId: string) => void;
   clearToolSelection: () => void;
 
+  // Tool Reset Actions
+  registerToolReset: (toolId: string, resetFunction: () => void) => void;
+  resetTool: (toolId: string) => void;
+
   // Workflow Actions (compound actions)
   handleToolSelect: (toolId: string) => void;
   handleBackToTools: () => void;
@@ -106,16 +110,19 @@ interface ToolWorkflowProviderProps {
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, initialState);
 
+  // Store reset functions for tools
+  const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
+
   // Navigation actions and state are available since we're inside NavigationProvider
   const { actions } = useNavigationActions();
   const navigationState = useNavigationState();
-  
+
   // Tool management hook
   const {
     toolRegistry,
     getSelectedTool,
   } = useToolManagement();
-  
+
   // Get selected tool from navigation context
   const selectedTool = getSelectedTool(navigationState.selectedToolKey);
 
@@ -147,13 +154,29 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     dispatch({ type: 'SET_SEARCH_QUERY', payload: query });
   }, []);
 
+  // Tool reset methods
+  const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {
+    setToolResetFunctions(prev => ({ ...prev, [toolId]: resetFunction }));
+  }, []);
+
+  const resetTool = useCallback((toolId: string) => {
+    // Use the current state directly instead of depending on the state in the closure
+    setToolResetFunctions(current => {
+      const resetFunction = current[toolId];
+      if (resetFunction) {
+        resetFunction();
+      }
+      return current; // Return the same state to avoid unnecessary updates
+    });
+  }, []); // Empty dependency array makes this stable
+
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: string) => {
     actions.handleToolSelect(toolId);
-    
+
     // Clear search query when selecting a tool
     setSearchQuery('');
-    
+
     // Handle view switching logic
     if (toolId === 'allTools' || toolId === 'read' || toolId === 'view-pdf') {
       setLeftPanelView('toolPicker');
@@ -212,6 +235,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     selectTool: actions.selectTool,
     clearToolSelection: actions.clearToolSelection,
 
+    // Tool Reset Actions
+    registerToolReset,
+    resetTool,
+
     // Workflow Actions
     handleToolSelect,
     handleBackToTools,
@@ -233,6 +260,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSearchQuery,
     actions.selectTool,
     actions.clearToolSelection,
+    registerToolReset,
+    resetTool,
     handleToolSelect,
     handleBackToTools,
     handleReaderToggle,
@@ -251,36 +280,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 export function useToolWorkflow(): ToolWorkflowContextValue {
   const context = useContext(ToolWorkflowContext);
   if (!context) {
-    // During development hot reload, temporarily return a safe fallback
-    if (false && process.env.NODE_ENV === 'development') {
-      console.warn('ToolWorkflowContext temporarily unavailable during hot reload, using fallback');
-
-      // Return minimal safe fallback to prevent crashes
-      return {
-        sidebarsVisible: true,
-        leftPanelView: 'toolPicker',
-        readerMode: false,
-        previewFile: null,
-        pageEditorFunctions: null,
-        searchQuery: '',
-        selectedToolKey: null,
-        selectedTool: null,
-        toolRegistry: {},
-        filteredTools: [],
-        isPanelVisible: true,
-        setSidebarsVisible: () => {},
-        setLeftPanelView: () => {},
-        setReaderMode: () => {},
-        setPreviewFile: () => {},
-        setPageEditorFunctions: () => {},
-        setSearchQuery: () => {},
-        selectTool: () => {},
-        clearToolSelection: () => {},
-        handleToolSelect: () => {},
-        handleBackToTools: () => {},
-        handleReaderToggle: () => {}
-      } as ToolWorkflowContextValue;
-    }
 
     console.error('ToolWorkflowContext not found. Current stack:', new Error().stack);
     throw new Error('useToolWorkflow must be used within a ToolWorkflowProvider');
