@@ -16,7 +16,7 @@
 }
 
 .pageContainer:hover .pageHoverControls {
-  opacity: 1 !important;
+  opacity: 0.95 !important;
 }
 
 /* Checkbox container - prevent transform inheritance */

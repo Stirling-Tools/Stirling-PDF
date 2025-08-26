@@ -25,7 +25,7 @@ const FileStatusIndicator = ({
         {t("files.noFiles", "No files uploaded. ")}{" "}
         <Anchor
           size="sm"
-          onClick={openFilesModal}
+          onClick={() => openFilesModal()}
           style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
         >
           <FolderIcon style={{ fontSize: '14px' }} />
@@ -42,7 +42,7 @@ const FileStatusIndicator = ({
         {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
         <Anchor
           size="sm"
-          onClick={openFilesModal}
+          onClick={() => openFilesModal()}
           style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
         >
           <FolderIcon style={{ fontSize: '14px' }} />

@@ -73,8 +73,8 @@ function FileContextInner({
   }, []);
 
   // File operations using unified addFiles helper with persistence
-  const addRawFiles = useCallback(async (files: File[]): Promise<File[]> => {
-    const addedFilesWithIds = await addFiles('raw', { files }, stateRef, filesRef, dispatch, lifecycleManager);
+  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string }): Promise<File[]> => {
+    const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
     
     // Persist to IndexedDB if enabled
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {

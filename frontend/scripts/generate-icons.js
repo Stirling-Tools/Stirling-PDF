@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const { icons } = require('@iconify-json/material-symbols');
-const { getIcons } = require('@iconify/utils');
 const fs = require('fs');
 const path = require('path');
 
@@ -89,68 +88,73 @@ function scanForUsedIcons() {
   return iconArray;
 }
 
-// Auto-detect used icons
-const usedIcons = scanForUsedIcons();
+// Main async function
+async function main() {
+  // Auto-detect used icons
+  const usedIcons = scanForUsedIcons();
 
-// Check if we need to regenerate (compare with existing)
-const outputPath = path.join(__dirname, '..', 'src', 'assets', 'material-symbols-icons.json');
-let needsRegeneration = true;
+  // Check if we need to regenerate (compare with existing)
+  const outputPath = path.join(__dirname, '..', 'src', 'assets', 'material-symbols-icons.json');
+  let needsRegeneration = true;
 
-if (fs.existsSync(outputPath)) {
-  try {
-    const existingSet = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
-    const existingIcons = Object.keys(existingSet.icons || {}).sort();
-    const currentIcons = [...usedIcons].sort();
-    
-    if (JSON.stringify(existingIcons) === JSON.stringify(currentIcons)) {
-      needsRegeneration = false;
-      info(`✅ Icon set already up-to-date (${usedIcons.length} icons, ${Math.round(fs.statSync(outputPath).size / 1024)}KB)`);
+  if (fs.existsSync(outputPath)) {
+    try {
+      const existingSet = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+      const existingIcons = Object.keys(existingSet.icons || {}).sort();
+      const currentIcons = [...usedIcons].sort();
+      
+      if (JSON.stringify(existingIcons) === JSON.stringify(currentIcons)) {
+        needsRegeneration = false;
+        info(`✅ Icon set already up-to-date (${usedIcons.length} icons, ${Math.round(fs.statSync(outputPath).size / 1024)}KB)`);
+      }
+    } catch (error) {
+      // If we can't parse existing file, regenerate
+      needsRegeneration = true;
     }
-  } catch (error) {
-    // If we can't parse existing file, regenerate
-    needsRegeneration = true;
   }
-}
 
-if (!needsRegeneration) {
-  info('🎉 No regeneration needed!');
-  process.exit(0);
-}
+  if (!needsRegeneration) {
+    info('🎉 No regeneration needed!');
+    process.exit(0);
+  }
 
-info(`🔍 Extracting ${usedIcons.length} icons from Material Symbols...`);
+  info(`🔍 Extracting ${usedIcons.length} icons from Material Symbols...`);
 
-// Extract only our used icons from the full set
-const extractedIcons = getIcons(icons, usedIcons);
+  // Dynamic import of ES module
+  const { getIcons } = await import('@iconify/utils');
+  
+  // Extract only our used icons from the full set
+  const extractedIcons = getIcons(icons, usedIcons);
 
-if (!extractedIcons) {
-  console.error('❌ Failed to extract icons');
-  process.exit(1);
-}
+  if (!extractedIcons) {
+    console.error('❌ Failed to extract icons');
+    process.exit(1);
+  }
 
-// Check for missing icons
-const extractedIconNames = Object.keys(extractedIcons.icons || {});
-const missingIcons = usedIcons.filter(icon => !extractedIconNames.includes(icon));
+  // Check for missing icons
+  const extractedIconNames = Object.keys(extractedIcons.icons || {});
+  const missingIcons = usedIcons.filter(icon => !extractedIconNames.includes(icon));
 
-if (missingIcons.length > 0) {
-  info(`⚠️  Missing icons (${missingIcons.length}): ${missingIcons.join(', ')}`);
-  info('💡 These icons don\'t exist in Material Symbols. Please use available alternatives.');
-}
+  if (missingIcons.length > 0) {
+    info(`⚠️  Missing icons (${missingIcons.length}): ${missingIcons.join(', ')}`);
+    info('💡 These icons don\'t exist in Material Symbols. Please use available alternatives.');
+  }
 
-// Create output directory
-const outputDir = path.join(__dirname, '..', 'src', 'assets');
-if (!fs.existsSync(outputDir)) {
-  fs.mkdirSync(outputDir, { recursive: true });
-}
+  // Create output directory
+  const outputDir = path.join(__dirname, '..', 'src', 'assets');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
 
-// Write the extracted icon set to a file (outputPath already defined above)
-fs.writeFileSync(outputPath, JSON.stringify(extractedIcons, null, 2));
+  // Write the extracted icon set to a file (outputPath already defined above)
+  fs.writeFileSync(outputPath, JSON.stringify(extractedIcons, null, 2));
 
-info(`✅ Successfully extracted ${Object.keys(extractedIcons.icons || {}).length} icons`);
-info(`📦 Bundle size: ${Math.round(JSON.stringify(extractedIcons).length / 1024)}KB`);
-info(`💾 Saved to: ${outputPath}`);
+  info(`✅ Successfully extracted ${Object.keys(extractedIcons.icons || {}).length} icons`);
+  info(`📦 Bundle size: ${Math.round(JSON.stringify(extractedIcons).length / 1024)}KB`);
+  info(`💾 Saved to: ${outputPath}`);
 
-// Generate TypeScript types
-const typesContent = `// Auto-generated icon types
+  // Generate TypeScript types
+  const typesContent = `// Auto-generated icon types
 // This file is automatically generated by scripts/generate-icons.js
 // Do not edit manually - changes will be overwritten
 
@@ -168,8 +172,15 @@ declare const iconSet: IconSet;
 export default iconSet;
 `;
 
-const typesPath = path.join(outputDir, 'material-symbols-icons.d.ts');
-fs.writeFileSync(typesPath, typesContent);
+  const typesPath = path.join(outputDir, 'material-symbols-icons.d.ts');
+  fs.writeFileSync(typesPath, typesContent);
 
-info(`📝 Generated types: ${typesPath}`);
-info(`🎉 Icon extraction complete!`);
+  info(`📝 Generated types: ${typesPath}`);
+  info(`🎉 Icon extraction complete!`);
+}
+
+// Run the main function
+main().catch(error => {
+  console.error('❌ Script failed:', error);
+  process.exit(1);
+});
