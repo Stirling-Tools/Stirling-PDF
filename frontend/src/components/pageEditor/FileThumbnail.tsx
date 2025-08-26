@@ -13,7 +13,7 @@ interface FileItem {
   id: string;
   name: string;
   pageCount: number;
-  thumbnail: string;
+  thumbnail: string | null;
   size: number;
   splitBefore?: boolean;
 }
@@ -193,15 +193,16 @@ const FileThumbnail = ({
             boxShadow: '2px 2px 0 rgba(0,0,0,0.1), 4px 4px 0 rgba(0,0,0,0.05)'
           }}
         >
-          <img
-            src={file.thumbnail}
-            alt={file.name}
-            draggable={false}
-            onError={(e) => {
-              // Hide broken image if blob URL was revoked
-              const img = e.target as HTMLImageElement;
-              img.style.display = 'none';
-            }}
+          {file.thumbnail && (
+            <img
+              src={file.thumbnail}
+              alt={file.name}
+              draggable={false}
+              onError={(e) => {
+                // Hide broken image if blob URL was revoked
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+              }}
             style={{
               maxWidth: '100%',
               maxHeight: '100%',
@@ -209,6 +210,7 @@ const FileThumbnail = ({
               borderRadius: 2,
             }}
           />
+          )}
         </div>
 
         {/* Page count badge - only show for PDFs */}
