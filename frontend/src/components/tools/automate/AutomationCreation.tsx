@@ -114,7 +114,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       if (mode === AutomationMode.EDIT && existingAutomation) {
         // For edit mode, check if name has changed
         const nameChanged = automationName.trim() !== existingAutomation.name;
-        
+
         if (nameChanged) {
           // Name changed - create new automation
           savedAutomation = await automationStorage.saveAutomation(automationData);
@@ -150,12 +150,17 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
       <Stack gap="md">
         {/* Automation Name */}
+        <Stack gap="xs">
+        <Text size="sm" fw={500} mb="xs" style={{ color: "var(--mantine-color-text)" }}>
+            {t('automate.creation.name.label', 'Automation Name')} *
+        </Text>
         <TextInput
-          placeholder={t('automate.creation.name.placeholder', 'Automation name')}
+          placeholder={t('automate.creation.name.placeholder', 'My Automation')}
           value={automationName}
           onChange={(e) => setAutomationName(e.currentTarget.value)}
           size="sm"
         />
+        </Stack>
 
 
         {/* Selected Tools List */}

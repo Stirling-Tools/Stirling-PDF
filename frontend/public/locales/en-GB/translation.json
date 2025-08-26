@@ -2241,7 +2241,8 @@
         "editTitle": "Edit Automation",
         "description": "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
         "name": {
-          "placeholder": "Automation name"
+          "label": "Automation Name",
+          "placeholder": "My Automation"
         },
         "tools": {
           "selectTool": "Select a tool...",
