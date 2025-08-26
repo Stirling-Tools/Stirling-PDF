@@ -51,7 +51,6 @@
     "placeholder": "Select a PDF file in the main view to get started",
     "upload": "Upload",
     "addFiles": "Add files",
-    "noFiles": "No files uploaded. ",
     "selectFromWorkbench": "Select files from the workbench or "
   },
   "noFavourites": "No favourites added",
