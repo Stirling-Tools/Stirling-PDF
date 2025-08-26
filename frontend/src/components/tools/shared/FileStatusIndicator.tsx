@@ -57,36 +57,70 @@ const FileStatusIndicator = ({
 
   // Check if there are no files in the workbench
   if (workbenchFiles.length === 0) {
-    return (
-      <Text size="sm" c="dimmed">
-        {t("files.noFiles", "No files uploaded. ")}{" "}
-        <Anchor
-          size="sm"
-          onClick={openFilesModal}
-          style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-        >
-          <FolderIcon style={{ fontSize: '14px' }} />
-          {t("files.addFiles", "Add files")}
-        </Anchor>
-      </Text>
-    );
+    // If no recent files, show upload button
+    if (!hasRecentFiles) {
+      return (
+        <Text size="sm" c="dimmed">
+          <Anchor
+            size="sm"
+            onClick={handleNativeUpload}
+            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+          >
+            <UploadIcon style={{ fontSize: '0.875rem' }} />
+            {t("files.upload", "Upload")}
+          </Anchor>
+        </Text>
+      );
+    } else {
+      // If there are recent files, show add files button
+      return (
+        <Text size="sm" c="dimmed">
+          <Anchor
+            size="sm"
+            onClick={openFilesModal}
+            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+          >
+            <FolderIcon style={{ fontSize: '0.875rem' }} />
+            {t("files.addFiles", "Add files")}
+          </Anchor>
+        </Text>
+      );
+    }
   }
 
   // Show selection status when there are files in workbench
   if (selectedFiles.length === 0) {
-    return (
-      <Text size="sm" c="dimmed">
-        {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
-        <Anchor
-          size="sm"
-          onClick={openFilesModal}
-          style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-        >
-          <FolderIcon style={{ fontSize: '14px' }} />
-          {t("files.addFiles", "Add files")}
-        </Anchor>
-      </Text>
-    );
+    // If no recent files, show upload option
+    if (!hasRecentFiles) {
+      return (
+        <Text size="sm" c="dimmed">
+          {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
+          <Anchor
+            size="sm"
+            onClick={handleNativeUpload}
+            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+          >
+            <UploadIcon style={{ fontSize: '0.875rem' }} />
+            {t("files.upload", "Upload")}
+          </Anchor>
+        </Text>
+      );
+    } else {
+      // If there are recent files, show add files option
+      return (
+        <Text size="sm" c="dimmed">
+          {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
+          <Anchor
+            size="sm"
+            onClick={openFilesModal}
+            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+          >
+            <FolderIcon style={{ fontSize: '0.875rem' }} />
+            {t("files.addFiles", "Add files")}
+          </Anchor>
+        </Text>
+      );
+    }
   }
 
   return (
