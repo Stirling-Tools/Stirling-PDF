@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
 import FileCard from "./FileCard";
-import { FileRecord } from "../../types/fileContext";
+import { FileId, FileRecord } from "../../types/fileContext";
 
 interface FileGridProps {
   files: Array<{ file: File; record?: FileRecord }>;
@@ -12,8 +12,8 @@ interface FileGridProps {
   onDoubleClick?: (item: { file: File; record?: FileRecord }) => void;
   onView?: (item: { file: File; record?: FileRecord }) => void;
   onEdit?: (item: { file: File; record?: FileRecord }) => void;
-  onSelect?: (fileId: string) => void;
-  selectedFiles?: string[];
+  onSelect?: (fileId: FileId) => void;
+  selectedFiles?: FileId[];
   showSearch?: boolean;
   showSort?: boolean;
   maxDisplay?: number; // If set, shows only this many files with "Show All" option
@@ -119,11 +119,11 @@ const FileGrid = ({
         direction="row"
         wrap="wrap"
         gap="md"
-        h="30rem" 
+        h="30rem"
         style={{ overflowY: "auto", width: "100%" }}
       >
         {displayFiles.map((item, idx) => {
-          const fileId = item.record?.id || item.file.name;
+          const fileId = item.record?.id || item.file.name as FileId /* FIX ME: This doesn't seem right */;
           const originalIdx = files.findIndex(f => (f.record?.id || f.file.name) === fileId);
           const supported = isFileSupported ? isFileSupported(item.file.name) : true;
           return (

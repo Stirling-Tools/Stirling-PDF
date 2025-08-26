@@ -2,6 +2,7 @@
  * High-performance thumbnail generation service using main thread processing
  */
 
+import { FileId } from '../types/fileContext';
 import { pdfWorkerManager } from './pdfWorkerManager';
 
 interface ThumbnailResult {
@@ -32,12 +33,12 @@ interface CachedPDFDocument {
 
 export class ThumbnailGenerationService {
   // Session-based thumbnail cache
-  private thumbnailCache = new Map<string, CachedThumbnail>();
+  private thumbnailCache = new Map<FileId | string /* FIX ME: Page ID */, CachedThumbnail>();
   private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
   private currentCacheSize = 0;
 
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
-  private pdfDocumentCache = new Map<string, CachedPDFDocument>();
+  private pdfDocumentCache = new Map<FileId, CachedPDFDocument>();
   private maxPdfCacheSize = 10; // Keep up to 10 PDF documents cached
 
   constructor(private maxWorkers: number = 10) {
@@ -47,7 +48,7 @@ export class ThumbnailGenerationService {
   /**
    * Get or create a cached PDF document
    */
-  private async getCachedPDFDocument(fileId: string, pdfArrayBuffer: ArrayBuffer): Promise<any> {
+  private async getCachedPDFDocument(fileId: FileId, pdfArrayBuffer: ArrayBuffer): Promise<any> {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
       cached.lastUsed = Date.now();
@@ -79,7 +80,7 @@ export class ThumbnailGenerationService {
   /**
    * Release a reference to a cached PDF document
    */
-  private releasePDFDocument(fileId: string): void {
+  private releasePDFDocument(fileId: FileId): void {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
       cached.refCount--;
@@ -91,7 +92,7 @@ export class ThumbnailGenerationService {
    * Evict the least recently used PDF document
    */
   private evictLeastRecentlyUsedPDF(): void {
-    let oldestEntry: [string, CachedPDFDocument] | null = null;
+    let oldestEntry: [FileId, CachedPDFDocument] | null = null;
     let oldestTime = Date.now();
 
     for (const [key, value] of this.pdfDocumentCache.entries()) {
@@ -111,7 +112,7 @@ export class ThumbnailGenerationService {
    * Generate thumbnails for multiple pages using main thread processing
    */
   async generateThumbnails(
-    fileId: string,
+    fileId: FileId,
     pdfArrayBuffer: ArrayBuffer,
     pageNumbers: number[],
     options: ThumbnailGenerationOptions = {},
@@ -121,11 +122,11 @@ export class ThumbnailGenerationService {
     if (!fileId || typeof fileId !== 'string' || fileId.trim() === '') {
       throw new Error('generateThumbnails: fileId must be a non-empty string');
     }
-    
+
     if (!pdfArrayBuffer || pdfArrayBuffer.byteLength === 0) {
       throw new Error('generateThumbnails: pdfArrayBuffer must not be empty');
     }
-    
+
     if (!pageNumbers || pageNumbers.length === 0) {
       throw new Error('generateThumbnails: pageNumbers must not be empty');
     }
@@ -142,7 +143,7 @@ export class ThumbnailGenerationService {
    * Main thread thumbnail generation with batching for UI responsiveness
    */
   private async generateThumbnailsMainThread(
-    fileId: string,
+    fileId: FileId,
     pdfArrayBuffer: ArrayBuffer,
     pageNumbers: number[],
     scale: number,
@@ -150,48 +151,48 @@ export class ThumbnailGenerationService {
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
     const pdf = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
-    
+
     const allResults: ThumbnailResult[] = [];
     let completed = 0;
     const batchSize = 3; // Smaller batches for better UI responsiveness
-    
+
     // Process pages in small batches
     for (let i = 0; i < pageNumbers.length; i += batchSize) {
       const batch = pageNumbers.slice(i, i + batchSize);
-      
+
       // Process batch sequentially (to avoid canvas conflicts)
       for (const pageNumber of batch) {
         try {
           const page = await pdf.getPage(pageNumber);
           const viewport = page.getViewport({ scale });
-          
+
           const canvas = document.createElement('canvas');
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-          
+
           const context = canvas.getContext('2d');
           if (!context) {
             throw new Error('Could not get canvas context');
           }
-          
+
           await page.render({ canvasContext: context, viewport }).promise;
           const thumbnail = canvas.toDataURL('image/jpeg', quality);
-          
+
           allResults.push({ pageNumber, thumbnail, success: true });
-          
+
         } catch (error) {
           console.error(`Failed to generate thumbnail for page ${pageNumber}:`, error);
-          allResults.push({ 
-            pageNumber, 
-            thumbnail: '', 
-            success: false, 
-            error: error instanceof Error ? error.message : 'Unknown error' 
+          allResults.push({
+            pageNumber,
+            thumbnail: '',
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
           });
         }
       }
-      
+
       completed += batch.length;
-      
+
       // Report progress
       if (onProgress) {
         onProgress({
@@ -200,16 +201,16 @@ export class ThumbnailGenerationService {
           thumbnails: allResults.slice(-batch.length).filter(r => r.success)
         });
       }
-      
+
       // Yield control to prevent UI blocking
       await new Promise(resolve => setTimeout(resolve, 1));
     }
-    
+
     // Release reference to PDF document (don't destroy - keep in cache)
     this.releasePDFDocument(fileId);
-    
+
     this.cleanupCompletedDocument(fileId);
-    
+
     return allResults;
   }
 
@@ -227,7 +228,7 @@ export class ThumbnailGenerationService {
 
   addThumbnailToCache(pageId: string, thumbnail: string): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
-    
+
     // Enforce cache size limits
     while (this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes && this.thumbnailCache.size > 0) {
       this.evictLeastRecentlyUsed();
@@ -238,7 +239,7 @@ export class ThumbnailGenerationService {
       lastUsed: Date.now(),
       sizeBytes
     });
-    
+
     this.currentCacheSize += sizeBytes;
   }
 
@@ -284,7 +285,7 @@ export class ThumbnailGenerationService {
     this.pdfDocumentCache.clear();
   }
 
-  clearPDFCacheForFile(fileId: string): void {
+  clearPDFCacheForFile(fileId: FileId): void {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
       pdfWorkerManager.destroyDocument(cached.pdf);
@@ -296,7 +297,7 @@ export class ThumbnailGenerationService {
    * Clean up a PDF document from cache when thumbnail generation is complete
    * This frees up workers faster for better performance
    */
-  cleanupCompletedDocument(fileId: string): void {
+  cleanupCompletedDocument(fileId: FileId): void {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached && cached.refCount <= 0) {
       pdfWorkerManager.destroyDocument(cached.pdf);

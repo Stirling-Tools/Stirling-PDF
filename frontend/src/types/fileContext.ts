@@ -26,7 +26,8 @@ export type ModeType =
   | 'removeCertificateSign';
 
 // Normalized state types
-export type FileId = string;
+declare const tag: unique symbol;
+export type FileId = string & { readonly [tag]: 'FileId' };
 
 export interface ProcessedFilePage {
   thumbnail?: string;
@@ -69,14 +70,14 @@ export interface FileContextNormalizedFiles {
 export function createFileId(): FileId {
   // Use crypto.randomUUID for authoritative primary key
   if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
-    return window.crypto.randomUUID();
+    return window.crypto.randomUUID() as FileId;
   }
   // Fallback for environments without randomUUID
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
-  });
+  }) as FileId;
 }
 
 // Generate quick deduplication key from file metadata
@@ -136,7 +137,7 @@ export interface FileOperation {
   id: string;
   type: OperationType;
   timestamp: number;
-  fileIds: string[];
+  fileIds: FileId[];
   status: 'pending' | 'applied' | 'failed';
   data?: any;
   metadata?: {
@@ -150,7 +151,7 @@ export interface FileOperation {
 }
 
 export interface FileOperationHistory {
-  fileId: string;
+  fileId: FileId;
   fileName: string;
   operations: (FileOperation | PageOperation)[];
   createdAt: number;
@@ -165,7 +166,7 @@ export interface ViewerConfig {
 }
 
 export interface FileEditHistory {
-  fileId: string;
+  fileId: FileId;
   pageOperations: PageOperation[];
   lastModified: number;
 }
@@ -176,10 +177,10 @@ export interface FileContextState {
     ids: FileId[];
     byId: Record<FileId, FileRecord>;
   };
-  
-  // Pinned files - files that won't be consumed by tools  
+
+  // Pinned files - files that won't be consumed by tools
   pinnedFiles: Set<FileId>;
-  
+
   // UI state - file-related UI state only
   ui: {
     selectedFileIds: FileId[];
@@ -191,27 +192,27 @@ export interface FileContextState {
 }
 
 // Action types for reducer pattern
-export type FileContextAction = 
+export type FileContextAction =
   // File management actions
   | { type: 'ADD_FILES'; payload: { fileRecords: FileRecord[] } }
   | { type: 'REMOVE_FILES'; payload: { fileIds: FileId[] } }
   | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<FileRecord> } }
   | { type: 'REORDER_FILES'; payload: { orderedFileIds: FileId[] } }
-  
+
   // Pinned files actions
   | { type: 'PIN_FILE'; payload: { fileId: FileId } }
   | { type: 'UNPIN_FILE'; payload: { fileId: FileId } }
   | { type: 'CONSUME_FILES'; payload: { inputFileIds: FileId[]; outputFileRecords: FileRecord[] } }
-  
-  // UI actions  
+
+  // UI actions
   | { type: 'SET_SELECTED_FILES'; payload: { fileIds: FileId[] } }
   | { type: 'SET_SELECTED_PAGES'; payload: { pageNumbers: number[] } }
   | { type: 'CLEAR_SELECTIONS' }
   | { type: 'SET_PROCESSING'; payload: { isProcessing: boolean; progress: number } }
-  
+
   // Navigation guard actions (minimal for file-related unsaved changes only)
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
-  
+
   // Context management
   | { type: 'RESET_CONTEXT' };
 
@@ -236,20 +237,20 @@ export interface FileContextActions {
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
   clearSelections: () => void;
-  
+
   // Processing state - simple flags only
   setProcessing: (isProcessing: boolean, progress?: number) => void;
-  
+
   // File-related unsaved changes (minimal navigation guard support)
   setHasUnsavedChanges: (hasChanges: boolean) => void;
-  
+
   // Context management
   resetContext: () => void;
-  
+
   // Resource management
   trackBlobUrl: (url: string) => void;
-  scheduleCleanup: (fileId: string, delay?: number) => void;
-  cleanupFile: (fileId: string) => void;
+  scheduleCleanup: (fileId: FileId, delay?: number) => void;
+  cleanupFile: (fileId: FileId) => void;
 }
 
 // File selectors (separate from actions to avoid re-renders)
@@ -257,22 +258,22 @@ export interface FileContextSelectors {
   // File access - no state dependency, uses ref
   getFile: (id: FileId) => File | undefined;
   getFiles: (ids?: FileId[]) => File[];
-  
+
   // Record access - uses normalized state
   getFileRecord: (id: FileId) => FileRecord | undefined;
   getFileRecords: (ids?: FileId[]) => FileRecord[];
-  
+
   // Derived selectors
   getAllFileIds: () => FileId[];
   getSelectedFiles: () => File[];
   getSelectedFileRecords: () => FileRecord[];
-  
+
   // Pinned files selectors
   getPinnedFileIds: () => FileId[];
   getPinnedFiles: () => File[];
   getPinnedFileRecords: () => FileRecord[];
   isFilePinned: (file: File) => boolean;
-  
+
   // Stable signature for effect dependencies
   getFilesSignature: () => string;
 }

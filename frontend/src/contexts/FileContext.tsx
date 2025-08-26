@@ -1,14 +1,14 @@
 /**
  * FileContext - Manages PDF files for Stirling PDF multi-tool workflow
- * 
+ *
  * Handles file state, memory management, and resource cleanup for large PDFs (up to 100GB+).
  * Users upload PDFs once and chain tools (split → merge → compress → view) without reloading.
- * 
+ *
  * Key hooks:
  * - useFileState() - access file state and UI state
- * - useFileActions() - file operations (add/remove/update)  
+ * - useFileActions() - file operations (add/remove/update)
  * - useFileSelection() - for file selection state and actions
- * 
+ *
  * Memory management handled by FileLifecycleManager (PDF.js cleanup, blob URL revocation).
  */
 
@@ -38,16 +38,16 @@ const DEBUG = process.env.NODE_ENV === 'development';
 function FileContextInner({
   children,
   enableUrlSync = true,
-  enablePersistence = true 
+  enablePersistence = true
 }: FileContextProviderProps) {
   const [state, dispatch] = useReducer(fileContextReducer, initialFileContextState);
-  
+
   // IndexedDB context for persistence
   const indexedDB = enablePersistence ? useIndexedDB() : null;
 
   // File ref map - stores File objects outside React state
   const filesRef = useRef<Map<FileId, File>>(new Map());
-  
+
   // Stable state reference for selectors
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -60,8 +60,8 @@ function FileContextInner({
   const lifecycleManager = lifecycleManagerRef.current;
 
   // Create stable selectors (memoized once to avoid re-renders)
-  const selectors = useMemo<FileContextSelectors>(() => 
-    createFileSelectors(stateRef, filesRef), 
+  const selectors = useMemo<FileContextSelectors>(() =>
+    createFileSelectors(stateRef, filesRef),
     [] // Empty deps - selectors are stable
   );
 
@@ -75,7 +75,6 @@ function FileContextInner({
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string }): Promise<File[]> => {
     const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
-    
     // Persist to IndexedDB if enabled
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
       await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
@@ -86,7 +85,7 @@ function FileContextInner({
         }
       }));
     }
-    
+
     return addedFilesWithIds.map(({ file }) => file);
   }, [indexedDB, enablePersistence]);
 
@@ -110,11 +109,11 @@ function FileContextInner({
 
   // Helper to find FileId from File object
   const findFileId = useCallback((file: File): FileId | undefined => {
-    return Object.keys(stateRef.current.files.byId).find(id => {
+    return (Object.keys(stateRef.current.files.byId) as FileId[]).find(id => {
       const storedFile = filesRef.current.get(id);
-      return storedFile && 
-             storedFile.name === file.name && 
-             storedFile.size === file.size && 
+      return storedFile &&
+             storedFile.name === file.name &&
+             storedFile.size === file.size &&
              storedFile.lastModified === file.lastModified;
     });
   }, []);
@@ -143,11 +142,11 @@ function FileContextInner({
     ...baseActions,
     addFiles: addRawFiles,
     addProcessedFiles,
-    addStoredFiles, 
+    addStoredFiles,
     removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
       // Remove from memory and cleanup resources
       lifecycleManager.removeFiles(fileIds, stateRef);
-      
+
       // Remove from IndexedDB if enabled
       if (indexedDB && enablePersistence && deleteFromStorage !== false) {
         try {
@@ -157,7 +156,7 @@ function FileContextInner({
         }
       }
     },
-    updateFileRecord: (fileId: FileId, updates: Partial<FileRecord>) => 
+    updateFileRecord: (fileId: FileId, updates: Partial<FileRecord>) =>
       lifecycleManager.updateFileRecord(fileId, updates, stateRef),
     reorderFiles: (orderedFileIds: FileId[]) => {
       dispatch({ type: 'REORDER_FILES', payload: { orderedFileIds } });
@@ -166,7 +165,7 @@ function FileContextInner({
       lifecycleManager.cleanupAllFiles();
       filesRef.current.clear();
       dispatch({ type: 'RESET_CONTEXT' });
-      
+
       // Don't clear IndexedDB automatically - only clear in-memory state
       // IndexedDB should only be cleared when explicitly requested by user
     },
@@ -175,7 +174,7 @@ function FileContextInner({
       lifecycleManager.cleanupAllFiles();
       filesRef.current.clear();
       dispatch({ type: 'RESET_CONTEXT' });
-      
+
       // Then clear IndexedDB storage
       if (indexedDB && enablePersistence) {
         try {
@@ -191,14 +190,14 @@ function FileContextInner({
     consumeFiles: consumeFilesWrapper,
     setHasUnsavedChanges,
     trackBlobUrl: lifecycleManager.trackBlobUrl,
-    cleanupFile: (fileId: string) => lifecycleManager.cleanupFile(fileId, stateRef),
-    scheduleCleanup: (fileId: string, delay?: number) => 
+    cleanupFile: (fileId: FileId) => lifecycleManager.cleanupFile(fileId, stateRef),
+    scheduleCleanup: (fileId: FileId, delay?: number) =>
       lifecycleManager.scheduleCleanup(fileId, delay, stateRef)
   }), [
-    baseActions, 
-    addRawFiles, 
-    addProcessedFiles, 
-    addStoredFiles, 
+    baseActions,
+    addRawFiles,
+    addProcessedFiles,
+    addStoredFiles,
     lifecycleManager,
     setHasUnsavedChanges,
     consumeFilesWrapper,
@@ -247,12 +246,12 @@ function FileContextInner({
 export function FileContextProvider({
   children,
   enableUrlSync = true,
-  enablePersistence = true 
+  enablePersistence = true
 }: FileContextProviderProps) {
   if (enablePersistence) {
     return (
       <IndexedDBProvider>
-        <FileContextInner 
+        <FileContextInner
           enableUrlSync={enableUrlSync}
           enablePersistence={enablePersistence}
         >
@@ -262,7 +261,7 @@ export function FileContextProvider({
     );
   } else {
     return (
-      <FileContextInner 
+      <FileContextInner
         enableUrlSync={enableUrlSync}
         enablePersistence={enablePersistence}
       >

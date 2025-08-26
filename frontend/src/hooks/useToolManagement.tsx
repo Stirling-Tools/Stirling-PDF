@@ -3,19 +3,20 @@ import { useTranslation } from 'react-i18next';
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
+import { FileId } from '../types/fileContext';
 
 interface ToolManagementResult {
   selectedTool: ToolRegistryEntry | null;
-  toolSelectedFileIds: string[];
+  toolSelectedFileIds: FileId[];
   toolRegistry: Record<string, ToolRegistryEntry>;
-  setToolSelectedFileIds: (fileIds: string[]) => void;
+  setToolSelectedFileIds: (fileIds: FileId[]) => void;
   getSelectedTool: (toolKey: string | null) => ToolRegistryEntry | null;
 }
 
 export const useToolManagement = (): ToolManagementResult => {
   const { t } = useTranslation();
 
-  const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
+  const [toolSelectedFileIds, setToolSelectedFileIds] = useState<FileId[]>([]);
 
   // Build endpoints list from registry entries with fallback to legacy mapping
   const baseRegistry = useFlatToolRegistry();

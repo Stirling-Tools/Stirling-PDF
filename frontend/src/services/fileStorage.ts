@@ -4,10 +4,11 @@
  * Now uses centralized IndexedDB manager
  */
 
+import { FileId } from '../types/fileContext';
 import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
 
 export interface StoredFile {
-  id: string;
+  id: FileId;
   name: string;
   type: string;
   size: number;
@@ -38,7 +39,7 @@ class FileStorageService {
   /**
    * Store a file in IndexedDB with external UUID
    */
-  async storeFile(file: File, fileId: string, thumbnail?: string): Promise<StoredFile> {
+  async storeFile(file: File, fileId: FileId, thumbnail?: string): Promise<StoredFile> {
     const db = await this.getDatabase();
 
     const arrayBuffer = await file.arrayBuffer();
@@ -88,7 +89,7 @@ class FileStorageService {
   /**
    * Retrieve a file from IndexedDB
    */
-  async getFile(id: string): Promise<StoredFile | null> {
+  async getFile(id: FileId): Promise<StoredFile | null> {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
@@ -166,7 +167,7 @@ class FileStorageService {
   /**
    * Delete a file from IndexedDB
    */
-  async deleteFile(id: string): Promise<void> {
+  async deleteFile(id: FileId): Promise<void> {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
@@ -182,12 +183,12 @@ class FileStorageService {
   /**
    * Update the lastModified timestamp of a file (for most recently used sorting)
    */
-  async touchFile(id: string): Promise<boolean> {
+  async touchFile(id: FileId): Promise<boolean> {
     const db = await this.getDatabase();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
-      
+
       const getRequest = store.get(id);
       getRequest.onsuccess = () => {
         const file = getRequest.result;
@@ -438,9 +439,9 @@ class FileStorageService {
    * Convert StoredFile to the format expected by FileContext.addStoredFiles()
    * This is the recommended way to load stored files into FileContext
    */
-  createFileWithMetadata(storedFile: StoredFile): { file: File; originalId: string; metadata: { thumbnail?: string } } {
+  createFileWithMetadata(storedFile: StoredFile): { file: File; originalId: FileId; metadata: { thumbnail?: string } } {
     const file = this.createFileFromStored(storedFile);
-    
+
     return {
       file,
       originalId: storedFile.id,
@@ -461,7 +462,7 @@ class FileStorageService {
   /**
    * Get file data as ArrayBuffer for streaming/chunked processing
    */
-  async getFileData(id: string): Promise<ArrayBuffer | null> {
+  async getFileData(id: FileId): Promise<ArrayBuffer | null> {
     try {
       const storedFile = await this.getFile(id);
       return storedFile ? storedFile.data : null;
@@ -474,7 +475,7 @@ class FileStorageService {
   /**
    * Create a temporary blob URL that gets revoked automatically
    */
-  async createTemporaryBlobUrl(id: string): Promise<string | null> {
+  async createTemporaryBlobUrl(id: FileId): Promise<string | null> {
     const data = await this.getFileData(id);
     if (!data) return null;
 
@@ -492,7 +493,7 @@ class FileStorageService {
   /**
    * Update thumbnail for an existing file
    */
-  async updateThumbnail(id: string, thumbnail: string): Promise<boolean> {
+  async updateThumbnail(id: FileId, thumbnail: string): Promise<boolean> {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
