@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 export interface PageEditorState {
   // Selection state
   selectionMode: boolean;
-  selectedPageNumbers: number[];
+  selectedPageIds: string[];
   
   // Animation state  
   movingPage: number | null;
@@ -17,15 +17,15 @@ export interface PageEditorState {
   
   // Actions
   setSelectionMode: (mode: boolean) => void;
-  setSelectedPageNumbers: (pages: number[]) => void;
+  setSelectedPageIds: (pages: string[]) => void;
   setMovingPage: (pageNumber: number | null) => void;
   setIsAnimating: (animating: boolean) => void;
   setSplitPositions: (positions: Set<number>) => void;
   setExportLoading: (loading: boolean) => void;
   
   // Helper functions
-  togglePage: (pageNumber: number) => void;
-  toggleSelectAll: (totalPages: number) => void;
+  togglePage: (pageId: string) => void;
+  toggleSelectAll: (allPageIds: string[]) => void;
   animateReorder: () => void;
 }
 
@@ -36,7 +36,7 @@ export interface PageEditorState {
 export function usePageEditorState(): PageEditorState {
   // Selection state
   const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedPageNumbers, setSelectedPageNumbers] = useState<number[]>([]);
+  const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
   
   // Animation state
   const [movingPage, setMovingPage] = useState<number | null>(null);
@@ -49,20 +49,19 @@ export function usePageEditorState(): PageEditorState {
   const [exportLoading, setExportLoading] = useState(false);
   
   // Helper functions
-  const togglePage = useCallback((pageNumber: number) => {
-    setSelectedPageNumbers(prev => 
-      prev.includes(pageNumber)
-        ? prev.filter(n => n !== pageNumber)
-        : [...prev, pageNumber]
+  const togglePage = useCallback((pageId: string) => {
+    setSelectedPageIds(prev => 
+      prev.includes(pageId)
+        ? prev.filter(id => id !== pageId)
+        : [...prev, pageId]
     );
   }, []);
 
-  const toggleSelectAll = useCallback((totalPages: number) => {
-    if (!totalPages) return;
+  const toggleSelectAll = useCallback((allPageIds: string[]) => {
+    if (!allPageIds.length) return;
     
-    const allPageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
-    setSelectedPageNumbers(prev => 
-      prev.length === allPageNumbers.length ? [] : allPageNumbers
+    setSelectedPageIds(prev => 
+      prev.length === allPageIds.length ? [] : allPageIds
     );
   }, []);
   
@@ -74,7 +73,7 @@ export function usePageEditorState(): PageEditorState {
   return {
     // State
     selectionMode,
-    selectedPageNumbers,
+    selectedPageIds,
     movingPage,
     isAnimating,
     splitPositions,
@@ -82,7 +81,7 @@ export function usePageEditorState(): PageEditorState {
     
     // Setters
     setSelectionMode,
-    setSelectedPageNumbers,
+    setSelectedPageIds,
     setMovingPage,
     setIsAnimating,
     setSplitPositions,

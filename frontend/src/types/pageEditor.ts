@@ -56,11 +56,14 @@ export interface PageEditorFunctions {
   handleSelectAll: () => void;
   handleDeselectAll: () => void;
   handleSetSelectedPages: (pageNumbers: number[]) => void;
+  showExportPreview: (selectedOnly: boolean) => void;
   onExportSelected: () => void;
   onExportAll: () => void;
+  applyChanges: () => void;
   exportLoading: boolean;
   selectionMode: boolean;
-  selectedPages: number[];
+  selectedPageIds: string[];
+  displayDocument?: PDFDocument;
   splitPositions: Set<number>;
   totalPages: number;
 }

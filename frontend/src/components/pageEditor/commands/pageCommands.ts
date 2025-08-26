@@ -403,8 +403,7 @@ export class PageBreakCommand extends DOMCommand {
   constructor(
     private selectedPageNumbers: number[],
     private getCurrentDocument: () => PDFDocument | null,
-    private setDocument: (doc: PDFDocument) => void,
-    private setSelectedPages: (pages: number[]) => void
+    private setDocument: (doc: PDFDocument) => void
   ) {
     super();
   }
@@ -455,19 +454,7 @@ export class PageBreakCommand extends DOMCommand {
 
     this.setDocument(updatedDocument);
     
-    // Maintain existing selection by mapping original selected pages to their new positions
-    const updatedSelection: number[] = [];
-    this.selectedPageNumbers.forEach(originalPageNum => {
-      // Find the original page by matching the page ID from the original document
-      const originalPage = this.originalDocument?.pages[originalPageNum - 1];
-      if (originalPage) {
-        const foundPage = newPages.find(page => page.id === originalPage.id && !page.isBlankPage);
-        if (foundPage) {
-          updatedSelection.push(foundPage.pageNumber);
-        }
-      }
-    });
-    this.setSelectedPages(updatedSelection);
+    // No need to maintain selection - page IDs remain stable, so selection persists automatically
   }
 
   undo(): void {

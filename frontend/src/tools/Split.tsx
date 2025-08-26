@@ -28,13 +28,14 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   }, [splitParams.parameters]);
 
-  useEffect(() => {
+    useEffect(() => {
     // Reset results when selected files change (user selected different files)
     if (selectedFiles.length > 0) {
       splitOperation.resetResults();
       onPreviewFile?.(null);
     }
   }, [selectedFiles]);
+
   const handleSplit = async () => {
     try {
       await splitOperation.executeOperation(splitParams.parameters, selectedFiles);
@@ -56,8 +57,7 @@ const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleSettingsReset = () => {
     splitOperation.resetResults();
     onPreviewFile?.(null);
-    actions.setMode("split");
-  };
+    };
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults = splitOperation.files.length > 0 || splitOperation.downloadUrl !== null;
