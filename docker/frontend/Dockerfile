@@ -6,14 +6,24 @@ WORKDIR /app
 # Copy package files
 COPY frontend/package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (uses .npmrc secret if available, otherwise anonymous)
+RUN --mount=type=secret,id=npmrc,target=/tmp/.npmrc \
+    if [ -s /tmp/.npmrc ]; then \
+      cp /tmp/.npmrc /root/.npmrc; \
+    fi && \
+    npm ci && \
+    rm -f /root/.npmrc
 
 # Copy source code
 COPY frontend .
 
-# Build the application
-RUN npm run build
+# Build the application (uses .npmrc secret if available, otherwise anonymous)
+RUN --mount=type=secret,id=npmrc,target=/tmp/.npmrc \
+    if [ -s /tmp/.npmrc ]; then \
+      cp /tmp/.npmrc /root/.npmrc; \
+    fi && \
+    npm run build && \
+    rm -f /root/.npmrc
 
 # Production stage
 FROM nginx:alpine

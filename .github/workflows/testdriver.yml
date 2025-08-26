@@ -131,6 +131,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
+          registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
 
       - name: Run TestDriver.ai
@@ -147,6 +148,7 @@ jobs:
             1. /run testing/testdriver/test.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           FORCE_COLOR: "3"
 
   cleanup:

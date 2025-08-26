@@ -143,14 +143,21 @@ jobs:
         uses: actions/setup-node@v4.1.0
         with:
           node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - name: Install frontend dependencies
         run: cd frontend && npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Build frontend
         run: cd frontend && npm run build
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Run frontend tests
         run: cd frontend && npm run test -- --run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4.6.2
         with:

@@ -260,6 +260,15 @@ jobs:
             echo "Backend image needs to be built"
           fi
 
+      - name: Create .npmrc for Docker build
+        if: steps.check-frontend.outputs.exists == 'false'
+        run: |
+          if [ "${{ secrets.NPM_TOKEN }}" != "" ]; then
+            echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > /tmp/.npmrc
+          else
+            touch /tmp/.npmrc
+          fi
+
       - name: Build and push V2 frontend image
         if: steps.check-frontend.outputs.exists == 'false'
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
@@ -270,6 +279,8 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
+          secrets: |
+            npmrc=/tmp/.npmrc
 
       - name: Build and push V2 backend image
         if: steps.check-backend.outputs.exists == 'false'
