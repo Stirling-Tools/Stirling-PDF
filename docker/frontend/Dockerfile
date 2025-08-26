@@ -8,10 +8,14 @@ COPY frontend/package*.json ./
 
 # Install dependencies (uses .npmrc secret if available, otherwise anonymous)
 RUN --mount=type=secret,id=npmrc \
+    set -e && \
     if [ -s /run/secrets/npmrc ]; then \
+      echo "Using authenticated npm registry" && \
       echo "$(cat /run/secrets/npmrc)" > /root/.npmrc; \
+    else \
+      echo "Using anonymous npm registry (no token provided)"; \
     fi && \
-    npm ci && \
+    npm ci --loglevel=warn && \
     rm -f /root/.npmrc
 
 # Copy source code
@@ -19,8 +23,12 @@ COPY frontend .
 
 # Build the application (uses .npmrc secret if available, otherwise anonymous)
 RUN --mount=type=secret,id=npmrc \
+    set -e && \
     if [ -s /run/secrets/npmrc ]; then \
+      echo "Using authenticated npm registry for build" && \
       echo "$(cat /run/secrets/npmrc)" > /root/.npmrc; \
+    else \
+      echo "Using anonymous npm registry for build (no token provided)"; \
     fi && \
     npm run build && \
     rm -f /root/.npmrc
