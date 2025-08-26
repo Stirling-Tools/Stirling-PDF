@@ -32,6 +32,34 @@
             border-radius: 5px;
             padding: 10px;
         }
+
+        /* Better visibility for selected redaction option */
+        .redaction-options-group .form-check {
+            border: 1px solid var(--md-sys-color-surface-3);
+            border-radius: 8px;
+            padding: 10px 12px;
+            transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+        }
+
+        .redaction-options-group .form-check + .form-check { margin-top: .5rem; }
+
+        .redaction-options-group .form-check:hover {
+            background-color: var(--md-sys-color-surface-1);
+        }
+
+        .redaction-options-group .form-check.selected {
+            border-color: #0d6efd;
+            background-color: rgba(13,110,253,0.06);
+            box-shadow: 0 0 0 2px rgba(13,110,253,0.1) inset;
+        }
+
+        .redaction-options-group .form-check .form-check-label {
+            font-weight: 600;
+        }
+
+        .redaction-options-group small.form-text {
+            margin-left: 1.8rem; /* align with radio */
+        }
     </style>
 </head>
 
@@ -79,13 +107,13 @@
                             </div>
                             <div class="form-check mb-2">
                                 <input aria-describedby="delete-desc" class="form-check-input" id="deleteText" name="redactionMode" type="radio" value="aggressive">
-                                <label class="form-check-label" for="deleteText" th:text="#{autoRedact.deleteTextLabel}">Delete Text</label>
-                                <small class="form-text text-muted d-block mt-1" id="delete-desc" th:text="#{autoRedact.deleteTextDescription}">Removes the text completely. This may alter the original layout or leave a gap.</small>
+                                <label class="form-check-label" for="deleteText" th:text="#{autoRedact.deleteTextLabel}">Remove Text</label>
+                                <small class="form-text text-muted d-block mt-1" id="delete-desc" th:text="#{autoRedact.deleteTextDescription}">Removes text completely, allowing the surrounding content to shift. This may change the document's original appearance.</small>
                             </div>
                             <div class="form-check mb-3">
                                 <input aria-describedby="keep-desc" class="form-check-input" id="keepLayout" name="redactionMode" type="radio" value="moderate">
-                                <label class="form-check-label" for="keepLayout" th:text="#{autoRedact.keepLayoutLabel}">Keep Layout</label>
-                                <small class="form-text text-muted d-block mt-1" id="keep-desc" th:text="#{autoRedact.keepLayoutDescription}">Covers text with a redaction box, preserving the page's original design.</small>
+                                <label class="form-check-label" for="keepLayout" th:text="#{autoRedact.keepLayoutLabel}">Remove Text & Cover (Preserve Layout)</label>
+                                <small class="form-text text-muted d-block mt-1" id="keep-desc" th:text="#{autoRedact.keepLayoutDescription}">Removes the underlying text and places a redaction box in its place, preserving the document's original layout.</small>
                             </div>
 
                             <div class="form-check">
@@ -127,7 +155,9 @@
                             <div id="languages">
                                 <div class="form-check" th:each="language, iterStat : ${languages}">
                                     <input onchange="handleLangSelection()" required th:checked="${language == 'eng'}" th:id="${'language-' + language}" th:name="languages" th:value="${language}" type="checkbox" />
-                                    <label th:for="${'language-' + language}" th:text="${language}"></label>
+                     <label th:attr="data-lang-code=${language}, data-lang-name=#{'lang.' + language}"
+                         th:for="${'language-' + language}"
+                         th:text="${language}"></label>
                                 </div>
                             </div>
                             <small class="form-text text-muted" id="ocr-desc">Used when OCR restoration is needed</small>
@@ -180,11 +210,7 @@
                 }
         }
 
-        // Translations for language names
-        const languageTranslations = {};
-        /*[# th:each="lang : ${languages}"]*/
-            languageTranslations['[(${lang})]'] = /*[[#{${'lang.' + lang}}]]*/[(${lang})];
-        /*[/]*/
+    // Helper to get translated language from data attribute
 
         const localeToTesseract = {
             'en': 'eng', 'fr': 'fra', 'de': 'deu', 'es': 'spa', 'it': 'ita', 'pt': 'por', 'ru': 'rus',
@@ -195,7 +221,9 @@
         };
 
         function getTranslatedLanguageName(shortCode) {
-            return languageTranslations[shortCode] || shortCode;
+            // Try to find a label with matching code and read its data-lang-name
+            const label = document.querySelector(`#languages label[for="language-${shortCode}"]`);
+            return (label && (label.dataset.langName || label.textContent)) || shortCode;
         }
 
         function prioritizeLanguages() {
@@ -207,7 +235,9 @@
                 const label = element.querySelector('label');
                 if (label) {
                     const langCode = label.getAttribute('for').split('-')[1];
-                    label.textContent = getTranslatedLanguageName(langCode);
+                    // Display translated name if available
+                    const translated = label.dataset.langName;
+                    if (translated) label.textContent = translated;
                 }
             });
             const browserLanguage = document.documentElement.lang || navigator.language || navigator.userLanguage;
@@ -242,7 +272,7 @@
         const guaranteeRedactionCheckbox = document.getElementById('guaranteeRedaction');
         const defaultColor = document.getElementById('defaultColor');
 
-        function updateMode() {
+    function updateMode() {
             const selectedMode = document.querySelector('input[name="redactionMode"]:checked');
             if (selectedMode) {
                 // Set aggressive mode for delete text option
@@ -256,6 +286,11 @@
                     // Delete Text and Keep Layout modes disable PDF image
                     guaranteeRedactionCheckbox.checked = false;
                 }
+
+                // Highlight selected card
+                document.querySelectorAll('.redaction-options-group .form-check').forEach(div => div.classList.remove('selected'));
+                const parent = selectedMode.closest('.form-check');
+                if (parent) parent.classList.add('selected');
             }
         }
 

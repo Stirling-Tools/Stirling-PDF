@@ -1654,7 +1654,8 @@ public class RedactionService {
                     if (cw > 0) {
                         int count = Math.max(1, Math.round(targetWidth / cw));
                         int max = (originalWord != null ? originalWord.length() : 1) * 2;
-                        return " ".repeat(Math.min(count, max));
+                        // Repeat the chosen alternative character, not spaces
+                        return alt.repeat(Math.min(count, max));
                     }
                 } catch (Exception ignored) {
                 }
@@ -1969,9 +1970,11 @@ public class RedactionService {
                 try {
                     if (bytes.length >= 2) {
                         if ((bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
+                            // UTF-16BE BOM
                             return new String(
-                                    bytes, 2, bytes.length - 2, StandardCharsets.UTF_16LE);
+                                    bytes, 2, bytes.length - 2, StandardCharsets.UTF_16BE);
                         } else if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
+                            // UTF-16LE BOM
                             return new String(
                                     bytes, 2, bytes.length - 2, StandardCharsets.UTF_16LE);
                         }
@@ -2384,7 +2387,9 @@ public class RedactionService {
             }
 
             try {
-                if ("Tj".equals(segment.operatorName) || "'".equals(segment.operatorName)) {
+                if ("Tj".equals(segment.operatorName)
+                        || "'".equals(segment.operatorName)
+                        || "\"".equals(segment.operatorName)) {
                     log.debug(
                             "Creating modification task for Tj operator at segment {}",
                             segmentIndex);
@@ -2702,9 +2707,10 @@ public class RedactionService {
     }
 
     private String handleQuotedOperator(Object token, PDFont font) {
+        // Do not add an extra newline; it shifts indices and breaks match ranges
         return (token instanceof COSString cosString)
-                ? "\n" + extractStringWithFallbacks(cosString, font)
-                : "\n";
+                ? extractStringWithFallbacks(cosString, font)
+                : "";
     }
 
     private String handleTJOperator(Object token, PDFont font) {
