@@ -68,7 +68,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
-      icon: <LocalIcon icon="automation-outline" width="1.25rem" height="1.25rem" />,
+      icon: <LocalIcon icon="automation-outline" width="1.6rem" height="1.6rem" />,
       size: 'lg',
       isRound: false,
       type: 'navigation',
@@ -85,7 +85,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'files',
       name: t("quickAccess.files", "Files"),
-      icon: <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />,
+      icon: <LocalIcon icon="folder-rounded" width="1.6rem" height="1.6rem" />,
       isRound: true,
       size: 'lg',
       type: 'modal',
@@ -156,7 +156,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
 
                   <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
                     <ActionIcon
-                      size={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? (config.size || 'xl') : 'lg'}
+                      size={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? (config.size || 'lg') : 'lg'}
                       variant="subtle"
                        onClick={() => {
                          config.onClick();
