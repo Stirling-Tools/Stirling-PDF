@@ -65,7 +65,8 @@ export function createToolFlow(config: ToolFlowConfig) {
   const steps = createToolSteps();
 
   return (
-    <Stack gap="sm" p="sm" h="95vh" w="100%" style={{ overflow: 'auto' }}>
+    <Stack gap="sm" p="sm" >
+    {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
       <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>
         {config.title && <ToolWorkflowTitle {...config.title} />}
 
