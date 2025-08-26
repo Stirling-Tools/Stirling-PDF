@@ -27,7 +27,7 @@ const createViewOptions = (switchingTo: ModeType | null) => [
         ) : (
           <VisibilityIcon fontSize="small" />
         )}
-        <span>Read</span>
+        <span>Viewer</span>
       </div>
     ),
     value: "viewer",
