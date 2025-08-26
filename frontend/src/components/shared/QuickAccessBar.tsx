@@ -188,7 +188,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
           {buttonConfigs
             .filter(config => config.id === 'config')
             .map(config => (
-                <div className="flex flex-col items-center gap-1">
+                <div key={config.id} className="flex flex-col items-center gap-1">
                   <ActionIcon
                     size={config.size || 'lg'}
                     variant="subtle"
