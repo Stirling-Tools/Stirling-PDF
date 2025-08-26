@@ -22,18 +22,14 @@ const viewOptionStyle = {
 const createViewOptions = (currentView: ModeType, switchingTo: ModeType | null) => [
   {
     label: (
-      <Tooltip content="Viewer" position="bottom" arrow={true}>
-        <div style={viewOptionStyle as React.CSSProperties}>
-          {currentView === "viewer" ? (
-            <>
-              {switchingTo === "viewer" ? <Loader size="xs" /> : <VisibilityIcon fontSize="small" />}
-              <span>Viewer</span>
-            </>
-          ) : (
-            switchingTo === "viewer" ? <Loader size="xs" /> : <VisibilityIcon fontSize="small" />
-          )}
-        </div>
-      </Tooltip>
+      <div style={viewOptionStyle as React.CSSProperties}>
+        {switchingTo === "viewer" ? (
+          <Loader size="xs" />
+        ) : (
+          <VisibilityIcon fontSize="small" />
+        )}
+        <span>Viewer</span>
+      </div>
     ),
     value: "viewer",
   },

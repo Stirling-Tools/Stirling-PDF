@@ -13,15 +13,16 @@ import { useOCRParameters } from "../hooks/tools/ocr/useOCRParameters";
 import { useOCROperation } from "../hooks/tools/ocr/useOCROperation";
 import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useOCRTips } from "../components/tooltips/useOCRTips";
+import { useAdvancedOCRTips } from "../components/tooltips/useAdvancedOCRTips";
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { actions } = useNavigationActions();
   const { selectedFiles } = useFileSelection();
 
   const ocrParams = useOCRParameters();
   const ocrOperation = useOCROperation();
   const ocrTips = useOCRTips();
+  const advancedOCRTips = useAdvancedOCRTips();
 
   // Step expansion state management
   const [expandedStep, setExpandedStep] = useState<"files" | "settings" | "advanced" | null>("files");
@@ -82,7 +83,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     },
     steps: [
       {
-        title: "Settings",
+        title: t("ocr.settings.title", "Settings"),
         isCollapsed: !hasFiles || settingsCollapsed,
         onCollapsedClick: hasResults
           ? handleSettingsReset
@@ -108,6 +109,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               if (!hasFiles) return; // Only allow if files are selected
               setExpandedStep(expandedStep === "advanced" ? null : "advanced");
             },
+        tooltip: advancedOCRTips,
         content: (
           <AdvancedOCRSettings
             advancedOptions={ocrParams.parameters.additionalOptions}
