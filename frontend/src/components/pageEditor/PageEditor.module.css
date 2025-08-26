@@ -1,67 +1,265 @@
-/* Page container hover effects - optimized for smooth scrolling */
-.pageContainer {
-  transition: transform 0.2s ease-in-out;
-  /* Enable hardware acceleration for smoother scrolling */
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+/* =========================
+   NEW styles for card UI
+   ========================= */
+
+   .card {
+    background: var(--file-card-bg);
+    border-radius: 0.0625rem;
+    cursor: pointer;
+    transition: box-shadow 0.18s ease, outline-color 0.18s ease, transform 0.18s ease;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  .card:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .card[data-selected="true"] {
+    box-shadow: var(--shadow-sm);
+  }
+  
+  /* While dragging */
+  .card.dragging,
+  .card:global(.dragging) {
+    outline: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-md);
+    transform: none !important;
+  }
+  
+  /* -------- Header -------- */
+  .header {
+    height: 2.25rem;
+    border-radius: 0.0625rem 0.0625rem 0 0;
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    padding: 0 6px;
+    user-select: none;
+    background: var(--bg-toolbar);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-default);
+  }
+  .headerResting {
+    background: #3B4B6E; /* dark blue for unselected in light mode */
+    color: #FFFFFF;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .headerSelected {
+    background: var(--header-selected-bg);
+    color: var(--header-selected-fg);
+    border-bottom: 1px solid var(--header-selected-bg);
+  }
+  
+  /* Selected border color in light mode */
+  :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
+    outline-color: var(--card-selected-border);
+  }
+  
+  /* Reserve space for checkbox instead of logo */
+  .logoMark {
+    margin-left: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .headerIndex {
+    text-align: center;
+    font-weight: 500;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+  }
+  
+  .kebab {
+    justify-self: end;
+    color: inherit;
+  }
+  
+  /* Menu dropdown */
+  .menuDropdown {
+    min-width: 210px;
+  }
+  
+  /* -------- Title / Meta -------- */
+  .title {
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+  .meta {
+    margin-top: 2px;
+    color: var(--text-secondary);
+  }
+  
+  /* -------- Preview area -------- */
+  .previewBox {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--file-card-bg);
+  }
+  .previewPaper {
+    width: 100%;
+    height: calc(100% - 6px);
+    min-height: 9rem;
+    justify-content: center;
+    display: grid;
+    position: relative;
+    overflow: hidden;
+    background: var(--file-card-bg);
+  }
+  
+  /* Thumbnail fallback */
+  .previewPaper[data-thumb-missing="true"]::after {
+    content: "No preview";
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    color: var(--text-secondary);
+    font-weight: 600; font-size: 12px;
+  }
+  
+  /* Drag handle grip */
+  .dragHandle {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    color: var(--text-secondary);
+    z-index: 1;
+    cursor: grab;
+    display: inline-flex;
+  }
+  
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .card,
+    .menuDropdown {
+      transition: none !important;
+    }
+  }
+
+  /* =========================
+     DARK MODE OVERRIDES
+     ========================= */
+  :global([data-mantine-color-scheme="dark"]) .card {
+    outline-color: #3A4047; /* deselected stroke */
+  }
+  :global([data-mantine-color-scheme="dark"]) .card[data-selected="true"] {
+    outline-color: #4B525A; /* selected stroke (subtle grey) */
+  }
+  :global([data-mantine-color-scheme="dark"]) .headerResting {
+    background: #1F2329; /* requested default unselected color */
+    color: var(--tool-header-text); /* #D0D6DC */
+    border-bottom-color: var(--tool-header-border); /* #3A4047 */
+  }
+  :global([data-mantine-color-scheme="dark"]) .headerSelected {
+    background: var(--tool-header-border); /* #3A4047 */
+    color: var(--tool-header-text); /* #D0D6DC */
+    border-bottom-color: var(--tool-header-border);
+  }
+  :global([data-mantine-color-scheme="dark"]) .title {
+    color: #D0D6DC; /* title text */
+  }
+  :global([data-mantine-color-scheme="dark"]) .meta {
+    color: #6B7280; /* subtitle text */
+  }
+
+  /* Light mode selected header stroke override */
+  :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
+    outline-color: #3B4B6E;
+  }
+  
+  /* =========================
+     (Optional) legacy styles from your
+     previous component kept here to
+     avoid breaking other imports.
+     They are not used by the new card.
+     ========================= */
+  
+  .pageContainer {
+    transition: transform 0.2s ease-in-out;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  .pageContainer:hover { transform: scale(1.02) translateZ(0); }
+  .pageContainer:hover .pageNumber { opacity: 1 !important; }
+  .pageContainer:hover .pageHoverControls { opacity: 1 !important; }
+  .checkboxContainer { transform: none !important; transition: none !important; }
+  
+  .pageMoveAnimation { transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+  .pageMoving { z-index: 10; transform: scale(1.05); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+  
+  .multiDragIndicator {
+    position: fixed;
+    background: rgba(59, 130, 246, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transform: translate(-50%, -50%);
+    backdrop-filter: blur(4px);
+  }
+  
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .pulse { animation: pulse 1s infinite; }
+
+  .actionsOverlay {
+    position: absolute;
+    left: 0;
+    top: 44px; /* just below header */
+    background: var(--bg-toolbar);
+    border-bottom: 1px solid var(--border-default);
+    z-index: 20;
+    overflow: hidden;
+    animation: slideDown 140ms ease-out;
+    color: var(--text-primary);
+  }
+  @keyframes slideDown { from { transform: translateY(-8px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+
+  .actionRow {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+  }
+  .actionRow:hover { background: var(--hover-bg); }
+  .actionDanger { color: var(--text-brand-accent); }
+  .actionsDivider { height: 1px; background: var(--border-default); margin: 4px 0; }
+
+.pinIndicator {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 1;
+  color: rgba(0, 0, 0, 0.35); /* match drag handle color */
 }
 
-.pageContainer:hover {
-  transform: scale(1.02) translateZ(0);
-}
-
-.pageContainer:hover .pageNumber {
-  opacity: 1 !important;
-}
-
-.pageContainer:hover .pageHoverControls {
-  opacity: 1 !important;
-}
-
-/* Checkbox container - prevent transform inheritance */
-.checkboxContainer {
-  transform: none !important;
-  transition: none !important;
-}
-
-/* Page movement animations */
-.pageMoveAnimation {
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.pageMoving {
-  z-index: 10;
-  transform: scale(1.05);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-/* Multi-page drag indicator */
-.multiDragIndicator {
-  position: fixed;
-  background: rgba(59, 130, 246, 0.9);
+.unsupportedPill {
+  margin-left: 1.75rem;
+  background: #6B7280;
   color: white;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  pointer-events: none;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  transform: translate(-50%, -50%);
-  backdrop-filter: blur(4px);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: 20px;
 }
-
-/* Animations */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.pulse {
-  animation: pulse 1s infinite;
-}
+  
