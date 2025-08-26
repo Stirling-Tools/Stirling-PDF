@@ -23,7 +23,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
         <div style={{ display: 'flex', gap: '4px' }}>
           <Button
             variant={parameters.compressionMethod === 'quality' ? 'filled' : 'outline'}
-            color={parameters.compressionMethod === 'quality' ? 'blue' : 'gray'}
+            color={parameters.compressionMethod === 'quality' ? 'blue' : 'var(--text-muted)'}
             onClick={() => onParameterChange('compressionMethod', 'quality')}
             disabled={disabled}
             style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
@@ -34,7 +34,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
           </Button>
           <Button
             variant={parameters.compressionMethod === 'filesize' ? 'filled' : 'outline'}
-            color={parameters.compressionMethod === 'filesize' ? 'blue' : 'gray'}
+            color={parameters.compressionMethod === 'filesize' ? 'blue' : 'var(--text-muted)'}
             onClick={() => onParameterChange('compressionMethod', 'filesize')}
             disabled={disabled}
             style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
