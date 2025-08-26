@@ -2110,13 +2110,24 @@
   "automation": {
     "suggested": {
       "securePdfIngestion": "Secure PDF Ingestion",
-      "securePdfIngestionDesc": "Sanitise → OCR/Cleanup → PDF/A → Compress",
+      "securePdfIngestionDesc": "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size.",
       "emailPreparation": "Email Preparation", 
-      "emailPreparationDesc": "Compress → Split by Size 20MB → Sanitize metadata",
+      "emailPreparationDesc": "Optimizes PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy.",
       "secureWorkflow": "Security Workflow",
-      "secureWorkflowDesc": "Sanitize PDFs and add password protection",
-      "optimizationWorkflow": "Optimization Workflow",
-      "optimizationWorkflowDesc": "Repair and compress PDFs for better performance"
+      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access.",
+      "processImages": "Process Images",
+      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
+    },
+    "operation": {
+      "sanitize": "Sanitize",
+      "ocrCleanup": "OCR & Cleanup",
+      "pdfaConversion": "PDF/A Conversion",
+      "compress": "Compress",
+      "splitBySize": "Split by Size (20MB)",
+      "sanitizeMetadata": "Remove Metadata",
+      "addPassword": "Add Password Protection",
+      "imageToPdf": "Image to PDF",
+      "ocr": "OCR Text Extraction"
     }
   },
   "automate": {

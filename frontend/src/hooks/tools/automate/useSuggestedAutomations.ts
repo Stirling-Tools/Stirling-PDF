@@ -19,10 +19,11 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
       {
         id: "secure-pdf-ingestion",
         name: t("automation.suggested.securePdfIngestion", "Secure PDF Ingestion"),
-        description: t("automation.suggested.securePdfIngestionDesc", "Sanitise → OCR/Cleanup → PDF/A → Compress"),
+        description: t("automation.suggested.securePdfIngestionDesc", "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size."),
         operations: [
           {
             operation: "sanitize",
+            displayName: t("automation.operation.sanitize", "Sanitize"),
             parameters: {
               removeJavaScript: true,
               removeEmbeddedFiles: true,
@@ -34,6 +35,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "ocr",
+            displayName: t("automation.operation.ocrCleanup", "OCR & Cleanup"),
             parameters: {
               languages: ['eng'],
               ocrType: 'skip-text',
@@ -43,6 +45,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "convert",
+            displayName: t("automation.operation.pdfaConversion", "PDF/A Conversion"),
             parameters: {
               fromExtension: 'pdf',
               toExtension: 'pdfa',
@@ -53,6 +56,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "compress",
+            displayName: t("automation.operation.compress", "Compress"),
             parameters: {
               compressionLevel: 5,
               grayscale: false,
@@ -70,10 +74,11 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
       {
         id: "email-preparation",
         name: t("automation.suggested.emailPreparation", "Email Preparation"),
-        description: t("automation.suggested.emailPreparationDesc", "Compress → Split by Size 20MB → Sanitize metadata"),
+        description: t("automation.suggested.emailPreparationDesc", "Optimizes PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy."),
         operations: [
           {
             operation: "compress",
+            displayName: t("automation.operation.compress", "Compress"),
             parameters: {
               compressionLevel: 5,
               grayscale: false,
@@ -85,6 +90,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "splitPdf",
+            displayName: t("automation.operation.splitBySize", "Split by Size (20MB)"),
             parameters: {
               mode: 'bySizeOrCount',
               pages: '',
@@ -100,6 +106,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "sanitize",
+            displayName: t("automation.operation.sanitizeMetadata", "Remove Metadata"),
             parameters: {
               removeJavaScript: false,
               removeEmbeddedFiles: false,
@@ -117,10 +124,11 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
       {
         id: "secure-workflow",
         name: t("automation.suggested.secureWorkflow", "Security Workflow"),
-        description: t("automation.suggested.secureWorkflowDesc", "Sanitize PDFs and add password protection"),
+        description: t("automation.suggested.secureWorkflowDesc", "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access."),
         operations: [
           {
             operation: "sanitize",
+            displayName: t("automation.operation.sanitize", "Sanitize"),
             parameters: {
               removeJavaScript: true,
               removeEmbeddedFiles: true,
@@ -132,6 +140,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "addPassword",
+            displayName: t("automation.operation.addPassword", "Add Password Protection"),
             parameters: {
               password: 'password',
               ownerPassword: '',
@@ -154,23 +163,34 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         icon: SecurityIcon,
       },
       {
-        id: "optimization-workflow",
-        name: t("automation.suggested.optimizationWorkflow", "Optimization Workflow"),
-        description: t("automation.suggested.optimizationWorkflowDesc", "Repair and compress PDFs for better performance"),
+        id: "process-images",
+        name: t("automation.suggested.processImages", "Process Images"),
+        description: t("automation.suggested.processImagesDesc", "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."),
         operations: [
           {
-            operation: "repair",
-            parameters: {}
+            operation: "convert",
+            displayName: t("automation.operation.imageToPdf", "Image to PDF"),
+            parameters: {
+              fromExtension: 'image',
+              toExtension: 'pdf',
+              imageOptions: {
+                colorType: 'color',
+                dpi: 300,
+                singleOrMultiple: 'multiple',
+                fitOption: 'maintainAspectRatio',
+                autoRotate: true,
+                combineImages: true,
+              }
+            }
           },
           {
-            operation: "compress",
+            operation: "ocr",
+            displayName: t("automation.operation.ocr", "OCR Text Extraction"),
             parameters: {
-              compressionLevel: 7,
-              grayscale: false,
-              expectedSize: '',
-              compressionMethod: 'quality',
-              fileSizeValue: '',
-              fileSizeUnit: 'MB',
+              languages: ['eng'],
+              ocrType: 'skip-text',
+              ocrRenderType: 'hocr',
+              additionalOptions: [],
             }
           }
         ],
