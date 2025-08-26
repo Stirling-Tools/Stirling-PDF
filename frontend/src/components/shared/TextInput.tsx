@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { useMantineColorScheme } from '@mantine/core';
+import LocalIcon from './LocalIcon';
 import styles from './textInput/TextInput.module.css';
 
 /**
@@ -30,6 +31,8 @@ export interface TextInputProps {
   readOnly?: boolean;
   /** Accessibility label */
   'aria-label'?: string;
+  /** Focus event handler */
+  onFocus?: () => void;
 }
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
@@ -45,6 +48,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
   disabled = false,
   readOnly = false,
   'aria-label': ariaLabel,
+  onFocus,
   ...props
 }, ref) => {
   const { colorScheme } = useMantineColorScheme();
@@ -62,7 +66,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
   return (
     <div className={`${styles.container} ${className}`} style={style}>
       {icon && (
-        <span 
+        <span
           className={styles.icon}
           style={{ color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382' }}
         >
@@ -80,6 +84,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
         disabled={disabled}
         readOnly={readOnly}
         aria-label={ariaLabel}
+        onFocus={onFocus}
         style={{
           backgroundColor: colorScheme === 'dark' ? '#4B525A' : '#FFFFFF',
           color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382',
@@ -96,7 +101,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
           style={{ color: colorScheme === 'dark' ? '#FFFFFF' : '#6B7382' }}
           aria-label="Clear input"
         >
-          <span className="material-symbols-rounded">close</span>
+          <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
         </button>
       )}
     </div>

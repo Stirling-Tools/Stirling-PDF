@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import LocalIcon from './LocalIcon';
 import { isClickOutside, addEventListenerWithCleanup } from '../../utils/genericUtils';
 import { useTooltipPosition } from '../../hooks/useTooltipPosition';
 import { TooltipTip } from '../../types/tips';
@@ -171,9 +172,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           }}
           title="Close tooltip"
         >
-          <span className="material-symbols-rounded">
-            close
-          </span>
+          <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
         </button>
       )}
       {arrow && getArrowClass() && (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Text, Button, Checkbox, Group, useMantineColorScheme } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import AddIcon from '@mui/icons-material/Add';
+import LocalIcon from './LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
@@ -138,7 +138,7 @@ const LandingPage = () => {
                 onClick={handleOpenFilesModal}
                 onMouseEnter={() => setIsUploadHover(false)}
               >
-                <AddIcon className="text-[var(--accent-interactive)]" />
+                <LocalIcon icon="add" width="1.5rem" height="1.5rem" className="text-[var(--accent-interactive)]" />
                 {!isUploadHover && (
                   <span>
                     {t('landing.addFiles', 'Add Files')}
@@ -165,7 +165,7 @@ const LandingPage = () => {
                 onClick={handleNativeUploadClick}
                 onMouseEnter={() => setIsUploadHover(true)}
               >
-                <span className="material-symbols-rounded" style={{ fontSize: '1.25rem', color: 'var(--accent-interactive)' }}>upload</span>
+                <LocalIcon icon="upload" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
                 {isUploadHover && (
                   <span style={{ marginLeft: '.5rem' }}>
                     {t('landing.uploadFromComputer', 'Upload from computer')}

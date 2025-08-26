@@ -24,8 +24,10 @@ export interface AutomationTool {
   parameters?: Record<string, any>;
 }
 
+export type AutomationStep = typeof import('../constants/automation').AUTOMATION_STEPS[keyof typeof import('../constants/automation').AUTOMATION_STEPS];
+
 export interface AutomationStepData {
-  step: 'selection' | 'creation' | 'run';
+  step: AutomationStep;
   mode?: AutomationMode;
   automation?: AutomationConfig;
 }
