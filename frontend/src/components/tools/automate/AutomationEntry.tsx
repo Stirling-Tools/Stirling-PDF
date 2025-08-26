@@ -14,8 +14,8 @@ interface AutomationEntryProps {
   description?: string;
   /** MUI Icon component for the badge */
   badgeIcon?: React.ComponentType<any>;
-  /** Array of tool operation names in the workflow OR full operation objects with display names */
-  operations: string[] | Array<{operation: string; displayName?: string}>;
+  /** Array of tool operation names in the workflow */
+  operations: string[];
   /** Click handler */
   onClick: () => void;
   /** Whether to keep the icon at normal color (for special cases like "Add New") */
@@ -53,36 +53,30 @@ export default function AutomationEntry({
   const createTooltipContent = () => {
     if (!description) return null;
 
-    const toolChain = operations.map((op, index) => {
-      // Handle both string[] and operation object arrays
-      const operationName = typeof op === 'string' ? op : op.operation;
-      const displayName = typeof op === 'object' && op.displayName ? op.displayName : t(`${operationName}.title`, operationName);
-      
-      return (
-        <React.Fragment key={`${operationName}-${index}`}>
-          <Text 
-            component="span" 
-            size="sm" 
-            fw={600}
-            style={{ 
-              color: 'var(--mantine-primary-color-filled)',
-              background: 'var(--mantine-primary-color-light)',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              fontSize: '0.75rem',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {displayName}
+    const toolChain = operations.map((op, index) => (
+      <React.Fragment key={`${op}-${index}`}>
+        <Text 
+          component="span" 
+          size="sm" 
+          fw={600}
+          style={{ 
+            color: 'var(--mantine-primary-color-filled)',
+            background: 'var(--mantine-primary-color-light)',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            fontSize: '0.75rem',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {t(`${op}.title`, op)}
+        </Text>
+        {index < operations.length - 1 && (
+          <Text component="span" size="sm" mx={4}>
+            →
           </Text>
-          {index < operations.length - 1 && (
-            <Text component="span" size="sm" mx={4}>
-              →
-            </Text>
-          )}
-        </React.Fragment>
-      );
-    });
+        )}
+      </React.Fragment>
+    ));
 
     return (
       <div style={{ minWidth: '400px', width: 'auto' }}>
@@ -125,25 +119,19 @@ export default function AutomationEntry({
             />
           )}
           <Group gap="xs" justify="flex-start" style={{ flex: 1 }}>
-            {operations.map((op, index) => {
-              // Handle both string[] and operation object arrays  
-              const operationName = typeof op === 'string' ? op : op.operation;
-              const displayName = typeof op === 'object' && op.displayName ? op.displayName : t(`${operationName}.title`, operationName);
-              
-              return (
-                <React.Fragment key={`${operationName}-${index}`}>
-                  <Text size="xs" style={{ color: 'var(--mantine-color-text)' }}>
-                    {displayName}
-                  </Text>
+            {operations.map((op, index) => (
+              <React.Fragment key={`${op}-${index}`}>
+                <Text size="xs" style={{ color: 'var(--mantine-color-text)' }}>
+                  {t(`${op}.title`, op)}
+                </Text>
 
-                  {index < operations.length - 1 && (
-                    <Text size="xs" c="dimmed" style={{ color: 'var(--mantine-color-text)' }}>
-                      →
-                    </Text>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                {index < operations.length - 1 && (
+                  <Text size="xs" c="dimmed" style={{ color: 'var(--mantine-color-text)' }}>
+                    →
+                  </Text>
+                )}
+              </React.Fragment>
+            ))}
           </Group>
         </Group>
       );

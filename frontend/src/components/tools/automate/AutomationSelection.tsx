@@ -68,7 +68,7 @@ export default function AutomationSelection({
               title={automation.name}
               description={automation.description}
               badgeIcon={automation.icon}
-              operations={automation.operations}
+              operations={automation.operations.map(op => op.operation)}
               onClick={() => onRun(automation)}
               showMenu={true}
               onCopy={() => onCopyFromSuggested(automation)}

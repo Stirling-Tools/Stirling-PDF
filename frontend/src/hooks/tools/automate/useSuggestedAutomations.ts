@@ -23,7 +23,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         operations: [
           {
             operation: "sanitize",
-            displayName: t("automation.operation.sanitize", "Sanitize"),
             parameters: {
               removeJavaScript: true,
               removeEmbeddedFiles: true,
@@ -35,7 +34,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "ocr",
-            displayName: t("automation.operation.ocrCleanup", "OCR & Cleanup"),
             parameters: {
               languages: ['eng'],
               ocrType: 'skip-text',
@@ -45,7 +43,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "convert",
-            displayName: t("automation.operation.pdfaConversion", "PDF/A Conversion"),
             parameters: {
               fromExtension: 'pdf',
               toExtension: 'pdfa',
@@ -56,7 +53,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "compress",
-            displayName: t("automation.operation.compress", "Compress"),
             parameters: {
               compressionLevel: 5,
               grayscale: false,
@@ -78,7 +74,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         operations: [
           {
             operation: "compress",
-            displayName: t("automation.operation.compress", "Compress"),
             parameters: {
               compressionLevel: 5,
               grayscale: false,
@@ -90,7 +85,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "splitPdf",
-            displayName: t("automation.operation.splitBySize", "Split by Size (20MB)"),
             parameters: {
               mode: 'bySizeOrCount',
               pages: '',
@@ -106,7 +100,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "sanitize",
-            displayName: t("automation.operation.sanitizeMetadata", "Remove Metadata"),
             parameters: {
               removeJavaScript: false,
               removeEmbeddedFiles: false,
@@ -128,7 +121,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         operations: [
           {
             operation: "sanitize",
-            displayName: t("automation.operation.sanitize", "Sanitize"),
             parameters: {
               removeJavaScript: true,
               removeEmbeddedFiles: true,
@@ -140,7 +132,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "addPassword",
-            displayName: t("automation.operation.addPassword", "Add Password Protection"),
             parameters: {
               password: 'password',
               ownerPassword: '',
@@ -169,7 +160,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         operations: [
           {
             operation: "convert",
-            displayName: t("automation.operation.imageToPdf", "Image to PDF"),
             parameters: {
               fromExtension: 'image',
               toExtension: 'pdf',
@@ -185,7 +175,6 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           },
           {
             operation: "ocr",
-            displayName: t("automation.operation.ocr", "OCR Text Extraction"),
             parameters: {
               languages: ['eng'],
               ocrType: 'skip-text',

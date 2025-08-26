@@ -5,7 +5,6 @@
 export interface AutomationOperation {
   operation: string;
   parameters: Record<string, any>;
-  displayName?: string; // Custom display name for tooltip
 }
 
 export interface AutomationConfig {
