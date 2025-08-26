@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AutomationTool, AutomationConfig, AutomationMode } from '../../../types/automation';
 import { AUTOMATION_CONSTANTS } from '../../../constants/automation';
@@ -16,18 +16,18 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
   const [automationName, setAutomationName] = useState('');
   const [selectedTools, setSelectedTools] = useState<AutomationTool[]>([]);
 
-  const getToolName = (operation: string) => {
+  const getToolName = useCallback((operation: string) => {
     const tool = toolRegistry?.[operation] as any;
     return tool?.name || t(`tools.${operation}.name`, operation);
-  };
+  }, [toolRegistry, t]);
 
-  const getToolDefaultParameters = (operation: string): Record<string, any> => {
+  const getToolDefaultParameters = useCallback((operation: string): Record<string, any> => {
     const config = toolRegistry[operation]?.operationConfig;
     if (config?.defaultParameters) {
       return { ...config.defaultParameters };
     }
     return {};
-  };
+  }, [toolRegistry]);
 
   // Initialize based on mode and existing automation
   useEffect(() => {
@@ -58,7 +58,7 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
       }));
       setSelectedTools(defaultTools);
     }
-  }, [mode, existingAutomation, selectedTools.length, t, getToolName]);
+  }, [mode, existingAutomation, t, getToolName]);
 
   const addTool = (operation: string) => {
     const newTool: AutomationTool = {
