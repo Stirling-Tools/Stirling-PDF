@@ -209,6 +209,11 @@ export async function addFiles(
           }
         }
         
+        // Store insertion position if provided
+        if (options.insertAfterPageId !== undefined) {
+          record.insertAfterPageId = options.insertAfterPageId;
+        }
+        
         // Create processedFile with provided metadata
         if (pageCount > 0) {
           record.processedFile = createProcessedFile(pageCount, thumbnail);
@@ -277,6 +282,11 @@ export async function addFiles(
           if (metadata.thumbnail.startsWith('blob:')) {
             lifecycleManager.trackBlobUrl(metadata.thumbnail);
           }
+        }
+        
+        // Store insertion position if provided
+        if (options.insertAfterPageId !== undefined) {
+          record.insertAfterPageId = options.insertAfterPageId;
         }
         
         // Create processedFile metadata with correct page count

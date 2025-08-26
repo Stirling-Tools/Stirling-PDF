@@ -139,9 +139,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         getInitialData: () => ({
           pageNumber: page.pageNumber,
           pageId: page.id,
-          selectedPages: selectionMode && selectedPages.includes(page.pageNumber)
-            ? selectedPages
-            : [page.pageNumber]
+          selectedPages: [page.pageNumber]
         }),
         onDragStart: () => {
           setIsDragging(true);
@@ -160,12 +158,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             const targetPageNumber = targetData.pageNumber as number;
             const targetIndex = pdfDocument.pages.findIndex(p => p.pageNumber === targetPageNumber);
             if (targetIndex !== -1) {
-              const pagesToMove = selectionMode && selectedPages.includes(page.pageNumber)
-                ? selectedPages
-                : undefined;
-              // Trigger animation for drag & drop
-              onAnimateReorder();
-              onReorderPages(page.pageNumber, targetIndex, pagesToMove);
+              onReorderPages(page.pageNumber, targetIndex, undefined);
             }
           }
         }
@@ -454,8 +447,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
                 e.stopPropagation();
                 if (index > 0 && !movingPage && !isAnimating) {
                   onSetMovingPage(page.pageNumber);
-                  // Trigger animation
-                  onAnimateReorder();
                   // Actually move the page left (swap with previous page)
                   onReorderPages(page.pageNumber, index - 1);
                   setTimeout(() => onSetMovingPage(null), 650);
@@ -477,8 +468,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
                 e.stopPropagation();
                 if (index < totalPages - 1 && !movingPage && !isAnimating) {
                   onSetMovingPage(page.pageNumber);
-                  // Trigger animation
-                  onAnimateReorder();
                   // Actually move the page right (swap with next page)
                   onReorderPages(page.pageNumber, index + 1);
                   setTimeout(() => onSetMovingPage(null), 650);
