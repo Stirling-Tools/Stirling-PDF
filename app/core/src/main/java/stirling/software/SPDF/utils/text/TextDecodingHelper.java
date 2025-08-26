@@ -123,7 +123,7 @@ public class TextDecodingHelper {
                 }
             } catch (Exception ignored) {
             }
-            if (!isPrintable(ch)) {
+            if (ch == null || !isPrintable(ch)) {
                 // Handle problematic character codes specifically
                 ch = "�";
             }
