@@ -6,6 +6,8 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AutomationEntry from "./AutomationEntry";
 import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSuggestedAutomations";
 import { AutomationConfig, SuggestedAutomation } from "../../../types/automation";
+import { iconMap } from './iconMap';
+import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -14,6 +16,7 @@ interface AutomationSelectionProps {
   onEdit: (automation: AutomationConfig) => void;
   onDelete: (automation: AutomationConfig) => void;
   onCopyFromSuggested: (automation: SuggestedAutomation) => void;
+  toolRegistry: Record<string, ToolRegistryEntry>;
 }
 
 export default function AutomationSelection({ 
@@ -22,7 +25,8 @@ export default function AutomationSelection({
   onRun, 
   onEdit, 
   onDelete,
-  onCopyFromSuggested
+  onCopyFromSuggested,
+  toolRegistry
 }: AutomationSelectionProps) {
   const { t } = useTranslation();
   const suggestedAutomations = useSuggestedAutomations();
@@ -40,20 +44,26 @@ export default function AutomationSelection({
         operations={[]}
         onClick={onCreateNew}
         keepIconColor={true}
+        toolRegistry={toolRegistry}
       />
       {/* Saved Automations */}
-      {savedAutomations.map((automation) => (
-        <AutomationEntry
-          key={automation.id}
-          title={automation.name}
-          badgeIcon={SettingsIcon}
-          operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
-          onClick={() => onRun(automation)}
-          showMenu={true}
-          onEdit={() => onEdit(automation)}
-          onDelete={() => onDelete(automation)}
-        />
-      ))}
+      {savedAutomations.map((automation) => {
+        const IconComponent = automation.icon ? iconMap[automation.icon as keyof typeof iconMap] : SettingsIcon;
+        return (
+          <AutomationEntry
+            key={automation.id}
+            title={automation.name}
+            description={automation.description}
+            badgeIcon={IconComponent || SettingsIcon}
+            operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
+            onClick={() => onRun(automation)}
+            showMenu={true}
+            onEdit={() => onEdit(automation)}
+            onDelete={() => onDelete(automation)}
+            toolRegistry={toolRegistry}
+          />
+        );
+      })}
       <Divider pb='sm' />
 
       {/* Suggested Automations */}
@@ -72,6 +82,7 @@ export default function AutomationSelection({
               onClick={() => onRun(automation)}
               showMenu={true}
               onCopy={() => onCopyFromSuggested(automation)}
+              toolRegistry={toolRegistry}
             />
           ))}
         </Stack>

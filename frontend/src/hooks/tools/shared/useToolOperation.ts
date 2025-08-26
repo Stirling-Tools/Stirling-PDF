@@ -156,10 +156,16 @@ export const useToolOperation = <TParams = void>(
 
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
 
-          // Multi-file responses are typically ZIP files that need extraction
+          // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
           if (config.responseHandler) {
             // Use custom responseHandler for multi-file (handles ZIP extraction)
             processedFiles = await config.responseHandler(response.data, validFiles);
+          } else if (response.data.type === 'application/pdf' || 
+                     (response.headers && response.headers['content-type'] === 'application/pdf')) {
+            // Single PDF response (e.g. split with merge option) - use original filename
+            const originalFileName = validFiles[0]?.name || 'document.pdf';
+            const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
+            processedFiles = [singleFile];
           } else {
             // Default: assume ZIP response for multi-file endpoints
             processedFiles = await extractZipFiles(response.data);

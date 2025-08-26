@@ -22,7 +22,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode } = useToolWorkflow();
+  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -74,7 +74,12 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       type: 'navigation',
       onClick: () => {
         setActiveButton('automate');
-        handleToolSelect('automate');
+        // If already on automate tool, reset it directly
+        if (selectedToolKey === 'automate') {
+          resetTool('automate');
+        } else {
+          handleToolSelect('automate');
+        }
       }
     },
     {
