@@ -2126,7 +2126,7 @@
     "selectedCount": "{{count}} selected",
     "download": "Download",
     "delete": "Delete",
-    "unsupported":"Unsupported"
+    "unsupported": "Unsupported"
   },
   "storage": {
     "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",
@@ -2298,70 +2298,76 @@
     }
   },
   "automate": {
-      "title": "Automate",
-      "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks.",
-      "invalidStep": "Invalid step",
-      "files": {
-        "placeholder": "Select files to process with this automation"
+    "title": "Automate",
+    "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks.",
+    "invalidStep": "Invalid step",
+    "files": {
+      "placeholder": "Select files to process with this automation"
+    },
+    "selection": {
+      "title": "Automation Selection",
+      "saved": {
+        "title": "Saved"
       },
-      "selection": {
-        "title": "Automation Selection",
-        "saved": {
-          "title": "Saved"
-        },
-        "createNew": {
-          "title": "Create New Automation"
-        },
-        "suggested": {
-          "title": "Suggested"
-        }
+      "createNew": {
+        "title": "Create New Automation"
       },
-      "creation": {
-        "createTitle": "Create Automation",
-        "editTitle": "Edit Automation",
-        "description": "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
-        "name": {
-          "label": "Automation Name",
-          "placeholder": "My Automation"
-        },
-        "tools": {
-          "selectTool": "Select a tool...",
-          "selected": "Selected Tools",
-          "remove": "Remove tool",
-          "configure": "Configure tool",
-          "notConfigured": "! Not Configured",
-          "addTool": "Add Tool",
-          "add": "Add a tool..."
-        },
-        "save": "Save Automation",
-        "unsavedChanges": {
-          "title": "Unsaved Changes",
-          "message": "You have unsaved changes. Are you sure you want to go back? All changes will be lost.",
-          "cancel": "Cancel",
-          "confirm": "Go Back"
-        }
+      "suggested": {
+        "title": "Suggested"
+      }
+    },
+    "creation": {
+      "createTitle": "Create Automation",
+      "editTitle": "Edit Automation",
+      "intro": "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
+      "name": {
+        "label": "Automation Name",
+        "placeholder": "My Automation"
       },
-      "run": {
-        "title": "Run Automation"
+      "description": {
+        "label": "Description (optional)",
+        "placeholder": "Describe what this automation does..."
       },
-      "sequence": {
-        "unnamed": "Unnamed Automation",
-        "steps": "{{count}} steps",
-        "running": "Running Automation...",
-        "run": "Run Automation",
-        "finish": "Finish"
+      "tools": {
+        "selectTool": "Select a tool...",
+        "selected": "Selected Tools",
+        "remove": "Remove tool",
+        "configure": "Configure tool",
+        "notConfigured": "! Not Configured",
+        "addTool": "Add Tool",
+        "add": "Add a tool..."
       },
-      "reviewTitle": "Automation Results",
-      "config": {
-        "loading": "Loading tool configuration...",
-        "noSettings": "This tool does not have configurable settings.",
-        "title": "Configure {{toolName}}",
-        "description": "Configure the settings for this tool. These settings will be applied when the automation runs.",
+      "save": "Save Automation",
+      "unsavedChanges": {
+        "title": "Unsaved Changes",
+        "message": "You have unsaved changes. Are you sure you want to go back? All changes will be lost.",
         "cancel": "Cancel",
-        "save": "Save Configuration"
+        "confirm": "Go Back"
       },
-      "copyToSaved": "Copy to Saved"
-    }
+      "icon": {
+        "label": "Icon"
+      }
+    },
+    "run": {
+      "title": "Run Automation"
+    },
+    "sequence": {
+      "unnamed": "Unnamed Automation",
+      "steps": "{{count}} steps",
+      "running": "Running Automation...",
+      "run": "Run Automation",
+      "finish": "Finish"
+    },
+    "reviewTitle": "Automation Results",
+    "config": {
+      "loading": "Loading tool configuration...",
+      "noSettings": "This tool does not have configurable settings.",
+      "title": "Configure {{toolName}}",
+      "description": "Configure the settings for this tool. These settings will be applied when the automation runs.",
+      "cancel": "Cancel",
+      "save": "Save Configuration"
+    },
+    "copyToSaved": "Copy to Saved"
   },
   "automation": {
     "suggested": {
