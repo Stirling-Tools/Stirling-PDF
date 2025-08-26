@@ -385,6 +385,19 @@ const PageEditor = ({
     undoManagerRef.current.executeCommand(pageBreakCommand);
   }, [selectedPageNumbers, displayDocument]);
 
+  const handleInsertFiles = useCallback(async (files: File[], insertAfterPage: number) => {
+    if (!displayDocument || files.length === 0) return;
+
+    try {
+      const targetPage = displayDocument.pages.find(p => p.pageNumber === insertAfterPage);
+      if (!targetPage) return;
+      
+      await actions.addFiles(files, { insertAfterPageId: targetPage.id });
+    } catch (error) {
+      console.error('Failed to insert files:', error);
+    }
+  }, [displayDocument, actions]);
+
   const handleSelectAll = useCallback(() => {
     if (!displayDocument) return;
     const allPageNumbers = Array.from({ length: displayDocument.pages.length }, (_, i) => i + 1);
@@ -416,18 +429,21 @@ const PageEditor = ({
   const getSourceFiles = useCallback((): Map<string, File> | null => {
     const sourceFiles = new Map<string, File>();
 
-    // Check if we have multiple files by looking at active file IDs
-    if (activeFileIds.length <= 1) {
-      return null; // Use single-file export method
-    }
-
-    // Collect all source files
+    // Always include original files
     activeFileIds.forEach(fileId => {
       const file = selectors.getFile(fileId);
       if (file) {
         sourceFiles.set(fileId, file);
       }
     });
+
+    // Use multi-file export if we have multiple original files
+    const hasInsertedFiles = false;
+    const hasMultipleOriginalFiles = activeFileIds.length > 1;
+    
+    if (!hasInsertedFiles && !hasMultipleOriginalFiles) {
+      return null; // Use single-file export method
+    }
 
     return sourceFiles.size > 0 ? sourceFiles : null;
   }, [activeFileIds, selectors]);
@@ -755,6 +771,7 @@ const PageEditor = ({
                 pdfDocument={displayDocument}
                 setPdfDocument={setEditedDocument}
                 splitPositions={splitPositions}
+                onInsertFiles={handleInsertFiles}
               />
             )}
           />

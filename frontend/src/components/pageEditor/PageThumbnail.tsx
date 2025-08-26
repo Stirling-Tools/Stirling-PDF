@@ -6,9 +6,11 @@ import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
+import AddIcon from '@mui/icons-material/Add';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { PDFPage, PDFDocument } from '../../types/pageEditor';
 import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
+import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import styles from './PageEditor.module.css';
 
 
@@ -35,6 +37,7 @@ interface PageThumbnailProps {
   pdfDocument: PDFDocument;
   setPdfDocument: (doc: PDFDocument) => void;
   splitPositions: Set<number>;
+  onInsertFiles?: (files: File[], insertAfterPage: number) => void;
 }
 
 const PageThumbnail: React.FC<PageThumbnailProps> = ({
@@ -60,6 +63,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   pdfDocument,
   setPdfDocument,
   splitPositions,
+  onInsertFiles,
 }: PageThumbnailProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isMouseDown, setIsMouseDown] = useState(false);
@@ -67,6 +71,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const dragElementRef = useRef<HTMLDivElement>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
+  const { openFilesModal } = useFilesModalContext();
 
   // Calculate document aspect ratio from first non-blank page
   const getDocumentAspectRatio = useCallback(() => {
@@ -223,6 +228,27 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     const action = hasSplit ? 'removed' : 'added';
     onSetStatus(`Split marker ${action} after position ${index + 1}`);
   }, [index, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand]);
+
+  const handleInsertFileAfter = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (onInsertFiles) {
+      // Open file manager modal with custom handler for page insertion
+      openFilesModal({ 
+        insertAfterPage: page.pageNumber,
+        customHandler: (files: File[], insertAfterPage?: number) => {
+          if (insertAfterPage !== undefined) {
+            onInsertFiles(files, insertAfterPage);
+          }
+        }
+      });
+      onSetStatus(`Select files to insert after page ${page.pageNumber}`);
+    } else {
+      // Fallback to normal file handling
+      openFilesModal({ insertAfterPage: page.pageNumber });
+      onSetStatus(`Select files to insert after page ${page.pageNumber}`);
+    }
+  }, [openFilesModal, page.pageNumber, onSetStatus, onInsertFiles]);
 
   // Handle click vs drag differentiation
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -509,6 +535,17 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
               </ActionIcon>
             </Tooltip>
           )}
+
+          <Tooltip label="Insert File After">
+            <ActionIcon
+              size="md"
+              variant="subtle"
+              style={{ color: 'var(--mantine-color-dimmed)' }}
+              onClick={handleInsertFileAfter}
+            >
+              <AddIcon style={{ fontSize: 20 }} />
+            </ActionIcon>
+          </Tooltip>
         </div>
 
       </div>

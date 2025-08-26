@@ -568,6 +568,268 @@ export class BulkPageBreakCommand extends DOMCommand {
   }
 }
 
+export class InsertFilesCommand extends DOMCommand {
+  private insertedPages: PDFPage[] = [];
+  private originalDocument: PDFDocument | null = null;
+  private fileDataMap = new Map<string, ArrayBuffer>(); // Store file data for thumbnail generation
+  private originalProcessedFile: any = null; // Store original ProcessedFile for undo
+  private insertedFileMap = new Map<string, File>(); // Store inserted files for export
+
+  constructor(
+    private files: File[],
+    private insertAfterPageNumber: number,
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void,
+    private setSelectedPages: (pages: number[]) => void,
+    private getSelectedPages: () => number[],
+    private updateFileContext?: (updatedDocument: PDFDocument, insertedFiles?: Map<string, File>) => void
+  ) {
+    super();
+  }
+
+  async execute(): Promise<void> {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc || this.files.length === 0) return;
+
+    // Store original state for undo
+    this.originalDocument = {
+      ...currentDoc,
+      pages: currentDoc.pages.map(page => ({...page}))
+    };
+
+    try {
+      // Process each file to extract pages and wait for all to complete
+      const allNewPages: PDFPage[] = [];
+      
+      // Process all files and wait for their completion
+      const baseTimestamp = Date.now();
+      const extractionPromises = this.files.map(async (file, index) => {
+        const fileId = `inserted-${file.name}-${baseTimestamp + index}`;
+        // Store inserted file for export
+        this.insertedFileMap.set(fileId, file);
+        // Use base timestamp + index to ensure unique but predictable file IDs
+        return await this.extractPagesFromFile(file, baseTimestamp + index);
+      });
+      
+      const extractedPageArrays = await Promise.all(extractionPromises);
+      
+      // Flatten all extracted pages
+      for (const pages of extractedPageArrays) {
+        allNewPages.push(...pages);
+      }
+
+      if (allNewPages.length === 0) return;
+
+      // Find insertion point (after the specified page)
+      const insertIndex = this.insertAfterPageNumber; // Insert after page N means insert at index N
+
+      // Create new pages array with inserted pages
+      const newPages: PDFPage[] = [];
+      let pageNumberCounter = 1;
+
+      // Add pages before insertion point
+      for (let i = 0; i < insertIndex && i < currentDoc.pages.length; i++) {
+        const page = { ...currentDoc.pages[i], pageNumber: pageNumberCounter++ };
+        newPages.push(page);
+      }
+
+      // Add inserted pages
+      for (const newPage of allNewPages) {
+        const insertedPage: PDFPage = {
+          ...newPage,
+          pageNumber: pageNumberCounter++,
+          selected: false,
+          splitAfter: false
+        };
+        newPages.push(insertedPage);
+        this.insertedPages.push(insertedPage);
+      }
+
+      // Add remaining pages after insertion point
+      for (let i = insertIndex; i < currentDoc.pages.length; i++) {
+        const page = { ...currentDoc.pages[i], pageNumber: pageNumberCounter++ };
+        newPages.push(page);
+      }
+
+      // Update document
+      const updatedDocument: PDFDocument = {
+        ...currentDoc,
+        pages: newPages,
+        totalPages: newPages.length,
+      };
+
+      this.setDocument(updatedDocument);
+
+      // Update FileContext with the new document structure and inserted files
+      if (this.updateFileContext) {
+        this.updateFileContext(updatedDocument, this.insertedFileMap);
+      }
+
+      // Generate thumbnails for inserted pages (all files should be read by now)
+      this.generateThumbnailsForInsertedPages(updatedDocument);
+
+      // Maintain existing selection by mapping original selected pages to their new positions
+      const originalSelection = this.getSelectedPages();
+      const updatedSelection: number[] = [];
+      
+      originalSelection.forEach(originalPageNum => {
+        if (originalPageNum <= this.insertAfterPageNumber) {
+          // Pages before insertion point keep same number
+          updatedSelection.push(originalPageNum);
+        } else {
+          // Pages after insertion point are shifted by number of inserted pages
+          updatedSelection.push(originalPageNum + allNewPages.length);
+        }
+      });
+      
+      this.setSelectedPages(updatedSelection);
+
+    } catch (error) {
+      console.error('Failed to insert files:', error);
+      // Revert to original state if error occurs
+      if (this.originalDocument) {
+        this.setDocument(this.originalDocument);
+      }
+    }
+  }
+
+  private async generateThumbnailsForInsertedPages(updatedDocument: PDFDocument): Promise<void> {
+    try {
+      const { thumbnailGenerationService } = await import('../../../services/thumbnailGenerationService');
+      
+      // Group pages by file ID to generate thumbnails efficiently
+      const pagesByFileId = new Map<string, PDFPage[]>();
+      
+      for (const page of this.insertedPages) {
+        const fileId = page.id.substring(0, page.id.lastIndexOf('-page-'));
+        if (!pagesByFileId.has(fileId)) {
+          pagesByFileId.set(fileId, []);
+        }
+        pagesByFileId.get(fileId)!.push(page);
+      }
+      
+      // Generate thumbnails for each file
+      for (const [fileId, pages] of pagesByFileId) {
+        const arrayBuffer = this.fileDataMap.get(fileId);
+        
+        console.log('Generating thumbnails for file:', fileId);
+        console.log('Pages:', pages.length);
+        console.log('ArrayBuffer size:', arrayBuffer?.byteLength || 'undefined');
+        
+        if (arrayBuffer && arrayBuffer.byteLength > 0) {
+          // Extract page numbers for all pages from this file
+          const pageNumbers = pages.map(page => {
+            const pageNumMatch = page.id.match(/-page-(\d+)$/);
+            return pageNumMatch ? parseInt(pageNumMatch[1]) : 1;
+          });
+          
+          console.log('Generating thumbnails for page numbers:', pageNumbers);
+          
+          // Generate thumbnails for all pages from this file at once
+          const results = await thumbnailGenerationService.generateThumbnails(
+            fileId,
+            arrayBuffer,
+            pageNumbers,
+            { scale: 0.2, quality: 0.8 }
+          );
+          
+          console.log('Thumbnail generation results:', results.length, 'thumbnails generated');
+          
+          // Update pages with generated thumbnails
+          for (let i = 0; i < results.length && i < pages.length; i++) {
+            const result = results[i];
+            const page = pages[i];
+            
+            if (result.success) {
+              const pageIndex = updatedDocument.pages.findIndex(p => p.id === page.id);
+              if (pageIndex >= 0) {
+                updatedDocument.pages[pageIndex].thumbnail = result.thumbnail;
+                console.log('Updated thumbnail for page:', page.id);
+              }
+            }
+          }
+          
+          // Trigger re-render by updating the document
+          this.setDocument({ ...updatedDocument });
+        } else {
+          console.error('No valid ArrayBuffer found for file ID:', fileId);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to generate thumbnails for inserted pages:', error);
+    }
+  }
+
+  private async extractPagesFromFile(file: File, baseTimestamp: number): Promise<PDFPage[]> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const arrayBuffer = event.target?.result as ArrayBuffer;
+          console.log('File reader onload - arrayBuffer size:', arrayBuffer?.byteLength || 'undefined');
+          
+          if (!arrayBuffer) {
+            reject(new Error('Failed to read file'));
+            return;
+          }
+
+          // Clone the ArrayBuffer before passing to PDF.js (it might consume it)
+          const clonedArrayBuffer = arrayBuffer.slice(0);
+          
+          // Use PDF.js via the worker manager to extract pages
+          const { pdfWorkerManager } = await import('../../../services/pdfWorkerManager');
+          const pdf = await pdfWorkerManager.createDocument(clonedArrayBuffer);
+          
+          const pageCount = pdf.numPages;
+          const pages: PDFPage[] = [];
+          const fileId = `inserted-${file.name}-${baseTimestamp}`;
+          
+          console.log('Original ArrayBuffer size:', arrayBuffer.byteLength);
+          console.log('Storing ArrayBuffer for fileId:', fileId, 'size:', arrayBuffer.byteLength);
+          
+          // Store the original ArrayBuffer for thumbnail generation
+          this.fileDataMap.set(fileId, arrayBuffer);
+          
+          console.log('After storing - fileDataMap size:', this.fileDataMap.size);
+          console.log('Stored value size:', this.fileDataMap.get(fileId)?.byteLength || 'undefined');
+          
+          for (let i = 1; i <= pageCount; i++) {
+            const pageId = `${fileId}-page-${i}`;
+            pages.push({
+              id: pageId,
+              pageNumber: i, // Will be renumbered in execute()
+              originalPageNumber: i,
+              thumbnail: null, // Will be generated after insertion
+              rotation: 0,
+              selected: false,
+              splitAfter: false,
+              isBlankPage: false
+            });
+          }
+          
+          // Clean up PDF document
+          pdfWorkerManager.destroyDocument(pdf);
+          
+          resolve(pages);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  undo(): void {
+    if (!this.originalDocument) return;
+    this.setDocument(this.originalDocument);
+  }
+
+  get description(): string {
+    return `Insert ${this.files.length} file(s) after page ${this.insertAfterPageNumber}`;
+  }
+}
+
 // Simple undo manager for DOM commands
 export class UndoManager {
   private undoStack: DOMCommand[] = [];
@@ -580,6 +842,13 @@ export class UndoManager {
 
   executeCommand(command: DOMCommand): void {
     command.execute();
+    this.undoStack.push(command);
+    this.redoStack = [];
+    this.onStateChange?.();
+  }
+
+  // For async commands that need to be executed manually
+  addToUndoStack(command: DOMCommand): void {
     this.undoStack.push(command);
     this.redoStack = [];
     this.onStateChange?.();

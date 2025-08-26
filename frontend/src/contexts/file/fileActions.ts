@@ -84,6 +84,9 @@ interface AddFileOptions {
   
   // For 'stored' files
   filesWithMetadata?: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>;
+  
+  // Insertion position
+  insertAfterPageId?: string;
 }
 
 /**
@@ -162,6 +165,11 @@ export async function addFiles(
           if (thumbnail.startsWith('blob:')) {
             lifecycleManager.trackBlobUrl(thumbnail);
           }
+        }
+        
+        // Store insertion position if provided
+        if (options.insertAfterPageId !== undefined) {
+          record.insertAfterPageId = options.insertAfterPageId;
         }
         
         // Create initial processedFile metadata with page count

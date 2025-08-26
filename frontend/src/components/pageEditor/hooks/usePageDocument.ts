@@ -49,33 +49,41 @@ export function usePageDocument(): PageDocumentHook {
             .map(id => (selectors.getFileRecord(id)?.name ?? 'file').replace(/\.pdf$/i, ''))
             .join(' + ');
 
-    // Debug logging for merged document creation
-    console.log(`🎬 PageEditor: Building merged document for ${name} with ${activeFileIds.length} files`);
+    // Build page insertion map from files with insertion positions
+    const insertionMap = new Map<string, string[]>(); // insertAfterPageId -> fileIds
+    const originalFileIds: string[] = [];
     
-    // Collect pages from ALL active files, not just the primary file
+    activeFileIds.forEach(fileId => {
+      const record = selectors.getFileRecord(fileId);
+      if (record?.insertAfterPageId !== undefined) {
+        if (!insertionMap.has(record.insertAfterPageId)) {
+          insertionMap.set(record.insertAfterPageId, []);
+        }
+        insertionMap.get(record.insertAfterPageId)!.push(fileId);
+      } else {
+        originalFileIds.push(fileId);
+      }
+    });
+    
+    // Build pages by interleaving original pages with insertions
     let pages: PDFPage[] = [];
     let totalPageCount = 0;
     
-    activeFileIds.forEach((fileId, fileIndex) => {
+    // Helper function to create pages from a file
+    const createPagesFromFile = (fileId: string, startPageNumber: number): PDFPage[] => {
       const fileRecord = selectors.getFileRecord(fileId);
       if (!fileRecord) {
-        console.warn(`🎬 PageEditor: No record found for file ${fileId}`);
-        return;
+        return [];
       }
       
       const processedFile = fileRecord.processedFile;
-      console.log(`🎬 PageEditor: Processing file ${fileIndex + 1}/${activeFileIds.length} (${fileRecord.name})`);
-      console.log(`🎬 ProcessedFile exists:`, !!processedFile);
-      console.log(`🎬 ProcessedFile pages:`, processedFile?.pages?.length || 0);
-      console.log(`🎬 ProcessedFile totalPages:`, processedFile?.totalPages || 'unknown');
-      
       let filePages: PDFPage[] = [];
       
       if (processedFile?.pages && processedFile.pages.length > 0) {
         // Use fully processed pages with thumbnails
         filePages = processedFile.pages.map((page, pageIndex) => ({
           id: `${fileId}-${page.pageNumber}`,
-          pageNumber: totalPageCount + pageIndex + 1,
+          pageNumber: startPageNumber + pageIndex,
           thumbnail: page.thumbnail || null,
           rotation: page.rotation || 0,
           selected: false,
@@ -85,29 +93,61 @@ export function usePageDocument(): PageDocumentHook {
         }));
       } else if (processedFile?.totalPages) {
         // Fallback: create pages without thumbnails but with correct count
-        console.log(`🎬 PageEditor: Creating placeholder pages for ${fileRecord.name} (${processedFile.totalPages} pages)`);
         filePages = Array.from({ length: processedFile.totalPages }, (_, pageIndex) => ({
           id: `${fileId}-${pageIndex + 1}`,
-          pageNumber: totalPageCount + pageIndex + 1,
+          pageNumber: startPageNumber + pageIndex,
           originalPageNumber: pageIndex + 1,
           originalFileId: fileId,
           rotation: 0,
-          thumbnail: null, // Will be generated later
+          thumbnail: null,
           selected: false,
           splitAfter: false,
         }));
       }
       
-      pages = pages.concat(filePages);
-      totalPageCount += filePages.length;
+      return filePages;
+    };
+
+    // Collect all pages from original files (without renumbering yet)
+    const originalFilePages: PDFPage[] = [];
+    originalFileIds.forEach(fileId => {
+      const filePages = createPagesFromFile(fileId, 1); // Temporary numbering
+      originalFilePages.push(...filePages);
     });
+    
+    // Start with all original pages numbered sequentially  
+    pages = originalFilePages.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1
+    }));
+    
+    // Process each insertion by finding the page ID and inserting after it
+    for (const [insertAfterPageId, fileIds] of insertionMap.entries()) {
+      const targetPageIndex = pages.findIndex(p => p.id === insertAfterPageId);
+      
+      if (targetPageIndex === -1) continue;
+      
+      // Collect all pages to insert
+      const allNewPages: PDFPage[] = [];
+      fileIds.forEach(fileId => {
+        const insertedPages = createPagesFromFile(fileId, 1);
+        allNewPages.push(...insertedPages);
+      });
+      
+      // Insert all new pages after the target page
+      pages.splice(targetPageIndex + 1, 0, ...allNewPages);
+      
+      // Renumber all pages after insertion
+      pages.forEach((page, index) => {
+        page.pageNumber = index + 1;
+      });
+    }
+    
+    totalPageCount = pages.length;
 
     if (pages.length === 0) {
-      console.warn('🎬 PageEditor: No pages found in any files');
       return null;
     }
-
-    console.log(`🎬 PageEditor: Created merged document with ${pages.length} total pages`);
 
     const mergedDoc: PDFDocument = {
       id: activeFileIds.join('-'),
