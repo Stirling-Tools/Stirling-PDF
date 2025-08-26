@@ -190,7 +190,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
           <div className="spacer" />
 
           {/* Config button at the bottom */}
-          {buttonConfigs
+          {/* {buttonConfigs
             .filter(config => config.id === 'config')
             .map(config => (
                 <div className="flex flex-col items-center gap-1">
@@ -210,14 +210,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
                     {config.name}
                   </span>
                 </div>
-            ))}
+            ))} */}
         </div>
       </div>
 
-      <AppConfigModal
+      {/* <AppConfigModal
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
-      />
+      /> */}
     </div>
   );
 });
