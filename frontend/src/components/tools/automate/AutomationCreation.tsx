@@ -98,7 +98,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   const saveAutomation = async () => {
     if (!canSaveAutomation()) return;
 
-    const automation = {
+    const automationData = {
       name: automationName.trim(),
       description: '',
       operations: selectedTools.map(tool => ({
@@ -109,7 +109,30 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
     try {
       const { automationStorage } = await import('../../../services/automationStorage');
-      const savedAutomation = await automationStorage.saveAutomation(automation);
+      let savedAutomation;
+
+      if (mode === AutomationMode.EDIT && existingAutomation) {
+        // For edit mode, check if name has changed
+        const nameChanged = automationName.trim() !== existingAutomation.name;
+        
+        if (nameChanged) {
+          // Name changed - create new automation
+          savedAutomation = await automationStorage.saveAutomation(automationData);
+        } else {
+          // Name unchanged - update existing automation
+          const updatedAutomation = {
+            ...existingAutomation,
+            ...automationData,
+            id: existingAutomation.id,
+            createdAt: existingAutomation.createdAt
+          };
+          savedAutomation = await automationStorage.updateAutomation(updatedAutomation);
+        }
+      } else {
+        // Create mode - always create new automation
+        savedAutomation = await automationStorage.saveAutomation(automationData);
+      }
+
       onComplete(savedAutomation);
     } catch (error) {
       console.error('Error saving automation:', error);

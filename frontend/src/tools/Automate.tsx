@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "../contexts/FileContext";
 import { useFileSelection } from "../contexts/FileContext";
+import { useNavigation } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import { createFilesToolStep } from "../components/tools/shared/FilesToolStep";
@@ -13,20 +14,21 @@ import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperati
 import { BaseToolProps } from "../types/tool";
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 import { useSavedAutomations } from "../hooks/tools/automate/useSavedAutomations";
-import { AutomationConfig, AutomationStepData, AutomationMode } from "../types/automation";
+import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep } from "../types/automation";
 import { AUTOMATION_STEPS } from "../constants/automation";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
+  const { setMode } = useNavigation();
 
-  const [currentStep, setCurrentStep] = useState<'selection' | 'creation' | 'run'>(AUTOMATION_STEPS.SELECTION);
+  const [currentStep, setCurrentStep] = useState<AutomationStep>(AUTOMATION_STEPS.SELECTION);
   const [stepData, setStepData] = useState<AutomationStepData>({ step: AUTOMATION_STEPS.SELECTION });
 
   const automateOperation = useAutomateOperation();
   const toolRegistry = useFlatToolRegistry();
   const hasResults = automateOperation.files.length > 0 || automateOperation.downloadUrl !== null;
-  const { savedAutomations, deleteAutomation, refreshAutomations } = useSavedAutomations();
+  const { savedAutomations, deleteAutomation, refreshAutomations, copyFromSuggested } = useSavedAutomations();
 
   const handleStepChange = (data: AutomationStepData) => {
     // If navigating away from run step, reset automation results
@@ -62,7 +64,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 'selection':
+      case AUTOMATION_STEPS.SELECTION:
         return (
           <AutomationSelection
             savedAutomations={savedAutomations}
@@ -77,10 +79,18 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 onError?.(`Failed to delete automation: ${automation.name}`);
               }
             }}
+            onCopyFromSuggested={async (suggestedAutomation) => {
+              try {
+                await copyFromSuggested(suggestedAutomation);
+              } catch (error) {
+                console.error('Failed to copy suggested automation:', error);
+                onError?.(`Failed to copy automation: ${suggestedAutomation.name}`);
+              }
+            }}
           />
         );
 
-      case 'creation':
+      case AUTOMATION_STEPS.CREATION:
         if (!stepData.mode) {
           console.error('Creation mode is undefined');
           return null;
@@ -98,7 +108,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           />
         );
 
-      case 'run':
+      case AUTOMATION_STEPS.RUN:
         if (!stepData.automation) {
           console.error('Automation config is undefined');
           return null;
@@ -171,7 +181,11 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     review: {
       isVisible: hasResults && currentStep === AUTOMATION_STEPS.RUN,
       operation: automateOperation,
-      title: t('automate.reviewTitle', 'Automation Results')
+      title: t('automate.reviewTitle', 'Automation Results'),
+      onFileClick: (file: File) => {
+        onPreviewFile?.(file);
+        setMode('viewer');
+      }
     }
   });
 };
