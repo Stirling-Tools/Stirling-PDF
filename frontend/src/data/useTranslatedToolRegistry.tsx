@@ -40,7 +40,27 @@ import OCRSettings from '../components/tools/ocr/OCRSettings';
 import ConvertSettings from '../components/tools/convert/ConvertSettings';
 import ChangePermissionsSettings from '../components/tools/changePermissions/ChangePermissionsSettings';
 
-const showPlaceholderTools = false; // For development purposes. Allows seeing the full list of tools, even if they're unimplemented
+const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
+
+// Convert tool supported file formats
+export const CONVERT_SUPPORTED_FORMATS = [
+            // Microsoft Office
+            "doc", "docx", "dot", "dotx", "csv", "xls", "xlsx", "xlt", "xltx", "slk", "dif", "ppt", "pptx",
+            // OpenDocument
+            "odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg",
+            // Text formats
+            "txt", "text", "xml", "rtf", "html", "lwp", "md",
+            // Images
+            "bmp", "gif", "jpeg", "jpg", "png", "tif", "tiff", "pbm", "pgm", "ppm", "ras", "xbm", "xpm", "svg", "svm", "wmf", "webp",
+            // StarOffice
+            "sda", "sdc", "sdd", "sdw", "stc", "std", "sti", "stw", "sxd", "sxg", "sxi", "sxw",
+            // Email formats
+            "eml",
+            // Archive formats
+            "zip",
+            // Other
+            "dbf", "fods", "vsd", "vor", "vor3", "vor4", "uop", "pct", "ps", "pdf"
+        ];
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -394,6 +414,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION,
         maxFiles: -1,
+        supportedFormats: CONVERT_SUPPORTED_FORMATS,
         endpoints: ["handleData"]
     },
     "auto-rename-pdf-file": {
@@ -589,6 +610,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        supportedFormats: CONVERT_SUPPORTED_FORMATS,
         endpoints: [
             "pdf-to-img",
             "img-to-pdf",
@@ -605,24 +627,7 @@ export function useFlatToolRegistry(): ToolRegistry {
             "pdf-to-pdfa",
             "eml-to-pdf"
         ],
-        supportedFormats: [
-            // Microsoft Office
-            "doc", "docx", "dot", "dotx", "csv", "xls", "xlsx", "xlt", "xltx", "slk", "dif", "ppt", "pptx",
-            // OpenDocument
-            "odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg",
-            // Text formats
-            "txt", "text", "xml", "rtf", "html", "lwp", "md",
-            // Images
-            "bmp", "gif", "jpeg", "jpg", "png", "tif", "tiff", "pbm", "pgm", "ppm", "ras", "xbm", "xpm", "svg", "svm", "wmf", "webp",
-            // StarOffice
-            "sda", "sdc", "sdd", "sdw", "stc", "std", "sti", "stw", "sxd", "sxg", "sxi", "sxw",
-            // Email formats
-            "eml",
-            // Archive formats
-            "zip",
-            // Other
-            "dbf", "fods", "vsd", "vor", "vor3", "vor4", "uop", "pct", "ps", "pdf"
-        ],
+
         operationConfig: convertOperationConfig,
         settingsComponent: ConvertSettings
     },
@@ -671,14 +676,13 @@ export function useFlatToolRegistry(): ToolRegistry {
 
     if (showPlaceholderTools) {
       return allTools;
-    } else {
-      const filteredTools = Object.keys(allTools)
-        .filter(key => allTools[key].component !== null || allTools[key].link)
-        .reduce((obj, key) => {
-          obj[key] = allTools[key];
-          return obj;
-        }, {} as ToolRegistry);
-      return filteredTools;
     }
+    const filteredTools = Object.keys(allTools)
+      .filter(key => allTools[key].component !== null || allTools[key].link)
+      .reduce((obj, key) => {
+        obj[key] = allTools[key];
+        return obj;
+      }, {} as ToolRegistry);
+    return filteredTools;
   }, [t]); // Only re-compute when translations change
 }

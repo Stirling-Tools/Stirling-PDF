@@ -32,7 +32,7 @@ const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
     icon: CleaningServicesIcon
   },
   {
-    id: 'split',
+    id: 'splitPdf',
     title: 'Split',
     icon: CropIcon
   },

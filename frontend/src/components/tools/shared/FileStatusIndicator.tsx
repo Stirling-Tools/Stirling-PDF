@@ -14,7 +14,6 @@ export interface FileStatusIndicatorProps {
 
 const FileStatusIndicator = ({
   selectedFiles = [],
-  placeholder,
 }: FileStatusIndicatorProps) => {
   const { t } = useTranslation();
   const { openFilesModal, onFilesSelect } = useFilesModalContext();

@@ -117,7 +117,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
       {
         id: "secure-workflow",
         name: t("automation.suggested.secureWorkflow", "Security Workflow"),
-        description: t("automation.suggested.secureWorkflowDesc", "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access."),
+        description: t("automation.suggested.secureWorkflowDesc", "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access. Password is set to 'password' by default."),
         operations: [
           {
             operation: "sanitize",
