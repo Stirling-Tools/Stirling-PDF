@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.slf4j.MDC;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -81,7 +79,8 @@ class CorrelationIdFilterTest {
 
         @Test
         @DisplayName(
-                "Should propagate existing ID unchanged to MDC & request attribute, and set it in the response header")
+                "Should propagate existing ID unchanged to MDC & request attribute, and set it in"
+                        + " the response header")
         void shouldPropagateExistingId() throws ServletException, IOException {
             String givenId = "abc-123";
             request.addHeader(CorrelationIdFilter.HEADER, givenId);
@@ -101,7 +100,8 @@ class CorrelationIdFilterTest {
 
         @Test
         @DisplayName(
-                "Should strip newlines only in the response header, leaving MDC/attribute unsanitized (per current code)")
+                "Should strip newlines only in the response header, leaving MDC/attribute"
+                        + " unsanitized (per current code)")
         void shouldStripNewlinesOnlyInResponseHeader() throws ServletException, IOException {
             String raw = "id-with\r\nnewlines";
             String expectedSanitized = "id-withnewlines"; // Newlines removed
