@@ -29,6 +29,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDListBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDPushButton;
 import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTerminalField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.http.ResponseEntity;
@@ -98,12 +99,13 @@ public class MultiPageLayoutController {
                         newDocument, newPage, PDPageContentStream.AppendMode.APPEND, true, true);
         LayerUtility layerUtility = new LayerUtility(newDocument);
 
-        float borderThickness = 1.5f;
+        float borderThickness = 1.5f; // Specify border thickness as required
         contentStream.setLineWidth(borderThickness);
         contentStream.setStrokingColor(Color.BLACK);
 
         for (int i = 0; i < totalPages; i++) {
             if (i != 0 && i % pagesPerSheet == 0) {
+                // Close the current content stream and create a new page and content stream
                 contentStream.close();
                 newPage = new PDPage(PDRectangle.A4);
                 newDocument.addPage(newPage);
@@ -122,7 +124,9 @@ public class MultiPageLayoutController {
             float scaleHeight = cellHeight / rect.getHeight();
             float scale = Math.min(scaleWidth, scaleHeight);
 
-            int adjustedPageIndex = i % pagesPerSheet;
+            int adjustedPageIndex =
+                    i % pagesPerSheet; // Close the current content stream and create a new
+            // page and content stream
             int rowIndex = adjustedPageIndex / cols;
             int colIndex = adjustedPageIndex % cols;
 
@@ -142,6 +146,7 @@ public class MultiPageLayoutController {
             contentStream.restoreGraphicsState();
 
             if (addBorder) {
+                // Draw border around each page
                 float borderX = colIndex * cellWidth;
                 float borderY = newPage.getMediaBox().getHeight() - (rowIndex + 1) * cellHeight;
                 contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
@@ -366,7 +371,11 @@ public class MultiPageLayoutController {
                 }
             }
         } catch (Exception e) {
-            log.warn("Failed to copy basic form fields for page {}: {}", pageIndex, e.getMessage(), e);
+            log.warn(
+                    "Failed to copy basic form fields for page {}: {}",
+                    pageIndex,
+                    e.getMessage(),
+                    e);
         }
     }
 
@@ -386,38 +395,35 @@ public class MultiPageLayoutController {
             PDTextField newTextField = new PDTextField(newAcroForm);
             newTextField.setDefaultAppearance("/Helv 12 Tf 0 g");
 
-            String originalName = sourceField.getPartialName();
-            if (originalName == null) originalName = "textField";
-            String newFieldName =
-                    generateUniqueFieldName(originalName, pageIndex, fieldNameCounters);
-            newTextField.setPartialName(newFieldName);
+            boolean initialized =
+                    initializeFieldWithWidget(
+                            newAcroForm,
+                            destinationPage,
+                            destinationAnnotations,
+                            newTextField,
+                            sourceField.getPartialName(),
+                            "textField",
+                            sourceWidget,
+                            offsetX,
+                            offsetY,
+                            scale,
+                            pageIndex,
+                            fieldNameCounters);
 
-            PDAnnotationWidget newWidget = new PDAnnotationWidget();
-
-            PDRectangle sourceRect = sourceWidget.getRectangle();
-            if (sourceRect == null) {
+            if (!initialized) {
                 return;
             }
-            float newX = (sourceRect.getLowerLeftX() * scale) + offsetX;
-            float newY = (sourceRect.getLowerLeftY() * scale) + offsetY;
-            float newWidth = sourceRect.getWidth() * scale;
-            float newHeight = sourceRect.getHeight() * scale;
-            newWidget.setRectangle(new PDRectangle(newX, newY, newWidth, newHeight));
-
-            newWidget.setPage(destinationPage);
-
-            newTextField.getWidgets().add(newWidget);
-            newWidget.setParent(newTextField);
-
-            newAcroForm.getFields().add(newTextField);
-            destinationAnnotations.add(newWidget);
 
             if (sourceField.getValueAsString() != null) {
                 newTextField.setValue(sourceField.getValueAsString());
             }
 
         } catch (Exception e) {
-            log.warn("Failed to create text field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
+            log.warn(
+                    "Failed to create text field '{}': {}",
+                    sourceField.getPartialName(),
+                    e.getMessage(),
+                    e);
         }
     }
 
@@ -436,31 +442,24 @@ public class MultiPageLayoutController {
         try {
             PDCheckBox newCheckBox = new PDCheckBox(newAcroForm);
 
-            String originalName = sourceField.getPartialName();
-            if (originalName == null) originalName = "checkBox";
-            String newFieldName =
-                    generateUniqueFieldName(originalName, pageIndex, fieldNameCounters);
-            newCheckBox.setPartialName(newFieldName);
+            boolean initialized =
+                    initializeFieldWithWidget(
+                            newAcroForm,
+                            destinationPage,
+                            destinationAnnotations,
+                            newCheckBox,
+                            sourceField.getPartialName(),
+                            "checkBox",
+                            sourceWidget,
+                            offsetX,
+                            offsetY,
+                            scale,
+                            pageIndex,
+                            fieldNameCounters);
 
-            PDAnnotationWidget newWidget = new PDAnnotationWidget();
-
-            PDRectangle sourceRect = sourceWidget.getRectangle();
-            if (sourceRect == null) {
+            if (!initialized) {
                 return;
             }
-            float newX = (sourceRect.getLowerLeftX() * scale) + offsetX;
-            float newY = (sourceRect.getLowerLeftY() * scale) + offsetY;
-            float newWidth = sourceRect.getWidth() * scale;
-            float newHeight = sourceRect.getHeight() * scale;
-            newWidget.setRectangle(new PDRectangle(newX, newY, newWidth, newHeight));
-
-            newWidget.setPage(destinationPage);
-
-            newCheckBox.getWidgets().add(newWidget);
-            newWidget.setParent(newCheckBox);
-
-            newAcroForm.getFields().add(newCheckBox);
-            destinationAnnotations.add(newWidget);
 
             if (sourceField.isChecked()) {
                 newCheckBox.check();
@@ -469,7 +468,11 @@ public class MultiPageLayoutController {
             }
 
         } catch (Exception e) {
-            log.warn("Failed to create checkbox field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
+            log.warn(
+                    "Failed to create checkbox field '{}': {}",
+                    sourceField.getPartialName(),
+                    e.getMessage(),
+                    e);
         }
     }
 
@@ -488,28 +491,24 @@ public class MultiPageLayoutController {
         try {
             PDRadioButton newRadioButton = new PDRadioButton(newAcroForm);
 
-            String originalName = sourceField.getPartialName();
-            if (originalName == null) originalName = "radioButton";
-            String newFieldName =
-                    generateUniqueFieldName(originalName, pageIndex, fieldNameCounters);
-            newRadioButton.setPartialName(newFieldName);
+            boolean initialized =
+                    initializeFieldWithWidget(
+                            newAcroForm,
+                            destinationPage,
+                            destinationAnnotations,
+                            newRadioButton,
+                            sourceField.getPartialName(),
+                            "radioButton",
+                            sourceWidget,
+                            offsetX,
+                            offsetY,
+                            scale,
+                            pageIndex,
+                            fieldNameCounters);
 
-            PDAnnotationWidget newWidget = new PDAnnotationWidget();
-            PDRectangle sourceRect = sourceWidget.getRectangle();
-            if (sourceRect == null) {
+            if (!initialized) {
                 return;
             }
-            float newX = (sourceRect.getLowerLeftX() * scale) + offsetX;
-            float newY = (sourceRect.getLowerLeftY() * scale) + offsetY;
-            float newWidth = sourceRect.getWidth() * scale;
-            float newHeight = sourceRect.getHeight() * scale;
-            newWidget.setRectangle(new PDRectangle(newX, newY, newWidth, newHeight));
-            newWidget.setPage(destinationPage);
-
-            newRadioButton.getWidgets().add(newWidget);
-            newWidget.setParent(newRadioButton);
-            newAcroForm.getFields().add(newRadioButton);
-            destinationAnnotations.add(newWidget);
 
             if (sourceField.getExportValues() != null) {
                 newRadioButton.setExportValues(sourceField.getExportValues());
@@ -518,7 +517,11 @@ public class MultiPageLayoutController {
                 newRadioButton.setValue(sourceField.getValue());
             }
         } catch (Exception e) {
-            log.warn("Failed to create radio button field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
+            log.warn(
+                    "Failed to create radio button field '{}': {}",
+                    sourceField.getPartialName(),
+                    e.getMessage(),
+                    e);
         }
     }
 
@@ -537,28 +540,24 @@ public class MultiPageLayoutController {
         try {
             PDComboBox newComboBox = new PDComboBox(newAcroForm);
 
-            String originalName = sourceField.getPartialName();
-            if (originalName == null) originalName = "comboBox";
-            String newFieldName =
-                    generateUniqueFieldName(originalName, pageIndex, fieldNameCounters);
-            newComboBox.setPartialName(newFieldName);
+            boolean initialized =
+                    initializeFieldWithWidget(
+                            newAcroForm,
+                            destinationPage,
+                            destinationAnnotations,
+                            newComboBox,
+                            sourceField.getPartialName(),
+                            "comboBox",
+                            sourceWidget,
+                            offsetX,
+                            offsetY,
+                            scale,
+                            pageIndex,
+                            fieldNameCounters);
 
-            PDAnnotationWidget newWidget = new PDAnnotationWidget();
-            PDRectangle sourceRect = sourceWidget.getRectangle();
-            if (sourceRect == null) {
+            if (!initialized) {
                 return;
             }
-            float newX = (sourceRect.getLowerLeftX() * scale) + offsetX;
-            float newY = (sourceRect.getLowerLeftY() * scale) + offsetY;
-            float newWidth = sourceRect.getWidth() * scale;
-            float newHeight = sourceRect.getHeight() * scale;
-            newWidget.setRectangle(new PDRectangle(newX, newY, newWidth, newHeight));
-            newWidget.setPage(destinationPage);
-
-            newComboBox.getWidgets().add(newWidget);
-            newWidget.setParent(newComboBox);
-            newAcroForm.getFields().add(newComboBox);
-            destinationAnnotations.add(newWidget);
 
             if (sourceField.getOptions() != null) {
                 newComboBox.setOptions(sourceField.getOptions());
@@ -567,7 +566,11 @@ public class MultiPageLayoutController {
                 newComboBox.setValue(sourceField.getValue());
             }
         } catch (Exception e) {
-            log.warn("Failed to create combo box field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
+            log.warn(
+                    "Failed to create combo box field '{}': {}",
+                    sourceField.getPartialName(),
+                    e.getMessage(),
+                    e);
         }
     }
 
@@ -586,28 +589,24 @@ public class MultiPageLayoutController {
         try {
             PDListBox newListBox = new PDListBox(newAcroForm);
 
-            String originalName = sourceField.getPartialName();
-            if (originalName == null) originalName = "listBox";
-            String newFieldName =
-                    generateUniqueFieldName(originalName, pageIndex, fieldNameCounters);
-            newListBox.setPartialName(newFieldName);
+            boolean initialized =
+                    initializeFieldWithWidget(
+                            newAcroForm,
+                            destinationPage,
+                            destinationAnnotations,
+                            newListBox,
+                            sourceField.getPartialName(),
+                            "listBox",
+                            sourceWidget,
+                            offsetX,
+                            offsetY,
+                            scale,
+                            pageIndex,
+                            fieldNameCounters);
 
-            PDAnnotationWidget newWidget = new PDAnnotationWidget();
-            PDRectangle sourceRect = sourceWidget.getRectangle();
-            if (sourceRect == null) {
+            if (!initialized) {
                 return;
             }
-            float newX = (sourceRect.getLowerLeftX() * scale) + offsetX;
-            float newY = (sourceRect.getLowerLeftY() * scale) + offsetY;
-            float newWidth = sourceRect.getWidth() * scale;
-            float newHeight = sourceRect.getHeight() * scale;
-            newWidget.setRectangle(new PDRectangle(newX, newY, newWidth, newHeight));
-            newWidget.setPage(destinationPage);
-
-            newListBox.getWidgets().add(newWidget);
-            newWidget.setParent(newListBox);
-            newAcroForm.getFields().add(newListBox);
-            destinationAnnotations.add(newWidget);
 
             if (sourceField.getOptions() != null) {
                 newListBox.setOptions(sourceField.getOptions());
@@ -616,7 +615,11 @@ public class MultiPageLayoutController {
                 newListBox.setValue(sourceField.getValue());
             }
         } catch (Exception e) {
-            log.warn("Failed to create list box field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
+            log.warn(
+                    "Failed to create list box field '{}': {}",
+                    sourceField.getPartialName(),
+                    e.getMessage(),
+                    e);
         }
     }
 
@@ -635,30 +638,30 @@ public class MultiPageLayoutController {
         try {
             PDSignatureField newSignatureField = new PDSignatureField(newAcroForm);
 
-            String originalName = sourceField.getPartialName();
-            if (originalName == null) originalName = "signature";
-            String newFieldName =
-                    generateUniqueFieldName(originalName, pageIndex, fieldNameCounters);
-            newSignatureField.setPartialName(newFieldName);
+            boolean initialized =
+                    initializeFieldWithWidget(
+                            newAcroForm,
+                            destinationPage,
+                            destinationAnnotations,
+                            newSignatureField,
+                            sourceField.getPartialName(),
+                            "signature",
+                            sourceWidget,
+                            offsetX,
+                            offsetY,
+                            scale,
+                            pageIndex,
+                            fieldNameCounters);
 
-            PDAnnotationWidget newWidget = new PDAnnotationWidget();
-            PDRectangle sourceRect = sourceWidget.getRectangle();
-            if (sourceRect == null) {
+            if (!initialized) {
                 return;
             }
-            float newX = (sourceRect.getLowerLeftX() * scale) + offsetX;
-            float newY = (sourceRect.getLowerLeftY() * scale) + offsetY;
-            float newWidth = sourceRect.getWidth() * scale;
-            float newHeight = sourceRect.getHeight() * scale;
-            newWidget.setRectangle(new PDRectangle(newX, newY, newWidth, newHeight));
-            newWidget.setPage(destinationPage);
-
-            newSignatureField.getWidgets().add(newWidget);
-            newWidget.setParent(newSignatureField);
-            newAcroForm.getFields().add(newSignatureField);
-            destinationAnnotations.add(newWidget);
         } catch (Exception e) {
-            log.warn("Failed to create signature field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
+            log.warn(
+                    "Failed to create signature field '{}': {}",
+                    sourceField.getPartialName(),
+                    e.getMessage(),
+                    e);
         }
     }
 
@@ -677,31 +680,69 @@ public class MultiPageLayoutController {
         try {
             PDPushButton newPushButton = new PDPushButton(newAcroForm);
 
-            String originalName = sourceField.getPartialName();
-            if (originalName == null) originalName = "pushButton";
-            String newFieldName =
-                    generateUniqueFieldName(originalName, pageIndex, fieldNameCounters);
-            newPushButton.setPartialName(newFieldName);
+            boolean initialized =
+                    initializeFieldWithWidget(
+                            newAcroForm,
+                            destinationPage,
+                            destinationAnnotations,
+                            newPushButton,
+                            sourceField.getPartialName(),
+                            "pushButton",
+                            sourceWidget,
+                            offsetX,
+                            offsetY,
+                            scale,
+                            pageIndex,
+                            fieldNameCounters);
 
-            PDAnnotationWidget newWidget = new PDAnnotationWidget();
-            PDRectangle sourceRect = sourceWidget.getRectangle();
-            if (sourceRect == null) {
+            if (!initialized) {
                 return;
             }
-            float newX = (sourceRect.getLowerLeftX() * scale) + offsetX;
-            float newY = (sourceRect.getLowerLeftY() * scale) + offsetY;
-            float newWidth = sourceRect.getWidth() * scale;
-            float newHeight = sourceRect.getHeight() * scale;
-            newWidget.setRectangle(new PDRectangle(newX, newY, newWidth, newHeight));
-            newWidget.setPage(destinationPage);
-
-            newPushButton.getWidgets().add(newWidget);
-            newWidget.setParent(newPushButton);
-            newAcroForm.getFields().add(newPushButton);
-            destinationAnnotations.add(newWidget);
         } catch (Exception e) {
-            log.warn("Failed to create push button field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
+            log.warn(
+                    "Failed to create push button field '{}': {}",
+                    sourceField.getPartialName(),
+                    e.getMessage(),
+                    e);
         }
+    }
+
+    private <T extends PDTerminalField> boolean initializeFieldWithWidget(
+            PDAcroForm newAcroForm,
+            PDPage destinationPage,
+            List<PDAnnotation> destinationAnnotations,
+            T newField,
+            String originalName,
+            String fallbackName,
+            PDAnnotationWidget sourceWidget,
+            float offsetX,
+            float offsetY,
+            float scale,
+            int pageIndex,
+            Map<String, Integer> fieldNameCounters) {
+
+        String baseName = (originalName != null) ? originalName : fallbackName;
+        String newFieldName = generateUniqueFieldName(baseName, pageIndex, fieldNameCounters);
+        newField.setPartialName(newFieldName);
+
+        PDAnnotationWidget newWidget = new PDAnnotationWidget();
+        PDRectangle sourceRect = sourceWidget.getRectangle();
+        if (sourceRect == null) {
+            return false;
+        }
+
+        float newX = (sourceRect.getLowerLeftX() * scale) + offsetX;
+        float newY = (sourceRect.getLowerLeftY() * scale) + offsetY;
+        float newWidth = sourceRect.getWidth() * scale;
+        float newHeight = sourceRect.getHeight() * scale;
+        newWidget.setRectangle(new PDRectangle(newX, newY, newWidth, newHeight));
+        newWidget.setPage(destinationPage);
+
+        newField.getWidgets().add(newWidget);
+        newWidget.setParent(newField);
+        newAcroForm.getFields().add(newField);
+        destinationAnnotations.add(newWidget);
+        return true;
     }
 
     private PDField findFieldForWidget(PDAcroForm acroForm, PDAnnotationWidget widget) {
@@ -774,13 +815,20 @@ public class MultiPageLayoutController {
                         try {
                             widget.getPage().getAnnotations().remove(widget);
                         } catch (Exception e) {
-                            log.warn("Failed to remove widget annotation from page: {}", e.getMessage(), e);
+                            log.warn(
+                                    "Failed to remove widget annotation from page: {}",
+                                    e.getMessage(),
+                                    e);
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            log.warn("Failed to cleanup field widgets for field '{}': {}", field.getPartialName(), e.getMessage(), e);
+            log.warn(
+                    "Failed to cleanup field widgets for field '{}': {}",
+                    field.getPartialName(),
+                    e.getMessage(),
+                    e);
         }
     }
 }
