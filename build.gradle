@@ -2,10 +2,10 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "3.5.4"
+    id "org.springframework.boot" version "3.5.5"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
-    id "edu.sc.seis.launch4j" version "3.0.7"
+    id "edu.sc.seis.launch4j" version "4.0.0"
     id "com.diffplug.spotless" version "7.2.1"
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
@@ -21,17 +21,24 @@ import java.nio.file.Files
 import java.time.Year
 
 ext {
-    springBootVersion = "3.5.4"
+    springBootVersion = "3.5.5"
     pdfboxVersion = "3.0.5"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.38"
     bouncycastleVersion = "1.81"
-    springSecuritySamlVersion = "6.5.2"
+    springSecuritySamlVersion = "6.5.3"
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.25.1"
     googleJavaFormatVersion = "1.28.0"
     junitPlatformVersion = "1.12.2"
     tempJrePath = null
+}
+
+ext.isSecurityDisabled = { ->
+    System.getenv('DOCKER_ENABLE_SECURITY') == 'false' ||
+    System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true' ||
+    (project.hasProperty('DISABLE_ADDITIONAL_FEATURES') &&
+     System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')
 }
 
 jar {
@@ -67,8 +74,8 @@ allprojects {
 }
 
 tasks.register('writeVersion', WriteProperties) {
-    outputFile = layout.projectDirectory.file('app/common/src/main/resources/version.properties')
-    println "Writing version.properties to ${outputFile.path}"
+    destinationFile = layout.projectDirectory.file('app/common/src/main/resources/version.properties')
+    println "Writing version.properties to ${destinationFile.get().asFile.path}"
     comment = "${new Date()}"
     property 'version', project.provider { project.version.toString() }
 }
@@ -215,42 +222,14 @@ tasks.withType(JavaCompile).configureEach {
     dependsOn "spotlessApply"
 }
 
+def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
+
 licenseReport {
-    projects = [project]
+    projects = allProjects
     renderers = [new JsonReportRenderer()]
     allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
-}
-
-sourceSets {
-    main {
-        java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
-                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
-                exclude 'stirling/software/proprietary/security/**'
-            }
-
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
-            }
-
-        }
-    }
-
-    test {
-        java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
-                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
-                exclude 'stirling/software/proprietary/security/**'
-            }
-
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
-            }
-        }
-    }
+    configurations = [ "productionRuntimeClasspath", "runtimeClasspath" ]
 }
 
 // Configure the forked spring boot run task to properly delegate to the stirling-pdf module
@@ -575,9 +554,7 @@ swaggerhubUpload {
 dependencies {
     implementation project(':stirling-pdf')
     implementation project(':common')
-    if (System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
-        || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-        && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
+    if (rootProject.ext.isSecurityDisabled()) {
         implementation project(':proprietary')
     }
 
@@ -591,7 +568,6 @@ dependencies {
 tasks.named("test") {
     useJUnitPlatform()
 }
-
 
 // Make sure all relevant processes depend on writeVersion
 processResources.dependsOn(writeVersion)
