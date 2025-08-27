@@ -19,14 +19,34 @@ export function parseToolRoute(): ToolRoute {
     
     // Map URL paths to tool keys and modes (excluding internal UI modes)
     const toolMappings: Record<string, { mode: ModeType; toolKey: string }> = {
+      'split-pdfs': { mode: 'split', toolKey: 'split' },
       'split': { mode: 'split', toolKey: 'split' },
-      'merge': { mode: 'merge', toolKey: 'merge' },
-      'compress': { mode: 'compress', toolKey: 'compress' },
+      'merge-pdfs': { mode: 'merge', toolKey: 'merge' },
+      'compress-pdf': { mode: 'compress', toolKey: 'compress' },
       'convert': { mode: 'convert', toolKey: 'convert' },
+      'convert-pdf': { mode: 'convert', toolKey: 'convert' },
+      'file-to-pdf': { mode: 'convert', toolKey: 'convert' },
+      'eml-to-pdf': { mode: 'convert', toolKey: 'convert' },
+      'html-to-pdf': { mode: 'convert', toolKey: 'convert' },
+      'markdown-to-pdf': { mode: 'convert', toolKey: 'convert' },
+      'pdf-to-csv': { mode: 'convert', toolKey: 'convert' },
+      'pdf-to-img': { mode: 'convert', toolKey: 'convert' },
+      'pdf-to-markdown': { mode: 'convert', toolKey: 'convert' },
+      'pdf-to-pdfa': { mode: 'convert', toolKey: 'convert' },
+      'pdf-to-word': { mode: 'convert', toolKey: 'convert' },
+      'pdf-to-xml': { mode: 'convert', toolKey: 'convert' },
       'add-password': { mode: 'addPassword', toolKey: 'addPassword' },
       'change-permissions': { mode: 'changePermissions', toolKey: 'changePermissions' },
-      'sanitize': { mode: 'sanitize', toolKey: 'sanitize' },
-      'ocr': { mode: 'ocr', toolKey: 'ocr' }
+      'sanitize-pdf': { mode: 'sanitize', toolKey: 'sanitize' },
+      'ocr': { mode: 'ocr', toolKey: 'ocr' },
+      'ocr-pdf': { mode: 'ocr', toolKey: 'ocr' },
+      'add-watermark': { mode: 'addWatermark', toolKey: 'addWatermark' },
+      'remove-password': { mode: 'removePassword', toolKey: 'removePassword' },
+      'single-large-page': { mode: 'single-large-page', toolKey: 'single-large-page' },
+      'repair': { mode: 'repair', toolKey: 'repair' },
+      'unlock-pdf-forms': { mode: 'unlockPdfForms', toolKey: 'unlockPdfForms' },
+      'remove-certificate-sign': { mode: 'removeCertificateSign', toolKey: 'removeCertificateSign' },
+      'remove-cert-sign': { mode: 'removeCertificateSign', toolKey: 'removeCertificateSign' }
     };
     
     const mapping = toolMappings[toolKey];
