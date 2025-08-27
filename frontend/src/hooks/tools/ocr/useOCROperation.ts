@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OCRParameters, defaultParameters } from './useOCRParameters';
-import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
+import { useToolOperation, ToolOperationConfig, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { useToolResources } from '../shared/useToolResources';
 
@@ -94,7 +94,7 @@ export const ocrResponseHandler = async (blob: Blob, originalFiles: File[], extr
 
 // Static configuration object (without t function dependencies)
 export const ocrOperationConfig = {
-  toolType: 'singleFile',
+  toolType: ToolType.singleFile,
   buildFormData: buildOCRFormData,
   operationType: 'ocr',
   endpoint: '/api/v1/misc/ocr-pdf',

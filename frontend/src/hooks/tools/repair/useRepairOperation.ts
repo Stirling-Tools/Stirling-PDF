@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RepairParameters, defaultParameters } from './useRepairParameters';
 
@@ -12,7 +12,7 @@ export const buildRepairFormData = (parameters: RepairParameters, file: File): F
 
 // Static configuration object
 export const repairOperationConfig = {
-  toolType: 'singleFile',
+  toolType: ToolType.singleFile,
   buildFormData: buildRepairFormData,
   operationType: 'repair',
   endpoint: '/api/v1/misc/repair',

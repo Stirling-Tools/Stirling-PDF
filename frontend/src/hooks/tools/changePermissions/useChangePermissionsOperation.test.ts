@@ -4,9 +4,13 @@ import { useChangePermissionsOperation } from './useChangePermissionsOperation';
 import type { ChangePermissionsParameters } from './useChangePermissionsParameters';
 
 // Mock the useToolOperation hook
-vi.mock('../shared/useToolOperation', () => ({
-  useToolOperation: vi.fn()
-}));
+vi.mock('../shared/useToolOperation', async () => {
+  const actual = await vi.importActual('../shared/useToolOperation');  // Need to keep ToolType etc.
+  return {
+    ...actual,
+    useToolOperation: vi.fn()
+  };
+});
 
 // Mock the translation hook
 const mockT = vi.fn((key: string) => `translated-${key}`);
@@ -20,7 +24,7 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { SingleFileToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
+import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '../shared/useToolOperation';
 
 describe('useChangePermissionsOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
@@ -106,7 +110,7 @@ describe('useChangePermissionsOperation', () => {
   });
 
   test.each([
-    { property: 'toolType' as const, expectedValue: 'singleFile' },
+    { property: 'toolType' as const, expectedValue: ToolType.singleFile },
     { property: 'endpoint' as const, expectedValue: '/api/v1/security/add-password' },
     { property: 'filePrefix' as const, expectedValue: 'permissions_' },
     { property: 'operationType' as const, expectedValue: 'change-permissions' }

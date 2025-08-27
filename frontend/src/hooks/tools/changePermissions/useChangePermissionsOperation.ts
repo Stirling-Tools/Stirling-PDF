@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { ChangePermissionsParameters, defaultParameters } from './useChangePermissionsParameters';
 
@@ -24,7 +24,7 @@ export const buildChangePermissionsFormData = (parameters: ChangePermissionsPara
 
 // Static configuration object
 export const changePermissionsOperationConfig = {
-  toolType: 'singleFile',
+  toolType: ToolType.singleFile,
   buildFormData: buildChangePermissionsFormData,
   operationType: 'change-permissions',
   endpoint: '/api/v1/security/add-password', // Change Permissions is a fake endpoint for the Add Password tool

@@ -4,6 +4,7 @@ import { AutomationConfig, AutomationExecutionCallbacks } from '../types/automat
 import { AUTOMATION_CONSTANTS } from '../constants/automation';
 import { AutomationFileProcessor } from './automationFileProcessor';
 import { ResourceManager } from './resourceManager';
+import { ToolType } from '../hooks/tools/shared/useToolOperation';
 
 
 /**
@@ -47,7 +48,7 @@ export const executeToolOperationWithPrefix = async (
       return resultFiles;
     }
 
-    if (config.toolType === 'multiFile') {
+    if (config.toolType === ToolType.multiFile) {
       // Multi-file processing - single API call with all files
       const endpoint = typeof config.endpoint === 'function'
         ? config.endpoint(parameters)

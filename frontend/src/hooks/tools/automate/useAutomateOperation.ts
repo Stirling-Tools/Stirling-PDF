@@ -1,4 +1,4 @@
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { useCallback } from 'react';
 import { executeAutomationSequence } from '../../../utils/automationExecutor';
 import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
@@ -40,7 +40,7 @@ export function useAutomateOperation() {
   }, [toolRegistry]);
 
   return useToolOperation<AutomateParameters>({
-    toolType: 'custom',
+    toolType: ToolType.custom,
     operationType: 'automate',
     customProcessor,
     filePrefix: '' // No prefix needed since automation handles naming internally

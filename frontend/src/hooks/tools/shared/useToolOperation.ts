@@ -12,7 +12,11 @@ import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
 
-export type ToolConfigType = 'singleFile' | 'multiFile' | 'custom';
+export enum ToolType {
+  singleFile,
+  multiFile,
+  custom,
+}
 
 /**
  * Configuration for tool operations defining processing behavior and API integration.
@@ -41,7 +45,7 @@ interface BaseToolOperationConfig<TParams> {
 
 export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
   /** This tool processes one file at a time. */
-  toolType: 'singleFile';
+  toolType: ToolType.singleFile;
 
   /** Builds FormData for API request. */
   buildFormData: ((params: TParams, file: File) => FormData);
@@ -54,7 +58,7 @@ export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperatio
 
 export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
   /** This tool processes multiple files at once. */
-  toolType: 'multiFile';
+  toolType: ToolType.multiFile;
 
   /** Builds FormData for API request. */
   buildFormData: ((params: TParams, files: File[]) => FormData);
@@ -67,7 +71,7 @@ export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperation
 
 export interface CustomToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
   /** This tool has custom behaviour. */
-  toolType: 'custom';
+  toolType: ToolType.custom;
 
   buildFormData?: undefined;
   endpoint?: undefined;
@@ -160,7 +164,7 @@ export const useToolOperation = <TParams>(
       let processedFiles: File[];
 
       switch (config.toolType) {
-        case 'singleFile':
+        case ToolType.singleFile:
           // Individual file processing - separate API call per file
           const apiCallsConfig: ApiCallsConfig<TParams> = {
             endpoint: config.endpoint,
@@ -177,7 +181,7 @@ export const useToolOperation = <TParams>(
           );
           break;
 
-        case 'multiFile':
+        case ToolType.multiFile:
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');
           const formData = config.buildFormData(params, validFiles);
@@ -189,7 +193,7 @@ export const useToolOperation = <TParams>(
           if (config.responseHandler) {
             // Use custom responseHandler for multi-file (handles ZIP extraction)
             processedFiles = await config.responseHandler(response.data, validFiles);
-          } else if (response.data.type === 'application/pdf' || 
+          } else if (response.data.type === 'application/pdf' ||
                      (response.headers && response.headers['content-type'] === 'application/pdf')) {
             // Single PDF response (e.g. split with merge option) - use original filename
             const originalFileName = validFiles[0]?.name || 'document.pdf';
@@ -206,7 +210,7 @@ export const useToolOperation = <TParams>(
           }
           break;
 
-        case 'custom':
+        case ToolType.custom:
           actions.setStatus('Processing files...');
           processedFiles = await config.customProcessor(params, validFiles);
           break;
