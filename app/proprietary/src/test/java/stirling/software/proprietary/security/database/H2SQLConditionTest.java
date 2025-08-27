@@ -20,31 +20,55 @@ class H2SQLConditionTest {
     }
 
     @Test
-    void returnsFalse_whenEnableCustomDatabase_missing_or_false() {
-        // missing -> parseBoolean(null) = false
-        assertFalse(eval(new MockEnvironment()), "Missing flag should be treated as false");
+    void returnsTrue_whenDisabledOrMissing_and_typeIsH2_caseInsensitive() {
+        // Flag fehlt, Typ=h2 -> true
+        MockEnvironment envMissingFlag =
+                new MockEnvironment().withProperty("system.datasource.type", "h2");
+        assertTrue(eval(envMissingFlag));
 
-        // explicitly false (even if type=h2)
-        MockEnvironment envFalse =
+        // Flag=false, Typ=H2 -> true
+        MockEnvironment envFalseFlag =
                 new MockEnvironment()
                         .withProperty("system.datasource.enableCustomDatabase", "false")
-                        .withProperty("system.datasource.type", "h2");
-        assertFalse(eval(envFalse), "Flag=false must short-circuit to false even if type=h2");
+                        .withProperty("system.datasource.type", "H2");
+        assertTrue(eval(envFalseFlag));
     }
 
     @Test
-    void returnsTrue_whenEnabled_and_type_is_h2_caseInsensitive() {
-        MockEnvironment env =
+    void returnsFalse_whenEnableCustomDatabase_true_regardlessOfType() {
+        // Flag=true, Typ=h2 -> false
+        MockEnvironment envTrueH2 =
                 new MockEnvironment()
                         .withProperty("system.datasource.enableCustomDatabase", "true")
                         .withProperty("system.datasource.type", "h2");
-        assertTrue(eval(env));
+        assertFalse(eval(envTrueH2));
 
-        MockEnvironment envUpper =
+        // Flag=true, Typ=postgres -> false
+        MockEnvironment envTrueOther =
                 new MockEnvironment()
                         .withProperty("system.datasource.enableCustomDatabase", "true")
-                        .withProperty("system.datasource.type", "H2");
-        assertTrue(eval(envUpper));
+                        .withProperty("system.datasource.type", "postgresql");
+        assertFalse(eval(envTrueOther));
+
+        // Flag=true, Typ fehlt -> false
+        MockEnvironment envTrueMissingType =
+                new MockEnvironment()
+                        .withProperty("system.datasource.enableCustomDatabase", "true");
+        assertFalse(eval(envTrueMissingType));
+    }
+
+    @Test
+    void returnsFalse_whenTypeNotH2_orMissing_andFlagNotEnabled() {
+        // Flag fehlt, Typ=postgres -> false
+        MockEnvironment envNotH2 =
+                new MockEnvironment().withProperty("system.datasource.type", "postgresql");
+        assertFalse(eval(envNotH2));
+
+        // Flag=false, Typ fehlt -> false (Default: "")
+        MockEnvironment envMissingType =
+                new MockEnvironment()
+                        .withProperty("system.datasource.enableCustomDatabase", "false");
+        assertFalse(eval(envMissingType));
     }
 
     @Test
