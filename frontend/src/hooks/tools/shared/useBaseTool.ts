@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useFileSelection } from '../../../contexts/FileContext';
 import { useEndpointEnabled } from '../../useEndpointConfig';
 import { BaseToolProps } from '../../../types/tool';
@@ -61,7 +61,7 @@ export function useBaseTool<TParams>(
   useEffect(() => {
     operation.resetResults();
     onPreviewFile?.(null);
-  }, [params.parameters, operation, onPreviewFile]);
+  }, [params.parameters]);
 
   // Reset results when selected files change
   useEffect(() => {
@@ -69,10 +69,10 @@ export function useBaseTool<TParams>(
       operation.resetResults();
       onPreviewFile?.(null);
     }
-  }, [selectedFiles, operation, onPreviewFile]);
+  }, [selectedFiles.length]);
 
   // Standard handlers
-  const handleExecute = async () => {
+  const handleExecute = useCallback(async () => {
     try {
       await operation.executeOperation(params.parameters, selectedFiles);
       if (operation.files && onComplete) {
@@ -84,24 +84,24 @@ export function useBaseTool<TParams>(
         onError(message);
       }
     }
-  };
+  }, [operation, params.parameters, selectedFiles, onComplete, onError, toolName]);
 
-  const handleThumbnailClick = (file: File) => {
+  const handleThumbnailClick = useCallback((file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem('previousMode', toolName);
-  };
+  }, [onPreviewFile, toolName]);
 
-  const handleSettingsReset = () => {
+  const handleSettingsReset = useCallback(() => {
     operation.resetResults();
     onPreviewFile?.(null);
-  };
+  }, [operation, onPreviewFile]);
 
   // Standard computed state
   const hasFiles = selectedFiles.length > 0;
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
 
-  return useMemo(() => ({
+  return {
     // File management
     selectedFiles,
 
@@ -122,17 +122,5 @@ export function useBaseTool<TParams>(
     hasFiles,
     hasResults,
     settingsCollapsed
-  }), [
-    selectedFiles,
-    params,
-    operation,
-    endpointEnabled,
-    endpointLoading,
-    handleExecute,
-    handleThumbnailClick,
-    handleSettingsReset,
-    hasFiles,
-    hasResults,
-    settingsCollapsed
-  ]);
+  };
 }
