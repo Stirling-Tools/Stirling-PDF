@@ -22,7 +22,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode } = useToolWorkflow();
+  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -68,19 +68,24 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
-      icon: <LocalIcon icon="automation-outline" width="1.25rem" height="1.25rem" />,
+      icon: <LocalIcon icon="automation-outline" width="1.6rem" height="1.6rem" />,
       size: 'lg',
       isRound: false,
       type: 'navigation',
       onClick: () => {
         setActiveButton('automate');
-        handleToolSelect('automate');
+        // If already on automate tool, reset it directly
+        if (selectedToolKey === 'automate') {
+          resetTool('automate');
+        } else {
+          handleToolSelect('automate');
+        }
       }
     },
     {
       id: 'files',
       name: t("quickAccess.files", "Files"),
-      icon: <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />,
+      icon: <LocalIcon icon="folder-rounded" width="1.6rem" height="1.6rem" />,
       isRound: true,
       size: 'lg',
       type: 'modal',
@@ -151,7 +156,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
 
                   <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
                     <ActionIcon
-                      size={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? (config.size || 'xl') : 'lg'}
+                      size={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? (config.size || 'lg') : 'lg'}
                       variant="subtle"
                        onClick={() => {
                          config.onClick();
@@ -185,7 +190,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
           <div className="spacer" />
 
           {/* Config button at the bottom */}
-          {buttonConfigs
+          {/* {buttonConfigs
             .filter(config => config.id === 'config')
             .map(config => (
                 <div className="flex flex-col items-center gap-1">
@@ -205,14 +210,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
                     {config.name}
                   </span>
                 </div>
-            ))}
+            ))} */}
         </div>
       </div>
 
-      <AppConfigModal
+      {/* <AppConfigModal
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
-      />
+      /> */}
     </div>
   );
 });

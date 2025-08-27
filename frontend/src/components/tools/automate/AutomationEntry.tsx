@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Tooltip } from '../../shared/Tooltip';
+import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 
 interface AutomationEntryProps {
   /** Optional title for the automation (usually for custom ones) */
@@ -28,6 +29,8 @@ interface AutomationEntryProps {
   onDelete?: () => void;
   /** Copy handler (for suggested automations) */
   onCopy?: () => void;
+  /** Tool registry to resolve operation names */
+  toolRegistry?: Record<string, ToolRegistryEntry>;
 }
 
 export default function AutomationEntry({
@@ -40,7 +43,8 @@ export default function AutomationEntry({
   showMenu = false,
   onEdit,
   onDelete,
-  onCopy
+  onCopy,
+  toolRegistry
 }: AutomationEntryProps) {
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
@@ -49,9 +53,19 @@ export default function AutomationEntry({
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
 
+  // Helper function to resolve tool display names
+  const getToolDisplayName = (operation: string): string => {
+    if (toolRegistry?.[operation]?.name) {
+      return toolRegistry[operation].name;
+    }
+    // Fallback to translation or operation key
+    return t(`${operation}.title`, operation);
+  };
+
   // Create tooltip content with description and tool chain
   const createTooltipContent = () => {
-    if (!description) return null;
+    // Show tooltip if there's a description OR if there are operations to show in the chain
+    if (!description && operations.length === 0) return null;
 
     const toolChain = operations.map((op, index) => (
       <React.Fragment key={`${op}-${index}`}>
@@ -68,7 +82,7 @@ export default function AutomationEntry({
             whiteSpace: 'nowrap'
           }}
         >
-          {t(`${op}.title`, op)}
+          {getToolDisplayName(op)}
         </Text>
         {index < operations.length - 1 && (
           <Text component="span" size="sm" mx={4}>
@@ -80,12 +94,16 @@ export default function AutomationEntry({
 
     return (
       <div style={{ minWidth: '400px', width: 'auto' }}>
-        <Text size="sm" mb={8} style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
-          {description}
-        </Text>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-          {toolChain}
-        </div>
+        {description && (
+          <Text size="sm" mb={8} style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+            {description}
+          </Text>
+        )}
+        {operations.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+            {toolChain}
+          </div>
+        )}
       </div>
     );
   };
@@ -122,7 +140,7 @@ export default function AutomationEntry({
             {operations.map((op, index) => (
               <React.Fragment key={`${op}-${index}`}>
                 <Text size="xs" style={{ color: 'var(--mantine-color-text)' }}>
-                  {t(`${op}.title`, op)}
+                  {getToolDisplayName(op)}
                 </Text>
 
                 {index < operations.length - 1 && (
@@ -221,8 +239,10 @@ export default function AutomationEntry({
     </Box>
   );
 
-  // Only show tooltip if description exists, otherwise return plain content
-  return description ? (
+  // Show tooltip if there's a description OR operations to display
+  const shouldShowTooltip = description || operations.length > 0;
+  
+  return shouldShowTooltip ? (
     <Tooltip 
       content={createTooltipContent()} 
       position="right" 

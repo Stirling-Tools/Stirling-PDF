@@ -44,6 +44,6 @@ export function useAutomateOperation() {
     endpoint: '/api/v1/pipeline/handleData', // Not used with customProcessor
     buildFormData: () => new FormData(), // Not used with customProcessor
     customProcessor,
-    filePrefix: AUTOMATION_CONSTANTS.FILE_PREFIX
+    filePrefix: '' // No prefix needed since automation handles naming internally
   });
 }

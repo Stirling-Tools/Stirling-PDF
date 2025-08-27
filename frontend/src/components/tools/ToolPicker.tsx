@@ -131,7 +131,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 borderTop: `0.0625rem solid var(--tool-header-border)`,
                 borderBottom: `0.0625rem solid var(--tool-header-border)`,
                 padding: "0.5rem 1rem",
-                fontWeight: 700,
+                fontWeight: 600,
                 background: "var(--tool-header-bg)",
                 color: "var(--tool-header-text)",
                 cursor: "pointer",
@@ -141,7 +141,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               }}
               onClick={() => scrollTo(quickAccessRef)}
             >
-              <span>{t("toolPicker.quickAccess", "QUICK ACCESS")}</span>
+              <span style={{ fontSize: "1rem" }}>{t("toolPicker.quickAccess", "QUICK ACCESS")}</span>
               <span
                 style={{
                   background: "var(--tool-header-badge-bg)",
@@ -156,7 +156,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               </span>
             </div>
 
-            <Box ref={quickAccessRef} w="100%">
+            <Box ref={quickAccessRef} w="100%" my="sm">
               <Stack p="sm" gap="xs">
                 {quickSection?.subcategories.map(sc =>
                   renderToolButtons(t, sc, selectedToolKey, onSelect, false)
@@ -177,7 +177,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                 borderTop: `0.0625rem solid var(--tool-header-border)`,
                 borderBottom: `0.0625rem solid var(--tool-header-border)`,
                 padding: "0.5rem 1rem",
-                fontWeight: 700,
+                fontWeight: 600,
                 background: "var(--tool-header-bg)",
                 color: "var(--tool-header-text)",
                 cursor: "pointer",
@@ -187,7 +187,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               }}
               onClick={() => scrollTo(allToolsRef)}
             >
-              <span>{t("toolPicker.allTools", "ALL TOOLS")}</span>
+              <span style={{ fontSize: "1rem" }}>{t("toolPicker.allTools", "ALL TOOLS")}</span>
               <span
                 style={{
                   background: "var(--tool-header-badge-bg)",

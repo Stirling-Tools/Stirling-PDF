@@ -6,6 +6,7 @@ import {
   Stack,
   Group,
   TextInput,
+  Textarea,
   Divider,
   Modal
 } from '@mantine/core';
@@ -13,6 +14,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 import ToolConfigurationModal from './ToolConfigurationModal';
 import ToolList from './ToolList';
+import IconSelector from './IconSelector';
 import { AutomationConfig, AutomationMode, AutomationTool } from '../../../types/automation';
 import { useAutomationForm } from '../../../hooks/tools/automate/useAutomationForm';
 
@@ -31,6 +33,10 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   const {
     automationName,
     setAutomationName,
+    automationDescription,
+    setAutomationDescription,
+    automationIcon,
+    setAutomationIcon,
     selectedTools,
     addTool,
     removeTool,
@@ -100,7 +106,8 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
     const automationData = {
       name: automationName.trim(),
-      description: '',
+      description: automationDescription.trim(),
+      icon: automationIcon,
       operations: selectedTools.map(tool => ({
         operation: tool.operation,
         parameters: tool.parameters || {}
@@ -114,7 +121,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       if (mode === AutomationMode.EDIT && existingAutomation) {
         // For edit mode, check if name has changed
         const nameChanged = automationName.trim() !== existingAutomation.name;
-        
+
         if (nameChanged) {
           // Name changed - create new automation
           savedAutomation = await automationStorage.saveAutomation(automationData);
@@ -144,17 +151,39 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   return (
     <div>
         <Text size="sm" mb="md" p="md"  style={{borderRadius:'var(--mantine-radius-md)', background: 'var(--color-gray-200)', color: 'var(--mantine-color-text)' }}>
-        {t("automate.creation.description", "Automations run tools sequentially. To get started, add tools in the order you want them to run.")}
+            {t("automate.creation.intro", "Automations run tools sequentially. To get started, add tools in the order you want them to run.")}
         </Text>
       <Divider mb="md" />
 
       <Stack gap="md">
-        {/* Automation Name */}
-        <TextInput
-          placeholder={t('automate.creation.name.placeholder', 'Automation name')}
-          value={automationName}
-          onChange={(e) => setAutomationName(e.currentTarget.value)}
+        {/* Automation Name and Icon */}
+        <Group gap="xs" align="flex-end">
+          <Stack gap="xs" style={{ flex: 1 }}>
+            <TextInput
+              placeholder={t('automate.creation.name.placeholder', 'My Automation')}
+              value={automationName}
+              withAsterisk
+              label={t('automate.creation.name.label', 'Automation Name')}
+              onChange={(e) => setAutomationName(e.currentTarget.value)}
+              size="sm"
+            />
+          </Stack>
+
+          <IconSelector
+            value={automationIcon || 'SettingsIcon'}
+            onChange={setAutomationIcon}
+            size="sm"
+          />
+        </Group>
+
+        {/* Automation Description */}
+        <Textarea
+          placeholder={t('automate.creation.description.placeholder', 'Describe what this automation does...')}
+          value={automationDescription}
+          label={t('automate.creation.description.label', 'Description')}
+          onChange={(e) => setAutomationDescription(e.currentTarget.value)}
           size="sm"
+          rows={3}
         />
 
 
