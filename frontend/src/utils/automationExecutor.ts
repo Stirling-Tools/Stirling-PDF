@@ -15,6 +15,19 @@ export const executeToolOperation = async (
   files: File[],
   toolRegistry: ToolRegistry
 ): Promise<File[]> => {
+  return executeToolOperationWithPrefix(operationName, parameters, files, toolRegistry, AUTOMATION_CONSTANTS.FILE_PREFIX);
+};
+
+/**
+ * Execute a tool operation with custom prefix
+ */
+export const executeToolOperationWithPrefix = async (
+  operationName: string, 
+  parameters: any, 
+  files: File[],
+  toolRegistry: ToolRegistry,
+  filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
+): Promise<File[]> => {
   console.log(`🔧 Executing tool: ${operationName}`, { parameters, fileCount: files.length });
   
   const config = toolRegistry[operationName]?.operationConfig;
@@ -51,15 +64,37 @@ export const executeToolOperation = async (
 
       console.log(`📥 Response status: ${response.status}, size: ${response.data.size} bytes`);
 
-      // Multi-file responses are typically ZIP files, but may be single files
-      const result = await AutomationFileProcessor.extractAutomationZipFiles(response.data);
+      // Multi-file responses are typically ZIP files, but may be single files (e.g. split with merge=true)
+      let result;
+      if (response.data.type === 'application/pdf' || 
+          (response.headers && response.headers['content-type'] === 'application/pdf')) {
+        // Single PDF response (e.g. split with merge option) - use original filename
+        const originalFileName = files[0]?.name || 'document.pdf';
+        const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
+        result = {
+          success: true,
+          files: [singleFile],
+          errors: []
+        };
+      } else {
+        // ZIP response
+        result = await AutomationFileProcessor.extractAutomationZipFiles(response.data);
+      }
       
       if (result.errors.length > 0) {
         console.warn(`⚠️ File processing warnings:`, result.errors);
       }
       
-      console.log(`📁 Processed ${result.files.length} files from response`);
-      return result.files;
+      // Apply prefix to files, replacing any existing prefix
+      const processedFiles = filePrefix 
+        ? result.files.map(file => {
+            const nameWithoutPrefix = file.name.replace(/^[^_]*_/, '');
+            return new File([file], `${filePrefix}${nameWithoutPrefix}`, { type: file.type });
+          })
+        : result.files;
+      
+      console.log(`📁 Processed ${processedFiles.length} files from response`);
+      return processedFiles;
 
     } else {
       // Single-file processing - separate API call per file
@@ -83,11 +118,12 @@ export const executeToolOperation = async (
 
         console.log(`📥 Response ${i+1} status: ${response.status}, size: ${response.data.size} bytes`);
 
-        // Create result file
+        // Create result file with automation prefix
+        
         const resultFile = ResourceManager.createResultFile(
           response.data, 
           file.name,
-          AUTOMATION_CONSTANTS.FILE_PREFIX
+          filePrefix
         );
         resultFiles.push(resultFile);
         console.log(`✅ Created result file: ${resultFile.name}`);
@@ -123,6 +159,7 @@ export const executeAutomationSequence = async (
   }
 
   let currentFiles = [...initialFiles];
+  const automationPrefix = automation.name ? `${automation.name}_` : 'automated_';
 
   for (let i = 0; i < automation.operations.length; i++) {
     const operation = automation.operations[i];
@@ -134,11 +171,12 @@ export const executeAutomationSequence = async (
     try {
       onStepStart?.(i, operation.operation);
       
-      const resultFiles = await executeToolOperation(
+      const resultFiles = await executeToolOperationWithPrefix(
         operation.operation, 
         operation.parameters || {}, 
         currentFiles,
-        toolRegistry
+        toolRegistry,
+        i === automation.operations.length - 1 ? automationPrefix : '' // Only add prefix to final step
       );
       
       console.log(`✅ Step ${i + 1} completed: ${resultFiles.length} result files`);

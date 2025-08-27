@@ -32,9 +32,10 @@ const FileUploadButton = ({
       onChange={onChange}
       accept={accept}
       disabled={disabled}
+
     >
       {(props) => (
-        <Button {...props} variant={variant} fullWidth={fullWidth}>
+        <Button {...props} variant={variant} fullWidth={fullWidth} color="blue">
           {file ? file.name : (placeholder || defaultPlaceholder)}
         </Button>
       )}

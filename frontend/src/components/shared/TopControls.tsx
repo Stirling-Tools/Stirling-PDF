@@ -6,6 +6,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import { ModeType, isValidMode } from '../../contexts/NavigationContext';
+import { Tooltip } from "./Tooltip";
 
 const viewOptionStyle = {
   display: 'inline-flex',
@@ -17,8 +18,8 @@ const viewOptionStyle = {
 }
 
 
-// Create view options with icons and loading states
-const createViewOptions = (switchingTo: ModeType | null) => [
+// Build view options showing text only for current view; others icon-only with tooltip
+const createViewOptions = (currentView: ModeType, switchingTo: ModeType | null) => [
   {
     label: (
       <div style={viewOptionStyle as React.CSSProperties}>
@@ -34,27 +35,35 @@ const createViewOptions = (switchingTo: ModeType | null) => [
   },
   {
     label: (
-      <div style={viewOptionStyle as React.CSSProperties}>
-        {switchingTo === "pageEditor" ? (
-          <Loader size="xs" />
-        ) : (
-          <EditNoteIcon fontSize="small" />
-        )}
-        <span>Page Editor</span>
-      </div>
+      <Tooltip content="Page Editor" position="bottom" arrow={true}>
+        <div style={viewOptionStyle as React.CSSProperties}>
+          {currentView === "pageEditor" ? (
+            <>
+              {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
+              <span>Page Editor</span>
+            </>
+          ) : (
+            switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />
+          )}
+        </div>
+      </Tooltip>
     ),
     value: "pageEditor",
   },
   {
     label: (
-      <div style={viewOptionStyle as React.CSSProperties}>
-        {switchingTo === "fileEditor" ? (
-          <Loader size="xs" />
-        ) : (
-          <FolderIcon fontSize="small" />
-        )}
-        <span>File Manager</span>
-      </div>
+      <Tooltip content="Active Files" position="bottom" arrow={true}>
+        <div style={viewOptionStyle as React.CSSProperties}>
+          {currentView === "fileEditor" ? (
+            <>
+              {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
+              <span>Active Files</span>
+            </>
+          ) : (
+            switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />
+          )}
+        </div>
+      </Tooltip>
     ),
     value: "fileEditor",
   },
@@ -103,11 +112,10 @@ const TopControls = ({
       {!isToolSelected && (
         <div className="flex justify-center mt-[0.5rem]">
             <SegmentedControl
-              data={createViewOptions(switchingTo)}
+              data={createViewOptions(currentView, switchingTo)}
               value={currentView}
               onChange={handleViewChange}
               color="blue"
-              radius="xl"
               fullWidth
               className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
               style={{
@@ -118,13 +126,18 @@ const TopControls = ({
               styles={{
                 root: {
                   borderRadius: 9999,
+                  maxHeight: '2.6rem',
                 },
                 control: {
                   borderRadius: 9999,
                 },
                 indicator: {
                   borderRadius: 9999,
+                  maxHeight: '2rem',
                 },
+                label: {
+                  paddingTop: '0rem',
+                }
               }}
             />
         </div>

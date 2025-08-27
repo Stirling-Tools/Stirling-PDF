@@ -50,7 +50,7 @@ const renderTooltipTitle = (
         sidebarTooltip={true}
       >
         <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
-          <Text fw={500} size="lg">
+          <Text fw={400} size="sm">
             {title}
           </Text>
           <LocalIcon icon="gpp-maybe-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />
@@ -60,7 +60,7 @@ const renderTooltipTitle = (
   }
 
   return (
-    <Text fw={500} size="lg">
+    <Text fw={500} size="sm">
       {title}
     </Text>
   );
@@ -96,7 +96,7 @@ const ToolStep = ({
     <div>
       <div
         style={{
-          padding: '1rem',
+          padding: '0.5rem',
           opacity: isCollapsed ? 0.8 : 1,
           color: isCollapsed ? 'var(--mantine-color-dimmed)' : 'inherit',
           transition: 'opacity 0.2s ease, color 0.2s ease'
@@ -114,7 +114,7 @@ const ToolStep = ({
       >
         <Flex align="center" gap="sm">
           {shouldShowNumber && (
-            <Text fw={500} size="lg" c="dimmed">
+            <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
               {stepNumber}
             </Text>
           )}
@@ -135,7 +135,7 @@ const ToolStep = ({
       </Flex>
 
       {!isCollapsed && (
-        <Stack gap="md" pl={_noPadding ? 0 : "md"}>
+        <Stack gap="sm" pl={_noPadding ? 0 : "sm"}>
           {helpText && (
             <Text size="sm" c="dimmed">
               {helpText}
@@ -145,7 +145,7 @@ const ToolStep = ({
         </Stack>
       )}
       </div>
-      <Divider style={{ marginLeft: '1rem', marginRight: '-0.5rem' }} />
+      <Divider style={{ color: '#E2E8F0', marginLeft: '1rem', marginRight: '-0.5rem' }} />
     </div>
   );
 }
