@@ -1,5 +1,7 @@
 package stirling.software.common.configuration.interfaces;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 
 class ShowAdminInterfaceTest {
@@ -10,7 +12,7 @@ class ShowAdminInterfaceTest {
     @Test
     void getShowUpdateOnlyAdmins_returnsTrueByDefault() {
         ShowAdminInterface instance = new TestImpl();
-        org.junit.jupiter.api.Assertions.assertTrue(
+        assertTrue(
                 instance.getShowUpdateOnlyAdmins(), "Default should return true");
     }
 }
