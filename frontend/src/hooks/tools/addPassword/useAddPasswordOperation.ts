@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { AddPasswordFullParameters, defaultParameters } from './useAddPasswordParameters';
 import { defaultParameters as permissionsDefaults } from '../changePermissions/useChangePermissionsParameters';
@@ -26,11 +26,11 @@ const fullDefaultParameters: AddPasswordFullParameters = {
 
 // Static configuration object
 export const addPasswordOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildAddPasswordFormData,
   operationType: 'addPassword',
   endpoint: '/api/v1/security/add-password',
-  buildFormData: buildAddPasswordFormData,
   filePrefix: 'encrypted_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters: fullDefaultParameters,
 } as const;
 
