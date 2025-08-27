@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import { useCompressParameters } from "../hooks/tools/compress/useCompressParameters";
@@ -10,7 +9,6 @@ import { useCompressTips } from "../components/tooltips/useCompressTips";
 
 const Compress = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("compress-pdf");
   const compressTips = useCompressTips();
 
   const base = useBaseTool(
@@ -35,7 +33,7 @@ const Compress = (props: BaseToolProps) => {
           <CompressSettings
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
-            disabled={endpointLoading}
+            disabled={base.endpointLoading}
           />
         ),
       },
@@ -45,7 +43,7 @@ const Compress = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !endpointEnabled,
+      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
     },
     review: {
       isVisible: base.hasResults,

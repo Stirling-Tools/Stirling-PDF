@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useFileSelection } from '../../../contexts/FileContext';
+import { useEndpointEnabled } from '../../useEndpointConfig';
 import { BaseToolProps } from '../../../types/tool';
 import { ToolOperationHook } from './useToolOperation';
 import { BaseParametersHook } from './useBaseParameters';
@@ -11,6 +12,10 @@ interface BaseToolReturn<TParams> {
   // Tool-specific hooks (passed through for convenience)
   params: BaseParametersHook<TParams>;
   operation: ToolOperationHook<TParams>;
+
+  // Endpoint validation
+  endpointEnabled: boolean | null;
+  endpointLoading: boolean;
 
   // Standard handlers
   handleExecute: () => Promise<void>;
@@ -49,11 +54,22 @@ export function useBaseTool<TParams>(
   const params = useParams();
   const operation = useOperation();
 
+  // Endpoint validation using parameters hook
+  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(params.getEndpointName());
+
   // Reset results when parameters change
   useEffect(() => {
     operation.resetResults();
     onPreviewFile?.(null);
   }, [params.parameters, operation, onPreviewFile]);
+
+  // Reset results when selected files change
+  useEffect(() => {
+    if (selectedFiles.length > 0) {
+      operation.resetResults();
+      onPreviewFile?.(null);
+    }
+  }, [selectedFiles, operation, onPreviewFile]);
 
   // Standard handlers
   const handleExecute = async () => {
@@ -93,6 +109,10 @@ export function useBaseTool<TParams>(
     params,
     operation,
 
+    // Endpoint validation
+    endpointEnabled,
+    endpointLoading,
+
     // Handlers
     handleExecute,
     handleThumbnailClick,
@@ -106,6 +126,8 @@ export function useBaseTool<TParams>(
     selectedFiles,
     params,
     operation,
+    endpointEnabled,
+    endpointLoading,
     handleExecute,
     handleThumbnailClick,
     handleSettingsReset,
