@@ -1,4 +1,4 @@
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { useCallback } from 'react';
 import { executeAutomationSequence } from '../../../utils/automationExecutor';
 import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
@@ -10,7 +10,7 @@ export function useAutomateOperation() {
 
   const customProcessor = useCallback(async (params: AutomateParameters, files: File[]) => {
     console.log('🚀 Starting automation execution via customProcessor', { params, files });
-    
+
     if (!params.automationConfig) {
       throw new Error('No automation configuration provided');
     }
@@ -40,9 +40,8 @@ export function useAutomateOperation() {
   }, [toolRegistry]);
 
   return useToolOperation<AutomateParameters>({
+    toolType: ToolType.custom,
     operationType: 'automate',
-    endpoint: '/api/v1/pipeline/handleData', // Not used with customProcessor
-    buildFormData: () => new FormData(), // Not used with customProcessor
     customProcessor,
     filePrefix: '' // No prefix needed since automation handles naming internally
   });
