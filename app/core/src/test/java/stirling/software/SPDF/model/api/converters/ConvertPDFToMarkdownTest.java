@@ -1,5 +1,6 @@
 package stirling.software.SPDF.model.api.converters;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -7,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
@@ -79,8 +79,8 @@ class ConvertPDFToMarkdownTest {
             MultipartFile passed = captor.getValue();
 
             // Minimal plausibility checks
-            Assertions.assertEquals("input.pdf", passed.getOriginalFilename());
-            Assertions.assertEquals("application/pdf", passed.getContentType());
+            assertEquals("input.pdf", passed.getOriginalFilename());
+            assertEquals("application/pdf", passed.getContentType());
         }
     }
 

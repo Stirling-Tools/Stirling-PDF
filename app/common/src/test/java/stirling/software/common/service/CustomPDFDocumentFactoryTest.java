@@ -46,7 +46,7 @@ class CustomPDFDocumentFactoryTest {
     void testStrategy_FileInput(int sizeMB, StrategyType expected) throws IOException {
         File file = writeTempFile(inflatePdf(basePdfBytes, sizeMB));
         try (PDDocument doc = factory.load(file)) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
+            assertEquals(expected, factory.lastStrategyUsed);
         }
     }
 
@@ -55,7 +55,7 @@ class CustomPDFDocumentFactoryTest {
     void testStrategy_ByteArray(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
         try (PDDocument doc = factory.load(inflated)) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
+            assertEquals(expected, factory.lastStrategyUsed);
         }
     }
 
@@ -64,7 +64,7 @@ class CustomPDFDocumentFactoryTest {
     void testStrategy_InputStream(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
         try (PDDocument doc = factory.load(new ByteArrayInputStream(inflated))) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
+            assertEquals(expected, factory.lastStrategyUsed);
         }
     }
 
@@ -75,7 +75,7 @@ class CustomPDFDocumentFactoryTest {
         MockMultipartFile multipart =
                 new MockMultipartFile("file", "doc.pdf", "application/pdf", inflated);
         try (PDDocument doc = factory.load(multipart)) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
+            assertEquals(expected, factory.lastStrategyUsed);
         }
     }
 
@@ -88,7 +88,7 @@ class CustomPDFDocumentFactoryTest {
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileInput(multipart);
         try (PDDocument doc = factory.load(pdfFile)) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
+            assertEquals(expected, factory.lastStrategyUsed);
         }
     }
 

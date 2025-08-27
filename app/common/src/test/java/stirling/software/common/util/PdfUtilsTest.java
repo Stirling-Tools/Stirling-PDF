@@ -1,8 +1,6 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -38,7 +36,6 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -228,7 +225,7 @@ public class PdfUtilsTest {
             doc.addPage(p2);
 
             PDDocument out = PdfUtils.convertPdfToPdfImage(doc);
-            Assertions.assertNotNull(out);
+            assertNotNull(out);
             assertEquals(2, out.getNumberOfPages(), "Page count should be preserved");
             out.close();
         }
@@ -306,7 +303,7 @@ public class PdfUtilsTest {
 
             PdfUtils.addImageToDocument(doc, ximg, "fitDocumentToImage", false);
 
-            Assertions.assertEquals(1, doc.getNumberOfPages());
+            assertEquals(1, doc.getNumberOfPages());
             PDRectangle box = doc.getPage(0).getMediaBox();
             assertEquals(300, (int) box.getWidth());
             assertEquals(500, (int) box.getHeight());
@@ -322,9 +319,9 @@ public class PdfUtilsTest {
 
             PdfUtils.addImageToDocument(doc, ximg, "maintainAspectRatio", true);
 
-            Assertions.assertEquals(1, doc.getNumberOfPages());
+            assertEquals(1, doc.getNumberOfPages());
             PDRectangle box = doc.getPage(0).getMediaBox();
-            Assertions.assertTrue(
+            assertTrue(
                     box.getWidth() > box.getHeight(),
                     "A4 should be landscape when auto-rotate + landscape");
         }
@@ -339,7 +336,7 @@ public class PdfUtilsTest {
 
             PdfUtils.addImageToDocument(doc, ximg, "fillPage", false);
 
-            Assertions.assertEquals(1, doc.getNumberOfPages());
+            assertEquals(1, doc.getNumberOfPages());
         }
     }
 
@@ -404,7 +401,7 @@ public class PdfUtilsTest {
     void containsTextInFile_allPages_true() throws IOException {
         PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("alpha", "beta")) {
-            Assertions.assertTrue(util.containsTextInFile(doc, "beta", "all"));
+            assertTrue(util.containsTextInFile(doc, "beta", "all"));
         }
     }
 
@@ -413,7 +410,7 @@ public class PdfUtilsTest {
     void containsTextInFile_singlePage_two_true() throws IOException {
         PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("alpha", "beta")) {
-            Assertions.assertTrue(util.containsTextInFile(doc, "beta", "2"));
+            assertTrue(util.containsTextInFile(doc, "beta", "2"));
         }
     }
 
@@ -422,7 +419,7 @@ public class PdfUtilsTest {
     void containsTextInFile_range_oneToOne_true() throws IOException {
         PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("findme", "other")) {
-            Assertions.assertTrue(util.containsTextInFile(doc, "findme", "1-1"));
+            assertTrue(util.containsTextInFile(doc, "findme", "1-1"));
         }
     }
 
@@ -431,7 +428,7 @@ public class PdfUtilsTest {
     void containsTextInFile_list_pages_true() throws IOException {
         PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("foo", "bar")) {
-            Assertions.assertTrue(util.containsTextInFile(doc, "bar", " 1 , 2 "));
+            assertTrue(util.containsTextInFile(doc, "bar", " 1 , 2 "));
         }
     }
 
@@ -440,7 +437,7 @@ public class PdfUtilsTest {
     void containsTextInFile_textNotPresent_false() throws IOException {
         PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("xxx", "yyy")) {
-            Assertions.assertFalse(util.containsTextInFile(doc, "zzz", "all"));
+            assertFalse(util.containsTextInFile(doc, "zzz", "all"));
         }
     }
 
@@ -450,7 +447,7 @@ public class PdfUtilsTest {
         PdfUtils util = new PdfUtils();
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage(PDRectangle.A4));
-            Assertions.assertFalse(util.pageSize(doc, "600x842"));
+            assertFalse(util.pageSize(doc, "600x842"));
         }
     }
 
@@ -478,8 +475,8 @@ public class PdfUtilsTest {
 
         // Should be readable as a single combined PNG image
         BufferedImage img = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
-        Assertions.assertNotNull(img, "PNG should be readable");
-        Assertions.assertTrue(img.getWidth() > 0 && img.getHeight() > 0, "Image dimensions > 0");
+        assertNotNull(img, "PNG should be readable");
+        assertTrue(img.getWidth() > 0 && img.getHeight() > 0, "Image dimensions > 0");
     }
 
     @Test
@@ -507,15 +504,14 @@ public class PdfUtilsTest {
         // Assert: open ZIP, read first entry as PNG
         try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
             ZipEntry entry = zis.getNextEntry();
-            Assertions.assertNotNull(entry, "ZIP should contain at least one entry");
+            assertNotNull(entry, "ZIP should contain at least one entry");
 
             ByteArrayOutputStream imgOut = new ByteArrayOutputStream();
             zis.transferTo(imgOut);
             BufferedImage first = ImageIO.read(new ByteArrayInputStream(imgOut.toByteArray()));
 
-            Assertions.assertNotNull(first, "First PNG entry should be readable");
-            Assertions.assertTrue(
-                    first.getWidth() > 0 && first.getHeight() > 0, "Image dimensions > 0");
+            assertNotNull(first, "First PNG entry should be readable");
+            assertTrue(first.getWidth() > 0 && first.getHeight() > 0, "Image dimensions > 0");
         }
     }
 
@@ -736,13 +732,13 @@ public class PdfUtilsTest {
                         factory, pdfBytes, "jpg", ImageType.RGB, true, 72, "sample.pdf");
 
         BufferedImage img = ImageIO.read(new ByteArrayInputStream(jpgBytes));
-        Assertions.assertNotNull(img, "JPG should be readable");
+        assertNotNull(img, "JPG should be readable");
 
         ColorModel cm = img.getColorModel();
-        Assertions.assertFalse(cm.hasAlpha(), "JPG output should have no alpha channel");
+        assertFalse(cm.hasAlpha(), "JPG output should have no alpha channel");
 
         // JPG background should be white (approximate check)
         int rgb = img.getRGB(img.getWidth() / 2, img.getHeight() / 2) & 0x00FFFFFF;
-        Assertions.assertEquals(0xFFFFFF, rgb, "Background pixel should be white");
+        assertEquals(0xFFFFFF, rgb, "Background pixel should be white");
     }
 }

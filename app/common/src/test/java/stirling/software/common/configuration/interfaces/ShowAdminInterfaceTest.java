@@ -12,7 +12,6 @@ class ShowAdminInterfaceTest {
     @Test
     void getShowUpdateOnlyAdmins_returnsTrueByDefault() {
         ShowAdminInterface instance = new TestImpl();
-        assertTrue(
-                instance.getShowUpdateOnlyAdmins(), "Default should return true");
+        assertTrue(instance.getShowUpdateOnlyAdmins(), "Default should return true");
     }
 }

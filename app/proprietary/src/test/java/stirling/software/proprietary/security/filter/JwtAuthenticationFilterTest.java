@@ -1,7 +1,6 @@
 package stirling.software.proprietary.security.filter;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -234,9 +233,8 @@ class JwtAuthenticationFilterTest {
                         eq(response),
                         argThat(
                                 exception ->
-                                        exception
-                                                .getMessage()
-                                                .equals("JWT is missing from the request")));
+                                        "JWT is missing from the request"
+                                                .equals(exception.getMessage())));
         verify(filterChain, never()).doFilter(request, response);
     }
 }
