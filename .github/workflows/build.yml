@@ -110,14 +110,17 @@ jobs:
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
+            app/core/build/reports/jacoco/test
             app/core/build/reports/tests/
             app/core/build/test-results/
             app/core/build/reports/problems/
             app/common/build/reports/tests/
             app/common/build/test-results/
+            app/common/build/reports/jacoco/test
             app/common/build/reports/problems/
             app/proprietary/build/reports/tests/
             app/proprietary/build/test-results/
+            app/proprietary/build/reports/jacoco/test
             app/proprietary/build/reports/problems/
             build/reports/problems/
           retention-days: 3
