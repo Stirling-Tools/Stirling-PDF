@@ -6,10 +6,10 @@ import { ToolOperationHook } from './useToolOperation';
 import { BaseParametersHook } from './useBaseParameters';
 
 interface BaseToolReturn<TParams> {
-  // File management (used internally)
+  // File management
   selectedFiles: File[];
 
-  // Tool-specific hooks (passed through for convenience)
+  // Tool-specific hooks
   params: BaseParametersHook<TParams>;
   operation: ToolOperationHook<TParams>;
 
@@ -29,15 +29,7 @@ interface BaseToolReturn<TParams> {
 }
 
 /**
- * Base tool hook for tool components.
- *
- * Manages standard behaviour for tools:
- * - File selection
- * - Standard handlers (execute, thumbnail click, settings reset)
- * - Standard computed state (hasFiles, hasResults, settingsCollapsed)
- *
- * Tools should use the behaviour from this hook to build their UI and
- * have it behave like other tools.
+ * Base tool hook for tool components. Manages standard behaviour for tools.
  */
 export function useBaseTool<TParams>(
   toolName: string,
@@ -47,10 +39,10 @@ export function useBaseTool<TParams>(
 ): BaseToolReturn<TParams> {
   const { onPreviewFile, onComplete, onError } = props;
 
-  // File selection (used internally in handleExecute)
+  // File selection
   const { selectedFiles } = useFileSelection();
 
-  // Tool-specific hooks (passed through)
+  // Tool-specific hooks
   const params = useParams();
   const operation = useOperation();
 
