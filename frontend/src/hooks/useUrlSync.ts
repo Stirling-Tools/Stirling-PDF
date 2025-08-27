@@ -17,7 +17,7 @@ export function useNavigationUrlSync(
   // Initialize mode from URL on mount
   useEffect(() => {
     if (!enableSync) return;
-    
+
     const route = parseToolRoute();
     if (route.mode !== currentMode) {
       setMode(route.mode);
@@ -27,10 +27,10 @@ export function useNavigationUrlSync(
   // Update URL when mode changes
   useEffect(() => {
     if (!enableSync) return;
-    
-    if (currentMode === 'pageEditor') {
-      clearToolRoute();
-    } else {
+
+    // Only update URL for actual tool modes, not internal UI modes
+    // URL clearing is handled by useToolWorkflowUrlSync when selectedToolKey becomes null
+    if (currentMode !== 'fileEditor' && currentMode !== 'pageEditor' && currentMode !== 'viewer') {
       updateToolRoute(currentMode, currentMode);
     }
   }, [currentMode, enableSync]);
@@ -38,7 +38,7 @@ export function useNavigationUrlSync(
   // Handle browser back/forward navigation
   useEffect(() => {
     if (!enableSync) return;
-    
+
     const handlePopState = () => {
       const route = parseToolRoute();
       if (route.mode !== currentMode) {
@@ -63,7 +63,7 @@ export function useToolWorkflowUrlSync(
   // Initialize tool from URL on mount
   useEffect(() => {
     if (!enableSync) return;
-    
+
     const route = parseToolRoute();
     if (route.toolKey && route.toolKey !== selectedToolKey) {
       selectTool(route.toolKey);
@@ -75,12 +75,15 @@ export function useToolWorkflowUrlSync(
   // Update URL when tool changes
   useEffect(() => {
     if (!enableSync) return;
-    
+
     if (selectedToolKey) {
       const route = parseToolRoute();
       if (route.toolKey !== selectedToolKey) {
         updateToolRoute(selectedToolKey as ModeType, selectedToolKey);
       }
+    } else {
+      // Clear URL when no tool is selected - always clear regardless of current URL
+      clearToolRoute();
     }
   }, [selectedToolKey, enableSync]);
 }
@@ -102,19 +105,19 @@ export function useCurrentRoute() {
 export function useToolNavigation() {
   const navigateToTool = useCallback((toolKey: string) => {
     updateToolRoute(toolKey as ModeType, toolKey);
-    
+
     // Dispatch a custom event to notify other components
-    window.dispatchEvent(new CustomEvent('toolNavigation', { 
-      detail: { toolKey } 
+    window.dispatchEvent(new CustomEvent('toolNavigation', {
+      detail: { toolKey }
     }));
   }, []);
 
   const navigateToHome = useCallback(() => {
     clearToolRoute();
-    
+
     // Dispatch a custom event to notify other components
-    window.dispatchEvent(new CustomEvent('toolNavigation', { 
-      detail: { toolKey: null } 
+    window.dispatchEvent(new CustomEvent('toolNavigation', {
+      detail: { toolKey: null }
     }));
   }, []);
 

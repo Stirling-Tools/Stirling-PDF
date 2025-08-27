@@ -4,9 +4,9 @@ import { ModeType, isValidMode, getDefaultMode } from '../types/navigation';
 
 /**
  * NavigationContext - Complete navigation management system
- * 
+ *
  * Handles navigation modes, navigation guards for unsaved changes,
- * and breadcrumb/history navigation. Separated from FileContext to 
+ * and breadcrumb/history navigation. Separated from FileContext to
  * maintain clear separation of concerns.
  */
 
@@ -32,19 +32,19 @@ const navigationReducer = (state: NavigationState, action: NavigationAction): Na
   switch (action.type) {
     case 'SET_MODE':
       return { ...state, currentMode: action.payload.mode };
-    
+
     case 'SET_UNSAVED_CHANGES':
       return { ...state, hasUnsavedChanges: action.payload.hasChanges };
-    
+
     case 'SET_PENDING_NAVIGATION':
       return { ...state, pendingNavigation: action.payload.navigationFn };
-    
+
     case 'SHOW_NAVIGATION_WARNING':
       return { ...state, showNavigationWarning: action.payload.show };
-    
+
     case 'SET_SELECTED_TOOL':
       return { ...state, selectedToolKey: action.payload.toolKey };
-    
+
     default:
       return state;
   }
@@ -90,7 +90,7 @@ const NavigationStateContext = createContext<NavigationContextStateValue | undef
 const NavigationActionsContext = createContext<NavigationContextActionsValue | undefined>(undefined);
 
 // Provider component
-export const NavigationProvider: React.FC<{ 
+export const NavigationProvider: React.FC<{
   children: React.ReactNode;
   enableUrlSync?: boolean;
 }> = ({ children, enableUrlSync = true }) => {
@@ -126,7 +126,7 @@ export const NavigationProvider: React.FC<{
       if (state.pendingNavigation) {
         state.pendingNavigation();
       }
-      
+
       // Clear navigation state
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: false } });
@@ -144,12 +144,14 @@ export const NavigationProvider: React.FC<{
 
     clearToolSelection: useCallback(() => {
       dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: null } });
+      dispatch({ type: 'SET_MODE', payload: { mode: getDefaultMode() } });
     }, []),
 
     handleToolSelect: useCallback((toolId: string) => {
       // Handle special cases
       if (toolId === 'allTools') {
         dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: null } });
+        dispatch({ type: 'SET_MODE', payload: { mode: getDefaultMode() } });
         return;
       }
 
@@ -216,7 +218,7 @@ export const useNavigation = () => {
 export const useNavigationGuard = () => {
   const state = useNavigationState();
   const { actions } = useNavigationActions();
-  
+
   return {
     pendingNavigation: state.pendingNavigation,
     showNavigationWarning: state.showNavigationWarning,
@@ -234,7 +236,7 @@ export { isValidMode, getDefaultMode, type ModeType } from '../types/navigation'
 
 // TODO: This will be expanded for URL-based routing system
 // - URL parsing utilities
-// - Route definitions  
+// - Route definitions
 // - Navigation hooks with URL sync
 // - History management
 // - Breadcrumb restoration from URL params

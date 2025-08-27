@@ -11,12 +11,12 @@ import { ModeType, isValidMode as isValidModeType, getDefaultMode, ToolRoute } f
 export function parseToolRoute(): ToolRoute {
   const path = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
-  
+
   // Extract tool from URL path (e.g., /split-pdf -> split)
   const toolMatch = path.match(/\/([a-zA-Z-]+)(?:-pdf)?$/);
   if (toolMatch) {
     const toolKey = toolMatch[1].toLowerCase();
-    
+
     // Map URL paths to tool keys and modes (excluding internal UI modes)
     const toolMappings: Record<string, { mode: ModeType; toolKey: string }> = {
       'split-pdfs': { mode: 'split', toolKey: 'split' },
@@ -48,7 +48,7 @@ export function parseToolRoute(): ToolRoute {
       'remove-certificate-sign': { mode: 'removeCertificateSign', toolKey: 'removeCertificateSign' },
       'remove-cert-sign': { mode: 'removeCertificateSign', toolKey: 'removeCertificateSign' }
     };
-    
+
     const mapping = toolMappings[toolKey];
     if (mapping) {
       return {
@@ -57,7 +57,7 @@ export function parseToolRoute(): ToolRoute {
       };
     }
   }
-  
+
   // Check for query parameter fallback (e.g., ?tool=split)
   const toolParam = searchParams.get('tool');
   if (toolParam && isValidModeType(toolParam)) {
@@ -66,7 +66,7 @@ export function parseToolRoute(): ToolRoute {
       toolKey: toolParam
     };
   }
-  
+
   // Default to page editor for home page
   return {
     mode: getDefaultMode(),
@@ -81,7 +81,7 @@ export function parseToolRoute(): ToolRoute {
 export function updateToolRoute(mode: ModeType, toolKey?: string): void {
   const currentPath = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
-  
+
   // Don't create URLs for internal UI modes
   if (mode === 'viewer' || mode === 'fileEditor' || mode === 'pageEditor') {
     // If we're switching to an internal mode, clear any existing tool URL
@@ -90,32 +90,38 @@ export function updateToolRoute(mode: ModeType, toolKey?: string): void {
     }
     return;
   }
-  
+
   let newPath = '/';
-  
+
   // Map modes to URL paths (only for actual tools)
   if (toolKey) {
     const pathMappings: Record<string, string> = {
-      'split': '/split-pdf',
-      'merge': '/merge-pdf', 
+      'split': '/split-pdfs',
+      'merge': '/merge-pdf',
       'compress': '/compress-pdf',
       'convert': '/convert-pdf',
       'addPassword': '/add-password-pdf',
       'changePermissions': '/change-permissions-pdf',
       'sanitize': '/sanitize-pdf',
-      'ocr': '/ocr-pdf'
+      'ocr': '/ocr-pdf',
+      'addWatermark': '/watermark',
+      'removePassword': '/remove-password',
+      'single-large-page': '/single-large-page',
+      'repair': '/repair',
+      'unlockPdfForms': '/unlock-pdf-forms',
+      'removeCertificateSign': '/remove-certificate-sign'
     };
-    
+
     newPath = pathMappings[toolKey] || `/${toolKey}`;
   }
-  
+
   // Remove tool query parameter since we're using path-based routing
   searchParams.delete('tool');
-  
+
   // Construct final URL
   const queryString = searchParams.toString();
   const fullUrl = newPath + (queryString ? `?${queryString}` : '');
-  
+
   // Update URL without triggering page reload
   if (currentPath !== newPath || window.location.search !== (queryString ? `?${queryString}` : '')) {
     window.history.replaceState(null, '', fullUrl);
@@ -128,10 +134,10 @@ export function updateToolRoute(mode: ModeType, toolKey?: string): void {
 export function clearToolRoute(): void {
   const searchParams = new URLSearchParams(window.location.search);
   searchParams.delete('tool');
-  
+
   const queryString = searchParams.toString();
   const url = '/' + (queryString ? `?${queryString}` : '');
-  
+
   window.history.replaceState(null, '', url);
 }
 
@@ -142,14 +148,14 @@ export function getToolDisplayName(toolKey: string): string {
   const displayNames: Record<string, string> = {
     'split': 'Split PDF',
     'merge': 'Merge PDF',
-    'compress': 'Compress PDF', 
+    'compress': 'Compress PDF',
     'convert': 'Convert PDF',
     'addPassword': 'Add Password',
     'changePermissions': 'Change Permissions',
     'sanitize': 'Sanitize PDF',
     'ocr': 'OCR PDF'
   };
-  
+
   return displayNames[toolKey] || toolKey;
 }
 
@@ -161,27 +167,33 @@ export function getToolDisplayName(toolKey: string): string {
  */
 export function generateShareableUrl(mode: ModeType, toolKey?: string): string {
   const baseUrl = window.location.origin;
-  
+
   // Don't generate URLs for internal UI modes
   if (mode === 'viewer' || mode === 'fileEditor' || mode === 'pageEditor') {
     return baseUrl;
   }
-  
+
   if (toolKey) {
     const pathMappings: Record<string, string> = {
       'split': '/split-pdf',
       'merge': '/merge-pdf',
-      'compress': '/compress-pdf', 
+      'compress': '/compress-pdf',
       'convert': '/convert-pdf',
       'addPassword': '/add-password-pdf',
       'changePermissions': '/change-permissions-pdf',
       'sanitize': '/sanitize-pdf',
-      'ocr': '/ocr-pdf'
+      'ocr': '/ocr-pdf',
+      'addWatermark': '/watermark',
+      'removePassword': '/remove-password',
+      'single-large-page': '/single-large-page',
+      'repair': '/repair',
+      'unlockPdfForms': '/unlock-pdf-forms',
+      'removeCertificateSign': '/remove-certificate-sign'
     };
-    
+
     const path = pathMappings[toolKey] || `/${toolKey}`;
     return `${baseUrl}${path}`;
   }
-  
+
   return baseUrl;
 }
