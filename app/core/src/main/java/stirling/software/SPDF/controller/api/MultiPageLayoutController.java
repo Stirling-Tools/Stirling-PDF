@@ -43,6 +43,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -52,6 +53,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
+@Slf4j
 public class MultiPageLayoutController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -160,6 +162,7 @@ public class MultiPageLayoutController {
                     cellWidth,
                     cellHeight);
         } catch (Exception e) {
+            log.warn("Failed to copy and transform form fields: {}", e.getMessage(), e);
         }
 
         sourceDocument.close();
@@ -363,6 +366,7 @@ public class MultiPageLayoutController {
                 }
             }
         } catch (Exception e) {
+            log.warn("Failed to copy basic form fields for page {}: {}", pageIndex, e.getMessage(), e);
         }
     }
 
@@ -413,6 +417,7 @@ public class MultiPageLayoutController {
             }
 
         } catch (Exception e) {
+            log.warn("Failed to create text field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
         }
     }
 
@@ -464,6 +469,7 @@ public class MultiPageLayoutController {
             }
 
         } catch (Exception e) {
+            log.warn("Failed to create checkbox field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
         }
     }
 
@@ -512,6 +518,7 @@ public class MultiPageLayoutController {
                 newRadioButton.setValue(sourceField.getValue());
             }
         } catch (Exception e) {
+            log.warn("Failed to create radio button field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
         }
     }
 
@@ -560,6 +567,7 @@ public class MultiPageLayoutController {
                 newComboBox.setValue(sourceField.getValue());
             }
         } catch (Exception e) {
+            log.warn("Failed to create combo box field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
         }
     }
 
@@ -608,6 +616,7 @@ public class MultiPageLayoutController {
                 newListBox.setValue(sourceField.getValue());
             }
         } catch (Exception e) {
+            log.warn("Failed to create list box field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
         }
     }
 
@@ -649,6 +658,7 @@ public class MultiPageLayoutController {
             newAcroForm.getFields().add(newSignatureField);
             destinationAnnotations.add(newWidget);
         } catch (Exception e) {
+            log.warn("Failed to create signature field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
         }
     }
 
@@ -690,6 +700,7 @@ public class MultiPageLayoutController {
             newAcroForm.getFields().add(newPushButton);
             destinationAnnotations.add(newWidget);
         } catch (Exception e) {
+            log.warn("Failed to create push button field '{}': {}", sourceField.getPartialName(), e.getMessage(), e);
         }
     }
 
@@ -706,6 +717,7 @@ public class MultiPageLayoutController {
                 }
             }
         } catch (Exception e) {
+            log.warn("Failed to find field for widget: {}", e.getMessage(), e);
         }
 
         return null;
@@ -736,6 +748,7 @@ public class MultiPageLayoutController {
                 cleanupFieldWidgets(field);
             }
         } catch (Exception e) {
+            log.warn("Failed to cleanup source form fields: {}", e.getMessage(), e);
         }
     }
 
@@ -761,11 +774,13 @@ public class MultiPageLayoutController {
                         try {
                             widget.getPage().getAnnotations().remove(widget);
                         } catch (Exception e) {
+                            log.warn("Failed to remove widget annotation from page: {}", e.getMessage(), e);
                         }
                     }
                 }
             }
         } catch (Exception e) {
+            log.warn("Failed to cleanup field widgets for field '{}': {}", field.getPartialName(), e.getMessage(), e);
         }
     }
 }
