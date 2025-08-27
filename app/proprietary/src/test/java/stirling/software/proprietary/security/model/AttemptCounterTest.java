@@ -8,7 +8,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("AttemptCounterTest")
 class AttemptCounterTest {
 
     // --- Helper functions for reflection access to private fields ---
@@ -233,5 +232,15 @@ class AttemptCounterTest {
                 counter.getAttemptCount(),
                 "After increment past MAX_VALUE, int overflows to MIN_VALUE (Java standard"
                         + " behavior)");
+    }
+
+    @Test
+    @DisplayName("Reflection: getPrivateLong reads the actual lastAttemptTime")
+    void reflectionGetter_shouldReturnInternalValue() {
+        AttemptCounter counter = new AttemptCounter();
+        long expected = counter.getLastAttemptTime();
+        long reflected = getPrivateLong(counter, "lastAttemptTime");
+
+        assertEquals(expected, reflected, "Reflection getter should match the field value");
     }
 }
