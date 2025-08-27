@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -59,19 +58,16 @@ public class AccountWebController {
     private final SessionPersistentRegistry sessionPersistentRegistry;
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
-    private final boolean runningEE;
     private final TeamRepository teamRepository;
 
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
-            TeamRepository teamRepository,
-            @Qualifier("runningEE") boolean runningEE) {
+            TeamRepository teamRepository) {
         this.applicationProperties = applicationProperties;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
-        this.runningEE = runningEE;
         this.teamRepository = teamRepository;
     }
 
@@ -207,11 +203,9 @@ public class AccountWebController {
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @EnterpriseEndpoint
     @GetMapping("/usage")
     public String showUsage() {
-        if (!runningEE) {
-            return "error";
-        }
         return "usage";
     }
 
