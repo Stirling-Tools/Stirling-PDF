@@ -31,6 +31,8 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Enumeration;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.CMSException;
@@ -44,8 +46,21 @@ import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 
 public abstract class CreateSignatureBase implements SignatureInterface {
     private PrivateKey privateKey;
+    @Getter
     private Certificate[] certificateChain;
+    @Setter
     private String tsaUrl;
+    /**
+     * -- SETTER --
+     *  Set if external signing scenario should be used. If
+     * , SignatureInterface would
+     *  be used for signing.
+     *  <p>Default:
+     *
+     * @param externalSigning {@code true} if external signing should be performed
+     */
+    @Setter
+    @Getter
     private boolean externalSigning;
 
     /**
@@ -97,16 +112,8 @@ public abstract class CreateSignatureBase implements SignatureInterface {
         this.privateKey = privateKey;
     }
 
-    public Certificate[] getCertificateChain() {
-        return certificateChain;
-    }
-
     public final void setCertificateChain(final Certificate[] certificateChain) {
         this.certificateChain = certificateChain;
-    }
-
-    public void setTsaUrl(String tsaUrl) {
-        this.tsaUrl = tsaUrl;
     }
 
     /**
@@ -152,19 +159,4 @@ public abstract class CreateSignatureBase implements SignatureInterface {
         }
     }
 
-    public boolean isExternalSigning() {
-        return externalSigning;
-    }
-
-    /**
-     * Set if external signing scenario should be used. If {@code false}, SignatureInterface would
-     * be used for signing.
-     *
-     * <p>Default: {@code false}
-     *
-     * @param externalSigning {@code true} if external signing should be performed
-     */
-    public void setExternalSigning(boolean externalSigning) {
-        this.externalSigning = externalSigning;
-    }
 }
