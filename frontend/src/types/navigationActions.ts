@@ -2,10 +2,11 @@
  * Navigation action interfaces to break circular dependencies
  */
 
-import { ModeType } from './navigation';
+import { WorkbenchType, ToolId } from './navigation';
 
 export interface NavigationActions {
-  setMode: (mode: ModeType) => void;
+  setWorkbench: (workbench: WorkbenchType) => void;
+  setSelectedTool: (toolId: ToolId | null) => void;
   setHasUnsavedChanges: (hasChanges: boolean) => void;
   showNavigationWarning: (show: boolean) => void;
   requestNavigation: (navigationFn: () => void) => void;
@@ -14,7 +15,8 @@ export interface NavigationActions {
 }
 
 export interface NavigationState {
-  currentMode: ModeType;
+  workbench: WorkbenchType;
+  selectedTool: ToolId | null;
   hasUnsavedChanges: boolean;
   pendingNavigation: (() => void) | null;
   showNavigationWarning: boolean;

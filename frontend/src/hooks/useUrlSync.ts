@@ -1,123 +1,90 @@
 /**
- * URL synchronization hooks for tool routing
+ * URL synchronization hooks for tool routing with registry support
  */
 
 import { useEffect, useCallback } from 'react';
-import { ModeType } from '../types/navigation';
+import { WorkbenchType, ToolId, ToolRoute } from '../types/navigation';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
+import { ToolRegistry } from '../data/toolsTaxonomy';
 
 /**
- * Hook to sync navigation mode with URL
+ * Hook to sync workbench and tool with URL using registry
  */
 export function useNavigationUrlSync(
-  currentMode: ModeType,
-  setMode: (mode: ModeType) => void,
+  workbench: WorkbenchType,
+  selectedTool: ToolId | null,
+  setWorkbench: (workbench: WorkbenchType) => void,
+  setSelectedTool: (toolId: ToolId | null) => void,
+  handleToolSelect: (toolId: string) => void,
+  clearToolSelection: () => void,
+  registry: ToolRegistry,
   enableSync: boolean = true
 ) {
-  // Initialize mode from URL on mount
+  // Initialize workbench and tool from URL on mount
   useEffect(() => {
     if (!enableSync) return;
 
-    const route = parseToolRoute();
-    if (route.mode !== currentMode) {
-      setMode(route.mode);
+    const route = parseToolRoute(registry);
+    if (route.toolId !== selectedTool) {
+      if (route.toolId) {
+        handleToolSelect(route.toolId);
+      } else {
+        clearToolSelection();
+      }
     }
   }, []); // Only run on mount
 
-  // Update URL when mode changes
+  // Update URL when tool or workbench changes
   useEffect(() => {
     if (!enableSync) return;
 
-    // Only update URL for actual tool modes, not internal UI modes
-    // URL clearing is handled by useToolWorkflowUrlSync when selectedToolKey becomes null
-    if (currentMode !== 'fileEditor' && currentMode !== 'pageEditor' && currentMode !== 'viewer') {
-      updateToolRoute(currentMode, currentMode);
+    if (selectedTool) {
+      updateToolRoute(selectedTool, registry);
+    } else {
+      // Clear URL when no tool is selected
+      clearToolRoute();
     }
-  }, [currentMode, enableSync]);
+  }, [selectedTool, registry, enableSync]);
 
   // Handle browser back/forward navigation
   useEffect(() => {
     if (!enableSync) return;
 
     const handlePopState = () => {
-      const route = parseToolRoute();
-      if (route.mode !== currentMode) {
-        setMode(route.mode);
+      const route = parseToolRoute(registry);
+      if (route.toolId !== selectedTool) {
+        if (route.toolId) {
+          handleToolSelect(route.toolId);
+        } else {
+          clearToolSelection();
+        }
       }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [currentMode, setMode, enableSync]);
+  }, [selectedTool, handleToolSelect, clearToolSelection, registry, enableSync]);
 }
 
 /**
- * Hook to sync tool workflow with URL
+ * Hook to programmatically navigate to tools with registry support
  */
-export function useToolWorkflowUrlSync(
-  selectedToolKey: string | null,
-  selectTool: (toolKey: string) => void,
-  clearTool: () => void,
-  enableSync: boolean = true
-) {
-  // Initialize tool from URL on mount
-  useEffect(() => {
-    if (!enableSync) return;
-
-    const route = parseToolRoute();
-    if (route.toolKey && route.toolKey !== selectedToolKey) {
-      selectTool(route.toolKey);
-    } else if (!route.toolKey && selectedToolKey) {
-      clearTool();
-    }
-  }, []); // Only run on mount
-
-  // Update URL when tool changes
-  useEffect(() => {
-    if (!enableSync) return;
-
-    if (selectedToolKey) {
-      const route = parseToolRoute();
-      if (route.toolKey !== selectedToolKey) {
-        updateToolRoute(selectedToolKey as ModeType, selectedToolKey);
-      }
-    } else {
-      // Clear URL when no tool is selected - always clear regardless of current URL
-      clearToolRoute();
-    }
-  }, [selectedToolKey, enableSync]);
-}
-
-/**
- * Hook to get current URL route information
- */
-export function useCurrentRoute() {
-  const getCurrentRoute = useCallback(() => {
-    return parseToolRoute();
-  }, []);
-
-  return getCurrentRoute;
-}
-
-/**
- * Hook to programmatically navigate to tools
- */
-export function useToolNavigation() {
-  const navigateToTool = useCallback((toolKey: string) => {
-    updateToolRoute(toolKey as ModeType, toolKey);
+export function useToolNavigation(registry: ToolRegistry) {
+  const navigateToTool = useCallback((toolId: ToolId) => {
+    updateToolRoute(toolId, registry);
 
     // Dispatch a custom event to notify other components
     window.dispatchEvent(new CustomEvent('toolNavigation', {
-      detail: { toolKey }
+      detail: { toolId }
     }));
-  }, []);
+  }, [registry]);
 
   const navigateToHome = useCallback(() => {
     clearToolRoute();
 
     // Dispatch a custom event to notify other components
     window.dispatchEvent(new CustomEvent('toolNavigation', {
-      detail: { toolKey: null }
+      detail: { toolId: null }
     }));
   }, []);
 
@@ -125,4 +92,15 @@ export function useToolNavigation() {
     navigateToTool,
     navigateToHome
   };
+}
+
+/**
+ * Hook to get current URL route information with registry support
+ */
+export function useCurrentRoute(registry: ToolRegistry) {
+  const getCurrentRoute = useCallback(() => {
+    return parseToolRoute(registry);
+  }, [registry]);
+
+  return getCurrentRoute;
 }

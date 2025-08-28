@@ -1,32 +1,29 @@
-import { useLocation } from "react-router-dom";
 import { useEffect, useRef } from "react";
+import { useNavigationState } from "../contexts/NavigationContext";
 
 export function ScarfPixel() {
-  const location = useLocation();
+  const { workbench, selectedTool } = useNavigationState();
   const lastUrlSent = useRef<string | null>(null); // helps with React 18 StrictMode in dev
 
   useEffect(() => {
-    // Force reload of the tracking pixel on route change
+    // Get current pathname from browser location
+    const pathname = window.location.pathname;
+    
     const url = 'https://static.scarf.sh/a.png?x-pxid=3c1d68de-8945-4e9f-873f-65320b6fabf7'
-               + '&path=' + encodeURIComponent(location.pathname)
-               + '&t=' + Date.now();                               // cache-buster
+               + '&path=' + encodeURIComponent(pathname)
+               + '&t=' + Date.now(); // cache-buster
 
+    console.log("ScarfPixel: Navigation change", { workbench, selectedTool, pathname });
 
-            //    + '&machineType=' + machineType
-            //     + '&appVersion=' + appVersion
-            //  + '&licenseType=' + license
-            //  + '&loginEnabled=' + loginEnabled;
-      console.log("ScarfPixel: reload " + location.pathname );
-
-     if (lastUrlSent.current !== url) {
+    if (lastUrlSent.current !== url) {
       lastUrlSent.current = url;
       const img = new Image();
       img.referrerPolicy = "no-referrer-when-downgrade"; // optional
       img.src = url;
 
-      console.log("ScarfPixel: Fire to... " + location.pathname , url);
+      console.log("ScarfPixel: Fire to... " + pathname, url);
     }
-  }, [location.pathname]);
+  }, [workbench, selectedTool]); // Fire when navigation state changes
 
   return null; // Nothing visible in UI
 }

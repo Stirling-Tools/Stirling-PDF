@@ -1,42 +1,31 @@
 /**
- * Shared navigation types to avoid circular dependencies
+ * Navigation types for workbench and tool separation
  */
 
-// Navigation mode types - complete list to match contexts
-export type ModeType =
-  | 'viewer'
-  | 'pageEditor'
-  | 'fileEditor'
-  | 'merge'
-  | 'split'
-  | 'compress'
-  | 'ocr'
-  | 'convert'
-  | 'sanitize'
-  | 'addPassword'
-  | 'changePermissions'
-  | 'addWatermark'
-  | 'removePassword'
-  | 'single-large-page'
-  | 'repair'
-  | 'unlockPdfForms'
-  | 'removeCertificateSign';
+// Define workbench values once as source of truth
+const WORKBENCH_TYPES = ['viewer', 'pageEditor', 'fileEditor'] as const;
 
-// Utility functions for mode handling
-export const isValidMode = (mode: string): mode is ModeType => {
-  const validModes: ModeType[] = [
-    'viewer', 'pageEditor', 'fileEditor', 'merge', 'split', 
-    'compress', 'ocr', 'convert', 'addPassword', 'changePermissions', 
-    'sanitize', 'addWatermark', 'removePassword', 'single-large-page',
-    'repair', 'unlockPdfForms', 'removeCertificateSign'
-  ];
-  return validModes.includes(mode as ModeType);
+// Workbench types - how the user interacts with content
+export type WorkbenchType = typeof WORKBENCH_TYPES[number];
+
+// Tool identity - what PDF operation we're performing (derived from registry)
+export type ToolId = string;
+
+// Navigation state
+export interface NavigationState {
+  workbench: WorkbenchType;
+  selectedTool: ToolId | null;
+}
+
+export const getDefaultWorkbench = (): WorkbenchType => 'fileEditor';
+
+// Type guard using the same source of truth - no duplication
+export const isValidWorkbench = (value: string): value is WorkbenchType => {
+  return WORKBENCH_TYPES.includes(value as WorkbenchType);
 };
-
-export const getDefaultMode = (): ModeType => 'fileEditor';
 
 // Route parsing result
 export interface ToolRoute {
-  mode: ModeType;
-  toolKey: string | null;
+  workbench: WorkbenchType;
+  toolId: ToolId | null;
 }

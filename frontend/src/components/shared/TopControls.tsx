@@ -5,7 +5,7 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
-import { ModeType, isValidMode } from '../../contexts/NavigationContext';
+import { WorkbenchType, isValidWorkbench } from '../../types/navigation';
 import { Tooltip } from "./Tooltip";
 
 const viewOptionStyle = {
@@ -19,7 +19,7 @@ const viewOptionStyle = {
 
 
 // Build view options showing text only for current view; others icon-only with tooltip
-const createViewOptions = (currentView: ModeType, switchingTo: ModeType | null) => [
+const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchType | null) => [
   {
     label: (
       <div style={viewOptionStyle as React.CSSProperties}>
@@ -70,8 +70,8 @@ const createViewOptions = (currentView: ModeType, switchingTo: ModeType | null) 
 ];
 
 interface TopControlsProps {
-  currentView: ModeType;
-  setCurrentView: (view: ModeType) => void;
+  currentView: WorkbenchType;
+  setCurrentView: (view: WorkbenchType) => void;
   selectedToolKey?: string | null;
 }
 
@@ -81,25 +81,25 @@ const TopControls = ({
   selectedToolKey,
 }: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
-  const [switchingTo, setSwitchingTo] = useState<ModeType | null>(null);
+  const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
 
   const isToolSelected = selectedToolKey !== null;
 
   const handleViewChange = useCallback((view: string) => {
-    if (!isValidMode(view)) {
-      // Ignore invalid values defensively
+    if (!isValidWorkbench(view)) {
       return;
     }
-    const mode = view as ModeType;
+    
+    const workbench = view;
 
     // Show immediate feedback
-    setSwitchingTo(mode as ModeType);
+    setSwitchingTo(workbench);
 
     // Defer the heavy view change to next frame so spinner can render
     requestAnimationFrame(() => {
       // Give the spinner one more frame to show
       requestAnimationFrame(() => {
-        setCurrentView(mode as ModeType);
+        setCurrentView(workbench);
 
         // Clear the loading state after view change completes
         setTimeout(() => setSwitchingTo(null), 300);

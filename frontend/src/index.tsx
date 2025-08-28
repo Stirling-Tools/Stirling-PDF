@@ -8,7 +8,6 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './i18n'; // Initialize i18next
 import { PostHogProvider } from 'posthog-js/react';
-import { ScarfPixel } from './components/ScarfPixel';
 
 // Compute initial color scheme
 function getInitialScheme(): 'light' | 'dark' {
@@ -40,7 +39,6 @@ root.render(
       }}
     >
       <BrowserRouter>
-        <ScarfPixel />
         <App />
       </BrowserRouter>
     </PostHogProvider>

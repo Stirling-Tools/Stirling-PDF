@@ -43,7 +43,7 @@ const SingleLargePage = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "single-large-page");
-    actions.setMode("viewer");
+    actions.setWorkbench("viewer");
   };
 
   const handleSettingsReset = () => {

@@ -43,7 +43,7 @@ const Repair = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "repair");
-    actions.setMode("viewer");
+    actions.setWorkbench("viewer");
   };
 
   const handleSettingsReset = () => {

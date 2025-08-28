@@ -43,7 +43,7 @@ const RemoveCertificateSign = ({ onPreviewFile, onComplete, onError }: BaseToolP
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "removeCertificateSign");
-    actions.setMode("viewer");
+    actions.setWorkbench("viewer");
   };
 
   const handleSettingsReset = () => {

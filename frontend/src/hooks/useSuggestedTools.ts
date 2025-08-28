@@ -45,16 +45,16 @@ const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
 
 export function useSuggestedTools(): SuggestedTool[] {
   const { actions } = useNavigationActions();
-  const { selectedToolKey } = useNavigationState();
+  const { selectedTool } = useNavigationState();
 
   return useMemo(() => {
     // Filter out the current tool
-    const filteredTools = ALL_SUGGESTED_TOOLS.filter(tool => tool.id !== selectedToolKey);
+    const filteredTools = ALL_SUGGESTED_TOOLS.filter(tool => tool.id !== selectedTool);
 
     // Add navigation function to each tool
     return filteredTools.map(tool => ({
       ...tool,
-      navigate: () => actions.handleToolSelect(tool.id)
+      navigate: () => actions.setSelectedTool(tool.id)
     }));
-  }, [selectedToolKey, actions]);
+  }, [selectedTool, actions]);
 }

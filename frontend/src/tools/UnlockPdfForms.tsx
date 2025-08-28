@@ -43,7 +43,7 @@ const UnlockPdfForms = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   const handleThumbnailClick = (file: File) => {
     onPreviewFile?.(file);
     sessionStorage.setItem("previousMode", "unlockPdfForms");
-    actions.setMode("viewer");
+    actions.setWorkbench("viewer");
   };
 
   const handleSettingsReset = () => {
