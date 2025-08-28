@@ -6,13 +6,13 @@ import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState, useFileActions } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
+import { useToolManagement } from '../../hooks/useToolManagement';
 
 import TopControls from '../shared/TopControls';
 import FileEditor from '../fileEditor/FileEditor';
 import PageEditor from '../pageEditor/PageEditor';
 import PageEditorControls from '../pageEditor/PageEditorControls';
 import Viewer from '../viewer/Viewer';
-import ToolRenderer from '../tools/ToolRenderer';
 import LandingPage from '../shared/LandingPage';
 
 // No props needed - component uses contexts directly
@@ -23,9 +23,9 @@ export default function Workbench() {
   // Use context-based hooks to eliminate all prop drilling
   const { state } = useFileState();
   const { actions } = useFileActions();
-  const { currentMode: currentView } = useNavigationState();
+  const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
-  const setCurrentView = navActions.setMode;
+  const setCurrentView = navActions.setWorkbench;
   const activeFiles = state.files.ids;
   const {
     previewFile,
@@ -36,7 +36,14 @@ export default function Workbench() {
     setSidebarsVisible
   } = useToolWorkflow();
 
-  const { selectedToolKey, selectedTool, handleToolSelect } = useToolWorkflow();
+  const { handleToolSelect } = useToolWorkflow();
+  
+  // Get navigation state - this is the source of truth
+  const { selectedTool: selectedToolId } = useNavigationState();
+  
+  // Get tool registry to look up selected tool
+  const { toolRegistry } = useToolManagement();
+  const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addToActiveFiles } = useFileHandler();
 
   const handlePreviewClose = () => {
@@ -69,11 +76,11 @@ export default function Workbench() {
       case "fileEditor":
         return (
           <FileEditor
-            toolMode={!!selectedToolKey}
+            toolMode={!!selectedToolId}
             showUpload={true}
-            showBulkActions={!selectedToolKey}
+            showBulkActions={!selectedToolId}
             supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
-            {...(!selectedToolKey && {
+            {...(!selectedToolId && {
               onOpenPageEditor: (file) => {
                 setCurrentView("pageEditor");
               },
@@ -127,14 +134,6 @@ export default function Workbench() {
         );
 
       default:
-        // Check if it's a tool view
-        if (selectedToolKey && selectedTool) {
-          return (
-            <ToolRenderer
-              selectedToolKey={selectedToolKey}
-            />
-          );
-        }
         return (
           <LandingPage/>
         );
@@ -154,7 +153,7 @@ export default function Workbench() {
       <TopControls
         currentView={currentView}
         setCurrentView={setCurrentView}
-        selectedToolKey={selectedToolKey}
+        selectedToolKey={selectedToolId}
       />
 
       {/* Main content area */}

@@ -412,9 +412,9 @@ const FileEditor = ({
     if (record) {
       // Set the file as selected in context and switch to viewer for preview
       setSelectedFiles([fileId]);
-      navActions.setMode('viewer');
+      navActions.setWorkbench('viewer');
     }
-  }, [activeFileRecords, setSelectedFiles, navActions.setMode]);
+  }, [activeFileRecords, setSelectedFiles, navActions.setWorkbench]);
 
   const handleMergeFromHere = useCallback((fileId: FileId) => {
     const startIndex = activeFileRecords.findIndex(r => r.id === fileId);

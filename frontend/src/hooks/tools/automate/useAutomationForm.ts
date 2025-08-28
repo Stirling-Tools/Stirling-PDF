@@ -2,29 +2,29 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AutomationTool, AutomationConfig, AutomationMode } from '../../../types/automation';
 import { AUTOMATION_CONSTANTS } from '../../../constants/automation';
-import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
+import { ToolRegistry } from '../../../data/toolsTaxonomy';
 
 interface UseAutomationFormProps {
   mode: AutomationMode;
   existingAutomation?: AutomationConfig;
-  toolRegistry: Record<string, ToolRegistryEntry>;
+  toolRegistry: ToolRegistry;
 }
 
 export function useAutomationForm({ mode, existingAutomation, toolRegistry }: UseAutomationFormProps) {
   const { t } = useTranslation();
-  
+
   const [automationName, setAutomationName] = useState('');
   const [automationDescription, setAutomationDescription] = useState('');
   const [automationIcon, setAutomationIcon] = useState<string>('');
   const [selectedTools, setSelectedTools] = useState<AutomationTool[]>([]);
 
   const getToolName = useCallback((operation: string) => {
-    const tool = toolRegistry?.[operation] as any;
+    const tool = toolRegistry?.[operation as keyof ToolRegistry] as any;
     return tool?.name || t(`tools.${operation}.name`, operation);
   }, [toolRegistry, t]);
 
   const getToolDefaultParameters = useCallback((operation: string): Record<string, any> => {
-    const config = toolRegistry[operation]?.operationConfig;
+    const config = toolRegistry[operation as keyof ToolRegistry]?.operationConfig;
     if (config?.defaultParameters) {
       return { ...config.defaultParameters };
     }

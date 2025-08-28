@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "../contexts/FileContext";
 import { useFileSelection } from "../contexts/FileContext";
-import { useNavigation } from "../contexts/NavigationContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
@@ -21,7 +21,7 @@ import { AUTOMATION_STEPS } from "../constants/automation";
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
-  const { setMode } = useNavigation();
+  const { actions } = useNavigationActions();
   const { registerToolReset } = useToolWorkflow();
 
   const [currentStep, setCurrentStep] = useState<AutomationStep>(AUTOMATION_STEPS.SELECTION);
@@ -161,7 +161,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const filesPlaceholder = useMemo(() => {
     if (currentStep === AUTOMATION_STEPS.RUN && stepData.automation?.operations?.length) {
       const firstOperation = stepData.automation.operations[0];
-      const toolConfig = toolRegistry[firstOperation.operation];
+      const toolConfig = toolRegistry[firstOperation.operation as keyof typeof toolRegistry];
 
       // Check if the tool has supportedFormats that include non-PDF formats
       if (toolConfig?.supportedFormats && toolConfig.supportedFormats.length > 1) {
@@ -223,7 +223,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       title: t('automate.reviewTitle', 'Automation Results'),
       onFileClick: (file: File) => {
         onPreviewFile?.(file);
-        setMode('viewer');
+        actions.setWorkbench('viewer');
       }
     }
   });

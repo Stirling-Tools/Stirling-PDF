@@ -31,7 +31,7 @@ export const executeToolOperationWithPrefix = async (
 ): Promise<File[]> => {
   console.log(`🔧 Executing tool: ${operationName}`, { parameters, fileCount: files.length });
 
-  const config = toolRegistry[operationName]?.operationConfig;
+  const config = toolRegistry[operationName as keyof ToolRegistry]?.operationConfig;
   if (!config) {
     console.error(`❌ Tool operation not supported: ${operationName}`);
     throw new Error(`Tool operation not supported: ${operationName}`);

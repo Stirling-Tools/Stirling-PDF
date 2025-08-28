@@ -33,7 +33,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   React.useEffect(() => {
     if (automation?.operations) {
       const steps = automation.operations.map((op: any, index: number) => {
-        const tool = toolRegistry[op.operation];
+        const tool = toolRegistry[op.operation as keyof typeof toolRegistry];
         return {
           id: `${op.operation}-${index}`,
           operation: op.operation,

@@ -25,7 +25,7 @@ export default function RightRail() {
   const [csvInput, setCsvInput] = useState<string>("");
 
   // Navigation view
-  const { currentMode: currentView } = useNavigationState();
+  const { workbench: currentView } = useNavigationState();
 
   // File state and selection
   const { state, selectors } = useFileState();

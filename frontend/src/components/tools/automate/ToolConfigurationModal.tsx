@@ -35,7 +35,7 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
   const [isValid, setIsValid] = useState(true);
 
   // Get tool info from registry
-  const toolInfo = toolRegistry[tool.operation];
+  const toolInfo = toolRegistry[tool.operation as keyof ToolRegistry];
   const SettingsComponent = toolInfo?.settingsComponent;
 
   // Initialize parameters from tool (which should contain defaults from registry)

@@ -1,8 +1,9 @@
 import { type TFunction } from 'i18next';
 import React from 'react';
-import { ToolOperationHook, ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
+import { ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
 import { BaseToolProps } from '../types/tool';
-import { BaseParameters } from '../types/parameters';
+import { WorkbenchType } from '../types/workbench';
+import { ToolId } from '../types/toolId';
 
 export enum SubcategoryId {
   SIGNING = 'signing',
@@ -28,7 +29,6 @@ export type ToolRegistryEntry = {
 	icon: React.ReactNode;
 	name: string;
 	component: React.ComponentType<BaseToolProps> | null;
-	view: 'sign' | 'security' | 'format' | 'extract' | 'view' | 'merge' | 'pageEditor' | 'convert' | 'redact' | 'split' | 'convert' | 'remove' | 'compress' | 'external';
 	description: string;
 	categoryId: ToolCategoryId;
 	subcategoryId: SubcategoryId;
@@ -37,13 +37,17 @@ export type ToolRegistryEntry = {
 	endpoints?: string[];
 	link?: string;
 	type?: string;
+	// URL path for routing (e.g., '/split-pdfs', '/compress-pdf')
+	urlPath?: string;
+	// Workbench type for navigation
+	workbench?: WorkbenchType;
 	// Operation configuration for automation
 	operationConfig?: ToolOperationConfig<any>;
 	// Settings component for automation configuration
 	settingsComponent?: React.ComponentType<any>;
 }
 
-export type ToolRegistry = Record<string /* FIX ME: Should be ToolId */, ToolRegistryEntry>;
+export type ToolRegistry = Record<ToolId, ToolRegistryEntry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.SIGNING,
@@ -106,4 +110,31 @@ export const getAllApplicationEndpoints = (
   const toolEp = getAllEndpoints(registry);
   const convEp = extensionToEndpoint ? getConversionEndpoints(extensionToEndpoint) : [];
   return Array.from(new Set([...toolEp, ...convEp]));
+};
+
+/**
+ * Default workbench for tools that don't specify one
+ * Returns null to trigger the default case in Workbench component (ToolRenderer)
+ */
+export const getDefaultToolWorkbench = (): WorkbenchType => 'fileEditor';
+
+/**
+ * Get workbench type for a tool
+ */
+export const getToolWorkbench = (tool: ToolRegistryEntry): WorkbenchType => {
+  return tool.workbench || getDefaultToolWorkbench();
+};
+
+/**
+ * Get URL path for a tool
+ */
+export const getToolUrlPath = (toolId: string, tool: ToolRegistryEntry): string => {
+  return tool.urlPath || `/${toolId.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+};
+
+/**
+ * Check if a tool ID exists in the registry
+ */
+export const isValidToolId = (toolId: string, registry: ToolRegistry): boolean => {
+  return toolId in registry;
 };

@@ -1,42 +1,19 @@
 /**
- * Shared navigation types to avoid circular dependencies
+ * Navigation types for workbench and tool separation
  */
 
-// Navigation mode types - complete list to match contexts
-export type ModeType =
-  | 'viewer'
-  | 'pageEditor'
-  | 'fileEditor'
-  | 'merge'
-  | 'split'
-  | 'compress'
-  | 'ocr'
-  | 'convert'
-  | 'sanitize'
-  | 'addPassword'
-  | 'changePermissions'
-  | 'addWatermark'
-  | 'removePassword'
-  | 'single-large-page'
-  | 'repair'
-  | 'unlockPdfForms'
-  | 'removeCertificateSign';
+import { WorkbenchType } from './workbench';
+import { ToolId } from './toolId';
 
-// Utility functions for mode handling
-export const isValidMode = (mode: string): mode is ModeType => {
-  const validModes: ModeType[] = [
-    'viewer', 'pageEditor', 'fileEditor', 'merge', 'split', 
-    'compress', 'ocr', 'convert', 'addPassword', 'changePermissions', 
-    'sanitize', 'addWatermark', 'removePassword', 'single-large-page',
-    'repair', 'unlockPdfForms', 'removeCertificateSign'
-  ];
-  return validModes.includes(mode as ModeType);
-};
+// Navigation state
+export interface NavigationState {
+  workbench: WorkbenchType;
+  selectedTool: ToolId | null;
+}
 
-export const getDefaultMode = (): ModeType => 'fileEditor';
 
 // Route parsing result
 export interface ToolRoute {
-  mode: ModeType;
-  toolKey: string | null;
+  workbench: WorkbenchType;
+  toolId: ToolId | null;
 }
