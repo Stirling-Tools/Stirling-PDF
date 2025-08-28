@@ -8,6 +8,7 @@ import {
   getDefaultWorkbench
 } from '../types/navigation';
 import { ToolRegistry, getToolWorkbench, getToolUrlPath, isValidToolId } from '../data/toolsTaxonomy';
+import { firePixel } from './scarfTracking';
 
 /**
  * Parse the current URL to extract tool routing information
@@ -45,32 +46,37 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
 }
 
 /**
+ * Update URL and fire analytics pixel
+ */
+function updateUrl(newPath: string, searchParams: URLSearchParams): void {
+  const currentPath = window.location.pathname;
+  const queryString = searchParams.toString();
+  const fullUrl = newPath + (queryString ? `?${queryString}` : '');
+
+  // Only update URL and fire pixel if something actually changed
+  if (currentPath !== newPath || window.location.search !== (queryString ? `?${queryString}` : '')) {
+    window.history.replaceState(null, '', fullUrl);
+    firePixel(newPath);
+  }
+}
+
+/**
  * Update the URL to reflect the current tool selection
  */
 export function updateToolRoute(toolId: ToolId, registry: ToolRegistry): void {
-  const currentPath = window.location.pathname;
-  const searchParams = new URLSearchParams(window.location.search);
-
   const tool = registry[toolId];
   if (!tool) {
     console.warn(`Tool ${toolId} not found in registry`);
     return;
   }
 
-
   const newPath = getToolUrlPath(toolId, tool);
-
+  const searchParams = new URLSearchParams(window.location.search);
+  
   // Remove tool query parameter since we're using path-based routing
   searchParams.delete('tool');
 
-  // Construct final URL
-  const queryString = searchParams.toString();
-  const fullUrl = newPath + (queryString ? `?${queryString}` : '');
-
-  // Update URL without triggering page reload
-  if (currentPath !== newPath || window.location.search !== (queryString ? `?${queryString}` : '')) {
-    window.history.replaceState(null, '', fullUrl);
-  }
+  updateUrl(newPath, searchParams);
 }
 
 /**
@@ -80,10 +86,7 @@ export function clearToolRoute(): void {
   const searchParams = new URLSearchParams(window.location.search);
   searchParams.delete('tool');
 
-  const queryString = searchParams.toString();
-  const url = '/' + (queryString ? `?${queryString}` : '');
-
-  window.history.replaceState(null, '', url);
+  updateUrl('/', searchParams);
 }
 
 /**

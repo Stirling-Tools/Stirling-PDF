@@ -7,7 +7,6 @@ import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
-import { ScarfPixel } from "./components/ScarfPixel";
 
 // Import global styles
 import "./styles/tailwind.css";
@@ -37,7 +36,6 @@ export default function App() {
         <ErrorBoundary>
           <FileContextProvider enableUrlSync={true} enablePersistence={true}>
             <NavigationProvider>
-              <ScarfPixel />
               <FilesModalProvider>
                 <ToolWorkflowProvider>
                   <SidebarProvider>

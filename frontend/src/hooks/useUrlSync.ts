@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useCallback } from 'react';
-import { WorkbenchType, ToolId, ToolRoute } from '../types/navigation';
+import { WorkbenchType, ToolId } from '../types/navigation';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
 import { ToolRegistry } from '../data/toolsTaxonomy';
 
@@ -11,10 +11,7 @@ import { ToolRegistry } from '../data/toolsTaxonomy';
  * Hook to sync workbench and tool with URL using registry
  */
 export function useNavigationUrlSync(
-  workbench: WorkbenchType,
   selectedTool: ToolId | null,
-  setWorkbench: (workbench: WorkbenchType) => void,
-  setSelectedTool: (toolId: ToolId | null) => void,
   handleToolSelect: (toolId: string) => void,
   clearToolSelection: () => void,
   registry: ToolRegistry,
@@ -28,7 +25,9 @@ export function useNavigationUrlSync(
     if (route.toolId !== selectedTool) {
       if (route.toolId) {
         handleToolSelect(route.toolId);
-      } else {
+      } else if (selectedTool !== null) {
+        // Only clear selection if we actually had a tool selected
+        // Don't clear on initial load when selectedTool starts as null
         clearToolSelection();
       }
     }
@@ -41,8 +40,10 @@ export function useNavigationUrlSync(
     if (selectedTool) {
       updateToolRoute(selectedTool, registry);
     } else {
-      // Clear URL when no tool is selected
-      clearToolRoute();
+      // Only clear URL if we're not on the home page already
+      if (window.location.pathname !== '/') {
+        clearToolRoute();
+      }
     }
   }, [selectedTool, registry, enableSync]);
 

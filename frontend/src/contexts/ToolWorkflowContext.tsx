@@ -174,7 +174,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const handleToolSelect = useCallback((toolId: string) => {
     // Set the selected tool and determine the appropriate workbench
     actions.setSelectedTool(toolId);
-    
+
     // Get the tool from registry to determine workbench
     const tool = getSelectedTool(toolId);
     if (tool && tool.workbench) {
@@ -225,10 +225,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // URL sync for proper tool navigation
   useNavigationUrlSync(
-    navigationState.workbench,
     navigationState.selectedTool,
-    actions.setWorkbench,
-    actions.setSelectedTool,
     handleToolSelect,
     () => actions.setSelectedTool(null),
     toolRegistry,
