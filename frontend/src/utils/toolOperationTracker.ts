@@ -1,3 +1,4 @@
+import { FileId } from '../types/file';
 import { FileOperation } from '../types/fileContext';
 
 /**
@@ -7,9 +8,9 @@ export const createOperation = <TParams = void>(
   operationType: string,
   params: TParams,
   selectedFiles: File[]
-): { operation: FileOperation; operationId: string; fileId: string } => {
+): { operation: FileOperation; operationId: string; fileId: FileId } => {
   const operationId = `${operationType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  const fileId = selectedFiles.map(f => f.name).join(',');
+  const fileId = selectedFiles.map(f => f.name).join(',') as FileId;
 
   const operation: FileOperation = {
     id: operationId,
