@@ -50,6 +50,7 @@
     "title": "Files",
     "placeholder": "Select a PDF file in the main view to get started",
     "upload": "Upload",
+    "uploadFiles": "Upload Files",
     "addFiles": "Add files",
     "selectFromWorkbench": "Select files from the workbench or "
   },
@@ -2068,7 +2069,7 @@
     "loading": "Loading...",
     "or": "or",
     "dropFileHere": "Drop file here or click to upload",
-    "dropFilesHere": "Drop files here or click to upload",
+    "dropFilesHere": "Drop files here or click the upload button",
     "pdfFilesOnly": "PDF files only",
     "supportedFileTypes": "Supported file types",
     "upload": "Upload",
