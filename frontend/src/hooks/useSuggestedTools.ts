@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigationActions, useNavigationState } from '../contexts/NavigationContext';
+import { ToolId } from '../types/toolId';
 
 // Material UI Icons
 import CompressIcon from '@mui/icons-material/Compress';
@@ -9,7 +10,7 @@ import CropIcon from '@mui/icons-material/Crop';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 
 export interface SuggestedTool {
-  id: string /* FIX ME: Should be ToolId */;
+  id: ToolId;
   title: string;
   icon: React.ComponentType<any>;
   navigate: () => void;
@@ -32,7 +33,7 @@ const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
     icon: CleaningServicesIcon
   },
   {
-    id: 'splitPdf',
+    id: 'split',
     title: 'Split',
     icon: CropIcon
   },

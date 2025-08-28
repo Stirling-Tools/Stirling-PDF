@@ -1,10 +1,10 @@
-import { ToolId } from '../types/navigation';
+import { ToolId } from '../types/toolId';
 
 // Map URL paths to tool keys (multiple URLs can map to same tool)
 export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/split-pdfs': 'split',
   '/split': 'split',
-  '/merge-pdfs': 'merge',
+  '/merge-pdfs': 'mergePdfs',
   '/compress-pdf': 'compress',
   '/convert': 'convert',
   '/convert-pdf': 'convert',
@@ -19,15 +19,15 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/pdf-to-word': 'convert',
   '/pdf-to-xml': 'convert',
   '/add-password': 'addPassword',
-  '/change-permissions': 'changePermissions',
+  '/change-permissions': 'change-permissions',
   '/sanitize-pdf': 'sanitize',
   '/ocr': 'ocr',
   '/ocr-pdf': 'ocr',
   '/add-watermark': 'addWatermark',
-  '/remove-password': 'removePassword',
+  '/remove-password': 'remove-password',
   '/single-large-page': 'single-large-page',
   '/repair': 'repair',
-  '/unlock-pdf-forms': 'unlockPdfForms',
-  '/remove-certificate-sign': 'removeCertificateSign',
-  '/remove-cert-sign': 'removeCertificateSign'
+  '/unlock-pdf-forms': 'unlock-pdf-forms',
+  '/remove-certificate-sign': 'remove-certificate-sign',
+  '/remove-cert-sign': 'remove-certificate-sign'
 };

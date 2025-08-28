@@ -2,7 +2,8 @@
  * Navigation action interfaces to break circular dependencies
  */
 
-import { WorkbenchType, ToolId } from './navigation';
+import { WorkbenchType } from './workbench';
+import { ToolId } from './toolId';
 
 export interface NavigationActions {
   setWorkbench: (workbench: WorkbenchType) => void;

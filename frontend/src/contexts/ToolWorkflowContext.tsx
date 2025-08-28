@@ -6,10 +6,11 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
-import { ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { ToolRegistryEntry, ToolRegistry } from '../data/toolsTaxonomy';
 import { useNavigationActions, useNavigationState } from './NavigationContext';
+import { ToolId, isValidToolId } from '../types/toolId';
 import { useNavigationUrlSync } from '../hooks/useUrlSync';
-import { getDefaultWorkbench } from '../types/navigation';
+import { getDefaultWorkbench } from '../types/workbench';
 
 // State interface
 interface ToolWorkflowState {
@@ -84,7 +85,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setSearchQuery: (query: string) => void;
 
   // Tool Actions
-  selectTool: (toolId: string) => void;
+  selectTool: (toolId: ToolId | null) => void;
   clearToolSelection: () => void;
 
   // Tool Reset Actions
@@ -174,7 +175,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: string) => {
     // Set the selected tool and determine the appropriate workbench
-    actions.setSelectedTool(toolId);
+    const validToolId = isValidToolId(toolId) ? toolId : null;
+    actions.setSelectedTool(validToolId);
 
     // Get the tool from registry to determine workbench
     const tool = getSelectedTool(toolId);
@@ -229,7 +231,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     navigationState.selectedTool,
     handleToolSelect,
     handleBackToTools,
-    toolRegistry,
+    toolRegistry as ToolRegistry,
     true
   );
 

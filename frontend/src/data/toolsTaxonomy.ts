@@ -1,9 +1,9 @@
 import { type TFunction } from 'i18next';
 import React from 'react';
-import { ToolOperationHook, ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
+import { ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
 import { BaseToolProps } from '../types/tool';
-import { BaseParameters } from '../types/parameters';
-import { WorkbenchType } from '../types/navigation';
+import { WorkbenchType } from '../types/workbench';
+import { ToolId } from '../types/toolId';
 
 export enum SubcategoryId {
   SIGNING = 'signing',
@@ -47,7 +47,7 @@ export type ToolRegistryEntry = {
 	settingsComponent?: React.ComponentType<any>;
 }
 
-export type ToolRegistry = Record<string /* FIX ME: Should be ToolId */, ToolRegistryEntry>;
+export type ToolRegistry = Record<ToolId, ToolRegistryEntry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.SIGNING,
@@ -126,7 +126,7 @@ export const getToolWorkbench = (tool: ToolRegistryEntry): WorkbenchType => {
 };
 
 /**
- * Get URL path for a tool  
+ * Get URL path for a tool
  */
 export const getToolUrlPath = (toolId: string, tool: ToolRegistryEntry): string => {
   return tool.urlPath || `/${toolId.replace(/([A-Z])/g, '-$1').toLowerCase()}`;

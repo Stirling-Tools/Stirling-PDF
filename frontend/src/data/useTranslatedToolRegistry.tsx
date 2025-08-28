@@ -39,6 +39,7 @@ import AddWatermarkSingleStepSettings from "../components/tools/addWatermark/Add
 import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
+import { ToolId } from "../types/toolId";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -162,7 +163,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: addPasswordOperationConfig,
         settingsComponent: AddPasswordSettings,
       },
-      watermark: {
+      addWatermark: {
         icon: <LocalIcon icon="branding-watermark-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.watermark.title", "Add Watermark"),
         component: AddWatermark,
@@ -258,7 +259,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
       // Document Review
 
-      read: {
+     read: {
         icon: <LocalIcon icon="article-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.read.title", "Read"),
         component: null,
@@ -284,7 +285,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="crop-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.crop.title", "Crop PDF"),
         component: null,
-
         description: t("home.crop.desc", "Crop a PDF to reduce its size (maintains text!)"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -293,16 +293,14 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="rotate-right-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.rotate.title", "Rotate"),
         component: null,
-
         description: t("home.rotate.desc", "Easily rotate your PDFs."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },
-      splitPdf: {
+      split: {
         icon: <LocalIcon icon="content-cut-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.split.title", "Split"),
         component: SplitPdfPanel,
-
         description: t("home.split.desc", "Split PDFs into multiple documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
@@ -372,7 +370,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
       // Extraction
 
-      extractPages: {
+      "extract-page": {
         icon: <LocalIcon icon="upload-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.extractPages.title", "Extract Pages"),
         component: null,
@@ -490,7 +488,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
       // Advanced Formatting
 
-      adjustContrast: {
+      "adjust-contrast": {
         icon: <LocalIcon icon="palette" width="1.5rem" height="1.5rem" />,
         name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
         component: null,
@@ -700,9 +698,9 @@ export function useFlatToolRegistry(): ToolRegistry {
       return allTools;
     }
     const filteredTools = Object.keys(allTools)
-      .filter((key) => allTools[key].component !== null || allTools[key].link)
+      .filter((key) => allTools[key as ToolId].component !== null || allTools[key as ToolId].link)
       .reduce((obj, key) => {
-        obj[key] = allTools[key];
+        obj[key as ToolId] = allTools[key as ToolId];
         return obj;
       }, {} as ToolRegistry);
     return filteredTools;

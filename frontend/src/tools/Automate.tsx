@@ -161,7 +161,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const filesPlaceholder = useMemo(() => {
     if (currentStep === AUTOMATION_STEPS.RUN && stepData.automation?.operations?.length) {
       const firstOperation = stepData.automation.operations[0];
-      const toolConfig = toolRegistry[firstOperation.operation];
+      const toolConfig = toolRegistry[firstOperation.operation as keyof typeof toolRegistry];
 
       // Check if the tool has supportedFormats that include non-PDF formats
       if (toolConfig?.supportedFormats && toolConfig.supportedFormats.length > 1) {

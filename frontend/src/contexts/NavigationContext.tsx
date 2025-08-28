@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { WorkbenchType, ToolId, getDefaultWorkbench } from '../types/navigation';
+import { WorkbenchType, getDefaultWorkbench } from '../types/workbench';
+import { ToolId, isValidToolId } from '../types/toolId';
 import { useFlatToolRegistry } from '../data/useTranslatedToolRegistry';
 
 /**
@@ -167,10 +168,13 @@ export const NavigationProvider: React.FC<{
       }
 
       // Look up the tool in the registry to get its proper workbench
-      const tool = toolRegistry[toolId];
+
+      const tool = isValidToolId(toolId)? toolRegistry[toolId] : null;
       const workbench = tool ? (tool.workbench || getDefaultWorkbench()) : getDefaultWorkbench();
 
-      dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId, workbench } });
+      // Validate toolId and convert to ToolId type
+      const validToolId = isValidToolId(toolId) ? toolId : null;
+      dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: validToolId, workbench } });
     }, [toolRegistry])
   };
 

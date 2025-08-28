@@ -2,12 +2,10 @@
  * URL routing utilities for tool navigation with registry support
  */
 
-import {
-  ToolId,
-  ToolRoute,
-  getDefaultWorkbench
-} from '../types/navigation';
-import { ToolRegistry, getToolWorkbench, getToolUrlPath, isValidToolId } from '../data/toolsTaxonomy';
+import { ToolRoute } from '../types/navigation';
+import { ToolId, isValidToolId } from '../types/toolId';
+import { getDefaultWorkbench } from '../types/workbench';
+import { ToolRegistry, getToolWorkbench, getToolUrlPath } from '../data/toolsTaxonomy';
 import { firePixel } from './scarfTracking';
 import { URL_TO_TOOL_MAP } from './urlMapping';
 
@@ -31,7 +29,7 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
   // Fallback: Try to find tool by primary URL path in registry
   for (const [toolId, tool] of Object.entries(registry)) {
     const toolUrlPath = getToolUrlPath(toolId, tool);
-    if (path === toolUrlPath) {
+    if (path === toolUrlPath && isValidToolId(toolId)) {
       return {
         workbench: getToolWorkbench(tool),
         toolId
@@ -41,7 +39,7 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
 
   // Check for query parameter fallback (e.g., ?tool=split)
   const toolParam = searchParams.get('tool');
-  if (toolParam && isValidToolId(toolParam, registry)) {
+  if (toolParam && isValidToolId(toolParam) && registry[toolParam]) {
     const tool = registry[toolParam];
     return {
       workbench: getToolWorkbench(tool),

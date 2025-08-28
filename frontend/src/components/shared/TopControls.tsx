@@ -5,7 +5,7 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
-import { WorkbenchType, isValidWorkbench } from '../../types/navigation';
+import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
 import { Tooltip } from "./Tooltip";
 
 const viewOptionStyle = {

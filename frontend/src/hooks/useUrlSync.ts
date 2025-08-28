@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
-import { WorkbenchType, ToolId } from '../types/navigation';
+import { ToolId } from '../types/toolId';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
 import { ToolRegistry } from '../data/toolsTaxonomy';
 import { firePixel } from '../utils/scarfTracking';
@@ -55,7 +55,7 @@ export function useNavigationUrlSync(
         clearToolRoute(false); // Use pushState for user navigation
       }
     }
-    
+
     prevSelectedTool.current = selectedTool;
   }, [selectedTool, registry, enableSync]);
 
