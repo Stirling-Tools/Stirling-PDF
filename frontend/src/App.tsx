@@ -1,4 +1,5 @@
 import React, { Suspense } from "react";
+import { ScrollArea } from "@mantine/core";
 import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "./contexts/FileContext";
 import { NavigationProvider } from "./contexts/NavigationContext";
@@ -40,7 +41,9 @@ export default function App() {
                 <ToolWorkflowProvider>
                   <SidebarProvider>
                     <RightRailProvider>
-                    <HomePage />
+                      <ScrollArea h="100vh" scrollbarSize={6} scrollHideDelay={1000}>
+                        <HomePage />
+                      </ScrollArea>
                     </RightRailProvider>
                   </SidebarProvider>
                 </ToolWorkflowProvider>

@@ -11,6 +11,7 @@ import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import RightRail from "../components/shared/RightRail";
 import FileManager from "../components/FileManager";
+import Footer from "../components/shared/Footer";
 
 
 export default function HomePage() {
@@ -38,17 +39,21 @@ export default function HomePage() {
   // Note: File selection limits are now handled directly by individual tools
 
   return (
-    <Group
-      align="flex-start"
-      gap={0}
-      className="min-h-screen w-screen overflow-hidden flex-nowrap flex"
-    >
-      <QuickAccessBar
-        ref={quickAccessRef} />
-      <ToolPanel />
-      <Workbench />
-      <RightRail />
-      <FileManager selectedTool={selectedTool as any /* FIX ME */} />
-    </Group>
+    <div className="min-h-screen flex flex-col">
+      <Group
+        align="flex-start"
+        gap={0}
+        className="flex-nowrap flex"
+        style={{ minHeight: '100vh' }}
+      >
+        <QuickAccessBar
+          ref={quickAccessRef} />
+        <ToolPanel />
+        <Workbench />
+        <RightRail />
+        <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+      </Group>
+      <Footer />
+    </div>
   );
 }
