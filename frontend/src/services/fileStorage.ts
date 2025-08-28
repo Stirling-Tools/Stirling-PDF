@@ -4,7 +4,7 @@
  * Now uses centralized IndexedDB manager
  */
 
-import { FileId } from '../types/fileContext';
+import { FileId } from '../types/file';
 import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
 
 export interface StoredFile {

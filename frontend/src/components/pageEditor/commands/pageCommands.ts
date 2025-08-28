@@ -1,4 +1,4 @@
-import { FileId } from '../../../types/fileContext';
+import { FileId } from '../../../types/file';
 import { PDFDocument, PDFPage } from '../../../types/pageEditor';
 
 // V1-style DOM-first command system (replaces the old React state commands)

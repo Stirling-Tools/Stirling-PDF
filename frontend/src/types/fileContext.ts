@@ -2,9 +2,8 @@
  * Types for global file context management across views and tools
  */
 
-import { ProcessedFile } from './processing';
-import { PDFDocument, PDFPage, PageOperation } from './pageEditor';
-import { FileMetadata } from './file';
+import { PageOperation } from './pageEditor';
+import { FileId, FileMetadata } from './file';
 
 export type ModeType =
   | 'viewer'
@@ -26,9 +25,6 @@ export type ModeType =
   | 'removeCertificateSign';
 
 // Normalized state types
-declare const tag: unique symbol;
-export type FileId = string & { readonly [tag]: 'FileId' };
-
 export interface ProcessedFilePage {
   thumbnail?: string;
   pageNumber?: number;

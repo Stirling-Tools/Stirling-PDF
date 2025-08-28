@@ -1,4 +1,5 @@
-import { FileId, FileOperation } from '../types/fileContext';
+import { FileId } from '../types/file';
+import { FileOperation } from '../types/fileContext';
 
 /**
  * Creates operation tracking data for FileContext integration

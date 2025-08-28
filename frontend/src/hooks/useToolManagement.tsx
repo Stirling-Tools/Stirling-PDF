@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
-import { FileId } from '../types/fileContext';
+import { FileId } from '../types/file';
 
 interface ToolManagementResult {
   selectedTool: ToolRegistryEntry | null;

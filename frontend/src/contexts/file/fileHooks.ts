@@ -9,7 +9,8 @@ import {
   FileContextStateValue,
   FileContextActionsValue
 } from './contexts';
-import { FileId, FileRecord } from '../../types/fileContext';
+import { FileRecord } from '../../types/fileContext';
+import { FileId } from '../../types/file';
 
 /**
  * Hook for accessing file state (will re-render on any state change)

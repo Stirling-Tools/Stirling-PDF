@@ -12,8 +12,9 @@ import {
   Divider
 } from '@mantine/core';
 // FileContext no longer needed - these were stub functions anyway
-import { FileId, FileOperation, FileOperationHistory as FileOperationHistoryType } from '../../types/fileContext';
+import {  FileOperation, FileOperationHistory as FileOperationHistoryType } from '../../types/fileContext';
 import { PageOperation } from '../../types/pageEditor';
+import { FileId } from '../../types/file';
 
 interface FileOperationHistoryProps {
   fileId: FileId;

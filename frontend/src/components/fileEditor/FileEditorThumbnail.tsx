@@ -11,7 +11,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
-import { FileId } from '../../types/fileContext';
+import { FileId } from '../../types/file';
 
 interface FileItem {
   id: FileId;

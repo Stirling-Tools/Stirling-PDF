@@ -7,7 +7,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 import { pdfWorkerManager } from './pdfWorkerManager';
-import { FileId } from '../types/fileContext';
+import { FileId } from '../types/file';
 
 export interface ProcessedFileMetadata {
   totalPages: number;

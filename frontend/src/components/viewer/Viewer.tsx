@@ -15,7 +15,7 @@ import { fileStorage } from "../../services/fileStorage";
 import SkeletonLoader from '../shared/SkeletonLoader';
 import { useFileState, useFileActions, useCurrentFile } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
-import { FileId } from "../../types/fileContext";
+import { FileId } from "../../types/file";
 
 
 // Lazy loading page image component

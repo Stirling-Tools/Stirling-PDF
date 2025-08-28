@@ -15,7 +15,7 @@ import {
 } from '@mantine/core';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { useTranslation } from 'react-i18next';
-import { FileId } from '../../types/fileContext';
+import { FileId } from '../../types/file';
 
 interface FilePickerModalProps {
   opened: boolean;

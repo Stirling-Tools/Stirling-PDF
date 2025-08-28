@@ -3,8 +3,8 @@
  * FileContext uses pure File objects with separate ID tracking
  */
 
-import { FileId } from "./fileContext";
-
+declare const tag: unique symbol;
+export type FileId = string & { readonly [tag]: 'FileId' };
 
 /**
  * File metadata for efficient operations without loading full file data

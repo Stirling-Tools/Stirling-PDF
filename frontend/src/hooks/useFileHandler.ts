@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useFileState, useFileActions } from '../contexts/FileContext';
 import { FileMetadata } from '../types/file';
-import { FileId } from '../types/fileContext';
+import { FileId } from '../types/file';
 
 export const useFileHandler = () => {
   const { state } = useFileState(); // Still needed for addStoredFiles

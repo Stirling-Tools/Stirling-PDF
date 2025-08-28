@@ -19,7 +19,6 @@ import {
   FileContextStateValue,
   FileContextActionsValue,
   FileContextActions,
-  FileId,
   FileRecord
 } from '../types/fileContext';
 
@@ -30,6 +29,7 @@ import { addFiles, consumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
+import { FileId } from '../types/file';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useFileHandler } from '../hooks/useFileHandler';
 import { FileMetadata } from '../types/file';
-import { FileId } from '../types/fileContext';
+import { FileId } from '../types/file';
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;

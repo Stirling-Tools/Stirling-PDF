@@ -8,7 +8,7 @@ import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { createOperation } from '../../../utils/toolOperationTracker';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
-import { FileId } from '../../../types/fileContext';
+import { FileId } from '../../../types/file';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };

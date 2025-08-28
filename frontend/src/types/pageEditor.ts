@@ -1,4 +1,4 @@
-import { FileId } from './fileContext';
+import { FileId } from './file';
 
 export interface PDFPage {
   id: string;

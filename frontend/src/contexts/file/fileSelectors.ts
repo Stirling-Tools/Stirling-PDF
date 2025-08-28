@@ -2,8 +2,8 @@
  * File selectors - Pure functions for accessing file state
  */
 
+import { FileId } from '../../types/file';
 import {
-  FileId,
   FileRecord,
   FileContextState,
   FileContextSelectors

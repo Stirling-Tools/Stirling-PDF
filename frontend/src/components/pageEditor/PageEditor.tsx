@@ -17,7 +17,7 @@ import PageThumbnail from './PageThumbnail';
 import DragDropGrid from './DragDropGrid';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
-import { FileId } from "../../types/fileContext";
+import { FileId } from "../../types/file";
 
 import {
   DOMCommand,
@@ -129,7 +129,7 @@ const PageEditor = ({
 
   // Interface functions for parent component
   const displayDocument = editedDocument || mergedPdfDocument;
-  
+
   // Utility functions to convert between page IDs and page numbers
   const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
     if (!displayDocument) return [];
@@ -138,7 +138,7 @@ const PageEditor = ({
       return page?.pageNumber || 0;
     }).filter(num => num > 0);
   }, [displayDocument]);
-  
+
   const getPageIdsFromNumbers = useCallback((pageNumbers: number[]): string[] => {
     if (!displayDocument) return [];
     return pageNumbers.map(num => {
@@ -146,10 +146,10 @@ const PageEditor = ({
       return page?.id || '';
     }).filter(id => id !== '');
   }, [displayDocument]);
-  
+
   // Convert selectedPageIds to numbers for components that still need numbers
-  const selectedPageNumbers = useMemo(() => 
-    getPageNumbersFromIds(selectedPageIds), 
+  const selectedPageNumbers = useMemo(() =>
+    getPageNumbersFromIds(selectedPageIds),
     [selectedPageIds, getPageNumbersFromIds]
   );
 
@@ -237,7 +237,7 @@ const PageEditor = ({
   const handleRotate = useCallback((direction: 'left' | 'right') => {
     if (!displayDocument || selectedPageIds.length === 0) return;
     const rotation = direction === 'left' ? -90 : 90;
-    
+
     handleRotatePages(selectedPageIds, rotation);
   }, [displayDocument, selectedPageIds, handleRotatePages]);
 
@@ -446,8 +446,8 @@ const PageEditor = ({
   }, [displayDocument, getPageNumbersFromIds]);
 
   // Helper function to collect source files for multi-file export
-  const getSourceFiles = useCallback((): Map<string, File> | null => {
-    const sourceFiles = new Map<string, File>();
+  const getSourceFiles = useCallback((): Map<FileId, File> | null => {
+    const sourceFiles = new Map<FileId, File>();
 
     // Always include original files
     activeFileIds.forEach(fileId => {
@@ -502,7 +502,7 @@ const PageEditor = ({
 
       // Step 2: Use the already selected page IDs
       // Filter to only include IDs that exist in the document with DOM state
-      const validSelectedPageIds = selectedPageIds.filter(pageId => 
+      const validSelectedPageIds = selectedPageIds.filter(pageId =>
         documentWithDOMState.pages.some(p => p.id === pageId)
       );
 

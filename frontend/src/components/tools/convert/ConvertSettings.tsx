@@ -22,7 +22,7 @@ import {
   OUTPUT_OPTIONS,
   FIT_OPTIONS
 } from "../../../constants/convertConstants";
-import { FileId } from "../../../types/fileContext";
+import { FileId } from "../../../types/file";
 
 interface ConvertSettingsProps {
   parameters: ConvertParameters;

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useRef, useCallback, useEff
 import { FileMetadata } from '../types/file';
 import { StoredFile, fileStorage } from '../services/fileStorage';
 import { downloadFiles } from '../utils/downloadUtils';
-import { FileId } from '../types/fileContext';
+import { FileId } from '../types/file';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {

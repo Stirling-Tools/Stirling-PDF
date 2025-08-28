@@ -2,7 +2,7 @@
  * High-performance thumbnail generation service using main thread processing
  */
 
-import { FileId } from '../types/fileContext';
+import { FileId } from '../types/file';
 import { pdfWorkerManager } from './pdfWorkerManager';
 
 interface ThumbnailResult {

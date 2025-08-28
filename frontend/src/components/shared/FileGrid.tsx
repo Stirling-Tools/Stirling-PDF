@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
 import FileCard from "./FileCard";
-import { FileId, FileRecord } from "../../types/fileContext";
+import { FileRecord } from "../../types/fileContext";
+import { FileId } from "../../types/file";
 
 interface FileGridProps {
   files: Array<{ file: File; record?: FileRecord }>;

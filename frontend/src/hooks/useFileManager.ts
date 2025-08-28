@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useIndexedDB } from '../contexts/IndexedDBContext';
 import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
-import { FileId } from '../types/fileContext';
+import { FileId } from '../types/file';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);

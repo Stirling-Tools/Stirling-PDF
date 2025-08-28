@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
 import { useNavigationActions } from '../../contexts/NavigationContext';
-import { FileId, FileOperation } from '../../types/fileContext';
+import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';
@@ -16,6 +16,7 @@ import styles from './FileEditor.module.css';
 import FileEditorThumbnail from './FileEditorThumbnail';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
+import { FileId } from '../../types/file';
 
 
 interface FileEditorProps {
