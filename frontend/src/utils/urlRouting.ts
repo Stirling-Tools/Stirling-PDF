@@ -9,6 +9,7 @@ import {
 } from '../types/navigation';
 import { ToolRegistry, getToolWorkbench, getToolUrlPath, isValidToolId } from '../data/toolsTaxonomy';
 import { firePixel } from './scarfTracking';
+import { URL_TO_TOOL_MAP } from './urlMapping';
 
 /**
  * Parse the current URL to extract tool routing information
@@ -17,7 +18,17 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
   const path = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
 
-  // Try to find tool by URL path
+  // First, check URL mapping for multiple URL aliases
+  const mappedToolId = URL_TO_TOOL_MAP[path];
+  if (mappedToolId && registry[mappedToolId]) {
+    const tool = registry[mappedToolId];
+    return {
+      workbench: getToolWorkbench(tool),
+      toolId: mappedToolId
+    };
+  }
+
+  // Fallback: Try to find tool by primary URL path in registry
   for (const [toolId, tool] of Object.entries(registry)) {
     const toolUrlPath = getToolUrlPath(toolId, tool);
     if (path === toolUrlPath) {
