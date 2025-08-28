@@ -9,6 +9,7 @@ export interface FilesStepConfig {
   selectedFiles: File[];
   isCollapsed?: boolean;
   placeholder?: string;
+  minFiles?: number;
   onCollapsedClick?: () => void;
   isVisible?: boolean;
 }
@@ -75,6 +76,7 @@ export function createToolFlow(config: ToolFlowConfig) {
           selectedFiles: config.files.selectedFiles,
           isCollapsed: config.files.isCollapsed,
           placeholder: config.files.placeholder,
+          minFiles: config.files.minFiles,
           onCollapsedClick: config.files.onCollapsedClick
         })}
 

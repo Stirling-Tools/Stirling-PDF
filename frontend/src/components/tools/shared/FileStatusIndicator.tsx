@@ -10,12 +10,14 @@ import { useFileManager } from "../../../hooks/useFileManager";
 export interface FileStatusIndicatorProps {
   selectedFiles?: File[];
   placeholder?: string;
+  minFiles?: number;
 }
 
 const FileStatusIndicator = ({
   selectedFiles = [],
+  minFiles = 1,
 }: FileStatusIndicatorProps) => {
-  const { t } = useTranslation();
+const { t } = useTranslation();
   const { openFilesModal, onFilesSelect } = useFilesModalContext();
   const { files: workbenchFiles } = useAllFiles();
   const { loadRecentFiles } = useFileManager();
@@ -59,7 +61,7 @@ const FileStatusIndicator = ({
     // If no recent files, show upload button
     if (!hasRecentFiles) {
       return (
-        <Text size="sm" c="dimmed">
+<Text size="sm" c="dimmed">
           <Anchor
             size="sm"
             onClick={handleNativeUpload}
@@ -88,7 +90,7 @@ const FileStatusIndicator = ({
   }
 
   // Show selection status when there are files in workbench
-  if (selectedFiles.length === 0) {
+  if (selectedFiles.length < minFiles) {
     // If no recent files, show upload option
     if (!hasRecentFiles) {
       return (
