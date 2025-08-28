@@ -26,7 +26,6 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
 
     // Prevent double initialization
     if (window.CookieConsent) {
-      console.log('Cookie consent already loaded, forcing show...');
       setIsInitialized(true);
       // Force show the modal if it exists but isn't visible
       setTimeout(() => {
@@ -35,38 +34,34 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
       return;
     }
 
-    console.log('Loading cookie consent library...');
-    
     // Load the cookie consent CSS files first
     const mainCSS = document.createElement('link');
     mainCSS.rel = 'stylesheet';
     mainCSS.href = '/css/cookieconsent.css';
     document.head.appendChild(mainCSS);
-    
+
     const customCSS = document.createElement('link');
     customCSS.rel = 'stylesheet';
     customCSS.href = '/css/cookieconsentCustomisation.css';
     document.head.appendChild(customCSS);
-    
+
     // Load the cookie consent library
     const script = document.createElement('script');
     script.src = '/js/thirdParty/cookieconsent.umd.js';
     script.onload = () => {
-      console.log('Cookie consent script loaded successfully');
       // Small delay to ensure DOM is ready
       setTimeout(() => {
-        console.log('Initializing cookie consent...');
-        
+
         // Detect current theme and set appropriate mode
         const detectTheme = () => {
           const mantineScheme = document.documentElement.getAttribute('data-mantine-color-scheme');
           const hasLightClass = document.documentElement.classList.contains('light');
           const hasDarkClass = document.documentElement.classList.contains('dark');
           const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          
+
           // Priority: Mantine attribute > CSS classes > system preference
           let isDarkMode = false;
-          
+
           if (mantineScheme) {
             isDarkMode = mantineScheme === 'dark';
           } else if (hasLightClass) {
@@ -76,15 +71,13 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
           } else {
             isDarkMode = systemPrefersDark;
           }
-          
-          console.log('Theme detection:', { mantineScheme, hasLightClass, hasDarkClass, systemPrefersDark, isDarkMode });
-          
+
           // Always explicitly set or remove the class
           document.documentElement.classList.toggle('cc--darkmode', isDarkMode);
-          
+
           return isDarkMode;
         };
-        
+
         // Initial theme detection with slight delay to ensure DOM is ready
         setTimeout(() => {
           detectTheme();
@@ -95,26 +88,23 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
           console.error('CookieConsent is not available on window object');
           return;
         }
-        
+
         // Listen for theme changes
         const themeObserver = new MutationObserver((mutations) => {
           mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' && 
-                (mutation.attributeName === 'data-mantine-color-scheme' || 
+            if (mutation.type === 'attributes' &&
+                (mutation.attributeName === 'data-mantine-color-scheme' ||
                  mutation.attributeName === 'class')) {
-              console.log('Theme changed, re-detecting...');
               detectTheme();
             }
           });
         });
-        
+
         themeObserver.observe(document.documentElement, {
           attributes: true,
           attributeFilter: ['data-mantine-color-scheme', 'class']
         });
 
-        // Clear any existing cookie to force show
-        document.cookie = 'cc_cookie=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/';
 
         // Initialize cookie consent with full configuration
         try {
@@ -190,26 +180,20 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
               }
             }
           });
-          
+
           // Force show after initialization
           setTimeout(() => {
-            console.log('Forcing cookie consent to show...');
             window.CookieConsent.show();
-            
+
             // Debug: Check if modal elements exist
             const ccMain = document.getElementById('cc-main');
             const consentModal = document.querySelector('.cm-wrapper');
-            console.log('cc-main element:', ccMain);
-            console.log('consent modal element:', consentModal);
-            if (ccMain) {
-              console.log('cc-main styles:', window.getComputedStyle(ccMain));
-            }
+
           }, 200);
-          
+
         } catch (error) {
           console.error('Error initializing CookieConsent:', error);
         }
-      console.log('Cookie consent initialized successfully');
       setIsInitialized(true);
       }, 100); // Small delay to ensure DOM is ready
     };
