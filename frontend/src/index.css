@@ -11,3 +11,33 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Footer link styling - make buttons and links look identical */
+.footer-link {
+  color: var(--mantine-color-blue-6);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+}
+
+.footer-link:hover {
+  color: var(--mantine-color-blue-8);
+  text-decoration: underline;
+}
+
+.stirling-link {
+  color: var(--mantine-color-blue-6);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.stirling-link:hover {
+  color: var(--mantine-color-blue-8);
+  text-decoration: underline;
+}

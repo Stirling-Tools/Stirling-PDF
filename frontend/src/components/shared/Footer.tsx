@@ -1,4 +1,4 @@
-import { Flex } from '@mantine/core';
+import { Flex, Text } from '@mantine/core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCookieConsent } from '../../hooks/useCookieConsent';
@@ -93,22 +93,11 @@ export default function Footer({
               {t('legal.accessibility', 'Accessibility')}
             </a>
           )}
-          {cookiePolicy && (
-            <a
-              className="footer-link px-3"
-              target="_blank"
-              rel="noopener noreferrer"
-              href={cookiePolicy}
-            >
-              {t('legal.cookie', 'Cookie Preferecences')}
-            </a>
-          )}
           {analyticsEnabled && (
             <button
               className="footer-link px-3"
               id="cookieBanner"
               onClick={showCookiePreferences}
-              style={{ border: 'none', background: 'none', cursor: 'pointer' }}
             >
               {t('legal.showCookieBanner', 'Cookie Preferences')}
             </button>
@@ -117,9 +106,9 @@ export default function Footer({
 
         {/* Powered by section */}
         <Flex justify="center" align="center" gap={"sm"} >
-          <span>{t('poweredBy', 'Powered by')} </span>
+          <Text fw={600}>{t('poweredBy', 'Powered by')} </Text>
           <a href="https://stirlingpdf.com" className="stirling-link">
-            Stirling PDF
+            Stirling
           </a>
         </Flex>
     </div>
