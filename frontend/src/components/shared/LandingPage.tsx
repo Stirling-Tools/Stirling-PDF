@@ -189,7 +189,7 @@ const LandingPage = () => {
             className="text-[var(--accent-interactive)]"
             style={{ fontSize: '.8rem' }}
           >
-            {t('fileUpload.dropFilesHere', 'Drop files here or click to upload')}
+            {t('fileUpload.dropFilesHere', 'Drop files here or click the upload button')}
           </span>
         </div>
       </Dropzone>
