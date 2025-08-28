@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 
 // Import global styles
 import "./styles/tailwind.css";
+import "./styles/cookieconsent.css";
 import "./index.css";
 import { RightRailProvider } from "./contexts/RightRailContext";
 

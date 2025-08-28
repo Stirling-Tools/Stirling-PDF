@@ -1,6 +1,7 @@
 import { Flex } from '@mantine/core';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useCookieConsent } from '../../hooks/useCookieConsent';
 
 interface FooterProps {
   privacyPolicy?: string;
@@ -16,33 +17,10 @@ export default function Footer({
   termsAndConditions = '/terms',
   accessibilityStatement = 'accessibility',
   cookiePolicy = 'cookie',
-  impressum = 'impressum',
   analyticsEnabled = false
 }: FooterProps) {
   const { t } = useTranslation();
-
-  // Load cookie consent script when analytics is enabled
-  useEffect(() => {
-    if (analyticsEnabled) {
-      const script = document.createElement('script');
-      script.type = 'module';
-      script.src = '/js/thirdParty/cookieconsent-config.js';
-      document.head.appendChild(script);
-
-      return () => {
-        // Cleanup script when component unmounts
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-      };
-    }
-  }, [analyticsEnabled]);
-
-  const handleCookiePreferences = () => {
-    if (typeof window !== 'undefined' && (window as any).CookieConsent) {
-      (window as any).CookieConsent.show(true);
-    }
-  };
+  const { showCookiePreferences } = useCookieConsent({ analyticsEnabled });
 
   return (
     <div style={{
@@ -129,7 +107,7 @@ export default function Footer({
             <button
               className="footer-link px-3"
               id="cookieBanner"
-              onClick={handleCookiePreferences}
+              onClick={showCookiePreferences}
               style={{ border: 'none', background: 'none', cursor: 'pointer' }}
             >
               {t('legal.showCookieBanner', 'Cookie Preferences')}

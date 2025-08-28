@@ -53,7 +53,7 @@ export default function HomePage() {
         <RightRail />
         <FileManager selectedTool={selectedTool as any /* FIX ME */} />
       </Group>
-      <Footer />
+      <Footer analyticsEnabled />
     </div>
   );
 }
