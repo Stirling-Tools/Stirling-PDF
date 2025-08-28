@@ -7,6 +7,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 import { pdfWorkerManager } from './pdfWorkerManager';
+import { FileId } from '../types/file';
 
 export interface ProcessedFileMetadata {
   totalPages: number;
@@ -38,7 +39,7 @@ class FileProcessingService {
    * Process a file to extract metadata, page count, and generate thumbnails
    * This is the single source of truth for file processing
    */
-  async processFile(file: File, fileId: string): Promise<FileProcessingResult> {
+  async processFile(file: File, fileId: FileId): Promise<FileProcessingResult> {
     // Check if we're already processing this file
     const existingOperation = this.processingCache.get(fileId);
     if (existingOperation) {
@@ -48,10 +49,10 @@ class FileProcessingService {
 
     // Create abort controller for this operation
     const abortController = new AbortController();
-    
+
     // Create processing promise
     const processingPromise = this.performProcessing(file, fileId, abortController);
-    
+
     // Store operation with abort controller
     const operation: ProcessingOperation = {
       promise: processingPromise,
@@ -67,7 +68,7 @@ class FileProcessingService {
     return processingPromise;
   }
 
-  private async performProcessing(file: File, fileId: string, abortController: AbortController): Promise<FileProcessingResult> {
+  private async performProcessing(file: File, fileId: FileId, abortController: AbortController): Promise<FileProcessingResult> {
     console.log(`📁 FileProcessingService: Starting processing for ${file.name} (${fileId})`);
 
     try {
@@ -83,12 +84,12 @@ class FileProcessingService {
       if (file.type === 'application/pdf') {
         // Read arrayBuffer once and reuse for both PDF.js and fallback
         const arrayBuffer = await file.arrayBuffer();
-        
+
         // Check for cancellation after async operation
         if (abortController.signal.aborted) {
           throw new Error('Processing cancelled');
         }
-        
+
         // Discover page count using PDF.js (most accurate)
         try {
           const pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
@@ -101,7 +102,7 @@ class FileProcessingService {
 
           // Clean up immediately
           pdfWorkerManager.destroyDocument(pdfDoc);
-          
+
           // Check for cancellation after PDF.js processing
           if (abortController.signal.aborted) {
             throw new Error('Processing cancelled');
@@ -116,7 +117,7 @@ class FileProcessingService {
       try {
         thumbnailUrl = await generateThumbnailForFile(file);
         console.log(`📁 FileProcessingService: Generated thumbnail for ${file.name}`);
-        
+
         // Check for cancellation after thumbnail generation
         if (abortController.signal.aborted) {
           throw new Error('Processing cancelled');
@@ -141,7 +142,7 @@ class FileProcessingService {
       };
 
       console.log(`📁 FileProcessingService: Processing complete for ${file.name} - ${totalPages} pages`);
-      
+
       return {
         success: true,
         metadata
@@ -149,7 +150,7 @@ class FileProcessingService {
 
     } catch (error) {
       console.error(`📁 FileProcessingService: Processing failed for ${file.name}:`, error);
-      
+
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown processing error'
@@ -167,14 +168,14 @@ class FileProcessingService {
   /**
    * Check if a file is currently being processed
    */
-  isProcessing(fileId: string): boolean {
+  isProcessing(fileId: FileId): boolean {
     return this.processingCache.has(fileId);
   }
 
   /**
    * Cancel processing for a specific file
    */
-  cancelProcessing(fileId: string): boolean {
+  cancelProcessing(fileId: FileId): boolean {
     const operation = this.processingCache.get(fileId);
     if (operation) {
       operation.abortController.abort();

@@ -2,10 +2,10 @@
  * FileContext reducer - Pure state management for file operations
  */
 
-import { 
-  FileContextState, 
-  FileContextAction, 
-  FileId, 
+import { FileId } from '../../types/file';
+import {
+  FileContextState,
+  FileContextAction,
   FileRecord
 } from '../../types/fileContext';
 
@@ -32,7 +32,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
       const { fileRecords } = action.payload;
       const newIds: FileId[] = [];
       const newById: Record<FileId, FileRecord> = { ...state.files.byId };
-      
+
       fileRecords.forEach(record => {
         // Only add if not already present (dedupe by stable ID)
         if (!newById[record.id]) {
@@ -40,7 +40,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
           newById[record.id] = record;
         }
       });
-      
+
       return {
         ...state,
         files: {
@@ -49,20 +49,20 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'REMOVE_FILES': {
       const { fileIds } = action.payload;
       const remainingIds = state.files.ids.filter(id => !fileIds.includes(id));
       const newById = { ...state.files.byId };
-      
+
       // Remove files from state (resource cleanup handled by lifecycle manager)
       fileIds.forEach(id => {
         delete newById[id];
       });
-      
+
       // Clear selections that reference removed files
       const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !fileIds.includes(id));
-      
+
       return {
         ...state,
         files: {
@@ -75,15 +75,15 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'UPDATE_FILE_RECORD': {
       const { id, updates } = action.payload;
       const existingRecord = state.files.byId[id];
-      
+
       if (!existingRecord) {
         return state; // File doesn't exist, no-op
       }
-      
+
       return {
         ...state,
         files: {
@@ -98,13 +98,13 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'REORDER_FILES': {
       const { orderedFileIds } = action.payload;
-      
+
       // Validate that all IDs exist in current state
       const validIds = orderedFileIds.filter(id => state.files.byId[id]);
-      
+
       return {
         ...state,
         files: {
@@ -113,7 +113,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'SET_SELECTED_FILES': {
       const { fileIds } = action.payload;
       return {
@@ -124,7 +124,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'SET_SELECTED_PAGES': {
       const { pageNumbers } = action.payload;
       return {
@@ -135,7 +135,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'CLEAR_SELECTIONS': {
       return {
         ...state,
@@ -146,7 +146,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'SET_PROCESSING': {
       const { isProcessing, progress } = action.payload;
       return {
@@ -158,7 +158,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'SET_UNSAVED_CHANGES': {
       return {
         ...state,
@@ -168,42 +168,42 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'PIN_FILE': {
       const { fileId } = action.payload;
       const newPinnedFiles = new Set(state.pinnedFiles);
       newPinnedFiles.add(fileId);
-      
+
       return {
         ...state,
         pinnedFiles: newPinnedFiles
       };
     }
-    
+
     case 'UNPIN_FILE': {
       const { fileId } = action.payload;
       const newPinnedFiles = new Set(state.pinnedFiles);
       newPinnedFiles.delete(fileId);
-      
+
       return {
         ...state,
         pinnedFiles: newPinnedFiles
       };
     }
-    
+
     case 'CONSUME_FILES': {
       const { inputFileIds, outputFileRecords } = action.payload;
-      
+
       // Only remove unpinned input files
       const unpinnedInputIds = inputFileIds.filter(id => !state.pinnedFiles.has(id));
       const remainingIds = state.files.ids.filter(id => !unpinnedInputIds.includes(id));
-      
+
       // Remove unpinned files from state
       const newById = { ...state.files.byId };
       unpinnedInputIds.forEach(id => {
         delete newById[id];
       });
-      
+
       // Add output files
       const outputIds: FileId[] = [];
       outputFileRecords.forEach(record => {
@@ -212,10 +212,10 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
           newById[record.id] = record;
         }
       });
-      
+
       // Clear selections that reference removed files
       const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !unpinnedInputIds.includes(id));
-      
+
       return {
         ...state,
         files: {
@@ -228,12 +228,12 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         }
       };
     }
-    
+
     case 'RESET_CONTEXT': {
       // Reset UI state to clean slate (resource cleanup handled by lifecycle manager)
       return { ...initialFileContextState };
     }
-    
+
     default:
       return state;
   }
