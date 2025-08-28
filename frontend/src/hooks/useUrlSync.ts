@@ -6,6 +6,7 @@ import { useEffect, useCallback } from 'react';
 import { WorkbenchType, ToolId } from '../types/navigation';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
 import { ToolRegistry } from '../data/toolsTaxonomy';
+import { firePixel } from '../utils/scarfTracking';
 
 /**
  * Hook to sync workbench and tool with URL using registry
@@ -54,6 +55,10 @@ export function useNavigationUrlSync(
     const handlePopState = () => {
       const route = parseToolRoute(registry);
       if (route.toolId !== selectedTool) {
+        // Fire pixel for back/forward navigation
+        const currentPath = window.location.pathname;
+        firePixel(currentPath);
+        
         if (route.toolId) {
           handleToolSelect(route.toolId);
         } else {
