@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useFileState } from '../../../contexts/FileContext';
 import { PDFDocument, PDFPage } from '../../../types/pageEditor';
+import { FileId } from '../../../types/file';
 
 export interface PageDocumentHook {
   document: PDFDocument | null;
@@ -14,17 +15,17 @@ export interface PageDocumentHook {
  */
 export function usePageDocument(): PageDocumentHook {
   const { state, selectors } = useFileState();
-  
+
   // Prefer IDs + selectors to avoid array identity churn
   const activeFileIds = state.files.ids;
   const primaryFileId = activeFileIds[0] ?? null;
-  
+
   // Stable signature for effects (prevents loops)
   const filesSignature = selectors.getFilesSignature();
-  
+
   // UI state
   const globalProcessing = state.ui.isProcessing;
-  
+
   // Get primary file record outside useMemo to track processedFile changes
   const primaryFileRecord = primaryFileId ? selectors.getFileRecord(primaryFileId) : null;
   const processedFilePages = primaryFileRecord?.processedFile?.pages;
@@ -35,7 +36,7 @@ export function usePageDocument(): PageDocumentHook {
     if (activeFileIds.length === 0) return null;
 
     const primaryFile = primaryFileId ? selectors.getFile(primaryFileId) : null;
-    
+
     // If we have file IDs but no file record, something is wrong - return null to show loading
     if (!primaryFileRecord) {
       console.log('🎬 PageEditor: No primary file record found, showing loading');
@@ -50,9 +51,9 @@ export function usePageDocument(): PageDocumentHook {
             .join(' + ');
 
     // Build page insertion map from files with insertion positions
-    const insertionMap = new Map<string, string[]>(); // insertAfterPageId -> fileIds
-    const originalFileIds: string[] = [];
-    
+    const insertionMap = new Map<string, FileId[]>(); // insertAfterPageId -> fileIds
+    const originalFileIds: FileId[] = [];
+
     activeFileIds.forEach(fileId => {
       const record = selectors.getFileRecord(fileId);
       if (record?.insertAfterPageId !== undefined) {
@@ -64,21 +65,21 @@ export function usePageDocument(): PageDocumentHook {
         originalFileIds.push(fileId);
       }
     });
-    
+
     // Build pages by interleaving original pages with insertions
     let pages: PDFPage[] = [];
     let totalPageCount = 0;
-    
+
     // Helper function to create pages from a file
-    const createPagesFromFile = (fileId: string, startPageNumber: number): PDFPage[] => {
+    const createPagesFromFile = (fileId: FileId, startPageNumber: number): PDFPage[] => {
       const fileRecord = selectors.getFileRecord(fileId);
       if (!fileRecord) {
         return [];
       }
-      
+
       const processedFile = fileRecord.processedFile;
       let filePages: PDFPage[] = [];
-      
+
       if (processedFile?.pages && processedFile.pages.length > 0) {
         // Use fully processed pages with thumbnails
         filePages = processedFile.pages.map((page, pageIndex) => ({
@@ -104,7 +105,7 @@ export function usePageDocument(): PageDocumentHook {
           splitAfter: false,
         }));
       }
-      
+
       return filePages;
     };
 
@@ -114,35 +115,35 @@ export function usePageDocument(): PageDocumentHook {
       const filePages = createPagesFromFile(fileId, 1); // Temporary numbering
       originalFilePages.push(...filePages);
     });
-    
-    // Start with all original pages numbered sequentially  
+
+    // Start with all original pages numbered sequentially
     pages = originalFilePages.map((page, index) => ({
       ...page,
       pageNumber: index + 1
     }));
-    
+
     // Process each insertion by finding the page ID and inserting after it
     for (const [insertAfterPageId, fileIds] of insertionMap.entries()) {
       const targetPageIndex = pages.findIndex(p => p.id === insertAfterPageId);
-      
+
       if (targetPageIndex === -1) continue;
-      
+
       // Collect all pages to insert
       const allNewPages: PDFPage[] = [];
       fileIds.forEach(fileId => {
         const insertedPages = createPagesFromFile(fileId, 1);
         allNewPages.push(...insertedPages);
       });
-      
+
       // Insert all new pages after the target page
       pages.splice(targetPageIndex + 1, 0, ...allNewPages);
-      
+
       // Renumber all pages after insertion
       pages.forEach((page, index) => {
         page.pageNumber = index + 1;
       });
     }
-    
+
     totalPageCount = pages.length;
 
     if (pages.length === 0) {

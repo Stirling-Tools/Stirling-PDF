@@ -15,6 +15,7 @@ import { fileStorage } from "../../services/fileStorage";
 import SkeletonLoader from '../shared/SkeletonLoader';
 import { useFileState, useFileActions, useCurrentFile } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
+import { FileId } from "../../types/file";
 
 
 // Lazy loading page image component
@@ -152,7 +153,7 @@ const Viewer = ({
   const { selectors } = useFileState();
   const { actions } = useFileActions();
   const currentFile = useCurrentFile();
-  
+
   const getCurrentFile = () => currentFile.file;
   const getCurrentProcessedFile = () => currentFile.record?.processedFile || undefined;
   const clearAllFiles = actions.clearAllFiles;
@@ -378,7 +379,7 @@ const Viewer = ({
         }
         // Handle special IndexedDB URLs for large files
         else if (effectiveFile.url?.startsWith('indexeddb:')) {
-          const fileId = effectiveFile.url.replace('indexeddb:', '');
+          const fileId = effectiveFile.url.replace('indexeddb:', '') as FileId /* FIX ME: Not sure this is right - at least probably not the right place for this logic */;
 
           // Get data directly from IndexedDB
           const arrayBuffer = await fileStorage.getFileData(fileId);

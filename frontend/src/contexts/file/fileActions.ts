@@ -2,16 +2,15 @@
  * File actions - Unified file operations with single addFiles helper
  */
 
-import { 
-  FileId, 
-  FileRecord, 
+import {
+  FileRecord,
   FileContextAction,
   FileContextState,
   toFileRecord,
   createFileId,
   createQuickKey
 } from '../../types/fileContext';
-import { FileMetadata } from '../../types/file';
+import { FileId, FileMetadata } from '../../types/file';
 import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
 import { FileLifecycleManager } from './lifecycle';
 import { fileProcessingService } from '../../services/fileProcessingService';
@@ -78,13 +77,13 @@ type AddFileKind = 'raw' | 'processed' | 'stored';
 interface AddFileOptions {
   // For 'raw' files
   files?: File[];
-  
-  // For 'processed' files  
+
+  // For 'processed' files
   filesWithThumbnails?: Array<{ file: File; thumbnail?: string; pageCount?: number }>;
-  
+
   // For 'stored' files
   filesWithMetadata?: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>;
-  
+
   // Insertion position
   insertAfterPageId?: string;
 }
@@ -102,37 +101,37 @@ export async function addFiles(
 ): Promise<Array<{ file: File; id: FileId; thumbnail?: string }>> {
   // Acquire mutex to prevent race conditions
   await addFilesMutex.lock();
-  
+
   try {
   const fileRecords: FileRecord[] = [];
   const addedFiles: Array<{ file: File; id: FileId; thumbnail?: string }> = [];
-  
+
   // Build quickKey lookup from existing files for deduplication
   const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
   if (DEBUG) console.log(`📄 addFiles(${kind}): Existing quickKeys for deduplication:`, Array.from(existingQuickKeys));
-  
+
   switch (kind) {
     case 'raw': {
       const { files = [] } = options;
       if (DEBUG) console.log(`📄 addFiles(raw): Adding ${files.length} files with immediate thumbnail generation`);
-      
+
       for (const file of files) {
         const quickKey = createQuickKey(file);
-        
+
         // Soft deduplication: Check if file already exists by metadata
         if (existingQuickKeys.has(quickKey)) {
           if (DEBUG) console.log(`📄 Skipping duplicate file: ${file.name} (quickKey: ${quickKey})`);
           continue;
         }
         if (DEBUG) console.log(`📄 Adding new file: ${file.name} (quickKey: ${quickKey})`);
-        
+
         const fileId = createFileId();
         filesRef.current.set(fileId, file);
-        
+
         // Generate thumbnail and page count immediately
         let thumbnail: string | undefined;
         let pageCount: number = 1;
-        
+
         // Route based on file type - PDFs through full metadata pipeline, non-PDFs through simple path
         if (file.type.startsWith('application/pdf')) {
           try {
@@ -156,7 +155,7 @@ export async function addFiles(
             if (DEBUG) console.warn(`📄 Failed to generate simple thumbnail for ${file.name}:`, error);
           }
         }
-        
+
         // Create record with immediate thumbnail and page metadata
         const record = toFileRecord(file, fileId);
         if (thumbnail) {
@@ -166,40 +165,40 @@ export async function addFiles(
             lifecycleManager.trackBlobUrl(thumbnail);
           }
         }
-        
+
         // Store insertion position if provided
         if (options.insertAfterPageId !== undefined) {
           record.insertAfterPageId = options.insertAfterPageId;
         }
-        
+
         // Create initial processedFile metadata with page count
         if (pageCount > 0) {
           record.processedFile = createProcessedFile(pageCount, thumbnail);
           if (DEBUG) console.log(`📄 addFiles(raw): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
-        
+
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
         }
       break;
     }
-    
+
     case 'processed': {
       const { filesWithThumbnails = [] } = options;
       if (DEBUG) console.log(`📄 addFiles(processed): Adding ${filesWithThumbnails.length} processed files with pre-existing thumbnails`);
-      
+
       for (const { file, thumbnail, pageCount = 1 } of filesWithThumbnails) {
         const quickKey = createQuickKey(file);
-        
+
         if (existingQuickKeys.has(quickKey)) {
           if (DEBUG) console.log(`📄 Skipping duplicate processed file: ${file.name}`);
           continue;
         }
-        
+
         const fileId = createFileId();
         filesRef.current.set(fileId, file);
-        
+
         const record = toFileRecord(file, fileId);
         if (thumbnail) {
           record.thumbnailUrl = thumbnail;
@@ -208,64 +207,64 @@ export async function addFiles(
             lifecycleManager.trackBlobUrl(thumbnail);
           }
         }
-        
+
         // Store insertion position if provided
         if (options.insertAfterPageId !== undefined) {
           record.insertAfterPageId = options.insertAfterPageId;
         }
-        
+
         // Create processedFile with provided metadata
         if (pageCount > 0) {
           record.processedFile = createProcessedFile(pageCount, thumbnail);
           if (DEBUG) console.log(`📄 addFiles(processed): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
-        
+
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
       }
       break;
     }
-    
+
     case 'stored': {
       const { filesWithMetadata = [] } = options;
       if (DEBUG) console.log(`📄 addFiles(stored): Restoring ${filesWithMetadata.length} files from storage with existing metadata`);
-      
+
       for (const { file, originalId, metadata } of filesWithMetadata) {
         const quickKey = createQuickKey(file);
-        
+
         if (existingQuickKeys.has(quickKey)) {
           if (DEBUG) console.log(`📄 Skipping duplicate stored file: ${file.name} (quickKey: ${quickKey})`);
           continue;
         }
         if (DEBUG) console.log(`📄 Adding stored file: ${file.name} (quickKey: ${quickKey})`);
-        
+
         // Try to preserve original ID, but generate new if it conflicts
         let fileId = originalId;
         if (filesRef.current.has(originalId)) {
           fileId = createFileId();
           if (DEBUG) console.log(`📄 ID conflict for stored file ${file.name}, using new ID: ${fileId}`);
         }
-        
+
         filesRef.current.set(fileId, file);
-        
+
         const record = toFileRecord(file, fileId);
-        
+
         // Generate processedFile metadata for stored files
         let pageCount: number = 1;
-        
+
         // Only process PDFs through PDF worker manager, non-PDFs have no page count
         if (file.type.startsWith('application/pdf')) {
           try {
             if (DEBUG) console.log(`📄 addFiles(stored): Generating PDF metadata for stored file ${file.name}`);
-            
+
             // Get page count from PDF
             const arrayBuffer = await file.arrayBuffer();
             const { pdfWorkerManager } = await import('../../services/pdfWorkerManager');
             const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
             pageCount = pdf.numPages;
             pdfWorkerManager.destroyDocument(pdf);
-            
+
             if (DEBUG) console.log(`📄 addFiles(stored): Found ${pageCount} pages in PDF ${file.name}`);
           } catch (error) {
             if (DEBUG) console.warn(`📄 addFiles(stored): Failed to generate PDF metadata for ${file.name}:`, error);
@@ -274,7 +273,7 @@ export async function addFiles(
           pageCount = 0; // Non-PDFs have no page count
           if (DEBUG) console.log(`📄 addFiles(stored): Non-PDF file ${file.name}, no page count`);
         }
-        
+
         // Restore metadata from storage
         if (metadata.thumbnail) {
           record.thumbnailUrl = metadata.thumbnail;
@@ -283,33 +282,33 @@ export async function addFiles(
             lifecycleManager.trackBlobUrl(metadata.thumbnail);
           }
         }
-        
+
         // Store insertion position if provided
         if (options.insertAfterPageId !== undefined) {
           record.insertAfterPageId = options.insertAfterPageId;
         }
-        
+
         // Create processedFile metadata with correct page count
         if (pageCount > 0) {
           record.processedFile = createProcessedFile(pageCount, metadata.thumbnail);
           if (DEBUG) console.log(`📄 addFiles(stored): Created processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
-        
+
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
         addedFiles.push({ file, id: fileId, thumbnail: metadata.thumbnail });
-        
+
       }
       break;
     }
   }
-  
+
   // Dispatch ADD_FILES action if we have new files
   if (fileRecords.length > 0) {
     dispatch({ type: 'ADD_FILES', payload: { fileRecords } });
     if (DEBUG) console.log(`📄 addFiles(${kind}): Successfully added ${fileRecords.length} files`);
   }
-  
+
   return addedFiles;
   } finally {
     // Always release mutex even if error occurs
@@ -328,17 +327,17 @@ export async function consumeFiles(
   dispatch: React.Dispatch<FileContextAction>
 ): Promise<void> {
   if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputFiles.length} output files`);
-  
+
   // Process output files through the 'processed' path to generate thumbnails
   const outputFileRecords = await Promise.all(
     outputFiles.map(async (file) => {
       const fileId = createFileId();
       filesRef.current.set(fileId, file);
-      
+
       // Generate thumbnail and page count for output file
       let thumbnail: string | undefined;
       let pageCount: number = 1;
-      
+
       try {
         if (DEBUG) console.log(`📄 consumeFiles: Generating thumbnail for output file ${file.name}`);
         const result = await generateThumbnailWithMetadata(file);
@@ -347,29 +346,29 @@ export async function consumeFiles(
       } catch (error) {
         if (DEBUG) console.warn(`📄 consumeFiles: Failed to generate thumbnail for output file ${file.name}:`, error);
       }
-      
+
       const record = toFileRecord(file, fileId);
       if (thumbnail) {
         record.thumbnailUrl = thumbnail;
       }
-      
+
       if (pageCount > 0) {
         record.processedFile = createProcessedFile(pageCount, thumbnail);
       }
-      
+
       return record;
     })
   );
-  
+
   // Dispatch the consume action
-  dispatch({ 
-    type: 'CONSUME_FILES', 
-    payload: { 
-      inputFileIds, 
-      outputFileRecords 
-    } 
+  dispatch({
+    type: 'CONSUME_FILES',
+    payload: {
+      inputFileIds,
+      outputFileRecords
+    }
   });
-  
+
   if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputFileRecords.length} outputs`);
 }
 

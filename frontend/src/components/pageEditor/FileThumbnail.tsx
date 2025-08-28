@@ -11,9 +11,10 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 
 import styles from './PageEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
+import { FileId } from '../../types/file';
 
 interface FileItem {
-  id: string;
+  id: FileId;
   name: string;
   pageCount: number;
   thumbnail: string | null;
@@ -27,12 +28,12 @@ interface FileThumbnailProps {
   totalFiles: number;
   selectedFiles: string[];
   selectionMode: boolean;
-  onToggleFile: (fileId: string) => void;
-  onDeleteFile: (fileId: string) => void;
-  onViewFile: (fileId: string) => void;
+  onToggleFile: (fileId: FileId) => void;
+  onDeleteFile: (fileId: FileId) => void;
+  onViewFile: (fileId: FileId) => void;
   onSetStatus: (status: string) => void;
-  onReorderFiles?: (sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => void;
-  onDownloadFile?: (fileId: string) => void;
+  onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
+  onDownloadFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
 }
@@ -161,8 +162,8 @@ const FileThumbnail = ({
       onDrop: ({ source }) => {
         const sourceData = source.data;
         if (sourceData.type === 'file' && onReorderFiles) {
-          const sourceFileId = sourceData.fileId as string;
-          const selectedFileIds = sourceData.selectedFiles as string[];
+          const sourceFileId = sourceData.fileId as FileId;
+          const selectedFileIds = sourceData.selectedFiles as FileId[];
           onReorderFiles(sourceFileId, file.id, selectedFileIds);
         }
       }

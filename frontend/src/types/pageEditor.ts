@@ -1,3 +1,5 @@
+import { FileId } from './file';
+
 export interface PDFPage {
   id: string;
   pageNumber: number;
@@ -7,7 +9,7 @@ export interface PDFPage {
   selected: boolean;
   splitAfter?: boolean;
   isBlankPage?: boolean;
-  originalFileId?: string;
+  originalFileId?: FileId;
 }
 
 export interface PDFDocument {
