@@ -1,96 +1,55 @@
-import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileSelection } from "../contexts/FileContext";
-import { useNavigationActions } from "../contexts/NavigationContext";
-
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
-
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
-
 import { useChangePermissionsParameters } from "../hooks/tools/changePermissions/useChangePermissionsParameters";
 import { useChangePermissionsOperation } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
 import { useChangePermissionsTips } from "../components/tooltips/useChangePermissionsTips";
+import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "../types/tool";
 
-const ChangePermissions = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
+const ChangePermissions = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { actions } = useNavigationActions();
-  const { selectedFiles } = useFileSelection();
-
-  const changePermissionsParams = useChangePermissionsParameters();
-  const changePermissionsOperation = useChangePermissionsOperation();
   const changePermissionsTips = useChangePermissionsTips();
 
-  // Endpoint validation
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(changePermissionsParams.getEndpointName());
-
-  useEffect(() => {
-    changePermissionsOperation.resetResults();
-    onPreviewFile?.(null);
-  }, [changePermissionsParams.parameters]);
-
-  const handleChangePermissions = async () => {
-    try {
-      await changePermissionsOperation.executeOperation(changePermissionsParams.parameters, selectedFiles);
-      if (changePermissionsOperation.files && onComplete) {
-        onComplete(changePermissionsOperation.files);
-      }
-    } catch (error) {
-      if (onError) {
-        onError(
-          error instanceof Error ? error.message : t("changePermissions.error.failed", "Change permissions operation failed")
-        );
-      }
-    }
-  };
-
-  const handleThumbnailClick = (file: File) => {
-    onPreviewFile?.(file);
-    sessionStorage.setItem("previousMode", "changePermissions");
-  };
-
-  const handleSettingsReset = () => {
-    changePermissionsOperation.resetResults();
-    onPreviewFile?.(null);
-  };
-
-  const hasFiles = selectedFiles.length > 0;
-  const hasResults = changePermissionsOperation.files.length > 0 || changePermissionsOperation.downloadUrl !== null;
-  const settingsCollapsed = !hasFiles || hasResults;
+  const base = useBaseTool(
+    'changePermissions',
+    useChangePermissionsParameters,
+    useChangePermissionsOperation,
+    props
+  );
 
   return createToolFlow({
     files: {
-      selectedFiles,
-      isCollapsed: hasResults,
+      selectedFiles: base.selectedFiles,
+      isCollapsed: base.hasResults,
     },
     steps: [
       {
         title: t("changePermissions.title", "Document Permissions"),
-        isCollapsed: settingsCollapsed,
-        onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
+        isCollapsed: base.settingsCollapsed,
+        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
         tooltip: changePermissionsTips,
         content: (
           <ChangePermissionsSettings
-            parameters={changePermissionsParams.parameters}
-            onParameterChange={changePermissionsParams.updateParameter}
-            disabled={endpointLoading}
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
           />
         ),
       },
     ],
     executeButton: {
       text: t("changePermissions.submit", "Change Permissions"),
-      isVisible: !hasResults,
+      isVisible: !base.hasResults,
       loadingText: t("loading"),
-      onClick: handleChangePermissions,
-      disabled: !changePermissionsParams.validateParameters() || !hasFiles || !endpointEnabled,
+      onClick: base.handleExecute,
+      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
     },
     review: {
-      isVisible: hasResults,
-      operation: changePermissionsOperation,
+      isVisible: base.hasResults,
+      operation: base.operation,
       title: t("changePermissions.results.title", "Modified PDFs"),
-      onFileClick: handleThumbnailClick,
+      onFileClick: base.handleThumbnailClick,
     },
   });
 };
