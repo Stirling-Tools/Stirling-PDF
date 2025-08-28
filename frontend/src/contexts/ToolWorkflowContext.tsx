@@ -9,6 +9,7 @@ import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry } from '../data/toolsTaxonomy';
 import { useNavigationActions, useNavigationState } from './NavigationContext';
 import { useNavigationUrlSync } from '../hooks/useUrlSync';
+import { getDefaultWorkbench } from '../types/navigation';
 
 // State interface
 interface ToolWorkflowState {
@@ -180,7 +181,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (tool && tool.workbench) {
       actions.setWorkbench(tool.workbench);
     } else {
-      actions.setWorkbench('fileEditor'); // Default workbench
+      actions.setWorkbench(getDefaultWorkbench());
     }
 
     // Clear search query when selecting a tool

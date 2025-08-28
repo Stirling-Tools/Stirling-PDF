@@ -235,10 +235,3 @@ export const useNavigationGuard = () => {
     setShowNavigationWarning: actions.showNavigationWarning
   };
 };
-
-// TODO: This will be expanded for URL-based routing system
-// - URL parsing utilities
-// - Route definitions
-// - Navigation hooks with URL sync
-// - History management
-// - Breadcrumb restoration from URL params
