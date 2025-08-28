@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +50,36 @@ public class ExtractImageScansController {
     private static final String REPLACEFIRST = "[.][^.]+$";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    /**
+     * Calculate safe DPI to prevent memory issues based on page size
+     */
+    private int calculateSafeDPI(PDPage page, int requestedDPI) {
+        // Maximum safe image dimensions to prevent OOM
+        final int MAX_WIDTH = 8192;
+        final int MAX_HEIGHT = 8192;
+        final long MAX_PIXELS = 16_777_216; // 4096x4096
+        
+        float pageWidthPts = page.getMediaBox().getWidth();
+        float pageHeightPts = page.getMediaBox().getHeight();
+        
+        // Calculate projected dimensions at requested DPI
+        int projectedWidth = (int) Math.ceil(pageWidthPts * requestedDPI / 72.0);
+        int projectedHeight = (int) Math.ceil(pageHeightPts * requestedDPI / 72.0);
+        long projectedPixels = (long) projectedWidth * projectedHeight;
+        
+        // Calculate scaling factors if needed
+        if (projectedWidth <= MAX_WIDTH && projectedHeight <= MAX_HEIGHT && projectedPixels <= MAX_PIXELS) {
+            return requestedDPI; // Safe to use requested DPI
+        }
+        
+        double widthScale = (double) MAX_WIDTH / projectedWidth;
+        double heightScale = (double) MAX_HEIGHT / projectedHeight;
+        double pixelScale = Math.sqrt((double) MAX_PIXELS / projectedPixels);
+        double minScale = Math.min(Math.min(widthScale, heightScale), pixelScale);
+        
+        return (int) Math.max(72, requestedDPI * minScale);
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(
@@ -95,8 +126,23 @@ public class ExtractImageScansController {
                         // Create temp file to save the image
                         Path tempFile = Files.createTempFile("image_", ".png");
 
-                        // Render image and save as temp file
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300);
+                        // Calculate safe DPI to prevent memory issues
+                        PDPage page = document.getPage(i);
+                        int safeDPI = calculateSafeDPI(page, 300);
+                        
+                        // Render image and save as temp file with memory safety
+                        BufferedImage image;
+                        try {
+                            image = pdfRenderer.renderImageWithDPI(i, safeDPI);
+                        } catch (IllegalArgumentException e) {
+                            if (e.getMessage() != null && e.getMessage().contains("Maximum size of image exceeded")) {
+                                // Fall back to lower DPI if still too large
+                                safeDPI = Math.max(72, safeDPI / 2);
+                                image = pdfRenderer.renderImageWithDPI(i, safeDPI);
+                            } else {
+                                throw e;
+                            }
+                        }
                         ImageIO.write(image, "png", tempFile.toFile());
 
                         // Add temp file path to images list

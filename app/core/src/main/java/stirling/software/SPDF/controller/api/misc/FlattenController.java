@@ -38,6 +38,36 @@ public class FlattenController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
+    /**
+     * Calculate safe DPI to prevent memory issues based on page size
+     */
+    private int calculateSafeDPI(PDPage page, int requestedDPI) {
+        // Maximum safe image dimensions to prevent OOM
+        final int MAX_WIDTH = 8192;
+        final int MAX_HEIGHT = 8192;
+        final long MAX_PIXELS = 16_777_216; // 4096x4096
+        
+        float pageWidthPts = page.getMediaBox().getWidth();
+        float pageHeightPts = page.getMediaBox().getHeight();
+        
+        // Calculate projected dimensions at requested DPI
+        int projectedWidth = (int) Math.ceil(pageWidthPts * requestedDPI / 72.0);
+        int projectedHeight = (int) Math.ceil(pageHeightPts * requestedDPI / 72.0);
+        long projectedPixels = (long) projectedWidth * projectedHeight;
+        
+        // Calculate scaling factors if needed
+        if (projectedWidth <= MAX_WIDTH && projectedHeight <= MAX_HEIGHT && projectedPixels <= MAX_PIXELS) {
+            return requestedDPI; // Safe to use requested DPI
+        }
+        
+        double widthScale = (double) MAX_WIDTH / projectedWidth;
+        double heightScale = (double) MAX_HEIGHT / projectedHeight;
+        double pixelScale = Math.sqrt((double) MAX_PIXELS / projectedPixels);
+        double minScale = Math.min(Math.min(widthScale, heightScale), pixelScale);
+        
+        return (int) Math.max(72, requestedDPI * minScale);
+    }
+
     @PostMapping(consumes = "multipart/form-data", value = "/flatten")
     @Operation(
             summary = "Flatten PDF form fields or full page",
@@ -61,14 +91,31 @@ public class FlattenController {
             // flatten whole page aka convert each page to image and readd it (making text
             // unselectable)
             PDFRenderer pdfRenderer = new PDFRenderer(document);
+            pdfRenderer.setSubsamplingAllowed(true);
             PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
             int numPages = document.getNumberOfPages();
             for (int i = 0; i < numPages; i++) {
                 try {
-                    BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300, ImageType.RGB);
+                    // Calculate safe DPI to prevent memory issues
+                    PDPage originalPage = document.getPage(i);
+                    int safeDPI = calculateSafeDPI(originalPage, 300);
+                    
+                    BufferedImage image;
+                    try {
+                        image = pdfRenderer.renderImageWithDPI(i, safeDPI, ImageType.RGB);
+                    } catch (IllegalArgumentException e) {
+                        if (e.getMessage() != null && e.getMessage().contains("Maximum size of image exceeded")) {
+                            // Fall back to lower DPI if still too large
+                            safeDPI = Math.max(72, safeDPI / 2);
+                            image = pdfRenderer.renderImageWithDPI(i, safeDPI, ImageType.RGB);
+                        } else {
+                            throw e;
+                        }
+                    }
+                    
                     PDPage page = new PDPage();
-                    page.setMediaBox(document.getPage(i).getMediaBox());
+                    page.setMediaBox(originalPage.getMediaBox());
                     newDocument.addPage(page);
                     try (PDPageContentStream contentStream =
                             new PDPageContentStream(newDocument, page)) {

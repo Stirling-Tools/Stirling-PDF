@@ -255,6 +255,17 @@ public class PdfUtils {
                         totalHeight += dimension.height();
                     }
 
+                    // Check if the combined image would be too large
+                    long totalPixels = (long) maxWidth * totalHeight;
+                    final long MAX_COMBINED_PIXELS = 134_217_728; // 16384x8192 or equivalent
+                    
+                    if (totalPixels > MAX_COMBINED_PIXELS) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.combinedImageTooLarge",
+                                "The combined image would be too large ({0} pixels). Please use a lower DPI value or process pages individually.",
+                                totalPixels);
+                    }
+
                     // Create a new BufferedImage to store the combined images
                     BufferedImage combined =
                             prepareImageForPdfToImage(maxWidth, totalHeight, imageType);
@@ -356,7 +367,10 @@ public class PdfUtils {
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim;
             try {
-                bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
+                // Calculate safe DPI for this page
+                PDPage currentPage = document.getPage(page);
+                int safeDPI = calculateSafeDPIForPage(currentPage, 300);
+                bim = pdfRenderer.renderImageWithDPI(page, safeDPI, ImageType.RGB);
             } catch (IllegalArgumentException e) {
                 if (e.getMessage() != null
                         && e.getMessage().contains("Maximum size of image exceeded")) {
@@ -492,6 +506,36 @@ public class PdfUtils {
             log.error("Error adding image to PDF", e);
             throw e;
         }
+    }
+
+    /**
+     * Calculate safe DPI to prevent memory issues based on page size
+     */
+    private static int calculateSafeDPIForPage(PDPage page, int requestedDPI) {
+        // Maximum safe image dimensions to prevent OOM
+        final int MAX_WIDTH = 8192;
+        final int MAX_HEIGHT = 8192;
+        final long MAX_PIXELS = 16_777_216; // 4096x4096
+        
+        float pageWidthPts = page.getMediaBox().getWidth();
+        float pageHeightPts = page.getMediaBox().getHeight();
+        
+        // Calculate projected dimensions at requested DPI
+        int projectedWidth = (int) Math.ceil(pageWidthPts * requestedDPI / 72.0);
+        int projectedHeight = (int) Math.ceil(pageHeightPts * requestedDPI / 72.0);
+        long projectedPixels = (long) projectedWidth * projectedHeight;
+        
+        // Calculate scaling factors if needed
+        if (projectedWidth <= MAX_WIDTH && projectedHeight <= MAX_HEIGHT && projectedPixels <= MAX_PIXELS) {
+            return requestedDPI; // Safe to use requested DPI
+        }
+        
+        double widthScale = (double) MAX_WIDTH / projectedWidth;
+        double heightScale = (double) MAX_HEIGHT / projectedHeight;
+        double pixelScale = Math.sqrt((double) MAX_PIXELS / projectedPixels);
+        double minScale = Math.min(Math.min(widthScale, heightScale), pixelScale);
+        
+        return (int) Math.max(72, requestedDPI * minScale);
     }
 
     public static byte[] overlayImage(
