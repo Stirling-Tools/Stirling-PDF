@@ -227,7 +227,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   useNavigationUrlSync(
     navigationState.selectedTool,
     handleToolSelect,
-    () => actions.setSelectedTool(null),
+    handleBackToTools,
     toolRegistry,
     true
   );

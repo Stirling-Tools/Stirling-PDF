@@ -48,14 +48,18 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
 /**
  * Update URL and fire analytics pixel
  */
-function updateUrl(newPath: string, searchParams: URLSearchParams): void {
+function updateUrl(newPath: string, searchParams: URLSearchParams, replace: boolean = false): void {
   const currentPath = window.location.pathname;
   const queryString = searchParams.toString();
   const fullUrl = newPath + (queryString ? `?${queryString}` : '');
 
   // Only update URL and fire pixel if something actually changed
   if (currentPath !== newPath || window.location.search !== (queryString ? `?${queryString}` : '')) {
-    window.history.replaceState(null, '', fullUrl);
+    if (replace) {
+      window.history.replaceState(null, '', fullUrl);
+    } else {
+      window.history.pushState(null, '', fullUrl);
+    }
     firePixel(newPath);
   }
 }
@@ -63,7 +67,7 @@ function updateUrl(newPath: string, searchParams: URLSearchParams): void {
 /**
  * Update the URL to reflect the current tool selection
  */
-export function updateToolRoute(toolId: ToolId, registry: ToolRegistry): void {
+export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace: boolean = false): void {
   const tool = registry[toolId];
   if (!tool) {
     console.warn(`Tool ${toolId} not found in registry`);
@@ -76,17 +80,17 @@ export function updateToolRoute(toolId: ToolId, registry: ToolRegistry): void {
   // Remove tool query parameter since we're using path-based routing
   searchParams.delete('tool');
 
-  updateUrl(newPath, searchParams);
+  updateUrl(newPath, searchParams, replace);
 }
 
 /**
  * Clear tool routing and return to home page
  */
-export function clearToolRoute(): void {
+export function clearToolRoute(replace: boolean = false): void {
   const searchParams = new URLSearchParams(window.location.search);
   searchParams.delete('tool');
 
-  updateUrl('/', searchParams);
+  updateUrl('/', searchParams, replace);
 }
 
 /**

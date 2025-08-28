@@ -38,11 +38,11 @@ export function useNavigationUrlSync(
     if (!enableSync) return;
 
     if (selectedTool) {
-      updateToolRoute(selectedTool, registry);
+      updateToolRoute(selectedTool, registry, false); // Use pushState for user navigation
     } else {
       // Only clear URL if we're not on the home page already
       if (window.location.pathname !== '/') {
-        clearToolRoute();
+        clearToolRoute(false); // Use pushState for user navigation
       }
     }
   }, [selectedTool, registry, enableSync]);
