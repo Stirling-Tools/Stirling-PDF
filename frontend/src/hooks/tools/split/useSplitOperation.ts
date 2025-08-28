@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SplitParameters, defaultParameters } from './useSplitParameters';
 import { SPLIT_MODES } from '../../../constants/splitConstants';
@@ -57,11 +57,11 @@ export const getSplitEndpoint = (parameters: SplitParameters): string => {
 
 // Static configuration object
 export const splitOperationConfig = {
+  toolType: ToolType.multiFile,
+  buildFormData: buildSplitFormData,
   operationType: 'splitPdf',
   endpoint: getSplitEndpoint,
-  buildFormData: buildSplitFormData,
   filePrefix: 'split_',
-  multiFileEndpoint: true, // Single API call with all files
   defaultParameters,
 } as const;
 
