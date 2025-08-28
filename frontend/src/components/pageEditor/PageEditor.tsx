@@ -6,7 +6,6 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions, useCurrentFile, useFileSelection } from "../../contexts/FileContext";
-import { ModeType } from "../../contexts/NavigationContext";
 import { PDFDocument, PDFPage, PageEditorFunctions } from "../../types/pageEditor";
 import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
 import { pdfExportService } from "../../services/pdfExportService";

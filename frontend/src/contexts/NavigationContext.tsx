@@ -1,84 +1,94 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { useNavigationUrlSync } from '../hooks/useUrlSync';
-import { ModeType, isValidMode, getDefaultMode } from '../types/navigation';
+import { WorkbenchType, getDefaultWorkbench } from '../types/workbench';
+import { ToolId, isValidToolId } from '../types/toolId';
+import { useFlatToolRegistry } from '../data/useTranslatedToolRegistry';
 
 /**
  * NavigationContext - Complete navigation management system
- * 
+ *
  * Handles navigation modes, navigation guards for unsaved changes,
- * and breadcrumb/history navigation. Separated from FileContext to 
+ * and breadcrumb/history navigation. Separated from FileContext to
  * maintain clear separation of concerns.
  */
 
 // Navigation state
-interface NavigationState {
-  currentMode: ModeType;
+interface NavigationContextState {
+  workbench: WorkbenchType;
+  selectedTool: ToolId | null;
   hasUnsavedChanges: boolean;
   pendingNavigation: (() => void) | null;
   showNavigationWarning: boolean;
-  selectedToolKey: string | null; // Add tool selection to navigation state
 }
 
 // Navigation actions
 type NavigationAction =
-  | { type: 'SET_MODE'; payload: { mode: ModeType } }
+  | { type: 'SET_WORKBENCH'; payload: { workbench: WorkbenchType } }
+  | { type: 'SET_SELECTED_TOOL'; payload: { toolId: ToolId | null } }
+  | { type: 'SET_TOOL_AND_WORKBENCH'; payload: { toolId: ToolId | null; workbench: WorkbenchType } }
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
   | { type: 'SET_PENDING_NAVIGATION'; payload: { navigationFn: (() => void) | null } }
-  | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } }
-  | { type: 'SET_SELECTED_TOOL'; payload: { toolKey: string | null } };
+  | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } };
 
 // Navigation reducer
-const navigationReducer = (state: NavigationState, action: NavigationAction): NavigationState => {
+const navigationReducer = (state: NavigationContextState, action: NavigationAction): NavigationContextState => {
   switch (action.type) {
-    case 'SET_MODE':
-      return { ...state, currentMode: action.payload.mode };
-    
+    case 'SET_WORKBENCH':
+      return { ...state, workbench: action.payload.workbench };
+
+    case 'SET_SELECTED_TOOL':
+      return { ...state, selectedTool: action.payload.toolId };
+
+    case 'SET_TOOL_AND_WORKBENCH':
+      return {
+        ...state,
+        selectedTool: action.payload.toolId,
+        workbench: action.payload.workbench
+      };
+
     case 'SET_UNSAVED_CHANGES':
       return { ...state, hasUnsavedChanges: action.payload.hasChanges };
-    
+
     case 'SET_PENDING_NAVIGATION':
       return { ...state, pendingNavigation: action.payload.navigationFn };
-    
+
     case 'SHOW_NAVIGATION_WARNING':
       return { ...state, showNavigationWarning: action.payload.show };
-    
-    case 'SET_SELECTED_TOOL':
-      return { ...state, selectedToolKey: action.payload.toolKey };
-    
+
     default:
       return state;
   }
 };
 
 // Initial state
-const initialState: NavigationState = {
-  currentMode: getDefaultMode(),
+const initialState: NavigationContextState = {
+  workbench: getDefaultWorkbench(),
+  selectedTool: null,
   hasUnsavedChanges: false,
   pendingNavigation: null,
-  showNavigationWarning: false,
-  selectedToolKey: null
+  showNavigationWarning: false
 };
 
 // Navigation context actions interface
 export interface NavigationContextActions {
-  setMode: (mode: ModeType) => void;
+  setWorkbench: (workbench: WorkbenchType) => void;
+  setSelectedTool: (toolId: ToolId | null) => void;
+  setToolAndWorkbench: (toolId: ToolId | null, workbench: WorkbenchType) => void;
   setHasUnsavedChanges: (hasChanges: boolean) => void;
   showNavigationWarning: (show: boolean) => void;
   requestNavigation: (navigationFn: () => void) => void;
   confirmNavigation: () => void;
   cancelNavigation: () => void;
-  selectTool: (toolKey: string) => void;
   clearToolSelection: () => void;
   handleToolSelect: (toolId: string) => void;
 }
 
-// Split context values
+// Context state values
 export interface NavigationContextStateValue {
-  currentMode: ModeType;
+  workbench: WorkbenchType;
+  selectedTool: ToolId | null;
   hasUnsavedChanges: boolean;
   pendingNavigation: (() => void) | null;
   showNavigationWarning: boolean;
-  selectedToolKey: string | null;
 }
 
 export interface NavigationContextActionsValue {
@@ -90,15 +100,24 @@ const NavigationStateContext = createContext<NavigationContextStateValue | undef
 const NavigationActionsContext = createContext<NavigationContextActionsValue | undefined>(undefined);
 
 // Provider component
-export const NavigationProvider: React.FC<{ 
+export const NavigationProvider: React.FC<{
   children: React.ReactNode;
   enableUrlSync?: boolean;
 }> = ({ children, enableUrlSync = true }) => {
   const [state, dispatch] = useReducer(navigationReducer, initialState);
+  const toolRegistry = useFlatToolRegistry();
 
   const actions: NavigationContextActions = {
-    setMode: useCallback((mode: ModeType) => {
-      dispatch({ type: 'SET_MODE', payload: { mode } });
+    setWorkbench: useCallback((workbench: WorkbenchType) => {
+      dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
+    }, []),
+
+    setSelectedTool: useCallback((toolId: ToolId | null) => {
+      dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolId } });
+    }, []),
+
+    setToolAndWorkbench: useCallback((toolId: ToolId | null, workbench: WorkbenchType) => {
+      dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId, workbench } });
     }, []),
 
     setHasUnsavedChanges: useCallback((hasChanges: boolean) => {
@@ -110,74 +129,66 @@ export const NavigationProvider: React.FC<{
     }, []),
 
     requestNavigation: useCallback((navigationFn: () => void) => {
-      // If no unsaved changes, navigate immediately
       if (!state.hasUnsavedChanges) {
         navigationFn();
         return;
       }
 
-      // Otherwise, store the navigation and show warning
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: true } });
     }, [state.hasUnsavedChanges]),
 
     confirmNavigation: useCallback(() => {
-      // Execute pending navigation
       if (state.pendingNavigation) {
         state.pendingNavigation();
       }
-      
-      // Clear navigation state
+
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: false } });
     }, [state.pendingNavigation]),
 
     cancelNavigation: useCallback(() => {
-      // Clear navigation without executing
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: false } });
     }, []),
 
-    selectTool: useCallback((toolKey: string) => {
-      dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey } });
-    }, []),
-
     clearToolSelection: useCallback(() => {
-      dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: null } });
+      dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench: getDefaultWorkbench() } });
     }, []),
 
     handleToolSelect: useCallback((toolId: string) => {
-      // Handle special cases
       if (toolId === 'allTools') {
-        dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: null } });
+        dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench: getDefaultWorkbench() } });
         return;
       }
 
-      // Special-case: if tool is a dedicated reader tool, enter reader mode
       if (toolId === 'read' || toolId === 'view-pdf') {
-        dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: null } });
+        dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench: 'viewer' } });
         return;
       }
 
-      dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolKey: toolId } });
-      dispatch({ type: 'SET_MODE', payload: { mode: 'fileEditor' as ModeType } });
-    }, [])
+      // Look up the tool in the registry to get its proper workbench
+
+      const tool = isValidToolId(toolId)? toolRegistry[toolId] : null;
+      const workbench = tool ? (tool.workbench || getDefaultWorkbench()) : getDefaultWorkbench();
+
+      // Validate toolId and convert to ToolId type
+      const validToolId = isValidToolId(toolId) ? toolId : null;
+      dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: validToolId, workbench } });
+    }, [toolRegistry])
   };
 
   const stateValue: NavigationContextStateValue = {
-    currentMode: state.currentMode,
+    workbench: state.workbench,
+    selectedTool: state.selectedTool,
     hasUnsavedChanges: state.hasUnsavedChanges,
     pendingNavigation: state.pendingNavigation,
-    showNavigationWarning: state.showNavigationWarning,
-    selectedToolKey: state.selectedToolKey
+    showNavigationWarning: state.showNavigationWarning
   };
 
   const actionsValue: NavigationContextActionsValue = {
     actions
   };
-
-  // Enable URL synchronization
-  useNavigationUrlSync(state.currentMode, actions.setMode, enableUrlSync);
 
   return (
     <NavigationStateContext.Provider value={stateValue}>
@@ -216,7 +227,7 @@ export const useNavigation = () => {
 export const useNavigationGuard = () => {
   const state = useNavigationState();
   const { actions } = useNavigationActions();
-  
+
   return {
     pendingNavigation: state.pendingNavigation,
     showNavigationWarning: state.showNavigationWarning,
@@ -228,13 +239,3 @@ export const useNavigationGuard = () => {
     setShowNavigationWarning: actions.showNavigationWarning
   };
 };
-
-// Re-export utility functions from types for backward compatibility
-export { isValidMode, getDefaultMode, type ModeType } from '../types/navigation';
-
-// TODO: This will be expanded for URL-based routing system
-// - URL parsing utilities
-// - Route definitions  
-// - Navigation hooks with URL sync
-// - History management
-// - Breadcrumb restoration from URL params

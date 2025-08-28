@@ -1,120 +1,107 @@
 /**
- * URL synchronization hooks for tool routing
+ * URL synchronization hooks for tool routing with registry support
  */
 
-import { useEffect, useCallback } from 'react';
-import { ModeType } from '../types/navigation';
+import { useEffect, useCallback, useRef } from 'react';
+import { ToolId } from '../types/toolId';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
+import { ToolRegistry } from '../data/toolsTaxonomy';
+import { firePixel } from '../utils/scarfTracking';
 
 /**
- * Hook to sync navigation mode with URL
+ * Hook to sync workbench and tool with URL using registry
  */
 export function useNavigationUrlSync(
-  currentMode: ModeType,
-  setMode: (mode: ModeType) => void,
+  selectedTool: ToolId | null,
+  handleToolSelect: (toolId: string) => void,
+  clearToolSelection: () => void,
+  registry: ToolRegistry,
   enableSync: boolean = true
 ) {
-  // Initialize mode from URL on mount
+  const hasInitialized = useRef(false);
+  const prevSelectedTool = useRef<ToolId | null>(null);
+  // Initialize workbench and tool from URL on mount
   useEffect(() => {
     if (!enableSync) return;
-    
-    const route = parseToolRoute();
-    if (route.mode !== currentMode) {
-      setMode(route.mode);
+
+    // Fire pixel for initial page load
+    const currentPath = window.location.pathname;
+    firePixel(currentPath);
+
+    const route = parseToolRoute(registry);
+    if (route.toolId !== selectedTool) {
+      if (route.toolId) {
+        handleToolSelect(route.toolId);
+      } else if (selectedTool !== null) {
+        // Only clear selection if we actually had a tool selected
+        // Don't clear on initial load when selectedTool starts as null
+        clearToolSelection();
+      }
     }
+
+    hasInitialized.current = true;
   }, []); // Only run on mount
 
-  // Update URL when mode changes
+  // Update URL when tool or workbench changes
   useEffect(() => {
     if (!enableSync) return;
-    
-    if (currentMode === 'pageEditor') {
-      clearToolRoute();
-    } else {
-      updateToolRoute(currentMode, currentMode);
+
+    if (selectedTool) {
+      updateToolRoute(selectedTool, registry, false); // Use pushState for user navigation
+    } else if (prevSelectedTool.current !== null) {
+      // Only clear URL if we had a tool before (user navigated away)
+      // Don't clear on initial load when both current and previous are null
+      if (window.location.pathname !== '/') {
+        clearToolRoute(false); // Use pushState for user navigation
+      }
     }
-  }, [currentMode, enableSync]);
+
+    prevSelectedTool.current = selectedTool;
+  }, [selectedTool, registry, enableSync]);
 
   // Handle browser back/forward navigation
   useEffect(() => {
     if (!enableSync) return;
-    
+
     const handlePopState = () => {
-      const route = parseToolRoute();
-      if (route.mode !== currentMode) {
-        setMode(route.mode);
+      const route = parseToolRoute(registry);
+      if (route.toolId !== selectedTool) {
+        // Fire pixel for back/forward navigation
+        const currentPath = window.location.pathname;
+        firePixel(currentPath);
+
+        if (route.toolId) {
+          handleToolSelect(route.toolId);
+        } else {
+          clearToolSelection();
+        }
       }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [currentMode, setMode, enableSync]);
+  }, [selectedTool, handleToolSelect, clearToolSelection, registry, enableSync]);
 }
 
 /**
- * Hook to sync tool workflow with URL
+ * Hook to programmatically navigate to tools with registry support
  */
-export function useToolWorkflowUrlSync(
-  selectedToolKey: string | null,
-  selectTool: (toolKey: string) => void,
-  clearTool: () => void,
-  enableSync: boolean = true
-) {
-  // Initialize tool from URL on mount
-  useEffect(() => {
-    if (!enableSync) return;
-    
-    const route = parseToolRoute();
-    if (route.toolKey && route.toolKey !== selectedToolKey) {
-      selectTool(route.toolKey);
-    } else if (!route.toolKey && selectedToolKey) {
-      clearTool();
-    }
-  }, []); // Only run on mount
+export function useToolNavigation(registry: ToolRegistry) {
+  const navigateToTool = useCallback((toolId: ToolId) => {
+    updateToolRoute(toolId, registry);
 
-  // Update URL when tool changes
-  useEffect(() => {
-    if (!enableSync) return;
-    
-    if (selectedToolKey) {
-      const route = parseToolRoute();
-      if (route.toolKey !== selectedToolKey) {
-        updateToolRoute(selectedToolKey as ModeType, selectedToolKey);
-      }
-    }
-  }, [selectedToolKey, enableSync]);
-}
-
-/**
- * Hook to get current URL route information
- */
-export function useCurrentRoute() {
-  const getCurrentRoute = useCallback(() => {
-    return parseToolRoute();
-  }, []);
-
-  return getCurrentRoute;
-}
-
-/**
- * Hook to programmatically navigate to tools
- */
-export function useToolNavigation() {
-  const navigateToTool = useCallback((toolKey: string) => {
-    updateToolRoute(toolKey as ModeType, toolKey);
-    
     // Dispatch a custom event to notify other components
-    window.dispatchEvent(new CustomEvent('toolNavigation', { 
-      detail: { toolKey } 
+    window.dispatchEvent(new CustomEvent('toolNavigation', {
+      detail: { toolId }
     }));
-  }, []);
+  }, [registry]);
 
   const navigateToHome = useCallback(() => {
     clearToolRoute();
-    
+
     // Dispatch a custom event to notify other components
-    window.dispatchEvent(new CustomEvent('toolNavigation', { 
-      detail: { toolKey: null } 
+    window.dispatchEvent(new CustomEvent('toolNavigation', {
+      detail: { toolId: null }
     }));
   }, []);
 
@@ -122,4 +109,15 @@ export function useToolNavigation() {
     navigateToTool,
     navigateToHome
   };
+}
+
+/**
+ * Hook to get current URL route information with registry support
+ */
+export function useCurrentRoute(registry: ToolRegistry) {
+  const getCurrentRoute = useCallback(() => {
+    return parseToolRoute(registry);
+  }, [registry]);
+
+  return getCurrentRoute;
 }

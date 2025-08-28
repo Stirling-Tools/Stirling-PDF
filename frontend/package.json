@@ -28,6 +28,7 @@
     "jszip": "^3.10.1",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^3.11.174",
+    "posthog-js": "^1.261.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-i18next": "^15.5.2",
