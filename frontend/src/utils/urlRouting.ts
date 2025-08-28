@@ -76,7 +76,7 @@ export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace:
 
   const newPath = getToolUrlPath(toolId, tool);
   const searchParams = new URLSearchParams(window.location.search);
-  
+
   // Remove tool query parameter since we're using path-based routing
   searchParams.delete('tool');
 

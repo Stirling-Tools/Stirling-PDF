@@ -2,7 +2,7 @@
  * URL synchronization hooks for tool routing with registry support
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { WorkbenchType, ToolId } from '../types/navigation';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
 import { ToolRegistry } from '../data/toolsTaxonomy';
@@ -18,9 +18,15 @@ export function useNavigationUrlSync(
   registry: ToolRegistry,
   enableSync: boolean = true
 ) {
+  const hasInitialized = useRef(false);
+  const prevSelectedTool = useRef<ToolId | null>(null);
   // Initialize workbench and tool from URL on mount
   useEffect(() => {
     if (!enableSync) return;
+
+    // Fire pixel for initial page load
+    const currentPath = window.location.pathname;
+    firePixel(currentPath);
 
     const route = parseToolRoute(registry);
     if (route.toolId !== selectedTool) {
@@ -32,6 +38,8 @@ export function useNavigationUrlSync(
         clearToolSelection();
       }
     }
+
+    hasInitialized.current = true;
   }, []); // Only run on mount
 
   // Update URL when tool or workbench changes
@@ -40,12 +48,15 @@ export function useNavigationUrlSync(
 
     if (selectedTool) {
       updateToolRoute(selectedTool, registry, false); // Use pushState for user navigation
-    } else {
-      // Only clear URL if we're not on the home page already
+    } else if (prevSelectedTool.current !== null) {
+      // Only clear URL if we had a tool before (user navigated away)
+      // Don't clear on initial load when both current and previous are null
       if (window.location.pathname !== '/') {
         clearToolRoute(false); // Use pushState for user navigation
       }
     }
+    
+    prevSelectedTool.current = selectedTool;
   }, [selectedTool, registry, enableSync]);
 
   // Handle browser back/forward navigation
@@ -58,7 +69,7 @@ export function useNavigationUrlSync(
         // Fire pixel for back/forward navigation
         const currentPath = window.location.pathname;
         firePixel(currentPath);
-        
+
         if (route.toolId) {
           handleToolSelect(route.toolId);
         } else {
