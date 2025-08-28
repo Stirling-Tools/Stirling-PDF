@@ -16,6 +16,7 @@ import PageThumbnail from './PageThumbnail';
 import DragDropGrid from './DragDropGrid';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
+import { FileId } from "../../types/file";
 
 import {
   DOMCommand,
@@ -172,7 +173,8 @@ const PageEditor = ({
   const createRotateCommand = useCallback((pageIds: string[], rotation: number) => ({
     execute: () => {
       const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
-      undoManagerRef.current.executeCommand(bulkRotateCommand);
+
+    undoManagerRef.current.executeCommand(bulkRotateCommand);
     }
   }), []);
 
@@ -181,7 +183,8 @@ const PageEditor = ({
       if (!displayDocument) return;
 
       const pagesToDelete = pageIds.map(pageId => {
-        const page = displayDocument.pages.find(p => p.id === pageId);
+
+    const page = displayDocument.pages.find(p => p.id === pageId);
         return page?.pageNumber || 0;
       }).filter(num => num > 0);
 
@@ -212,7 +215,7 @@ const PageEditor = ({
       );
       undoManagerRef.current.executeCommand(splitCommand);
     }
-  }), [splitPositions]);
+}), [splitPositions]);
 
   // Command executor for PageThumbnail
   const executeCommand = useCallback((command: any) => {
@@ -442,8 +445,8 @@ const PageEditor = ({
   }, [displayDocument, getPageNumbersFromIds]);
 
   // Helper function to collect source files for multi-file export
-  const getSourceFiles = useCallback((): Map<string, File> | null => {
-    const sourceFiles = new Map<string, File>();
+  const getSourceFiles = useCallback((): Map<FileId, File> | null => {
+    const sourceFiles = new Map<FileId, File>();
 
     // Always include original files
     activeFileIds.forEach(fileId => {
@@ -621,6 +624,7 @@ const PageEditor = ({
 
   const closePdf = useCallback(() => {
     actions.clearAllFiles();
+
     undoManagerRef.current.clear();
     setSelectedPageIds([]);
     setSelectionMode(false);
@@ -631,7 +635,7 @@ const PageEditor = ({
     if (!displayDocument) return;
 
     // For now, trigger the actual export directly
-    // In the original, this would show a preview modal first
+   // In the original, this would show a preview modal first
     if (selectedOnly) {
       onExportSelected();
     } else {

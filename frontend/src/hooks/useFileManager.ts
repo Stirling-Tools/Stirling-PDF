@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useIndexedDB } from '../contexts/IndexedDBContext';
 import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+import { FileId } from '../types/file';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
@@ -11,19 +12,19 @@ export const useFileManager = () => {
     if (!indexedDB) {
       throw new Error('IndexedDB context not available');
     }
-    
+
     // Handle drafts differently from regular files
     if (fileMetadata.isDraft) {
       // Load draft from the drafts database
       try {
         const { indexedDBManager, DATABASE_CONFIGS } = await import('../services/indexedDBManager');
         const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
-        
+
         return new Promise((resolve, reject) => {
           const transaction = db.transaction(['drafts'], 'readonly');
           const store = transaction.objectStore('drafts');
           const request = store.get(fileMetadata.id);
-          
+
           request.onsuccess = () => {
             const draft = request.result;
             if (draft && draft.pdfData) {
@@ -36,14 +37,14 @@ export const useFileManager = () => {
               reject(new Error('Draft data not found'));
             }
           };
-          
+
           request.onerror = () => reject(request.error);
         });
       } catch (error) {
         throw new Error(`Failed to load draft: ${fileMetadata.name} (${error})`);
       }
     }
-    
+
     // Regular file loading
     if (fileMetadata.id) {
       const file = await indexedDB.loadFile(fileMetadata.id);
@@ -60,14 +61,14 @@ export const useFileManager = () => {
       if (!indexedDB) {
         return [];
       }
-      
+
       // Load regular files metadata only
       const storedFileMetadata = await indexedDB.loadAllMetadata();
-      
+
       // For now, only regular files - drafts will be handled separately in the future
       const allFiles = storedFileMetadata;
       const sortedFiles = allFiles.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-      
+
       return sortedFiles;
     } catch (error) {
       console.error('Failed to load recent files:', error);
@@ -94,7 +95,7 @@ export const useFileManager = () => {
     }
   }, [indexedDB]);
 
-  const storeFile = useCallback(async (file: File, fileId: string) => {
+  const storeFile = useCallback(async (file: File, fileId: FileId) => {
     if (!indexedDB) {
       throw new Error('IndexedDB context not available');
     }
@@ -104,7 +105,7 @@ export const useFileManager = () => {
 
       // Convert file to ArrayBuffer for StoredFile interface compatibility
       const arrayBuffer = await file.arrayBuffer();
-      
+
       // Return StoredFile format for compatibility with old API
       return {
         id: fileId,
@@ -122,10 +123,10 @@ export const useFileManager = () => {
   }, [indexedDB]);
 
   const createFileSelectionHandlers = useCallback((
-    selectedFiles: string[],
-    setSelectedFiles: (files: string[]) => void
+    selectedFiles: FileId[],
+    setSelectedFiles: (files: FileId[]) => void
   ) => {
-    const toggleSelection = (fileId: string) => {
+    const toggleSelection = (fileId: FileId) => {
       setSelectedFiles(
         selectedFiles.includes(fileId)
           ? selectedFiles.filter(id => id !== fileId)
@@ -137,13 +138,13 @@ export const useFileManager = () => {
       setSelectedFiles([]);
     };
 
-    const selectMultipleFiles = async (files: FileMetadata[], onStoredFilesSelect: (filesWithMetadata: Array<{ file: File; originalId: string; metadata: FileMetadata }>) => void) => {
+    const selectMultipleFiles = async (files: FileMetadata[], onStoredFilesSelect: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => void) => {
       if (selectedFiles.length === 0) return;
 
       try {
         // Filter by UUID and convert to File objects
         const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id));
-        
+
         // Use stored files flow that preserves IDs
         const filesWithMetadata = await Promise.all(
           selectedFileObjects.map(async (metadata) => ({
@@ -153,7 +154,7 @@ export const useFileManager = () => {
           }))
         );
         onStoredFilesSelect(filesWithMetadata);
-        
+
         clearSelection();
       } catch (error) {
         console.error('Failed to load selected files:', error);
@@ -168,7 +169,7 @@ export const useFileManager = () => {
     };
   }, [convertToFile]);
 
-  const touchFile = useCallback(async (id: string) => {
+  const touchFile = useCallback(async (id: FileId) => {
     if (!indexedDB) {
       console.warn('IndexedDB context not available for touch operation');
       return;

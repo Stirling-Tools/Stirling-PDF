@@ -8,9 +8,16 @@ import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { createOperation } from '../../../utils/toolOperationTracker';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
+import { FileId } from '../../../types/file';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
+
+export enum ToolType {
+  singleFile,
+  multiFile,
+  custom,
+}
 
 /**
  * Configuration for tool operations defining processing behavior and API integration.
@@ -20,44 +27,15 @@ export type { ProcessingProgress, ResponseHandler };
  * 2. Multi-file tools: multiFileEndpoint: true, single API call with all files
  * 3. Complex tools: customProcessor handles all processing logic
  */
-export interface ToolOperationConfig<TParams = void> {
+interface BaseToolOperationConfig<TParams> {
   /** Operation identifier for tracking and logging */
   operationType: string;
-
-  /**
-   * API endpoint for the operation. Can be static string or function for dynamic routing.
-   * Not used when customProcessor is provided.
-   */
-  endpoint: string | ((params: TParams) => string);
-
-  /**
-   * Builds FormData for API request. Signature determines processing approach:
-   * - (params, file: File) => FormData: Single-file processing
-   * - (params, files: File[]) => FormData: Multi-file processing
-   * Not used when customProcessor is provided.
-   */
-  buildFormData: ((params: TParams, file: File) => FormData) | ((params: TParams, files: File[]) => FormData); /* FIX ME */
 
   /** Prefix added to processed filenames (e.g., 'compressed_', 'split_') */
   filePrefix: string;
 
-  /**
-   * Whether this tool uses backends that accept MultipartFile[] arrays.
-   * - true: Single API call with all files (backend uses MultipartFile[])
-   * - false/undefined: Individual API calls per file (backend uses single MultipartFile)
-   * Ignored when customProcessor is provided.
-   */
-  multiFileEndpoint?: boolean;
-
   /** How to handle API responses (e.g., ZIP extraction, single file response) */
   responseHandler?: ResponseHandler;
-
-  /**
-   * Custom processing logic that completely bypasses standard file processing.
-   * When provided, tool handles all API calls, response processing, and file creation.
-   * Use for tools with complex routing logic or non-standard processing requirements.
-   */
-  customProcessor?: (params: TParams, files: File[]) => Promise<File[]>;
 
   /** Extract user-friendly error messages from API errors */
   getErrorMessage?: (error: any) => string;
@@ -65,6 +43,49 @@ export interface ToolOperationConfig<TParams = void> {
   /** Default parameter values for automation */
   defaultParameters?: TParams;
 }
+
+export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+  /** This tool processes one file at a time. */
+  toolType: ToolType.singleFile;
+
+  /** Builds FormData for API request. */
+  buildFormData: ((params: TParams, file: File) => FormData);
+
+  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
+  endpoint: string | ((params: TParams) => string);
+
+  customProcessor?: undefined;
+}
+
+export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+  /** This tool processes multiple files at once. */
+  toolType: ToolType.multiFile;
+
+  /** Builds FormData for API request. */
+  buildFormData: ((params: TParams, files: File[]) => FormData);
+
+  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
+  endpoint: string | ((params: TParams) => string);
+
+  customProcessor?: undefined;
+}
+
+export interface CustomToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+  /** This tool has custom behaviour. */
+  toolType: ToolType.custom;
+
+  buildFormData?: undefined;
+  endpoint?: undefined;
+
+  /**
+   * Custom processing logic that completely bypasses standard file processing.
+   * This tool handles all API calls, response processing, and file creation.
+   * Use for tools with complex routing logic or non-standard processing requirements.
+   */
+  customProcessor: (params: TParams, files: File[]) => Promise<File[]>;
+}
+
+export type ToolOperationConfig<TParams = void> = SingleFileToolOperationConfig<TParams> | MultiFileToolOperationConfig<TParams> | CustomToolOperationConfig<TParams>;
 
 /**
  * Complete tool operation interface with execution capability
@@ -103,7 +124,7 @@ export { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
  * @param config - Tool operation configuration
  * @returns Hook interface with state and execution methods
  */
-export const useToolOperation = <TParams = void>(
+export const useToolOperation = <TParams>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
@@ -143,15 +164,28 @@ export const useToolOperation = <TParams = void>(
     try {
       let processedFiles: File[];
 
-      if (config.customProcessor) {
-        actions.setStatus('Processing files...');
-        processedFiles = await config.customProcessor(params, validFiles);
-      } else {
-        // Use explicit multiFileEndpoint flag to determine processing approach
-        if (config.multiFileEndpoint) {
+      switch (config.toolType) {
+        case ToolType.singleFile:
+          // Individual file processing - separate API call per file
+          const apiCallsConfig: ApiCallsConfig<TParams> = {
+            endpoint: config.endpoint,
+            buildFormData: config.buildFormData,
+            filePrefix: config.filePrefix,
+            responseHandler: config.responseHandler
+          };
+          processedFiles = await processFiles(
+            params,
+            validFiles,
+            apiCallsConfig,
+            actions.setProgress,
+            actions.setStatus
+          );
+          break;
+
+        case ToolType.multiFile:
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');
-          const formData = (config.buildFormData as (params: TParams, files: File[]) => FormData)(params, validFiles);
+          const formData = config.buildFormData(params, validFiles);
           const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
 
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
@@ -160,7 +194,7 @@ export const useToolOperation = <TParams = void>(
           if (config.responseHandler) {
             // Use custom responseHandler for multi-file (handles ZIP extraction)
             processedFiles = await config.responseHandler(response.data, validFiles);
-          } else if (response.data.type === 'application/pdf' || 
+          } else if (response.data.type === 'application/pdf' ||
                      (response.headers && response.headers['content-type'] === 'application/pdf')) {
             // Single PDF response (e.g. split with merge option) - use original filename
             const originalFileName = validFiles[0]?.name || 'document.pdf';
@@ -175,22 +209,12 @@ export const useToolOperation = <TParams = void>(
               processedFiles = await extractAllZipFiles(response.data);
             }
           }
-        } else {
-          // Individual file processing - separate API call per file
-          const apiCallsConfig: ApiCallsConfig<TParams> = {
-            endpoint: config.endpoint,
-            buildFormData: config.buildFormData as (params: TParams, file: File) => FormData,
-            filePrefix: config.filePrefix,
-            responseHandler: config.responseHandler
-          };
-          processedFiles = await processFiles(
-            params,
-            validFiles,
-            apiCallsConfig,
-            actions.setProgress,
-            actions.setStatus
-          );
-        }
+          break;
+
+        case ToolType.custom:
+          actions.setStatus('Processing files...');
+          processedFiles = await config.customProcessor(params, validFiles);
+          break;
       }
 
       if (processedFiles.length > 0) {
@@ -208,7 +232,7 @@ export const useToolOperation = <TParams = void>(
         actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
 
         // Replace input files with processed files (consumeFiles handles pinning)
-        const inputFileIds = validFiles.map(file => findFileId(file)).filter(Boolean) as string[];
+        const inputFileIds = validFiles.map(file => findFileId(file)).filter(Boolean) as FileId[];
         await consumeFiles(inputFileIds, processedFiles);
 
         markOperationApplied(fileId, operationId);

@@ -4,9 +4,13 @@ import { useAddPasswordOperation } from './useAddPasswordOperation';
 import type { AddPasswordFullParameters, AddPasswordParameters } from './useAddPasswordParameters';
 
 // Mock the useToolOperation hook
-vi.mock('../shared/useToolOperation', () => ({
-  useToolOperation: vi.fn()
-}));
+vi.mock('../shared/useToolOperation', async () => {
+  const actual = await vi.importActual('../shared/useToolOperation');  // Need to keep ToolType etc.
+  return {
+    ...actual,
+    useToolOperation: vi.fn()
+  };
+});
 
 // Mock the translation hook
 const mockT = vi.fn((key: string) => `translated-${key}`);
@@ -20,13 +24,13 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { ToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
+import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '../shared/useToolOperation';
 
 
 describe('useAddPasswordOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
 
-  const getToolConfig = (): ToolOperationConfig<AddPasswordFullParameters> => mockUseToolOperation.mock.calls[0][0] as ToolOperationConfig<AddPasswordFullParameters>;
+  const getToolConfig = () => mockUseToolOperation.mock.calls[0][0] as SingleFileToolOperationConfig<AddPasswordFullParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -91,7 +95,7 @@ describe('useAddPasswordOperation', () => {
     };
 
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-    const formData = buildFormData(testParameters, testFile as any /* FIX ME */);
+    const formData = buildFormData(testParameters, testFile);
 
     // Verify the form data contains the file
     expect(formData.get('fileInput')).toBe(testFile);
@@ -112,7 +116,7 @@ describe('useAddPasswordOperation', () => {
   });
 
   test.each([
-    { property: 'multiFileEndpoint' as const, expectedValue: false },
+    { property: 'toolType' as const, expectedValue: ToolType.singleFile },
     { property: 'endpoint' as const, expectedValue: '/api/v1/security/add-password' },
     { property: 'filePrefix' as const, expectedValue: 'translated-addPassword.filenamePrefix_' },
     { property: 'operationType' as const, expectedValue: 'addPassword' }

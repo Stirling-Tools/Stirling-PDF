@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SanitizeParameters, defaultParameters } from './useSanitizeParameters';
 
@@ -21,9 +21,10 @@ export const buildSanitizeFormData = (parameters: SanitizeParameters, file: File
 
 // Static configuration object
 export const sanitizeOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildSanitizeFormData,
   operationType: 'sanitize',
   endpoint: '/api/v1/security/sanitize-pdf',
-  buildFormData: buildSanitizeFormData,
   filePrefix: 'sanitized_', // Will be overridden in hook with translation
   multiFileEndpoint: false,
   defaultParameters,

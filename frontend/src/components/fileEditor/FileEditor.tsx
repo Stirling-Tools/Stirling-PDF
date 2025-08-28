@@ -16,6 +16,7 @@ import styles from './FileEditor.module.css';
 import FileEditorThumbnail from './FileEditorThumbnail';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
+import { FileId } from '../../types/file';
 
 
 interface FileEditorProps {
@@ -46,17 +47,17 @@ const FileEditor = ({
   // Use optimized FileContext hooks
   const { state, selectors } = useFileState();
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
-  
+
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeFiles = useMemo(() => selectors.getFiles(), [selectors.getFilesSignature()]);
   const activeFileRecords = useMemo(() => selectors.getFileRecords(), [selectors.getFilesSignature()]);
   const selectedFileIds = state.ui.selectedFileIds;
   const isProcessing = state.ui.isProcessing;
-  
+
   // Get the real context actions
   const { actions } = useFileActions();
   const { actions: navActions } = useNavigationActions();
-  
+
   // Get file selection context
   const { setSelectedFiles } = useFileSelection();
 
@@ -86,9 +87,9 @@ const FileEditor = ({
   });
   // Get selected file IDs from context (defensive programming)
   const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
-  
+
   // Create refs for frequently changing values to stabilize callbacks
-  const contextSelectedIdsRef = useRef<string[]>([]);
+  const contextSelectedIdsRef = useRef<FileId[]>([]);
   contextSelectedIdsRef.current = contextSelectedIds;
 
   // Use activeFileRecords directly - no conversion needed
@@ -98,7 +99,7 @@ const FileEditor = ({
   const recordToFileItem = useCallback((record: any) => {
     const file = selectors.getFile(record.id);
     if (!file) return null;
-    
+
     return {
       id: record.id,
       name: file.name,
@@ -166,7 +167,7 @@ const FileEditor = ({
                 id: operationId,
                 type: 'convert',
                 timestamp: Date.now(),
-                fileIds: extractionResult.extractedFiles.map(f => f.name),
+                fileIds: extractionResult.extractedFiles.map(f => f.name) as FileId[] /* FIX ME: This doesn't seem right */,
                 status: 'pending',
                 metadata: {
                   originalFileName: file.name,
@@ -179,7 +180,7 @@ const FileEditor = ({
                   }
                 }
               };
-              
+
               if (extractionResult.errors.length > 0) {
                 errors.push(...extractionResult.errors);
               }
@@ -219,7 +220,7 @@ const FileEditor = ({
             id: operationId,
             type: 'upload',
             timestamp: Date.now(),
-            fileIds: [file.name],
+            fileIds: [file.name as FileId /* This doesn't seem right */],
             status: 'pending',
             metadata: {
               originalFileName: file.name,
@@ -239,7 +240,7 @@ const FileEditor = ({
       const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
       setError(errorMessage);
       console.error('File processing error:', err);
-      
+
       // Reset extraction progress on error
       setZipExtractionProgress({
         isExtracting: false,
@@ -263,21 +264,21 @@ const FileEditor = ({
     // Remove all files from context but keep in storage
     const allFileIds = activeFileRecords.map(record => record.id);
     removeFiles(allFileIds, false); // false = keep in storage
-    
+
     // Clear selections
     setSelectedFiles([]);
   }, [activeFileRecords, removeFiles, setSelectedFiles]);
 
-  const toggleFile = useCallback((fileId: string) => {
+  const toggleFile = useCallback((fileId: FileId) => {
     const currentSelectedIds = contextSelectedIdsRef.current;
-    
+
     const targetRecord = activeFileRecords.find(r => r.id === fileId);
     if (!targetRecord) return;
 
     const contextFileId = fileId; // No need to create a new ID
     const isSelected = currentSelectedIds.includes(contextFileId);
 
-    let newSelection: string[];
+    let newSelection: FileId[];
 
     if (isSelected) {
       // Remove file from selection
@@ -286,7 +287,7 @@ const FileEditor = ({
       // Add file to selection
       // In tool mode, typically allow multiple files unless specified otherwise
       const maxAllowed = toolMode ? 10 : Infinity; // Default max for tools
-      
+
       if (maxAllowed === 1) {
         newSelection = [contextFileId];
       } else {
@@ -314,30 +315,30 @@ const FileEditor = ({
   }, [setSelectedFiles]);
 
   // File reordering handler for drag and drop
-  const handleReorderFiles = useCallback((sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => {
+  const handleReorderFiles = useCallback((sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => {
     const currentIds = activeFileRecords.map(r => r.id);
-    
+
     // Find indices
     const sourceIndex = currentIds.findIndex(id => id === sourceFileId);
     const targetIndex = currentIds.findIndex(id => id === targetFileId);
-    
+
     if (sourceIndex === -1 || targetIndex === -1) {
       console.warn('Could not find source or target file for reordering');
       return;
     }
 
     // Handle multi-file selection reordering
-    const filesToMove = selectedFileIds.length > 1 
+    const filesToMove = selectedFileIds.length > 1
       ? selectedFileIds.filter(id => currentIds.includes(id))
       : [sourceFileId];
 
     // Create new order
     const newOrder = [...currentIds];
-    
+
     // Remove files to move from their current positions (in reverse order to maintain indices)
     const sourceIndices = filesToMove.map(id => newOrder.findIndex(nId => nId === id))
       .sort((a, b) => b - a); // Sort descending
-      
+
     sourceIndices.forEach(index => {
       newOrder.splice(index, 1);
     });
@@ -372,7 +373,7 @@ const FileEditor = ({
 
 
   // File operations using context
-  const handleDeleteFile = useCallback((fileId: string) => {
+  const handleDeleteFile = useCallback((fileId: FileId) => {
     const record = activeFileRecords.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
 
@@ -385,7 +386,7 @@ const FileEditor = ({
         id: operationId,
         type: 'remove',
         timestamp: Date.now(),
-        fileIds: [fileName],
+        fileIds: [fileName as FileId /* FIX ME: This doesn't seem right */],
         status: 'pending',
         metadata: {
           originalFileName: fileName,
@@ -396,7 +397,7 @@ const FileEditor = ({
           }
         }
       };
-            
+
       // Remove file from context but keep in storage (close, don't delete)
       removeFiles([contextFileId], false);
 
@@ -406,7 +407,7 @@ const FileEditor = ({
     }
   }, [activeFileRecords, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
 
-  const handleViewFile = useCallback((fileId: string) => {
+  const handleViewFile = useCallback((fileId: FileId) => {
     const record = activeFileRecords.find(r => r.id === fileId);
     if (record) {
       // Set the file as selected in context and switch to viewer for preview
@@ -415,7 +416,7 @@ const FileEditor = ({
     }
   }, [activeFileRecords, setSelectedFiles, navActions.setWorkbench]);
 
-  const handleMergeFromHere = useCallback((fileId: string) => {
+  const handleMergeFromHere = useCallback((fileId: FileId) => {
     const startIndex = activeFileRecords.findIndex(r => r.id === fileId);
     if (startIndex === -1) return;
 
@@ -426,14 +427,14 @@ const FileEditor = ({
     }
   }, [activeFileRecords, selectors, onMergeFiles]);
 
-  const handleSplitFile = useCallback((fileId: string) => {
+  const handleSplitFile = useCallback((fileId: FileId) => {
     const file = selectors.getFile(fileId);
     if (file && onOpenPageEditor) {
       onOpenPageEditor(file);
     }
   }, [selectors, onOpenPageEditor]);
 
-  const handleLoadFromStorage = useCallback(async (selectedFiles: any[]) => {
+  const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
 
     try {
@@ -513,11 +514,11 @@ const FileEditor = ({
             <SkeletonLoader type="fileGrid" count={6} />
           </Box>
         ) : (
-          <div 
-            style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-              gap: '1.5rem', 
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '1.5rem',
               padding: '1rem',
               pointerEvents: 'auto'
             }}
@@ -525,7 +526,7 @@ const FileEditor = ({
             {activeFileRecords.map((record, index) => {
               const fileItem = recordToFileItem(record);
               if (!fileItem) return null;
-              
+
               return (
                 <FileEditorThumbnail
                   key={record.id}
