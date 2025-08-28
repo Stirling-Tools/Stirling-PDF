@@ -116,8 +116,12 @@ public class AuditDashboardController {
     @GetMapping("/stats")
     @Operation(summary = "Get audit statistics for the last N days")
     public AuditStatsResponse getAuditStats(
-        @Schema(description = "Number of days to look back for audit events", example = "7", required = true)
-            @RequestParam(value = "days", defaultValue = "7") int days) {
+            @Schema(
+                            description = "Number of days to look back for audit events",
+                            example = "7",
+                            required = true)
+                    @RequestParam(value = "days", defaultValue = "7")
+                    int days) {
 
         // Get events from the last X days
         Instant startDate = Instant.now().minus(java.time.Duration.ofDays(days));
