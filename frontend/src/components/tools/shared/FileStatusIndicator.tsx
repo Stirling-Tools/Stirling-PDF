@@ -100,7 +100,7 @@ const FileStatusIndicator = ({
             style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
           >
             <UploadIcon style={{ fontSize: '0.875rem' }} />
-            {t("files.upload", "Upload")}
+            {t("files.uploadFiles", "Upload Files")}
           </Anchor>
         </Text>
       );
