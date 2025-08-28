@@ -104,13 +104,6 @@ export default function Footer({
           )}
         </Flex>
 
-        {/* Powered by section */}
-        <Flex justify="center" align="center" gap={"sm"} >
-          <Text fw={600}>{t('poweredBy', 'Powered by')} </Text>
-          <a href="https://stirlingpdf.com" className="stirling-link">
-            Stirling
-          </a>
-        </Flex>
     </div>
   );
 }
