@@ -22,7 +22,5 @@ export function firePixel(pathname: string): void {
   const img = new Image();
   img.referrerPolicy = "no-referrer-when-downgrade";
   img.src = url;
-
-  console.log("ScarfPixel: Fire to... " + pathname);
 }
 
