@@ -454,7 +454,6 @@ const FileEditor = ({
       multiple={true}
       maxSize={2 * 1024 * 1024 * 1024}
       style={{
-        height: '100vh',
         border: 'none',
         borderRadius: 0,
         backgroundColor: 'transparent'
@@ -462,7 +461,7 @@ const FileEditor = ({
       activateOnClick={false}
       activateOnDrag={true}
     >
-      <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
+      <Box pos="relative" style={{ overflow: 'auto' }}>
         <LoadingOverlay visible={false} />
 
         <Box p="md" pt="xl">
@@ -563,7 +562,7 @@ const FileEditor = ({
             color="blue"
             mt="md"
             onClose={() => setStatus(null)}
-            style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 10001 }}
+            style={{ position: 'fixed', bottom: 40, right: 80, zIndex: 10001 }}
           >
             {status}
           </Notification>

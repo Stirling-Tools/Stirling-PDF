@@ -439,7 +439,7 @@ const Viewer = ({
   }, [pageImages]);
 
   return (
-    <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon
@@ -558,7 +558,7 @@ const Viewer = ({
               radius="xl xl 0 0"
               shadow="sm"
               p={12}
-              pb={24}
+              pb={12}
               style={{
                 display: "flex",
                 alignItems: "center",
