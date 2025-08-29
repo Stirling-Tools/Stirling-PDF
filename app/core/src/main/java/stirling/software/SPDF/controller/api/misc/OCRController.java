@@ -49,6 +49,11 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class OCRController {
 
+    // Size limits to prevent OutOfMemoryError
+    private static final int MAX_IMAGE_WIDTH = 8192;
+    private static final int MAX_IMAGE_HEIGHT = 8192;
+    private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
+
     private final ApplicationProperties applicationProperties;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -334,6 +339,7 @@ public class OCRController {
 
             try (PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
+                pdfRenderer.setSubsamplingAllowed(true);
                 int pageCount = document.getNumberOfPages();
 
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
@@ -358,8 +364,63 @@ public class OCRController {
                             new File(tempOutputDir, String.format("page_%d.pdf", pageNum));
 
                     if (shouldOcr) {
+                        // Calculate what the image dimensions would be at 300 DPI
+                        int projectedWidth =
+                                (int) Math.ceil(page.getMediaBox().getWidth() * 300 / 72.0);
+                        int projectedHeight =
+                                (int) Math.ceil(page.getMediaBox().getHeight() * 300 / 72.0);
+                        long projectedPixels = (long) projectedWidth * projectedHeight;
+
+                        // Skip pages that would exceed memory limits - save original page without
+                        // OCR
+                        if (projectedWidth > MAX_IMAGE_WIDTH
+                                || projectedHeight > MAX_IMAGE_HEIGHT
+                                || projectedPixels > MAX_IMAGE_PIXELS) {
+
+                            log.warn(
+                                    "Skipping OCR for page {} - would exceed memory limits ({}x{} pixels)",
+                                    pageNum + 1,
+                                    projectedWidth,
+                                    projectedHeight);
+
+                            try (PDDocument pageDoc = new PDDocument()) {
+                                pageDoc.addPage(page);
+                                pageDoc.save(pageOutputPath);
+                                merger.addSource(pageOutputPath);
+                            }
+                            continue;
+                        }
+
                         // Convert page to image
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 300);
+                        BufferedImage image;
+                        try {
+                            image = pdfRenderer.renderImageWithDPI(pageNum, 300);
+                        } catch (IllegalArgumentException e) {
+                            if (e.getMessage() != null
+                                    && e.getMessage().contains("Maximum size of image exceeded")) {
+                                log.warn(
+                                        "Skipping OCR for page {} - image size exceeds PDFBox limits",
+                                        pageNum + 1);
+
+                                try (PDDocument pageDoc = new PDDocument()) {
+                                    pageDoc.addPage(page);
+                                    pageDoc.save(pageOutputPath);
+                                    merger.addSource(pageOutputPath);
+                                }
+                                continue;
+                            }
+                            throw e;
+                        } catch (OutOfMemoryError e) {
+                            log.warn("Skipping OCR for page {} - out of memory", pageNum + 1);
+
+                            try (PDDocument pageDoc = new PDDocument()) {
+                                pageDoc.addPage(page);
+                                pageDoc.save(pageOutputPath);
+                                merger.addSource(pageOutputPath);
+                            }
+                            continue;
+                        }
+
                         File imagePath =
                                 new File(tempImagesDir, String.format("page_%d.png", pageNum));
                         ImageIO.write(image, "png", imagePath);

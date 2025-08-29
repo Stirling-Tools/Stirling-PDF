@@ -14,14 +14,25 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ApplicationContextProvider;
+
+@Slf4j
 public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
+
+    // Size limits to prevent OutOfMemoryError
+    private static final int MAX_IMAGE_WIDTH = 8192;
+    private static final int MAX_IMAGE_HEIGHT = 8192;
+    private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
     public InvertFullColorStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
         super(file, replaceAndInvert);
@@ -38,56 +49,113 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
             // Transfer the content of the multipart file to the file
             getFileInput().transferTo(file);
 
-            // Load the uploaded PDF
-            PDDocument document = Loader.loadPDF(file);
-
-            // Render each page and invert colors
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            for (int page = 0; page < document.getNumberOfPages(); page++) {
-                BufferedImage image =
-                        pdfRenderer.renderImageWithDPI(page, 300); // Render page at 300 DPI
-
-                // Invert the colors
-                invertImageColors(image);
-
-                // Create a new PDPage from the inverted image
-                PDPage pdPage = document.getPage(page);
-                File tempImageFile = null;
-                try {
-                    tempImageFile = convertToBufferedImageTpFile(image);
-                    PDImageXObject pdImage =
-                            PDImageXObject.createFromFileByContent(tempImageFile, document);
-
-                    PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    document,
-                                    pdPage,
-                                    PDPageContentStream.AppendMode.OVERWRITE,
-                                    true);
-                    contentStream.drawImage(
-                            pdImage,
-                            0,
-                            0,
-                            pdPage.getMediaBox().getWidth(),
-                            pdPage.getMediaBox().getHeight());
-                    contentStream.close();
-                } finally {
-                    if (tempImageFile != null && tempImageFile.exists()) {
-                        Files.delete(tempImageFile.toPath());
-                    }
-                }
+            // Get CustomPDFDocumentFactory from application context
+            // Fall back to direct loading if bean is not available (e.g., in tests)
+            CustomPDFDocumentFactory pdfDocumentFactory = null;
+            try {
+                pdfDocumentFactory =
+                        ApplicationContextProvider.getBean(CustomPDFDocumentFactory.class);
+            } catch (Exception e) {
+                log.warn("CustomPDFDocumentFactory not available, using direct PDF loading");
             }
 
-            // Save the modified PDF to a ByteArrayOutputStream
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            document.save(byteArrayOutputStream);
-            document.close();
+            // Load the uploaded PDF using the factory for better memory management
+            PDDocument document = null;
+            try {
+                if (pdfDocumentFactory != null) {
+                    document = pdfDocumentFactory.load(file);
+                } else {
+                    document = Loader.loadPDF(file);
+                }
 
-            // Prepare the modified PDF for download
-            ByteArrayInputStream inputStream =
-                    new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-            InputStreamResource resource = new InputStreamResource(inputStream);
-            return resource;
+                // Render each page and invert colors
+                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                pdfRenderer.setSubsamplingAllowed(true);
+
+                for (int page = 0; page < document.getNumberOfPages(); page++) {
+                    PDPage pdPage = document.getPage(page);
+                    PDRectangle pageSize = pdPage.getMediaBox();
+
+                    // Calculate what the image dimensions would be at 300 DPI
+                    int projectedWidth = (int) Math.ceil(pageSize.getWidth() * 300 / 72.0);
+                    int projectedHeight = (int) Math.ceil(pageSize.getHeight() * 300 / 72.0);
+                    long projectedPixels = (long) projectedWidth * projectedHeight;
+
+                    // Skip pages that would exceed memory limits
+                    if (projectedWidth > MAX_IMAGE_WIDTH
+                            || projectedHeight > MAX_IMAGE_HEIGHT
+                            || projectedPixels > MAX_IMAGE_PIXELS) {
+
+                        log.warn(
+                                "Skipping page {} - would exceed memory limits ({}x{} pixels)",
+                                page + 1,
+                                projectedWidth,
+                                projectedHeight);
+                        continue;
+                    }
+
+                    BufferedImage image;
+                    try {
+                        image = pdfRenderer.renderImageWithDPI(page, 300); // Render page at 300 DPI
+                    } catch (IllegalArgumentException e) {
+                        if (e.getMessage() != null
+                                && e.getMessage().contains("Maximum size of image exceeded")) {
+                            log.warn(
+                                    "Skipping page {} - image size exceeds PDFBox limits",
+                                    page + 1);
+                            continue;
+                        }
+                        throw e;
+                    } catch (OutOfMemoryError e) {
+                        log.warn("Skipping page {} - out of memory", page + 1);
+                        continue;
+                    }
+
+                    // Invert the colors
+                    invertImageColors(image);
+
+                    // Create a new PDPage from the inverted image
+                    PDPage currentPage = document.getPage(page);
+                    File tempImageFile = null;
+                    try {
+                        tempImageFile = convertToBufferedImageTpFile(image);
+                        PDImageXObject pdImage =
+                                PDImageXObject.createFromFileByContent(tempImageFile, document);
+
+                        PDPageContentStream contentStream =
+                                new PDPageContentStream(
+                                        document,
+                                        currentPage,
+                                        PDPageContentStream.AppendMode.OVERWRITE,
+                                        true);
+                        contentStream.drawImage(
+                                pdImage,
+                                0,
+                                0,
+                                currentPage.getMediaBox().getWidth(),
+                                currentPage.getMediaBox().getHeight());
+                        contentStream.close();
+                    } finally {
+                        if (tempImageFile != null && tempImageFile.exists()) {
+                            Files.delete(tempImageFile.toPath());
+                        }
+                    }
+                }
+
+                // Save the modified PDF to a ByteArrayOutputStream
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                document.save(byteArrayOutputStream);
+
+                // Prepare the modified PDF for download
+                ByteArrayInputStream inputStream =
+                        new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+                InputStreamResource resource = new InputStreamResource(inputStream);
+                return resource;
+            } finally {
+                if (document != null) {
+                    document.close();
+                }
+            }
         } finally {
             if (file != null && file.exists()) {
                 Files.delete(file.toPath());

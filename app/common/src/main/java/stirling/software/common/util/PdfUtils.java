@@ -255,6 +255,20 @@ public class PdfUtils {
                         totalHeight += dimension.height();
                     }
 
+                    // Check if combined image would exceed memory limits
+                    final long MAX_COMBINED_PIXELS = 67_108_864; // 8192x8192 max combined
+                    long totalPixels = (long) maxWidth * totalHeight;
+
+                    if (totalPixels > MAX_COMBINED_PIXELS) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.combinedImageTooLarge",
+                                "Combined image would be too large ({0}x{1} = {2} pixels). Maximum allowed is {3} pixels. Consider using separate images instead of single combined image.",
+                                maxWidth,
+                                totalHeight,
+                                totalPixels,
+                                MAX_COMBINED_PIXELS);
+                    }
+
                     // Create a new BufferedImage to store the combined images
                     BufferedImage combined =
                             prepareImageForPdfToImage(maxWidth, totalHeight, imageType);
@@ -350,24 +364,66 @@ public class PdfUtils {
      * @throws IOException if conversion fails
      */
     public static PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
+        // Size limits to prevent OutOfMemoryError
+        final int MAX_IMAGE_WIDTH = 8192;
+        final int MAX_IMAGE_HEIGHT = 8192;
+        final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
+
         PDDocument imageDocument = new PDDocument();
         PDFRenderer pdfRenderer = new PDFRenderer(document);
         pdfRenderer.setSubsamplingAllowed(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
+            PDPage originalPage = document.getPage(page);
+
+            // Calculate what the image dimensions would be at 300 DPI
+            int projectedWidth =
+                    (int) Math.ceil(originalPage.getMediaBox().getWidth() * 300 / 72.0);
+            int projectedHeight =
+                    (int) Math.ceil(originalPage.getMediaBox().getHeight() * 300 / 72.0);
+            long projectedPixels = (long) projectedWidth * projectedHeight;
+
+            // Skip pages that would exceed memory limits - add original page without conversion
+            if (projectedWidth > MAX_IMAGE_WIDTH
+                    || projectedHeight > MAX_IMAGE_HEIGHT
+                    || projectedPixels > MAX_IMAGE_PIXELS) {
+
+                log.warn(
+                        "Skipping page {} - would exceed memory limits ({}x{} pixels)",
+                        page + 1,
+                        projectedWidth,
+                        projectedHeight);
+
+                float width = originalPage.getMediaBox().getWidth();
+                float height = originalPage.getMediaBox().getHeight();
+                PDPage newPage = new PDPage(new PDRectangle(width, height));
+                imageDocument.addPage(newPage);
+                continue;
+            }
+
             BufferedImage bim;
             try {
                 bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
             } catch (IllegalArgumentException e) {
                 if (e.getMessage() != null
                         && e.getMessage().contains("Maximum size of image exceeded")) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.pageTooBigFor300Dpi",
-                            "PDF page {0} is too large to render at 300 DPI. The resulting image would exceed Java's maximum array size. Please use a lower DPI value for PDF-to-image conversion.",
-                            page + 1);
+                    log.warn("Skipping page {} - image size exceeds PDFBox limits", page + 1);
+
+                    float width = originalPage.getMediaBox().getWidth();
+                    float height = originalPage.getMediaBox().getHeight();
+                    PDPage newPage = new PDPage(new PDRectangle(width, height));
+                    imageDocument.addPage(newPage);
+                    continue;
                 }
                 throw e;
+            } catch (OutOfMemoryError e) {
+                log.warn("Skipping page {} - out of memory", page + 1);
+
+                float width = originalPage.getMediaBox().getWidth();
+                float height = originalPage.getMediaBox().getHeight();
+                PDPage newPage = new PDPage(new PDRectangle(width, height));
+                imageDocument.addPage(newPage);
+                continue;
             }
-            PDPage originalPage = document.getPage(page);
 
             float width = originalPage.getMediaBox().getWidth();
             float height = originalPage.getMediaBox().getHeight();

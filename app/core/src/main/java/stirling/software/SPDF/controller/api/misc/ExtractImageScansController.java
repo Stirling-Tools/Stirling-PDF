@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +37,6 @@ import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -47,6 +47,11 @@ import stirling.software.common.util.WebResponseUtils;
 public class ExtractImageScansController {
 
     private static final String REPLACEFIRST = "[.][^.]+$";
+
+    // Size limits to prevent OutOfMemoryError
+    private static final int MAX_IMAGE_WIDTH = 8192;
+    private static final int MAX_IMAGE_HEIGHT = 8192;
+    private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
@@ -92,16 +97,55 @@ public class ExtractImageScansController {
 
                     // Create images of all pages
                     for (int i = 0; i < pageCount; i++) {
+                        PDPage page = document.getPage(i);
+
+                        // Calculate what the image dimensions would be at 300 DPI
+                        int projectedWidth =
+                                (int) Math.ceil(page.getMediaBox().getWidth() * 300 / 72.0);
+                        int projectedHeight =
+                                (int) Math.ceil(page.getMediaBox().getHeight() * 300 / 72.0);
+                        long projectedPixels = (long) projectedWidth * projectedHeight;
+
+                        // Skip pages that would exceed memory limits
+                        if (projectedWidth > MAX_IMAGE_WIDTH
+                                || projectedHeight > MAX_IMAGE_HEIGHT
+                                || projectedPixels > MAX_IMAGE_PIXELS) {
+
+                            log.warn(
+                                    "Skipping page {} - would exceed memory limits ({}x{} pixels)",
+                                    i + 1,
+                                    projectedWidth,
+                                    projectedHeight);
+                            continue;
+                        }
+
                         // Create temp file to save the image
                         Path tempFile = Files.createTempFile("image_", ".png");
 
                         // Render image and save as temp file
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300);
-                        ImageIO.write(image, "png", tempFile.toFile());
+                        try {
+                            BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300);
+                            ImageIO.write(image, "png", tempFile.toFile());
 
-                        // Add temp file path to images list
-                        images.add(tempFile.toString());
-                        tempImageFiles.add(tempFile);
+                            // Add temp file path to images list
+                            images.add(tempFile.toString());
+                            tempImageFiles.add(tempFile);
+                        } catch (IllegalArgumentException e) {
+                            if (e.getMessage() != null
+                                    && e.getMessage().contains("Maximum size of image exceeded")) {
+                                log.warn(
+                                        "Skipping page {} - image size exceeds PDFBox limits",
+                                        i + 1);
+                                Files.deleteIfExists(tempFile);
+                                continue;
+                            }
+                            Files.deleteIfExists(tempFile);
+                            throw e;
+                        } catch (OutOfMemoryError e) {
+                            log.warn("Skipping page {} - out of memory", i + 1);
+                            Files.deleteIfExists(tempFile);
+                            continue;
+                        }
                     }
                 }
             } else {
@@ -137,9 +181,8 @@ public class ExtractImageScansController {
                                         String.valueOf(request.getBorderSize())));
 
                 // Run CLI command
-                ProcessExecutorResult returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                                .runCommandWithOutputHandling(command);
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+                        .runCommandWithOutputHandling(command);
 
                 // Read the output photos in temp directory
                 List<Path> tempOutputFiles = Files.list(tempDir).sorted().toList();

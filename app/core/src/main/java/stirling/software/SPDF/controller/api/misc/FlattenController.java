@@ -36,6 +36,11 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class FlattenController {
 
+    // Size limits to prevent OutOfMemoryError
+    private static final int MAX_IMAGE_WIDTH = 8192;
+    private static final int MAX_IMAGE_HEIGHT = 8192;
+    private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @PostMapping(consumes = "multipart/form-data", value = "/flatten")
@@ -61,14 +66,42 @@ public class FlattenController {
             // flatten whole page aka convert each page to image and readd it (making text
             // unselectable)
             PDFRenderer pdfRenderer = new PDFRenderer(document);
+            pdfRenderer.setSubsamplingAllowed(true);
             PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
             int numPages = document.getNumberOfPages();
             for (int i = 0; i < numPages; i++) {
+                PDPage originalPage = document.getPage(i);
+
+                // Calculate what the image dimensions would be at 300 DPI
+                int projectedWidth =
+                        (int) Math.ceil(originalPage.getMediaBox().getWidth() * 300 / 72.0);
+                int projectedHeight =
+                        (int) Math.ceil(originalPage.getMediaBox().getHeight() * 300 / 72.0);
+                long projectedPixels = (long) projectedWidth * projectedHeight;
+
+                // Skip pages that would exceed memory limits
+                if (projectedWidth > MAX_IMAGE_WIDTH
+                        || projectedHeight > MAX_IMAGE_HEIGHT
+                        || projectedPixels > MAX_IMAGE_PIXELS) {
+
+                    log.warn(
+                            "Skipping page {} - would exceed memory limits ({}x{} pixels)",
+                            i + 1,
+                            projectedWidth,
+                            projectedHeight);
+
+                    // Add original page without flattening
+                    PDPage page = new PDPage();
+                    page.setMediaBox(originalPage.getMediaBox());
+                    newDocument.addPage(page);
+                    continue;
+                }
+
                 try {
                     BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300, ImageType.RGB);
                     PDPage page = new PDPage();
-                    page.setMediaBox(document.getPage(i).getMediaBox());
+                    page.setMediaBox(originalPage.getMediaBox());
                     newDocument.addPage(page);
                     try (PDPageContentStream contentStream =
                             new PDPageContentStream(newDocument, page)) {
@@ -78,8 +111,33 @@ public class FlattenController {
 
                         contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
                     }
+                } catch (IllegalArgumentException e) {
+                    if (e.getMessage() != null
+                            && e.getMessage().contains("Maximum size of image exceeded")) {
+                        log.warn("Skipping page {} - image size exceeds PDFBox limits", i + 1);
+
+                        // Add original page without flattening
+                        PDPage page = new PDPage();
+                        page.setMediaBox(originalPage.getMediaBox());
+                        newDocument.addPage(page);
+                        continue;
+                    }
+                    throw e;
+                } catch (OutOfMemoryError e) {
+                    log.warn("Skipping page {} - out of memory", i + 1);
+
+                    // Add original page without flattening
+                    PDPage page = new PDPage();
+                    page.setMediaBox(originalPage.getMediaBox());
+                    newDocument.addPage(page);
+                    continue;
                 } catch (IOException e) {
-                    log.error("exception", e);
+                    log.error("Error processing page {}", i + 1, e);
+
+                    // Add original page without flattening
+                    PDPage page = new PDPage();
+                    page.setMediaBox(originalPage.getMediaBox());
+                    newDocument.addPage(page);
                 }
             }
             return WebResponseUtils.pdfDocToWebResponse(
