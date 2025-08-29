@@ -318,7 +318,7 @@ export const mantineTheme = createTheme({
         },
         control: {
           color: 'var(--text-secondary)',
-          '[data-active]': {
+          '[dataActive]': {
             backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
             boxShadow: 'var(--shadow-sm)',
