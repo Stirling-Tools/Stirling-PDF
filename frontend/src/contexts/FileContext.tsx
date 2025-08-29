@@ -73,8 +73,16 @@ function FileContextInner({
   }, []);
 
   // File operations using unified addFiles helper with persistence
-  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string }): Promise<File[]> => {
+  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<File[]> => {
     const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
+
+    // Auto-select the newly added files if requested
+    if (options?.selectFiles && addedFilesWithIds.length > 0) {
+      const currentSelection = stateRef.current.ui.selectedFileIds;
+      const newFileIds = addedFilesWithIds.map(({ id }) => id);
+      dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
+    }
+
     // Persist to IndexedDB if enabled
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
       await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
@@ -89,30 +97,22 @@ function FileContextInner({
     return addedFilesWithIds.map(({ file }) => file);
   }, [indexedDB, enablePersistence]);
 
-  // Version that returns files with their IDs for auto-selection use cases
-  const addRawFilesWithIds = useCallback(async (files: File[], options?: { insertAfterPageId?: string }): Promise<Array<{ file: File; id: FileId }>> => {
-    const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
-    // Persist to IndexedDB if enabled
-    if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
-      await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
-        try {
-          await indexedDB.saveFile(file, id, thumbnail);
-        } catch (error) {
-          console.error('Failed to persist file to IndexedDB:', file.name, error);
-        }
-      }));
-    }
-
-    return addedFilesWithIds.map(({ file, id }) => ({ file, id }));
-  }, [indexedDB, enablePersistence]);
 
   const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<File[]> => {
     const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch, lifecycleManager);
     return result.map(({ file }) => file);
   }, []);
 
-  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>): Promise<File[]> => {
+  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<File[]> => {
     const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
+
+    // Auto-select the newly added files if requested
+    if (options?.selectFiles && result.length > 0) {
+      const currentSelection = stateRef.current.ui.selectedFileIds;
+      const newFileIds = result.map(({ id }) => id);
+      dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
+    }
+
     return result.map(({ file }) => file);
   }, []);
 
@@ -158,7 +158,6 @@ function FileContextInner({
   const actions = useMemo<FileContextActions>(() => ({
     ...baseActions,
     addFiles: addRawFiles,
-    addFilesWithIds: addRawFilesWithIds,
     addProcessedFiles,
     addStoredFiles,
     removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
@@ -214,7 +213,6 @@ function FileContextInner({
   }), [
     baseActions,
     addRawFiles,
-    addRawFilesWithIds,
     addProcessedFiles,
     addStoredFiles,
     lifecycleManager,

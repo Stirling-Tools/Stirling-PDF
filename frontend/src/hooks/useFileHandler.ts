@@ -4,24 +4,16 @@ import { FileMetadata } from '../types/file';
 import { FileId } from '../types/file';
 
 export const useFileHandler = () => {
-  const { state } = useFileState(); // Still needed for addStoredFiles
+  const { state } = useFileState();
   const { actions } = useFileActions();
 
   const addToActiveFiles = useCallback(async (file: File) => {
-    // Add files and auto-select them (adding to existing selection)
-    const addedFilesWithIds = await actions.addFilesWithIds([file]);
-    const newFileIds = addedFilesWithIds.map(({ id }) => id);
-    const currentSelection = state.ui.selectedFileIds;
-    actions.setSelectedFiles([...currentSelection, ...newFileIds]);
-  }, [actions.addFilesWithIds, actions.setSelectedFiles, state.ui.selectedFileIds]);
+    await actions.addFiles([file], { selectFiles: true });
+  }, [actions.addFiles]);
 
   const addMultipleFiles = useCallback(async (files: File[]) => {
-    // Add files and auto-select them (adding to existing selection)
-    const addedFilesWithIds = await actions.addFilesWithIds(files);
-    const newFileIds = addedFilesWithIds.map(({ id }) => id);
-    const currentSelection = state.ui.selectedFileIds;
-    actions.setSelectedFiles([...currentSelection, ...newFileIds]);
-  }, [actions.addFilesWithIds, actions.setSelectedFiles, state.ui.selectedFileIds]);
+    await actions.addFiles(files, { selectFiles: true });
+  }, [actions.addFiles]);
 
   // Add stored files preserving their original IDs to prevent session duplicates
   const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => {
@@ -31,15 +23,11 @@ export const useFileHandler = () => {
     });
 
     if (newFiles.length > 0) {
-      await actions.addStoredFiles(newFiles);
-      // Always auto-select newly added stored files (adding to existing selection)
-      const fileIds = newFiles.map(({ originalId }) => originalId);
-      const currentSelection = state.ui.selectedFileIds;
-      actions.setSelectedFiles([...currentSelection, ...fileIds]);
+      await actions.addStoredFiles(newFiles, { selectFiles: true });
     }
 
     console.log(`📁 Added ${newFiles.length} stored files (${filesWithMetadata.length - newFiles.length} skipped as duplicates)`);
-  }, [state.files.byId, state.ui.selectedFileIds, actions.addStoredFiles, actions.setSelectedFiles]);
+  }, [state.files.byId, actions.addStoredFiles]);
 
   return {
     addToActiveFiles,

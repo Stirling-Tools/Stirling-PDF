@@ -214,10 +214,9 @@ export type FileContextAction =
 
 export interface FileContextActions {
   // File management - lightweight actions only
-  addFiles: (files: File[], options?: { insertAfterPageId?: string }) => Promise<File[]>;
-  addFilesWithIds: (files: File[], options?: { insertAfterPageId?: string }) => Promise<Array<{ file: File; id: FileId }>>;
+  addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<File[]>;
   addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<File[]>;
-  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => Promise<File[]>;
+  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>, options?: { selectFiles?: boolean }) => Promise<File[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
