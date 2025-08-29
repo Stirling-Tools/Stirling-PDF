@@ -683,11 +683,11 @@ const PageEditor = ({
   const displayedPages = displayDocument?.pages || [];
 
   return (
-    <Box pos="relative" h="100vh" pt={40} style={{ overflow: 'auto' }} data-scrolling-container="true">
+    <Box pos="relative" h='100%' pt={40} style={{ overflow: 'auto' }} data-scrolling-container="true">
       <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
 
       {!mergedPdfDocument && !globalProcessing && activeFileIds.length === 0 && (
-        <Center h="100vh">
+        <Center h='100%'>
           <Stack align="center" gap="md">
             <Text size="lg" c="dimmed">📄</Text>
             <Text c="dimmed">No PDF files loaded</Text>

@@ -1,4 +1,4 @@
-import { Flex, Text } from '@mantine/core';
+import { Flex } from '@mantine/core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCookieConsent } from '../../hooks/useCookieConsent';
@@ -16,7 +16,6 @@ export default function Footer({
   privacyPolicy = '/privacy',
   termsAndConditions = '/terms',
   accessibilityStatement = 'accessibility',
-  cookiePolicy = 'cookie',
   analyticsEnabled = false
 }: FooterProps) {
   const { t } = useTranslation();
@@ -24,36 +23,19 @@ export default function Footer({
 
   return (
     <div style={{
+      height: 'var(--footer-height)',
       zIndex: 999999,
       backgroundColor: 'var(--mantine-color-gray-1)',
-      borderTop: '1px solid var(--mantine-color-gray-3)',
-      paddingBottom: '0.5rem',
+      borderTop: '1px solid var(--mantine-color-gray-2)',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
     }}>
-        <Flex pt='sm' gap="md"
+        <Flex gap="md"
           justify="center"
           align="center"
           direction="row"
-          wrap="wrap"
-          px="lg"
           style={{ fontSize: '0.75rem' }}>
-          <a
-            className="footer-link px-3"
-            id="licenses"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="/licenses"
-          >
-            {t('licenses.nav', 'Licenses')}
-          </a>
-          <a
-            className="footer-link px-3"
-            id="releases"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="/releases"
-          >
-            {t('releases.footer', 'Releases')}
-          </a>
           <a
             className="footer-link px-3"
             id="survey"
@@ -103,7 +85,6 @@ export default function Footer({
             </button>
           )}
         </Flex>
-
     </div>
   );
 }

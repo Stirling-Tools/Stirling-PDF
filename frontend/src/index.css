@@ -1,5 +1,11 @@
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -12,9 +18,14 @@ code {
     monospace;
 }
 
+/* CSS Variables */
+:root {
+  --footer-height: 2rem;
+}
+
 /* Footer link styling - make buttons and links look identical */
 .footer-link {
-  color: var(--mantine-color-blue-6);
+  color: var(--mantine-color-gray-6);
   text-decoration: none;
   transition: color 0.2s ease;
   border: none;

@@ -39,12 +39,12 @@ export default function HomePage() {
   // Note: File selection limits are now handled directly by individual tools
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen overflow-hidden">
       <Group
         align="flex-start"
         gap={0}
+        h="100%"
         className="flex-nowrap flex"
-        style={{ minHeight: '100vh' }}
       >
         <QuickAccessBar
           ref={quickAccessRef} />
@@ -53,7 +53,6 @@ export default function HomePage() {
         <RightRail />
         <FileManager selectedTool={selectedTool as any /* FIX ME */} />
       </Group>
-      <Footer analyticsEnabled />
     </div>
   );
 }
