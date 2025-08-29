@@ -517,7 +517,7 @@ const FileEditor = ({
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '1.5rem',
+              rowGap: '1.5rem',
               padding: '1rem',
               pointerEvents: 'auto'
             }}
