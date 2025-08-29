@@ -138,8 +138,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, []);
 
   const setReaderMode = useCallback((mode: boolean) => {
+    if (mode) {
+      actions.setWorkbench('viewer');
+      actions.setSelectedTool('read');
+    }
     dispatch({ type: 'SET_READER_MODE', payload: mode });
-  }, []);
+  }, [actions]);
 
   const setPreviewFile = useCallback((file: File | null) => {
     dispatch({ type: 'SET_PREVIEW_FILE', payload: file });
