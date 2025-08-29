@@ -1,10 +1,15 @@
+import { FileId } from './file';
+
 export interface PDFPage {
   id: string;
   pageNumber: number;
+  originalPageNumber: number;
   thumbnail: string | null;
   rotation: number;
   selected: boolean;
-  splitBefore?: boolean;
+  splitAfter?: boolean;
+  isBlankPage?: boolean;
+  originalFileId?: FileId;
 }
 
 export interface PDFDocument {
@@ -47,9 +52,20 @@ export interface PageEditorFunctions {
   handleRotate: (direction: 'left' | 'right') => void;
   handleDelete: () => void;
   handleSplit: () => void;
+  handleSplitAll: () => void;
+  handlePageBreak: () => void;
+  handlePageBreakAll: () => void;
+  handleSelectAll: () => void;
+  handleDeselectAll: () => void;
+  handleSetSelectedPages: (pageNumbers: number[]) => void;
+  showExportPreview: (selectedOnly: boolean) => void;
   onExportSelected: () => void;
   onExportAll: () => void;
+  applyChanges: () => void;
   exportLoading: boolean;
   selectionMode: boolean;
-  selectedPages: number[];
+  selectedPageIds: string[];
+  displayDocument?: PDFDocument;
+  splitPositions: Set<number>;
+  totalPages: number;
 }

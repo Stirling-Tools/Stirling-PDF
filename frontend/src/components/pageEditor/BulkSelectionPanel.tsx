@@ -1,21 +1,23 @@
 import React from 'react';
-import { Paper, Group, TextInput, Button, Text } from '@mantine/core';
+import { Group, TextInput, Button, Text } from '@mantine/core';
 
 interface BulkSelectionPanelProps {
   csvInput: string;
   setCsvInput: (value: string) => void;
-  selectedPages: number[];
+  selectedPageIds: string[];
+  displayDocument?: { pages: { id: string; pageNumber: number }[] };
   onUpdatePagesFromCSV: () => void;
 }
 
 const BulkSelectionPanel = ({
   csvInput,
   setCsvInput,
-  selectedPages,
+  selectedPageIds,
+  displayDocument,
   onUpdatePagesFromCSV,
 }: BulkSelectionPanelProps) => {
   return (
-    <Paper p="md" mb="md" withBorder>
+    <>
       <Group>
         <TextInput
           value={csvInput}
@@ -30,12 +32,15 @@ const BulkSelectionPanel = ({
           Apply
         </Button>
       </Group>
-      {selectedPages.length > 0 && (
+      {selectedPageIds.length > 0 && (
         <Text size="sm" c="dimmed" mt="sm">
-          Selected: {selectedPages.length} pages
+          Selected: {selectedPageIds.length} pages ({displayDocument ? selectedPageIds.map(id => {
+            const page = displayDocument.pages.find(p => p.id === id);
+            return page?.pageNumber || 0;
+          }).filter(n => n > 0).join(', ') : ''})
         </Text>
       )}
-    </Paper>
+      </>
   );
 };
 

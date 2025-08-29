@@ -4,9 +4,13 @@ import { useChangePermissionsOperation } from './useChangePermissionsOperation';
 import type { ChangePermissionsParameters } from './useChangePermissionsParameters';
 
 // Mock the useToolOperation hook
-vi.mock('../shared/useToolOperation', () => ({
-  useToolOperation: vi.fn()
-}));
+vi.mock('../shared/useToolOperation', async () => {
+  const actual = await vi.importActual('../shared/useToolOperation');  // Need to keep ToolType etc.
+  return {
+    ...actual,
+    useToolOperation: vi.fn()
+  };
+});
 
 // Mock the translation hook
 const mockT = vi.fn((key: string) => `translated-${key}`);
@@ -20,12 +24,12 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { ToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
+import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '../shared/useToolOperation';
 
 describe('useChangePermissionsOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
 
-  const getToolConfig = (): ToolOperationConfig<ChangePermissionsParameters> => mockUseToolOperation.mock.calls[0][0];
+  const getToolConfig = () => mockUseToolOperation.mock.calls[0][0] as SingleFileToolOperationConfig<ChangePermissionsParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -86,7 +90,7 @@ describe('useChangePermissionsOperation', () => {
     const buildFormData = callArgs.buildFormData;
 
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-    const formData = buildFormData(testParameters, testFile as any /* FIX ME */);
+    const formData = buildFormData(testParameters, testFile);
 
     // Verify the form data contains the file
     expect(formData.get('fileInput')).toBe(testFile);
@@ -106,10 +110,10 @@ describe('useChangePermissionsOperation', () => {
   });
 
   test.each([
-    { property: 'multiFileEndpoint' as const, expectedValue: false },
+    { property: 'toolType' as const, expectedValue: ToolType.singleFile },
     { property: 'endpoint' as const, expectedValue: '/api/v1/security/add-password' },
     { property: 'filePrefix' as const, expectedValue: 'permissions_' },
-    { property: 'operationType' as const, expectedValue: 'changePermissions' }
+    { property: 'operationType' as const, expectedValue: 'change-permissions' }
   ])('should configure $property correctly', ({ property, expectedValue }) => {
     renderHook(() => useChangePermissionsOperation());
 

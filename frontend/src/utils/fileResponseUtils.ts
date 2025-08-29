@@ -16,7 +16,6 @@ export const getFilenameFromHeaders = (contentDisposition: string = ''): string 
       return decodeURIComponent(filename);
     } catch (error) {
       // If decoding fails, return the original filename
-      console.warn('Failed to decode filename:', filename, error);
       return filename;
     }
   }
@@ -37,9 +36,9 @@ export const createFileFromApiResponse = (
 ): File => {
   const contentType = headers?.['content-type'] || 'application/octet-stream';
   const contentDisposition = headers?.['content-disposition'] || '';
-  
+
   const filename = getFilenameFromHeaders(contentDisposition) || fallbackFilename;
   const blob = new Blob([responseData], { type: contentType });
-  
+
   return new File([blob], filename, { type: contentType });
 };

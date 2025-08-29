@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useMemo, useRef } from 'react';
 import { Text, Stack, Box, Flex, Divider } from '@mantine/core';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import LocalIcon from '../../shared/LocalIcon';
 import { Tooltip } from '../../shared/Tooltip';
 import { TooltipTip } from '../../../types/tips';
 import { createFilesToolStep, FilesToolStepProps } from './FilesToolStep';
@@ -25,6 +24,7 @@ export interface ToolStepProps {
   _stepNumber?: number; // Internal prop set by ToolStepContainer
   _excludeFromCount?: boolean; // Internal prop to exclude from visible count calculation
   _noPadding?: boolean; // Internal prop to exclude from default left padding
+  alwaysShowTooltip?: boolean; // Force tooltip to show even when collapsed
   tooltip?: {
     content?: React.ReactNode;
     tips?: TooltipTip[];
@@ -38,9 +38,10 @@ export interface ToolStepProps {
 const renderTooltipTitle = (
   title: string,
   tooltip: ToolStepProps['tooltip'],
-  isCollapsed: boolean
+  isCollapsed: boolean,
+  alwaysShowTooltip: boolean = false
 ) => {
-  if (tooltip && !isCollapsed) {
+  if (tooltip && (!isCollapsed || alwaysShowTooltip)) {
     return (
       <Tooltip
         content={tooltip.content}
@@ -49,19 +50,17 @@ const renderTooltipTitle = (
         sidebarTooltip={true}
       >
         <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
-          <Text fw={500} size="lg">
+          <Text fw={400} size="sm">
             {title}
           </Text>
-          <span className="material-symbols-rounded" style={{ fontSize: '1.2rem', color: 'var(--icon-files-color)' }}>
-            gpp_maybe
-          </span>
+          <LocalIcon icon="gpp-maybe-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />
         </Flex>
       </Tooltip>
     );
   }
 
   return (
-    <Text fw={500} size="lg">
+    <Text fw={500} size="sm">
       {title}
     </Text>
   );
@@ -77,6 +76,7 @@ const ToolStep = ({
   showNumber,
   _stepNumber,
   _noPadding,
+  alwaysShowTooltip = false,
   tooltip
 }: ToolStepProps) => {
   if (!isVisible) return null;
@@ -96,7 +96,7 @@ const ToolStep = ({
     <div>
       <div
         style={{
-          padding: '1rem',
+          padding: '0.5rem',
           opacity: isCollapsed ? 0.8 : 1,
           color: isCollapsed ? 'var(--mantine-color-dimmed)' : 'inherit',
           transition: 'opacity 0.2s ease, color 0.2s ease'
@@ -114,22 +114,20 @@ const ToolStep = ({
       >
         <Flex align="center" gap="sm">
           {shouldShowNumber && (
-            <Text fw={500} size="lg" c="dimmed">
+            <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
               {stepNumber}
             </Text>
           )}
-          {renderTooltipTitle(title, tooltip, isCollapsed)}
+          {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
         </Flex>
 
         {isCollapsed ? (
-          <ChevronRightIcon style={{
-            fontSize: '1.2rem',
+          <LocalIcon icon="chevron-right-rounded" width="1.2rem" height="1.2rem" style={{
             color: 'var(--mantine-color-dimmed)',
             opacity: onCollapsedClick ? 1 : 0.5
           }} />
         ) : (
-          <ExpandMoreIcon style={{
-            fontSize: '1.2rem',
+          <LocalIcon icon="expand-more-rounded" width="1.2rem" height="1.2rem" style={{
             color: 'var(--mantine-color-dimmed)',
             opacity: onCollapsedClick ? 1 : 0.5
           }} />
@@ -137,7 +135,7 @@ const ToolStep = ({
       </Flex>
 
       {!isCollapsed && (
-        <Stack gap="md" pl={_noPadding ? 0 : "md"}>
+        <Stack gap="sm" pl={_noPadding ? 0 : "sm"}>
           {helpText && (
             <Text size="sm" c="dimmed">
               {helpText}
@@ -147,7 +145,7 @@ const ToolStep = ({
         </Stack>
       )}
       </div>
-      <Divider style={{ marginLeft: '1rem', marginRight: '-0.5rem' }} />
+      <Divider style={{ color: '#E2E8F0', marginLeft: '1rem', marginRight: '-0.5rem' }} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import FileSourceButtons from './FileSourceButtons';
 import FileDetails from './FileDetails';
 import SearchInput from './SearchInput';
 import FileListArea from './FileListArea';
+import FileActions from './FileActions';
 import HiddenFileInput from './HiddenFileInput';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
 
@@ -22,10 +23,11 @@ const MobileLayout: React.FC = () => {
     // Estimate heights of fixed components
     const fileSourceHeight = '3rem'; // FileSourceButtons height
     const fileDetailsHeight = selectedFiles.length > 0 ? '10rem' : '8rem'; // FileDetails compact height
+    const fileActionsHeight = activeSource === 'recent' ? '3rem' : '0rem'; // FileActions height (now at bottom)
     const searchHeight = activeSource === 'recent' ? '3rem' : '0rem'; // SearchInput height
-    const gapHeight = activeSource === 'recent' ? '3rem' : '2rem'; // Stack gaps
+    const gapHeight = activeSource === 'recent' ? '3.75rem' : '2rem'; // Stack gaps
     
-    return `calc(${baseHeight} - ${fileSourceHeight} - ${fileDetailsHeight} - ${searchHeight} - ${gapHeight})`;
+    return `calc(${baseHeight} - ${fileSourceHeight} - ${fileDetailsHeight} - ${fileActionsHeight} - ${searchHeight} - ${gapHeight})`;
   };
 
   return (
@@ -51,12 +53,20 @@ const MobileLayout: React.FC = () => {
         minHeight: 0
       }}>
         {activeSource === 'recent' && (
-          <Box style={{ 
-            flexShrink: 0,
-            borderBottom: '1px solid var(--mantine-color-gray-2)'
-          }}>
-            <SearchInput />
-          </Box>
+          <>
+            <Box style={{ 
+              flexShrink: 0,
+              borderBottom: '1px solid var(--mantine-color-gray-2)'
+            }}>
+              <SearchInput />
+            </Box>
+            <Box style={{ 
+              flexShrink: 0,
+              borderBottom: '1px solid var(--mantine-color-gray-2)'
+            }}>
+              <FileActions />
+            </Box>
+          </>
         )}
         
         <Box style={{ flex: 1, minHeight: 0 }}>

@@ -8,6 +8,7 @@ import ToolRenderer from './ToolRenderer';
 import ToolSearch from './toolPicker/ToolSearch';
 import { useSidebarContext } from "../../contexts/SidebarContext";
 import rainbowStyles from '../../styles/rainbow.module.css';
+import { Stack, ScrollArea } from '@mantine/core';
 
 // No props needed - component uses context
 
@@ -40,7 +41,7 @@ export default function ToolPanel() {
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       }`}
       style={{
-        width: isPanelVisible ? '20rem' : '0',
+        width: isPanelVisible ? '18.5rem' : '0',
         padding: '0'
       }}
     >
@@ -71,17 +72,15 @@ export default function ToolPanel() {
 
         {searchQuery.trim().length > 0 ? (
           // Searching view (replaces both picker and content)
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 min-h-0">
+          <div className="flex-1 flex flex-col overflow-y-auto">
               <SearchResults
                 filteredTools={filteredTools}
                 onSelect={handleToolSelect}
               />
-            </div>
           </div>
         ) : leftPanelView === 'toolPicker' ? (
           // Tool Picker View
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-auto">
             <ToolPicker
               selectedToolKey={selectedToolKey}
               onSelect={handleToolSelect}
@@ -91,15 +90,17 @@ export default function ToolPanel() {
           </div>
         ) : (
           // Selected Tool Content View
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Tool content */}
-            <div className="flex-1 min-h-0">
-              {selectedToolKey && (
-                <ToolRenderer
-                  selectedToolKey={selectedToolKey}
-                  onPreviewFile={setPreviewFile}
-                />
-              )}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <ScrollArea h="100%">
+                {selectedToolKey && (
+                  <ToolRenderer
+                    selectedToolKey={selectedToolKey}
+                    onPreviewFile={setPreviewFile}
+                  />
+                )}
+              </ScrollArea>
             </div>
           </div>
         )}

@@ -1,24 +1,32 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { RemovePasswordParameters } from './useRemovePasswordParameters';
+import { RemovePasswordParameters, defaultParameters } from './useRemovePasswordParameters';
+
+// Static function that can be used by both the hook and automation executor
+export const buildRemovePasswordFormData = (parameters: RemovePasswordParameters, file: File): FormData => {
+  const formData = new FormData();
+  formData.append("fileInput", file);
+  formData.append("password", parameters.password);
+  return formData;
+};
+
+// Static configuration object
+export const removePasswordOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildRemovePasswordFormData,
+  operationType: 'removePassword',
+  endpoint: '/api/v1/security/remove-password',
+  filePrefix: 'decrypted_', // Will be overridden in hook with translation
+  defaultParameters,
+} as const;
 
 export const useRemovePasswordOperation = () => {
   const { t } = useTranslation();
 
-  const buildFormData = (parameters: RemovePasswordParameters, file: File): FormData => {
-    const formData = new FormData();
-    formData.append("fileInput", file);
-    formData.append("password", parameters.password);
-    return formData;
-  };
-
   return useToolOperation<RemovePasswordParameters>({
-    operationType: 'removePassword',
-    endpoint: '/api/v1/security/remove-password',
-    buildFormData,
+    ...removePasswordOperationConfig,
     filePrefix: t('removePassword.filenamePrefix', 'decrypted') + '_',
-    multiFileEndpoint: false,
     getErrorMessage: createStandardErrorHandler(t('removePassword.error.failed', 'An error occurred while removing the password from the PDF.'))
   });
 };

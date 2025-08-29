@@ -1,90 +1,132 @@
 import { useState, useCallback } from 'react';
-import { fileStorage } from '../services/fileStorage';
-import { FileWithUrl } from '../types/file';
-import { createEnhancedFileFromStored } from '../utils/fileUtils';
+import { useIndexedDB } from '../contexts/IndexedDBContext';
+import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+import { FileId } from '../types/file';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
+  const indexedDB = useIndexedDB();
 
-  const convertToFile = useCallback(async (fileWithUrl: FileWithUrl): Promise<File> => {
-    if (fileWithUrl.url && fileWithUrl.url.startsWith('blob:')) {
-      const response = await fetch(fileWithUrl.url);
-      const data = await response.arrayBuffer();
-      const file = new File([data], fileWithUrl.name, {
-        type: fileWithUrl.type || 'application/pdf',
-        lastModified: fileWithUrl.lastModified || Date.now()
-      });
-      // Preserve the ID if it exists
-      if (fileWithUrl.id) {
-        Object.defineProperty(file, 'id', { value: fileWithUrl.id, writable: false });
+  const convertToFile = useCallback(async (fileMetadata: FileMetadata): Promise<File> => {
+    if (!indexedDB) {
+      throw new Error('IndexedDB context not available');
+    }
+
+    // Handle drafts differently from regular files
+    if (fileMetadata.isDraft) {
+      // Load draft from the drafts database
+      try {
+        const { indexedDBManager, DATABASE_CONFIGS } = await import('../services/indexedDBManager');
+        const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
+
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(['drafts'], 'readonly');
+          const store = transaction.objectStore('drafts');
+          const request = store.get(fileMetadata.id);
+
+          request.onsuccess = () => {
+            const draft = request.result;
+            if (draft && draft.pdfData) {
+              const file = new File([draft.pdfData], fileMetadata.name, {
+                type: 'application/pdf',
+                lastModified: fileMetadata.lastModified
+              });
+              resolve(file);
+            } else {
+              reject(new Error('Draft data not found'));
+            }
+          };
+
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        throw new Error(`Failed to load draft: ${fileMetadata.name} (${error})`);
       }
-      return file;
     }
 
-    // Always use ID first, fallback to name only if ID doesn't exist
-    const lookupKey = fileWithUrl.id || fileWithUrl.name;
-    const storedFile = await fileStorage.getFile(lookupKey);
-    if (storedFile) {
-      const file = new File([storedFile.data], storedFile.name, {
-        type: storedFile.type,
-        lastModified: storedFile.lastModified
-      });
-      // Add the ID to the file object
-      Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
-      return file;
+    // Regular file loading
+    if (fileMetadata.id) {
+      const file = await indexedDB.loadFile(fileMetadata.id);
+      if (file) {
+        return file;
+      }
     }
+    throw new Error(`File not found in storage: ${fileMetadata.name} (ID: ${fileMetadata.id})`);
+  }, [indexedDB]);
 
-    throw new Error('File not found in storage');
-  }, []);
-
-  const loadRecentFiles = useCallback(async (): Promise<FileWithUrl[]> => {
+  const loadRecentFiles = useCallback(async (): Promise<FileMetadata[]> => {
     setLoading(true);
     try {
-      const files = await fileStorage.getAllFiles();
-      const sortedFiles = files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-      return sortedFiles.map(file => createEnhancedFileFromStored(file));
+      if (!indexedDB) {
+        return [];
+      }
+
+      // Load regular files metadata only
+      const storedFileMetadata = await indexedDB.loadAllMetadata();
+
+      // For now, only regular files - drafts will be handled separately in the future
+      const allFiles = storedFileMetadata;
+      const sortedFiles = allFiles.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+
+      return sortedFiles;
     } catch (error) {
       console.error('Failed to load recent files:', error);
       return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [indexedDB]);
 
-  const handleRemoveFile = useCallback(async (index: number, files: FileWithUrl[], setFiles: (files: FileWithUrl[]) => void) => {
+  const handleRemoveFile = useCallback(async (index: number, files: FileMetadata[], setFiles: (files: FileMetadata[]) => void) => {
     const file = files[index];
+    if (!file.id) {
+      throw new Error('File ID is required for removal');
+    }
+    if (!indexedDB) {
+      throw new Error('IndexedDB context not available');
+    }
     try {
-      await fileStorage.deleteFile(file.id || file.name);
+      await indexedDB.deleteFile(file.id);
       setFiles(files.filter((_, i) => i !== index));
     } catch (error) {
       console.error('Failed to remove file:', error);
       throw error;
     }
-  }, []);
+  }, [indexedDB]);
 
-  const storeFile = useCallback(async (file: File) => {
+  const storeFile = useCallback(async (file: File, fileId: FileId) => {
+    if (!indexedDB) {
+      throw new Error('IndexedDB context not available');
+    }
     try {
-      // Generate thumbnail for the file
-      const thumbnail = await generateThumbnailForFile(file);
+      // Store file with provided UUID from FileContext (thumbnail generated internally)
+      const metadata = await indexedDB.saveFile(file, fileId);
 
-      // Store file with thumbnail
-      const storedFile = await fileStorage.storeFile(file, thumbnail);
+      // Convert file to ArrayBuffer for StoredFile interface compatibility
+      const arrayBuffer = await file.arrayBuffer();
 
-      // Add the ID to the file object
-      Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
-      return storedFile;
+      // Return StoredFile format for compatibility with old API
+      return {
+        id: fileId,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified,
+        data: arrayBuffer,
+        thumbnail: metadata.thumbnail
+      };
     } catch (error) {
       console.error('Failed to store file:', error);
       throw error;
     }
-  }, []);
+  }, [indexedDB]);
 
   const createFileSelectionHandlers = useCallback((
-    selectedFiles: string[],
-    setSelectedFiles: (files: string[]) => void
+    selectedFiles: FileId[],
+    setSelectedFiles: (files: FileId[]) => void
   ) => {
-    const toggleSelection = (fileId: string) => {
+    const toggleSelection = (fileId: FileId) => {
       setSelectedFiles(
         selectedFiles.includes(fileId)
           ? selectedFiles.filter(id => id !== fileId)
@@ -96,14 +138,23 @@ export const useFileManager = () => {
       setSelectedFiles([]);
     };
 
-    const selectMultipleFiles = async (files: FileWithUrl[], onFilesSelect: (files: File[]) => void) => {
+    const selectMultipleFiles = async (files: FileMetadata[], onStoredFilesSelect: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => void) => {
       if (selectedFiles.length === 0) return;
 
       try {
-        const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id || f.name));
-        const filePromises = selectedFileObjects.map(convertToFile);
-        const convertedFiles = await Promise.all(filePromises);
-        onFilesSelect(convertedFiles);
+        // Filter by UUID and convert to File objects
+        const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id));
+
+        // Use stored files flow that preserves IDs
+        const filesWithMetadata = await Promise.all(
+          selectedFileObjects.map(async (metadata) => ({
+            file: await convertToFile(metadata),
+            originalId: metadata.id,
+            metadata
+          }))
+        );
+        onStoredFilesSelect(filesWithMetadata);
+
         clearSelection();
       } catch (error) {
         console.error('Failed to load selected files:', error);
@@ -118,13 +169,19 @@ export const useFileManager = () => {
     };
   }, [convertToFile]);
 
-  const touchFile = useCallback(async (id: string) => {
+  const touchFile = useCallback(async (id: FileId) => {
+    if (!indexedDB) {
+      console.warn('IndexedDB context not available for touch operation');
+      return;
+    }
     try {
-      await fileStorage.touchFile(id);
+      // Update access time - this will be handled by the cache in IndexedDBContext
+      // when the file is loaded, so we can just load it briefly to "touch" it
+      await indexedDB.loadFile(id);
     } catch (error) {
       console.error('Failed to touch file:', error);
     }
-  }, []);
+  }, [indexedDB]);
 
   return {
     loading,

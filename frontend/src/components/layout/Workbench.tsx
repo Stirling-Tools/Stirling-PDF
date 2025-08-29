@@ -4,15 +4,18 @@ import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
-import { useFileContext } from '../../contexts/FileContext';
+import { useFileState } from '../../contexts/FileContext';
+import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
+import { useToolManagement } from '../../hooks/useToolManagement';
+import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
 import FileEditor from '../fileEditor/FileEditor';
 import PageEditor from '../pageEditor/PageEditor';
 import PageEditorControls from '../pageEditor/PageEditorControls';
 import Viewer from '../viewer/Viewer';
-import ToolRenderer from '../tools/ToolRenderer';
 import LandingPage from '../shared/LandingPage';
+import Footer from '../shared/Footer';
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -20,7 +23,11 @@ export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Use context-based hooks to eliminate all prop drilling
-  const { activeFiles, currentView, setCurrentView } = useFileContext();
+  const { state } = useFileState();
+  const { workbench: currentView } = useNavigationState();
+  const { actions: navActions } = useNavigationActions();
+  const setCurrentView = navActions.setWorkbench;
+  const activeFiles = state.files.ids;
   const {
     previewFile,
     pageEditorFunctions,
@@ -30,7 +37,14 @@ export default function Workbench() {
     setSidebarsVisible
   } = useToolWorkflow();
 
-  const { selectedToolKey, selectedTool, handleToolSelect } = useToolWorkflow();
+  const { handleToolSelect } = useToolWorkflow();
+
+  // Get navigation state - this is the source of truth
+  const { selectedTool: selectedToolId } = useNavigationState();
+
+  // Get tool registry to look up selected tool
+  const { toolRegistry } = useToolManagement();
+  const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addToActiveFiles } = useFileHandler();
 
   const handlePreviewClose = () => {
@@ -47,12 +61,12 @@ export default function Workbench() {
       handleToolSelect('convert');
       sessionStorage.removeItem('previousMode');
     } else {
-      setCurrentView('fileEditor' as any);
+      setCurrentView('fileEditor');
     }
   };
 
   const renderMainContent = () => {
-    if (!activeFiles[0]) {
+    if (activeFiles.length === 0) {
       return (
         <LandingPage
         />
@@ -63,17 +77,17 @@ export default function Workbench() {
       case "fileEditor":
         return (
           <FileEditor
-            toolMode={!!selectedToolKey}
+            toolMode={!!selectedToolId}
             showUpload={true}
-            showBulkActions={!selectedToolKey}
+            showBulkActions={!selectedToolId}
             supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
-            {...(!selectedToolKey && {
+            {...(!selectedToolId && {
               onOpenPageEditor: (file) => {
-                setCurrentView("pageEditor" as any);
+                setCurrentView("pageEditor");
               },
               onMergeFiles: (filesToMerge) => {
                 filesToMerge.forEach(addToActiveFiles);
-                setCurrentView("viewer" as any);
+                setCurrentView("viewer");
               }
             })}
           />
@@ -105,25 +119,22 @@ export default function Workbench() {
                 onRotate={pageEditorFunctions.handleRotate}
                 onDelete={pageEditorFunctions.handleDelete}
                 onSplit={pageEditorFunctions.handleSplit}
-                onExportSelected={pageEditorFunctions.onExportSelected}
+                onSplitAll={pageEditorFunctions.handleSplitAll}
+                onPageBreak={pageEditorFunctions.handlePageBreak}
+                onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
                 onExportAll={pageEditorFunctions.onExportAll}
                 exportLoading={pageEditorFunctions.exportLoading}
                 selectionMode={pageEditorFunctions.selectionMode}
-                selectedPages={pageEditorFunctions.selectedPages}
+                selectedPageIds={pageEditorFunctions.selectedPageIds}
+                displayDocument={pageEditorFunctions.displayDocument}
+                splitPositions={pageEditorFunctions.splitPositions}
+                totalPages={pageEditorFunctions.totalPages}
               />
             )}
           </>
         );
 
       default:
-        // Check if it's a tool view
-        if (selectedToolKey && selectedTool) {
-          return (
-            <ToolRenderer
-              selectedToolKey={selectedToolKey}
-            />
-          );
-        }
         return (
           <LandingPage/>
         );
@@ -132,7 +143,7 @@ export default function Workbench() {
 
   return (
     <Box
-      className="flex-1 h-screen min-w-80 relative flex flex-col"
+      className="flex-1 h-full min-w-80 relative flex flex-col"
       style={
         isRainbowMode
           ? {} // No background color in rainbow mode
@@ -142,19 +153,22 @@ export default function Workbench() {
       {/* Top Controls */}
       <TopControls
         currentView={currentView}
-        setCurrentView={setCurrentView as any /* FIX ME */}
-        selectedToolKey={selectedToolKey}
+        setCurrentView={setCurrentView}
+        selectedToolKey={selectedToolId}
       />
 
       {/* Main content area */}
       <Box
-        className="flex-1 min-h-0 relative z-10"
+        className="flex-1 min-h-0 relative z-10 workbench-scrollable "
         style={{
           transition: 'opacity 0.15s ease-in-out',
+          marginTop: '1rem',
         }}
       >
         {renderMainContent()}
       </Box>
+
+      <Footer analyticsEnabled />
     </Box>
   );
 }

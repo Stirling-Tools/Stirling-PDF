@@ -1,98 +1,58 @@
-import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-import { useToolFileSelection } from "../contexts/FileSelectionContext";
-
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
-
 import CompressSettings from "../components/tools/compress/CompressSettings";
-
 import { useCompressParameters } from "../hooks/tools/compress/useCompressParameters";
 import { useCompressOperation } from "../hooks/tools/compress/useCompressOperation";
-import { BaseToolProps } from "../types/tool";
+import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useCompressTips } from "../components/tooltips/useCompressTips";
 
-const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
+const Compress = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
-  const { selectedFiles } = useToolFileSelection();
-
-  const compressParams = useCompressParameters();
-  const compressOperation = useCompressOperation();
   const compressTips = useCompressTips();
 
-  // Endpoint validation
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("compress-pdf");
-
-  useEffect(() => {
-    compressOperation.resetResults();
-    onPreviewFile?.(null);
-  }, [compressParams.parameters]);
-
-  const handleCompress = async () => {
-    try {
-      await compressOperation.executeOperation(compressParams.parameters, selectedFiles);
-      if (compressOperation.files && onComplete) {
-        onComplete(compressOperation.files);
-      }
-    } catch (error) {
-      if (onError) {
-        onError(error instanceof Error ? error.message : "Compress operation failed");
-      }
-    }
-  };
-
-  const handleThumbnailClick = (file: File) => {
-    onPreviewFile?.(file);
-    sessionStorage.setItem("previousMode", "compress");
-    setCurrentMode("viewer");
-  };
-
-  const handleSettingsReset = () => {
-    compressOperation.resetResults();
-    onPreviewFile?.(null);
-    setCurrentMode("compress");
-  };
-
-  const hasFiles = selectedFiles.length > 0;
-  const hasResults = compressOperation.files.length > 0 || compressOperation.downloadUrl !== null;
-  const settingsCollapsed = !hasFiles || hasResults;
+  const base = useBaseTool(
+    'compress',
+    useCompressParameters,
+    useCompressOperation,
+    props
+  );
 
   return createToolFlow({
     files: {
-      selectedFiles,
-      isCollapsed: hasFiles && !hasResults,
+      selectedFiles: base.selectedFiles,
+      isCollapsed: base.hasResults,
     },
     steps: [
       {
         title: "Settings",
-        isCollapsed: settingsCollapsed,
-        onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
+        isCollapsed: base.settingsCollapsed,
+        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
         tooltip: compressTips,
         content: (
           <CompressSettings
-            parameters={compressParams.parameters}
-            onParameterChange={compressParams.updateParameter}
-            disabled={endpointLoading}
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
           />
         ),
       },
     ],
     executeButton: {
       text: t("compress.submit", "Compress"),
-      isVisible: !hasResults,
+      isVisible: !base.hasResults,
       loadingText: t("loading"),
-      onClick: handleCompress,
-      disabled: !compressParams.validateParameters() || !hasFiles || !endpointEnabled,
+      onClick: base.handleExecute,
+      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
     },
     review: {
-      isVisible: hasResults,
-      operation: compressOperation,
+      isVisible: base.hasResults,
+      operation: base.operation,
       title: t("compress.title", "Compression Results"),
-      onFileClick: handleThumbnailClick,
+      onFileClick: base.handleThumbnailClick,
     },
   });
 };
 
-export default Compress;
+
+export default Compress as ToolComponent;

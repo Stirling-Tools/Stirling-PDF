@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import { isImageFormat, isWebFormat } from "../../../utils/convertUtils";
 import { getConversionEndpoints } from "../../../data/toolsTaxonomy";
-import { useFileSelectionActions } from "../../../contexts/FileSelectionContext";
-import { useFileContext } from "../../../contexts/FileContext";
+import { useFileSelection } from "../../../contexts/FileContext";
+import { useFileState } from "../../../contexts/FileContext";
 import { detectFileExtension } from "../../../utils/fileUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
@@ -15,13 +15,14 @@ import ConvertFromWebSettings from "./ConvertFromWebSettings";
 import ConvertFromEmailSettings from "./ConvertFromEmailSettings";
 import ConvertToPdfaSettings from "./ConvertToPdfaSettings";
 import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
-import { 
+import {
   FROM_FORMAT_OPTIONS,
   EXTENSION_TO_ENDPOINT,
   COLOR_TYPES,
   OUTPUT_OPTIONS,
   FIT_OPTIONS
 } from "../../../constants/convertConstants";
+import { FileId } from "../../../types/file";
 
 interface ConvertSettingsProps {
   parameters: ConvertParameters;
@@ -31,8 +32,8 @@ interface ConvertSettingsProps {
   disabled?: boolean;
 }
 
-const ConvertSettings = ({ 
-  parameters, 
+const ConvertSettings = ({
+  parameters,
   onParameterChange,
   getAvailableToExtensions,
   selectedFiles,
@@ -41,8 +42,9 @@ const ConvertSettings = ({
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
-  const { setSelectedFiles } = useFileSelectionActions();
-  const { activeFiles, setSelectedFiles: setContextSelectedFiles } = useFileContext();
+  const { setSelectedFiles } = useFileSelection();
+  const { state, selectors } = useFileState();
+  const activeFiles = state.files.ids;
 
   const allEndpoints = useMemo(() => getConversionEndpoints(EXTENSION_TO_ENDPOINT), []);
 
@@ -51,7 +53,7 @@ const ConvertSettings = ({
   const isConversionAvailable = (fromExt: string, toExt: string): boolean => {
     const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
     if (!endpointKey) return false;
-    
+
     return endpointStatus[endpointKey] === true;
   };
 
@@ -60,10 +62,10 @@ const ConvertSettings = ({
     const baseOptions = FROM_FORMAT_OPTIONS.map(option => {
       // Check if this source format has any available conversions
       const availableConversions = getAvailableToExtensions(option.value) || [];
-      const hasAvailableConversions = availableConversions.some(targetOption => 
+      const hasAvailableConversions = availableConversions.some(targetOption =>
         isConversionAvailable(option.value, targetOption.value)
       );
-      
+
       return {
         ...option,
         enabled: hasAvailableConversions
@@ -79,24 +81,24 @@ const ConvertSettings = ({
         group: 'File',
         enabled: true
       };
-      
+
       // Add the dynamic option at the beginning
       return [dynamicOption, ...baseOptions];
     }
-    
+
     return baseOptions;
-  }, [getAvailableToExtensions, endpointStatus, parameters.fromExtension]);
+  }, [parameters.fromExtension, endpointStatus]);
 
   // Enhanced TO options with endpoint availability
   const enhancedToOptions = useMemo(() => {
     if (!parameters.fromExtension) return [];
-    
+
     const availableOptions = getAvailableToExtensions(parameters.fromExtension) || [];
     return availableOptions.map(option => ({
       ...option,
       enabled: isConversionAvailable(parameters.fromExtension, option.value)
     }));
-  }, [parameters.fromExtension, getAvailableToExtensions, endpointStatus]);
+  }, [parameters.fromExtension, endpointStatus]);
 
   const resetParametersToDefaults = () => {
     onParameterChange('imageOptions', {
@@ -127,9 +129,10 @@ const ConvertSettings = ({
   };
 
   const filterFilesByExtension = (extension: string) => {
-    return activeFiles.filter(file => {
+    const files = activeFiles.map(fileId => selectors.getFile(fileId)).filter(Boolean) as File[];
+    return files.filter(file => {
       const fileExtension = detectFileExtension(file.name);
-      
+
       if (extension === 'any') {
         return true;
       } else if (extension === 'image') {
@@ -141,16 +144,28 @@ const ConvertSettings = ({
   };
 
   const updateFileSelection = (files: File[]) => {
-    setSelectedFiles(files);
-    const fileIds = files.map(file => (file as any).id || file.name);
-    setContextSelectedFiles(fileIds);
+    // Map File objects to their actual IDs in FileContext
+    const fileIds = files.map(file => {
+      // Find the file ID by matching file properties
+      const fileRecord = state.files.ids
+        .map(id => selectors.getFileRecord(id))
+        .find(record =>
+          record &&
+          record.name === file.name &&
+          record.size === file.size &&
+          record.lastModified === file.lastModified
+        );
+      return fileRecord?.id;
+    }).filter((id): id is FileId => id !== undefined); // Type guard to ensure only strings
+
+    setSelectedFiles(fileIds);
   };
 
   const handleFromExtensionChange = (value: string) => {
     onParameterChange('fromExtension', value);
     setAutoTargetExtension(value);
     resetParametersToDefaults();
-    
+
     if (activeFiles.length > 0) {
       const matchingFiles = filterFilesByExtension(value);
       updateFileSelection(matchingFiles);
@@ -218,11 +233,11 @@ const ConvertSettings = ({
           >
             <Group justify="space-between">
               <Text size="sm">{t("convert.selectSourceFormatFirst", "Select a source format first")}</Text>
-              <KeyboardArrowDownIcon 
-                style={{ 
+              <KeyboardArrowDownIcon
+                style={{
                   fontSize: '1rem',
                   color: colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6]
-                }} 
+                }}
               />
             </Group>
           </UnstyledButton>
@@ -252,9 +267,9 @@ const ConvertSettings = ({
         </>
       )}
 
-      
+
       {/* Color options for image to PDF conversion */}
-      {(isImageFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') || 
+      {(isImageFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
        (parameters.isSmartDetection && parameters.smartDetectionType === 'images') ? (
         <>
           <Divider />
@@ -267,7 +282,7 @@ const ConvertSettings = ({
       ) : null}
 
       {/* Web to PDF options */}
-      {((isWebFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') || 
+      {((isWebFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
        (parameters.isSmartDetection && parameters.smartDetectionType === 'web')) ? (
         <>
           <Divider />

@@ -107,9 +107,8 @@ export const mantineTheme = createTheme({
         },
       },
     },
-
-    TextInput: {
-      styles: {
+    Textarea: {
+      styles: (theme: any) => ({
         input: {
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
@@ -123,7 +122,43 @@ export const mantineTheme = createTheme({
           color: 'var(--text-secondary)',
           fontWeight: 'var(--font-weight-medium)',
         },
-      },
+      }),
+    },
+
+    TextInput: {
+      styles: (theme: any) => ({
+        input: {
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-default)',
+          color: 'var(--text-primary)',
+          '&:focus': {
+            borderColor: 'var(--color-primary-500)',
+            boxShadow: '0 0 0 1px var(--color-primary-500)',
+          },
+        },
+        label: {
+          color: 'var(--text-secondary)',
+          fontWeight: 'var(--font-weight-medium)',
+        },
+      }),
+    },
+
+     PasswordInput: {
+      styles: (theme: any) => ({
+        input: {
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-default)',
+          color: 'var(--text-primary)',
+          '&:focus': {
+            borderColor: 'var(--color-primary-500)',
+            boxShadow: '0 0 0 1px var(--color-primary-500)',
+          },
+        },
+        label: {
+          color: 'var(--text-secondary)',
+          fontWeight: 'var(--font-weight-medium)',
+        },
+      }),
     },
 
     Select: {
@@ -188,6 +223,19 @@ export const mantineTheme = createTheme({
             backgroundColor: 'var(--color-primary-100)',
             color: 'var(--color-primary-900)',
           },
+        },
+      },
+    },
+    Tooltip: {
+      styles: {
+        tooltip: {
+          backgroundColor: 'var( --tooltip-title-bg)',
+          color: 'var( --tooltip-title-color)',
+          border: '1px solid var(--tooltip-borderp)',
+          fontSize: '0.75rem',
+          fontWeight: '500',
+          boxShadow: 'var(--shadow-md)',
+          borderRadius: 'var(--radius-sm)',
         },
       },
     },

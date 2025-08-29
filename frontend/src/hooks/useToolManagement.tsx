@@ -3,22 +3,20 @@ import { useTranslation } from 'react-i18next';
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
+import { FileId } from '../types/file';
 
 interface ToolManagementResult {
-  selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
-  toolSelectedFileIds: string[];
+  toolSelectedFileIds: FileId[];
   toolRegistry: Record<string, ToolRegistryEntry>;
-  selectTool: (toolKey: string) => void;
-  clearToolSelection: () => void;
-  setToolSelectedFileIds: (fileIds: string[]) => void;
+  setToolSelectedFileIds: (fileIds: FileId[]) => void;
+  getSelectedTool: (toolKey: string | null) => ToolRegistryEntry | null;
 }
 
 export const useToolManagement = (): ToolManagementResult => {
   const { t } = useTranslation();
 
-  const [selectedToolKey, setSelectedToolKey] = useState<string | null>(null);
-  const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
+  const [toolSelectedFileIds, setToolSelectedFileIds] = useState<FileId[]>([]);
 
   // Build endpoints list from registry entries with fallback to legacy mapping
   const baseRegistry = useFlatToolRegistry();
@@ -37,7 +35,7 @@ export const useToolManagement = (): ToolManagementResult => {
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
     if (endpointsLoading) return true;
-    const endpoints = baseRegistry[toolKey]?.endpoints || [];
+    const endpoints = baseRegistry[toolKey as keyof typeof baseRegistry]?.endpoints || [];
     return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 
@@ -48,43 +46,23 @@ export const useToolManagement = (): ToolManagementResult => {
         const baseTool = baseRegistry[toolKey as keyof typeof baseRegistry];
         availableToolRegistry[toolKey] = {
           ...baseTool,
-          name: t(baseTool.name),
-          description: t(baseTool.description)
+          name: baseTool.name,
+          description: baseTool.description,
         };
       }
     });
     return availableToolRegistry;
   }, [isToolAvailable, t, baseRegistry]);
 
-  useEffect(() => {
-    if (!endpointsLoading && selectedToolKey && !toolRegistry[selectedToolKey]) {
-      const firstAvailableTool = Object.keys(toolRegistry)[0];
-      if (firstAvailableTool) {
-        setSelectedToolKey(firstAvailableTool);
-      } else {
-        setSelectedToolKey(null);
-      }
-    }
-  }, [endpointsLoading, selectedToolKey, toolRegistry]);
-
-  const selectTool = useCallback((toolKey: string) => {
-    setSelectedToolKey(toolKey);
-  }, []);
-
-  const clearToolSelection = useCallback(() => {
-    setSelectedToolKey(null);
-  }, []);
-
-  const selectedTool = selectedToolKey ? toolRegistry[selectedToolKey] : null;
+  const getSelectedTool = useCallback((toolKey: string | null): ToolRegistryEntry | null => {
+    return toolKey ? toolRegistry[toolKey] || null : null;
+  }, [toolRegistry]);
 
   return {
-    selectedToolKey,
-    selectedTool,
+    selectedTool: getSelectedTool(null), // This will be unused, kept for compatibility
     toolSelectedFileIds,
     toolRegistry,
-    selectTool,
-    clearToolSelection,
     setToolSelectedFileIds,
-
+    getSelectedTool,
   };
 };

@@ -55,6 +55,7 @@
   "bored": "Bored Waiting?",
   "alphabet": "Alphabet",
   "downloadPdf": "Download PDF",
+
   "text": "Text",
   "font": "Font",
   "selectFillter": "-- Select --",
@@ -607,6 +608,10 @@
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }
   },
+  "landing": {
+    "addFiles": "Add Files",
+    "uploadFromComputer": "Upload from computer"
+  },
   "viewPdf": {
     "tags": "view,read,annotate,text,image,highlight,edit",
     "title": "View/Edit PDF",
@@ -738,7 +743,72 @@
     "submit": "Change"
   },
   "removePages": {
-    "tags": "Remove pages,delete pages"
+    "tags": "Remove pages,delete pages",
+    "title": "Remove Pages",
+    "pageNumbers": "Pages to Remove",
+    "pageNumbersPlaceholder": "e.g. 1,3,5-7",
+    "pageNumbersHelp": "Enter page numbers separated by commas, or ranges like 1-5. Example: 1,3,5-7",
+    "filenamePrefix": "pages_removed",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "settings": {
+      "title": "Page Selection"
+    },
+    "error": {
+      "failed": "An error occurred while removing pages."
+    },
+    "results": {
+      "title": "Page Removal Results"
+    },
+    "submit": "Remove Pages"
+  },
+  "pageSelection": {
+    "tooltip": {
+      "header": {
+        "title": "Page Selection Guide"
+      },
+      "basic": {
+        "title": "Basic Usage",
+        "text": "Select specific pages from your PDF document using simple syntax.",
+        "bullet1": "Individual pages: 1,3,5",
+        "bullet2": "Page ranges: 3-6 or 10-15",
+        "bullet3": "All pages: all"
+      },
+      "advanced": {
+        "title": "Advanced Features",
+        "expandText": "▶ Show advanced options",
+        "collapseText": "▼ Hide advanced options",
+        "mathematical": {
+          "title": "Mathematical Functions",
+          "text": "Use mathematical expressions to select page patterns:",
+          "bullet1": "2n - all even pages (2, 4, 6, 8...)",
+          "bullet2": "2n+1 - all odd pages (1, 3, 5, 7...)",
+          "bullet3": "3n - every 3rd page (3, 6, 9, 12...)",
+          "bullet4": "4n-1 - pages 3, 7, 11, 15..."
+        },
+        "ranges": {
+          "title": "Open-ended Ranges",
+          "text": "Select from a starting point to the end:",
+          "bullet1": "5- selects pages 5 to end of document",
+          "bullet2": "10- selects pages 10 to end"
+        },
+        "combinations": {
+          "title": "Complex Combinations",
+          "text": "Combine different selection methods:",
+          "bullet1": "1,3-5,8,2n - pages 1, 3-5, 8, and all even pages",
+          "bullet2": "10-,2n+1 - pages 10 to end plus all odd pages",
+          "bullet3": "1-5,15-,3n - pages 1-5, 15 to end, and every 3rd page"
+        }
+      },
+      "tips": {
+        "title": "Tips",
+        "text": "Keep these guidelines in mind:",
+        "bullet1": "Page numbers start from 1 (not 0)",
+        "bullet2": "Spaces are automatically removed",
+        "bullet3": "Invalid expressions are ignored"
+      }
+    }
   },
   "compressPdfs": {
     "tags": "squish,small,tiny"
@@ -2024,6 +2094,18 @@
       }
     }
   },
+  "rightRail": {
+    "closePdf": "Close PDF",
+    "closeSelected": "Close Selected Files",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectByNumber": "Select by Page Numbers",
+    "deleteSelected": "Delete Selected Pages",
+    "toggleTheme": "Toggle Theme",
+    "exportAll": "Export PDF",
+    "downloadSelected": "Download Selected Files",
+    "downloadAll": "Download All"
+  },
   "removePassword": {
     "title": "Remove Password",
     "desc": "Remove password protection from your PDF document.",
@@ -2045,5 +2127,20 @@
     "results": {
       "title": "Decrypted PDFs"
     }
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "Secure PDF Ingestion",
+      "securePdfIngestionDesc": "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size.",
+      "emailPreparation": "Email Preparation",
+      "emailPreparationDesc": "Optimizes PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy.",
+      "secureWorkflow": "Security Workflow",
+      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access. Password is set to 'password' by default.",
+      "processImages": "Process Images",
+      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
+    }
+  },
+  "automate": {
+    "copyToSaved": "Copy to Saved"
   }
 }

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box } from '@mantine/core';
-import { FileWithUrl } from '../../types/file';
+import { Box, Center } from '@mantine/core';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import { FileMetadata } from '../../types/file';
 import DocumentThumbnail from './filePreview/DocumentThumbnail';
 import DocumentStack from './filePreview/DocumentStack';
 import HoverOverlay from './filePreview/HoverOverlay';
@@ -8,7 +9,7 @@ import NavigationArrows from './filePreview/NavigationArrows';
 
 export interface FilePreviewProps {
   // Core file data
-  file: File | FileWithUrl | null;
+  file: File | FileMetadata | null;
   thumbnail?: string | null;
   
   // Optional features
@@ -21,7 +22,7 @@ export interface FilePreviewProps {
   isAnimating?: boolean;
   
   // Event handlers
-  onFileClick?: (file: File | FileWithUrl | null) => void;
+  onFileClick?: (file: File | FileMetadata | null) => void;
   onPrevious?: () => void;
   onNext?: () => void;
 }
@@ -38,7 +39,21 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   onPrevious,
   onNext
 }) => {
-  if (!file) return null;
+  if (!file) {
+    return (
+      <Box style={{ width: '100%', height: '100%' }}>
+        <Center style={{ width: '100%', height: '100%' }}>
+          <InsertDriveFileIcon 
+            style={{ 
+              fontSize: '4rem', 
+              color: 'var(--mantine-color-gray-4)',
+              opacity: 0.6 
+            }} 
+          />
+        </Center>
+      </Box>
+    );
+  }
   
   const hasMultipleFiles = totalFiles > 1;
   

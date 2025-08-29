@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { SanitizeParameters } from './useSanitizeParameters';
+import { SanitizeParameters, defaultParameters } from './useSanitizeParameters';
 
-const buildFormData = (parameters: SanitizeParameters, file: File): FormData => {
+// Static function that can be used by both the hook and automation executor
+export const buildSanitizeFormData = (parameters: SanitizeParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
 
@@ -18,15 +19,23 @@ const buildFormData = (parameters: SanitizeParameters, file: File): FormData => 
   return formData;
 };
 
+// Static configuration object
+export const sanitizeOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildSanitizeFormData,
+  operationType: 'sanitize',
+  endpoint: '/api/v1/security/sanitize-pdf',
+  filePrefix: 'sanitized_', // Will be overridden in hook with translation
+  multiFileEndpoint: false,
+  defaultParameters,
+} as const;
+
 export const useSanitizeOperation = () => {
   const { t } = useTranslation();
 
   return useToolOperation<SanitizeParameters>({
-    operationType: 'sanitize',
-    endpoint: '/api/v1/security/sanitize-pdf',
-    buildFormData,
+    ...sanitizeOperationConfig,
     filePrefix: t('sanitize.filenamePrefix', 'sanitized') + '_',
-    multiFileEndpoint: false, // Individual API calls per file
     getErrorMessage: createStandardErrorHandler(t('sanitize.error.failed', 'An error occurred while sanitising the PDF.'))
   });
 };

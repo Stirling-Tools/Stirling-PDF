@@ -13,6 +13,7 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n/config';
 import axios from 'axios';
 import { detectFileExtension } from '../../utils/fileUtils';
+import { FIT_OPTIONS } from '../../constants/convertConstants';
 
 // Mock axios
 vi.mock('axios');
@@ -23,8 +24,8 @@ vi.mock('../../services/fileStorage', () => ({
   fileStorage: {
     init: vi.fn().mockResolvedValue(undefined),
     storeFile: vi.fn().mockImplementation((file, thumbnail) => {
-      return Promise.resolve({ 
-        id: `mock-id-${file.name}`, 
+      return Promise.resolve({
+        id: `mock-id-${file.name}`,
         name: file.name,
         size: file.size,
         type: file.type,
@@ -403,7 +404,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
           colorType: 'grayscale',
           dpi: 150,
           singleOrMultiple: 'single',
-          fitOption: 'fitToPage',
+          fitOption: FIT_OPTIONS.FIT_PAGE,
           autoRotate: false,
           combineImages: true
         });
@@ -417,7 +418,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       const formData = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
-      expect(formData.get('fitOption')).toBe('fitToPage');
+      expect(formData.get('fitOption')).toBe(FIT_OPTIONS.FIT_PAGE);
       expect(formData.get('colorType')).toBe('grayscale');
       expect(formData.get('autoRotate')).toBe('false');
     });

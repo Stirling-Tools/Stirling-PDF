@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
+import { useNavigationActions, useNavigationState } from '../contexts/NavigationContext';
+import { ToolId } from '../types/toolId';
 
 // Material UI Icons
 import CompressIcon from '@mui/icons-material/Compress';
@@ -9,7 +10,7 @@ import CropIcon from '@mui/icons-material/Crop';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 
 export interface SuggestedTool {
-  name: string;
+  id: ToolId;
   title: string;
   icon: React.ComponentType<any>;
   navigate: () => void;
@@ -17,43 +18,44 @@ export interface SuggestedTool {
 
 const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
   {
-    name: 'compress',
+    id: 'compress',
     title: 'Compress',
     icon: CompressIcon
   },
   {
-    name: 'convert',
+    id: 'convert',
     title: 'Convert',
     icon: SwapHorizIcon
   },
   {
-    name: 'sanitize',
+    id: 'sanitize',
     title: 'Sanitize',
     icon: CleaningServicesIcon
   },
   {
-    name: 'split',
+    id: 'split',
     title: 'Split',
     icon: CropIcon
   },
   {
-    name: 'ocr',
+    id: 'ocr',
     title: 'OCR',
     icon: TextFieldsIcon
   }
 ];
 
 export function useSuggestedTools(): SuggestedTool[] {
-  const { handleToolSelect, selectedToolKey } = useToolWorkflow();
+  const { actions } = useNavigationActions();
+  const { selectedTool } = useNavigationState();
 
   return useMemo(() => {
     // Filter out the current tool
-    const filteredTools = ALL_SUGGESTED_TOOLS.filter(tool => tool.name !== selectedToolKey);
-    
+    const filteredTools = ALL_SUGGESTED_TOOLS.filter(tool => tool.id !== selectedTool);
+
     // Add navigation function to each tool
     return filteredTools.map(tool => ({
       ...tool,
-      navigate: () => handleToolSelect(tool.name)
+      navigate: () => actions.setSelectedTool(tool.id)
     }));
-  }, [selectedToolKey, handleToolSelect]);
+  }, [selectedTool, actions]);
 }

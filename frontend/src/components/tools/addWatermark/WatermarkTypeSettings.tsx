@@ -16,7 +16,7 @@ const WatermarkTypeSettings = ({ watermarkType, onWatermarkTypeChange, disabled 
       <div style={{ display: 'flex', gap: '4px' }}>
         <Button
           variant={watermarkType === 'text' ? 'filled' : 'outline'}
-          color={watermarkType === 'text' ? 'blue' : 'gray'}
+          color={watermarkType === 'text' ? 'blue' : 'var(--text-muted)'}
           onClick={() => onWatermarkTypeChange('text')}
           disabled={disabled}
           style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
@@ -27,7 +27,7 @@ const WatermarkTypeSettings = ({ watermarkType, onWatermarkTypeChange, disabled 
         </Button>
         <Button
           variant={watermarkType === 'image' ? 'filled' : 'outline'}
-          color={watermarkType === 'image' ? 'blue' : 'gray'}
+          color={watermarkType === 'image' ? 'blue' : 'var(--text-muted)'}
           onClick={() => onWatermarkTypeChange('image')}
           disabled={disabled}
           style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}

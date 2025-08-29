@@ -48,7 +48,11 @@
   "filesSelected": "{{count}} files selected",
   "files": {
     "title": "Files",
-    "placeholder": "Select a PDF file in the main view to get started"
+    "placeholder": "Select a PDF file in the main view to get started",
+    "upload": "Upload",
+    "uploadFiles": "Upload Files",
+    "addFiles": "Add files",
+    "selectFromWorkbench": "Select files from the workbench or "
   },
   "noFavourites": "No favourites added",
   "downloadComplete": "Download Complete",
@@ -85,6 +89,7 @@
   "warning": {
     "tooltipTitle": "Warning"
   },
+  "edit": "Edit",
   "delete": "Delete",
   "username": "Username",
   "password": "Password",
@@ -366,14 +371,6 @@
       "title": "Convert",
       "desc": "Convert files between different formats"
     },
-    "imageToPDF": {
-      "title": "Image to PDF",
-      "desc": "Convert a image (PNG, JPEG, GIF) to PDF."
-    },
-    "pdfToImage": {
-      "title": "PDF to Image",
-      "desc": "Convert a PDF to a image. (PNG, JPEG, GIF)"
-    },
     "pdfOrganiser": {
       "title": "Organise",
       "desc": "Remove/Rearrange pages in any order"
@@ -389,14 +386,6 @@
     "watermark": {
       "title": "Add Watermark",
       "desc": "Add a custom watermark to your PDF document."
-    },
-    "permissions": {
-      "title": "Change Permissions",
-      "desc": "Change the permissions of your PDF document"
-    },
-    "pageRemover": {
-      "title": "Remove",
-      "desc": "Delete unwanted pages from your PDF document."
     },
     "removePassword": {
       "title": "Remove Password",
@@ -414,10 +403,6 @@
       "title": "Change Metadata",
       "desc": "Change/Remove/Add metadata from a PDF document"
     },
-    "fileToPDF": {
-      "title": "Convert file to PDF",
-      "desc": "Convert nearly any file to PDF (DOCX, PNG, XLS, PPT, TXT and more)"
-    },
     "ocr": {
       "title": "OCR / Cleanup scans",
       "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
@@ -425,30 +410,6 @@
     "extractImages": {
       "title": "Extract Images",
       "desc": "Extracts all images from a PDF and saves them to zip"
-    },
-    "pdfToPDFA": {
-      "title": "PDF to PDF/A",
-      "desc": "Convert PDF to PDF/A for long-term storage"
-    },
-    "PDFToWord": {
-      "title": "PDF to Word",
-      "desc": "Convert PDF to Word formats (DOC, DOCX and ODT)"
-    },
-    "PDFToPresentation": {
-      "title": "PDF to Presentation",
-      "desc": "Convert PDF to Presentation formats (PPT, PPTX and ODP)"
-    },
-    "PDFToText": {
-      "title": "PDF to RTF (Text)",
-      "desc": "Convert PDF to Text or RTF format"
-    },
-    "PDFToHTML": {
-      "title": "PDF to HTML",
-      "desc": "Convert PDF to HTML format"
-    },
-    "PDFToXML": {
-      "title": "PDF to XML",
-      "desc": "Convert PDF to XML format"
     },
     "ScannerImageSplit": {
       "title": "Detect/Split Scanned photos",
@@ -518,33 +479,13 @@
       "title": "Auto Split Pages",
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
-    "sanitizePdf": {
+    "sanitize": {
       "title": "Sanitise",
-      "desc": "Remove scripts and other elements from PDF files"
-    },
-    "URLToPDF": {
-      "title": "URL/Website To PDF",
-      "desc": "Converts any http(s)URL to PDF"
-    },
-    "HTMLToPDF": {
-      "title": "HTML to PDF",
-      "desc": "Converts any HTML file or zip to PDF"
-    },
-    "MarkdownToPDF": {
-      "title": "Markdown to PDF",
-      "desc": "Converts any Markdown file to PDF"
-    },
-    "PDFToMarkdown": {
-      "title": "PDF to Markdown",
-      "desc": "Converts any PDF to Markdown"
+      "desc": "Remove potentially harmful elements from PDF files"
     },
     "getPdfInfo": {
       "title": "Get ALL Info on PDF",
       "desc": "Grabs any and all information possible on PDFs"
-    },
-    "pageExtracter": {
-      "title": "Extract page(s)",
-      "desc": "Extracts select pages from PDF"
     },
     "pdfToSinglePage": {
       "title": "PDF to Single Large Page",
@@ -561,14 +502,6 @@
     "redact": {
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
-    },
-    "PDFToCSV": {
-      "title": "PDF to CSV",
-      "desc": "Extracts Tables from a PDF converting it to CSV"
-    },
-    "split-by-size-or-count": {
-      "title": "Auto Split by Size/Count",
-      "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
     },
     "overlay-pdfs": {
       "title": "Overlay PDFs",
@@ -610,10 +543,6 @@
       "title": "Edit Table of Contents",
       "desc": "Add or edit bookmarks and table of contents in PDF documents"
     },
-    "automate": {
-      "title": "Automate",
-      "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
-    },
     "manageCertificates": {
       "title": "Manage Certificates",
       "desc": "Import, export, or delete digital certificate files used for signing PDFs."
@@ -625,7 +554,63 @@
     "reorganizePages": {
       "title": "Reorganize Pages",
       "desc": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
+    },
+    "extractPages": {
+      "title": "Extract Pages",
+      "desc": "Extract specific pages from a PDF document"
+    },
+    "removePages": {
+      "title": "Remove Pages",
+      "desc": "Remove specific pages from a PDF document"
+    },
+    "removeImagePdf": {
+      "title": "Remove Image",
+      "desc": "Remove images from PDF documents"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Auto Split by Size/Count",
+      "desc": "Automatically split PDFs by file size or page count"
+    },
+    "adjust-contrast": {
+      "title": "Adjust Colours/Contrast",
+      "desc": "Adjust colours and contrast of PDF documents"
+    },
+    "replaceColorPdf": {
+      "title": "Replace & Invert Colour",
+      "desc": "Replace or invert colours in PDF documents"
+    },
+    "devApi": {
+      "title": "API",
+      "desc": "Link to API documentation"
+    },
+    "devFolderScanning": {
+      "title": "Automated Folder Scanning",
+      "desc": "Link to automated folder scanning guide"
+    },
+    "devSsoGuide": {
+      "title": "SSO Guide",
+      "desc": "Link to SSO guide"
+    },
+    "devAirgapped": {
+      "title": "Air-gapped Setup",
+      "desc": "Link to air-gapped setup guide"
+    },
+    "addPassword": {
+      "title": "Add Password",
+      "desc": "Add password protection and restrictions to PDF files"
+    },
+    "changePermissions": {
+      "title": "Change Permissions",
+      "desc": "Change document restrictions and permissions"
+    },
+    "automate": {
+      "title": "Automate",
+      "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
     }
+  },
+  "landing": {
+    "addFiles": "Add Files",
+    "uploadFromComputer": "Upload from computer"
   },
   "viewPdf": {
     "tags": "view,read,annotate,text,image,highlight,edit",
@@ -755,7 +740,8 @@
     "officeDocs": "Office Documents (Word, Excel, PowerPoint)",
     "imagesExt": "Images (JPG, PNG, etc.)",
     "markdown": "Markdown",
-    "textRtf": "Text/RTF"
+    "textRtf": "Text/RTF",
+    "grayscale": "Greyscale"
   },
   "imageToPdf": {
     "tags": "conversion,img,jpg,picture,photo"
@@ -1011,7 +997,49 @@
     "submit": "Change"
   },
   "removePages": {
-    "tags": "Remove pages,delete pages"
+    "tags": "Remove pages,delete pages",
+    "title": "Remove Pages",
+    "pageNumbers": "Pages to Remove",
+    "pageNumbersPlaceholder": "e.g. 1,3,5-7",
+    "pageNumbersHelp": "Enter page numbers separated by commas, or ranges like 1-5. Example: 1,3,5-7",
+    "filenamePrefix": "pages_removed",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "settings": {
+      "title": "Page Selection"
+    },
+    "error": {
+      "failed": "An error occurred whilst removing pages."
+    },
+    "results": {
+      "title": "Page Removal Results"
+    },
+    "submit": "Remove Pages"
+  },
+  "pageSelection": {
+    "tooltip": {
+      "header": {
+        "title": "Page Selection Guide"
+      },
+      "basic": {
+        "title": "Basic Usage",
+        "text": "Select specific pages from your PDF document using simple syntax.",
+        "bullet1": "Individual pages: 1,3,5",
+        "bullet2": "Page ranges: 3-6 or 10-15",
+        "bullet3": "All pages: all"
+      },
+      "advanced": {
+        "title": "Advanced Features"
+      },
+      "tips": {
+        "title": "Tips",
+        "text": "Keep these guidelines in mind:",
+        "bullet1": "Page numbers start from 1 (not 0)",
+        "bullet2": "Spaces are automatically removed",
+        "bullet3": "Invalid expressions are ignored"
+      }
+    }
   },
   "compressPdfs": {
     "tags": "squish,small,tiny"
@@ -1084,7 +1112,88 @@
     },
     "help": "Please read this documentation on how to use this for other languages and/or use not in docker",
     "credit": "This service uses qpdf and Tesseract for OCR.",
-    "submit": "Process PDF with OCR"
+    "submit": "Process PDF with OCR",
+    "operation": {
+      "submit": "Process OCR and Review"
+    },
+    "results": {
+      "title": "OCR Results"
+    },
+    "languagePicker": {
+      "additionalLanguages": "Looking for additional languages?",
+      "viewSetupGuide": "View setup guide →"
+    },
+    "settings": {
+      "title": "Settings",
+      "ocrMode": {
+        "label": "OCR Mode",
+        "auto": "Auto (skip text layers)",
+        "force": "Force (re-OCR all, replace text)",
+        "strict": "Strict (abort if text found)"
+      },
+      "languages": {
+        "label": "Languages",
+        "placeholder": "Select languages"
+      },
+      "compatibilityMode": {
+        "label": "Compatibility Mode"
+      },
+      "advancedOptions": {
+        "label": "Processing Options",
+        "sidecar": "Create a text file",
+        "deskew": "Deskew pages",
+        "clean": "Clean input file",
+        "cleanFinal": "Clean final output"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "OCR Settings Overview"
+      },
+      "mode": {
+        "title": "OCR Mode",
+        "text": "Optical Character Recognition (OCR) helps you turn scanned or screenshotted pages into text you can search, copy, or highlight.",
+        "bullet1": "Auto skips pages that already contain text layers.",
+        "bullet2": "Force re-OCRs every page and replaces all the text.",
+        "bullet3": "Strict halts if any selectable text is found."
+      },
+      "languages": {
+        "title": "Languages",
+        "text": "Improve OCR accuracy by specifying the expected languages. Choose one or more languages to guide detection."
+      },
+      "output": {
+        "title": "Output",
+        "text": "Decide how you want the text output formatted:",
+        "bullet1": "Searchable PDF embeds text behind the original image.",
+        "bullet2": "HOCR XML returns a structured machine-readable file.",
+        "bullet3": "Plain-text sidecar creates a separate .txt file with raw content."
+      },
+      "advanced": {
+        "header": {
+          "title": "Advanced OCR Processing"
+        },
+        "compatibility": {
+          "title": "Compatibility Mode",
+          "text": "Uses OCR 'sandwich PDF' mode: results in larger files, but more reliable with certain languages and older PDF software. By default we use hOCR for smaller, modern PDFs."
+        },
+        "sidecar": {
+          "title": "Create Text File",
+          "text": "Generates a separate .txt file alongside the PDF containing all extracted text content for easy access and processing."
+        },
+        "deskew": {
+          "title": "Deskew Pages",
+          "text": "Automatically corrects skewed or tilted pages to improve OCR accuracy. Useful for scanned documents that weren't perfectly aligned."
+        },
+        "clean": {
+          "title": "Clean Input File",
+          "text": "Preprocesses the input by removing noise, enhancing contrast, and optimising the image for better OCR recognition before processing."
+        },
+        "cleanFinal": {
+          "title": "Clean Final Output",
+          "text": "Post-processes the final PDF by removing OCR artefacts and optimising the text layer for better readability and smaller file size."
+        }
+      }
+    }
   },
   "extractImages": {
     "tags": "picture,photo,save,archive,zip,capture,grab",
@@ -1923,23 +2032,41 @@
     "currentPage": "Current Page",
     "totalPages": "Total Pages"
   },
+  "rightRail": {
+    "closeSelected": "Close Selected Files",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectByNumber": "Select by Page Numbers",
+    "deleteSelected": "Delete Selected Pages",
+    "closePdf": "Close PDF",
+    "exportAll": "Export PDF",
+    "downloadSelected": "Download Selected Files",
+    "downloadAll": "Download All",
+    "toggleTheme": "Toggle Theme",
+    "language": "Language"
+  },
   "toolPicker": {
     "searchPlaceholder": "Search tools...",
     "noToolsFound": "No tools found",
     "allTools": "ALL TOOLS",
     "quickAccess": "QUICK ACCESS",
+    "categories": {
+      "standardTools": "Standard Tools",
+      "advancedTools": "Advanced Tools",
+      "recommendedTools": "Recommended Tools"
+    },
     "subcategories": {
-      "Signing": "Signing",
-      "Document Security": "Document Security",
-      "Verification": "Verification",
-      "Document Review": "Document Review",
-      "Page Formatting": "Page Formatting",
-      "Extraction": "Extraction",
-      "Removal": "Removal",
-      "Automation": "Automation",
-      "General": "General",
-      "Advanced Formatting": "Advanced Formatting",
-      "Developer Tools": "Developer Tools"
+      "signing": "Signing",
+      "documentSecurity": "Document Security",
+      "verification": "Verification",
+      "documentReview": "Document Review",
+      "pageFormatting": "Page Formatting",
+      "extraction": "Extraction",
+      "removal": "Removal",
+      "automation": "Automation",
+      "general": "General",
+      "advancedFormatting": "Advanced Formatting",
+      "developerTools": "Developer Tools"
     }
   },
   "quickAccess": {
@@ -1963,14 +2090,17 @@
     "loading": "Loading...",
     "or": "or",
     "dropFileHere": "Drop file here or click to upload",
-    "dropFilesHere": "Drop files here or click to upload",
+    "dropFilesHere": "Drop files here or click the upload button",
     "pdfFilesOnly": "PDF files only",
     "supportedFileTypes": "Supported file types",
+    "upload": "Upload",
     "uploadFile": "Upload File",
     "uploadFiles": "Upload Files",
     "noFilesInStorage": "No files available in storage. Upload some files first.",
     "selectFromStorage": "Select from Storage",
-    "backToTools": "Back to Tools"
+    "backToTools": "Back to Tools",
+    "addFiles": "Add Files",
+    "dragFilesInOrClick": "Drag files in or click \"Add Files\" to browse"
   },
   "fileManager": {
     "title": "Upload PDF Files",
@@ -2010,7 +2140,15 @@
     "fileSize": "Size",
     "fileVersion": "Version",
     "totalSelected": "Total Selected",
-    "dropFilesHere": "Drop files here"
+    "dropFilesHere": "Drop files here",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "deleteSelected": "Delete Selected",
+    "downloadSelected": "Download Selected",
+    "selectedCount": "{{count}} selected",
+    "download": "Download",
+    "delete": "Delete",
+    "unsupported": "Unsupported"
   },
   "storage": {
     "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",
@@ -2179,6 +2317,90 @@
     "submit": "Remove Password",
     "results": {
       "title": "Decrypted PDFs"
+    }
+  },
+  "automate": {
+    "title": "Automate",
+    "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks.",
+    "invalidStep": "Invalid step",
+    "files": {
+      "placeholder": "Select files to process with this automation"
+    },
+    "selection": {
+      "title": "Automation Selection",
+      "saved": {
+        "title": "Saved"
+      },
+      "createNew": {
+        "title": "Create New Automation"
+      },
+      "suggested": {
+        "title": "Suggested"
+      }
+    },
+    "creation": {
+      "createTitle": "Create Automation",
+      "editTitle": "Edit Automation",
+      "intro": "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
+      "name": {
+        "label": "Automation Name",
+        "placeholder": "My Automation"
+      },
+      "description": {
+        "label": "Description (optional)",
+        "placeholder": "Describe what this automation does..."
+      },
+      "tools": {
+        "selectTool": "Select a tool...",
+        "selected": "Selected Tools",
+        "remove": "Remove tool",
+        "configure": "Configure tool",
+        "notConfigured": "! Not Configured",
+        "addTool": "Add Tool",
+        "add": "Add a tool..."
+      },
+      "save": "Save Automation",
+      "unsavedChanges": {
+        "title": "Unsaved Changes",
+        "message": "You have unsaved changes. Are you sure you want to go back? All changes will be lost.",
+        "cancel": "Cancel",
+        "confirm": "Go Back"
+      },
+      "icon": {
+        "label": "Icon"
+      }
+    },
+    "run": {
+      "title": "Run Automation"
+    },
+    "sequence": {
+      "unnamed": "Unnamed Automation",
+      "steps": "{{count}} steps",
+      "running": "Running Automation...",
+      "run": "Run Automation",
+      "finish": "Finish"
+    },
+    "reviewTitle": "Automation Results",
+    "config": {
+      "loading": "Loading tool configuration...",
+      "noSettings": "This tool does not have configurable settings.",
+      "title": "Configure {{toolName}}",
+      "description": "Configure the settings for this tool. These settings will be applied when the automation runs.",
+      "cancel": "Cancel",
+      "save": "Save Configuration"
+    },
+    "copyToSaved": "Copy to Saved"
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "Secure PDF Ingestion",
+      "securePdfIngestionDesc": "Comprehensive PDF processing workflow that sanitises documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimises file size.",
+      "emailPreparation": "Email Preparation",
+      "emailPreparationDesc": "Optimises PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy.",
+      "secureWorkflow": "Security Workflow",
+      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default.",
+      "processImages": "Process Images",
+      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
   }
 }

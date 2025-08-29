@@ -1,4 +1,5 @@
 import React from 'react';
+import { ToolOperationHook } from '../hooks/tools/shared/useToolOperation';
 
 export type MaxFiles = number; // 1=single, >1=limited, -1=unlimited
 export type ToolCategory = 'manipulation' | 'conversion' | 'analysis' | 'utility' | 'optimization' | 'security';
@@ -10,6 +11,29 @@ export interface BaseToolProps {
   onError?: (error: string) => void;
   onPreviewFile?: (file: File | null) => void;
 }
+
+/**
+ * Interface for tool components that support automation.
+ * Tools implementing this interface can be used in automation workflows.
+ */
+export interface AutomationCapableTool {
+  /**
+   * Static method that returns the operation hook for this tool.
+   * This enables automation to execute the tool programmatically.
+   */
+  tool: () => () => ToolOperationHook<any>;
+
+  /**
+   * Static method that returns the default parameters for this tool.
+   * This enables automation creation to initialize tools with proper defaults.
+   */
+  getDefaultParameters: () => any;
+}
+
+/**
+ * Type for tool components that can be used in automation
+ */
+export type ToolComponent = React.ComponentType<BaseToolProps> & AutomationCapableTool;
 
 export interface ToolStepConfig {
   type: ToolStepType;
@@ -54,24 +78,3 @@ export interface Tool {
 
 export type ToolRegistry = Record<string, Tool>;
 
-export interface FileSelectionState {
-  selectedFiles: File[];
-  maxFiles: MaxFiles;
-  isToolMode: boolean;
-}
-
-export interface FileSelectionActions {
-  setSelectedFiles: (files: File[]) => void;
-  setMaxFiles: (maxFiles: MaxFiles) => void;
-  setIsToolMode: (isToolMode: boolean) => void;
-  clearSelection: () => void;
-}
-
-export interface FileSelectionComputed {
-  canSelectMore: boolean;
-  isAtLimit: boolean;
-  selectionCount: number;
-  isMultiFileMode: boolean;
-}
-
-export interface FileSelectionContextValue extends FileSelectionState, FileSelectionActions, FileSelectionComputed {}

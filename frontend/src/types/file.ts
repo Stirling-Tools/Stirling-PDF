@@ -1,12 +1,23 @@
 /**
- * Enhanced file types for IndexedDB storage
+ * File types for the new architecture
+ * FileContext uses pure File objects with separate ID tracking
  */
 
-export interface FileWithUrl extends File {
-  id?: string;
-  url?: string;
+declare const tag: unique symbol;
+export type FileId = string & { readonly [tag]: 'FileId' };
+
+/**
+ * File metadata for efficient operations without loading full file data
+ * Used by IndexedDBContext and FileContext for lazy file loading
+ */
+export interface FileMetadata {
+  id: FileId;
+  name: string;
+  type: string;
+  size: number;
+  lastModified: number;
   thumbnail?: string;
-  storedInIndexedDB?: boolean;
+  isDraft?: boolean; // Marks files as draft versions
 }
 
 export interface StorageConfig {
@@ -27,9 +38,9 @@ export const defaultStorageConfig: StorageConfig = {
 export const initializeStorageConfig = async (): Promise<StorageConfig> => {
   const tenGB = 10 * 1024 * 1024 * 1024; // 10GB in bytes
   const oneGB = 1024 * 1024 * 1024; // 1GB fallback
-  
+
   let maxTotalStorage = oneGB; // Default fallback
-  
+
   // Try to estimate available storage
   if ('storage' in navigator && 'estimate' in navigator.storage) {
     try {
@@ -42,7 +53,7 @@ export const initializeStorageConfig = async (): Promise<StorageConfig> => {
       console.warn('Could not estimate storage quota, using 1GB default:', error);
     }
   }
-  
+
   return {
     ...defaultStorageConfig,
     maxTotalStorage

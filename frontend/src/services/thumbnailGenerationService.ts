@@ -1,6 +1,9 @@
 /**
- * High-performance thumbnail generation service using Web Workers
+ * High-performance thumbnail generation service using main thread processing
  */
+
+import { FileId } from '../types/file';
+import { pdfWorkerManager } from './pdfWorkerManager';
 
 interface ThumbnailResult {
   pageNumber: number;
@@ -22,283 +25,174 @@ interface CachedThumbnail {
   sizeBytes: number;
 }
 
+interface CachedPDFDocument {
+  pdf: any; // PDFDocumentProxy from pdfjs-dist
+  lastUsed: number;
+  refCount: number;
+}
+
 export class ThumbnailGenerationService {
-  private workers: Worker[] = [];
-  private activeJobs = new Map<string, { resolve: Function; reject: Function; onProgress?: Function }>();
-  private jobCounter = 0;
-  private isGenerating = false;
-  
   // Session-based thumbnail cache
-  private thumbnailCache = new Map<string, CachedThumbnail>();
+  private thumbnailCache = new Map<FileId | string /* FIX ME: Page ID */, CachedThumbnail>();
   private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
   private currentCacheSize = 0;
 
-  constructor(private maxWorkers: number = 3) {
-    this.initializeWorkers();
-  }
+  // PDF document cache to reuse PDF instances and avoid creating multiple workers
+  private pdfDocumentCache = new Map<FileId, CachedPDFDocument>();
+  private maxPdfCacheSize = 10; // Keep up to 10 PDF documents cached
 
-  private initializeWorkers(): void {
-    const workerPromises: Promise<Worker | null>[] = [];
-    
-    for (let i = 0; i < this.maxWorkers; i++) {
-      const workerPromise = new Promise<Worker | null>((resolve) => {
-        try {
-          console.log(`Attempting to create worker ${i}...`);
-          const worker = new Worker('/thumbnailWorker.js');
-          let workerReady = false;
-          let pingTimeout: NodeJS.Timeout;
-          
-          worker.onmessage = (e) => {
-            const { type, data, jobId } = e.data;
-            
-            // Handle PONG response to confirm worker is ready
-            if (type === 'PONG') {
-              workerReady = true;
-              clearTimeout(pingTimeout);
-              console.log(`✓ Worker ${i} is ready and responsive`);
-              resolve(worker);
-              return;
-            }
-            
-            const job = this.activeJobs.get(jobId);
-            if (!job) return;
-            
-            switch (type) {
-              case 'PROGRESS':
-                if (job.onProgress) {
-                  job.onProgress(data);
-                }
-                break;
-                
-              case 'COMPLETE':
-                job.resolve(data.thumbnails);
-                this.activeJobs.delete(jobId);
-                break;
-                
-              case 'ERROR':
-                job.reject(new Error(data.error));
-                this.activeJobs.delete(jobId);
-                break;
-            }
-          };
-          
-          worker.onerror = (error) => {
-            console.error(`✗ Worker ${i} failed with error:`, error);
-            clearTimeout(pingTimeout);
-            worker.terminate();
-            resolve(null);
-          };
-          
-          // Test worker with timeout
-          pingTimeout = setTimeout(() => {
-            if (!workerReady) {
-              console.warn(`✗ Worker ${i} timed out (no PONG response)`);
-              worker.terminate();
-              resolve(null);
-            }
-          }, 3000); // Reduced timeout for faster feedback
-          
-          // Send PING to test worker
-          try {
-            worker.postMessage({ type: 'PING' });
-          } catch (pingError) {
-            console.error(`✗ Failed to send PING to worker ${i}:`, pingError);
-            clearTimeout(pingTimeout);
-            worker.terminate();
-            resolve(null);
-          }
-          
-        } catch (error) {
-          console.error(`✗ Failed to create worker ${i}:`, error);
-          resolve(null);
-        }
-      });
-      
-      workerPromises.push(workerPromise);
-    }
-    
-    // Wait for all workers to initialize or fail
-    Promise.all(workerPromises).then((workers) => {
-      this.workers = workers.filter((w): w is Worker => w !== null);
-      const successCount = this.workers.length;
-      const failCount = this.maxWorkers - successCount;
-      
-      console.log(`🔧 Worker initialization complete: ${successCount}/${this.maxWorkers} workers ready`);
-      
-      if (failCount > 0) {
-        console.warn(`⚠️  ${failCount} workers failed to initialize - will use main thread fallback`);
-      }
-      
-      if (successCount === 0) {
-        console.warn('🚨 No Web Workers available - all thumbnail generation will use main thread');
-      }
-    });
+  constructor(private maxWorkers: number = 10) {
+    // PDF rendering requires DOM access, so we use optimized main thread processing
   }
 
   /**
-   * Generate thumbnails for multiple pages using Web Workers
+   * Get or create a cached PDF document
+   */
+  private async getCachedPDFDocument(fileId: FileId, pdfArrayBuffer: ArrayBuffer): Promise<any> {
+    const cached = this.pdfDocumentCache.get(fileId);
+    if (cached) {
+      cached.lastUsed = Date.now();
+      cached.refCount++;
+      return cached.pdf;
+    }
+
+    // Evict old PDFs if cache is full
+    while (this.pdfDocumentCache.size >= this.maxPdfCacheSize) {
+      this.evictLeastRecentlyUsedPDF();
+    }
+
+    // Use centralized worker manager instead of direct getDocument
+    const pdf = await pdfWorkerManager.createDocument(pdfArrayBuffer, {
+      disableAutoFetch: true,
+      disableStream: true,
+      stopAtErrors: false
+    });
+
+    this.pdfDocumentCache.set(fileId, {
+      pdf,
+      lastUsed: Date.now(),
+      refCount: 1
+    });
+
+    return pdf;
+  }
+
+  /**
+   * Release a reference to a cached PDF document
+   */
+  private releasePDFDocument(fileId: FileId): void {
+    const cached = this.pdfDocumentCache.get(fileId);
+    if (cached) {
+      cached.refCount--;
+      // Don't destroy immediately - keep in cache for potential reuse
+    }
+  }
+
+  /**
+   * Evict the least recently used PDF document
+   */
+  private evictLeastRecentlyUsedPDF(): void {
+    let oldestEntry: [FileId, CachedPDFDocument] | null = null;
+    let oldestTime = Date.now();
+
+    for (const [key, value] of this.pdfDocumentCache.entries()) {
+      if (value.lastUsed < oldestTime && value.refCount === 0) {
+        oldestTime = value.lastUsed;
+        oldestEntry = [key, value];
+      }
+    }
+
+    if (oldestEntry) {
+      pdfWorkerManager.destroyDocument(oldestEntry[1].pdf); // Use worker manager for cleanup
+      this.pdfDocumentCache.delete(oldestEntry[0]);
+    }
+  }
+
+  /**
+   * Generate thumbnails for multiple pages using main thread processing
    */
   async generateThumbnails(
+    fileId: FileId,
     pdfArrayBuffer: ArrayBuffer,
     pageNumbers: number[],
     options: ThumbnailGenerationOptions = {},
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
-    if (this.isGenerating) {
-      console.warn('🚨 ThumbnailService: Thumbnail generation already in progress, rejecting new request');
-      throw new Error('Thumbnail generation already in progress');
+    // Input validation
+    if (!fileId || typeof fileId !== 'string' || fileId.trim() === '') {
+      throw new Error('generateThumbnails: fileId must be a non-empty string');
     }
 
-    console.log(`🎬 ThumbnailService: Starting thumbnail generation for ${pageNumbers.length} pages`);
-    this.isGenerating = true;
-    
+    if (!pdfArrayBuffer || pdfArrayBuffer.byteLength === 0) {
+      throw new Error('generateThumbnails: pdfArrayBuffer must not be empty');
+    }
+
+    if (!pageNumbers || pageNumbers.length === 0) {
+      throw new Error('generateThumbnails: pageNumbers must not be empty');
+    }
+
     const {
       scale = 0.2,
-      quality = 0.8,
-      batchSize = 20, // Pages per worker
-      parallelBatches = this.maxWorkers
+      quality = 0.8
     } = options;
 
-    try {
-      // Check if workers are available, fallback to main thread if not
-      if (this.workers.length === 0) {
-        console.warn('No Web Workers available, falling back to main thread processing');
-        return await this.generateThumbnailsMainThread(pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
-      }
-
-      // Split pages across workers
-      const workerBatches = this.distributeWork(pageNumbers, this.workers.length);
-      console.log(`🔧 ThumbnailService: Distributing ${pageNumbers.length} pages across ${this.workers.length} workers:`, workerBatches.map(batch => batch.length));
-      const jobPromises: Promise<ThumbnailResult[]>[] = [];
-
-      for (let i = 0; i < workerBatches.length; i++) {
-        const batch = workerBatches[i];
-        if (batch.length === 0) continue;
-
-        const worker = this.workers[i % this.workers.length];
-        const jobId = `job-${++this.jobCounter}`;
-        console.log(`🔧 ThumbnailService: Sending job ${jobId} with ${batch.length} pages to worker ${i}:`, batch);
-
-        const promise = new Promise<ThumbnailResult[]>((resolve, reject) => {
-          // Add timeout for worker jobs
-          const timeout = setTimeout(() => {
-            console.error(`⏰ ThumbnailService: Worker job ${jobId} timed out`);
-            this.activeJobs.delete(jobId);
-            reject(new Error(`Worker job ${jobId} timed out`));
-          }, 60000); // 1 minute timeout
-          
-          // Create job with timeout handling
-          this.activeJobs.set(jobId, { 
-            resolve: (result: any) => { 
-              console.log(`✅ ThumbnailService: Job ${jobId} completed with ${result.length} thumbnails`);
-              clearTimeout(timeout); 
-              resolve(result); 
-            },
-            reject: (error: any) => { 
-              console.error(`❌ ThumbnailService: Job ${jobId} failed:`, error);
-              clearTimeout(timeout); 
-              reject(error); 
-            },
-            onProgress: onProgress ? (progressData: any) => {
-              console.log(`📊 ThumbnailService: Job ${jobId} progress - ${progressData.completed}/${progressData.total} (${progressData.thumbnails.length} new)`);
-              onProgress(progressData);
-            } : undefined
-          });
-          
-          worker.postMessage({
-            type: 'GENERATE_THUMBNAILS',
-            jobId,
-            data: {
-              pdfArrayBuffer,
-              pageNumbers: batch,
-              scale,
-              quality
-            }
-          });
-        });
-
-        jobPromises.push(promise);
-      }
-
-      // Wait for all workers to complete
-      const results = await Promise.all(jobPromises);
-      
-      // Flatten and sort results by page number
-      const allThumbnails = results.flat().sort((a, b) => a.pageNumber - b.pageNumber);
-      console.log(`🎯 ThumbnailService: All workers completed, returning ${allThumbnails.length} thumbnails`);
-      
-      return allThumbnails;
-      
-    } catch (error) {
-      console.error('Web Worker thumbnail generation failed, falling back to main thread:', error);
-      return await this.generateThumbnailsMainThread(pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
-    } finally {
-      console.log('🔄 ThumbnailService: Resetting isGenerating flag');
-      this.isGenerating = false;
-    }
+    return await this.generateThumbnailsMainThread(fileId, pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
   }
 
   /**
-   * Fallback thumbnail generation on main thread
+   * Main thread thumbnail generation with batching for UI responsiveness
    */
   private async generateThumbnailsMainThread(
+    fileId: FileId,
     pdfArrayBuffer: ArrayBuffer,
     pageNumbers: number[],
     scale: number,
     quality: number,
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
-    console.log(`🔧 ThumbnailService: Fallback to main thread for ${pageNumbers.length} pages`);
-    
-    // Import PDF.js dynamically for main thread
-    const { getDocument } = await import('pdfjs-dist');
-    
-    // Load PDF once
-    const pdf = await getDocument({ data: pdfArrayBuffer }).promise;
-    console.log(`✓ ThumbnailService: PDF loaded on main thread`);
-    
-    
+    const pdf = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
+
     const allResults: ThumbnailResult[] = [];
     let completed = 0;
-    const batchSize = 5; // Small batches for UI responsiveness
-    
+    const batchSize = 3; // Smaller batches for better UI responsiveness
+
     // Process pages in small batches
     for (let i = 0; i < pageNumbers.length; i += batchSize) {
       const batch = pageNumbers.slice(i, i + batchSize);
-      
+
       // Process batch sequentially (to avoid canvas conflicts)
       for (const pageNumber of batch) {
         try {
           const page = await pdf.getPage(pageNumber);
           const viewport = page.getViewport({ scale });
-          
+
           const canvas = document.createElement('canvas');
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-          
+
           const context = canvas.getContext('2d');
           if (!context) {
             throw new Error('Could not get canvas context');
           }
-          
+
           await page.render({ canvasContext: context, viewport }).promise;
           const thumbnail = canvas.toDataURL('image/jpeg', quality);
-          
+
           allResults.push({ pageNumber, thumbnail, success: true });
-          
+
         } catch (error) {
           console.error(`Failed to generate thumbnail for page ${pageNumber}:`, error);
-          allResults.push({ 
-            pageNumber, 
-            thumbnail: '', 
-            success: false, 
-            error: error instanceof Error ? error.message : 'Unknown error' 
+          allResults.push({
+            pageNumber,
+            thumbnail: '',
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
           });
         }
       }
-      
+
       completed += batch.length;
-      
+
       // Report progress
       if (onProgress) {
         onProgress({
@@ -307,144 +201,115 @@ export class ThumbnailGenerationService {
           thumbnails: allResults.slice(-batch.length).filter(r => r.success)
         });
       }
-      
-      // Small delay to keep UI responsive
-      if (i + batchSize < pageNumbers.length) {
-        await new Promise(resolve => setTimeout(resolve, 10));
-      }
+
+      // Yield control to prevent UI blocking
+      await new Promise(resolve => setTimeout(resolve, 1));
     }
-    
-    // Clean up
-    pdf.destroy();
-    
-    return allResults.filter(r => r.success);
+
+    // Release reference to PDF document (don't destroy - keep in cache)
+    this.releasePDFDocument(fileId);
+
+    this.cleanupCompletedDocument(fileId);
+
+    return allResults;
   }
 
   /**
-   * Distribute work evenly across workers
-   */
-  private distributeWork(pageNumbers: number[], numWorkers: number): number[][] {
-    const batches: number[][] = Array(numWorkers).fill(null).map(() => []);
-    
-    pageNumbers.forEach((pageNum, index) => {
-      const workerIndex = index % numWorkers;
-      batches[workerIndex].push(pageNum);
-    });
-    
-    return batches;
-  }
-
-  /**
-   * Generate a single thumbnail (fallback for individual pages)
-   */
-  async generateSingleThumbnail(
-    pdfArrayBuffer: ArrayBuffer,
-    pageNumber: number,
-    options: ThumbnailGenerationOptions = {}
-  ): Promise<string> {
-    const results = await this.generateThumbnails(pdfArrayBuffer, [pageNumber], options);
-    
-    if (results.length === 0 || !results[0].success) {
-      throw new Error(`Failed to generate thumbnail for page ${pageNumber}`);
-    }
-    
-    return results[0].thumbnail;
-  }
-
-  /**
-   * Add thumbnail to cache with size management
-   */
-  addThumbnailToCache(pageId: string, thumbnail: string): void {
-    const thumbnailSizeBytes = thumbnail.length * 0.75; // Rough base64 size estimate
-    const now = Date.now();
-    
-    // Add new thumbnail
-    this.thumbnailCache.set(pageId, {
-      thumbnail,
-      lastUsed: now,
-      sizeBytes: thumbnailSizeBytes
-    });
-    
-    this.currentCacheSize += thumbnailSizeBytes;
-    
-    // If we exceed 1GB, trigger cleanup
-    if (this.currentCacheSize > this.maxCacheSizeBytes) {
-      this.cleanupThumbnailCache();
-    }
-  }
-
-  /**
-   * Get thumbnail from cache and update last used timestamp
+   * Cache management
    */
   getThumbnailFromCache(pageId: string): string | null {
     const cached = this.thumbnailCache.get(pageId);
-    if (!cached) return null;
-    
-    // Update last used timestamp
-    cached.lastUsed = Date.now();
-    
-    return cached.thumbnail;
+    if (cached) {
+      cached.lastUsed = Date.now();
+      return cached.thumbnail;
+    }
+    return null;
   }
 
-  /**
-   * Clean up cache using LRU eviction
-   */
-  private cleanupThumbnailCache(): void {
-    const entries = Array.from(this.thumbnailCache.entries());
-    
-    // Sort by last used (oldest first)
-    entries.sort(([, a], [, b]) => a.lastUsed - b.lastUsed);
-    
-    this.thumbnailCache.clear();
-    this.currentCacheSize = 0;
-    const targetSize = this.maxCacheSizeBytes * 0.8; // Clean to 80% of limit
-    
-    // Keep most recently used entries until we hit target size
-    for (let i = entries.length - 1; i >= 0 && this.currentCacheSize < targetSize; i--) {
-      const [key, value] = entries[i];
-      this.thumbnailCache.set(key, value);
-      this.currentCacheSize += value.sizeBytes;
+  addThumbnailToCache(pageId: string, thumbnail: string): void {
+    const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
+
+    // Enforce cache size limits
+    while (this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes && this.thumbnailCache.size > 0) {
+      this.evictLeastRecentlyUsed();
+    }
+
+    this.thumbnailCache.set(pageId, {
+      thumbnail,
+      lastUsed: Date.now(),
+      sizeBytes
+    });
+
+    this.currentCacheSize += sizeBytes;
+  }
+
+  private evictLeastRecentlyUsed(): void {
+    let oldestEntry: [string, CachedThumbnail] | null = null;
+    let oldestTime = Date.now();
+
+    for (const [key, value] of this.thumbnailCache.entries()) {
+      if (value.lastUsed < oldestTime) {
+        oldestTime = value.lastUsed;
+        oldestEntry = [key, value];
+      }
+    }
+
+    if (oldestEntry) {
+      this.thumbnailCache.delete(oldestEntry[0]);
+      this.currentCacheSize -= oldestEntry[1].sizeBytes;
     }
   }
 
-  /**
-   * Clear all cached thumbnails
-   */
-  clearThumbnailCache(): void {
-    this.thumbnailCache.clear();
-    this.currentCacheSize = 0;
-  }
-
-  /**
-   * Get cache statistics
-   */
   getCacheStats() {
     return {
-      entries: this.thumbnailCache.size,
-      totalSizeBytes: this.currentCacheSize,
+      size: this.thumbnailCache.size,
+      sizeBytes: this.currentCacheSize,
       maxSizeBytes: this.maxCacheSizeBytes
     };
   }
 
-  /**
-   * Stop generation but keep cache and workers alive
-   */
   stopGeneration(): void {
-    this.activeJobs.clear();
-    this.isGenerating = false;
+    // No-op since we removed workers
+  }
+
+  clearCache(): void {
+    this.thumbnailCache.clear();
+    this.currentCacheSize = 0;
+  }
+
+  clearPDFCache(): void {
+    // Destroy all cached PDF documents using worker manager
+    for (const [, cached] of this.pdfDocumentCache) {
+      pdfWorkerManager.destroyDocument(cached.pdf);
+    }
+    this.pdfDocumentCache.clear();
+  }
+
+  clearPDFCacheForFile(fileId: FileId): void {
+    const cached = this.pdfDocumentCache.get(fileId);
+    if (cached) {
+      pdfWorkerManager.destroyDocument(cached.pdf);
+      this.pdfDocumentCache.delete(fileId);
+    }
   }
 
   /**
-   * Terminate all workers and clear cache (only on explicit cleanup)
+   * Clean up a PDF document from cache when thumbnail generation is complete
+   * This frees up workers faster for better performance
    */
+  cleanupCompletedDocument(fileId: FileId): void {
+    const cached = this.pdfDocumentCache.get(fileId);
+    if (cached && cached.refCount <= 0) {
+      pdfWorkerManager.destroyDocument(cached.pdf);
+      this.pdfDocumentCache.delete(fileId);
+    }
+  }
+
   destroy(): void {
-    this.workers.forEach(worker => worker.terminate());
-    this.workers = [];
-    this.activeJobs.clear();
-    this.isGenerating = false;
-    this.clearThumbnailCache();
+    this.clearCache();
+    this.clearPDFCache();
   }
 }
 
-// Export singleton instance
+// Global singleton instance
 export const thumbnailGenerationService = new ThumbnailGenerationService();

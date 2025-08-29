@@ -11,12 +11,13 @@ import {
   Code,
   Divider
 } from '@mantine/core';
-import { useFileContext } from '../../contexts/FileContext';
-import { FileOperation, FileOperationHistory as FileOperationHistoryType } from '../../types/fileContext';
+// FileContext no longer needed - these were stub functions anyway
+import {  FileOperation, FileOperationHistory as FileOperationHistoryType } from '../../types/fileContext';
 import { PageOperation } from '../../types/pageEditor';
+import { FileId } from '../../types/file';
 
 interface FileOperationHistoryProps {
-  fileId: string;
+  fileId: FileId;
   showOnlyApplied?: boolean;
   maxHeight?: number;
 }
@@ -26,11 +27,13 @@ const FileOperationHistory: React.FC<FileOperationHistoryProps> = ({
   showOnlyApplied = false,
   maxHeight = 400
 }) => {
-  const { getFileHistory, getAppliedOperations } = useFileContext();
+  // These were stub functions in the old context - replace with empty stubs
+  const getFileHistory = (fileId: FileId) => ({ operations: [], createdAt: Date.now(), lastModified: Date.now() });
+  const getAppliedOperations = (fileId: FileId) => [];
 
   const history = getFileHistory(fileId);
   const allOperations = showOnlyApplied ? getAppliedOperations(fileId) : history?.operations || [];
-  const operations = allOperations.filter(op => 'fileIds' in op) as FileOperation[];
+  const operations = allOperations.filter((op: any) => 'fileIds' in op) as FileOperation[];
 
   const formatTimestamp = (timestamp: number) => {
     return new Date(timestamp).toLocaleString();

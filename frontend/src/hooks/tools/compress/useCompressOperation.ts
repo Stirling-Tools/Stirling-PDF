@@ -1,17 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
+import { useToolOperation, ToolOperationConfig, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
+import { CompressParameters, defaultParameters } from './useCompressParameters';
 
-export interface CompressParameters {
-  compressionLevel: number;
-  grayscale: boolean;
-  expectedSize: string;
-  compressionMethod: 'quality' | 'filesize';
-  fileSizeValue: string;
-  fileSizeUnit: 'KB' | 'MB';
-}
-
-const buildFormData = (parameters: CompressParameters, file: File): FormData => {
+// Static configuration that can be used by both the hook and automation executor
+export const buildCompressFormData = (parameters: CompressParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
@@ -29,15 +22,21 @@ const buildFormData = (parameters: CompressParameters, file: File): FormData => 
   return formData;
 };
 
+// Static configuration object
+export const compressOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildCompressFormData,
+  operationType: 'compress',
+  endpoint: '/api/v1/misc/compress-pdf',
+  filePrefix: 'compressed_',
+  defaultParameters,
+} as const;
+
 export const useCompressOperation = () => {
   const { t } = useTranslation();
 
   return useToolOperation<CompressParameters>({
-    operationType: 'compress',
-    endpoint: '/api/v1/misc/compress-pdf',
-    buildFormData,
-    filePrefix: 'compressed_',
-    multiFileEndpoint: false, // Individual API calls per file
+    ...compressOperationConfig,
     getErrorMessage: createStandardErrorHandler(t('compress.error.failed', 'An error occurred while compressing the PDF.'))
   });
 };

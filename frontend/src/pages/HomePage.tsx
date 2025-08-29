@@ -1,28 +1,26 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileContext } from "../contexts/FileContext";
-import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
-import { ToolWorkflowProvider, useToolWorkflow } from "../contexts/ToolWorkflowContext";
+import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
-import { SidebarProvider, useSidebarContext } from "../contexts/SidebarContext";
+import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { getBaseUrl } from "../constants/app";
 
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
+import RightRail from "../components/shared/RightRail";
 import FileManager from "../components/FileManager";
+import Footer from "../components/shared/Footer";
 
 
-function HomePageContent() {
+export default function HomePage() {
   const { t } = useTranslation();
   const {
     sidebarRefs,
   } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
-
-  const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
 
   const { selectedTool, selectedToolKey } = useToolWorkflow();
 
@@ -38,42 +36,23 @@ function HomePageContent() {
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
   });
 
-  // Update file selection context when tool changes
-  useEffect(() => {
-    if (selectedTool) {
-      setMaxFiles(selectedTool.maxFiles ?? -1);
-      setIsToolMode(true);
-    } else {
-      setMaxFiles(-1);
-      setIsToolMode(false);
-      setSelectedFiles([]);
-    }
-  }, [selectedTool, setMaxFiles, setIsToolMode, setSelectedFiles]);
+  // Note: File selection limits are now handled directly by individual tools
 
   return (
-    <Group
-      align="flex-start"
-      gap={0}
-      className="min-h-screen w-screen overflow-hidden flex-nowrap flex"
-    >
-      <QuickAccessBar
-        ref={quickAccessRef} />
-      <ToolPanel />
-      <Workbench />
-      <FileManager selectedTool={selectedTool as any /* FIX ME */} />
-    </Group>
-  );
-}
-
-export default function HomePage() {
-  const { setCurrentView } = useFileContext();
-  return (
-    <FileSelectionProvider>
-      <ToolWorkflowProvider onViewChange={setCurrentView as any /* FIX ME */}>
-        <SidebarProvider>
-          <HomePageContent />
-        </SidebarProvider>
-      </ToolWorkflowProvider>
-    </FileSelectionProvider>
+    <div className="h-screen overflow-hidden">
+      <Group
+        align="flex-start"
+        gap={0}
+        h="100%"
+        className="flex-nowrap flex"
+      >
+        <QuickAccessBar
+          ref={quickAccessRef} />
+        <ToolPanel />
+        <Workbench />
+        <RightRail />
+        <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+      </Group>
+    </div>
   );
 }

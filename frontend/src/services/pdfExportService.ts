@@ -4,19 +4,18 @@ import { PDFDocument, PDFPage } from '../types/pageEditor';
 export interface ExportOptions {
   selectedOnly?: boolean;
   filename?: string;
-  splitDocuments?: boolean;
 }
 
 export class PDFExportService {
   /**
-   * Export PDF document with applied operations
+   * Export PDF document with applied operations (single file source)
    */
   async exportPDF(
     pdfDocument: PDFDocument,
     selectedPageIds: string[] = [],
     options: ExportOptions = {}
-  ): Promise<{ blob: Blob; filename: string } | { blobs: Blob[]; filenames: string[] }> {
-    const { selectedOnly = false, filename, splitDocuments = false } = options;
+  ): Promise<{ blob: Blob; filename: string }> {
+    const { selectedOnly = false, filename } = options;
 
     try {
       // Determine which pages to export
@@ -28,17 +27,13 @@ export class PDFExportService {
         throw new Error('No pages to export');
       }
 
-      // Load original PDF once
+      // Load original PDF and create new document
       const originalPDFBytes = await pdfDocument.file.arrayBuffer();
       const sourceDoc = await PDFLibDocument.load(originalPDFBytes);
+      const blob = await this.createSingleDocument(sourceDoc, pagesToExport);
+      const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly, false);
 
-      if (splitDocuments) {
-        return await this.createSplitDocuments(sourceDoc, pagesToExport, filename || pdfDocument.name);
-      } else {
-        const blob = await this.createSingleDocument(sourceDoc, pagesToExport);
-        const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly);
-        return { blob, filename: exportFilename };
-      }
+      return { blob, filename: exportFilename };
     } catch (error) {
       console.error('PDF export error:', error);
       throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -46,28 +41,85 @@ export class PDFExportService {
   }
 
   /**
-   * Create a single PDF document with all operations applied
+   * Export PDF document with applied operations (multi-file source)
    */
-  private async createSingleDocument(
-    sourceDoc: PDFLibDocument,
+  async exportPDFMultiFile(
+    pdfDocument: PDFDocument,
+    sourceFiles: Map<string, File>,
+    selectedPageIds: string[] = [],
+    options: ExportOptions = {}
+  ): Promise<{ blob: Blob; filename: string }> {
+    const { selectedOnly = false, filename } = options;
+
+    try {
+      // Determine which pages to export
+      const pagesToExport = selectedOnly && selectedPageIds.length > 0
+        ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
+        : pdfDocument.pages;
+
+      if (pagesToExport.length === 0) {
+        throw new Error('No pages to export');
+      }
+
+      const blob = await this.createMultiSourceDocument(sourceFiles, pagesToExport);
+      const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly, false);
+
+      return { blob, filename: exportFilename };
+    } catch (error) {
+      console.error('Multi-file PDF export error:', error);
+      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Create a PDF document from multiple source files
+   */
+  private async createMultiSourceDocument(
+    sourceFiles: Map<string, File>,
     pages: PDFPage[]
   ): Promise<Blob> {
     const newDoc = await PDFLibDocument.create();
 
+    // Load all source documents once and cache them
+    const loadedDocs = new Map<string, PDFLibDocument>();
+
+    for (const [fileId, file] of sourceFiles) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const doc = await PDFLibDocument.load(arrayBuffer);
+        loadedDocs.set(fileId, doc);
+      } catch (error) {
+        console.warn(`Failed to load source file ${fileId}:`, error);
+      }
+    }
+
     for (const page of pages) {
-      // Get the original page from source document
-      const sourcePageIndex = page.pageNumber - 1;
+      if (page.isBlankPage || page.originalPageNumber === -1) {
+        // Create a blank page
+        const blankPage = newDoc.addPage(PageSizes.A4);
 
-      if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
-        // Copy the page
-        const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
-
-        // Apply rotation
+        // Apply rotation if needed
         if (page.rotation !== 0) {
-          copiedPage.setRotation(degrees(page.rotation));
+          blankPage.setRotation(degrees(page.rotation));
         }
+      } else if (page.originalFileId && loadedDocs.has(page.originalFileId)) {
+        // Get the correct source document for this page
+        const sourceDoc = loadedDocs.get(page.originalFileId)!;
+        const sourcePageIndex = page.originalPageNumber - 1;
 
-        newDoc.addPage(copiedPage);
+        if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
+          // Copy the page from the correct source document
+          const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
+
+          // Apply rotation
+          if (page.rotation !== 0) {
+            copiedPage.setRotation(degrees(page.rotation));
+          }
+
+          newDoc.addPage(copiedPage);
+        }
+      } else {
+        console.warn(`Cannot find source document for page ${page.pageNumber} (fileId: ${page.originalFileId})`);
       }
     }
 
@@ -82,86 +134,60 @@ export class PDFExportService {
   }
 
   /**
-   * Create multiple PDF documents based on split markers
+   * Create a single PDF document with all operations applied (single source)
    */
-  private async createSplitDocuments(
+  private async createSingleDocument(
     sourceDoc: PDFLibDocument,
-    pages: PDFPage[],
-    baseFilename: string
-  ): Promise<{ blobs: Blob[]; filenames: string[] }> {
-    const splitPoints: number[] = [];
-    const blobs: Blob[] = [];
-    const filenames: string[] = [];
+    pages: PDFPage[]
+  ): Promise<Blob> {
+    const newDoc = await PDFLibDocument.create();
 
-    // Find split points
-    pages.forEach((page, index) => {
-      if (page.splitBefore && index > 0) {
-        splitPoints.push(index);
-      }
-    });
+    for (const page of pages) {
+      if (page.isBlankPage || page.originalPageNumber === -1) {
+        // Create a blank page
+        const blankPage = newDoc.addPage(PageSizes.A4);
 
-    // Add end point
-    splitPoints.push(pages.length);
-
-    let startIndex = 0;
-    let partNumber = 1;
-
-    for (const endIndex of splitPoints) {
-      const segmentPages = pages.slice(startIndex, endIndex);
-
-      if (segmentPages.length > 0) {
-        const newDoc = await PDFLibDocument.create();
-
-        for (const page of segmentPages) {
-          const sourcePageIndex = page.pageNumber - 1;
-
-          if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
-            const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
-
-            if (page.rotation !== 0) {
-              copiedPage.setRotation(degrees(page.rotation));
-            }
-
-            newDoc.addPage(copiedPage);
-          }
+        // Apply rotation if needed
+        if (page.rotation !== 0) {
+          blankPage.setRotation(degrees(page.rotation));
         }
+      } else {
+        // Get the original page from source document using originalPageNumber
+        const sourcePageIndex = page.originalPageNumber - 1;
 
-        // Set metadata
-        newDoc.setCreator('Stirling PDF');
-        newDoc.setProducer('Stirling PDF');
-        newDoc.setTitle(`${baseFilename} - Part ${partNumber}`);
+        if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
+          // Copy the page
+          const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
 
-        const pdfBytes = await newDoc.save();
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        const filename = this.generateSplitFilename(baseFilename, partNumber);
+          // Apply rotation
+          if (page.rotation !== 0) {
+            copiedPage.setRotation(degrees(page.rotation));
+          }
 
-        blobs.push(blob);
-        filenames.push(filename);
-        partNumber++;
+          newDoc.addPage(copiedPage);
+        }
       }
-
-      startIndex = endIndex;
     }
 
-    return { blobs, filenames };
+    // Set metadata
+    newDoc.setCreator('Stirling PDF');
+    newDoc.setProducer('Stirling PDF');
+    newDoc.setCreationDate(new Date());
+    newDoc.setModificationDate(new Date());
+
+    const pdfBytes = await newDoc.save();
+    return new Blob([pdfBytes], { type: 'application/pdf' });
   }
+
 
   /**
    * Generate appropriate filename for export
    */
-  private generateFilename(originalName: string, selectedOnly: boolean): string {
+  private generateFilename(originalName: string, selectedOnly: boolean, appendSuffix: boolean): string {
     const baseName = originalName.replace(/\.pdf$/i, '');
-    const suffix = selectedOnly ? '_selected' : '_edited';
-    return `${baseName}${suffix}.pdf`;
+    return `${baseName}.pdf`;
   }
 
-  /**
-   * Generate filename for split documents
-   */
-  private generateSplitFilename(baseName: string, partNumber: number): string {
-    const cleanBaseName = baseName.replace(/\.pdf$/i, '');
-    return `${cleanBaseName}_part_${partNumber}.pdf`;
-  }
 
   /**
    * Download a single file
@@ -185,7 +211,6 @@ export class PDFExportService {
    * Download multiple files as a ZIP
    */
   async downloadAsZip(blobs: Blob[], filenames: string[], zipFilename: string): Promise<void> {
-    // For now, download files wherindividually
     blobs.forEach((blob, index) => {
       setTimeout(() => {
         this.downloadFile(blob, filenames[index]);
@@ -230,8 +255,8 @@ export class PDFExportService {
       ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
       : pdfDocument.pages;
 
-    const splitCount = pagesToExport.reduce((count, page, index) => {
-      return count + (page.splitBefore && index > 0 ? 1 : 0);
+    const splitCount = pagesToExport.reduce((count, page) => {
+      return count + (page.splitAfter ? 1 : 0);
     }, 1); // At least 1 document
 
     // Rough size estimation (very approximate)
