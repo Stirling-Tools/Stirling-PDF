@@ -178,7 +178,8 @@ export const useToolOperation = <TParams>(
             endpoint: config.endpoint,
             buildFormData: config.buildFormData,
             filePrefix: config.filePrefix,
-            responseHandler: config.responseHandler
+            responseHandler: config.responseHandler,
+            preserveBackendFilename: config.preserveBackendFilename
           };
           processedFiles = await processFiles(
             params,
