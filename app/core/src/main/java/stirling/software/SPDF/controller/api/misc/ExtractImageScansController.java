@@ -37,7 +37,6 @@ import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -49,37 +48,12 @@ public class ExtractImageScansController {
 
     private static final String REPLACEFIRST = "[.][^.]+$";
 
-    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    // Size limits to prevent OutOfMemoryError
+    private static final int MAX_IMAGE_WIDTH = 8192;
+    private static final int MAX_IMAGE_HEIGHT = 8192;
+    private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
-    /**
-     * Calculate safe DPI to prevent memory issues based on page size
-     */
-    private int calculateSafeDPI(PDPage page, int requestedDPI) {
-        // Maximum safe image dimensions to prevent OOM
-        final int MAX_WIDTH = 8192;
-        final int MAX_HEIGHT = 8192;
-        final long MAX_PIXELS = 16_777_216; // 4096x4096
-        
-        float pageWidthPts = page.getMediaBox().getWidth();
-        float pageHeightPts = page.getMediaBox().getHeight();
-        
-        // Calculate projected dimensions at requested DPI
-        int projectedWidth = (int) Math.ceil(pageWidthPts * requestedDPI / 72.0);
-        int projectedHeight = (int) Math.ceil(pageHeightPts * requestedDPI / 72.0);
-        long projectedPixels = (long) projectedWidth * projectedHeight;
-        
-        // Calculate scaling factors if needed
-        if (projectedWidth <= MAX_WIDTH && projectedHeight <= MAX_HEIGHT && projectedPixels <= MAX_PIXELS) {
-            return requestedDPI; // Safe to use requested DPI
-        }
-        
-        double widthScale = (double) MAX_WIDTH / projectedWidth;
-        double heightScale = (double) MAX_HEIGHT / projectedHeight;
-        double pixelScale = Math.sqrt((double) MAX_PIXELS / projectedPixels);
-        double minScale = Math.min(Math.min(widthScale, heightScale), pixelScale);
-        
-        return (int) Math.max(72, requestedDPI * minScale);
-    }
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(
@@ -123,31 +97,55 @@ public class ExtractImageScansController {
 
                     // Create images of all pages
                     for (int i = 0; i < pageCount; i++) {
+                        PDPage page = document.getPage(i);
+
+                        // Calculate what the image dimensions would be at 300 DPI
+                        int projectedWidth =
+                                (int) Math.ceil(page.getMediaBox().getWidth() * 300 / 72.0);
+                        int projectedHeight =
+                                (int) Math.ceil(page.getMediaBox().getHeight() * 300 / 72.0);
+                        long projectedPixels = (long) projectedWidth * projectedHeight;
+
+                        // Skip pages that would exceed memory limits
+                        if (projectedWidth > MAX_IMAGE_WIDTH
+                                || projectedHeight > MAX_IMAGE_HEIGHT
+                                || projectedPixels > MAX_IMAGE_PIXELS) {
+
+                            log.warn(
+                                    "Skipping page {} - would exceed memory limits ({}x{} pixels)",
+                                    i + 1,
+                                    projectedWidth,
+                                    projectedHeight);
+                            continue;
+                        }
+
                         // Create temp file to save the image
                         Path tempFile = Files.createTempFile("image_", ".png");
 
-                        // Calculate safe DPI to prevent memory issues
-                        PDPage page = document.getPage(i);
-                        int safeDPI = calculateSafeDPI(page, 300);
-                        
-                        // Render image and save as temp file with memory safety
-                        BufferedImage image;
+                        // Render image and save as temp file
                         try {
-                            image = pdfRenderer.renderImageWithDPI(i, safeDPI);
-                        } catch (IllegalArgumentException e) {
-                            if (e.getMessage() != null && e.getMessage().contains("Maximum size of image exceeded")) {
-                                // Fall back to lower DPI if still too large
-                                safeDPI = Math.max(72, safeDPI / 2);
-                                image = pdfRenderer.renderImageWithDPI(i, safeDPI);
-                            } else {
-                                throw e;
-                            }
-                        }
-                        ImageIO.write(image, "png", tempFile.toFile());
+                            BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300);
+                            ImageIO.write(image, "png", tempFile.toFile());
 
-                        // Add temp file path to images list
-                        images.add(tempFile.toString());
-                        tempImageFiles.add(tempFile);
+                            // Add temp file path to images list
+                            images.add(tempFile.toString());
+                            tempImageFiles.add(tempFile);
+                        } catch (IllegalArgumentException e) {
+                            if (e.getMessage() != null
+                                    && e.getMessage().contains("Maximum size of image exceeded")) {
+                                log.warn(
+                                        "Skipping page {} - image size exceeds PDFBox limits",
+                                        i + 1);
+                                Files.deleteIfExists(tempFile);
+                                continue;
+                            }
+                            Files.deleteIfExists(tempFile);
+                            throw e;
+                        } catch (OutOfMemoryError e) {
+                            log.warn("Skipping page {} - out of memory", i + 1);
+                            Files.deleteIfExists(tempFile);
+                            continue;
+                        }
                     }
                 }
             } else {
@@ -183,9 +181,8 @@ public class ExtractImageScansController {
                                         String.valueOf(request.getBorderSize())));
 
                 // Run CLI command
-                ProcessExecutorResult returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                                .runCommandWithOutputHandling(command);
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+                        .runCommandWithOutputHandling(command);
 
                 // Read the output photos in temp directory
                 List<Path> tempOutputFiles = Files.list(tempDir).sorted().toList();

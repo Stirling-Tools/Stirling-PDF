@@ -36,37 +36,12 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class FlattenController {
 
-    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    // Size limits to prevent OutOfMemoryError
+    private static final int MAX_IMAGE_WIDTH = 8192;
+    private static final int MAX_IMAGE_HEIGHT = 8192;
+    private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
-    /**
-     * Calculate safe DPI to prevent memory issues based on page size
-     */
-    private int calculateSafeDPI(PDPage page, int requestedDPI) {
-        // Maximum safe image dimensions to prevent OOM
-        final int MAX_WIDTH = 8192;
-        final int MAX_HEIGHT = 8192;
-        final long MAX_PIXELS = 16_777_216; // 4096x4096
-        
-        float pageWidthPts = page.getMediaBox().getWidth();
-        float pageHeightPts = page.getMediaBox().getHeight();
-        
-        // Calculate projected dimensions at requested DPI
-        int projectedWidth = (int) Math.ceil(pageWidthPts * requestedDPI / 72.0);
-        int projectedHeight = (int) Math.ceil(pageHeightPts * requestedDPI / 72.0);
-        long projectedPixels = (long) projectedWidth * projectedHeight;
-        
-        // Calculate scaling factors if needed
-        if (projectedWidth <= MAX_WIDTH && projectedHeight <= MAX_HEIGHT && projectedPixels <= MAX_PIXELS) {
-            return requestedDPI; // Safe to use requested DPI
-        }
-        
-        double widthScale = (double) MAX_WIDTH / projectedWidth;
-        double heightScale = (double) MAX_HEIGHT / projectedHeight;
-        double pixelScale = Math.sqrt((double) MAX_PIXELS / projectedPixels);
-        double minScale = Math.min(Math.min(widthScale, heightScale), pixelScale);
-        
-        return (int) Math.max(72, requestedDPI * minScale);
-    }
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @PostMapping(consumes = "multipart/form-data", value = "/flatten")
     @Operation(
@@ -96,24 +71,35 @@ public class FlattenController {
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
             int numPages = document.getNumberOfPages();
             for (int i = 0; i < numPages; i++) {
+                PDPage originalPage = document.getPage(i);
+
+                // Calculate what the image dimensions would be at 300 DPI
+                int projectedWidth =
+                        (int) Math.ceil(originalPage.getMediaBox().getWidth() * 300 / 72.0);
+                int projectedHeight =
+                        (int) Math.ceil(originalPage.getMediaBox().getHeight() * 300 / 72.0);
+                long projectedPixels = (long) projectedWidth * projectedHeight;
+
+                // Skip pages that would exceed memory limits
+                if (projectedWidth > MAX_IMAGE_WIDTH
+                        || projectedHeight > MAX_IMAGE_HEIGHT
+                        || projectedPixels > MAX_IMAGE_PIXELS) {
+
+                    log.warn(
+                            "Skipping page {} - would exceed memory limits ({}x{} pixels)",
+                            i + 1,
+                            projectedWidth,
+                            projectedHeight);
+
+                    // Add original page without flattening
+                    PDPage page = new PDPage();
+                    page.setMediaBox(originalPage.getMediaBox());
+                    newDocument.addPage(page);
+                    continue;
+                }
+
                 try {
-                    // Calculate safe DPI to prevent memory issues
-                    PDPage originalPage = document.getPage(i);
-                    int safeDPI = calculateSafeDPI(originalPage, 300);
-                    
-                    BufferedImage image;
-                    try {
-                        image = pdfRenderer.renderImageWithDPI(i, safeDPI, ImageType.RGB);
-                    } catch (IllegalArgumentException e) {
-                        if (e.getMessage() != null && e.getMessage().contains("Maximum size of image exceeded")) {
-                            // Fall back to lower DPI if still too large
-                            safeDPI = Math.max(72, safeDPI / 2);
-                            image = pdfRenderer.renderImageWithDPI(i, safeDPI, ImageType.RGB);
-                        } else {
-                            throw e;
-                        }
-                    }
-                    
+                    BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300, ImageType.RGB);
                     PDPage page = new PDPage();
                     page.setMediaBox(originalPage.getMediaBox());
                     newDocument.addPage(page);
@@ -125,8 +111,33 @@ public class FlattenController {
 
                         contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
                     }
+                } catch (IllegalArgumentException e) {
+                    if (e.getMessage() != null
+                            && e.getMessage().contains("Maximum size of image exceeded")) {
+                        log.warn("Skipping page {} - image size exceeds PDFBox limits", i + 1);
+
+                        // Add original page without flattening
+                        PDPage page = new PDPage();
+                        page.setMediaBox(originalPage.getMediaBox());
+                        newDocument.addPage(page);
+                        continue;
+                    }
+                    throw e;
+                } catch (OutOfMemoryError e) {
+                    log.warn("Skipping page {} - out of memory", i + 1);
+
+                    // Add original page without flattening
+                    PDPage page = new PDPage();
+                    page.setMediaBox(originalPage.getMediaBox());
+                    newDocument.addPage(page);
+                    continue;
                 } catch (IOException e) {
-                    log.error("exception", e);
+                    log.error("Error processing page {}", i + 1, e);
+
+                    // Add original page without flattening
+                    PDPage page = new PDPage();
+                    page.setMediaBox(originalPage.getMediaBox());
+                    newDocument.addPage(page);
                 }
             }
             return WebResponseUtils.pdfDocToWebResponse(

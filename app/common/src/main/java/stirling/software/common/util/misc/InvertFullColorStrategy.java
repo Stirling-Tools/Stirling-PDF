@@ -15,7 +15,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,38 +25,13 @@ import stirling.software.common.util.ApplicationContextProvider;
 
 public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
+    // Size limits to prevent OutOfMemoryError
+    private static final int MAX_IMAGE_WIDTH = 8192;
+    private static final int MAX_IMAGE_HEIGHT = 8192;
+    private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
+
     public InvertFullColorStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
         super(file, replaceAndInvert);
-    }
-
-    /**
-     * Calculate safe DPI to prevent memory issues based on page size
-     */
-    private int calculateSafeDPI(PDRectangle mediaBox, int requestedDPI) {
-        // Maximum safe image dimensions to prevent OOM
-        final int MAX_WIDTH = 8192;
-        final int MAX_HEIGHT = 8192;
-        final long MAX_PIXELS = 16_777_216; // 4096x4096
-        
-        float pageWidthPts = mediaBox.getWidth();
-        float pageHeightPts = mediaBox.getHeight();
-        
-        // Calculate projected dimensions at requested DPI
-        int projectedWidth = (int) Math.ceil(pageWidthPts * requestedDPI / 72.0);
-        int projectedHeight = (int) Math.ceil(pageHeightPts * requestedDPI / 72.0);
-        long projectedPixels = (long) projectedWidth * projectedHeight;
-        
-        // Calculate scaling factors if needed
-        if (projectedWidth <= MAX_WIDTH && projectedHeight <= MAX_HEIGHT && projectedPixels <= MAX_PIXELS) {
-            return requestedDPI; // Safe to use requested DPI
-        }
-        
-        double widthScale = (double) MAX_WIDTH / projectedWidth;
-        double heightScale = (double) MAX_HEIGHT / projectedHeight;
-        double pixelScale = Math.sqrt((double) MAX_PIXELS / projectedPixels);
-        double minScale = Math.min(Math.min(widthScale, heightScale), pixelScale);
-        
-        return (int) Math.max(72, requestedDPI * minScale);
     }
 
     @Override
@@ -71,39 +45,65 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
             // Transfer the content of the multipart file to the file
             getFileInput().transferTo(file);
 
-            // Get PDF document factory and load the uploaded PDF with memory-safe settings
-            CustomPDFDocumentFactory pdfDocumentFactory = 
-                ApplicationContextProvider.getBean(CustomPDFDocumentFactory.class);
+            // Get CustomPDFDocumentFactory from application context
+            CustomPDFDocumentFactory pdfDocumentFactory =
+                    ApplicationContextProvider.getBean(CustomPDFDocumentFactory.class);
+
+            // Load the uploaded PDF using the factory for better memory management
             PDDocument document = pdfDocumentFactory.load(file);
 
-            // Render each page and invert colors with memory safety
+            // Render each page and invert colors
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
-            
+
             for (int page = 0; page < document.getNumberOfPages(); page++) {
                 PDPage pdPage = document.getPage(page);
-                PDRectangle mediaBox = pdPage.getMediaBox();
-                
-                // Calculate safe DPI to prevent memory issues
-                int safeDPI = calculateSafeDPI(mediaBox, 300);
-                
+                PDRectangle pageSize = pdPage.getMediaBox();
+
+                // Calculate what the image dimensions would be at 300 DPI
+                int projectedWidth = (int) Math.ceil(pageSize.getWidth() * 300 / 72.0);
+                int projectedHeight = (int) Math.ceil(pageSize.getHeight() * 300 / 72.0);
+                long projectedPixels = (long) projectedWidth * projectedHeight;
+
+                // Skip pages that would exceed memory limits
+                if (projectedWidth > MAX_IMAGE_WIDTH
+                        || projectedHeight > MAX_IMAGE_HEIGHT
+                        || projectedPixels > MAX_IMAGE_PIXELS) {
+
+                    System.err.println(
+                            "Skipping page "
+                                    + (page + 1)
+                                    + " - would exceed memory limits ("
+                                    + projectedWidth
+                                    + "x"
+                                    + projectedHeight
+                                    + " pixels)");
+                    continue;
+                }
+
                 BufferedImage image;
                 try {
-                    image = pdfRenderer.renderImageWithDPI(page, safeDPI, ImageType.RGB);
+                    image = pdfRenderer.renderImageWithDPI(page, 300); // Render page at 300 DPI
                 } catch (IllegalArgumentException e) {
-                    if (e.getMessage() != null && e.getMessage().contains("Maximum size of image exceeded")) {
-                        // Fall back to lower DPI if still too large
-                        safeDPI = Math.max(72, safeDPI / 2);
-                        image = pdfRenderer.renderImageWithDPI(page, safeDPI, ImageType.RGB);
-                    } else {
-                        throw e;
+                    if (e.getMessage() != null
+                            && e.getMessage().contains("Maximum size of image exceeded")) {
+                        System.err.println(
+                                "Skipping page "
+                                        + (page + 1)
+                                        + " - image size exceeds PDFBox limits");
+                        continue;
                     }
+                    throw e;
+                } catch (OutOfMemoryError e) {
+                    System.err.println("Skipping page " + (page + 1) + " - out of memory");
+                    continue;
                 }
 
                 // Invert the colors
                 invertImageColors(image);
 
                 // Create a new PDPage from the inverted image
+                PDPage currentPage = document.getPage(page);
                 File tempImageFile = null;
                 try {
                     tempImageFile = convertToBufferedImageTpFile(image);
@@ -113,15 +113,15 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                     PDPageContentStream contentStream =
                             new PDPageContentStream(
                                     document,
-                                    pdPage,
+                                    currentPage,
                                     PDPageContentStream.AppendMode.OVERWRITE,
                                     true);
                     contentStream.drawImage(
                             pdImage,
                             0,
                             0,
-                            pdPage.getMediaBox().getWidth(),
-                            pdPage.getMediaBox().getHeight());
+                            currentPage.getMediaBox().getWidth(),
+                            currentPage.getMediaBox().getHeight());
                     contentStream.close();
                 } finally {
                     if (tempImageFile != null && tempImageFile.exists()) {
