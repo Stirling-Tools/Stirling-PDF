@@ -72,17 +72,15 @@ export default function ToolPanel() {
 
         {searchQuery.trim().length > 0 ? (
           // Searching view (replaces both picker and content)
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 min-h-0">
+          <div className="flex-1 flex flex-col overflow-y-auto">
               <SearchResults
                 filteredTools={filteredTools}
                 onSelect={handleToolSelect}
               />
-            </div>
           </div>
         ) : leftPanelView === 'toolPicker' ? (
           // Tool Picker View
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-auto">
             <ToolPicker
               selectedToolKey={selectedToolKey}
               onSelect={handleToolSelect}

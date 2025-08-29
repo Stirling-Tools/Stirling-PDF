@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useToolSections } from '../../hooks/useToolSections';
 import SubcategoryHeader from './shared/SubcategoryHeader';
 import NoToolsFound from './shared/NoToolsFound';
+import "./toolPicker/ToolPicker.css";
 
 interface SearchResultsProps {
   filteredTools: [string, ToolRegistryEntry][];
@@ -21,11 +22,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }
   }
 
   return (
-    <Stack p="sm" gap="xs">
+    <Stack p="sm" gap="xs"
+        className="tool-picker-scrollable">
       {searchGroups.map(group => (
-        <Box key={group.subcategoryId} w="100%">
+        <Box key={group.subcategoryId}  w="100%">
           <SubcategoryHeader label={getSubcategoryLabel(t, group.subcategoryId)} />
-          <Stack gap="xs">
+          <Stack  gap="xs">
             {group.tools.map(({ id, tool }) => (
               <ToolButton
                 key={id}
