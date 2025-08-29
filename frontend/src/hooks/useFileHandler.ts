@@ -9,12 +9,12 @@ export const useFileHandler = () => {
 
   const addToActiveFiles = useCallback(async (file: File) => {
     // Let FileContext handle deduplication with quickKey logic
-    await actions.addFiles([file]);
+    await actions.addFiles([file], { selectFiles: true });
   }, [actions.addFiles]);
 
   const addMultipleFiles = useCallback(async (files: File[]) => {
     // Let FileContext handle deduplication with quickKey logic
-    await actions.addFiles(files);
+    await actions.addFiles(files, { selectFiles: true });
   }, [actions.addFiles]);
 
   // Add stored files preserving their original IDs to prevent session duplicates
@@ -25,7 +25,7 @@ export const useFileHandler = () => {
     });
 
     if (newFiles.length > 0) {
-      await actions.addStoredFiles(newFiles);
+      await actions.addStoredFiles(newFiles, { selectFiles: true });
     }
 
     console.log(`📁 Added ${newFiles.length} stored files (${filesWithMetadata.length - newFiles.length} skipped as duplicates)`);

@@ -25,7 +25,7 @@ import {
 // Import modular components
 import { fileContextReducer, initialFileContextState } from './file/FileReducer';
 import { createFileSelectors } from './file/fileSelectors';
-import { addFiles, consumeFiles, createFileActions } from './file/fileActions';
+import { AddedFile, addFiles, consumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
@@ -72,9 +72,21 @@ function FileContextInner({
     dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
   }, []);
 
+  const selectFiles = (addedFilesWithIds: AddedFile[]) => {
+    const currentSelection = stateRef.current.ui.selectedFileIds;
+    const newFileIds = addedFilesWithIds.map(({ id }) => id);
+    dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
+  }
+
   // File operations using unified addFiles helper with persistence
-  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string }): Promise<File[]> => {
+  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<File[]> => {
     const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
+
+    // Auto-select the newly added files if requested
+    if (options?.selectFiles && addedFilesWithIds.length > 0) {
+      selectFiles(addedFilesWithIds);
+    }
+
     // Persist to IndexedDB if enabled
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
       await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
@@ -94,8 +106,14 @@ function FileContextInner({
     return result.map(({ file }) => file);
   }, []);
 
-  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>): Promise<File[]> => {
+  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<File[]> => {
     const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
+
+    // Auto-select the newly added files if requested
+    if (options?.selectFiles && result.length > 0) {
+      selectFiles(result);
+    }
+
     return result.map(({ file }) => file);
   }, []);
 
