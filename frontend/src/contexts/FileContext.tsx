@@ -25,7 +25,7 @@ import {
 // Import modular components
 import { fileContextReducer, initialFileContextState } from './file/FileReducer';
 import { createFileSelectors } from './file/fileSelectors';
-import { addFiles, consumeFiles, createFileActions } from './file/fileActions';
+import { AddedFile, addFiles, consumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
@@ -72,15 +72,19 @@ function FileContextInner({
     dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
   }, []);
 
+  const selectFiles = (addedFilesWithIds: AddedFile[]) => {
+    const currentSelection = stateRef.current.ui.selectedFileIds;
+    const newFileIds = addedFilesWithIds.map(({ id }) => id);
+    dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
+  }
+
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<File[]> => {
     const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
     if (options?.selectFiles && addedFilesWithIds.length > 0) {
-      const currentSelection = stateRef.current.ui.selectedFileIds;
-      const newFileIds = addedFilesWithIds.map(({ id }) => id);
-      dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
+      selectFiles(addedFilesWithIds);
     }
 
     // Persist to IndexedDB if enabled
@@ -97,7 +101,6 @@ function FileContextInner({
     return addedFilesWithIds.map(({ file }) => file);
   }, [indexedDB, enablePersistence]);
 
-
   const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<File[]> => {
     const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch, lifecycleManager);
     return result.map(({ file }) => file);
@@ -108,9 +111,7 @@ function FileContextInner({
 
     // Auto-select the newly added files if requested
     if (options?.selectFiles && result.length > 0) {
-      const currentSelection = stateRef.current.ui.selectedFileIds;
-      const newFileIds = result.map(({ id }) => id);
-      dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
+      selectFiles(result);
     }
 
     return result.map(({ file }) => file);

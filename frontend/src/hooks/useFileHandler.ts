@@ -4,14 +4,16 @@ import { FileMetadata } from '../types/file';
 import { FileId } from '../types/file';
 
 export const useFileHandler = () => {
-  const { state } = useFileState();
+  const { state } = useFileState(); // Still needed for addStoredFiles
   const { actions } = useFileActions();
 
   const addToActiveFiles = useCallback(async (file: File) => {
+    // Let FileContext handle deduplication with quickKey logic
     await actions.addFiles([file], { selectFiles: true });
   }, [actions.addFiles]);
 
   const addMultipleFiles = useCallback(async (files: File[]) => {
+    // Let FileContext handle deduplication with quickKey logic
     await actions.addFiles(files, { selectFiles: true });
   }, [actions.addFiles]);
 
