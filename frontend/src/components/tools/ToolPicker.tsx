@@ -91,7 +91,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
   return (
     <Box
-      h="100vh"
+      h="100%"
       style={{
         display: "flex",
         flexDirection: "column",

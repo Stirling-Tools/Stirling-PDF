@@ -36,13 +36,13 @@ const LandingPage = () => {
   };
 
   return (
-    <Container size="70rem" p={0} h="102%" className="flex items-center justify-center" style={{ position: 'relative' }}>
+    <Container size="70rem" p={0} h="100%" className="flex items-center justify-center" style={{ position: 'relative' }}>
       {/* White PDF Page Background */}
       <Dropzone
         onDrop={handleFileDrop}
         accept={["application/pdf", "application/zip", "application/x-zip-compressed"]}
         multiple={true}
-        className="w-4/5 flex items-center justify-center h-[95vh]"
+        className="w-4/5 flex items-center justify-center h-[95%]"
         style={{
           position: 'absolute',
           left: '50%',
