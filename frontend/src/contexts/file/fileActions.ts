@@ -88,6 +88,12 @@ interface AddFileOptions {
   insertAfterPageId?: string;
 }
 
+export interface AddedFile {
+  file: File;
+  id: FileId;
+  thumbnail?: string;
+}
+
 /**
  * Unified file addition helper - replaces addFiles/addProcessedFiles/addStoredFiles
  */
@@ -98,13 +104,13 @@ export async function addFiles(
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   lifecycleManager: FileLifecycleManager
-): Promise<Array<{ file: File; id: FileId; thumbnail?: string }>> {
+): Promise<AddedFile[]> {
   // Acquire mutex to prevent race conditions
   await addFilesMutex.lock();
 
   try {
   const fileRecords: FileRecord[] = [];
-  const addedFiles: Array<{ file: File; id: FileId; thumbnail?: string }> = [];
+  const addedFiles: AddedFile[] = [];
 
   // Build quickKey lookup from existing files for deduplication
   const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
