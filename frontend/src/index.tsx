@@ -30,7 +30,7 @@ posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
   opt_out_capturing_by_default: false, // We handle opt-out via cookie consent
 });
 
-function UpdatePosthogConsent(){
+function updatePosthogConsent(){
     if(typeof(posthog) == "undefined") {
       return;
     }
@@ -41,8 +41,8 @@ function UpdatePosthogConsent(){
     console.log("Updated analytics consent: ", optIn? "opted in" : "opted out");
   }
 
-window.addEventListener("cc:onConsent", UpdatePosthogConsent);
-window.addEventListener("cc:onChange", UpdatePosthogConsent);
+window.addEventListener("cc:onConsent", updatePosthogConsent);
+window.addEventListener("cc:onChange", updatePosthogConsent);
 
 const container = document.getElementById('root');
 if (!container) {
