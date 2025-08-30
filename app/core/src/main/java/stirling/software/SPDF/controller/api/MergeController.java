@@ -191,7 +191,7 @@ public class MergeController {
             }
 
             mergedTempFile = new TempFile(tempFileManager, ".pdf");
-            mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());
+            mergerUtility.setDestinationFileName(mergedTempFile.getFile().getAbsolutePath());
 
             try {
                 mergerUtility.mergeDocuments(
