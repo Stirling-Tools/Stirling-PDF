@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -40,6 +41,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class SplitPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
     @Operation(
@@ -55,8 +57,12 @@ public class SplitPDFController {
         PDDocument document = null;
         Path zipFile = null;
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
+        byte[] data;
+        String filename;
+        TempFile outputTempFile = null;
 
         try {
+            outputTempFile = new TempFile(tempFileManager, ".zip");
 
             MultipartFile file = request.getFileInput();
             String pages = request.getPageNumbers();
@@ -105,12 +111,11 @@ public class SplitPDFController {
             // closing the original document
             document.close();
 
-            zipFile = Files.createTempFile("split_documents", ".zip");
-
-            String filename =
+            filename =
                     Filenames.toSimpleFileName(file.getOriginalFilename())
                             .replaceFirst("[.][^.]+$", "");
-            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            try (ZipOutputStream zipOut =
+                    new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
                 // loop through the split documents and write them to the zip file
                 for (int i = 0; i < splitDocumentsBoas.size(); i++) {
                     String fileName = filename + "_" + (i + 1) + ".pdf";
@@ -125,19 +130,11 @@ public class SplitPDFController {
 
                     log.debug("Wrote split document {} to zip file", fileName);
                 }
-            } catch (Exception e) {
-                log.error("Failed writing to zip", e);
-                throw e;
             }
-
-            log.debug("Successfully created zip file with split documents: {}", zipFile.toString());
-            byte[] data = Files.readAllBytes(zipFile);
-            Files.deleteIfExists(zipFile);
-
-            // return the Resource in the response
-            return WebResponseUtils.bytesToWebResponse(
-                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
-
+            log.debug(
+                    "Successfully created zip file with split documents: {}",
+                    outputTempFile.getPath());
+            data = Files.readAllBytes(outputTempFile.getPath());
         } finally {
             try {
                 // Close the main document
@@ -152,13 +149,16 @@ public class SplitPDFController {
                     }
                 }
 
-                // Delete temporary zip file
-                if (zipFile != null) {
-                    Files.deleteIfExists(zipFile);
+                // Close the output temporary file
+                if (outputTempFile != null) {
+                    outputTempFile.close();
                 }
             } catch (Exception e) {
                 log.error("Error while cleaning up resources", e);
             }
         }
+
+        return WebResponseUtils.bytesToWebResponse(
+                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 }
