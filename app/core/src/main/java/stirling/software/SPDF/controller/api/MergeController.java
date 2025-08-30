@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -161,16 +162,16 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
                             + " provided. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<FileSystemResource> mergePdfs(@ModelAttribute MergePdfsRequest request)
+    public ResponseEntity<StreamingResponseBody> mergePdfs(@ModelAttribute MergePdfsRequest request)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
         TempFile mergedTempFile = null;
         TempFile outputTempFile = null;
         PDDocument mergedDocument = null;
-        ResponseEntity<FileSystemResource> response = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
         boolean generateToc = request.isGenerateToc();
+        ResponseEntity<FileSystemResource> data = null;
 
         try {
             MultipartFile[] files = request.getFileInput();
@@ -238,12 +239,8 @@ public class MergeController {
             String mergedFileName =
                     files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
                             + "_merged_unsigned.pdf";
-            response =
-                    WebResponseUtils.fileToWebResponse(
-                            outputTempFile.getFile(),
-                            mergedFileName); // Return the modified PDF as stream
-            return response;
-
+            return WebResponseUtils.fileToWebResponse(
+                    outputTempFile, mergedFileName); // Return the modified PDF as stream
         } catch (Exception ex) {
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
@@ -260,9 +257,6 @@ public class MergeController {
             }
             if (mergedTempFile != null) {
                 mergedTempFile.close();
-            }
-            if (response == null && outputTempFile != null) {
-                outputTempFile.close();
             }
         }
     }

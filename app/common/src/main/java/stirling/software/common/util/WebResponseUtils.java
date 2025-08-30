@@ -1,21 +1,25 @@
 package stirling.software.common.util;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class WebResponseUtils {
 
     public static ResponseEntity<byte[]> baosToWebResponse(
@@ -70,19 +74,29 @@ public class WebResponseUtils {
     /**
      * Convert a File to a web response.
      *
-     * @param file the file to convert
-     * @param docName the name of the document
-     * @return a ResponseEntity containing the file as a resource
+     * @param outputTempFile The temporary file to be sent as a response.
+     * @param docName The name of the document.
+     * @return A ResponseEntity containing the file as a resource.
      */
-    public static ResponseEntity<FileSystemResource> fileToWebResponse(File file, String docName)
-            throws IOException {
-        FileSystemResource resource = new FileSystemResource(file);
+    public static ResponseEntity<StreamingResponseBody> fileToWebResponse(
+            TempFile outputTempFile, String docName) throws IOException {
+        Path path = outputTempFile.getFile().toPath().normalize();
+        long len = Files.size(path);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentLength(resource.contentLength());
-        String encodedDocName =
-                URLEncoder.encode(docName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
-        headers.setContentDispositionFormData("attachment", encodedDocName);
-        return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+        headers.setContentLength(len);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + docName + "\"");
+
+        StreamingResponseBody body =
+                os -> {
+                    try (os) {
+                        Files.copy(path, os);
+                        os.flush();
+                    } finally {
+                        outputTempFile.close();
+                    }
+                };
+
+        return new ResponseEntity<>(body, headers, HttpStatus.OK);
     }
 }
