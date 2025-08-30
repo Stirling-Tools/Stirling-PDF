@@ -166,6 +166,7 @@ public class MergeController {
         File mergedTempFile = null;
         File outputTempFile = null;
         PDDocument mergedDocument = null;
+        ResponseEntity<FileSystemResource> response = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
         boolean generateToc = request.isGenerateToc();
@@ -236,8 +237,10 @@ public class MergeController {
             String mergedFileName =
                     files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
                             + "_merged_unsigned.pdf";
-            return WebResponseUtils.fileToWebResponse(
-                    outputTempFile, mergedFileName); // Return the modified PDF
+            response =
+                    WebResponseUtils.fileToWebResponse(
+                            outputTempFile, mergedFileName); // Return the modified PDF as stream
+            return response;
 
         } catch (Exception ex) {
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
@@ -255,6 +258,9 @@ public class MergeController {
             }
             if (mergedTempFile != null) {
                 tempFileManager.deleteTempFile(mergedTempFile);
+            }
+            if (response == null && outputTempFile != null) {
+                tempFileManager.deleteTempFile(outputTempFile);
             }
         }
     }
