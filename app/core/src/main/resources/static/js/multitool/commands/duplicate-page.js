@@ -1,15 +1,10 @@
-import { Command } from './command.js';
+import { CommandWithAnchors } from './command.js';
 
-/**
- * Represents a command to duplicate a page element.
- * This command supports undo and redo operations.
- */
-export class DuplicatePageCommand extends Command {
+export class DuplicatePageCommand extends CommandWithAnchors {
   /**
-   * Creates an instance of DuplicatePageCommand.
    * @param {HTMLElement} element - The page element to duplicate.
-   * @param {Function} duplicatePageAction - A function that duplicates the given element and returns the new element.
-   * @param {HTMLElement} pagesContainer - The container element holding all page elements.
+   * @param {Function} duplicatePageAction - (element) => HTMLElement (new clone already inserted)
+   * @param {HTMLElement} pagesContainer
    */
   constructor(element, duplicatePageAction, pagesContainer) {
     super();
@@ -20,34 +15,20 @@ export class DuplicatePageCommand extends Command {
     /** @type {HTMLElement|null} */
     this.newElement = null;
 
-    /** @type {ChildNode|null} */
-    this.nextSibling = null;
-
-    /** @type {number|null} */
-    this.targetIndex = null; // fallback if nextSibling is no longer available
+    /** @type {{ el: HTMLElement, nextSibling: ChildNode|null, index: number }|null} */
+    this._anchor = null;
   }
 
-  /**
-   * Executes the duplicate page command.
-   * Creates a new duplicate of the specified element.
-   */
   execute() {
+    // Create and insert a duplicate next to the original
     this.newElement = this.duplicatePageAction(this.element);
   }
 
-  /**
-   * Undoes the duplicate page command.
-   * Removes the duplicated element from the container and updates the UI.
-   */
   undo() {
     if (!this.newElement) return;
 
-    // Remember sibling and index before removing
-    this.nextSibling = this.newElement.nextSibling;
-    this.targetIndex = Array.prototype.indexOf.call(
-      this.pagesContainer.children,
-      this.newElement
-    );
+    // Capture anchor before removal so redo can reinsert at the same position
+    this._anchor = this.captureAnchor(this.newElement, this.pagesContainer);
 
     this.pagesContainer.removeChild(this.newElement);
 
@@ -66,36 +47,17 @@ export class DuplicatePageCommand extends Command {
     window.updatePageNumbersAndCheckboxes?.();
   }
 
-  /**
-   * Redoes the duplicate page command.
-   * Re-inserts the duplicated element into the container and updates the UI.
-   */
   redo() {
     if (!this.newElement) {
       this.execute();
       return;
     }
-
-    // Validate stored sibling reference
-    const nextSiblingIsValid =
-      this.nextSibling && this.nextSibling.parentNode === this.pagesContainer;
-
-    let anchor = null;
-    if (nextSiblingIsValid) {
-      anchor = this.nextSibling;
-    } else if (
-      Number.isInteger(this.targetIndex) &&
-      this.targetIndex >= 0 &&
-      this.targetIndex < this.pagesContainer.children.length
-    ) {
-      // Fallback: use stored index position
-      anchor = this.pagesContainer.children[this.targetIndex] || null;
+    if (this._anchor) {
+      this.insertWithAnchor(this.pagesContainer, this._anchor);
     } else {
-      // Final fallback: use the original element’s sibling
-      anchor = this.element.nextSibling;
+      // Fallback: insert relative to the original element
+      this.pagesContainer.insertBefore(this.newElement, this.element.nextSibling || null);
     }
-
-    this.pagesContainer.insertBefore(this.newElement, anchor || null);
     window.updatePageNumbersAndCheckboxes?.();
   }
 }

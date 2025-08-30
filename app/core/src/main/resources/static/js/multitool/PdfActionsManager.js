@@ -217,7 +217,7 @@ class PdfActionsManager {
 
     const insertFileButton = document.createElement("button");
     insertFileButton.classList.add("btn", "btn-primary");
-    moveUp.setAttribute('title', window.translations.addFile);
+    insertFileButton.setAttribute('title', window.translations.addFile);
     insertFileButton.innerHTML = `<span class="material-symbols-rounded">add</span>`;
     insertFileButton.onclick = this.insertFileButtonCallback;
     insertFileButtonContainer.appendChild(insertFileButton);
