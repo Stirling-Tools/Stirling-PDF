@@ -80,7 +80,7 @@ public class MergeController {
                         } catch (IOException e) {
                             return 0; // If there's an error, treat them as equal
                         }
-                    }; // If there's an error, treat them as equal
+                    };
             case "byDateCreated" ->
                     (file1, file2) -> {
                         try {
@@ -96,7 +96,7 @@ public class MergeController {
                         } catch (IOException e) {
                             return 0; // If there's an error, treat them as equal
                         }
-                    }; // If there's an error, treat them as equal
+                    };
             case "byPDFTitle" ->
                     (file1, file2) -> {
                         try (PDDocument doc1 = pdfDocumentFactory.load(file1);
