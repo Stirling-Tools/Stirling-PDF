@@ -1,6 +1,9 @@
 package stirling.software.proprietary.audit;
 
+import lombok.Getter;
+
 /** Defines the different levels of audit logging available in the application. */
+@Getter
 public enum AuditLevel {
     /**
      * OFF - No audit logging (level 0) Disables all audit logging except for critical security
@@ -31,10 +34,6 @@ public enum AuditLevel {
 
     AuditLevel(int level) {
         this.level = level;
-    }
-
-    public int getLevel() {
-        return level;
     }
 
     /**

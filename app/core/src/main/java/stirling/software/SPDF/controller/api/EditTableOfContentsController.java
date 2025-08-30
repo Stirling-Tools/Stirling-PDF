@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
@@ -234,33 +236,12 @@ public class EditTableOfContentsController {
     }
 
     // Inner class to represent bookmarks in JSON
+    @Setter
+    @Getter
     public static class BookmarkItem {
         private String title;
         private int pageNumber;
         private List<BookmarkItem> children = new ArrayList<>();
 
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public int getPageNumber() {
-            return pageNumber;
-        }
-
-        public void setPageNumber(int pageNumber) {
-            this.pageNumber = pageNumber;
-        }
-
-        public List<BookmarkItem> getChildren() {
-            return children;
-        }
-
-        public void setChildren(List<BookmarkItem> children) {
-            this.children = children;
-        }
     }
 }

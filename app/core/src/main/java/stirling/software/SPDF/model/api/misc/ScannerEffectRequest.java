@@ -79,10 +79,6 @@ public class ScannerEffectRequest {
     @Schema(description = "Whether advanced settings are enabled", example = "false")
     private boolean advancedEnabled = false;
 
-    public boolean isAdvancedEnabled() {
-        return advancedEnabled;
-    }
-
     public int getQualityValue() {
         return switch (quality) {
             case low -> 30;
