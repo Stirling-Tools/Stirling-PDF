@@ -33,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -42,6 +43,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class SplitPdfBySectionsController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @PostMapping(value = "/split-pdf-by-sections", consumes = "multipart/form-data")
     @Operation(
@@ -67,7 +69,8 @@ public class SplitPdfBySectionsController {
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
         if (merge) {
-            MergeController mergeController = new MergeController(pdfDocumentFactory);
+            MergeController mergeController =
+                    new MergeController(pdfDocumentFactory, tempFileManager);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             mergeController.mergeDocuments(splitDocuments).save(baos);
             return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), filename + "_split.pdf");

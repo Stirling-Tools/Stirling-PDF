@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,6 +19,7 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,8 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfErrorUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -48,6 +48,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class MergeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
@@ -62,56 +63,54 @@ public class MergeController {
 
     // Returns a comparator for sorting MultipartFile arrays based on the given sort type
     private Comparator<MultipartFile> getSortComparator(String sortType) {
-        switch (sortType) {
-            case "byFileName":
-                return Comparator.comparing(MultipartFile::getOriginalFilename);
-            case "byDateModified":
-                return (file1, file2) -> {
-                    try {
-                        BasicFileAttributes attr1 =
-                                Files.readAttributes(
-                                        Paths.get(file1.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        BasicFileAttributes attr2 =
-                                Files.readAttributes(
-                                        Paths.get(file2.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        return attr1.lastModifiedTime().compareTo(attr2.lastModifiedTime());
-                    } catch (IOException e) {
-                        return 0; // If there's an error, treat them as equal
-                    }
-                };
-            case "byDateCreated":
-                return (file1, file2) -> {
-                    try {
-                        BasicFileAttributes attr1 =
-                                Files.readAttributes(
-                                        Paths.get(file1.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        BasicFileAttributes attr2 =
-                                Files.readAttributes(
-                                        Paths.get(file2.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        return attr1.creationTime().compareTo(attr2.creationTime());
-                    } catch (IOException e) {
-                        return 0; // If there's an error, treat them as equal
-                    }
-                };
-            case "byPDFTitle":
-                return (file1, file2) -> {
-                    try (PDDocument doc1 = pdfDocumentFactory.load(file1);
-                            PDDocument doc2 = pdfDocumentFactory.load(file2)) {
-                        String title1 = doc1.getDocumentInformation().getTitle();
-                        String title2 = doc2.getDocumentInformation().getTitle();
-                        return title1.compareTo(title2);
-                    } catch (IOException e) {
-                        return 0;
-                    }
-                };
-            case "orderProvided":
-            default:
-                return (file1, file2) -> 0; // Default is the order provided
-        }
+        return switch (sortType) {
+            case "byFileName" -> Comparator.comparing(MultipartFile::getOriginalFilename);
+            case "byDateModified" ->
+                    (file1, file2) -> {
+                        try {
+                            BasicFileAttributes attr1 =
+                                    Files.readAttributes(
+                                            Paths.get(file1.getOriginalFilename()),
+                                            BasicFileAttributes.class);
+                            BasicFileAttributes attr2 =
+                                    Files.readAttributes(
+                                            Paths.get(file2.getOriginalFilename()),
+                                            BasicFileAttributes.class);
+                            return attr1.lastModifiedTime().compareTo(attr2.lastModifiedTime());
+                        } catch (IOException e) {
+                            return 0; // If there's an error, treat them as equal
+                        }
+                    }; // If there's an error, treat them as equal
+            case "byDateCreated" ->
+                    (file1, file2) -> {
+                        try {
+                            BasicFileAttributes attr1 =
+                                    Files.readAttributes(
+                                            Paths.get(file1.getOriginalFilename()),
+                                            BasicFileAttributes.class);
+                            BasicFileAttributes attr2 =
+                                    Files.readAttributes(
+                                            Paths.get(file2.getOriginalFilename()),
+                                            BasicFileAttributes.class);
+                            return attr1.creationTime().compareTo(attr2.creationTime());
+                        } catch (IOException e) {
+                            return 0; // If there's an error, treat them as equal
+                        }
+                    }; // If there's an error, treat them as equal
+            case "byPDFTitle" ->
+                    (file1, file2) -> {
+                        try (PDDocument doc1 = pdfDocumentFactory.load(file1);
+                                PDDocument doc2 = pdfDocumentFactory.load(file2)) {
+                            String title1 = doc1.getDocumentInformation().getTitle();
+                            String title2 = doc2.getDocumentInformation().getTitle();
+                            return title1.compareTo(title2);
+                        } catch (IOException e) {
+                            return 0;
+                        }
+                    };
+            case "orderProvided" -> (file1, file2) -> 0; // Default is the order provided
+            default -> (file1, file2) -> 0; // Default is the order provided
+        };
     }
 
     // Adds a table of contents to the merged document using filenames as chapter titles
@@ -161,10 +160,11 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
                             + " provided. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest request)
+    public ResponseEntity<FileSystemResource> mergePdfs(@ModelAttribute MergePdfsRequest request)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
         File mergedTempFile = null;
+        File outputTempFile = null;
         PDDocument mergedDocument = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
@@ -182,13 +182,13 @@ public class MergeController {
             for (MultipartFile multipartFile : files) {
                 totalSize += multipartFile.getSize();
                 File tempFile =
-                        GeneralUtils.convertMultipartFileToFile(
+                        tempFileManager.convertMultipartFileToFile(
                                 multipartFile); // Convert MultipartFile to File
                 filesToDelete.add(tempFile); // Add temp file to the list for later deletion
                 mergerUtility.addSource(tempFile); // Add source file to the merger utility
             }
 
-            mergedTempFile = Files.createTempFile("merged-", ".pdf").toFile();
+            mergedTempFile = tempFileManager.createTempFile(".pdf");
             mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());
 
             try {
@@ -213,7 +213,7 @@ public class MergeController {
                 if (acroForm != null) {
                     List<PDField> fieldsToRemove =
                             acroForm.getFields().stream()
-                                    .filter(field -> field instanceof PDSignatureField)
+                                    .filter(PDSignatureField.class::isInstance)
                                     .toList();
 
                     if (!fieldsToRemove.isEmpty()) {
@@ -229,15 +229,15 @@ public class MergeController {
                 addTableOfContents(mergedDocument, files);
             }
 
-            // Save the modified document to a new ByteArrayOutputStream
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            mergedDocument.save(baos);
+            // Save the modified document to a temporary file
+            outputTempFile = tempFileManager.createTempFile(".pdf");
+            mergedDocument.save(outputTempFile);
 
             String mergedFileName =
                     files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
                             + "_merged_unsigned.pdf";
-            return WebResponseUtils.baosToWebResponse(
-                    baos, mergedFileName); // Return the modified PDF
+            return WebResponseUtils.fileToWebResponse(
+                    outputTempFile, mergedFileName); // Return the modified PDF
 
         } catch (Exception ex) {
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
@@ -251,12 +251,10 @@ public class MergeController {
                 mergedDocument.close(); // Close the merged document
             }
             for (File file : filesToDelete) {
-                if (file != null) {
-                    Files.deleteIfExists(file.toPath()); // Delete temporary files
-                }
+                tempFileManager.deleteTempFile(file); // Delete temporary files
             }
             if (mergedTempFile != null) {
-                Files.deleteIfExists(mergedTempFile.toPath());
+                tempFileManager.deleteTempFile(mergedTempFile);
             }
         }
     }

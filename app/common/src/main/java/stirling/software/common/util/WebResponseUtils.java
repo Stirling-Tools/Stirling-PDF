@@ -1,11 +1,13 @@
 package stirling.software.common.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -63,5 +65,24 @@ public class WebResponseUtils {
         document.close();
 
         return baosToWebResponse(baos, docName);
+    }
+
+    /**
+     * Convert a File to a web response.
+     *
+     * @param file the file to convert
+     * @param docName the name of the document
+     * @return a ResponseEntity containing the file as a resource
+     */
+    public static ResponseEntity<FileSystemResource> fileToWebResponse(File file, String docName)
+            throws IOException {
+        FileSystemResource resource = new FileSystemResource(file);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentLength(resource.contentLength());
+        String encodedDocName =
+                URLEncoder.encode(docName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+        headers.setContentDispositionFormData("attachment", encodedDocName);
+        return new ResponseEntity<>(resource, headers, HttpStatus.OK);
     }
 }
