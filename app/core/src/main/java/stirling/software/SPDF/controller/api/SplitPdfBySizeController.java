@@ -62,7 +62,6 @@ public class SplitPdfBySizeController {
                         .replaceFirst("[.][^.]+$", "");
         log.debug("Base filename for output: {}", filename);
 
-        byte[] data;
         try (TempFile zipTempFile = new TempFile(tempFileManager, ".zip")) {
             Path zipFile = zipTempFile.getPath();
             log.debug("Created temporary zip file: {}", zipFile);
@@ -108,18 +107,18 @@ public class SplitPdfBySizeController {
                         log.debug("PDF splitting completed successfully");
                     }
                 }
+
+                byte[] data = Files.readAllBytes(zipFile);
+                log.debug("Successfully read {} bytes from ZIP file", data.length);
+
+                log.debug("Returning response with {} bytes of data", data.length);
+                return WebResponseUtils.bytesToWebResponse(
+                        data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
             } catch (Exception e) {
                 ExceptionUtils.logException("PDF splitting process", e);
                 throw e; // Re-throw to ensure proper error response
             }
-
-            data = Files.readAllBytes(zipFile);
-            log.debug("Successfully read {} bytes from ZIP file", data.length);
         }
-
-        log.debug("Returning response with {} bytes of data", data.length);
-        return WebResponseUtils.bytesToWebResponse(
-                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private void handleSplitBySize(
