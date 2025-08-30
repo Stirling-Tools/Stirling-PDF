@@ -156,19 +156,31 @@ class PdfContainer {
     return movePageCommand;
   }
 
-  async addFiles(element) {
-    let addFilesCommand = new AddFilesCommand(
+  /**
+   * Adds files or a single blank page (when blank=true) near an anchor element.
+   * @param {HTMLElement|null} element - Anchor element (insert before its nextSibling).
+   * @param {boolean} [blank=false] - When true, insert a single blank page.
+   */
+  async addFiles(element, blank = false) {
+    // Choose the action: real file picker or blank page generator.
+    const action = blank
+      ? async (nextSiblingElement) => {
+          // Create exactly one blank page and return the created elements array.
+          const pages = await this.addFilesBlank(nextSiblingElement, []);
+          return pages; // array of inserted elements
+        }
+      : this.addFilesAction.bind(this);
+
+    const addFilesCommand = new AddFilesCommand(
       element,
       window.selectedPages,
-      this.addFilesAction.bind(this),
+      action,
       this.pagesContainer
     );
 
     await addFilesCommand.execute();
-
     this.undoManager.pushUndoClearRedo(addFilesCommand);
     window.tooltipSetup();
-
   }
 
   async addFilesAction(nextSiblingElement) {
