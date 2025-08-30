@@ -51,13 +51,13 @@ public abstract class CreateSignatureBase implements SignatureInterface {
     @Setter
     private String tsaUrl;
     /**
-     * -- SETTER --
-     *  Set if external signing scenario should be used. If
-     * , SignatureInterface would
-     *  be used for signing.
-     *  <p>Default:
+     * Specifies whether the external signing scenario should be used.
+     * If set to {@code true}, external signing will be performed and
+     * {@link SignatureInterface} will be used for signing.
+     * If set to {@code false}, internal signing will be performed.
+     * <p>Default: {@code false}
      *
-     * @param externalSigning {@code true} if external signing should be performed
+     * @param externalSigning {@code true} if external signing should be performed; {@code false} for internal signing
      */
     @Setter
     @Getter
