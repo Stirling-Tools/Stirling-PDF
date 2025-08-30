@@ -171,7 +171,6 @@ public class MergeController {
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
         boolean generateToc = request.isGenerateToc();
-        ResponseEntity<FileSystemResource> data = null;
 
         try {
             MultipartFile[] files = request.getFileInput();
