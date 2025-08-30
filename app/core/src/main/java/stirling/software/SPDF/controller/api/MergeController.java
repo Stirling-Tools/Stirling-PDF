@@ -159,8 +159,8 @@ public class MergeController {
             summary = "Merge multiple PDF files into one",
             description =
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
-                        + " file will contain all pages from the input files in the order they were"
-                        + " provided. Input:PDF Output:PDF Type:MISO")
+                            + " file will contain all pages from the input files in the order they were"
+                            + " provided. Input:PDF Output:PDF Type:MISO")
     public ResponseEntity<FileSystemResource> mergePdfs(@ModelAttribute MergePdfsRequest request)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
