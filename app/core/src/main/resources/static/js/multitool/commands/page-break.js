@@ -42,6 +42,10 @@ export class PageBreakCommand extends CommandWithAnchors {
 
       if (index !== 0) {
         const result = await this.pageBreakCallback(element, this.addedElements);
+        if (!Array.isArray(this.addedElements)) {
+          this.addedElements = [];
+        }
+
         if (Array.isArray(result)) {
           this.addedElements.push(...result);
         } else if (result) {

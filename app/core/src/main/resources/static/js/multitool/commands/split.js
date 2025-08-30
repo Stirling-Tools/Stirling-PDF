@@ -53,7 +53,11 @@ export class SplitAllCommand extends Command {
     if (!this.isSelectedInWindow) {
       const hasSplit = this._hasSplit();
       (this.elements || []).forEach((page) => {
-        page.classList[hasSplit ? 'remove' : 'add'](this.splitClass);
+        if (hasSplit) {
+          page.classList.remove(this.splitClass);
+        } else {
+          page.classList.add(this.splitClass);
+        }
       });
       return;
     }

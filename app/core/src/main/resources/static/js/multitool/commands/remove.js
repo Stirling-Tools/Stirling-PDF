@@ -22,9 +22,11 @@ export class RemoveSelectedCommand extends Command {
       pageDivs.forEach((div, index) => {
         const pageNumber = index + 1;
         const checkbox = div.querySelector(".pdf-actions_checkbox");
-        checkbox.id = `selectPageCheckbox-${pageNumber}`;
-        checkbox.setAttribute("data-page-number", pageNumber);
-        checkbox.checked = window.selectedPages.includes(pageNumber);
+        if (checkbox) {
+          checkbox.id = `selectPageCheckbox-${pageNumber}`;
+          checkbox.setAttribute("data-page-number", pageNumber);
+          checkbox.checked = window.selectedPages.includes(pageNumber);
+        }
       });
     });
 

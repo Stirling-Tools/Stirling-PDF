@@ -366,7 +366,7 @@ class PdfContainer {
     clone.appendChild(img);
 
     this.pdfAdapters.forEach((adapter) => {
-      adapter.adapt?.(clone);
+      adapter?.adapt?.(clone);
     });
 
     const nextSibling = element.nextSibling;
