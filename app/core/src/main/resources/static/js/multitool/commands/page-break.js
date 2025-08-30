@@ -54,6 +54,9 @@ export class PageBreakCommand extends CommandWithAnchors {
       }
     }
 
+    // Capture anchors right after insertion so redo does not depend on undo.
+    this._anchors = this.addedElements.map((el) => this.captureAnchor(el, this.pagesContainer));
+
     if (undoBtn) undoBtn.disabled = false;
   }
 
@@ -84,9 +87,18 @@ export class PageBreakCommand extends CommandWithAnchors {
   }
 
   redo() {
+    // If elements are already present (no prior undo), do nothing.
     if (!this.addedElements.length) return;
+    const alreadyInDom =
+      this.addedElements[0].parentNode === this.pagesContainer;
+    if (alreadyInDom) return;
 
-    for (const anchor of this._anchors) {
+    // Use pre-captured anchors (from execute) or fall back to current ones.
+    const anchors = (this._anchors && this._anchors.length)
+      ? this._anchors
+      : this.addedElements.map((el) => this.captureAnchor(el, this.pagesContainer));
+
+    for (const anchor of anchors) {
       this.insertWithAnchor(this.pagesContainer, anchor);
     }
   }
