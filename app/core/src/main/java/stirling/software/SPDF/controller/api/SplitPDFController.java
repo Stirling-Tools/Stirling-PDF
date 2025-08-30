@@ -58,7 +58,6 @@ public class SplitPDFController {
         PDDocument document = null;
         Path zipFile = null;
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
-        byte[] data;
         String filename;
         TempFile outputTempFile = null;
 
