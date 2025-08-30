@@ -135,7 +135,9 @@ public class SplitPDFController {
             log.debug(
                     "Successfully created zip file with split documents: {}",
                     outputTempFile.getPath());
-            data = Files.readAllBytes(outputTempFile.getPath());
+            byte[] data = Files.readAllBytes(outputTempFile.getPath());
+            return WebResponseUtils.bytesToWebResponse(
+                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
         } finally {
             try {
                 // Close the main document
@@ -158,8 +160,5 @@ public class SplitPDFController {
                 log.error("Error while cleaning up resources", e);
             }
         }
-
-        return WebResponseUtils.bytesToWebResponse(
-                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 }
