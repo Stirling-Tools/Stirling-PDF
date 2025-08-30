@@ -37,6 +37,9 @@ export class AddFilesCommand extends CommandWithAnchors {
       this.addedElements = [];
     }
 
+    // Capture anchors right after insertion so redo does not depend on undo.
+    this._anchors = this.addedElements.map((el) => this.captureAnchor(el, this.pagesContainer));
+
     if (undoBtn) undoBtn.disabled = false;
   }
 
@@ -63,8 +66,18 @@ export class AddFilesCommand extends CommandWithAnchors {
 
   redo() {
     if (!this.addedElements.length) return;
+    // If the elements are already in the DOM (no prior undo), do nothing.
+    const alreadyInDom =
+      this.addedElements[0].parentNode === this.pagesContainer;
+    if (alreadyInDom) return;
 
-    for (const anchor of this._anchors) {
+    // Use pre-captured anchors (from execute) or fall back to capturing now.
+    const anchors = (this._anchors && this._anchors.length)
+      ? this._anchors
+      : this.addedElements.map((el) =>
+          this.captureAnchor(el, this.pagesContainer));
+
+    for (const anchor of anchors) {
       this.insertWithAnchor(this.pagesContainer, anchor);
     }
   }
