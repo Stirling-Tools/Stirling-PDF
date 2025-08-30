@@ -30,6 +30,7 @@ class PdfContainer {
     this.setDownloadAttribute = this.setDownloadAttribute.bind(this);
     this.preventIllegalChars = this.preventIllegalChars.bind(this);
     this.addImageFile = this.addImageFile.bind(this);
+    this.duplicatePage = this.duplicatePage.bind(this);
     this.nameAndArchiveFiles = this.nameAndArchiveFiles.bind(this);
     this.splitPDF = this.splitPDF.bind(this);
     this.splitAll = this.splitAll.bind(this);
@@ -56,6 +57,7 @@ class PdfContainer {
         rotateElement: this.rotateElement,
         updateFilename: this.updateFilename,
         deleteSelected: this.deleteSelected,
+        duplicatePage: this.duplicatePage,
       });
     });
 
@@ -347,6 +349,30 @@ class PdfContainer {
     }
     pages.push(div);
     return pages;
+  }
+
+  duplicatePage(element) {
+    const clone = document.createElement('div');
+    clone.classList.add('page-container');
+
+    const originalImg = element.querySelector('img');
+    const img = document.createElement('img');
+    img.classList.add('page-image');
+    img.src = originalImg.src;
+    img.pageIdx = originalImg.pageIdx;
+    img.rend = originalImg.rend;
+    img.doc = originalImg.doc;
+    img.style.rotate = originalImg.style.rotate;
+    clone.appendChild(img);
+
+    this.pdfAdapters.forEach((adapter) => {
+      adapter.adapt?.(clone);
+    });
+
+    const nextSibling = element.nextSibling;
+    this.pagesContainer.insertBefore(clone, nextSibling);
+    this.updatePageNumbersAndCheckboxes();
+    return clone;
   }
 
   async loadFile(file) {
