@@ -119,8 +119,6 @@ public class AutoSplitPdfController {
 
         PDDocument document = null;
         List<PDDocument> splitDocuments = new ArrayList<>();
-        byte[] data = null;
-        String filename = null;
         TempFile outputTempFile = null;
 
         try {
@@ -156,7 +154,7 @@ public class AutoSplitPdfController {
             // Remove split documents that have no pages
             splitDocuments.removeIf(pdDocument -> pdDocument.getNumberOfPages() == 0);
 
-            filename =
+            String filename =
                     Filenames.toSimpleFileName(file.getOriginalFilename())
                             .replaceFirst("[.][^.]+$", "");
 
@@ -177,7 +175,9 @@ public class AutoSplitPdfController {
                 }
             }
 
-            data = Files.readAllBytes(outputTempFile.getPath());
+            byte[] data = Files.readAllBytes(outputTempFile.getPath());
+            return WebResponseUtils.bytesToWebResponse(
+                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
 
         } catch (Exception e) {
             log.error("Error in auto split", e);
@@ -204,7 +204,5 @@ public class AutoSplitPdfController {
                 outputTempFile.close();
             }
         }
-        return WebResponseUtils.bytesToWebResponse(
-                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 }
