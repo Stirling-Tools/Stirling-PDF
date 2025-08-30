@@ -37,6 +37,7 @@ import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfErrorUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -158,13 +159,13 @@ public class MergeController {
             summary = "Merge multiple PDF files into one",
             description =
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
-                            + " file will contain all pages from the input files in the order they were"
-                            + " provided. Input:PDF Output:PDF Type:MISO")
+                        + " file will contain all pages from the input files in the order they were"
+                        + " provided. Input:PDF Output:PDF Type:MISO")
     public ResponseEntity<FileSystemResource> mergePdfs(@ModelAttribute MergePdfsRequest request)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
-        File mergedTempFile = null;
-        File outputTempFile = null;
+        TempFile mergedTempFile = null;
+        TempFile outputTempFile = null;
         PDDocument mergedDocument = null;
         ResponseEntity<FileSystemResource> response = null;
 
@@ -189,7 +190,7 @@ public class MergeController {
                 mergerUtility.addSource(tempFile); // Add source file to the merger utility
             }
 
-            mergedTempFile = tempFileManager.createTempFile(".pdf");
+            mergedTempFile = new TempFile(tempFileManager, ".pdf");
             mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());
 
             try {
@@ -205,7 +206,7 @@ public class MergeController {
             }
 
             // Load the merged PDF document
-            mergedDocument = pdfDocumentFactory.load(mergedTempFile);
+            mergedDocument = pdfDocumentFactory.load(mergedTempFile.getFile());
 
             // Remove signatures if removeCertSign is true
             if (removeCertSign) {
@@ -231,15 +232,16 @@ public class MergeController {
             }
 
             // Save the modified document to a temporary file
-            outputTempFile = tempFileManager.createTempFile(".pdf");
-            mergedDocument.save(outputTempFile);
+            outputTempFile = new TempFile(tempFileManager, ".pdf");
+            mergedDocument.save(outputTempFile.getFile());
 
             String mergedFileName =
                     files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
                             + "_merged_unsigned.pdf";
             response =
                     WebResponseUtils.fileToWebResponse(
-                            outputTempFile, mergedFileName); // Return the modified PDF as stream
+                            outputTempFile.getFile(),
+                            mergedFileName); // Return the modified PDF as stream
             return response;
 
         } catch (Exception ex) {
@@ -257,10 +259,10 @@ public class MergeController {
                 tempFileManager.deleteTempFile(file); // Delete temporary files
             }
             if (mergedTempFile != null) {
-                tempFileManager.deleteTempFile(mergedTempFile);
+                mergedTempFile.close();
             }
             if (response == null && outputTempFile != null) {
-                tempFileManager.deleteTempFile(outputTempFile);
+                outputTempFile.close();
             }
         }
     }
