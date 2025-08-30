@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
