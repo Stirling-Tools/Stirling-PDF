@@ -59,7 +59,7 @@ public class PageNumbersController {
         String fontColor = request.getFontColor();
 
         Color color = Color.BLACK;
-        if (fontColor != null && !fontColor.isBlank()) {
+        if (fontColor != null && !fontColor.trim().isEmpty()) {
             try {
                 color = Color.decode(fontColor);
             } catch (NumberFormatException e) {
