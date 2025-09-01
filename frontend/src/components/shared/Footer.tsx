@@ -24,7 +24,6 @@ export default function Footer({
   return (
     <div style={{
       height: 'var(--footer-height)',
-      zIndex: 999999,
       backgroundColor: 'var(--mantine-color-gray-1)',
       borderTop: '1px solid var(--mantine-color-gray-2)',
       display: 'flex',

@@ -79,6 +79,11 @@ export const createFileFromResponse = (
   targetExtension: string
 ): File => {
   const originalName = originalFileName.split('.')[0];
+
+  if (targetExtension == 'pdfa') {
+    targetExtension = 'pdf';
+  }
+
   const fallbackFilename = `${originalName}_converted.${targetExtension}`;
 
   return createFileFromApiResponse(responseData, headers, fallbackFilename);
