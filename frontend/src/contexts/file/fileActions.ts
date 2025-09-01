@@ -330,7 +330,8 @@ export async function consumeFiles(
   outputFiles: File[],
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
-  dispatch: React.Dispatch<FileContextAction>
+  dispatch: React.Dispatch<FileContextAction>,
+  indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any> } | null
 ): Promise<void> {
   if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputFiles.length} output files`);
 
@@ -362,16 +363,27 @@ export async function consumeFiles(
         record.processedFile = createProcessedFile(pageCount, thumbnail);
       }
 
-      return record;
+      return { record, file, fileId, thumbnail };
     })
   );
+
+  // Persist output files to IndexedDB if available
+  if (indexedDB) {
+    await Promise.all(outputFileRecords.map(async ({ file, fileId, thumbnail }) => {
+      try {
+        await indexedDB.saveFile(file, fileId, thumbnail);
+      } catch (error) {
+        console.error('Failed to persist output file to IndexedDB:', file.name, error);
+      }
+    }));
+  }
 
   // Dispatch the consume action
   dispatch({
     type: 'CONSUME_FILES',
     payload: {
       inputFileIds,
-      outputFileRecords
+      outputFileRecords: outputFileRecords.map(({ record }) => record)
     }
   });
 

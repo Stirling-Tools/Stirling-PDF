@@ -122,8 +122,8 @@ function FileContextInner({
 
   // Helper functions for pinned files
   const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<void> => {
-    return consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch);
-  }, []);
+    return consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch, indexedDB);
+  }, [indexedDB]);
 
   // Helper to find FileId from File object
   const findFileId = useCallback((file: File): FileId | undefined => {
