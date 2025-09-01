@@ -6,7 +6,9 @@ import {
   FileId, 
   FileRecord, 
   FileContextState,
-  FileContextSelectors 
+  FileContextSelectors,
+  FileWithId,
+  createFileWithId
 } from '../../types/fileContext';
 
 /**
@@ -17,11 +19,19 @@ export function createFileSelectors(
   filesRef: React.MutableRefObject<Map<FileId, File>>
 ): FileContextSelectors {
   return {
-    getFile: (id: FileId) => filesRef.current.get(id),
+    getFile: (id: FileId) => {
+      const file = filesRef.current.get(id);
+      return file ? createFileWithId(file, id) : undefined;
+    },
     
     getFiles: (ids?: FileId[]) => {
       const currentIds = ids || stateRef.current.files.ids;
-      return currentIds.map(id => filesRef.current.get(id)).filter(Boolean) as File[];
+      return currentIds
+        .map(id => {
+          const file = filesRef.current.get(id);
+          return file ? createFileWithId(file, id) : undefined;
+        })
+        .filter(Boolean) as FileWithId[];
     },
     
     getFileRecord: (id: FileId) => stateRef.current.files.byId[id],
@@ -35,8 +45,11 @@ export function createFileSelectors(
     
     getSelectedFiles: () => {
       return stateRef.current.ui.selectedFileIds
-        .map(id => filesRef.current.get(id))
-        .filter(Boolean) as File[];
+        .map(id => {
+          const file = filesRef.current.get(id);
+          return file ? createFileWithId(file, id) : undefined;
+        })
+        .filter(Boolean) as FileWithId[];
     },
     
     getSelectedFileRecords: () => {
@@ -52,8 +65,11 @@ export function createFileSelectors(
     
     getPinnedFiles: () => {
       return Array.from(stateRef.current.pinnedFiles)
-        .map(id => filesRef.current.get(id))
-        .filter(Boolean) as File[];
+        .map(id => {
+          const file = filesRef.current.get(id);
+          return file ? createFileWithId(file, id) : undefined;
+        })
+        .filter(Boolean) as FileWithId[];
     },
     
     getPinnedFileRecords: () => {
@@ -62,16 +78,8 @@ export function createFileSelectors(
         .filter(Boolean);
     },
     
-    isFilePinned: (file: File) => {
-      // Find FileId by matching File object properties
-      const fileId = Object.keys(stateRef.current.files.byId).find(id => {
-        const storedFile = filesRef.current.get(id);
-        return storedFile && 
-               storedFile.name === file.name && 
-               storedFile.size === file.size && 
-               storedFile.lastModified === file.lastModified;
-      });
-      return fileId ? stateRef.current.pinnedFiles.has(fileId) : false;
+    isFilePinned: (file: FileWithId) => {
+      return stateRef.current.pinnedFiles.has(file.fileId);
     },
     
     // Stable signature for effects - prevents unnecessary re-renders
@@ -119,12 +127,15 @@ export function buildQuickKeySetFromMetadata(metadata: Array<{ name: string; siz
 export function getPrimaryFile(
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>
-): { file?: File; record?: FileRecord } {
+): { file?: FileWithId; record?: FileRecord } {
   const primaryFileId = stateRef.current.files.ids[0];
   if (!primaryFileId) return {};
   
+  const file = filesRef.current.get(primaryFileId);
+  const record = stateRef.current.files.byId[primaryFileId];
+  
   return {
-    file: filesRef.current.get(primaryFileId),
-    record: stateRef.current.files.byId[primaryFileId]
+    file: file ? createFileWithId(file, primaryFileId) : undefined,
+    record
   };
 }

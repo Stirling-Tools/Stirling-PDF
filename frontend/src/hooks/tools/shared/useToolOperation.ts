@@ -7,6 +7,7 @@ import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { createOperation } from '../../../utils/toolOperationTracker';
+import { FileWithId, extractFiles } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 
 // Re-export for backwards compatibility
@@ -82,7 +83,7 @@ export interface ToolOperationHook<TParams = void> {
   progress: ProcessingProgress | null;
 
   // Actions
-  executeOperation: (params: TParams, selectedFiles: File[]) => Promise<void>;
+  executeOperation: (params: TParams, selectedFiles: FileWithId[]) => Promise<void>;
   resetResults: () => void;
   clearError: () => void;
   cancelOperation: () => void;
@@ -107,7 +108,7 @@ export const useToolOperation = <TParams = void>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, findFileId } = useFileContext();
+  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -116,7 +117,7 @@ export const useToolOperation = <TParams = void>(
 
   const executeOperation = useCallback(async (
     params: TParams,
-    selectedFiles: File[]
+    selectedFiles: FileWithId[]
   ): Promise<void> => {
     // Validation
     if (selectedFiles.length === 0) {
@@ -130,7 +131,7 @@ export const useToolOperation = <TParams = void>(
       return;
     }
 
-    // Setup operation tracking
+    // Setup operation tracking with proper FileWithId
     const { operation, operationId, fileId } = createOperation(config.operationType, params, selectedFiles);
     recordOperation(fileId, operation);
 
@@ -143,15 +144,18 @@ export const useToolOperation = <TParams = void>(
     try {
       let processedFiles: File[];
 
+      // Convert FileWithId to regular File objects for API processing
+      const validRegularFiles = extractFiles(validFiles);
+
       if (config.customProcessor) {
         actions.setStatus('Processing files...');
-        processedFiles = await config.customProcessor(params, validFiles);
+        processedFiles = await config.customProcessor(params, validRegularFiles);
       } else {
         // Use explicit multiFileEndpoint flag to determine processing approach
         if (config.multiFileEndpoint) {
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');
-          const formData = (config.buildFormData as (params: TParams, files: File[]) => FormData)(params, validFiles);
+          const formData = (config.buildFormData as (params: TParams, files: File[]) => FormData)(params, validRegularFiles);
           const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
 
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
@@ -159,11 +163,11 @@ export const useToolOperation = <TParams = void>(
           // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
           if (config.responseHandler) {
             // Use custom responseHandler for multi-file (handles ZIP extraction)
-            processedFiles = await config.responseHandler(response.data, validFiles);
+            processedFiles = await config.responseHandler(response.data, validRegularFiles);
           } else if (response.data.type === 'application/pdf' || 
                      (response.headers && response.headers['content-type'] === 'application/pdf')) {
             // Single PDF response (e.g. split with merge option) - use original filename
-            const originalFileName = validFiles[0]?.name || 'document.pdf';
+            const originalFileName = validRegularFiles[0]?.name || 'document.pdf';
             const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
             processedFiles = [singleFile];
           } else {
@@ -185,7 +189,7 @@ export const useToolOperation = <TParams = void>(
           };
           processedFiles = await processFiles(
             params,
-            validFiles,
+            validRegularFiles,
             apiCallsConfig,
             actions.setProgress,
             actions.setStatus
@@ -208,7 +212,7 @@ export const useToolOperation = <TParams = void>(
         actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
 
         // Replace input files with processed files (consumeFiles handles pinning)
-        const inputFileIds = validFiles.map(file => findFileId(file)).filter(Boolean) as string[];
+        const inputFileIds = validFiles.map(file => file.fileId);
         await consumeFiles(inputFileIds, processedFiles);
 
         markOperationApplied(fileId, operationId);
@@ -223,7 +227,7 @@ export const useToolOperation = <TParams = void>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, findFileId, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
+  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();

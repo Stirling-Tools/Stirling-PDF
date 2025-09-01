@@ -5,9 +5,8 @@ import {
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
+import { useFileSelection, useFileState, useFileManagement } from '../../contexts/FileContext';
 import { useNavigationActions } from '../../contexts/NavigationContext';
-import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';
@@ -53,8 +52,6 @@ const FileEditor = ({
   const selectedFileIds = state.ui.selectedFileIds;
   const isProcessing = state.ui.isProcessing;
   
-  // Get the real context actions
-  const { actions } = useFileActions();
   const { actions: navActions } = useNavigationActions();
   
   // Get file selection context
@@ -212,25 +209,6 @@ const FileEditor = ({
 
       // Process all extracted files
       if (allExtractedFiles.length > 0) {
-        // Record upload operations for PDF files
-        for (const file of allExtractedFiles) {
-          const operationId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const operation: FileOperation = {
-            id: operationId,
-            type: 'upload',
-            timestamp: Date.now(),
-            fileIds: [file.name],
-            status: 'pending',
-            metadata: {
-              originalFileName: file.name,
-              fileSize: file.size,
-              parameters: {
-                uploadMethod: 'drag-drop'
-              }
-            }
-          };
-        }
-
         // Add files to context (they will be processed automatically)
         await addFiles(allExtractedFiles);
         setStatus(`Added ${allExtractedFiles.length} files`);

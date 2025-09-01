@@ -326,11 +326,11 @@ export async function consumeFiles(
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>
-): Promise<void> {
+): Promise<Array<{ file: File; id: FileId; thumbnail?: string }>> {
   if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputFiles.length} output files`);
   
   // Process output files through the 'processed' path to generate thumbnails
-  const outputFileRecords = await Promise.all(
+  const processedOutputs: Array<{ file: File; id: FileId; thumbnail?: string; record: FileRecord }> = await Promise.all(
     outputFiles.map(async (file) => {
       const fileId = createFileId();
       filesRef.current.set(fileId, file);
@@ -357,9 +357,12 @@ export async function consumeFiles(
         record.processedFile = createProcessedFile(pageCount, thumbnail);
       }
       
-      return record;
+      return { file, id: fileId, thumbnail, record };
     })
   );
+  
+  // Extract records for dispatch
+  const outputFileRecords = processedOutputs.map(({ record }) => record);
   
   // Dispatch the consume action
   dispatch({ 
@@ -371,6 +374,9 @@ export async function consumeFiles(
   });
   
   if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputFileRecords.length} outputs`);
+  
+  // Return file data for FileWithId conversion
+  return processedOutputs.map(({ file, id, thumbnail }) => ({ file, id, thumbnail }));
 }
 
 /**

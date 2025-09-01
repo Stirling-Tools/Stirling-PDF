@@ -25,8 +25,8 @@ export type ModeType =
   | 'unlockPdfForms'
   | 'removeCertificateSign';
 
-// Normalized state types
-export type FileId = string;
+// Normalized state types - Branded type to prevent string/FileId confusion
+export type FileId = string & { readonly __brand: 'FileId' };
 
 export interface ProcessedFilePage {
   thumbnail?: string;
@@ -83,6 +83,127 @@ export function createFileId(): FileId {
 export function createQuickKey(file: File): string {
   // Format: name|size|lastModified for fast duplicate detection
   return `${file.name}|${file.size}|${file.lastModified}`;
+}
+
+// File with embedded UUID - replaces loose File + FileId parameter passing
+export interface FileWithId extends File {
+  readonly fileId: FileId;
+  readonly quickKey: string; // Fast deduplication key: name|size|lastModified
+}
+
+// Type guard to check if a File object has an embedded fileId
+export function isFileWithId(file: File): file is FileWithId {
+  return 'fileId' in file && typeof (file as any).fileId === 'string' &&
+         'quickKey' in file && typeof (file as any).quickKey === 'string';
+}
+
+// Create a FileWithId from a regular File object
+export function createFileWithId(file: File, id?: FileId): FileWithId {
+  const fileId = id || createFileId();
+  const quickKey = createQuickKey(file);
+  
+  // Create new File-like object with embedded fileId and quickKey
+  const fileWithId = Object.create(file);
+  Object.defineProperty(fileWithId, 'fileId', {
+    value: fileId,
+    writable: false,
+    enumerable: true,
+    configurable: false
+  });
+  Object.defineProperty(fileWithId, 'quickKey', {
+    value: quickKey,
+    writable: false,
+    enumerable: true,
+    configurable: false
+  });
+  
+  return fileWithId as FileWithId;
+}
+
+// Wrap array of Files with FileIds
+export function wrapFilesWithIds(files: File[], ids?: FileId[]): FileWithId[] {
+  return files.map((file, index) => 
+    createFileWithId(file, ids?.[index])
+  );
+}
+
+// Extract FileIds from FileWithId array
+export function extractFileIds(files: FileWithId[]): FileId[] {
+  return files.map(file => file.fileId);
+}
+
+// Extract regular File objects from FileWithId array
+export function extractFiles(files: FileWithId[]): File[] {
+  return files.map(file => {
+    // Create clean File object without the fileId property
+    return new File([file], file.name, {
+      type: file.type,
+      lastModified: file.lastModified
+    });
+  });
+}
+
+// Type guards and validation functions
+
+// Validate that a string is a proper FileId (has UUID format)
+export function isValidFileId(id: string): id is FileId {
+  // Check UUID v4 format: 8-4-4-4-12 hex digits
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
+// Runtime assertion for FileId validation
+export function assertValidFileId(id: string): asserts id is FileId {
+  if (!isValidFileId(id)) {
+    throw new Error(`Invalid FileId format: "${id}". Expected UUID format.`);
+  }
+}
+
+// Detect potentially dangerous file.name usage as ID
+export function isDangerousFileNameAsId(fileName: string, context: string = ''): boolean {
+  // Check if it's definitely a UUID (safe)
+  if (isValidFileId(fileName)) {
+    return false;
+  }
+  
+  // Check if it's a quickKey (safe) - format: name|size|lastModified
+  if (/^.+\|\d+\|\d+$/.test(fileName)) {
+    return false; // quickKeys are legitimate, not dangerous
+  }
+  
+  // Common patterns that suggest file.name is being used as ID
+  const dangerousPatterns = [
+    /^[^-]+-page-\d+$/, // pattern: filename-page-123
+    /\.(pdf|jpg|png|doc|docx)$/i, // ends with file extension
+    /\s/, // contains whitespace (filenames often have spaces)
+    /[()[\]{}]/, // contains brackets/parentheses common in filenames
+    /['"]/, // contains quotes
+    /[^a-zA-Z0-9\-._]/ // contains special characters not in UUIDs
+  ];
+  
+  // Check dangerous patterns
+  const isDangerous = dangerousPatterns.some(pattern => pattern.test(fileName));
+  
+  if (isDangerous && context) {
+    console.warn(`⚠️ Potentially dangerous file.name usage detected in ${context}: "${fileName}"`);
+  }
+  
+  return isDangerous;
+}
+
+// Safe file ID getter that throws if file.name is used as ID
+export function safeGetFileId(file: File, context: string = ''): FileId {
+  if (isFileWithId(file)) {
+    return file.fileId;
+  }
+  
+  // If we reach here, someone is trying to use a regular File without embedded ID
+  throw new Error(`Attempted to get FileId from regular File object in ${context}. Use FileWithId instead.`);
+}
+
+// Prevent accidental file.name usage as FileId
+export function preventFileNameAsId(value: string, context: string = ''): never {
+  throw new Error(`Blocked attempt to use string "${value}" as FileId in ${context}. Use proper FileId from createFileId() or FileWithId.fileId instead.`);
 }
 
 
@@ -217,21 +338,21 @@ export type FileContextAction =
 
 export interface FileContextActions {
   // File management - lightweight actions only
-  addFiles: (files: File[], options?: { insertAfterPageId?: string }) => Promise<File[]>;
-  addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<File[]>;
-  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => Promise<File[]>;
+  addFiles: (files: File[], options?: { insertAfterPageId?: string }) => Promise<FileWithId[]>;
+  addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<FileWithId[]>;
+  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => Promise<FileWithId[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;
 
-  // File pinning
-  pinFile: (file: File) => void;
-  unpinFile: (file: File) => void;
+  // File pinning - now accepts FileWithId for safer type checking
+  pinFile: (file: FileWithId) => void;
+  unpinFile: (file: FileWithId) => void;
 
-  // File consumption (replace unpinned files with outputs)
-  consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<void>;
+  // File consumption (replace unpinned files with outputs) - now returns FileWithId
+  consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileWithId[]>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
@@ -254,24 +375,24 @@ export interface FileContextActions {
 
 // File selectors (separate from actions to avoid re-renders)
 export interface FileContextSelectors {
-  // File access - no state dependency, uses ref
-  getFile: (id: FileId) => File | undefined;
-  getFiles: (ids?: FileId[]) => File[];
+  // File access - now returns FileWithId for safer type checking
+  getFile: (id: FileId) => FileWithId | undefined;
+  getFiles: (ids?: FileId[]) => FileWithId[];
   
   // Record access - uses normalized state
   getFileRecord: (id: FileId) => FileRecord | undefined;
   getFileRecords: (ids?: FileId[]) => FileRecord[];
   
-  // Derived selectors
+  // Derived selectors - now return FileWithId
   getAllFileIds: () => FileId[];
-  getSelectedFiles: () => File[];
+  getSelectedFiles: () => FileWithId[];
   getSelectedFileRecords: () => FileRecord[];
   
-  // Pinned files selectors
+  // Pinned files selectors - now return FileWithId
   getPinnedFileIds: () => FileId[];
-  getPinnedFiles: () => File[];
+  getPinnedFiles: () => FileWithId[];
   getPinnedFileRecords: () => FileRecord[];
-  isFilePinned: (file: File) => boolean;
+  isFilePinned: (file: FileWithId) => boolean;
   
   // Stable signature for effect dependencies
   getFilesSignature: () => string;

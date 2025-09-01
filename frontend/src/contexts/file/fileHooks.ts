@@ -168,16 +168,7 @@ export function useFileContext() {
     markOperationApplied: (fileId: string, operationId: string) => {}, // Operation tracking not implemented  
     markOperationFailed: (fileId: string, operationId: string, error: string) => {}, // Operation tracking not implemented
     
-    // File ID lookup
-    findFileId: (file: File) => {
-      return state.files.ids.find(id => {
-        const record = state.files.byId[id];
-        return record && 
-               record.name === file.name && 
-               record.size === file.size && 
-               record.lastModified === file.lastModified;
-      });
-    },
+    // File ID lookup removed - use FileWithId.fileId directly for better performance and type safety
     
     // Pinned files
     pinnedFiles: state.pinnedFiles,

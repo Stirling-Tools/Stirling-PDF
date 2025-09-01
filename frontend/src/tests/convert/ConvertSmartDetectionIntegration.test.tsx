@@ -25,7 +25,7 @@ vi.mock('../../services/fileStorage', () => ({
     init: vi.fn().mockResolvedValue(undefined),
     storeFile: vi.fn().mockImplementation((file, thumbnail) => {
       return Promise.resolve({
-        id: `mock-id-${file.name}`,
+        id: `mock-uuid-${Math.random().toString(36).substring(2)}`,
         name: file.name,
         size: file.size,
         type: file.type,

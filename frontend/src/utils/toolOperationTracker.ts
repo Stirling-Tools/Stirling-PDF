@@ -1,4 +1,4 @@
-import { FileOperation } from '../types/fileContext';
+import { FileOperation, FileWithId, safeGetFileId, FileId } from '../types/fileContext';
 
 /**
  * Creates operation tracking data for FileContext integration
@@ -6,23 +6,26 @@ import { FileOperation } from '../types/fileContext';
 export const createOperation = <TParams = void>(
   operationType: string,
   params: TParams,
-  selectedFiles: File[]
+  selectedFiles: FileWithId[]
 ): { operation: FileOperation; operationId: string; fileId: string } => {
   const operationId = `${operationType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  const fileId = selectedFiles.map(f => f.name).join(',');
+  
+  // Use proper FileIds instead of file.name - fixed dangerous pattern
+  const fileIds = selectedFiles.map(file => file.fileId);
+  const fileId = fileIds.join(',');
 
   const operation: FileOperation = {
     id: operationId,
     type: operationType,
     timestamp: Date.now(),
-    fileIds: selectedFiles.map(f => f.name),
+    fileIds, // Now properly uses FileId[] instead of file.name[]
     status: 'pending',
     metadata: {
       originalFileName: selectedFiles[0]?.name,
       parameters: params,
       fileSize: selectedFiles.reduce((sum, f) => sum + f.size, 0)
     }
-  } as any /* FIX ME*/;
+  };
 
   return { operation, operationId, fileId };
 };
