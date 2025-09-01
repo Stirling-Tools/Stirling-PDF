@@ -591,11 +591,13 @@ export class InsertFilesCommand extends DOMCommand {
       // Process all files and wait for their completion
       const baseTimestamp = Date.now();
       const extractionPromises = this.files.map(async (file, index) => {
-        const fileId = `inserted-${file.name}-${baseTimestamp + index}`;
+        // Generate proper UUID for each inserted file to prevent collisions
+        const { createFileId } = await import('../../../types/fileContext');
+        const fileId = `inserted-${createFileId()}`;
         // Store inserted file for export
         this.insertedFileMap.set(fileId, file);
-        // Use base timestamp + index to ensure unique but predictable file IDs
-        return await this.extractPagesFromFile(file, baseTimestamp + index);
+        // Use UUID instead of timestamp for better collision avoidance
+        return await this.extractPagesFromFile(file, Date.now() + index);
       });
       
       const extractedPageArrays = await Promise.all(extractionPromises);
@@ -705,10 +707,7 @@ export class InsertFilesCommand extends DOMCommand {
         
         if (arrayBuffer && arrayBuffer.byteLength > 0) {
           // Extract page numbers for all pages from this file
-          const pageNumbers = pages.map(page => {
-            const pageNumMatch = page.id.match(/-page-(\d+)$/);
-            return pageNumMatch ? parseInt(pageNumMatch[1]) : 1;
-          });
+          const pageNumbers = pages.map(page => page.originalPageNumber);
           
           console.log('Generating thumbnails for page numbers:', pageNumbers);
           
@@ -769,7 +768,9 @@ export class InsertFilesCommand extends DOMCommand {
           
           const pageCount = pdf.numPages;
           const pages: PDFPage[] = [];
-          const fileId = `inserted-${file.name}-${baseTimestamp}`;
+          // Generate proper UUID for inserted file to prevent collisions
+          const { createFileId } = await import('../../../types/fileContext');
+          const fileId = `inserted-${createFileId()}`;
           
           console.log('Original ArrayBuffer size:', arrayBuffer.byteLength);
           console.log('Storing ArrayBuffer for fileId:', fileId, 'size:', arrayBuffer.byteLength);
