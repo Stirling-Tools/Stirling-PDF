@@ -15,7 +15,6 @@ export default defineConfig(
   },
   {
     "rules": {
-      "no-empty": "off", // Temporarily disabled until codebase conformant
       "no-empty-pattern": "off", // Temporarily disabled until codebase conformant
       "no-undef": "off", // Temporarily disabled until codebase conformant
       "no-useless-escape": "off", // Temporarily disabled until codebase conformant
