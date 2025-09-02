@@ -15,6 +15,7 @@ import Repair from "../tools/Repair";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
+import ManageSignatures from "../tools/ManageSignatures";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -28,6 +29,7 @@ import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
+import { manageSignaturesOperationConfig } from "../hooks/tools/manageSignatures/useManageSignaturesOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -39,6 +41,7 @@ import AddWatermarkSingleStepSettings from "../components/tools/addWatermark/Add
 import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
+import CertificateTypeSettings from "../components/tools/manageSignatures/CertificateTypeSettings";
 import { ToolId } from "../types/toolId";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
@@ -132,13 +135,17 @@ export function useFlatToolRegistry(): ToolRegistry {
     const allTools: ToolRegistry = {
       // Signing
 
-      certSign: {
+      manageSignatures: {
         icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.certSign.title", "Sign with Certificate"),
-        component: null,
-        description: t("home.certSign.desc", "Signs a PDF with a Certificate/Key (PEM/P12)"),
+        name: t("home.manageSignatures.title", "Sign with Certificate"),
+        component: ManageSignatures,
+        description: t("home.manageSignatures.desc", "Add digital signatures to PDF documents using certificates"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
+        maxFiles: -1,
+        endpoints: ["cert-sign"],
+        operationConfig: manageSignaturesOperationConfig,
+        settingsComponent: CertificateTypeSettings,
       },
       sign: {
         icon: <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />,
@@ -245,14 +252,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
         component: null,
         description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.VERIFICATION,
-      },
-      "validate-pdf-signature": {
-        icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.validateSignature.title", "Validate PDF Signature"),
-        component: null,
-        description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
       },

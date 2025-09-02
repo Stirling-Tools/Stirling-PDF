@@ -426,6 +426,10 @@
       "title": "Flatten",
       "desc": "Remove all interactive elements and forms from a PDF"
     },
+    "manageSignatures": {
+      "title": "Sign with Certificate", 
+      "desc": "Add digital signatures to PDF documents using certificates"
+    },
     "repair": {
       "title": "Repair",
       "desc": "Tries to repair a corrupt/broken PDF"
@@ -2383,6 +2387,146 @@
       "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorised access. Password is set to 'password' by default.",
       "processImages": "Process Images",
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
+    }
+  },
+  "manageSignatures": {
+    "title": "Sign with Certificate",
+    "filenamePrefix": "signed",
+    "files": {
+      "placeholder": "Select PDF files to sign with certificates"
+    },
+    "fileStatus": {
+      "stepTitle": "File Status"
+    },
+    "fileNavigation": "File {{current}} of {{total}}",
+    "hasSignatures": "Contains {{count}} signature(s)",
+    "noSignatures": "No signatures detected",
+    "signed": "Signed",
+    "certType": {
+      "stepTitle": "Certificate Type",
+      "tooltip": {
+        "header": {
+          "title": "About Certificate Types"
+        },
+        "what": {
+          "title": "What's a certificate?",
+          "text": "It's a secure ID for your signature that proves you signed. Unless you're required to sign via certificate, we recommend using another secure method like Type, Draw, or Upload."
+        },
+        "which": {
+          "title": "Which option should I use?",
+          "text": "Choose the format that matches your certificate file:",
+          "bullet1": "PKCS#12 (.p12 / .pfx) – one combined file (most common)",
+          "bullet2": "PEM – separate private-key and certificate .pem files",
+          "bullet3": "JKS – Java .jks keystore for dev / CI-CD workflows"
+        },
+        "convert": {
+          "title": "Key not listed?",
+          "text": "Convert your file to a Java keystore (.jks) with keytool, then pick JKS."
+        }
+      }
+    },
+    "certFiles": {
+      "stepTitle": "Certificate Files"
+    },
+    "appearance": {
+      "stepTitle": "Signature Appearance",
+      "title": "Signature Appearance",
+      "invisible": "Invisible",
+      "visible": "Visible",
+      "options": {
+        "title": "Signature Details"
+      },
+      "tooltip": {
+        "header": {
+          "title": "About Signature Appearance"
+        },
+        "invisible": {
+          "title": "Invisible Signatures",
+          "text": "The signature is added to the PDF for security but won't be visible when viewing the document. Perfect for legal requirements without changing the document's appearance.",
+          "bullet1": "Provides security without visual changes",
+          "bullet2": "Meets legal requirements for digital signing",
+          "bullet3": "Doesn't affect document layout or design"
+        },
+        "visible": {
+          "title": "Visible Signatures",
+          "text": "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed.",
+          "bullet1": "Shows signer name and date on the document",
+          "bullet2": "Can include reason and location for signing",
+          "bullet3": "Choose which page to place the signature",
+          "bullet4": "Optional logo can be included"
+        }
+      }
+    },
+    "mode": {
+      "title": "Action",
+      "validate": "Check for Signatures",
+      "viewEdit": "View/Edit Signatures",
+      "sign": "Add New Signature"
+    },
+    "validation": {
+      "title": "Validation Options",
+      "customCert": "Custom Certificate (Optional)",
+      "customCert.desc": "Upload a custom certificate for validation"
+    },
+    "signing": {
+      "title": "Certificate Settings",
+      "certType": "Certificate Type",
+      "choosePrivateKey": "Choose Private Key File",
+      "chooseCertificate": "Choose Certificate File", 
+      "chooseP12File": "Choose PKCS12 File",
+      "chooseJksFile": "Choose JKS File",
+      "password": "Certificate Password",
+      "showSignature": "Show visible signature on PDF",
+      "reason": "Reason for Signing",
+      "location": "Location",
+      "name": "Signer Name",
+      "pageNumber": "Page Number",
+      "logoTitle": "Logo",
+      "noLogo": "No Logo",
+      "showLogo": "Show Logo"
+    },
+    "validate": {
+      "submit": "Validate Signatures",
+      "results": "Signature Validation Results"
+    },
+    "sign": {
+      "submit": "Sign PDF",
+      "results": "Signed PDF"
+    },
+    "results": {
+      "title": "Signature Results"
+    },
+    "error": {
+      "failed": "An error occurred whilst processing signatures."
+    },
+    "tooltip": {
+      "header": {
+        "title": "About Managing Signatures"
+      },
+      "overview": {
+        "title": "What can this tool do?",
+        "text": "This tool lets you check if your PDFs are digitally signed and add new digital signatures. Digital signatures prove who created or approved a document and show if it has been changed since signing.",
+        "bullet1": "Check existing signatures and their validity",
+        "bullet2": "View detailed information about signers and certificates",
+        "bullet3": "Add new digital signatures to secure your documents",
+        "bullet4": "Multiple files supported with easy navigation"
+      },
+      "validation": {
+        "title": "Checking Signatures",
+        "text": "When you check signatures, the tool tells you if they're valid, who signed the document, when it was signed, and whether the document has been changed since signing.",
+        "bullet1": "Shows if signatures are valid or invalid",
+        "bullet2": "Displays signer information and signing date",
+        "bullet3": "Checks if the document was modified after signing",
+        "bullet4": "Can use custom certificates for verification"
+      },
+      "signing": {
+        "title": "Adding Signatures",
+        "text": "To sign a PDF, you need a digital certificate (like PEM, PKCS12, or JKS). You can choose to make the signature visible on the document or keep it invisible for security only.",
+        "bullet1": "Supports PEM, PKCS12, and JKS certificate formats",
+        "bullet2": "Option to show or hide signature on the PDF",
+        "bullet3": "Add reason, location, and signer name",
+        "bullet4": "Choose which page to place visible signatures"
+      }
     }
   }
 }
