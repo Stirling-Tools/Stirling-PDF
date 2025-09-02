@@ -50,6 +50,7 @@ const RemovePassword = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("removePassword.results.title", "Decrypted PDFs"),
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };

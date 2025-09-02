@@ -165,6 +165,7 @@ export function useFileContext() {
     // File management
     addFiles: actions.addFiles,
     consumeFiles: actions.consumeFiles,
+    undoConsumeFiles: actions.undoConsumeFiles,
     recordOperation: (fileId: FileId, operation: any) => {}, // Operation tracking not implemented
     markOperationApplied: (fileId: FileId, operationId: string) => {}, // Operation tracking not implemented
     markOperationFailed: (fileId: FileId, operationId: string, error: string) => {}, // Operation tracking not implemented
@@ -187,7 +188,11 @@ export function useFileContext() {
     isFilePinned: selectors.isFilePinned,
 
     // Active files
-    activeFiles: selectors.getFiles()
+    activeFiles: selectors.getFiles(),
+
+    // Direct access to actions and selectors (for advanced use cases)
+    actions,
+    selectors
   }), [state, selectors, actions]);
 }
 

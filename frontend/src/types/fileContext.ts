@@ -199,6 +199,7 @@ export type FileContextAction =
   | { type: 'PIN_FILE'; payload: { fileId: FileId } }
   | { type: 'UNPIN_FILE'; payload: { fileId: FileId } }
   | { type: 'CONSUME_FILES'; payload: { inputFileIds: FileId[]; outputFileRecords: FileRecord[] } }
+  | { type: 'UNDO_CONSUME_FILES'; payload: { inputFileRecords: FileRecord[]; outputFileIds: FileId[] } }
 
   // UI actions
   | { type: 'SET_SELECTED_FILES'; payload: { fileIds: FileId[] } }
@@ -228,7 +229,8 @@ export interface FileContextActions {
   unpinFile: (file: File) => void;
 
   // File consumption (replace unpinned files with outputs)
-  consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<void>;
+  consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileId[]>;
+  undoConsumeFiles: (inputFiles: File[], inputFileRecords: FileRecord[], outputFileIds: FileId[]) => Promise<void>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
