@@ -42,6 +42,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
@@ -2386,13 +2387,13 @@ public class RedactionService {
     }
 
     private static void mapStartToEnd(
-        List<TextSegment> segments,
-        List<MatchRange> result,
-        Map<Integer, List<AggressiveSegMatch>> perSegMatches,
-        List<Integer> decStarts,
-        List<Integer> decEnds,
-        int gStart,
-        int gEnd) {
+            List<TextSegment> segments,
+            List<MatchRange> result,
+            Map<Integer, List<AggressiveSegMatch>> perSegMatches,
+            List<Integer> decStarts,
+            List<Integer> decEnds,
+            int gStart,
+            int gEnd) {
         for (int sIdx = 0; sIdx < segments.size(); sIdx++) {
             int sStart = decStarts.get(sIdx);
             int sEnd = decEnds.get(sIdx);
@@ -2413,7 +2414,7 @@ public class RedactionService {
     }
 
     private static WidthCalculationResult calculatePreciseWidthAdjustment(
-        TextSegment segment, List<MatchRange> matches, String text) {
+            TextSegment segment, List<MatchRange> matches, String text) {
         float totalOriginalWidth = 0f, totalPlaceholderWidth = 0f;
         int processedMatches = 0;
         List<String> warnings = new ArrayList<>();
@@ -2513,7 +2514,7 @@ public class RedactionService {
     }
 
     private static void addSpacingAdjustment(
-        COSArray array, TextSegment segment, String originalText, String modifiedText) {
+            COSArray array, TextSegment segment, String originalText, String modifiedText) {
         try {
             if (array == null || segment == null || segment.getFont() == null) return;
             if (Objects.equals(originalText, modifiedText)) return;
@@ -2672,16 +2673,14 @@ public class RedactionService {
                 merger.setDestinationFileName(finalOutputFile.toString());
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
                     BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 600);
-                    File imagePath =
-                            new File(tempImagesDir, "page_" + pageNum + ".png");
+                    File imagePath = new File(tempImagesDir, "page_" + pageNum + ".png");
                     ImageIO.write(image, "png", imagePath);
                     List<String> command =
                             new ArrayList<>(
                                     Arrays.asList(
                                             "tesseract",
                                             imagePath.toString(),
-                                            new File(tempOutputDir, "page_" + pageNum)
-                                                    .toString(),
+                                            new File(tempOutputDir, "page_" + pageNum).toString(),
                                             "-l",
                                             buildLanguageOption(request),
                                             "--dpi",
@@ -2696,8 +2695,7 @@ public class RedactionService {
                         throw new IOException(
                                 "Tesseract restoration failed with return code: " + result.getRc());
                     }
-                    java.io.File pageOutputPath =
-                            new java.io.File(tempOutputDir, "page_" + pageNum + ".pdf");
+                    File pageOutputPath = new File(tempOutputDir, "page_" + pageNum + ".pdf");
                     merger.addSource(pageOutputPath);
                 }
                 merger.mergeDocuments(null);
@@ -2736,13 +2734,8 @@ public class RedactionService {
                         pageText.append(pdfText.getText()).append(" ");
                     }
                 }
-
-                String extractedText = pageText.toString().trim();
-                for (String word : targetWords) {
-                    if (extractedText.toLowerCase().contains(word.toLowerCase())) {}
-                }
-
             } catch (Exception e) {
+                log.debug("Failed to get direct text from page", e);
             }
         }
 
@@ -2776,8 +2769,6 @@ public class RedactionService {
             }
 
             String completeText = allText.toString().trim();
-            if (!completeText.isEmpty() && hasProblematicChars) {}
-
         }
 
         List<MatchRange> matches;
@@ -2939,8 +2930,7 @@ public class RedactionService {
         NORMALIZE_WHITESPACE
     }
 
-    public interface SemanticScrubber {
-    }
+    public interface SemanticScrubber {}
 
     private static class GlyphCoverageProbe {
         private final PDFont font;
@@ -2956,7 +2946,7 @@ public class RedactionService {
             if (font == null) return coverage;
 
             try {
-                if (font instanceof org.apache.pdfbox.pdmodel.font.PDType0Font) {
+                if (font instanceof PDType0Font) {
                     for (int cid = 0; cid < 65536; cid++) {
                         try {
                             String unicode = font.toUnicode(cid);
@@ -2964,12 +2954,12 @@ public class RedactionService {
                                 coverage.add(cid);
                             }
                         } catch (Exception e) {
-
+                            log.debug("Failed to get unicode for cid {}", cid, e);
                         }
                     }
                 }
             } catch (Exception e) {
-
+                log.debug("Failed to get glyph coverage for font {}", font, e);
             }
             return coverage;
         }
@@ -2995,17 +2985,17 @@ public class RedactionService {
                     String charStr = new String(Character.toChars(codePoint));
                     return font.getStringWidth(charStr) / FONT_SCALE_FACTOR * fontSize;
                 } catch (Exception e) {
-
+                    log.debug("Failed to get width for codepoint {}", codePoint, e);
                 }
             }
             return switch (strategy) {
-                case EMBED_WIDTH -> getEmbeddedProgramWidth(codePoint, fontSize);
+                case EMBED_WIDTH -> getEmbeddedProgramWidth(fontSize);
                 case AVERAGE_WIDTH -> getAverageFontWidth(fontSize);
                 case LEGACY_SUM -> getLegacySumFallback(codePoint, fontSize);
             };
         }
 
-        private float getEmbeddedProgramWidth(int codePoint, float fontSize) {
+        private float getEmbeddedProgramWidth(float fontSize) {
             try {
                 if (font.getFontDescriptor() != null) {
                     float avgWidth = font.getFontDescriptor().getAverageWidth();
@@ -3033,7 +3023,7 @@ public class RedactionService {
                             validChars++;
                         }
                     } catch (Exception e) {
-
+                        log.debug("Failed to get width for char {}", ch, e);
                     }
                 }
 
@@ -3091,7 +3081,7 @@ public class RedactionService {
             }
         }
 
-        private void scrubStructureElement(COSDictionary element, Set<ScrubOption> options) {
+        private static void scrubStructureElement(COSDictionary element, Set<ScrubOption> options) {
             if (element == null) return;
 
             if (options.contains(ScrubOption.REMOVE_ACTUALTEXT)) {
@@ -3120,18 +3110,16 @@ public class RedactionService {
             }
         }
 
-        private void normalizeWhitespaceInElement(COSDictionary element) {
+        private static void normalizeWhitespaceInElement(COSDictionary element) {
             for (COSName key : List.of(COSName.ACTUAL_TEXT, COSName.ALT, COSName.TU)) {
                 COSBase value = element.getDictionaryObject(key);
                 if (value instanceof COSString cosString) {
                     String text = cosString.getString();
-                    if (text != null) {
-                        String normalized = text.replaceAll("\\s+", " ").trim();
-                        if (normalized.length() > 256) {
-                            normalized = normalized.substring(0, 256);
-                        }
-                        element.setString(key, normalized);
+                    String normalized = text.replaceAll("\\s+", " ").trim();
+                    if (normalized.length() > 256) {
+                        normalized = normalized.substring(0, 256);
                     }
+                    element.setString(key, normalized);
                 }
             }
         }
@@ -3157,7 +3145,7 @@ public class RedactionService {
                     }
                 }
             } catch (Exception e) {
-
+                log.debug("Failed to scrub annotations", e);
             }
         }
     }
