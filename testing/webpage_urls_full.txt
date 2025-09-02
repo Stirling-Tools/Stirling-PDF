@@ -1,6 +1,5 @@
 
 /
-/accessibilityStatement
 /add-image
 /add-page-numbers
 /add-password
@@ -14,7 +13,6 @@
 /change-permissions
 /compare
 /compress-pdf
-/cookiePolicy
 /crop
 /extract-image-scans
 /extract-images
@@ -24,7 +22,6 @@
 /get-info-on-pdf
 /html-to-pdf
 /img-to-pdf
-/impressum
 /licenses
 /markdown-to-pdf
 /merge-pdfs
@@ -43,7 +40,6 @@
 /pdf-to-word
 /pdf-to-xml
 /pipeline
-/privacyPolicy
 /redact
 /releases
 /remove-annotations
@@ -64,7 +60,6 @@
 /split-pdf-by-sections
 /split-pdfs
 /stamp
-/termsAndConditions
 /validate-signature
 /view-pdf
 /swagger-ui/index.html

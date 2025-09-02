@@ -117,7 +117,7 @@ legal:
   privacyPolicy: / # URL to the privacy policy of your application
   accessibilityStatement: / # URL to the accessibility statement of your application
   cookiePolicy: / # URL to the cookie policy of your application
-  impressum: /impressum # URL to the impressum of your application
+  impressum: / # URL to the impressum of your application
   apiContact: # ONLY pro/enterprise features
     company: Stirling Software
     email: contact@stirlingpdf.com
