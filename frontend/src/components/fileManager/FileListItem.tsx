@@ -3,9 +3,12 @@ import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge } from '@m
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
+import HistoryIcon from '@mui/icons-material/History';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
 import { FileMetadata } from '../../types/file';
+import { useFileManagerContext } from '../../contexts/FileManagerContext';
 
 interface FileListItemProps {
   file: FileMetadata;
@@ -30,9 +33,16 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
+  const { fileGroups, onRestoreVersion } = useFileManagerContext();
 
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
+
+  // Get version information for this file
+  const originalFileId = file.originalFileId || file.id;
+  const fileVersions = fileGroups.get(originalFileId) || [];
+  const hasVersionHistory = fileVersions.length > 1;
+  const currentVersion = file.versionNumber || 0; // Display original files as v0
 
   return (
     <>
@@ -77,8 +87,18 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   DRAFT
                 </Badge>
               )}
+              {hasVersionHistory && (
+                <Badge size="xs" variant="light" color="blue">
+                  v{currentVersion}
+                </Badge>
+              )}
             </Group>
-            <Text size="xs" c="dimmed">{getFileSize(file)} • {getFileDate(file)}</Text>
+            <Text size="xs" c="dimmed">
+              {getFileSize(file)} • {getFileDate(file)}
+              {hasVersionHistory && (
+                <Text span c="dimmed"> • {fileVersions.length} versions</Text>
+              )}
+            </Text>
           </Box>
 
           {/* Three dots menu - fades in/out on hover */}
@@ -117,6 +137,42 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   {t('fileManager.download', 'Download')}
                 </Menu.Item>
               )}
+              
+              {/* Version History Menu */}
+              {hasVersionHistory && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Label>{t('fileManager.versions', 'Version History')}</Menu.Label>
+                  {fileVersions.map((version, index) => (
+                    <Menu.Item
+                      key={version.id}
+                      leftSection={
+                        version.id === file.id ? 
+                        <Badge size="xs" color="blue">Current</Badge> : 
+                        <RestoreIcon style={{ fontSize: 16 }} />
+                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (version.id !== file.id) {
+                          onRestoreVersion(version);
+                        }
+                      }}
+                      disabled={version.id === file.id}
+                    >
+                      <Group gap="xs" style={{ width: '100%', justifyContent: 'space-between' }}>
+                        <Text size="sm">
+                          v{version.versionNumber || 0}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {new Date(version.lastModified).toLocaleDateString()}
+                        </Text>
+                      </Group>
+                    </Menu.Item>
+                  ))}
+                  <Menu.Divider />
+                </>
+              )}
+              
               <Menu.Item
                 leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
                 onClick={(e) => {

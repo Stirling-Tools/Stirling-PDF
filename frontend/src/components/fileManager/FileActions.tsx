@@ -1,15 +1,25 @@
 import React from "react";
-import { Group, Text, ActionIcon, Tooltip } from "@mantine/core";
+import { Group, Text, ActionIcon, Tooltip, Switch } from "@mantine/core";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
+import HistoryIcon from "@mui/icons-material/History";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "../../contexts/FileManagerContext";
 
 const FileActions: React.FC = () => {
   const { t } = useTranslation();
-  const { recentFiles, selectedFileIds, filteredFiles, onSelectAll, onDeleteSelected, onDownloadSelected } =
-    useFileManagerContext();
+  const { 
+    recentFiles, 
+    selectedFileIds, 
+    filteredFiles, 
+    showAllVersions,
+    fileGroups,
+    onSelectAll, 
+    onDeleteSelected, 
+    onDownloadSelected,
+    onToggleVersions
+  } = useFileManagerContext();
 
   const handleSelectAll = () => {
     onSelectAll();
@@ -34,6 +44,9 @@ const FileActions: React.FC = () => {
 
   const allFilesSelected = filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length;
   const hasSelection = selectedFileIds.length > 0;
+  
+  // Check if there are any files with version history
+  const hasVersionedFiles = Array.from(fileGroups.values()).some(versions => versions.length > 1);
 
   return (
     <div
@@ -47,8 +60,8 @@ const FileActions: React.FC = () => {
         position: "relative",
       }}
     >
-      {/* Left: Select All */}
-      <div>
+      {/* Left: Select All and Version Toggle */}
+      <Group gap="md">
         <Tooltip
           label={allFilesSelected ? t("fileManager.deselectAll", "Deselect All") : t("fileManager.selectAll", "Select All")}
         >
@@ -63,7 +76,30 @@ const FileActions: React.FC = () => {
             <SelectAllIcon style={{ fontSize: "1rem" }} />
           </ActionIcon>
         </Tooltip>
-      </div>
+
+        {/* Version Toggle - only show if there are versioned files */}
+        {hasVersionedFiles && (
+          <Tooltip
+            label={showAllVersions ? 
+              t("fileManager.showLatestOnly", "Show latest versions only") : 
+              t("fileManager.showAllVersions", "Show all versions")
+            }
+          >
+            <Group gap="xs" style={{ cursor: 'pointer' }} onClick={onToggleVersions}>
+              <HistoryIcon style={{ fontSize: "1rem", color: 'var(--mantine-color-blue-6)' }} />
+              <Text size="xs" c="dimmed">
+                {showAllVersions ? t("fileManager.allVersions", "All") : t("fileManager.latestOnly", "Latest")}
+              </Text>
+              <Switch
+                size="xs"
+                checked={showAllVersions}
+                onChange={onToggleVersions}
+                style={{ pointerEvents: 'none' }}
+              />
+            </Group>
+          </Tooltip>
+        )}
+      </Group>
 
       {/* Center: Selected count */}
       <div

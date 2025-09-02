@@ -16,7 +16,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
   const { t } = useTranslation();
 
   return (
-    <Card withBorder p={0} h={`calc(${modalHeight} * 0.32 - 1rem)`} style={{ flex: 1, overflow: 'hidden' }}>
+    <Card withBorder p={0} h={`calc(${modalHeight} * 0.38 - 1rem)`} style={{ flex: 1, overflow: 'hidden' }}>
       <Box bg="gray.4" p="sm" style={{ borderTopLeftRadius: 'var(--mantine-radius-md)', borderTopRightRadius: 'var(--mantine-radius-md)' }}>
         <Text size="sm" fw={500} ta="center" c="white">
           {t('fileManager.details', 'File Details')}
@@ -54,10 +54,28 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
 
           <Group justify="space-between" py="xs">
             <Text size="sm" c="dimmed">{t('fileManager.fileVersion', 'Version')}</Text>
-            <Text size="sm" fw={500}>
-              {currentFile ? '1.0' : ''}
-            </Text>
+            {currentFile &&
+              <Badge size="sm" variant="light" color={currentFile?.versionNumber ? 'blue' : 'gray'}>
+                v{currentFile ? (currentFile.versionNumber || 0) : ''}
+              </Badge>}
+
           </Group>
+
+          {/* Tool Chain Display - Compact */}
+          {currentFile?.historyInfo?.toolChain && currentFile.historyInfo.toolChain.length > 0 && (
+            <>
+              <Divider />
+              <Box py="xs">
+                <Text size="xs" style={{
+                  color: 'var(--mantine-color-blue-6)',
+                  lineHeight: 1.3,
+                  wordBreak: 'break-word'
+                }}>
+                  {currentFile.historyInfo.toolChain.map(tool => tool.toolName).join(' → ')}
+                </Text>
+              </Box>
+            </>
+          )}
         </Stack>
       </ScrollArea>
     </Card>

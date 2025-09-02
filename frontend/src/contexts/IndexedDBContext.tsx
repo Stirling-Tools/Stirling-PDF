@@ -10,6 +10,7 @@ import { fileStorage, StoredFile } from '../services/fileStorage';
 import { FileId } from '../types/file';
 import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+import { createFileMetadataWithHistory } from '../utils/fileHistoryUtils';
 
 interface IndexedDBContextValue {
   // Core CRUD operations
@@ -67,15 +68,11 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     fileCache.current.set(fileId, { file, lastAccessed: Date.now() });
     evictLRUEntries();
 
-    // Return metadata
-    return {
-      id: fileId,
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      lastModified: file.lastModified,
-      thumbnail
-    };
+    // Extract history metadata for PDFs and return enhanced metadata
+    const metadata = await createFileMetadataWithHistory(file, fileId, thumbnail);
+    
+
+    return metadata;
   }, []);
 
   const loadFile = useCallback(async (fileId: FileId): Promise<File | null> => {
@@ -145,14 +142,46 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const loadAllMetadata = useCallback(async (): Promise<FileMetadata[]> => {
     const metadata = await fileStorage.getAllFileMetadata();
 
-    return metadata.map(m => ({
-      id: m.id,
-      name: m.name,
-      type: m.type,
-      size: m.size,
-      lastModified: m.lastModified,
-      thumbnail: m.thumbnail
+    // For each PDF file, extract history metadata
+    const metadataWithHistory = await Promise.all(metadata.map(async (m) => {
+      // For non-PDF files, return basic metadata
+      if (!m.type.includes('pdf')) {
+        return {
+          id: m.id,
+          name: m.name,
+          type: m.type,
+          size: m.size,
+          lastModified: m.lastModified,
+          thumbnail: m.thumbnail
+        };
+      }
+
+      try {
+        // For PDF files, load and extract history
+        const storedFile = await fileStorage.getFile(m.id);
+        if (storedFile?.data) {
+          const file = new File([storedFile.data], m.name, { type: m.type });
+          const enhancedMetadata = await createFileMetadataWithHistory(file, m.id, m.thumbnail);
+          
+          
+          return enhancedMetadata;
+        }
+      } catch (error) {
+        if (DEBUG) console.warn('🗂️ IndexedDB.loadAllMetadata: Failed to extract history from stored file:', m.name, error);
+      }
+
+      // Fallback to basic metadata if history extraction fails
+      return {
+        id: m.id,
+        name: m.name,
+        type: m.type,
+        size: m.size,
+        lastModified: m.lastModified,
+        thumbnail: m.thumbnail
+      };
     }));
+
+    return metadataWithHistory;
   }, []);
 
   const deleteMultiple = useCallback(async (fileIds: FileId[]): Promise<void> => {

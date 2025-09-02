@@ -10,6 +10,7 @@ import { createOperation } from '../../../utils/toolOperationTracker';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { FileId } from '../../../types/file';
 import { FileRecord } from '../../../types/fileContext';
+import { prepareFilesWithHistory } from '../../../utils/fileHistoryUtils';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -170,6 +171,20 @@ export const useToolOperation = <TParams>(
     actions.resetResults();
     cleanupBlobUrls();
 
+    // Prepare files with history metadata injection (for PDFs)
+    actions.setStatus('Preparing files...');
+    const getFileRecord = (file: File) => {
+      const fileId = findFileId(file);
+      return fileId ? selectors.getFileRecord(fileId) : undefined;
+    };
+
+    const filesWithHistory = await prepareFilesWithHistory(
+      validFiles,
+      getFileRecord,
+      config.operationType,
+      params as Record<string, any>
+    );
+
     try {
       let processedFiles: File[];
 
@@ -184,7 +199,7 @@ export const useToolOperation = <TParams>(
           };
           processedFiles = await processFiles(
             params,
-            validFiles,
+            filesWithHistory,
             apiCallsConfig,
             actions.setProgress,
             actions.setStatus
@@ -194,7 +209,7 @@ export const useToolOperation = <TParams>(
         case ToolType.multiFile:
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');
-          const formData = config.buildFormData(params, validFiles);
+          const formData = config.buildFormData(params, filesWithHistory);
           const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
 
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
@@ -202,11 +217,11 @@ export const useToolOperation = <TParams>(
           // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
           if (config.responseHandler) {
             // Use custom responseHandler for multi-file (handles ZIP extraction)
-            processedFiles = await config.responseHandler(response.data, validFiles);
+            processedFiles = await config.responseHandler(response.data, filesWithHistory);
           } else if (response.data.type === 'application/pdf' ||
                      (response.headers && response.headers['content-type'] === 'application/pdf')) {
             // Single PDF response (e.g. split with merge option) - use original filename
-            const originalFileName = validFiles[0]?.name || 'document.pdf';
+            const originalFileName = filesWithHistory[0]?.name || 'document.pdf';
             const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
             processedFiles = [singleFile];
           } else {
@@ -222,7 +237,7 @@ export const useToolOperation = <TParams>(
 
         case ToolType.custom:
           actions.setStatus('Processing files...');
-          processedFiles = await config.customProcessor(params, validFiles);
+          processedFiles = await config.customProcessor(params, filesWithHistory);
           break;
       }
 

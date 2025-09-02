@@ -3,6 +3,7 @@ import { FileMetadata } from '../types/file';
 import { StoredFile, fileStorage } from '../services/fileStorage';
 import { downloadFiles } from '../utils/downloadUtils';
 import { FileId } from '../types/file';
+import { getLatestVersions, groupFilesByOriginal, getVersionHistory } from '../utils/fileHistoryUtils';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
@@ -14,6 +15,8 @@ interface FileManagerContextValue {
   filteredFiles: FileMetadata[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   selectedFilesSet: Set<string>;
+  showAllVersions: boolean;
+  fileGroups: Map<string, FileMetadata[]>;
 
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
@@ -28,6 +31,9 @@ interface FileManagerContextValue {
   onDeleteSelected: () => void;
   onDownloadSelected: () => void;
   onDownloadSingle: (file: FileMetadata) => void;
+  onToggleVersions: () => void;
+  onRestoreVersion: (file: FileMetadata) => void;
+  onNewFilesSelect: (files: File[]) => void;
 
   // External props
   recentFiles: FileMetadata[];
@@ -68,6 +74,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
+  const [showAllVersions, setShowAllVersions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track blob URLs for cleanup
@@ -76,11 +83,44 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   // Computed values (with null safety)
   const selectedFilesSet = new Set(selectedFileIds);
 
-  const selectedFiles = selectedFileIds.length === 0 ? [] :
-    (recentFiles || []).filter(file => selectedFilesSet.has(file.id));
+  // Group files by original file ID for version management
+  const fileGroups = useMemo(() => {
+    if (!recentFiles || recentFiles.length === 0) return new Map();
+    
+    // Convert FileMetadata to FileRecord-like objects for grouping utility
+    const recordsForGrouping = recentFiles.map(file => ({
+      ...file,
+      originalFileId: file.originalFileId,
+      versionNumber: file.versionNumber || 0
+    }));
+    
+    return groupFilesByOriginal(recordsForGrouping);
+  }, [recentFiles]);
 
-  const filteredFiles = !searchTerm ? recentFiles || [] :
-    (recentFiles || []).filter(file =>
+  // Get files to display (latest versions only or all versions)
+  const displayFiles = useMemo(() => {
+    if (!recentFiles || recentFiles.length === 0) return [];
+    
+    if (showAllVersions) {
+      return recentFiles;
+    } else {
+      // Show only latest versions
+      const recordsForFiltering = recentFiles.map(file => ({
+        ...file,
+        originalFileId: file.originalFileId,
+        versionNumber: file.versionNumber || 0
+      }));
+      
+      const latestVersions = getLatestVersions(recordsForFiltering);
+      return latestVersions.map(record => recentFiles.find(file => file.id === record.id)!);
+    }
+  }, [recentFiles, showAllVersions]);
+
+  const selectedFiles = selectedFileIds.length === 0 ? [] :
+    displayFiles.filter(file => selectedFilesSet.has(file.id));
+
+  const filteredFiles = !searchTerm ? displayFiles :
+    displayFiles.filter(file =>
       file.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -243,6 +283,42 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, []);
 
+  const handleToggleVersions = useCallback(() => {
+    setShowAllVersions(prev => !prev);
+    // Clear selection when toggling versions
+    setSelectedFileIds([]);
+    setLastClickedIndex(null);
+  }, []);
+
+  const handleRestoreVersion = useCallback(async (file: FileMetadata) => {
+    try {
+      console.log('Restoring version:', file.name, 'version:', file.versionNumber);
+      
+      // 1. Load the file from IndexedDB storage
+      const storedFile = await fileStorage.getFile(file.id);
+      if (!storedFile) {
+        console.error('File not found in storage:', file.id);
+        return;
+      }
+
+      // 2. Create new File object from stored data
+      const restoredFile = new File([storedFile.data], file.name, { 
+        type: file.type,
+        lastModified: file.lastModified 
+      });
+
+      // 3. Add the restored file as a new version through the normal file upload flow
+      // This will trigger the file processing and create a new entry in recent files
+      onNewFilesSelect([restoredFile]);
+      
+      // 4. Refresh the recent files list to show the new version
+      await refreshRecentFiles();
+      
+      console.log('Successfully restored version:', file.name, 'v' + file.versionNumber);
+    } catch (error) {
+      console.error('Failed to restore version:', error);
+    }
+  }, [refreshRecentFiles, onNewFilesSelect]);
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
@@ -274,6 +350,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     filteredFiles,
     fileInputRef,
     selectedFilesSet,
+    showAllVersions,
+    fileGroups,
 
     // Handlers
     onSourceChange: handleSourceChange,
@@ -288,6 +366,9 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onDeleteSelected: handleDeleteSelected,
     onDownloadSelected: handleDownloadSelected,
     onDownloadSingle: handleDownloadSingle,
+    onToggleVersions: handleToggleVersions,
+    onRestoreVersion: handleRestoreVersion,
+    onNewFilesSelect,
 
     // External props
     recentFiles,
@@ -300,6 +381,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     selectedFiles,
     filteredFiles,
     fileInputRef,
+    showAllVersions,
+    fileGroups,
     handleSourceChange,
     handleLocalFileClick,
     handleFileSelect,
@@ -311,6 +394,9 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleSelectAll,
     handleDeleteSelected,
     handleDownloadSelected,
+    handleToggleVersions,
+    handleRestoreVersion,
+    onNewFilesSelect,
     recentFiles,
     isFileSupported,
     modalHeight,

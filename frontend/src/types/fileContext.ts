@@ -54,6 +54,17 @@ export interface FileRecord {
   processedFile?: ProcessedFileMetadata;
   insertAfterPageId?: string; // Page ID after which this file should be inserted
   isPinned?: boolean;
+  
+  // File history tracking (from PDF metadata)
+  originalFileId?: string; // Root file ID for grouping versions
+  versionNumber?: number; // Version number in chain  
+  parentFileId?: FileId; // Immediate parent file ID
+  toolHistory?: Array<{
+    toolName: string;
+    timestamp: number;
+    parameters?: Record<string, any>;
+  }>;
+  
   // Note: File object stored in provider ref, not in state
 }
 

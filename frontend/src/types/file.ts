@@ -7,6 +7,27 @@ declare const tag: unique symbol;
 export type FileId = string & { readonly [tag]: 'FileId' };
 
 /**
+ * Tool operation metadata for history tracking
+ */
+export interface ToolOperation {
+  toolName: string;
+  timestamp: number;
+  parameters?: Record<string, any>;
+}
+
+/**
+ * File history information extracted from PDF metadata
+ */
+export interface FileHistoryInfo {
+  originalFileId: string;
+  parentFileId?: string;
+  versionNumber: number;
+  toolChain: ToolOperation[];
+  createdAt: number;
+  lastModified: number;
+}
+
+/**
  * File metadata for efficient operations without loading full file data
  * Used by IndexedDBContext and FileContext for lazy file loading
  */
@@ -18,6 +39,14 @@ export interface FileMetadata {
   lastModified: number;
   thumbnail?: string;
   isDraft?: boolean; // Marks files as draft versions
+  
+  // File history tracking (extracted from PDF metadata)
+  historyInfo?: FileHistoryInfo;
+  
+  // Quick access version information
+  originalFileId?: string; // Root file ID for grouping versions
+  versionNumber?: number; // Version number in chain
+  parentFileId?: FileId; // Immediate parent file ID
 }
 
 export interface StorageConfig {

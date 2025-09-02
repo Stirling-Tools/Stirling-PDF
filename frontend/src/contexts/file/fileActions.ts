@@ -15,6 +15,7 @@ import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
 import { FileLifecycleManager } from './lifecycle';
 import { fileProcessingService } from '../../services/fileProcessingService';
 import { buildQuickKeySet, buildQuickKeySetFromMetadata } from './fileSelectors';
+import { extractFileHistory } from '../../utils/fileHistoryUtils';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -183,6 +184,27 @@ export async function addFiles(
           if (DEBUG) console.log(`📄 addFiles(raw): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
 
+        // Extract file history from PDF metadata (async)
+        extractFileHistory(file, record).then(updatedRecord => {
+          if (updatedRecord !== record && (updatedRecord.originalFileId || updatedRecord.versionNumber)) {
+            // History was found, dispatch update to trigger re-render
+            dispatch({ 
+              type: 'UPDATE_FILE_RECORD', 
+              payload: { 
+                id: fileId, 
+                updates: {
+                  originalFileId: updatedRecord.originalFileId,
+                  versionNumber: updatedRecord.versionNumber,
+                  parentFileId: updatedRecord.parentFileId,
+                  toolHistory: updatedRecord.toolHistory
+                }
+              } 
+            });
+          }
+        }).catch(error => {
+          if (DEBUG) console.warn(`📄 addFiles(raw): Failed to extract history for ${file.name}:`, error);
+        });
+
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
@@ -224,6 +246,27 @@ export async function addFiles(
           record.processedFile = createProcessedFile(pageCount, thumbnail);
           if (DEBUG) console.log(`📄 addFiles(processed): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
+
+        // Extract file history from PDF metadata (async)
+        extractFileHistory(file, record).then(updatedRecord => {
+          if (updatedRecord !== record && (updatedRecord.originalFileId || updatedRecord.versionNumber)) {
+            // History was found, dispatch update to trigger re-render
+            dispatch({ 
+              type: 'UPDATE_FILE_RECORD', 
+              payload: { 
+                id: fileId, 
+                updates: {
+                  originalFileId: updatedRecord.originalFileId,
+                  versionNumber: updatedRecord.versionNumber,
+                  parentFileId: updatedRecord.parentFileId,
+                  toolHistory: updatedRecord.toolHistory
+                }
+              } 
+            });
+          }
+        }).catch(error => {
+          if (DEBUG) console.warn(`📄 addFiles(processed): Failed to extract history for ${file.name}:`, error);
+        });
 
         existingQuickKeys.add(quickKey);
         fileRecords.push(record);
