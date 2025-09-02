@@ -22,7 +22,13 @@ export default defineConfig(
       "no-case-declarations": "off", // Temporarily disabled until codebase conformant
       "prefer-const": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/ban-ts-comment": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/no-empty-object-type": "off", // Temporarily disabled until codebase conformant
+      "@typescript-eslint/no-empty-object-type": [
+        "error",
+        {
+          // Allow empty extending interfaces because there's no real reason not to, and it makes it obvious where to put extra attributes in the future
+          allowInterfaces: 'with-single-extends',
+        }
+      ],
       "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-require-imports": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-unused-expressions": "off", // Temporarily disabled until codebase conformant
