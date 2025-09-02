@@ -34,6 +34,7 @@ const UnlockPdfForms = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("unlockPDFForms.results.title", "Unlocked Forms Results"),
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };

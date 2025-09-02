@@ -74,6 +74,11 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   };
 
+  const handleUndo = async () => {
+    await ocrOperation.undoOperation();
+    onPreviewFile?.(null);
+  };
+
   const settingsCollapsed = expandedStep !== "settings";
 
   return createToolFlow({
@@ -132,6 +137,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       operation: ocrOperation,
       title: t("ocr.results.title", "OCR Results"),
       onFileClick: handleThumbnailClick,
+      onUndo: handleUndo,
     },
   });
 };

@@ -25,6 +25,47 @@ export const initialFileContextState: FileContextState = {
   }
 };
 
+// Helper function for consume/undo operations
+function processFileSwap(
+  state: FileContextState,
+  filesToRemove: FileId[],
+  filesToAdd: FileRecord[]
+): FileContextState {
+  // Only remove unpinned files
+  const unpinnedRemoveIds = filesToRemove.filter(id => !state.pinnedFiles.has(id));
+  const remainingIds = state.files.ids.filter(id => !unpinnedRemoveIds.includes(id));
+
+  // Remove unpinned files from state
+  const newById = { ...state.files.byId };
+  unpinnedRemoveIds.forEach(id => {
+    delete newById[id];
+  });
+
+  // Add new files
+  const addedIds: FileId[] = [];
+  filesToAdd.forEach(record => {
+    if (!newById[record.id]) {
+      addedIds.push(record.id);
+      newById[record.id] = record;
+    }
+  });
+
+  // Clear selections that reference removed files
+  const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !unpinnedRemoveIds.includes(id));
+
+  return {
+    ...state,
+    files: {
+      ids: [...addedIds, ...remainingIds],
+      byId: newById
+    },
+    ui: {
+      ...state.ui,
+      selectedFileIds: validSelectedFileIds
+    }
+  };
+}
+
 // Pure reducer function
 export function fileContextReducer(state: FileContextState, action: FileContextAction): FileContextState {
   switch (action.type) {
@@ -193,40 +234,12 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
 
     case 'CONSUME_FILES': {
       const { inputFileIds, outputFileRecords } = action.payload;
+      return processFileSwap(state, inputFileIds, outputFileRecords);
+    }
 
-      // Only remove unpinned input files
-      const unpinnedInputIds = inputFileIds.filter(id => !state.pinnedFiles.has(id));
-      const remainingIds = state.files.ids.filter(id => !unpinnedInputIds.includes(id));
-
-      // Remove unpinned files from state
-      const newById = { ...state.files.byId };
-      unpinnedInputIds.forEach(id => {
-        delete newById[id];
-      });
-
-      // Add output files
-      const outputIds: FileId[] = [];
-      outputFileRecords.forEach(record => {
-        if (!newById[record.id]) {
-          outputIds.push(record.id);
-          newById[record.id] = record;
-        }
-      });
-
-      // Clear selections that reference removed files
-      const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !unpinnedInputIds.includes(id));
-
-      return {
-        ...state,
-        files: {
-          ids: [...remainingIds, ...outputIds],
-          byId: newById
-        },
-        ui: {
-          ...state.ui,
-          selectedFileIds: validSelectedFileIds
-        }
-      };
+    case 'UNDO_CONSUME_FILES': {
+      const { inputFileRecords, outputFileIds } = action.payload;
+      return processFileSwap(state, outputFileIds, inputFileRecords);
     }
 
     case 'RESET_CONTEXT': {

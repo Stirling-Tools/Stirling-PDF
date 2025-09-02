@@ -48,6 +48,7 @@ const Split = (props: BaseToolProps) => {
       operation: base.operation,
       title: "Split Results",
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };

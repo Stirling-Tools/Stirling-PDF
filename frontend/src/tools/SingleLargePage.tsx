@@ -34,6 +34,7 @@ const SingleLargePage = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("pdfToSinglePage.results.title", "Single Page Results"),
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };

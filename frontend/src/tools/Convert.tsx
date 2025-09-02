@@ -93,6 +93,11 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   };
 
+  const handleUndo = async () => {
+    await convertOperation.undoOperation();
+    onPreviewFile?.(null);
+  };
+
   return createToolFlow({
     files: {
       selectedFiles,
@@ -128,6 +133,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       operation: convertOperation,
       title: t("convert.conversionResults", "Conversion Results"),
       onFileClick: handleThumbnailClick,
+      onUndo: handleUndo,
       testId: "conversion-results",
     },
   });

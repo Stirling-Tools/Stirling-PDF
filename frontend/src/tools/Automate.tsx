@@ -43,6 +43,11 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     setStepData({ step: AUTOMATION_STEPS.SELECTION });
   };
 
+  const handleUndo = async () => {
+    await automateOperation.undoOperation();
+    onPreviewFile?.(null);
+  };
+
   // Register reset function with the tool workflow context - only once on mount
   React.useEffect(() => {
     const stableResetFunction = () => {
@@ -224,7 +229,8 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       onFileClick: (file: File) => {
         onPreviewFile?.(file);
         actions.setWorkbench('viewer');
-      }
+      },
+      onUndo: handleUndo
     }
   });
 };

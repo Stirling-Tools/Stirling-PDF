@@ -25,7 +25,7 @@ import {
 // Import modular components
 import { fileContextReducer, initialFileContextState } from './file/FileReducer';
 import { createFileSelectors } from './file/fileSelectors';
-import { AddedFile, addFiles, consumeFiles, createFileActions } from './file/fileActions';
+import { AddedFile, addFiles, consumeFiles, undoConsumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
@@ -121,9 +121,13 @@ function FileContextInner({
   const baseActions = useMemo(() => createFileActions(dispatch), []);
 
   // Helper functions for pinned files
-  const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<void> => {
-    return consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch);
-  }, []);
+  const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<FileId[]> => {
+    return consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch, indexedDB);
+  }, [indexedDB]);
+
+  const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputFileRecords: FileRecord[], outputFileIds: FileId[]): Promise<void> => {
+    return undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds, stateRef, filesRef, dispatch, indexedDB);
+  }, [indexedDB]);
 
   // Helper to find FileId from File object
   const findFileId = useCallback((file: File): FileId | undefined => {
@@ -206,6 +210,7 @@ function FileContextInner({
     pinFile: pinFileWrapper,
     unpinFile: unpinFileWrapper,
     consumeFiles: consumeFilesWrapper,
+    undoConsumeFiles: undoConsumeFilesWrapper,
     setHasUnsavedChanges,
     trackBlobUrl: lifecycleManager.trackBlobUrl,
     cleanupFile: (fileId: FileId) => lifecycleManager.cleanupFile(fileId, stateRef),
@@ -219,6 +224,7 @@ function FileContextInner({
     lifecycleManager,
     setHasUnsavedChanges,
     consumeFilesWrapper,
+    undoConsumeFilesWrapper,
     pinFileWrapper,
     unpinFileWrapper,
     indexedDB,

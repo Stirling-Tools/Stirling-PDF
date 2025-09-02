@@ -323,34 +323,28 @@ export async function addFiles(
 }
 
 /**
- * Consume files helper - replace unpinned input files with output files
+ * Helper function to process files into records with thumbnails and metadata
  */
-export async function consumeFiles(
-  inputFileIds: FileId[],
-  outputFiles: File[],
-  stateRef: React.MutableRefObject<FileContextState>,
-  filesRef: React.MutableRefObject<Map<FileId, File>>,
-  dispatch: React.Dispatch<FileContextAction>
-): Promise<void> {
-  if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputFiles.length} output files`);
-
-  // Process output files through the 'processed' path to generate thumbnails
-  const outputFileRecords = await Promise.all(
-    outputFiles.map(async (file) => {
+async function processFilesIntoRecords(
+  files: File[],
+  filesRef: React.MutableRefObject<Map<FileId, File>>
+): Promise<Array<{ record: FileRecord; file: File; fileId: FileId; thumbnail?: string }>> {
+  return Promise.all(
+    files.map(async (file) => {
       const fileId = createFileId();
       filesRef.current.set(fileId, file);
 
-      // Generate thumbnail and page count for output file
+      // Generate thumbnail and page count
       let thumbnail: string | undefined;
       let pageCount: number = 1;
 
       try {
-        if (DEBUG) console.log(`📄 consumeFiles: Generating thumbnail for output file ${file.name}`);
+        if (DEBUG) console.log(`📄 Generating thumbnail for file ${file.name}`);
         const result = await generateThumbnailWithMetadata(file);
         thumbnail = result.thumbnail;
         pageCount = result.pageCount;
       } catch (error) {
-        if (DEBUG) console.warn(`📄 consumeFiles: Failed to generate thumbnail for output file ${file.name}:`, error);
+        if (DEBUG) console.warn(`📄 Failed to generate thumbnail for file ${file.name}:`, error);
       }
 
       const record = toFileRecord(file, fileId);
@@ -362,20 +356,168 @@ export async function consumeFiles(
         record.processedFile = createProcessedFile(pageCount, thumbnail);
       }
 
-      return record;
+      return { record, file, fileId, thumbnail };
     })
   );
+}
+
+/**
+ * Helper function to persist files to IndexedDB
+ */
+async function persistFilesToIndexedDB(
+  fileRecords: Array<{ file: File; fileId: FileId; thumbnail?: string }>,
+  indexedDB: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any> }
+): Promise<void> {
+  await Promise.all(fileRecords.map(async ({ file, fileId, thumbnail }) => {
+    try {
+      await indexedDB.saveFile(file, fileId, thumbnail);
+    } catch (error) {
+      console.error('Failed to persist file to IndexedDB:', file.name, error);
+    }
+  }));
+}
+
+/**
+ * Consume files helper - replace unpinned input files with output files
+ */
+export async function consumeFiles(
+  inputFileIds: FileId[],
+  outputFiles: File[],
+  stateRef: React.MutableRefObject<FileContextState>,
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  dispatch: React.Dispatch<FileContextAction>,
+  indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any> } | null
+): Promise<FileId[]> {
+  if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputFiles.length} output files`);
+
+  // Process output files with thumbnails and metadata
+  const outputFileRecords = await processFilesIntoRecords(outputFiles, filesRef);
+
+  // Persist output files to IndexedDB if available
+  if (indexedDB) {
+    await persistFilesToIndexedDB(outputFileRecords, indexedDB);
+  }
 
   // Dispatch the consume action
   dispatch({
     type: 'CONSUME_FILES',
     payload: {
       inputFileIds,
-      outputFileRecords
+      outputFileRecords: outputFileRecords.map(({ record }) => record)
     }
   });
 
   if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputFileRecords.length} outputs`);
+  
+  // Return the output file IDs for undo tracking
+  return outputFileRecords.map(({ fileId }) => fileId);
+}
+
+/**
+ * Helper function to restore files to filesRef and manage IndexedDB cleanup
+ */
+async function restoreFilesAndCleanup(
+  filesToRestore: Array<{ file: File; record: FileRecord }>,
+  fileIdsToRemove: FileId[],
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  indexedDB?: { deleteFile: (fileId: FileId) => Promise<void> } | null
+): Promise<void> {
+  // Remove files from filesRef
+  fileIdsToRemove.forEach(id => {
+    if (filesRef.current.has(id)) {
+      if (DEBUG) console.log(`📄 Removing file ${id} from filesRef`);
+      filesRef.current.delete(id);
+    } else {
+      if (DEBUG) console.warn(`📄 File ${id} not found in filesRef`);
+    }
+  });
+
+  // Restore files to filesRef
+  filesToRestore.forEach(({ file, record }) => {
+    if (file && record) {
+      // Validate the file before restoring
+      if (file.size === 0) {
+        if (DEBUG) console.warn(`📄 Skipping empty file ${file.name}`);
+        return;
+      }
+      
+      // Restore the file to filesRef
+      if (DEBUG) console.log(`📄 Restoring file ${file.name} with id ${record.id} to filesRef`);
+      filesRef.current.set(record.id, file);
+    }
+  });
+
+  // Clean up IndexedDB
+  if (indexedDB) {
+    const indexedDBPromises = fileIdsToRemove.map(fileId =>
+      indexedDB.deleteFile(fileId).catch(error => {
+        console.error('Failed to delete file from IndexedDB:', fileId, error);
+        throw error; // Re-throw to trigger rollback
+      })
+    );
+    
+    // Execute all IndexedDB operations
+    await Promise.all(indexedDBPromises);
+  }
+}
+
+/**
+ * Undoes a previous consumeFiles operation by restoring input files and removing output files (unless pinned)
+ */
+export async function undoConsumeFiles(
+  inputFiles: File[],
+  inputFileRecords: FileRecord[],
+  outputFileIds: FileId[],
+  stateRef: React.MutableRefObject<FileContextState>,
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  dispatch: React.Dispatch<FileContextAction>,
+  indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>; deleteFile: (fileId: FileId) => Promise<void> } | null
+): Promise<void> {
+  if (DEBUG) console.log(`📄 undoConsumeFiles: Restoring ${inputFileRecords.length} input files, removing ${outputFileIds.length} output files`);
+
+  // Validate inputs
+  if (inputFiles.length !== inputFileRecords.length) {
+    throw new Error(`Mismatch between input files (${inputFiles.length}) and records (${inputFileRecords.length})`);
+  }
+
+  // Create a backup of current filesRef state for rollback
+  const backupFilesRef = new Map(filesRef.current);
+  
+  try {
+    // Prepare files to restore
+    const filesToRestore = inputFiles.map((file, index) => ({
+      file,
+      record: inputFileRecords[index]
+    }));
+
+    // Restore input files and clean up output files
+    await restoreFilesAndCleanup(
+      filesToRestore,
+      outputFileIds,
+      filesRef,
+      indexedDB
+    );
+
+    // Dispatch the undo action (only if everything else succeeded)
+    dispatch({
+      type: 'UNDO_CONSUME_FILES',
+      payload: {
+        inputFileRecords,
+        outputFileIds
+      }
+    });
+
+    if (DEBUG) console.log(`📄 undoConsumeFiles: Successfully undone consume operation - restored ${inputFileRecords.length} inputs, removed ${outputFileIds.length} outputs`);
+    
+  } catch (error) {
+    // Rollback filesRef to previous state
+    if (DEBUG) console.error('📄 undoConsumeFiles: Error during undo, rolling back filesRef', error);
+    filesRef.current.clear();
+    backupFilesRef.forEach((file, id) => {
+      filesRef.current.set(id, file);
+    });
+    throw error; // Re-throw to let caller handle
+  }
 }
 
 /**

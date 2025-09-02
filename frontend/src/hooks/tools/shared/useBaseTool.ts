@@ -21,6 +21,7 @@ interface BaseToolReturn<TParams> {
   handleExecute: () => Promise<void>;
   handleThumbnailClick: (file: File) => void;
   handleSettingsReset: () => void;
+  handleUndo: () => Promise<void>;
 
   // Standard computed state
   hasFiles: boolean;
@@ -88,6 +89,11 @@ export function useBaseTool<TParams>(
     onPreviewFile?.(null);
   }, [operation, onPreviewFile]);
 
+  const handleUndo = useCallback(async () => {
+    await operation.undoOperation();
+    onPreviewFile?.(null);
+  }, [operation, onPreviewFile]);
+
   // Standard computed state
   const hasFiles = selectedFiles.length > 0;
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
@@ -109,6 +115,7 @@ export function useBaseTool<TParams>(
     handleExecute,
     handleThumbnailClick,
     handleSettingsReset,
+    handleUndo,
 
     // State
     hasFiles,

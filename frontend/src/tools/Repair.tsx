@@ -34,6 +34,7 @@ const Repair = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("repair.results.title", "Repair Results"),
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };

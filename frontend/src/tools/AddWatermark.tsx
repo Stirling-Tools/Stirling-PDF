@@ -79,6 +79,11 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
     onPreviewFile?.(null);
   };
 
+  const handleUndo = async () => {
+    await watermarkOperation.undoOperation();
+    onPreviewFile?.(null);
+  };
+
   const hasFiles = selectedFiles.length > 0;
   const hasResults = watermarkOperation.files.length > 0 || watermarkOperation.downloadUrl !== null;
 
@@ -203,6 +208,7 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
       operation: watermarkOperation,
       title: t("watermark.results.title", "Watermark Results"),
       onFileClick: handleThumbnailClick,
+      onUndo: handleUndo,
     },
     forceStepNumbers: true,
   });

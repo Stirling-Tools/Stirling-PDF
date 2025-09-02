@@ -43,6 +43,7 @@ export interface ReviewStepConfig {
   operation: ToolOperationHook<any>;
   title: string;
   onFileClick?: (file: File) => void;
+  onUndo: () => void;
   testId?: string;
 }
 
@@ -105,7 +106,8 @@ export function createToolFlow(config: ToolFlowConfig) {
           isVisible: config.review.isVisible,
           operation: config.review.operation,
           title: config.review.title,
-          onFileClick: config.review.onFileClick
+          onFileClick: config.review.onFileClick,
+          onUndo: config.review.onUndo
         })}
       </ToolStepProvider>
     </Stack>
