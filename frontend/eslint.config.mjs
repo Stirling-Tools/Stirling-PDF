@@ -1,6 +1,7 @@
 // @ts-check
 
 import eslint from '@eslint/js';
+import globals from "globals";
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -37,5 +38,29 @@ export default defineConfig(
         },
       ],
     },
-  }
+  },
+  // Config for browser scripts
+  {
+    files: [
+      "src",
+    ],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      }
+    }
+  },
+  // Config for node scripts
+  {
+    files: [
+      "scripts/*.js",
+      "postcss.config.js",
+      "tailwind.config.js",
+    ],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      }
+    }
+  },
 );
