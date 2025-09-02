@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +47,7 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -2377,10 +2379,8 @@ public class RedactionService {
         for (COSBase element : cosArray) {
             if (element instanceof COSString cosString) {
                 textBuilder.append(extractStringWithFallbacks(cosString, font));
-            } else if (element instanceof COSNumber cosNumber) {
-                if (cosNumber.floatValue() < -100.0) {
-                    textBuilder.append(" ");
-                }
+            } else if (element instanceof COSNumber cosNumber && cosNumber.floatValue() < -100.0) {
+                textBuilder.append(" ");
             }
         }
         return textBuilder.toString();
@@ -2417,29 +2417,16 @@ public class RedactionService {
             TextSegment segment, List<MatchRange> matches, String text) {
         float totalOriginalWidth = 0f, totalPlaceholderWidth = 0f;
         int processedMatches = 0;
-        List<String> warnings = new ArrayList<>();
 
         for (MatchRange match : matches) {
             try {
                 int segStart = Math.max(0, match.getStartPos() - segment.getStartPos());
                 int segEnd = Math.min(text.length(), match.getEndPos() - segment.getStartPos());
 
-                if (segStart >= text.length() || segEnd <= segStart || segStart < 0) {
-                    warnings.add("Invalid bounds: " + segStart + "-" + segEnd);
-                    continue;
-                }
-
                 String originalPart = text.substring(segStart, segEnd);
 
                 WidthMeasurement originalMeasurement =
                         measureTextWidth(segment.getFont(), originalPart, segment.getFontSize());
-                if (!originalMeasurement.valid()) {
-                    warnings.add(
-                            "Cannot measure: "
-                                    + originalPart.substring(
-                                            0, Math.min(10, originalPart.length())));
-                    continue;
-                }
 
                 String placeholderPart = createSafePlaceholder(originalPart, segment);
                 WidthMeasurement placeholderMeasurement =
@@ -2453,12 +2440,12 @@ public class RedactionService {
                 processedMatches++;
 
             } catch (Exception e) {
-                warnings.add("Error: " + e.getMessage());
+                log.warn("Error processing match: {}", e.getMessage());
             }
         }
 
         return new WidthCalculationResult(
-                totalOriginalWidth - totalPlaceholderWidth, processedMatches, warnings);
+                totalOriginalWidth - totalPlaceholderWidth, processedMatches);
     }
 
     private static String createSafePlaceholder(String originalText, TextSegment segment) {
@@ -2528,6 +2515,7 @@ public class RedactionService {
             float kerning = (-adjustment / segment.getFontSize()) * FONT_SCALE_FACTOR;
             array.add(new COSFloat(kerning));
         } catch (Exception ignored) {
+            log.warn("Failed to add kerning adjustment", ignored);
         }
     }
 
@@ -2584,8 +2572,7 @@ public class RedactionService {
             TextSegment segment,
             List<MatchRange> matches,
             COSArray newArray,
-            int textOffsetInSegment)
-            throws Exception {
+            int textOffsetInSegment) {
 
         String originalText = getDecodedString(cosString, segment.getFont());
 
@@ -2657,13 +2644,12 @@ public class RedactionService {
     }
 
     private byte[] processWithTesseractForRestoration(
-            java.nio.file.Path inputPath, java.nio.file.Path outputPath, RedactPdfRequest request)
+            Path inputPath, Path outputPath, RedactPdfRequest request)
             throws IOException, InterruptedException {
         try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
-            java.io.File tempOutputDir = new java.io.File(tempDir.getPath().toFile(), "output");
-            java.io.File tempImagesDir = new java.io.File(tempDir.getPath().toFile(), "images");
-            java.io.File finalOutputFile =
-                    new java.io.File(tempDir.getPath().toFile(), "final_output.pdf");
+            File tempOutputDir = new File(tempDir.getPath().toFile(), "output");
+            File tempImagesDir = new File(tempDir.getPath().toFile(), "images");
+            File finalOutputFile = new File(tempDir.getPath().toFile(), "final_output.pdf");
             tempOutputDir.mkdirs();
             tempImagesDir.mkdirs();
             try (PDDocument document = pdfDocumentFactory.load(inputPath.toFile())) {
@@ -2727,13 +2713,6 @@ public class RedactionService {
                 directFinder.setStartPage(document.getPages().indexOf(page) + 1);
                 directFinder.setEndPage(document.getPages().indexOf(page) + 1);
                 directFinder.getText(document);
-
-                StringBuilder pageText = new StringBuilder();
-                for (PDFText pdfText : directFinder.getFoundTexts()) {
-                    if (pdfText.getText() != null) {
-                        pageText.append(pdfText.getText()).append(" ");
-                    }
-                }
             } catch (Exception e) {
                 log.debug("Failed to get direct text from page", e);
             }
@@ -2752,24 +2731,6 @@ public class RedactionService {
 
         List<TextSegment> textSegments =
                 extractTextSegmentsFromTokens(page.getResources(), tokens, this.aggressiveMode);
-
-        if (!textSegments.isEmpty()) {
-            StringBuilder allText = new StringBuilder();
-            boolean hasProblematicChars = false;
-
-            for (TextSegment seg : textSegments) {
-                if (seg.getText() != null && !seg.getText().trim().isEmpty()) {
-                    String segmentText = seg.getText();
-                    if (!isTextSafeForRedaction(segmentText)) {
-                        hasProblematicChars = true;
-                        segmentText = normalizeTextForRedaction(segmentText);
-                    }
-                    allText.append(segmentText).append(" ");
-                }
-            }
-
-            String completeText = allText.toString().trim();
-        }
 
         List<MatchRange> matches;
         if (this.aggressiveMode) {
@@ -2792,9 +2753,11 @@ public class RedactionService {
                         wipeAllTextInFormXObject(document, form);
                     }
                 } catch (Exception ignored) {
+                    log.debug("Failed to wipe text in xobject {}", xobjName);
                 }
             }
         } catch (Exception ignored) {
+            log.debug("Failed to wipe all text in XObjects", ignored);
         }
     }
 
@@ -2828,13 +2791,10 @@ public class RedactionService {
         }
     }
 
-    private record WidthCalculationResult(
-            float adjustment, int processedMatches, List<String> warnings) {
-        private WidthCalculationResult(
-                float adjustment, int processedMatches, List<String> warnings) {
+    private record WidthCalculationResult(float adjustment, int processedMatches) {
+        private WidthCalculationResult(float adjustment, int processedMatches) {
             this.adjustment = adjustment;
             this.processedMatches = processedMatches;
-            this.warnings = new ArrayList<>(warnings);
         }
     }
 
@@ -3064,7 +3024,7 @@ public class RedactionService {
                 }
 
             } catch (Exception e) {
-
+                log.debug("Failed to scrub document", e);
             }
         }
 
@@ -3077,7 +3037,7 @@ public class RedactionService {
                     scrubStructureElement(structRoot, options);
                 }
             } catch (Exception e) {
-
+                log.debug("Failed to scrub structure tree", e);
             }
         }
 
@@ -3126,9 +3086,8 @@ public class RedactionService {
 
         private void scrubAnnotations(PDDocument document, Set<ScrubOption> options) {
             try {
-                for (org.apache.pdfbox.pdmodel.PDPage page : document.getPages()) {
-                    for (org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation annotation :
-                            page.getAnnotations()) {
+                for (PDPage page : document.getPages()) {
+                    for (PDAnnotation annotation : page.getAnnotations()) {
                         COSDictionary annotDict = annotation.getCOSObject();
 
                         if (options.contains(ScrubOption.REMOVE_ACTUALTEXT)) {
