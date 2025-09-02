@@ -182,7 +182,7 @@ export class EnhancedPDFProcessingService {
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
-    
+
     try {
       const totalPages = pdf.numPages;
 
@@ -459,11 +459,12 @@ export class EnhancedPDFProcessingService {
       case 'failed':
         this.metrics.failedFiles++;
         break;
-      case 'cacheHit':
+      case 'cacheHit': {
         // Update cache hit rate
         const totalAttempts = this.metrics.totalFiles + 1;
         this.metrics.cacheHitRate = (this.metrics.cacheHitRate * this.metrics.totalFiles + 1) / totalAttempts;
         break;
+      }
     }
   }
 
