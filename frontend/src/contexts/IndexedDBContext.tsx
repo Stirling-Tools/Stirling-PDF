@@ -142,10 +142,40 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const loadAllMetadata = useCallback(async (): Promise<FileMetadata[]> => {
     const metadata = await fileStorage.getAllFileMetadata();
 
-    // For each PDF file, extract history metadata
-    const metadataWithHistory = await Promise.all(metadata.map(async (m) => {
-      // For non-PDF files, return basic metadata
-      if (!m.type.includes('pdf')) {
+    // Separate PDF and non-PDF files for different processing
+    const pdfFiles = metadata.filter(m => m.type.includes('pdf'));
+    const nonPdfFiles = metadata.filter(m => !m.type.includes('pdf'));
+
+    // Process non-PDF files immediately (no history extraction needed)
+    const nonPdfMetadata: FileMetadata[] = nonPdfFiles.map(m => ({
+      id: m.id,
+      name: m.name,
+      type: m.type,
+      size: m.size,
+      lastModified: m.lastModified,
+      thumbnail: m.thumbnail
+    }));
+
+    // Process PDF files with controlled concurrency to avoid memory issues
+    const BATCH_SIZE = 5; // Process 5 PDFs at a time to avoid overwhelming memory
+    const pdfMetadata: FileMetadata[] = [];
+
+    for (let i = 0; i < pdfFiles.length; i += BATCH_SIZE) {
+      const batch = pdfFiles.slice(i, i + BATCH_SIZE);
+      
+      const batchResults = await Promise.all(batch.map(async (m) => {
+        try {
+          // For PDF files, load and extract history with timeout
+          const storedFile = await fileStorage.getFile(m.id);
+          if (storedFile?.data) {
+            const file = new File([storedFile.data], m.name, { type: m.type });
+            return await createFileMetadataWithHistory(file, m.id, m.thumbnail);
+          }
+        } catch (error) {
+          if (DEBUG) console.warn('🗂️ Failed to extract history from stored file:', m.name, error);
+        }
+
+        // Fallback to basic metadata if history extraction fails
         return {
           id: m.id,
           name: m.name,
@@ -154,34 +184,12 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
           lastModified: m.lastModified,
           thumbnail: m.thumbnail
         };
-      }
+      }));
+      
+      pdfMetadata.push(...batchResults);
+    }
 
-      try {
-        // For PDF files, load and extract history
-        const storedFile = await fileStorage.getFile(m.id);
-        if (storedFile?.data) {
-          const file = new File([storedFile.data], m.name, { type: m.type });
-          const enhancedMetadata = await createFileMetadataWithHistory(file, m.id, m.thumbnail);
-          
-          
-          return enhancedMetadata;
-        }
-      } catch (error) {
-        if (DEBUG) console.warn('🗂️ IndexedDB.loadAllMetadata: Failed to extract history from stored file:', m.name, error);
-      }
-
-      // Fallback to basic metadata if history extraction fails
-      return {
-        id: m.id,
-        name: m.name,
-        type: m.type,
-        size: m.size,
-        lastModified: m.lastModified,
-        thumbnail: m.thumbnail
-      };
-    }));
-
-    return metadataWithHistory;
+    return [...nonPdfMetadata, ...pdfMetadata];
   }, []);
 
   const deleteMultiple = useCallback(async (fileIds: FileId[]): Promise<void> => {

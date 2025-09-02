@@ -29,7 +29,7 @@ export class PDFExportService {
 
       // Load original PDF and create new document
       const originalPDFBytes = await pdfDocument.file.arrayBuffer();
-      const sourceDoc = await PDFLibDocument.load(originalPDFBytes);
+      const sourceDoc = await PDFLibDocument.load(originalPDFBytes, { ignoreEncryption: true });
       const blob = await this.createSingleDocument(sourceDoc, pagesToExport);
       const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly, false);
 
@@ -86,7 +86,7 @@ export class PDFExportService {
     for (const [fileId, file] of sourceFiles) {
       try {
         const arrayBuffer = await file.arrayBuffer();
-        const doc = await PDFLibDocument.load(arrayBuffer);
+        const doc = await PDFLibDocument.load(arrayBuffer, { ignoreEncryption: true });
         loadedDocs.set(fileId, doc);
       } catch (error) {
         console.warn(`Failed to load source file ${fileId}:`, error);

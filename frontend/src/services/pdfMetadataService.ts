@@ -8,6 +8,7 @@
 
 import { PDFDocument } from 'pdf-lib';
 import { FileId } from '../types/file';
+import { ContentCache, type CacheConfig } from '../utils/ContentCache';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -42,6 +43,21 @@ export interface PDFHistoryMetadata {
 export class PDFMetadataService {
   private static readonly HISTORY_KEYWORD = 'stirling-history';
   private static readonly FORMAT_VERSION = '1.0';
+  
+  private metadataCache: ContentCache<PDFHistoryMetadata | null>;
+  
+  constructor(cacheConfig?: Partial<CacheConfig>) {
+    const defaultConfig: CacheConfig = {
+      ttl: 5 * 60 * 1000, // 5 minutes
+      maxSize: 100, // 100 files
+      enableWarnings: DEBUG
+    };
+    
+    this.metadataCache = new ContentCache<PDFHistoryMetadata | null>({
+      ...defaultConfig,
+      ...cacheConfig
+    });
+  }
 
   /**
    * Inject file history metadata into a PDF
@@ -54,7 +70,7 @@ export class PDFMetadataService {
     versionNumber: number = 1
   ): Promise<ArrayBuffer> {
     try {
-      const pdfDoc = await PDFDocument.load(pdfBytes);
+      const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
       
       const historyMetadata: PDFHistoryMetadata = {
         stirlingHistory: {
@@ -120,8 +136,29 @@ export class PDFMetadataService {
    * Extract file history metadata from a PDF
    */
   async extractHistoryMetadata(pdfBytes: ArrayBuffer): Promise<PDFHistoryMetadata | null> {
+    const cacheKey = this.metadataCache.generateKeyFromBuffer(pdfBytes);
+    
+    // Check cache first
+    const cached = this.metadataCache.get(cacheKey);
+    if (cached !== null) {
+      return cached;
+    }
+    
+    // Extract from PDF
+    const metadata = await this.extractHistoryMetadataInternal(pdfBytes);
+    
+    // Cache the result
+    this.metadataCache.set(cacheKey, metadata);
+    
+    return metadata;
+  }
+
+  /**
+   * Internal method for actual PDF metadata extraction
+   */
+  private async extractHistoryMetadataInternal(pdfBytes: ArrayBuffer): Promise<PDFHistoryMetadata | null> {
     try {
-      const pdfDoc = await PDFDocument.load(pdfBytes);
+      const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
       const keywords = pdfDoc.getKeywords();
       
       // Look for history keyword directly in array or convert to string
@@ -167,7 +204,7 @@ export class PDFMetadataService {
 
       return metadata;
     } catch (error) {
-      if (DEBUG) console.error('📄 pdfMetadataService.extractHistoryMetadata: Failed to extract:', error);
+      if (DEBUG) console.error('📄 Failed to extract PDF metadata:', error);
       return null;
     }
   }
@@ -327,5 +364,9 @@ export class PDFMetadataService {
   }
 }
 
-// Export singleton instance
-export const pdfMetadataService = new PDFMetadataService();
+// Export singleton instance with optimized cache settings
+export const pdfMetadataService = new PDFMetadataService({
+  ttl: 10 * 60 * 1000, // 10 minutes for PDF metadata (longer than default)
+  maxSize: 50, // Smaller cache for memory efficiency  
+  enableWarnings: DEBUG
+});
