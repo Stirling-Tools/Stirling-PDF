@@ -50,6 +50,7 @@ const ChangePermissions = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("changePermissions.results.title", "Modified PDFs"),
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };

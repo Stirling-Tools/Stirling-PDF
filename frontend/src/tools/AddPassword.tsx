@@ -60,6 +60,11 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   };
 
+  const handleUndo = async () => {
+    await addPasswordOperation.undoOperation();
+    onPreviewFile?.(null);
+  };
+
   const hasFiles = selectedFiles.length > 0;
   const hasResults = addPasswordOperation.files.length > 0 || addPasswordOperation.downloadUrl !== null;
   const passwordsCollapsed = !hasFiles || hasResults;
@@ -110,6 +115,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       operation: addPasswordOperation,
       title: t("addPassword.results.title", "Encrypted PDFs"),
       onFileClick: handleThumbnailClick,
+      onUndo: handleUndo,
     },
   });
 };

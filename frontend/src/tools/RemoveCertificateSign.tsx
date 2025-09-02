@@ -34,6 +34,7 @@ const RemoveCertificateSign = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("removeCertSign.results.title", "Certificate Removal Results"),
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };
