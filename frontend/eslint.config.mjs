@@ -15,7 +15,6 @@ export default defineConfig(
   },
   {
     rules: {
-      "no-undef": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-empty-object-type": [
         "error",
         {
