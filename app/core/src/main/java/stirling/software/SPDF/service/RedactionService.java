@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -317,7 +316,7 @@ public class RedactionService {
                         int start = Integer.parseInt(range[0].trim());
                         int end = Integer.parseInt(range[1].trim());
 
-                        if (start <= end && start > 0 && end > 0) {
+                        if (start <= end && start > 0) {
                             for (int i = start; i <= end; i++) {
                                 result.add(i);
                             }
@@ -347,7 +346,7 @@ public class RedactionService {
         }
 
         String colorString = hex.trim();
-        if (!colorString.startsWith("#")) {
+        if (colorString.charAt(0) != '#') {
             colorString = "#" + colorString;
         }
 
@@ -852,7 +851,7 @@ public class RedactionService {
                 copy.add(newDict);
             } else if (obj instanceof List<?> nestedList
                     && !nestedList.isEmpty()
-                    && nestedList.get(0) instanceof Object) {
+                    && nestedList.get(0) != null) {
                 try {
                     @SuppressWarnings("unchecked")
                     List<Object> objectList = (List<Object>) nestedList;
@@ -892,8 +891,7 @@ public class RedactionService {
                 TextFinderUtils.createOptimizedSearchPatterns(
                         targetWords, useRegex, wholeWordSearch);
 
-        for (int i = 0; i < segments.size(); i++) {
-            TextSegment segment = segments.get(i);
+        for (TextSegment segment : segments) {
             String segmentText = segment.getText();
             if (segmentText == null || segmentText.isEmpty()) {
                 continue;
@@ -1656,39 +1654,6 @@ public class RedactionService {
             this.aggressiveMode = false;
             this.aggressiveSegMatches = null;
         }
-    }
-
-    private static String tryEncodingFallbacks(COSString cosString) {
-        try {
-            byte[] bytes = cosString.getBytes();
-            if (bytes.length == 0) return "";
-
-            String[] encodings = {"UTF-8", "UTF-16BE", "UTF-16LE", "ISO-8859-1", "Windows-1252"};
-
-            for (String encoding : encodings) {
-                try {
-                    if (bytes.length >= 2) {
-                        if ((bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
-                            // UTF-16BE BOM
-                            return new String(
-                                    bytes, 2, bytes.length - 2, StandardCharsets.UTF_16BE);
-                        } else if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
-                            // UTF-16LE BOM
-                            return new String(
-                                    bytes, 2, bytes.length - 2, StandardCharsets.UTF_16LE);
-                        }
-                    }
-
-                    String decoded = new String(bytes, encoding);
-                    if (!isGibberish(decoded)) {
-                        return decoded;
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-        } catch (Exception e) {
-        }
-        return null;
     }
 
     private float applySafetyBounds(

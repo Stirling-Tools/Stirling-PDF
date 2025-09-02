@@ -88,7 +88,14 @@ public class TextFinderUtils {
             if (originalTerm.length() == 1) {
                 char c = originalTerm.charAt(0);
                 if (Character.isDigit(c)) {
-                    return "(?<![\\p{L}\\p{N}])" + patternString + "(?![\\p{L}\\p{N}])";
+                    // Single digit as a strict standalone token:
+                    // - Not adjacent to letters or digits
+                    // - Not part of a decimal number (e.g., 1.0 or 2,50)
+                    //   by excluding cases where a digit is immediately followed by [.,]\d
+                    //   or immediately preceded by \d[.,]
+                    String leftBoundary = "(?<![\\p{L}\\p{N}])(?<!\\d\\.)(?<!\\d,)";
+                    String rightBoundary = "(?![\\p{L}\\p{N}])(?![.,]\\d)";
+                    return leftBoundary + patternString + rightBoundary;
                 } else if (Character.isLetter(c)) {
                     return "(?<![\\p{L}\\p{N}])" + patternString + "(?![\\p{L}\\p{N}])";
                 } else {

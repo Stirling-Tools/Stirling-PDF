@@ -1,8 +1,12 @@
 package stirling.software.SPDF.pdf;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -15,45 +19,41 @@ import stirling.software.SPDF.model.PDFText;
 @Slf4j
 public class TextFinder extends PDFTextStripper {
 
-    private final String searchTerm;
-    private final boolean useRegex;
-    private final boolean wholeWordSearch;
-    private final List<PDFText> foundTexts = new ArrayList<>();
-
-    private final List<TextPosition> pageTextPositions = new ArrayList<>();
-    private final StringBuilder pageTextBuilder = new StringBuilder();
-
-    public TextFinder(String searchTerm, boolean useRegex, boolean wholeWordSearch)
-            throws IOException {
-        this.searchTerm = searchTerm;
-        this.useRegex = useRegex;
-        this.wholeWordSearch = wholeWordSearch;
-        this.setWordSeparator(" ");
+    private static String removeDiacritics(String input) {
+        if (input == null || input.isEmpty()) return input;
+        String nfd = Normalizer.normalize(input, Normalizer.Form.NFD);
+        // remove combining diacritical marks
+        String stripped = nfd.replaceAll("\\p{M}+", "");
+        return Normalizer.normalize(stripped, Normalizer.Form.NFC);
     }
 
-    @Override
-    protected void startPage(PDPage page) throws IOException {
-        super.startPage(page);
-        pageTextPositions.clear();
-        pageTextBuilder.setLength(0);
-    }
-
-    @Override
-    protected void writeString(String text, List<TextPosition> textPositions) {
-        pageTextBuilder.append(text);
-        pageTextPositions.addAll(textPositions);
-    }
-
-    @Override
-    protected void writeWordSeparator() {
-        pageTextBuilder.append(getWordSeparator());
-        pageTextPositions.add(null); // Placeholder for separator
-    }
-
-    @Override
-    protected void writeLineSeparator() {
-        pageTextBuilder.append(getLineSeparator());
-        pageTextPositions.add(null); // Placeholder for separator
+    private static NormalizedMap buildNormalizedMap(String original) {
+        if (original == null) return new NormalizedMap("", new int[0]);
+        StringBuilder sb = new StringBuilder(original.length());
+        // Worst case map size equals original length
+        int[] tempMap = new int[original.length() * 2];
+        int normIdx = 0;
+        for (int i = 0; i < original.length(); i++) {
+            char ch = original.charAt(i);
+            // Normalize this single char; handle precomposed accents common in PDF text
+            String nfd = Normalizer.normalize(String.valueOf(ch), Normalizer.Form.NFD);
+            String base = nfd.replaceAll("\\p{M}+", "");
+            // Append each resulting char and map back to original index i
+            for (int j = 0; j < base.length(); j++) {
+                char b = base.charAt(j);
+                sb.append(b);
+                if (normIdx >= tempMap.length) {
+                    // expand temp map
+                    int[] newMap = new int[tempMap.length * 2];
+                    System.arraycopy(tempMap, 0, newMap, 0, tempMap.length);
+                    tempMap = newMap;
+                }
+                tempMap[normIdx++] = i;
+            }
+        }
+        int[] map = new int[normIdx];
+        System.arraycopy(tempMap, 0, map, 0, normIdx);
+        return new NormalizedMap(sb.toString(), map);
     }
 
     @Override
@@ -86,6 +86,71 @@ public class TextFinder extends PDFTextStripper {
             }
         }
         if (activePattern == null) {
+            if (!this.useRegex) {
+                NormalizedMap nm = buildNormalizedMap(text);
+                String normText = nm.normalized();
+                String normTerm = removeDiacritics(processedSearchTerm);
+                List<Pattern> normPatterns =
+                        stirling.software.SPDF.utils.text.TextFinderUtils
+                                .createOptimizedSearchPatterns(
+                                        Collections.singleton(normTerm),
+                                        false,
+                                        this.wholeWordSearch);
+                Matcher nMatcher = null;
+                Pattern nActive = null;
+                for (Pattern p : normPatterns) {
+                    nMatcher = p.matcher(normText);
+                    if (nMatcher.find()) {
+                        nActive = p;
+                        break;
+                    }
+                }
+                if (nActive != null) {
+                    nMatcher = nActive.matcher(normText);
+                    int matchCount = 0;
+                    while (nMatcher.find()) {
+                        matchCount++;
+                        int nStart = nMatcher.start();
+                        int nEnd = nMatcher.end();
+                        int origStart = nm.indexMap()[nStart];
+                        int origEnd = nm.indexMap()[nEnd - 1] + 1;
+
+                        float minX = Float.MAX_VALUE;
+                        float minY = Float.MAX_VALUE;
+                        float maxX = Float.MIN_VALUE;
+                        float maxY = Float.MIN_VALUE;
+                        boolean foundPosition = false;
+
+                        for (int i = origStart; i < origEnd; i++) {
+                            if (i >= pageTextPositions.size()) continue;
+                            org.apache.pdfbox.text.TextPosition pos = pageTextPositions.get(i);
+                            if (pos != null) {
+                                foundPosition = true;
+                                minX = Math.min(minX, pos.getX());
+                                maxX = Math.max(maxX, pos.getX() + pos.getWidth());
+                                minY = Math.min(minY, pos.getY() - pos.getHeight());
+                                maxY = Math.max(maxY, pos.getY());
+                            }
+                        }
+                        if (foundPosition) {
+                            String matchedOriginal =
+                                    text.substring(
+                                            Math.max(0, origStart),
+                                            Math.min(text.length(), origEnd));
+                            foundTexts.add(
+                                    new PDFText(
+                                            this.getCurrentPageNo() - 1,
+                                            minX,
+                                            minY,
+                                            maxX,
+                                            maxY,
+                                            matchedOriginal));
+                        }
+                    }
+                    super.endPage(page);
+                    return;
+                }
+            }
             super.endPage(page);
             return;
         }
@@ -104,6 +169,26 @@ public class TextFinder extends PDFTextStripper {
             matchCount++;
             int matchStart = matcher.start();
             int matchEnd = matcher.end();
+
+            if (this.wholeWordSearch
+                    && processedSearchTerm.length() == 1
+                    && Character.isDigit(processedSearchTerm.charAt(0))) {
+                char left = matchStart > 0 ? text.charAt(matchStart - 1) : '\0';
+                char right = matchEnd < text.length() ? text.charAt(matchEnd) : '\0';
+                if (Character.isLetterOrDigit(left) || Character.isLetterOrDigit(right)) {
+                    continue; // skip
+                }
+                if ((right == '.' || right == ',')
+                        && (matchEnd + 1 < text.length()
+                                && Character.isDigit(text.charAt(matchEnd + 1)))) {
+                    continue; // skip
+                }
+                if ((left == '.' || left == ',')
+                        && (matchStart - 2 >= 0
+                                && Character.isDigit(text.charAt(matchStart - 2)))) {
+                    continue; // skip
+                }
+            }
 
             log.debug(
                     "Found match #{} at positions {}-{}: '{}'",
@@ -190,6 +275,65 @@ public class TextFinder extends PDFTextStripper {
                 processedSearchTerm);
 
         super.endPage(page);
+    }
+
+    private final String searchTerm;
+    private final boolean useRegex;
+    private final boolean wholeWordSearch;
+    private final List<PDFText> foundTexts = new ArrayList<>();
+
+    private final List<TextPosition> pageTextPositions = new ArrayList<>();
+    private final StringBuilder pageTextBuilder = new StringBuilder();
+
+    public TextFinder(String searchTerm, boolean useRegex, boolean wholeWordSearch)
+            throws IOException {
+        this.searchTerm = searchTerm;
+        this.useRegex = useRegex;
+        this.wholeWordSearch = wholeWordSearch;
+        this.setWordSeparator(" ");
+    }
+
+    @Override
+    protected void startPage(PDPage page) throws IOException {
+        super.startPage(page);
+        pageTextPositions.clear();
+        pageTextBuilder.setLength(0);
+    }
+
+    @Override
+    protected void writeString(String text, List<TextPosition> textPositions) {
+        pageTextBuilder.append(text);
+        pageTextPositions.addAll(textPositions);
+    }
+
+    @Override
+    protected void writeWordSeparator() {
+        pageTextBuilder.append(getWordSeparator());
+        pageTextPositions.add(null); // Placeholder for separator
+    }
+
+    @Override
+    protected void writeLineSeparator() {
+        pageTextBuilder.append(getLineSeparator());
+        pageTextPositions.add(null); // Placeholder for separator
+    }
+
+    private static class NormalizedMap {
+        private final String normalized;
+        private final int[] indexMap;
+
+        NormalizedMap(String normalized, int[] indexMap) {
+            this.normalized = normalized;
+            this.indexMap = indexMap;
+        }
+
+        public String normalized() {
+            return normalized;
+        }
+
+        public int[] indexMap() {
+            return indexMap;
+        }
     }
 
     public List<PDFText> getFoundTexts() {
