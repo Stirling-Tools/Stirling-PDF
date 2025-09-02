@@ -42,7 +42,7 @@
 /show-javascript
 /sign
 /split-by-size-or-count
-/split-pdf
+/split-pdfs
 /split-pdf-by-chapters
 /split-pdf-by-sections
 /stamp
