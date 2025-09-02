@@ -86,7 +86,7 @@ public class RedactionService {
     private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
     private static final COSString EMPTY_COS_STRING = new COSString("");
     private static final int MAX_SWEEPS = 3;
-    private static final Pattern PATTERN = Pattern.compile(".*(hoepap|temp|generated).*");
+    private static final Pattern PATTERN = Pattern.compile(".*(placeholder|temp|generated).*");
     private boolean aggressiveMode = false;
     private Map<Integer, List<AggressiveSegMatch>> aggressiveSegMatches = null;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -2409,11 +2409,9 @@ public class RedactionService {
                                 textSegments.indexOf(task.segment), Collections.emptyList());
 
                 if (task.segment.tokenIndex >= newTokens.size()) {
-
                     continue;
                 }
                 if (task.segment.getText() == null || task.segment.getText().isEmpty()) {
-
                     continue;
                 }
 
@@ -2430,19 +2428,22 @@ public class RedactionService {
 
     private static String extractStringWithFallbacks(COSString cosString, PDFont font) {
         if (cosString == null) return "";
-
         try {
+            // Prefer font-guided decoding for correctness
+            if (font != null) {
+                String enhanced =
+                        TextDecodingHelper.decodeCharactersEnhanced(font, cosString.getBytes());
+                if (enhanced != null && !isGibberish(enhanced)) return enhanced;
+            }
+            // Fallback to COSString raw string if it seems valid
             String text = cosString.getString();
             if (!text.trim().isEmpty() && !isGibberish(text)) return text;
-
+            // Fallback: try basic font-based extraction
             if (font != null) {
                 String fontBasedText = tryFontBasedExtraction(cosString, font);
                 if (fontBasedText != null && !isGibberish(fontBasedText)) return fontBasedText;
             }
-
-            String encodingFallback = tryEncodingFallbacks(cosString);
-            if (encodingFallback != null && !isGibberish(encodingFallback)) return encodingFallback;
-
+            // Last resort: sanitized raw
             return sanitizeText(text);
         } catch (Exception e) {
             return "\uFFFD";

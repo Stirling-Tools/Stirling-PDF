@@ -20,80 +20,44 @@ public class TextEncodingHelper {
         if (font == null || text == null) {
             return false;
         }
-
         if (text.isEmpty()) {
             return true;
         }
-
-        try {
-            byte[] encoded = font.encode(text);
-            if (encoded.length > 0) {
-                return true;
+        // Strict: every code point must be encodable by the font
+        for (int i = 0; i < text.length(); ) {
+            int cp = text.codePointAt(i);
+            String ch = new String(Character.toChars(cp));
+            try {
+                byte[] encoded = font.encode(ch);
+                if (encoded == null || encoded.length == 0) {
+                    return false;
+                }
+            } catch (Exception ex) {
+                return false;
             }
-        } catch (Exception e) {
+            i += Character.charCount(cp);
         }
-
-        return validateAsCodePointArray(font, text);
+        return true;
     }
 
     private boolean validateAsCodePointArray(PDFont font, String text) {
         if (text == null || text.isEmpty()) {
             return true;
         }
-
-        int totalCodePoints = 0;
-        int successfulCodePoints = 0;
-
         for (int i = 0; i < text.length(); ) {
             int codePoint = text.codePointAt(i);
             String charStr = new String(Character.toChars(codePoint));
-            totalCodePoints++;
-
             try {
                 byte[] charEncoded = font.encode(charStr);
-                if (charEncoded.length > 0) {
-                    try {
-                        float charWidth = font.getStringWidth(charStr);
-                        if (charWidth >= 0) {
-                            successfulCodePoints++;
-                        }
-                    } catch (Exception e) {
-                        try {
-                            if (canDecodeCharacter(font, charStr)) {
-                                successfulCodePoints++;
-                            }
-                        } catch (Exception e2) {
-                        }
-                    }
-                } else {
-                    try {
-                        if (canDecodeCharacter(font, charStr)) {
-                            successfulCodePoints++;
-                        }
-                    } catch (Exception e) {
-                    }
+                if (charEncoded == null || charEncoded.length == 0) {
+                    return false;
                 }
             } catch (Exception e) {
-                try {
-                    if (canDecodeCharacter(font, charStr)) {
-                        successfulCodePoints++;
-                    }
-                } catch (Exception e2) {
-                    if (isBasicCharacter(codePoint)) {
-                        successfulCodePoints++;
-                    }
-                }
+                return false;
             }
-
             i += Character.charCount(codePoint);
         }
-
-        if (totalCodePoints == 0) {
-            return true;
-        }
-
-        double successRate = (double) successfulCodePoints / totalCodePoints;
-        return successRate >= 0.1;
+        return true;
     }
 
     private boolean canDecodeCharacter(PDFont font, String charStr) {
@@ -128,26 +92,17 @@ public class TextEncodingHelper {
         if (font == null || text == null) {
             return false;
         }
-
         if (text.isEmpty()) {
             return true;
         }
-
-        if (isSimpleCharacter(text)) {
-            try {
-                font.encode(text);
-                font.getStringWidth(text);
-                return true;
-            } catch (Exception e) {
-                try {
-                    return canHandleText(font, text);
-                } catch (Exception e2) {
-                    return false;
-                }
-            }
+        // Strict: removable only if we can encode every codepoint and measure width
+        if (!canEncodeCharacters(font, text)) return false;
+        try {
+            font.getStringWidth(text);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
-
-        return isTextFullyRemovable(font, text);
     }
 
     private boolean canHandleText(PDFont font, String text) {
@@ -197,68 +152,14 @@ public class TextEncodingHelper {
     }
 
     public boolean isTextFullyRemovable(PDFont font, String text) {
-        if (font == null || text == null) {
-            return false;
-        }
-
-        if (text.isEmpty()) {
-            return true;
-        }
-
+        if (font == null || text == null) return false;
+        if (text.isEmpty()) return true;
+        if (!canEncodeCharacters(font, text)) return false;
         try {
-            if (!canEncodeCharacters(font, text)) {
-                return false;
-            }
-
-            try {
-                float width = font.getStringWidth(text);
-                if (width < 0) {
-                    return false;
-                }
-            } catch (Exception e) {
-                try {
-                    if (!canCalculateTextWidth(font, text)) {
-                        return false;
-                    }
-                } catch (Exception e2) {
-                    return false;
-                }
-            }
-
-            try {
-                if (font.getFontDescriptor() == null) {
-                    try {
-                        return canHandleWithoutDescriptor(font, text);
-                    } catch (Exception e) {
-                        return false;
-                    }
-                }
-            } catch (Exception e) {
-                try {
-                    return canHandleWithoutDescriptor(font, text);
-                } catch (Exception e2) {
-                    return false;
-                }
-            }
-
-            try {
-                font.getFontDescriptor().getFontBoundingBox();
-            } catch (Exception e) {
-                try {
-                    return canHandleWithoutBoundingBox(font, text);
-                } catch (Exception e2) {
-                    return false;
-                }
-            }
-
-            return true;
-
+            float width = font.getStringWidth(text);
+            return width >= 0;
         } catch (Exception e) {
-            try {
-                return canHandleText(font, text);
-            } catch (Exception e2) {
-                return false;
-            }
+            return false;
         }
     }
 
@@ -381,45 +282,19 @@ public class TextEncodingHelper {
     }
 
     public boolean fontSupportsCharacter(PDFont font, String character) {
-        if (font == null || character == null) {
-            return false;
-        }
-
-        if (character.isEmpty()) {
-            return true;
-        }
-
-        try {
-            byte[] encoded = font.encode(character);
-            if (encoded.length > 0) {
-                try {
-                    float width = font.getStringWidth(character);
-                    if (width >= 0) {
-                        return true;
-                    }
-                } catch (Exception e) {
-                }
-                return true;
-            }
-        } catch (Exception e) {
-        }
-
-        try {
-            if (canDecodeCharacter(font, character)) {
-                return true;
-            }
-        } catch (Exception e) {
-        }
-
+        if (font == null || character == null) return false;
+        if (character.isEmpty()) return true;
         for (int i = 0; i < character.length(); ) {
-            int codePoint = character.codePointAt(i);
-            if (isBasicCharacter(codePoint)) {
-                i += Character.charCount(codePoint);
-                continue;
+            int cp = character.codePointAt(i);
+            String ch = new String(Character.toChars(cp));
+            try {
+                byte[] encoded = font.encode(ch);
+                if (encoded == null || encoded.length == 0) return false;
+            } catch (Exception e) {
+                return false;
             }
-            return false;
+            i += Character.charCount(cp);
         }
-
         return true;
     }
 

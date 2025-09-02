@@ -3,8 +3,6 @@ package stirling.software.SPDF.pdf;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -71,26 +69,33 @@ public class TextFinder extends PDFTextStripper {
             super.endPage(page);
             return;
         }
-        String regex = this.useRegex ? processedSearchTerm : "\\Q" + processedSearchTerm + "\\E";
-        if (this.wholeWordSearch) {
-            if (processedSearchTerm.length() == 1
-                    && Character.isDigit(processedSearchTerm.charAt(0))) {
-                regex = "(?<![\\w])(?<!\\d[\\.,])" + regex + "(?![\\w])(?![\\.,]\\d)";
-            } else if (processedSearchTerm.length() == 1) {
-                regex = "(?<![\\w])" + regex + "(?![\\w])";
-            } else {
-                regex = "\\b" + regex + "\\b";
+        // Build patterns using unified utility for consistency
+        List<java.util.regex.Pattern> patterns =
+                stirling.software.SPDF.utils.text.TextFinderUtils.createOptimizedSearchPatterns(
+                        java.util.Collections.singleton(processedSearchTerm),
+                        this.useRegex,
+                        this.wholeWordSearch);
+        java.util.regex.Matcher matcher = null;
+        java.util.regex.Pattern activePattern = null;
+        for (java.util.regex.Pattern p : patterns) {
+            matcher = p.matcher(text);
+            if (matcher
+                    .find()) { // prime by checking has at least one match; we will re-iterate below
+                activePattern = p;
+                break;
             }
         }
-
-        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-        Matcher matcher = pattern.matcher(text);
+        if (activePattern == null) {
+            super.endPage(page);
+            return;
+        }
+        matcher = activePattern.matcher(text);
 
         log.debug(
-                "Searching for '{}' in page {} with regex '{}' (wholeWord: {}, useRegex: {})",
+                "Searching for '{}' in page {} with pattern '{}' (wholeWord: {}, useRegex: {})",
                 processedSearchTerm,
                 getCurrentPageNo(),
-                regex,
+                activePattern,
                 wholeWordSearch,
                 useRegex);
 

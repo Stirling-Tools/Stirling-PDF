@@ -123,9 +123,8 @@ public class TextDecodingHelper {
                 }
             } catch (Exception ignored) {
             }
-            if (ch == null || !isPrintable(ch)) {
-                // Handle problematic character codes specifically
-                ch = "�";
+            if (ch == null) {
+                return null; // fail fast if undecodable via font tables
             }
             out.append(ch);
             i += consumed;
@@ -250,16 +249,8 @@ public class TextDecodingHelper {
     }
 
     public String handleProblematicCharacterCode(int code, PDFont font) {
-        if (code >= PROBLEMATIC_CODE_LOWER_BOUND && code <= PROBLEMATIC_CODE_UPPER_BOUND) {
-            int adjustedCode = code - PROBLEMATIC_CODE_LOWER_BOUND;
-            if (adjustedCode >= ASCII_LOWER_BOUND) {
-                return String.valueOf((char) adjustedCode);
-            }
-            if (font != null && font.getName() != null && font.getName().contains("+")) {
-                return mapSubsetCharacter(adjustedCode);
-            }
-        }
-        return "�";
+        // For correctness, avoid speculative remapping. Return replacement char only when needed.
+        return "\uFFFD";
     }
 
     public String mapSubsetCharacter(int code) {
@@ -267,7 +258,8 @@ public class TextDecodingHelper {
             return String.valueOf((char) code);
         }
         if (code >= EXTENDED_ASCII_LOWER_BOUND && code <= EXTENDED_ASCII_UPPER_BOUND) {
-            return String.valueOf((char) (code - 128));
+            // Do not alter code point arbitrarily; extended ASCII maps directly for correctness.
+            return String.valueOf((char) code);
         }
         return null;
     }

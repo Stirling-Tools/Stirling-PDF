@@ -3,321 +3,324 @@
       xmlns:th="https://www.thymeleaf.org">
 
 <head>
-    <th:block th:insert="~{fragments/common :: head(title=#{autoRedact.title}, header=#{autoRedact.header})}"></th:block>
-    <style>
-        .redaction-options-group {
-            margin-bottom: 1rem;
-        }
+  <th:block th:insert="~{fragments/common :: head(title=#{autoRedact.title}, header=#{autoRedact.header})}"></th:block>
+  <style>
+    .redaction-options-group {
+      margin-bottom: 1rem;
+    }
 
-        .form-text.text-muted {
-            color: #6c757d !important;
-        }
+    .form-text.text-muted {
+      color: #6c757d !important;
+    }
 
-        .btn-primary:focus, .form-check-input:focus, .form-control:focus, .form-select:focus {
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-            outline: 2px solid #0d6efd;
-            outline-offset: 2px;
-        }
+    .btn-primary:focus, .form-check-input:focus, .form-control:focus, .form-select:focus {
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+      outline: 2px solid #0d6efd;
+      outline-offset: 2px;
+    }
 
-        .form-check-input:checked {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-        }
+    .form-check-input:checked {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+    }
 
-        /* OCR language list styling */
-        #languages {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid var(--md-sys-color-surface-3);
-            border-radius: 5px;
-            padding: 10px;
-        }
+    /* OCR language list styling */
+    #languages {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid var(--md-sys-color-surface-3);
+      border-radius: 5px;
+      padding: 10px;
+    }
 
-        /* Better visibility for selected redaction option */
-        .redaction-options-group .form-check {
-            border: 1px solid var(--md-sys-color-surface-3);
-            border-radius: 8px;
-            padding: 10px 12px;
-            transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
-        }
+    /* Better visibility for selected redaction option */
+    .redaction-options-group .form-check {
+      border: 1px solid var(--md-sys-color-surface-3);
+      border-radius: 8px;
+      padding: 10px 12px;
+      transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+    }
 
-        .redaction-options-group .form-check + .form-check { margin-top: .5rem; }
+    .redaction-options-group .form-check + .form-check { margin-top: .5rem; }
 
-        .redaction-options-group .form-check:hover {
-            background-color: var(--md-sys-color-surface-1);
-        }
+    .redaction-options-group .form-check:hover {
+      background-color: var(--md-sys-color-surface-1);
+    }
 
-        .redaction-options-group .form-check.selected {
-            border-color: #0d6efd;
-            background-color: rgba(13,110,253,0.06);
-            box-shadow: 0 0 0 2px rgba(13,110,253,0.1) inset;
-        }
+    .redaction-options-group .form-check.selected {
+      border-color: #0d6efd;
+      background-color: rgba(13,110,253,0.06);
+      box-shadow: 0 0 0 2px rgba(13,110,253,0.1) inset;
+    }
 
-        .redaction-options-group .form-check .form-check-label {
-            font-weight: 600;
-        }
+    .redaction-options-group .form-check .form-check-label {
+      font-weight: 600;
+    }
 
-        .redaction-options-group small.form-text {
-            margin-left: 1.8rem; /* align with radio */
-        }
-    </style>
+    .redaction-options-group small.form-text {
+      margin-left: 1.8rem; /* align with radio */
+    }
+  </style>
 </head>
 
 <body>
 <div id="page-container">
-    <div id="content-wrap">
-        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br><br>
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-6 bg-card">
-                    <div class="tool-header">
-                        <svg class="material-symbols-rounded tool-header-icon security">
-                            <use xlink:href="/images/redact-auto.svg#icon-redact-auto"></use>
-                        </svg>
-                        <span class="tool-header-text" id="form-title" th:text="#{autoRedact.header}"></span>
-                    </div>
-                                <form aria-labelledby="form-title" enctype="multipart/form-data" id="autoRedactForm"
-                  method="post" th:action="@{'api/v1/security/auto-redact'}">
-                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}"></div>
+  <div id="content-wrap">
+    <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+    <br><br>
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-6 bg-card">
+          <div class="tool-header">
+            <svg class="material-symbols-rounded tool-header-icon security">
+              <use xlink:href="/images/redact-auto.svg#icon-redact-auto"></use>
+            </svg>
+            <span class="tool-header-text" id="form-title" th:text="#{autoRedact.header}"></span>
+          </div>
+          <form aria-labelledby="form-title" enctype="multipart/form-data" id="autoRedactForm"
+                method="post" th:action="@{'api/v1/security/auto-redact'}">
+            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}"></div>
 
-                        <div class="mb-3">
-                            <label class="form-label" for="listOfText" th:text="#{autoRedact.textsToRedactLabel}"></label>
-                            <textarea class="form-control" id="listOfText" name="listOfText" required rows="4"
-                                      th:placeholder="#{autoRedact.textsToRedactPlaceholder}"></textarea>
-                        </div>
+            <div class="mb-3">
+              <label class="form-label" for="listOfText" th:text="#{autoRedact.textsToRedactLabel}"></label>
+              <textarea class="form-control" id="listOfText" name="listOfText" required rows="4"
+                        th:placeholder="#{autoRedact.textsToRedactPlaceholder}"></textarea>
+            </div>
 
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" id="useRegex" name="useRegex" type="checkbox">
-                                <label class="form-check-label" for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" id="wholeWordSearch" name="wholeWordSearch" type="checkbox">
-                                <label class="form-check-label" for="wholeWordSearch" th:text="#{autoRedact.wholeWordSearchLabel}"></label>
-                            </div>
-                        </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" id="useRegex" name="useRegex" type="checkbox">
+                <label class="form-check-label" for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" id="wholeWordSearch" name="wholeWordSearch" type="checkbox">
+                <label class="form-check-label" for="wholeWordSearch" th:text="#{autoRedact.wholeWordSearchLabel}"></label>
+              </div>
+            </div>
 
-                        <div class="redaction-options-group">
-                            <label class="form-label fw-bold mb-3" th:text="#{autoRedact.redactionStyleLabel}"></label>
-                            <div class="form-check mb-2">
-                                <input aria-describedby="visual-desc" checked class="form-check-input" id="visualImage" name="redactionMode" type="radio" value="visual">
-                                <label class="form-check-label" for="visualImage" th:text="#{autoRedact.visualRedactionLabel}">Visual</label>
-                                <small class="form-text text-muted d-block mt-1" id="visual-desc" th:text="#{autoRedact.visualRedactionDescription}">Converts to image with visual redactions for maximum security.</small>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input aria-describedby="delete-desc" class="form-check-input" id="deleteText" name="redactionMode" type="radio" value="aggressive">
-                                <label class="form-check-label" for="deleteText" th:text="#{autoRedact.deleteTextLabel}">Remove Text</label>
-                                <small class="form-text text-muted d-block mt-1" id="delete-desc" th:text="#{autoRedact.deleteTextDescription}">Removes text completely, allowing the surrounding content to shift. This may change the document's original appearance.</small>
-                            </div>
-                            <div class="form-check mb-3">
-                                <input aria-describedby="keep-desc" class="form-check-input" id="keepLayout" name="redactionMode" type="radio" value="moderate">
-                                <label class="form-check-label" for="keepLayout" th:text="#{autoRedact.keepLayoutLabel}">Remove Text & Cover (Preserve Layout)</label>
-                                <small class="form-text text-muted d-block mt-1" id="keep-desc" th:text="#{autoRedact.keepLayoutDescription}">Removes the underlying text and places a redaction box in its place, preserving the document's original layout.</small>
-                            </div>
+            <div class="redaction-options-group">
+              <label class="form-label fw-bold mb-3" th:text="#{autoRedact.redactionStyleLabel}"></label>
+              <div class="form-check mb-2">
+                <input aria-describedby="visual-desc" checked class="form-check-input" id="visualImage" name="redactionMode" type="radio" value="visual">
+                <label class="form-check-label" for="visualImage" th:text="#{autoRedact.visualRedactionLabel}">Visual</label>
+                <small class="form-text text-muted d-block mt-1" id="visual-desc" th:text="#{autoRedact.visualRedactionDescription}">Converts to image with visual redactions for maximum security.</small>
+              </div>
+              <div class="form-check mb-2">
+                <input aria-describedby="delete-desc" class="form-check-input" id="deleteText" name="redactionMode" type="radio" value="aggressive">
+                <label class="form-check-label" for="deleteText" th:text="#{autoRedact.deleteTextLabel}">Remove Text</label>
+                <small class="form-text text-muted d-block mt-1" id="delete-desc" th:text="#{autoRedact.deleteTextDescription}">Removes text completely, allowing the surrounding content to shift. This may change the document's original appearance.</small>
+              </div>
+              <div class="form-check mb-3">
+                <input aria-describedby="keep-desc" class="form-check-input" id="keepLayout" name="redactionMode" type="radio" value="moderate">
+                <label class="form-check-label" for="keepLayout" th:text="#{autoRedact.keepLayoutLabel}">Remove Text & Cover (Preserve Layout)</label>
+                <small class="form-text text-muted d-block mt-1" id="keep-desc" th:text="#{autoRedact.keepLayoutDescription}">Removes the underlying text and places a redaction box in its place, preserving the document's original layout.</small>
+              </div>
+            </div>
 
-                            <div class="form-check">
-                                <input aria-describedby="guarantee-desc" class="form-check-input" id="guaranteeRedaction" name="convertPDFToImage" type="checkbox">
-                                <label class="form-check-label" for="guaranteeRedaction" th:text="#{autoRedact.pdfImageLabel}">PDF image</label>
-                                <small class="form-text text-muted d-block mt-1" id="guarantee-desc" th:text="#{autoRedact.pdfImageDescription}">For maximum security, uses an image-based method to ensure text is unrecoverable. May slightly affect document quality.</small>
-                            </div>
-                        </div>
+            <!-- PDF Image checkbox - moved outside redaction-options-group to use plain styling -->
+            <div class="mb-3">
+              <div class="form-check">
+                <input aria-describedby="guarantee-desc" class="form-check-input" id="convertPDFToImage" name="convertPDFToImage" type="checkbox">
+                <label class="form-check-label" for="convertPDFToImage" th:text="#{autoRedact.convertPDFToImageLabel}">Convert PDF to PDF-Image</label>
+              </div>
+              <small class="form-text text-muted d-block mt-1" id="guarantee-desc" th:text="#{autoRedact.pdfImageDescription}">For maximum security, uses an image-based method to ensure text is unrecoverable. May slightly affect document quality.</small>
+            </div>
 
-                        <br>
+            <br>
 
-                        <div class="mb-3">
-                            <label class="form-label" for="defaultColor" th:text="#{autoRedact.colorLabel}"></label>
-                            <select class="form-select" id="defaultColor" name="defaultColor" onchange="handleColorChange(this.value)">
-                                <option th:text="#{black}" value="#000000">Black</option>
-                                <option th:text="#{white}" value="#FFFFFF">White</option>
-                                <option th:text="#{red}" value="#FF0000">Red</option>
-                                <option th:text="#{green}" value="#00FF00">Green</option>
-                                <option th:text="#{blue}" value="#0000FF">Blue</option>
-                                <option th:text="#{custom}" value="custom">Custom...</option>
-                            </select>
-                        </div>
+            <div class="mb-3">
+              <label class="form-label" for="defaultColor" th:text="#{autoRedact.colorLabel}"></label>
+              <select class="form-select" id="defaultColor" name="defaultColor" onchange="handleColorChange(this.value)">
+                <option th:text="#{black}" value="#000000">Black</option>
+                <option th:text="#{white}" value="#FFFFFF">White</option>
+                <option th:text="#{red}" value="#FF0000">Red</option>
+                <option th:text="#{green}" value="#00FF00">Green</option>
+                <option th:text="#{blue}" value="#0000FF">Blue</option>
+                <option th:text="#{custom}" value="custom">Custom...</option>
+              </select>
+            </div>
 
-                        <div class="mb-3" id="customColorContainer" style="display: none;">
-                            <label class="form-label" for="customColor">Custom Color (Hex)</label>
-                            <input class="form-control" id="customColor" name="redactColor" placeholder="#FF00FF" type="text">
-                        </div>
+            <div class="mb-3" id="customColorContainer" style="display: none;">
+              <label class="form-label" for="customColor">Custom Color (Hex)</label>
+              <input class="form-control" id="customColor" name="redactColor" placeholder="#FF00FF" type="text">
+            </div>
 
-                        <div class="mb-3">
-                            <label class="form-label" for="customPadding" th:text="#{autoRedact.customPaddingLabel}"></label>
-                            <input class="form-control" id="customPadding" max="1" min="0" name="customPadding"
-                                   step="0.1" type="number" value="0.1">
-                        </div>
+            <div class="mb-3">
+              <label class="form-label" for="customPadding" th:text="#{autoRedact.customPaddingLabel}"></label>
+              <input class="form-control" id="customPadding" max="1" min="0" name="customPadding"
+                     step="0.1" type="number" value="0.1">
+            </div>
 
-                        <br>
+            <br>
 
-                        <div class="mb-3" th:if="${#lists.size(languages) > 0}">
-                            <label class="form-label" for="languages">OCR Languages</label>
-                            <div id="languages">
-                                <div class="form-check" th:each="language, iterStat : ${languages}">
-                                    <input onchange="handleLangSelection()" required th:checked="${language == 'eng'}" th:id="${'language-' + language}" th:name="languages" th:value="${language}" type="checkbox" />
-                     <label th:attr="data-lang-code=${language}, data-lang-name=#{'lang.' + language}"
+            <div class="mb-3" th:if="${#lists.size(languages) > 0}">
+              <label class="form-label" for="languages">OCR Languages</label>
+              <div id="languages">
+                <div class="form-check" th:each="language, iterStat : ${languages}">
+                  <input class="form-check-input" onchange="handleLangSelection()" required th:checked="${language == 'eng'}" th:id="${'language-' + language}" th:name="languages" th:value="${language}" type="checkbox" />
+                  <label class="form-check-label" th:attr="data-lang-code=${language}, data-lang-name=#{'lang.' + language}"
                          th:for="${'language-' + language}"
                          th:text="${language}"></label>
-                                </div>
-                            </div>
-                            <small class="form-text text-muted" id="ocr-desc">Used when OCR restoration is needed</small>
-                        </div>
-
-                        <input id="aggressiveMode" name="aggressiveMode" type="hidden" value="false">
-
-                        <div class="mb-3 text-center">
-                            <button class="btn btn-primary" id="submitBtn" th:text="#{autoRedact.submitButton}" type="submit"></button>
-                        </div>
-                    </form>
                 </div>
+              </div>
+              <small class="form-text text-muted" id="ocr-desc">Used when OCR restoration is needed</small>
             </div>
+
+            <input id="aggressiveMode" name="aggressiveMode" type="hidden" value="false">
+
+            <div class="mb-3 text-center">
+              <button class="btn btn-primary" id="submitBtn" th:text="#{autoRedact.submitButton}" type="submit"></button>
+            </div>
+          </form>
         </div>
+      </div>
     </div>
-    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+  <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
 </div>
 <script th:inline="javascript">
-    function handleColorChange(selectedValue) {
-        const container = document.getElementById('customColorContainer');
-        const input = document.getElementById('customColor');
-        if (selectedValue === "custom") {
-            container.style.display = 'block';
-            if (!input.value) {
-                input.value = '#000000';
-            }
-        } else {
-            container.style.display = 'none';
-            input.value = selectedValue;
-        }
+  function handleColorChange(selectedValue) {
+    const container = document.getElementById('customColorContainer');
+    const input = document.getElementById('customColor');
+    if (selectedValue === "custom") {
+      container.style.display = 'block';
+      if (!input.value) {
+        input.value = '#000000';
+      }
+    } else {
+      container.style.display = 'none';
+      input.value = selectedValue;
     }
+  }
 
-        function handleLangSelection() {
-                let checkboxes = document.getElementsByName("languages");
-                let selected = false;
-                for (let i = 0; i < checkboxes.length; i++) {
-                        if (checkboxes[i].checked) {
-                                selected = true;
-                                checkboxes[i].setAttribute('required', 'false');
-                        }
-                }
-                if (selected) {
-                        for (let i = 0; i < checkboxes.length; i++) {
-                                checkboxes[i].removeAttribute('required');
-                        }
-                } else {
-                        for (let i = 0; i < checkboxes.length; i++) {
-                                checkboxes[i].setAttribute('required', 'true');
-                        }
-                }
-        }
+  function handleLangSelection() {
+    let checkboxes = document.getElementsByName("languages");
+    let selected = false;
+    for (let i = 0; i < checkboxes.length; i++) {
+      if (checkboxes[i].checked) {
+        selected = true;
+        checkboxes[i].setAttribute('required', 'false');
+      }
+    }
+    if (selected) {
+      for (let i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].removeAttribute('required');
+      }
+    } else {
+      for (let i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].setAttribute('required', 'true');
+      }
+    }
+  }
 
-    // Language translations map populated by Thymeleaf for available OCR languages
-        const languageTranslations = {};
-        /*[# th:each="lang : ${languages}"]*/
-        languageTranslations['[(${lang})]'] = /*[[#{${'lang.' + lang}}]]*/'[(${lang})]';
-        /*[/]*/
+  // Language translations map populated by Thymeleaf for available OCR languages
+  const languageTranslations = {};
+  /*[# th:each="lang : ${languages}"]*/
+  languageTranslations['[(${lang})]'] = /*[[#{${'lang.' + lang}}]]*/'[(${lang})]';
+  /*[/]*/
 
-        const localeToTesseract = {
-            'en': 'eng', 'fr': 'fra', 'de': 'deu', 'es': 'spa', 'it': 'ita', 'pt': 'por', 'ru': 'rus',
-            'zh': 'chi_sim', 'ja': 'jpn', 'ko': 'kor', 'ar': 'ara', 'hi': 'hin', 'nl': 'nld', 'cs': 'ces',
-            'pl': 'pol', 'tr': 'tur', 'uk': 'ukr', 'vi': 'vie', 'sv': 'swe', 'no': 'nor', 'fi': 'fin',
-            'da': 'dan', 'el': 'ell', 'he': 'heb', 'hu': 'hun', 'bg': 'bul', 'ro': 'ron', 'hr': 'hrv',
-            'sk': 'slk', 'id': 'ind', 'th': 'tha', 'sl': 'slv'
-        };
+  const localeToTesseract = {
+    'en': 'eng', 'fr': 'fra', 'de': 'deu', 'es': 'spa', 'it': 'ita', 'pt': 'por', 'ru': 'rus',
+    'zh': 'chi_sim', 'ja': 'jpn', 'ko': 'kor', 'ar': 'ara', 'hi': 'hin', 'nl': 'nld', 'cs': 'ces',
+    'pl': 'pol', 'tr': 'tur', 'uk': 'ukr', 'vi': 'vie', 'sv': 'swe', 'no': 'nor', 'fi': 'fin',
+    'da': 'dan', 'el': 'ell', 'he': 'heb', 'hu': 'hun', 'bg': 'bul', 'ro': 'ron', 'hr': 'hrv',
+    'sk': 'slk', 'id': 'ind', 'th': 'tha', 'sl': 'slv'
+  };
 
-        function getTranslatedLanguageName(shortCode) {
-            // Use Thymeleaf-provided map; fall back to code when translation missing
-            const name = languageTranslations[shortCode];
-            if (name && !/^\?{2,}.+\?{2,}$/.test(name)) return name;
-            return shortCode;
-        }
+  function getTranslatedLanguageName(shortCode) {
+    // Use Thymeleaf-provided map; fall back to code when translation missing
+    const name = languageTranslations[shortCode];
+    if (name && !/^\?{2,}.+\?{2,}$/.test(name)) return name;
+    return shortCode;
+  }
 
-        function prioritizeLanguages() {
-            const languageContainer = document.getElementById('languages');
-            if (!languageContainer) return;
-            const formChecks = Array.from(languageContainer.getElementsByClassName('form-check'));
-            if (formChecks.length === 0) return;
-            formChecks.forEach(element => {
-                const label = element.querySelector('label');
-                if (label) {
-                    const langCode = label.getAttribute('for').split('-')[1];
-                    // Always set from translations map; gracefully falls back to code
-                    label.textContent = getTranslatedLanguageName(langCode);
-                }
-            });
-            const browserLanguage = document.documentElement.lang || navigator.language || navigator.userLanguage;
-            const uiLanguage = document.documentElement.getAttribute('data-language') || browserLanguage;
-            const primaryLanguageCode = (uiLanguage || '').split(/[-_]/)[0].toLowerCase();
-            const tesseractPrimaryCode = localeToTesseract[primaryLanguageCode];
-            const priorityLanguages = [];
-            if (tesseractPrimaryCode) priorityLanguages.push(tesseractPrimaryCode);
-            if (tesseractPrimaryCode !== 'eng') priorityLanguages.push('eng');
-            const sortedElements = formChecks.sort((a, b) => {
-                const aInput = a.querySelector('input');
-                const bInput = b.querySelector('input');
-                if (!aInput || !bInput) return 0;
-                const aLangCode = aInput.id.split('-')[1];
-                const bLangCode = bInput.id.split('-')[1];
-                const aIsPriority = priorityLanguages.includes(aLangCode);
-                const bIsPriority = priorityLanguages.includes(bLangCode);
-                if (aIsPriority && !bIsPriority) return -1;
-                if (!aIsPriority && bIsPriority) return 1;
-                if (aIsPriority && bIsPriority) {
-                    return priorityLanguages.indexOf(aLangCode) - priorityLanguages.indexOf(bLangCode);
-                }
-                return getTranslatedLanguageName(aLangCode).localeCompare(getTranslatedLanguageName(bLangCode));
-            });
-            languageContainer.innerHTML = '';
-            sortedElements.forEach(element => languageContainer.appendChild(element));
-        }
+  function prioritizeLanguages() {
+    const languageContainer = document.getElementById('languages');
+    if (!languageContainer) return;
+    const formChecks = Array.from(languageContainer.getElementsByClassName('form-check'));
+    if (formChecks.length === 0) return;
+    formChecks.forEach(element => {
+      const label = element.querySelector('label');
+      if (label) {
+        const langCode = label.getAttribute('for').split('-')[1];
+        // Always set from translations map; gracefully falls back to code
+        label.textContent = getTranslatedLanguageName(langCode);
+      }
+    });
+    const browserLanguage = document.documentElement.lang || navigator.language || navigator.userLanguage;
+    const uiLanguage = document.documentElement.getAttribute('data-language') || browserLanguage;
+    const primaryLanguageCode = (uiLanguage || '').split(/[-_]/)[0].toLowerCase();
+    const tesseractPrimaryCode = localeToTesseract[primaryLanguageCode];
+    const priorityLanguages = [];
+    if (tesseractPrimaryCode) priorityLanguages.push(tesseractPrimaryCode);
+    if (tesseractPrimaryCode !== 'eng') priorityLanguages.push('eng');
+    const sortedElements = formChecks.sort((a, b) => {
+      const aInput = a.querySelector('input');
+      const bInput = b.querySelector('input');
+      if (!aInput || !bInput) return 0;
+      const aLangCode = aInput.id.split('-')[1];
+      const bLangCode = bInput.id.split('-')[1];
+      const aIsPriority = priorityLanguages.includes(aLangCode);
+      const bIsPriority = priorityLanguages.includes(bLangCode);
+      if (aIsPriority && !bIsPriority) return -1;
+      if (!aIsPriority && bIsPriority) return 1;
+      if (aIsPriority && bIsPriority) {
+        return priorityLanguages.indexOf(aLangCode) - priorityLanguages.indexOf(bLangCode);
+      }
+      return getTranslatedLanguageName(aLangCode).localeCompare(getTranslatedLanguageName(bLangCode));
+    });
+    languageContainer.innerHTML = '';
+    sortedElements.forEach(element => languageContainer.appendChild(element));
+  }
 
-        document.addEventListener('DOMContentLoaded', function () {
-        const redactionModeRadios = document.querySelectorAll('input[name="redactionMode"]');
-        const aggressiveModeHidden = document.getElementById('aggressiveMode');
-        const guaranteeRedactionCheckbox = document.getElementById('guaranteeRedaction');
-        const defaultColor = document.getElementById('defaultColor');
+  document.addEventListener('DOMContentLoaded', function () {
+    const redactionModeRadios = document.querySelectorAll('input[name="redactionMode"]');
+    const aggressiveModeHidden = document.getElementById('aggressiveMode');
+    const convertPDFToImageCheckbox = document.getElementById('convertPDFToImage');
+    const defaultColor = document.getElementById('defaultColor');
 
     function updateMode() {
-            const selectedMode = document.querySelector('input[name="redactionMode"]:checked');
-            if (selectedMode) {
-                // Set aggressive mode for delete text option
-                aggressiveModeHidden.value = selectedMode.value === 'aggressive' ? 'true' : 'false';
+      const selectedMode = document.querySelector('input[name="redactionMode"]:checked');
+      if (selectedMode) {
+        // Set aggressive mode for delete text option
+        aggressiveModeHidden.value = selectedMode.value === 'aggressive' ? 'true' : 'false';
 
-                // Handle PDF image checkbox based on selection
-                if (selectedMode.value === 'visual') {
-                    // Visual mode automatically enables PDF image for maximum security
-                    guaranteeRedactionCheckbox.checked = true;
-                } else {
-                    // Delete Text and Keep Layout modes disable PDF image
-                    guaranteeRedactionCheckbox.checked = false;
-                }
-
-                // Highlight selected card
-                document.querySelectorAll('.redaction-options-group .form-check').forEach(div => div.classList.remove('selected'));
-                const parent = selectedMode.closest('.form-check');
-                if (parent) parent.classList.add('selected');
-            }
+        // Handle PDF image checkbox based on selection
+        if (selectedMode.value === 'visual') {
+          // Visual mode automatically enables PDF image for maximum security
+          convertPDFToImageCheckbox.checked = true;
+        } else {
+          // Delete Text and Keep Layout modes disable PDF image
+          convertPDFToImageCheckbox.checked = false;
         }
 
-        redactionModeRadios.forEach(radio => {
-            radio.addEventListener('change', updateMode);
-        });
+        // Highlight selected card
+        document.querySelectorAll('.redaction-options-group .form-check').forEach(div => div.classList.remove('selected'));
+        const parent = selectedMode.closest('.form-check');
+        if (parent) parent.classList.add('selected');
+      }
+    }
 
-        if (defaultColor) {
-            handleColorChange(defaultColor.value);
-            const customColorInput = document.getElementById('customColor');
-            if (defaultColor.value !== 'custom') {
-                customColorInput.value = defaultColor.value;
-            }
-        }
+    redactionModeRadios.forEach(radio => {
+      radio.addEventListener('change', updateMode);
+    });
 
-        updateMode();
+    if (defaultColor) {
+      handleColorChange(defaultColor.value);
+      const customColorInput = document.getElementById('customColor');
+      if (defaultColor.value !== 'custom') {
+        customColorInput.value = defaultColor.value;
+      }
+    }
+
+    updateMode();
 
     // Initialize language list ordering & labels
     prioritizeLanguages();
-    
+
     // Handle pre-selected English language
     handleLangSelection();
-    });
+  });
 </script>
 </body>
 </html>
