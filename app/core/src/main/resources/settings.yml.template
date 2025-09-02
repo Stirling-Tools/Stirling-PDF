@@ -95,12 +95,33 @@ mail:
   password: '' # SMTP server password
   from: '' # sender email address
 
+#############################################################################################################
+# Declaration of settings for URLs                                                                          #
+#                                                                                                           #
+# To disable, set termsAndConditions, privacyPolicy, accessibilityStatement, cookiePolicy, impressum to '/' #
+#                                                                                                           #
+# If you want to use an internal file, place the file in the 'customFiles/templates/' folder                #
+# For termsAndConditions, the file must be named termsAndConditions.html                                    #
+# For privacyPolicy, the file must be named privacyPolicy.html                                              #
+# For accessibilityStatement, the file must be named accessibilityStatement.html                            #
+# For cookiePolicy, the file must be named cookiePolicy.html                                                #
+# For impressum, the file must be named impressum.html                                                      #
+# To use an internal URL, it must be entered without `.html`                                                #
+#                                                                                                           #
+# For example: termsAndConditions: /termsAndConditions                                                      #
+#                                                                                                           #
+# You can also use external URLs, for example: https://example.com/terms                                    #
+#############################################################################################################
 legal:
-  termsAndConditions: https://www.stirlingpdf.com/terms # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
-  privacyPolicy: https://www.stirlingpdf.com/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
-  accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
-  cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
-  impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
+  termsAndConditions: / # URL to the terms and conditions of your application
+  privacyPolicy: / # URL to the privacy policy of your application
+  accessibilityStatement: / # URL to the accessibility statement of your application
+  cookiePolicy: / # URL to the cookie policy of your application
+  impressum: /impressum # URL to the impressum of your application
+  apiContact: # ONLY pro/enterprise features
+    company: Stirling Software
+    email: contact@stirlingpdf.com
+    website: https://www.stirlingpdf.com
 
 system:
   defaultLocale: en-US # set the default language (e.g. 'de-DE', 'fr-FR', etc)

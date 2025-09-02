@@ -106,6 +106,14 @@ public class ApplicationProperties {
         private String accessibilityStatement;
         private String cookiePolicy;
         private String impressum;
+        private ApiContact apiContact = new ApiContact();
+    }
+
+    @Data
+    public static class ApiContact {
+        private String company;
+        private String website;
+        private String email;
     }
 
     @Data

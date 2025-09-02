@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}"
+  th:dir="#{language.direction}"
+  th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{legal.impressum}, header=#{legal.impressum})}">
+    </th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-8 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon">info</span>
+                <span class="tool-header-text"
+                  th:text="#{legal.impressum}">Impressum / Legal Notice</span>
+              </div>
+
+              <!-- start Note: sample page -->
+              <section id="note-sample-page">
+                <div class="alert alert-warning"
+                  role="alert">
+                  <strong>Note:</strong> This is a <em>sample page</em>; all information is placeholder content for
+                  demonstration purposes only.
+                  <br>
+                  <br>
+                  <li>Enable <code>customHTMLFiles</code> in the configuration to use custom HTML files, which can be found <a
+                      href="https://docs.stirlingpdf.com/Advanced%20Configuration/UI%20Customisation#custom-files"
+                      target="_blank">here</a>.</li>
+                  <li>Create a file named <code>impressum.html</code> in the folder <code>customFiles/templates</code>.</li>
+                  <li>Copy the content of this file from <a
+                      href="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/app/core/src/main/resources/templates/impressum.html"
+                      target="_blank">impressum.html</a> into the newly created file.</li>
+                  <li>Customize the layout and design of the page.</li>
+                </div>
+              </section>
+              <!-- end Note: sample page -->
+
+              <section>
+                <h2>Company Information</h2>
+                <p>Company Name<br>Street Address<br>City, Postal Code<br>Country</p>
+              </section>
+              <section>
+                <h2>Contact</h2>
+                <p>Telephone: +00 000 0000<br>Email: <a href="mailto:info@example.com">info@example.com</a></p>
+              </section>
+              <section>
+                <h2>Representatives</h2>
+                <p>Authorized to represent: Jane Doe, John Doe</p>
+              </section>
+              <section>
+                <h2>Registration &amp; VAT</h2>
+                <p>Commercial Register: Local Court of Exampletown, HRB 00000<br>VAT ID: XX000000000</p>
+              </section>
+              <section>
+                <h2>Disclaimer</h2>
+                <p>This page provides general company and contact information for international use. Legal requirements vary by
+                  jurisdiction; please ensure compliance with local laws.</p>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+
+</html>

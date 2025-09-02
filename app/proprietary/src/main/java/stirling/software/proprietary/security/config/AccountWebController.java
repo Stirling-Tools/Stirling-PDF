@@ -81,6 +81,11 @@ public class AccountWebController {
             return "redirect:/";
         }
 
+        boolean enableLogin = applicationProperties.getSecurity().getEnableLogin();
+        if (!enableLogin) {
+            return "redirect:/";
+        }
+
         Map<String, String> providerList = new HashMap<>();
         Security securityProps = applicationProperties.getSecurity();
         OAUTH2 oauth = securityProps.getOauth2();
