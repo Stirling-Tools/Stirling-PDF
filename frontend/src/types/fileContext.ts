@@ -102,26 +102,13 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
   const fileId = id || createFileId();
   const quickKey = createQuickKey(file);
 
-  // File properties are not enumerable, so we need to copy them explicitly
-  // This avoids prototype chain issues while preserving all File functionality
-  const stirlingFile = {
-    // Explicitly copy File properties (they're not enumerable)
-    name: file.name,
-    size: file.size,
-    type: file.type,
-    lastModified: file.lastModified,
-    webkitRelativePath: file.webkitRelativePath,
-
-    // Add our custom properties
-    fileId: fileId,
-    quickKey: quickKey,
-
-    // Preserve File prototype methods by binding them to the original file
-    arrayBuffer: file.arrayBuffer.bind(file),
-    slice: file.slice.bind(file),
-    stream: file.stream.bind(file),
-    text: file.text.bind(file)
-  } as StirlingFile;
+  // Create a new object that inherits from the File instance
+  // This preserves all File methods and properties while avoiding binding issues
+  const stirlingFile = Object.assign(
+    Object.create(Object.getPrototypeOf(file)), // Proper prototype chain
+    file, // Copy all properties (enumerable and non-enumerable)
+    { fileId, quickKey } // Add our custom properties
+  ) as StirlingFile;
 
   return stirlingFile;
 }
