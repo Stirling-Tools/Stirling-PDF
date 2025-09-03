@@ -1,4 +1,4 @@
-import { Stack, Button } from "@mantine/core";
+import { Stack, Button, Text, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ManageSignaturesParameters } from "../../../hooks/tools/manageSignatures/useManageSignaturesParameters";
 
@@ -13,46 +13,45 @@ const CertificateTypeSettings = ({ parameters, onParameterChange, disabled = fal
 
   return (
     <Stack gap="md">
-      {/* Certificate Type Selection */}
-      <Stack gap="sm">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <Button
-              variant={parameters.certType === 'PKCS12' ? 'filled' : 'outline'}
-              color={parameters.certType === 'PKCS12' ? 'blue' : 'var(--text-muted)'}
-              onClick={() => onParameterChange('certType', 'PKCS12')}
-              disabled={disabled}
-              style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-            >
-              <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-                PKCS#12
-              </div>
-            </Button>
-            <Button
-              variant={parameters.certType === 'PEM' ? 'filled' : 'outline'}
-              color={parameters.certType === 'PEM' ? 'blue' : 'var(--text-muted)'}
-              onClick={() => onParameterChange('certType', 'PEM')}
-              disabled={disabled}
-              style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-            >
-              <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-                PEM
-              </div>
-            </Button>
+      <div style={{ display: 'flex', gap: '4px' }}>
+        <Button
+          variant={parameters.signMode === 'MANUAL' ? 'filled' : 'outline'}
+          color={parameters.signMode === 'MANUAL' ? 'blue' : 'var(--text-muted)'}
+          onClick={() => {
+            onParameterChange('signMode', 'MANUAL');
+            // Reset cert type when switching to manual
+            if (parameters.signMode === 'AUTO') {
+              onParameterChange('certType', '');
+            }
+          }}
+          disabled={disabled}
+          style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
+        >
+          <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
+            Manual<br />(Provide Files)
           </div>
-          <Button
-            variant={parameters.certType === 'JKS' ? 'filled' : 'outline'}
-            color={parameters.certType === 'JKS' ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('certType', 'JKS')}
-            disabled={disabled}
-            style={{ width: '100%', height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              JKS
-            </div>
-          </Button>
-        </div>
-      </Stack>
+        </Button>
+        <Button
+          variant={parameters.signMode === 'AUTO' ? 'filled' : 'outline'}
+          color={parameters.signMode === 'AUTO' ? 'green' : 'var(--text-muted)'}
+          onClick={() => {
+            onParameterChange('signMode', 'AUTO');
+            // Clear cert type and files when switching to auto
+            onParameterChange('certType', '');
+          }}
+          disabled={disabled}
+          style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
+        >
+          <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
+            Auto<br />(Server Certificate)
+          </div>
+        </Button>
+      </div>
+      <Text size="xs" c="dimmed">
+        {parameters.signMode === 'MANUAL' 
+          ? "Upload your own certificate files for signing"
+          : "Use the server's pre-configured certificate"}
+      </Text>
     </Stack>
   );
 };

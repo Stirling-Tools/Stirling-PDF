@@ -7,7 +7,7 @@ const TOOL_IDS = [
   'detect-split-scanned-photos',
   'edit-table-of-contents',
   'scanner-effect',
-  'auto-rename-pdf-file', 'multi-page-layout', 'adjust-page-size-scale', 'adjust-contrast', 'cropPdf', 'single-large-page', 'multi-tool',
+  'auto-rename-pdf-file', 'multi-page-layout', 'booklet-imposition', 'adjust-page-size-scale', 'adjust-contrast', 'cropPdf', 'single-large-page', 'multi-tool',
   'repair', 'compare', 'addPageNumbers', 'redact',
   'flatten', 'remove-certificate-sign',
   'unlock-pdf-forms', 'compress', 'extract-page', 'reorganize-pages', 'extract-images',

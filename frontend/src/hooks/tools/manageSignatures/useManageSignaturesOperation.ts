@@ -7,29 +7,35 @@ import { ManageSignaturesParameters, defaultParameters } from './useManageSignat
 export const buildManageSignaturesFormData = (parameters: ManageSignaturesParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
-  formData.append('certType', parameters.certType);
-  formData.append('password', parameters.password);
   
-  // Add certificate files based on type
-  switch (parameters.certType) {
-    case 'PEM':
-      if (parameters.privateKeyFile) {
-        formData.append('privateKeyFile', parameters.privateKeyFile);
-      }
-      if (parameters.certFile) {
-        formData.append('certFile', parameters.certFile);
-      }
-      break;
-    case 'PKCS12':
-      if (parameters.p12File) {
-        formData.append('p12File', parameters.p12File);
-      }
-      break;
-    case 'JKS':
-      if (parameters.jksFile) {
-        formData.append('jksFile', parameters.jksFile);
-      }
-      break;
+  // Handle sign mode
+  if (parameters.signMode === 'AUTO') {
+    formData.append('certType', 'SERVER');
+  } else {
+    formData.append('certType', parameters.certType);
+    formData.append('password', parameters.password);
+    
+    // Add certificate files based on type (only for manual mode)
+    switch (parameters.certType) {
+      case 'PEM':
+        if (parameters.privateKeyFile) {
+          formData.append('privateKeyFile', parameters.privateKeyFile);
+        }
+        if (parameters.certFile) {
+          formData.append('certFile', parameters.certFile);
+        }
+        break;
+      case 'PKCS12':
+        if (parameters.p12File) {
+          formData.append('p12File', parameters.p12File);
+        }
+        break;
+      case 'JKS':
+        if (parameters.jksFile) {
+          formData.append('jksFile', parameters.jksFile);
+        }
+        break;
+    }
   }
   
   // Add signature appearance options if enabled

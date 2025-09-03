@@ -2,7 +2,9 @@ import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
 export interface ManageSignaturesParameters extends BaseParameters {
-  // Certificate signing options
+  // Sign mode selection
+  signMode: 'MANUAL' | 'AUTO';
+  // Certificate signing options (only for manual mode)
   certType: '' | 'PEM' | 'PKCS12' | 'JKS';
   privateKeyFile?: File;
   certFile?: File;
@@ -20,6 +22,7 @@ export interface ManageSignaturesParameters extends BaseParameters {
 }
 
 export const defaultParameters: ManageSignaturesParameters = {
+  signMode: 'MANUAL',
   certType: '',
   password: '',
   showSignature: false,
@@ -37,7 +40,12 @@ export const useManageSignaturesParameters = (): ManageSignaturesParametersHook 
     defaultParameters,
     endpointName: 'manage-signatures',
     validateFn: (params) => {
-      // Requires certificate type
+      // Auto mode (server certificate) - no additional validation needed
+      if (params.signMode === 'AUTO') {
+        return true;
+      }
+      
+      // Manual mode - requires certificate type and files
       if (!params.certType) {
         return false;
       }

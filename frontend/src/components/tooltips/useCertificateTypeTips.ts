@@ -19,7 +19,8 @@ export const useCertificateTypeTips = (): TooltipContent => {
         bullets: [
           t("manageSignatures.certType.tooltip.which.bullet1", "PKCS#12 (.p12 / .pfx) – one combined file (most common)"),
           t("manageSignatures.certType.tooltip.which.bullet2", "PEM – separate private-key and certificate .pem files"),
-          t("manageSignatures.certType.tooltip.which.bullet3", "JKS – Java .jks keystore for dev / CI-CD workflows")
+          t("manageSignatures.certType.tooltip.which.bullet3", "JKS – Java .jks keystore for dev / CI-CD workflows"),
+          t("manageSignatures.certType.tooltip.which.bullet4", "SERVER – use server's certificate (no files needed)")
         ]
       },
       {

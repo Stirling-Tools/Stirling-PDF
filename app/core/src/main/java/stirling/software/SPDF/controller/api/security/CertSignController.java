@@ -72,6 +72,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.service.ServerCertificateService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -101,6 +102,7 @@ public class CertSignController {
     }
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final ServerCertificateService serverCertificateService;
 
     private static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
@@ -175,6 +177,7 @@ public class CertSignController {
         }
 
         KeyStore ks = null;
+        String keystorePassword = password;
 
         switch (certType) {
             case "PEM":
@@ -193,6 +196,19 @@ public class CertSignController {
                 ks = KeyStore.getInstance("JKS");
                 ks.load(jksfile.getInputStream(), password.toCharArray());
                 break;
+            case "SERVER":
+                if (!serverCertificateService.isEnabled()) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.serverCertificateDisabled",
+                            "Server certificate feature is disabled");
+                }
+                if (!serverCertificateService.hasServerCertificate()) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.serverCertificateNotFound", "No server certificate configured");
+                }
+                ks = serverCertificateService.getServerKeyStore();
+                keystorePassword = serverCertificateService.getServerCertificatePassword();
+                break;
             default:
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.invalidArgument",
@@ -200,7 +216,7 @@ public class CertSignController {
                         "certificate type: " + certType);
         }
 
-        CreateSignature createSignature = new CreateSignature(ks, password.toCharArray());
+        CreateSignature createSignature = new CreateSignature(ks, keystorePassword.toCharArray());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         sign(
                 pdfDocumentFactory,

@@ -16,6 +16,7 @@ import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
 import ManageSignatures from "../tools/ManageSignatures";
+import BookletImposition from "../tools/BookletImposition";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -30,6 +31,7 @@ import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperati
 import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
 import { manageSignaturesOperationConfig } from "../hooks/tools/manageSignatures/useManageSignaturesOperation";
+import { bookletImpositionOperationConfig } from "../hooks/tools/bookletImposition/useBookletImpositionOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -42,6 +44,7 @@ import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 import CertificateTypeSettings from "../components/tools/manageSignatures/CertificateTypeSettings";
+import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
 import { ToolId } from "../types/toolId";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
@@ -350,6 +353,16 @@ export function useFlatToolRegistry(): ToolRegistry {
         component: null,
 
         description: t("home.pageLayout.desc", "Merge multiple pages of a PDF document into a single page"),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.PAGE_FORMATTING,
+      },
+      "booklet-imposition": {
+        icon: <LocalIcon icon="menu-book-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.bookletImposition.title", "Booklet Imposition"),
+        component: BookletImposition,
+        operationConfig: bookletImpositionOperationConfig,
+        settingsComponent: BookletImpositionSettings,
+        description: t("home.bookletImposition.desc", "Create booklets with proper page ordering and multi-page layout for printing and binding"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },

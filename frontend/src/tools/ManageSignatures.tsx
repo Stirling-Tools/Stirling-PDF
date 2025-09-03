@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import CertificateTypeSettings from "../components/tools/manageSignatures/CertificateTypeSettings";
+import CertificateFormatSettings from "../components/tools/manageSignatures/CertificateFormatSettings";
 import CertificateFilesSettings from "../components/tools/manageSignatures/CertificateFilesSettings";
 import SignatureAppearanceSettings from "../components/tools/manageSignatures/SignatureAppearanceSettings";
 import { useManageSignaturesParameters } from "../hooks/tools/manageSignatures/useManageSignaturesParameters";
@@ -26,6 +27,13 @@ const ManageSignatures = (props: BaseToolProps) => {
   // Check if certificate files are configured for appearance step
   const areCertFilesConfigured = () => {
     const params = base.params.parameters;
+    
+    // Auto mode (server certificate) - always configured
+    if (params.signMode === 'AUTO') {
+      return true;
+    }
+    
+    // Manual mode - check for required files based on cert type
     switch (params.certType) {
       case 'PEM':
         return !!(params.privateKeyFile && params.certFile);
@@ -47,10 +55,9 @@ const ManageSignatures = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t("manageSignatures.certType.stepTitle", "Certificate Type"),
+        title: t("manageSignatures.signMode.stepTitle", "Sign Mode"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
-        tooltip: certTypeTips,
         content: (
           <CertificateTypeSettings
             parameters={base.params.parameters}
@@ -59,7 +66,20 @@ const ManageSignatures = (props: BaseToolProps) => {
           />
         ),
       },
-      {
+      ...(base.params.parameters.signMode === 'MANUAL' ? [{
+        title: t("manageSignatures.certType.stepTitle", "Certificate Format"),
+        isCollapsed: base.settingsCollapsed,
+        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        tooltip: certTypeTips,
+        content: (
+          <CertificateFormatSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />
+        ),
+      }] : []),
+      ...(base.params.parameters.signMode === 'MANUAL' ? [{
         title: t("manageSignatures.certFiles.stepTitle", "Certificate Files"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
@@ -70,7 +90,7 @@ const ManageSignatures = (props: BaseToolProps) => {
             disabled={base.endpointLoading}
           />
         ),
-      },
+      }] : []),
       {
         title: t("manageSignatures.appearance.stepTitle", "Signature Appearance"),
         isCollapsed: base.settingsCollapsed || !areCertFilesConfigured(),

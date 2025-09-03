@@ -56,6 +56,12 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
         />
       )}
 
+      {parameters.certType === 'SERVER' && (
+        <Text c="dimmed" size="sm">
+          {t('manageSignatures.signing.serverCertMessage', 'Using server certificate - no files or password required')}
+        </Text>
+      )}
+
       {/* Password - only show when files are uploaded */}
       {parameters.certType && (
         (parameters.certType === 'PEM' && parameters.privateKeyFile && parameters.certFile) ||

@@ -450,6 +450,10 @@
       "title": "Sign with Certificate",
       "desc": "Signs a PDF with a Certificate/Key (PEM/P12)"
     },
+    "manageSignatures": {
+      "title": "Manage Signatures",
+      "desc": "Sign PDFs with certificates using manual or server-managed keys"
+    },
     "removeCertSign": {
       "title": "Remove Certificate Sign",
       "desc": "Remove certificate signature from PDF"
@@ -457,6 +461,10 @@
     "pageLayout": {
       "title": "Multi-Page Layout",
       "desc": "Merge multiple pages of a PDF document into a single page"
+    },
+    "bookletImposition": {
+      "title": "Booklet Imposition",
+      "desc": "Create booklets with proper page ordering and multi-page layout for printing and binding"
     },
     "scalePages": {
       "title": "Adjust page size/scale",
@@ -1390,6 +1398,33 @@
     "showLogo": "Show Logo",
     "submit": "Sign PDF"
   },
+  "manageSignatures": {
+    "tags": "sign,certificate,PEM,PKCS12,JKS,server,manual,auto",
+    "title": "Manage Signatures",
+    "header": "Sign PDFs with Certificates",
+    "files": {
+      "placeholder": "Select PDF files to sign with certificates"
+    },
+    "signMode": {
+      "stepTitle": "Sign Mode"
+    },
+    "certType": {
+      "stepTitle": "Certificate Format"
+    },
+    "certFiles": {
+      "stepTitle": "Certificate Files"
+    },
+    "appearance": {
+      "stepTitle": "Signature Appearance"
+    },
+    "sign": {
+      "submit": "Sign PDF",
+      "results": "Signed PDF"
+    },
+    "error": {
+      "failed": "An error occurred whilst signing the PDF."
+    }
+  },
   "removeCertSign": {
     "tags": "authenticate,PEM,P12,official,decrypt",
     "title": "Remove Certificate Signature",
@@ -1415,6 +1450,18 @@
     "pagesPerSheet": "Pages per sheet:",
     "addBorder": "Add Borders",
     "submit": "Submit"
+  },
+  "bookletImposition": {
+    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "title": "Booklet Imposition",
+    "header": "Booklet Imposition",
+    "submit": "Create Booklet",
+    "files": {
+      "placeholder": "Select PDF files to create booklet impositions from"
+    },
+    "error": {
+      "failed": "An error occurred while creating the booklet imposition."
+    }
   },
   "scalePages": {
     "tags": "resize,modify,dimension,adapt",

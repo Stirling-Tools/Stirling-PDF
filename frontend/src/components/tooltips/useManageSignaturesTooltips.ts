@@ -33,10 +33,11 @@ export const useManageSignaturesTooltips = (): TooltipContent => {
         title: t("manageSignatures.tooltip.signing.title", "Adding Signatures"),
         description: t("manageSignatures.tooltip.signing.text", "To sign a PDF, you need a digital certificate (like PEM, PKCS12, or JKS). You can choose to make the signature visible on the document or keep it invisible for security only."),
         bullets: [
-          t("manageSignatures.tooltip.signing.bullet1", "Supports PEM, PKCS12, and JKS certificate formats"),
+          t("manageSignatures.tooltip.signing.bullet1", "Supports PEM, PKCS12, JKS, and server certificate formats"),
           t("manageSignatures.tooltip.signing.bullet2", "Option to show or hide signature on the PDF"),
           t("manageSignatures.tooltip.signing.bullet3", "Add reason, location, and signer name"),
-          t("manageSignatures.tooltip.signing.bullet4", "Choose which page to place visible signatures")
+          t("manageSignatures.tooltip.signing.bullet4", "Choose which page to place visible signatures"),
+          t("manageSignatures.tooltip.signing.bullet5", "Use server certificate for simple 'Sign with Stirling-PDF' option")
         ]
       }
     ]
