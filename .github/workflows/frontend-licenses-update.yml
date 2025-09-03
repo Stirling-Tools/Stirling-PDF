@@ -145,6 +145,26 @@ jobs:
               });
             }
 
+      - name: Summarize results (fork PRs)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
+        run: |
+          {
+            echo "## Frontend License Check"
+            echo ""
+            if [ "${LICENSE_WARNINGS_EXIST}" = "true" ]; then
+              echo "❌ **Failed** – incompatible or unknown licenses found."
+              if [ -f "frontend/src/assets/license-warnings.json" ]; then
+                echo ""
+                echo "### Warnings"
+                jq -r '.warnings[] | "- \(.message)"' frontend/src/assets/license-warnings.json || true
+              fi
+            else
+              echo "✅ **Passed** – no license warnings detected."
+            fi
+            echo ""
+            echo "_Note: This is a fork PR. PR comments are disabled; use this summary._"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Comment on PR - License Check Results
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
