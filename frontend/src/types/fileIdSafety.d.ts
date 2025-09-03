@@ -24,10 +24,9 @@ declare global {
     type RequireStirlingFile<T> = T extends File ? StirlingFile : T;
   }
 
-  // Extend Window interface to add runtime validation helpers
+  // Extend Window interface for debugging
   interface Window {
     __FILE_ID_DEBUG?: boolean;
-    __validateFileId?: (id: string, context: string) => void;
   }
 }
 
