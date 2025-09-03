@@ -37,8 +37,8 @@ export const useManageSignaturesParameters = (): ManageSignaturesParametersHook 
     defaultParameters,
     endpointName: 'manage-signatures',
     validateFn: (params) => {
-      // Requires certificate type and password
-      if (!params.certType || !params.password) {
+      // Requires certificate type
+      if (!params.certType) {
         return false;
       }
       

@@ -64,6 +64,7 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
       ) && (
         <TextInput
           label={t('manageSignatures.signing.password', 'Certificate Password')}
+          placeholder={t('manageSignatures.signing.passwordOptional', 'Leave empty if no password')}
           type="password"
           value={parameters.password}
           onChange={(event) => onParameterChange('password', event.currentTarget.value)}

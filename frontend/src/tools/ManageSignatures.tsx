@@ -23,6 +23,21 @@ const ManageSignatures = (props: BaseToolProps) => {
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
 
+  // Check if certificate files are configured for appearance step
+  const areCertFilesConfigured = () => {
+    const params = base.params.parameters;
+    switch (params.certType) {
+      case 'PEM':
+        return !!(params.privateKeyFile && params.certFile);
+      case 'PKCS12':
+        return !!params.p12File;
+      case 'JKS':
+        return !!params.jksFile;
+      default:
+        return false;
+    }
+  };
+
   return createToolFlow({
     forceStepNumbers: true,
     files: {
@@ -58,8 +73,8 @@ const ManageSignatures = (props: BaseToolProps) => {
       },
       {
         title: t("manageSignatures.appearance.stepTitle", "Signature Appearance"),
-        isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        isCollapsed: base.settingsCollapsed || !areCertFilesConfigured(),
+        onCollapsedClick: (base.settingsCollapsed || !areCertFilesConfigured()) ? base.handleSettingsReset : undefined,
         tooltip: appearanceTips,
         content: (
           <SignatureAppearanceSettings

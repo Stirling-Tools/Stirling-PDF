@@ -2476,6 +2476,7 @@
       "chooseP12File": "Choose PKCS12 File",
       "chooseJksFile": "Choose JKS File",
       "password": "Certificate Password",
+      "passwordOptional": "Leave empty if no password",
       "showSignature": "Show visible signature on PDF",
       "reason": "Reason for Signing",
       "location": "Location",
