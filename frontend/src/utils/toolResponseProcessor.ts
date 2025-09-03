@@ -23,5 +23,10 @@ export async function processResponse(
   // Only add prefix if it's not empty - this preserves original filenames for file history
   const name = filePrefix ? `${filePrefix}${original}` : original;
   const type = blob.type || 'application/octet-stream';
-  return [new File([blob], name, { type })];
+  
+  // File was modified by tool processing - set lastModified to current time
+  return [new File([blob], name, { 
+    type,
+    lastModified: Date.now()
+  })];
 }

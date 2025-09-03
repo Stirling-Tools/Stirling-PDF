@@ -10,7 +10,7 @@ import { createOperation } from '../../../utils/toolOperationTracker';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { FileId } from '../../../types/file';
 import { FileRecord } from '../../../types/fileContext';
-import { prepareFilesWithHistory } from '../../../utils/fileHistoryUtils';
+import { prepareFilesWithHistory, verifyToolMetadataPreservation } from '../../../utils/fileHistoryUtils';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -243,6 +243,9 @@ export const useToolOperation = <TParams>(
 
       if (processedFiles.length > 0) {
         actions.setFiles(processedFiles);
+
+        // Verify metadata preservation for backend quality tracking
+        await verifyToolMetadataPreservation(validFiles, processedFiles, config.operationType);
 
         // Generate thumbnails and download URL concurrently
         actions.setGeneratingThumbnails(true);

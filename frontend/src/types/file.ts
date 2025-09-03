@@ -17,14 +17,13 @@ export interface ToolOperation {
 
 /**
  * File history information extracted from PDF metadata
+ * Timestamps come from standard PDF metadata fields (CreationDate, ModificationDate)
  */
 export interface FileHistoryInfo {
   originalFileId: string;
   parentFileId?: string;
   versionNumber: number;
   toolChain: ToolOperation[];
-  createdAt: number;
-  lastModified: number;
 }
 
 /**
@@ -47,6 +46,17 @@ export interface FileMetadata {
   originalFileId?: string; // Root file ID for grouping versions
   versionNumber?: number; // Version number in chain
   parentFileId?: FileId; // Immediate parent file ID
+  
+  // Standard PDF document metadata
+  pdfMetadata?: {
+    title?: string;
+    author?: string;
+    subject?: string;
+    creator?: string;
+    producer?: string;
+    creationDate?: Date;
+    modificationDate?: Date;
+  };
 }
 
 export interface StorageConfig {

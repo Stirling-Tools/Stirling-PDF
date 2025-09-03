@@ -1,6 +1,6 @@
 /**
  * File History Utilities
- * 
+ *
  * Helper functions for integrating PDF metadata service with FileContext operations.
  * Handles extraction of history from files and preparation for metadata injection.
  */
@@ -16,7 +16,7 @@ const DEBUG = process.env.NODE_ENV === 'development';
  * Extract history information from a PDF file and update FileRecord
  */
 export async function extractFileHistory(
-  file: File, 
+  file: File,
   record: FileRecord
 ): Promise<FileRecord> {
   // Only process PDF files
@@ -27,10 +27,10 @@ export async function extractFileHistory(
   try {
     const arrayBuffer = await file.arrayBuffer();
     const historyMetadata = await pdfMetadataService.extractHistoryMetadata(arrayBuffer);
-    
+
     if (historyMetadata) {
       const history = historyMetadata.stirlingHistory;
-      
+
       // Update record with history information
       return {
         ...record,
@@ -63,7 +63,7 @@ export async function injectHistoryForTool(
 
   try {
     const arrayBuffer = await file.arrayBuffer();
-    
+
     // Create tool operation record
     const toolOperation: ToolOperation = {
       toolName,
@@ -75,7 +75,7 @@ export async function injectHistoryForTool(
 
     // Extract version info directly from the PDF metadata to ensure accuracy
     const existingHistoryMetadata = await pdfMetadataService.extractHistoryMetadata(arrayBuffer);
-    
+
     let newVersionNumber: number;
     let originalFileId: string;
     let parentFileId: string;
@@ -88,7 +88,7 @@ export async function injectHistoryForTool(
       originalFileId = history.originalFileId;
       parentFileId = sourceFileRecord.id; // This file becomes the parent
       parentToolChain = history.toolChain || [];
-      
+
     } else if (sourceFileRecord.originalFileId && sourceFileRecord.versionNumber) {
       // File record has history but PDF doesn't (shouldn't happen, but fallback)
       newVersionNumber = sourceFileRecord.versionNumber + 1;
@@ -99,7 +99,7 @@ export async function injectHistoryForTool(
       // File has no history - this becomes version 1
       newVersionNumber = 1;
       originalFileId = sourceFileRecord.id; // Use source file ID as original
-      parentFileId = sourceFileRecord.id; // Parent is the source file  
+      parentFileId = sourceFileRecord.id; // Parent is the source file
       parentToolChain = []; // No previous tools
     }
 
@@ -148,19 +148,65 @@ export async function prepareFilesWithHistory(
 }
 
 /**
+ * Verify that processed files preserved metadata from originals
+ * Logs warnings for tools that strip standard PDF metadata
+ */
+export async function verifyToolMetadataPreservation(
+  originalFiles: File[],
+  processedFiles: File[],
+  toolName: string
+): Promise<void> {
+  if (originalFiles.length === 0 || processedFiles.length === 0) return;
+
+  try {
+    // For single-file tools, compare the original with the processed file
+    if (originalFiles.length === 1 && processedFiles.length === 1) {
+      const originalBytes = await originalFiles[0].arrayBuffer();
+      const processedBytes = await processedFiles[0].arrayBuffer();
+
+      await pdfMetadataService.verifyMetadataPreservation(
+        originalBytes,
+        processedBytes,
+        toolName
+      );
+    }
+    // For multi-file tools, we could add more complex verification later
+  } catch (error) {
+    if (DEBUG) console.warn(`📄 Failed to verify metadata preservation for ${toolName}:`, error);
+  }
+}
+
+/**
  * Group files by their original file ID for version management
  */
 export function groupFilesByOriginal(fileRecords: FileRecord[]): Map<string, FileRecord[]> {
   const groups = new Map<string, FileRecord[]>();
 
   for (const record of fileRecords) {
-    const originalId = record.originalFileId || record.id;
-    
-    if (!groups.has(originalId)) {
-      groups.set(originalId, []);
+    // For files with history, use their originalFileId
+    // For files without history, check if any other file references this file as originalFileId
+    let groupKey = record.originalFileId;
+
+    if (!groupKey) {
+      // Check if this file is referenced as an originalFileId by other files
+      const isReferencedAsOriginal = fileRecords.some(otherRecord =>
+        otherRecord.originalFileId === record.id
+      );
+
+      if (isReferencedAsOriginal) {
+        // This file is the original of other files
+        groupKey = record.id;
+      } else {
+        // This file is truly standalone
+        groupKey = record.id;
+      }
     }
-    
-    groups.get(originalId)!.push(record);
+
+    if (!groups.has(groupKey)) {
+      groups.set(groupKey, []);
+    }
+
+    groups.get(groupKey)!.push(record);
   }
 
   // Sort each group by version number
@@ -192,11 +238,11 @@ export function getLatestVersions(fileRecords: FileRecord[]): FileRecord[] {
  * Get version history for a file
  */
 export function getVersionHistory(
-  targetRecord: FileRecord, 
+  targetRecord: FileRecord,
   allRecords: FileRecord[]
 ): FileRecord[] {
   const originalId = targetRecord.originalFileId || targetRecord.id;
-  
+
   return allRecords
     .filter(record => {
       const recordOriginalId = record.originalFileId || record.id;
@@ -217,16 +263,16 @@ export function hasVersionHistory(record: FileRecord): boolean {
  */
 export function generateVersionName(record: FileRecord): string {
   const baseName = record.name.replace(/\.pdf$/i, '');
-  
+
   if (!hasVersionHistory(record)) {
     return record.name;
   }
 
   const versionInfo = record.versionNumber ? ` (v${record.versionNumber})` : '';
-  const toolInfo = record.toolHistory && record.toolHistory.length > 0 
+  const toolInfo = record.toolHistory && record.toolHistory.length > 0
     ? ` - ${record.toolHistory[record.toolHistory.length - 1].toolName}`
     : '';
-  
+
   return `${baseName}${versionInfo}${toolInfo}.pdf`;
 }
 
@@ -234,8 +280,8 @@ export function generateVersionName(record: FileRecord): string {
  * Create metadata for storing files with history information
  */
 export async function createFileMetadataWithHistory(
-  file: File, 
-  fileId: FileId, 
+  file: File,
+  fileId: FileId,
   thumbnail?: string
 ): Promise<FileMetadata> {
   const baseMetadata: FileMetadata = {
@@ -247,31 +293,39 @@ export async function createFileMetadataWithHistory(
     thumbnail
   };
 
-  // Extract history for PDF files
+  // Extract metadata for PDF files
   if (file.type.includes('pdf')) {
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const historyMetadata = await pdfMetadataService.extractHistoryMetadata(arrayBuffer);
-      
+      const [historyMetadata, standardMetadata] = await Promise.all([
+        pdfMetadataService.extractHistoryMetadata(arrayBuffer),
+        pdfMetadataService.extractStandardMetadata(arrayBuffer)
+      ]);
+
+      const result = { ...baseMetadata };
+
+      // Add standard PDF metadata if available
+      if (standardMetadata) {
+        result.pdfMetadata = standardMetadata;
+      }
+
+      // Add history metadata if available
       if (historyMetadata) {
         const history = historyMetadata.stirlingHistory;
-        return {
-          ...baseMetadata,
+        result.originalFileId = history.originalFileId;
+        result.versionNumber = history.versionNumber;
+        result.parentFileId = history.parentFileId as FileId | undefined;
+        result.historyInfo = {
           originalFileId: history.originalFileId,
+          parentFileId: history.parentFileId,
           versionNumber: history.versionNumber,
-          parentFileId: history.parentFileId as FileId | undefined,
-          historyInfo: {
-            originalFileId: history.originalFileId,
-            parentFileId: history.parentFileId,
-            versionNumber: history.versionNumber,
-            toolChain: history.toolChain,
-            createdAt: history.createdAt,
-            lastModified: history.lastModified
-          }
+          toolChain: history.toolChain
         };
       }
+
+      return result;
     } catch (error) {
-      if (DEBUG) console.warn('📄 Failed to extract history for metadata:', file.name, error);
+      if (DEBUG) console.warn('📄 Failed to extract metadata:', file.name, error);
     }
   }
 

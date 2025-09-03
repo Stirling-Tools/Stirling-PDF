@@ -70,7 +70,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
     // Extract history metadata for PDFs and return enhanced metadata
     const metadata = await createFileMetadataWithHistory(file, fileId, thumbnail);
-    
+
 
     return metadata;
   }, []);
@@ -162,13 +162,16 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
     for (let i = 0; i < pdfFiles.length; i += BATCH_SIZE) {
       const batch = pdfFiles.slice(i, i + BATCH_SIZE);
-      
+
       const batchResults = await Promise.all(batch.map(async (m) => {
         try {
           // For PDF files, load and extract history with timeout
           const storedFile = await fileStorage.getFile(m.id);
           if (storedFile?.data) {
-            const file = new File([storedFile.data], m.name, { type: m.type });
+            const file = new File([storedFile.data], m.name, {
+              type: m.type,
+              lastModified: m.lastModified
+            });
             return await createFileMetadataWithHistory(file, m.id, m.thumbnail);
           }
         } catch (error) {
@@ -185,7 +188,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
           thumbnail: m.thumbnail
         };
       }));
-      
+
       pdfMetadata.push(...batchResults);
     }
 

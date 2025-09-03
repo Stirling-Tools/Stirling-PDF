@@ -23,6 +23,8 @@ export interface ToolOperation {
 
 /**
  * Complete file history metadata structure
+ * Uses standard PDF metadata fields (Creator, Producer, CreationDate, ModificationDate)
+ * and embeds Stirling-specific history in keywords
  */
 export interface PDFHistoryMetadata {
   stirlingHistory: {
@@ -30,10 +32,7 @@ export interface PDFHistoryMetadata {
     parentFileId?: string;
     versionNumber: number;
     toolChain: ToolOperation[];
-    createdBy: 'Stirling-PDF';
     formatVersion: '1.0';
-    createdAt: number;
-    lastModified: number;
   };
 }
 
@@ -78,17 +77,13 @@ export class PDFMetadataService {
           parentFileId,
           versionNumber,
           toolChain: [...toolChain],
-          createdBy: 'Stirling-PDF',
-          formatVersion: PDFMetadataService.FORMAT_VERSION,
-          createdAt: Date.now(),
-          lastModified: Date.now()
+          formatVersion: PDFMetadataService.FORMAT_VERSION
         }
       };
 
-      // Set basic metadata
+      // Set Stirling-PDF identification fields only (don't touch dates)
       pdfDoc.setCreator('Stirling-PDF');
       pdfDoc.setProducer('Stirling-PDF');
-      pdfDoc.setModificationDate(new Date());
 
       // Embed history metadata in keywords field (most compatible)
       const historyJson = JSON.stringify(historyMetadata);
@@ -274,6 +269,87 @@ export class PDFMetadataService {
   }
 
   /**
+   * Extract standard PDF document metadata
+   */
+  async extractStandardMetadata(pdfBytes: ArrayBuffer): Promise<{
+    title?: string;
+    author?: string;
+    subject?: string;
+    creator?: string;
+    producer?: string;
+    creationDate?: Date;
+    modificationDate?: Date;
+  } | null> {
+    try {
+      const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+      
+      return {
+        title: pdfDoc.getTitle() || undefined,
+        author: pdfDoc.getAuthor() || undefined,
+        subject: pdfDoc.getSubject() || undefined,
+        creator: pdfDoc.getCreator() || undefined,
+        producer: pdfDoc.getProducer() || undefined,
+        creationDate: pdfDoc.getCreationDate() || undefined,
+        modificationDate: pdfDoc.getModificationDate() || undefined
+      };
+    } catch (error) {
+      if (DEBUG) console.warn('📄 Failed to extract standard PDF metadata:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Verify that tool preserved standard PDF metadata
+   * Logs warnings for tools that strip metadata 
+   */
+  async verifyMetadataPreservation(
+    originalBytes: ArrayBuffer,
+    processedBytes: ArrayBuffer, 
+    toolName: string
+  ): Promise<void> {
+    try {
+      const [originalMetadata, processedMetadata] = await Promise.all([
+        this.extractStandardMetadata(originalBytes),
+        this.extractStandardMetadata(processedBytes)
+      ]);
+
+      if (!originalMetadata || !processedMetadata) return;
+
+      // Check each metadata field for preservation
+      const issues: string[] = [];
+
+      if (originalMetadata.title && !processedMetadata.title) {
+        issues.push('Title stripped');
+      }
+      if (originalMetadata.author && !processedMetadata.author) {
+        issues.push('Author stripped');
+      }
+      if (originalMetadata.subject && !processedMetadata.subject) {
+        issues.push('Subject stripped');
+      }
+      if (originalMetadata.creationDate && !processedMetadata.creationDate) {
+        issues.push('CreationDate stripped');
+      }
+      if (originalMetadata.creationDate && processedMetadata.creationDate && 
+          Math.abs(originalMetadata.creationDate.getTime() - processedMetadata.creationDate.getTime()) > 1000) {
+        issues.push(`CreationDate modified (${originalMetadata.creationDate.toISOString()} → ${processedMetadata.creationDate.toISOString()})`);
+      }
+      
+      // Note: We don't check ModificationDate preservation since we use File.lastModified as source of truth
+
+      if (issues.length > 0) {
+        console.warn(`⚠️ METADATA LOSS: Tool '${toolName}' did not preserve PDF metadata:`, issues.join(', '));
+        console.warn(`⚠️ This backend tool should be updated to preserve standard PDF metadata fields.`);
+      } else {
+        console.log(`✅ METADATA PRESERVED: Tool '${toolName}' correctly preserved all PDF metadata`);
+      }
+
+    } catch (error) {
+      if (DEBUG) console.warn(`📄 Failed to verify metadata preservation for ${toolName}:`, error);
+    }
+  }
+
+  /**
    * Check if a PDF has Stirling history metadata
    */
   async hasStirlingHistory(pdfBytes: ArrayBuffer): Promise<boolean> {
@@ -359,7 +435,6 @@ export class PDFMetadataService {
            typeof metadata.stirlingHistory.originalFileId === 'string' &&
            typeof metadata.stirlingHistory.versionNumber === 'number' &&
            Array.isArray(metadata.stirlingHistory.toolChain) &&
-           metadata.stirlingHistory.createdBy === 'Stirling-PDF' &&
            metadata.stirlingHistory.formatVersion === PDFMetadataService.FORMAT_VERSION;
   }
 }

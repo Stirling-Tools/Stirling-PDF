@@ -18,10 +18,7 @@ interface PDFHistoryMetadata {
     parentFileId?: string;         // UUID of the immediate parent file  
     versionNumber: number;         // Version number (1, 2, 3, etc.)
     toolChain: ToolOperation[];    // Array of applied tool operations
-    createdBy: 'Stirling-PDF';     // System identifier
     formatVersion: '1.0';          // Metadata format version
-    createdAt: number;             // Timestamp when version was created
-    lastModified: number;          // Timestamp when last modified
   };
 }
 
@@ -32,9 +29,30 @@ interface ToolOperation {
 }
 ```
 
-### Example PDF Keywords Field
+### Standard PDF Metadata Fields Used
+The system uses industry-standard PDF document information fields:
+- **Creator**: Set to "Stirling-PDF" (identifies the application)
+- **Producer**: Set to "Stirling-PDF" (identifies the PDF library/processor)
+- **Title, Author, Subject, CreationDate**: Automatically preserved by pdf-lib during processing
+- **Keywords**: Enhanced with Stirling history data while preserving user keywords
+
+**Date Handling Strategy**: 
+- **PDF CreationDate**: Preserved automatically (document creation date)
+- **File.lastModified**: Source of truth for "when file was last changed" (original upload time or tool processing time)
+- **No duplication**: Single timestamp approach using File.lastModified for all UI displays
+
+### Example PDF Document Information
 ```
-Keywords: ["user-keyword", "stirling-history:{\"stirlingHistory\":{\"originalFileId\":\"abc123\",\"versionNumber\":2,\"toolChain\":[{\"toolName\":\"compress\",\"timestamp\":1756825614618},{\"toolName\":\"sanitize\",\"timestamp\":1756825631545}],\"createdBy\":\"Stirling-PDF\",\"formatVersion\":\"1.0\"}}"]
+PDF Document Info:
+  Title: "User Document Title" (preserved from original)
+  Author: "Document Author" (preserved from original)
+  Creator: "Stirling-PDF"
+  Producer: "Stirling-PDF"  
+  CreationDate: "2025-01-01T10:30:00Z" (preserved from original)
+  Keywords: ["user-keyword", "stirling-history:{\"stirlingHistory\":{\"originalFileId\":\"abc123\",\"versionNumber\":2,\"toolChain\":[{\"toolName\":\"compress\",\"timestamp\":1756825614618},{\"toolName\":\"sanitize\",\"timestamp\":1756825631545}],\"formatVersion\":\"1.0\"}}"]
+
+File System:
+  lastModified: 1756825631545 (tool processing time - source of truth for "when file was last changed")
 ```
 
 ## Version Numbering System
@@ -178,6 +196,25 @@ export const toolOperationConfig = {
 };
 ```
 
+### Metadata Preservation Strategy
+The system uses a **minimal touch approach** for PDF metadata:
+
+```typescript
+// Only modify necessary fields, let pdf-lib preserve everything else
+pdfDoc.setCreator('Stirling-PDF');
+pdfDoc.setProducer('Stirling-PDF'); 
+pdfDoc.setKeywords([...existingKeywords, historyKeyword]);
+
+// File.lastModified = Date.now() for processed files (source of truth)
+// PDF internal dates (CreationDate, etc.) preserved automatically by pdf-lib
+```
+
+**Benefits:**
+- **Automatic Preservation**: pdf-lib preserves Title, Author, Subject, CreationDate without explicit re-setting
+- **No Duplication**: File.lastModified is single source of truth for "when file changed"
+- **Simpler Code**: Minimal metadata operations reduce complexity and bugs
+- **Better Performance**: Fewer PDF reads/writes during processing
+
 ## Error Handling and Resilience
 
 ### Graceful Degradation
@@ -198,17 +235,25 @@ export const toolOperationConfig = {
 3. **Custom processors**: Must handle history injection manually if using custom response handlers
 
 ### Testing File History
-1. **Upload a PDF**: Should show no version (v0)
-2. **Apply any tool**: Should show v1 with tool name in history
+1. **Upload a PDF**: Should show no version (v0), original File.lastModified preserved
+2. **Apply any tool**: Should show v1 with tool name, File.lastModified updated to processing time
 3. **Apply another tool**: Should show v2 with tool chain sequence
-4. **Check file manager**: Version toggle and history dropdown should work
+4. **Check file manager**: Version toggle, history dropdown, standard PDF metadata should all work
 5. **Check workbench**: Tool chain overlay should appear on thumbnails
+
+### Backend Tool Monitoring
+The system automatically logs metadata preservation:
+- **Success**: `✅ METADATA PRESERVED: Tool 'ocr' correctly preserved all PDF metadata`
+- **Issues**: `⚠️ METADATA LOSS: Tool 'compress' did not preserve PDF metadata: CreationDate modified, Author stripped`
+
+This helps identify which backend tools need to be updated to preserve standard PDF metadata fields.
 
 ### Debugging
 Enable development mode logging to see:
 - History injection: `📄 Injected PDF history metadata`
 - History extraction: `📄 History extraction completed` 
 - Version progression: Version number increments and tool chain updates
+- Metadata issues: Warnings for tools that strip PDF metadata
 
 ## Future Enhancements
 

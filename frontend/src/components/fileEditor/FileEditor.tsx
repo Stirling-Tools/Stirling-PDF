@@ -106,6 +106,7 @@ const FileEditor = ({
       pageCount: record.processedFile?.totalPages || 1,
       thumbnail: record.thumbnailUrl || '',
       size: file.size,
+      modifiedAt: file.lastModified,
       file: file
     };
   }, [selectors]);
