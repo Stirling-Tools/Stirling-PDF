@@ -24,7 +24,6 @@ export default defineConfig(
       "@typescript-eslint/ban-ts-comment": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-empty-object-type": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/no-require-imports": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-unused-expressions": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-unused-vars": "off", // Temporarily disabled until codebase conformant
     },
