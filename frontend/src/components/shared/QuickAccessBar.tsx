@@ -8,6 +8,7 @@ import { useIsOverflowing } from '../../hooks/useIsOverflowing';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useSidebarNavigation } from '../../hooks/useSidebarNavigation';
+import { handleUnlessSpecialClick } from '../../utils/clickHandlers';
 import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
@@ -50,14 +51,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
 
     const handleClick = (e?: React.MouseEvent) => {
       if (navProps && e) {
-        // Check if it's a special click (middle click, ctrl+click, etc.)
-        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
-          return; // Let browser handle it via href
-        }
-        // For regular clicks, prevent default and use SPA navigation
-        e.preventDefault();
+        handleUnlessSpecialClick(e, config.onClick);
+      } else {
+        config.onClick();
       }
-      config.onClick();
     };
 
     // Render with URL navigation if available, otherwise regular div

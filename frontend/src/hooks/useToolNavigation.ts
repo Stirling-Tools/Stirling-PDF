@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { ToolId } from '../types/toolId';
 import { ToolRegistryEntry, getToolUrlPath } from '../data/toolsTaxonomy';
 import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
+import { handleUnlessSpecialClick } from '../utils/clickHandlers';
 
 export interface ToolNavigationProps {
   /** Full URL for the tool (for href attribute) */
@@ -26,20 +27,16 @@ export function useToolNavigation(): {
 
     // Click handler that maintains SPA behavior
     const onClick = (e: React.MouseEvent) => {
-      // Check if it's a special click (ctrl+click, etc.)
-      if (e.metaKey || e.ctrlKey || e.shiftKey) {
-        return; // Let browser handle it via href
-      }
+      handleUnlessSpecialClick(e, () => {
+        // Handle external links normally
+        if (tool.link) {
+          window.open(tool.link, '_blank', 'noopener,noreferrer');
+          return;
+        }
 
-      // Handle external links normally
-      if (tool.link) {
-        window.open(tool.link, '_blank', 'noopener,noreferrer');
-        return;
-      }
-
-      // For regular clicks, prevent default and use SPA navigation
-      e.preventDefault();
-      handleToolSelect(toolId);
+        // Use SPA navigation for internal tools
+        handleToolSelect(toolId);
+      });
     };
 
     return { href, onClick };

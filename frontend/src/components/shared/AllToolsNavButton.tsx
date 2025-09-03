@@ -5,6 +5,7 @@ import { Tooltip } from './Tooltip';
 import AppsIcon from '@mui/icons-material/AppsRounded';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useSidebarNavigation } from '../../hooks/useSidebarNavigation';
+import { handleUnlessSpecialClick } from '../../utils/clickHandlers';
 
 interface AllToolsNavButtonProps {
   activeButton: string;
@@ -29,14 +30,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
   const navProps = getHomeNavigation();
 
   const handleNavClick = (e: React.MouseEvent) => {
-    // Check if it's a special click (middle click, ctrl+click, etc.)
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
-      return; // Let browser handle it via href
-    }
-
-    // For regular clicks, prevent default and use SPA navigation
-    e.preventDefault();
-    handleClick();
+    handleUnlessSpecialClick(e, handleClick);
   };
 
   const iconNode = (

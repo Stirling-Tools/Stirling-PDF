@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useToolNavigation } from './useToolNavigation';
 import { useToolManagement } from './useToolManagement';
+import { handleUnlessSpecialClick } from '../utils/clickHandlers';
 
 export interface SidebarNavigationProps {
   /** Full URL for the navigation (for href attribute) */
@@ -21,8 +22,9 @@ export function useSidebarNavigation(): {
   const { getSelectedTool } = useToolManagement();
 
   const defaultNavClick = useCallback((e: React.MouseEvent) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-    e.preventDefault();
+    handleUnlessSpecialClick(e, () => {
+      // SPA navigation will be handled by the calling component
+    });
   }, []);
 
   const getHomeNavigation = useCallback((): SidebarNavigationProps => {

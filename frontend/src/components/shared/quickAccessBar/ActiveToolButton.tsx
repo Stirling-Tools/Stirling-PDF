@@ -17,6 +17,7 @@ import { ActionIcon } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
 import { useSidebarNavigation } from '../../../hooks/useSidebarNavigation';
+import { handleUnlessSpecialClick } from '../../../utils/clickHandlers';
 import FitText from '../FitText';
 import { Tooltip } from '../Tooltip';
 
@@ -147,15 +148,10 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
                   component="a"
                   href={getHomeNavigation().href}
                   onClick={(e: React.MouseEvent) => {
-                    // Check if it's a special click (middle click, ctrl+click, etc.)
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
-                      return; // Let browser handle it via href
-                    }
-
-                    // For regular clicks, prevent default and use SPA navigation
-                    e.preventDefault();
-                    setActiveButton('tools');
-                    handleBackToTools();
+                    handleUnlessSpecialClick(e, () => {
+                      setActiveButton('tools');
+                      handleBackToTools();
+                    });
                   }}
                   size={'xl'}
                   variant="subtle"

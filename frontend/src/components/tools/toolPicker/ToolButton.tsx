@@ -1,8 +1,9 @@
 import React from "react";
-import { Button, Anchor } from "@mantine/core";
+import { Button } from "@mantine/core";
 import { Tooltip } from "../../shared/Tooltip";
 import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { useToolNavigation } from "../../../hooks/useToolNavigation";
+import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
 import FitText from "../../shared/FitText";
 
 interface ToolButtonProps {
@@ -49,14 +50,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
   );
 
   const handleExternalClick = (e: React.MouseEvent) => {
-    // Check if it's a special click (ctrl+click, etc.)
-    if (e.metaKey || e.ctrlKey || e.shiftKey) {
-      return; // Let browser handle it via href
-    }
-
-    // For regular clicks, prevent default and use window.open
-    e.preventDefault();
-    handleClick(id);
+    handleUnlessSpecialClick(e, () => handleClick(id));
   };
 
   const buttonElement = navProps ? (
