@@ -37,16 +37,15 @@ export interface FileMetadata {
   size: number;
   lastModified: number;
   thumbnail?: string;
-  isDraft?: boolean; // Marks files as draft versions
-  
+
   // File history tracking (extracted from PDF metadata)
   historyInfo?: FileHistoryInfo;
-  
+
   // Quick access version information
   originalFileId?: string; // Root file ID for grouping versions
   versionNumber?: number; // Version number in chain
   parentFileId?: FileId; // Immediate parent file ID
-  
+
   // Standard PDF document metadata
   pdfMetadata?: {
     title?: string;

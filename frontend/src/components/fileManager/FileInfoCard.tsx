@@ -3,6 +3,7 @@ import { Stack, Card, Box, Text, Badge, Group, Divider, ScrollArea } from '@mant
 import { useTranslation } from 'react-i18next';
 import { detectFileExtension, getFileSize } from '../../utils/fileUtils';
 import { FileMetadata } from '../../types/file';
+import ToolChain from '../shared/ToolChain';
 
 interface FileInfoCardProps {
   currentFile: FileMetadata | null;
@@ -118,18 +119,18 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
 
           </Group>
 
-          {/* Tool Chain Display - Compact */}
+          {/* Tool Chain Display */}
           {currentFile?.historyInfo?.toolChain && currentFile.historyInfo.toolChain.length > 0 && (
             <>
               <Divider />
               <Box py="xs">
-                <Text size="xs" style={{
-                  color: 'var(--mantine-color-blue-6)',
-                  lineHeight: 1.3,
-                  wordBreak: 'break-word'
-                }}>
-                  {currentFile.historyInfo.toolChain.map(tool => tool.toolName).join(' → ')}
-                </Text>
+                <Text size="xs" c="dimmed" mb="xs">{t('fileManager.toolChain', 'Tools Applied')}</Text>
+                <ToolChain 
+                  toolChain={currentFile.historyInfo.toolChain}
+                  displayStyle="badges"
+                  size="xs"
+                  maxWidth={180}
+                />
               </Box>
             </>
           )}

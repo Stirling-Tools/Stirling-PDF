@@ -177,41 +177,62 @@ export async function verifyToolMetadataPreservation(
 }
 
 /**
- * Group files by their original file ID for version management
+ * Group files by processing branches - each branch ends in a leaf file
+ * Returns Map<fileId, lineagePath[]> where fileId is the leaf and lineagePath is the path back to original
  */
 export function groupFilesByOriginal(fileRecords: FileRecord[]): Map<string, FileRecord[]> {
   const groups = new Map<string, FileRecord[]>();
 
+  // Create a map for quick lookups
+  const fileMap = new Map<string, FileRecord>();
   for (const record of fileRecords) {
-    // For files with history, use their originalFileId
-    // For files without history, check if any other file references this file as originalFileId
-    let groupKey = record.originalFileId;
-
-    if (!groupKey) {
-      // Check if this file is referenced as an originalFileId by other files
-      const isReferencedAsOriginal = fileRecords.some(otherRecord =>
-        otherRecord.originalFileId === record.id
-      );
-
-      if (isReferencedAsOriginal) {
-        // This file is the original of other files
-        groupKey = record.id;
-      } else {
-        // This file is truly standalone
-        groupKey = record.id;
-      }
-    }
-
-    if (!groups.has(groupKey)) {
-      groups.set(groupKey, []);
-    }
-
-    groups.get(groupKey)!.push(record);
+    fileMap.set(record.id, record);
   }
 
-  // Sort each group by version number
-  for (const [_, records] of groups) {
-    records.sort((a, b) => (b.versionNumber || 0) - (a.versionNumber || 0));
+  // Find leaf files (files that are not parents of any other files AND have version history)
+  // Original files (v0) should only be leaves if they have no processed versions at all
+  const leafFiles = fileRecords.filter(record => {
+    const isParentOfOthers = fileRecords.some(otherRecord => otherRecord.parentFileId === record.id);
+    const isOriginalOfOthers = fileRecords.some(otherRecord => otherRecord.originalFileId === record.id);
+    
+    // A file is a leaf if:
+    // 1. It's not a parent of any other files, AND
+    // 2. It has processing history (versionNumber > 0) OR it's not referenced as original by others
+    return !isParentOfOthers && (record.versionNumber && record.versionNumber > 0 || !isOriginalOfOthers);
+  });
+
+  // For each leaf file, build its complete lineage path back to original
+  for (const leafFile of leafFiles) {
+    const lineagePath: FileRecord[] = [];
+    let currentFile: FileRecord | undefined = leafFile;
+    
+    // Trace back through parentFileId chain to build this specific branch
+    while (currentFile) {
+      lineagePath.push(currentFile);
+      
+      // Move to parent file in this branch
+      let nextFile: FileRecord | undefined = undefined;
+      
+      if (currentFile.parentFileId) {
+        nextFile = fileMap.get(currentFile.parentFileId);
+      } else if (currentFile.originalFileId && currentFile.originalFileId !== currentFile.id) {
+        // For v1 files, the original file might be referenced by originalFileId
+        nextFile = fileMap.get(currentFile.originalFileId);
+      }
+      
+      // Check for infinite loops before moving to next
+      if (nextFile && lineagePath.some(file => file.id === nextFile!.id)) {
+        break;
+      }
+      
+      currentFile = nextFile;
+    }
+    
+    // Sort lineage with latest version first (leaf at top)
+    lineagePath.sort((a, b) => (b.versionNumber || 0) - (a.versionNumber || 0));
+    
+    // Use leaf file ID as the group key - each branch gets its own group
+    groups.set(leafFile.id, lineagePath);
   }
 
   return groups;

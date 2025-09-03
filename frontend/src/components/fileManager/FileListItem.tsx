@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge } from '@mantine/core';
+import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge, Button } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
+import AddIcon from '@mui/icons-material/Add';
 import HistoryIcon from '@mui/icons-material/History';
-import RestoreIcon from '@mui/icons-material/Restore';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
 import { FileMetadata } from '../../types/file';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
+import ToolChain from '../shared/ToolChain';
 
 interface FileListItemProps {
   file: FileMetadata;
@@ -19,6 +20,8 @@ interface FileListItemProps {
   onDownload?: () => void;
   onDoubleClick?: () => void;
   isLast?: boolean;
+  isHistoryFile?: boolean; // Whether this is a history file (indented)
+  isLatestVersion?: boolean; // Whether this is the latest version (shows chevron)
 }
 
 const FileListItem: React.FC<FileListItemProps> = ({
@@ -28,21 +31,24 @@ const FileListItem: React.FC<FileListItemProps> = ({
   onSelect,
   onRemove,
   onDownload,
-  onDoubleClick
+  onDoubleClick,
+  isHistoryFile = false,
+  isLatestVersion = false
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const { fileGroups, onRestoreVersion } = useFileManagerContext();
+  const { fileGroups, expandedFileIds, onToggleExpansion, onAddToRecents } = useFileManagerContext();
 
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
 
   // Get version information for this file
-  const originalFileId = file.originalFileId || file.id;
-  const fileVersions = fileGroups.get(originalFileId) || [];
-  const hasVersionHistory = fileVersions.length > 1;
+  const leafFileId = isLatestVersion ? file.id : (file.originalFileId || file.id);
+  const lineagePath = fileGroups.get(leafFileId) || [];
+  const hasVersionHistory = lineagePath.length > 1;
   const currentVersion = file.versionNumber || 0; // Display original files as v0
+  const isExpanded = expandedFileIds.has(leafFileId);
 
   return (
     <>
@@ -56,7 +62,9 @@ const FileListItem: React.FC<FileListItemProps> = ({
           userSelect: 'none',
           WebkitUserSelect: 'none',
           MozUserSelect: 'none',
-          msUserSelect: 'none'
+          msUserSelect: 'none',
+          paddingLeft: isHistoryFile ? '2rem' : '0.75rem', // Indent history files
+          borderLeft: isHistoryFile ? '3px solid var(--mantine-color-blue-4)' : 'none' // Visual indicator for history
         }}
         onClick={(e) => onSelect(e.shiftKey)}
         onDoubleClick={onDoubleClick}
@@ -65,6 +73,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
       >
         <Group gap="sm">
           <Box>
+            {/* Checkbox for all files */}
             <Checkbox
               checked={isSelected}
               onChange={() => {}} // Handled by parent onClick
@@ -82,23 +91,29 @@ const FileListItem: React.FC<FileListItemProps> = ({
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Group gap="xs" align="center">
               <Text size="sm" fw={500} truncate style={{ flex: 1 }}>{file.name}</Text>
-              {file.isDraft && (
-                <Badge size="xs" variant="light" color="orange">
-                  DRAFT
-                </Badge>
-              )}
-              {hasVersionHistory && (
-                <Badge size="xs" variant="light" color="blue">
+                <Badge size="xs" variant="light" color={currentVersion > 0 ? "blue" : "gray"}>
                   v{currentVersion}
                 </Badge>
+
+            </Group>
+            <Group gap="xs" align="center">
+              <Text size="xs" c="dimmed">
+                {getFileSize(file)} • {getFileDate(file)}
+                {hasVersionHistory && (
+                  <Text span c="dimmed"> • {lineagePath.length} versions</Text>
+                )}
+              </Text>
+              
+              {/* Tool chain for processed files */}
+              {file.historyInfo?.toolChain && file.historyInfo.toolChain.length > 0 && (
+                <ToolChain 
+                  toolChain={file.historyInfo.toolChain}
+                  maxWidth={150}
+                  displayStyle="text"
+                  size="xs"
+                />
               )}
             </Group>
-            <Text size="xs" c="dimmed">
-              {getFileSize(file)} • {getFileDate(file)}
-              {hasVersionHistory && (
-                <Text span c="dimmed"> • {fileVersions.length} versions</Text>
-              )}
-            </Text>
           </Box>
 
           {/* Three dots menu - fades in/out on hover */}
@@ -137,42 +152,42 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   {t('fileManager.download', 'Download')}
                 </Menu.Item>
               )}
-              
-              {/* Version History Menu */}
-              {hasVersionHistory && (
+
+              {/* Show/Hide History option for latest version files */}
+              {isLatestVersion && hasVersionHistory && (
                 <>
-                  <Menu.Divider />
-                  <Menu.Label>{t('fileManager.versions', 'Version History')}</Menu.Label>
-                  {fileVersions.map((version, index) => (
-                    <Menu.Item
-                      key={version.id}
-                      leftSection={
-                        version.id === file.id ? 
-                        <Badge size="xs" color="blue">Current</Badge> : 
-                        <RestoreIcon style={{ fontSize: 16 }} />
-                      }
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (version.id !== file.id) {
-                          onRestoreVersion(version);
-                        }
-                      }}
-                      disabled={version.id === file.id}
-                    >
-                      <Group gap="xs" style={{ width: '100%', justifyContent: 'space-between' }}>
-                        <Text size="sm">
-                          v{version.versionNumber || 0}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          {new Date(version.lastModified).toLocaleDateString()}
-                        </Text>
-                      </Group>
-                    </Menu.Item>
-                  ))}
+                  <Menu.Item
+                    leftSection={<HistoryIcon style={{ fontSize: 16 }} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleExpansion(leafFileId);
+                    }}
+                  >
+                    {isExpanded ? 
+                      t('fileManager.hideHistory', 'Hide History') : 
+                      t('fileManager.showHistory', 'Show History')
+                    }
+                  </Menu.Item>
                   <Menu.Divider />
                 </>
               )}
-              
+
+              {/* Add to Recents option for history files */}
+              {isHistoryFile && (
+                <>
+                  <Menu.Item
+                    leftSection={<AddIcon style={{ fontSize: 16 }} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddToRecents(file);
+                    }}
+                  >
+                    {t('fileManager.addToRecents', 'Add to Recents')}
+                  </Menu.Item>
+                  <Menu.Divider />
+                </>
+              )}
+
               <Menu.Item
                 leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
                 onClick={(e) => {

@@ -15,7 +15,7 @@ interface FileManagerContextValue {
   filteredFiles: FileMetadata[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   selectedFilesSet: Set<string>;
-  showAllVersions: boolean;
+  expandedFileIds: Set<string>;
   fileGroups: Map<string, FileMetadata[]>;
 
   // Handlers
@@ -31,8 +31,8 @@ interface FileManagerContextValue {
   onDeleteSelected: () => void;
   onDownloadSelected: () => void;
   onDownloadSingle: (file: FileMetadata) => void;
-  onToggleVersions: () => void;
-  onRestoreVersion: (file: FileMetadata) => void;
+  onToggleExpansion: (fileId: string) => void;
+  onAddToRecents: (file: FileMetadata) => void;
   onNewFilesSelect: (files: File[]) => void;
 
   // External props
@@ -74,7 +74,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
-  const [showAllVersions, setShowAllVersions] = useState(false);
+  const [expandedFileIds, setExpandedFileIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track blob URLs for cleanup
@@ -97,24 +97,40 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     return groupFilesByOriginal(recordsForGrouping);
   }, [recentFiles]);
 
-  // Get files to display (latest versions only or all versions)
+  // Get files to display with expansion logic  
   const displayFiles = useMemo(() => {
     if (!recentFiles || recentFiles.length === 0) return [];
     
-    if (showAllVersions) {
-      return recentFiles;
-    } else {
-      // Show only latest versions
-      const recordsForFiltering = recentFiles.map(file => ({
-        ...file,
-        originalFileId: file.originalFileId,
-        versionNumber: file.versionNumber || 0
-      }));
+    const recordsForGrouping = recentFiles.map(file => ({
+      ...file,
+      originalFileId: file.originalFileId,
+      versionNumber: file.versionNumber || 0
+    }));
+    
+    // Get branch groups (leaf files with their lineage paths)
+    const branchGroups = groupFilesByOriginal(recordsForGrouping);
+    
+    // Show only leaf files (end of branches) in main list
+    const expandedFiles = [];
+    for (const [leafFileId, lineagePath] of branchGroups) {
+      const leafFile = recentFiles.find(f => f.id === leafFileId);
+      if (!leafFile) continue;
       
-      const latestVersions = getLatestVersions(recordsForFiltering);
-      return latestVersions.map(record => recentFiles.find(file => file.id === record.id)!);
+      // Add the leaf file (shown in main list)
+      expandedFiles.push(leafFile);
+      
+      // If expanded, add the lineage history (except the leaf itself)
+      if (expandedFileIds.has(leafFileId)) {
+        const historyFiles = lineagePath
+          .filter((record: any) => record.id !== leafFileId)
+          .map((record: any) => recentFiles.find(f => f.id === record.id))
+          .filter((f): f is FileMetadata => f !== undefined);
+        expandedFiles.push(...historyFiles);
+      }
     }
-  }, [recentFiles, showAllVersions]);
+    
+    return expandedFiles;
+  }, [recentFiles, expandedFileIds, fileGroups]);
 
   const selectedFiles = selectedFileIds.length === 0 ? [] :
     displayFiles.filter(file => selectedFilesSet.has(file.id));
@@ -241,9 +257,41 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         selectedFileIds.includes(file.id)
       );
 
-      // Delete files from storage
+      // For each selected file, determine which files to delete based on branch logic
+      const fileIdsToDelete = new Set<string>();
+      
       for (const file of filesToDelete) {
-        await fileStorage.deleteFile(file.id);
+        // If this is a leaf file (main entry), delete its entire branch
+        const branchLineage = fileGroups.get(file.id) || [];
+        
+        if (branchLineage.length > 0) {
+          // This is a leaf file with a lineage - check each file in the branch
+          for (const branchFile of branchLineage) {
+            // Check if this file is part of OTHER branches (shared between branches)
+            const isPartOfOtherBranches = Array.from(fileGroups.values()).some(otherLineage => {
+              // Check if this file appears in a different branch lineage
+              return otherLineage !== branchLineage && 
+                     otherLineage.some((f: any) => f.id === branchFile.id);
+            });
+            
+            if (isPartOfOtherBranches) {
+              // File is shared between branches - don't delete it
+              console.log(`Keeping shared file: ${branchFile.name} (part of other branches)`);
+            } else {
+              // File is exclusive to this branch - safe to delete
+              fileIdsToDelete.add(branchFile.id);
+              console.log(`Deleting branch-exclusive file: ${branchFile.name}`);
+            }
+          }
+        } else {
+          // This is a standalone file or history file - just delete it
+          fileIdsToDelete.add(file.id);
+        }
+      }
+
+      // Delete files from storage
+      for (const fileId of fileIdsToDelete) {
+        await fileStorage.deleteFile(fileId as FileId);
       }
 
       // Clear selection
@@ -254,7 +302,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     } catch (error) {
       console.error('Failed to delete selected files:', error);
     }
-  }, [selectedFileIds, filteredFiles, refreshRecentFiles]);
+  }, [selectedFileIds, filteredFiles, fileGroups, recentFiles, refreshRecentFiles]);
 
 
   const handleDownloadSelected = useCallback(async () => {
@@ -283,42 +331,40 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, []);
 
-  const handleToggleVersions = useCallback(() => {
-    setShowAllVersions(prev => !prev);
-    // Clear selection when toggling versions
-    setSelectedFileIds([]);
-    setLastClickedIndex(null);
+  const handleToggleExpansion = useCallback((fileId: string) => {
+    setExpandedFileIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(fileId)) {
+        newSet.delete(fileId);
+      } else {
+        newSet.add(fileId);
+      }
+      return newSet;
+    });
   }, []);
 
-  const handleRestoreVersion = useCallback(async (file: FileMetadata) => {
+  const handleAddToRecents = useCallback(async (file: FileMetadata) => {
     try {
-      console.log('Restoring version:', file.name, 'version:', file.versionNumber);
+      console.log('Promoting to recents:', file.name, 'version:', file.versionNumber);
       
-      // 1. Load the file from IndexedDB storage
+      // Load the file from storage and create a copy with new ID and timestamp
       const storedFile = await fileStorage.getFile(file.id);
-      if (!storedFile) {
-        console.error('File not found in storage:', file.id);
-        return;
+      if (storedFile) {
+        // Create new file with current timestamp to appear at top
+        const promotedFile = new File([storedFile.data], file.name, {
+          type: file.type,
+          lastModified: Date.now() // Current timestamp makes it appear at top
+        });
+        
+        // Add as new file through the normal flow (creates new ID)
+        onNewFilesSelect([promotedFile]);
+        
+        console.log('Successfully promoted to recents:', file.name, 'v' + file.versionNumber);
       }
-
-      // 2. Create new File object from stored data
-      const restoredFile = new File([storedFile.data], file.name, { 
-        type: file.type,
-        lastModified: file.lastModified 
-      });
-
-      // 3. Add the restored file as a new version through the normal file upload flow
-      // This will trigger the file processing and create a new entry in recent files
-      onNewFilesSelect([restoredFile]);
-      
-      // 4. Refresh the recent files list to show the new version
-      await refreshRecentFiles();
-      
-      console.log('Successfully restored version:', file.name, 'v' + file.versionNumber);
     } catch (error) {
-      console.error('Failed to restore version:', error);
+      console.error('Failed to promote to recents:', error);
     }
-  }, [refreshRecentFiles, onNewFilesSelect]);
+  }, [onNewFilesSelect]);
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
@@ -350,7 +396,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     filteredFiles,
     fileInputRef,
     selectedFilesSet,
-    showAllVersions,
+    expandedFileIds,
     fileGroups,
 
     // Handlers
@@ -366,8 +412,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onDeleteSelected: handleDeleteSelected,
     onDownloadSelected: handleDownloadSelected,
     onDownloadSingle: handleDownloadSingle,
-    onToggleVersions: handleToggleVersions,
-    onRestoreVersion: handleRestoreVersion,
+    onToggleExpansion: handleToggleExpansion,
+    onAddToRecents: handleAddToRecents,
     onNewFilesSelect,
 
     // External props
@@ -381,7 +427,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     selectedFiles,
     filteredFiles,
     fileInputRef,
-    showAllVersions,
+    expandedFileIds,
     fileGroups,
     handleSourceChange,
     handleLocalFileClick,
@@ -394,8 +440,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleSelectAll,
     handleDeleteSelected,
     handleDownloadSelected,
-    handleToggleVersions,
-    handleRestoreVersion,
+    handleToggleExpansion,
+    handleAddToRecents,
     onNewFilesSelect,
     recentFiles,
     isFileSupported,

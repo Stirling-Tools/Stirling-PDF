@@ -13,12 +13,9 @@ const FileActions: React.FC = () => {
     recentFiles, 
     selectedFileIds, 
     filteredFiles, 
-    showAllVersions,
-    fileGroups,
     onSelectAll, 
     onDeleteSelected, 
-    onDownloadSelected,
-    onToggleVersions
+    onDownloadSelected
   } = useFileManagerContext();
 
   const handleSelectAll = () => {
@@ -44,9 +41,6 @@ const FileActions: React.FC = () => {
 
   const allFilesSelected = filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length;
   const hasSelection = selectedFileIds.length > 0;
-  
-  // Check if there are any files with version history
-  const hasVersionedFiles = Array.from(fileGroups.values()).some(versions => versions.length > 1);
 
   return (
     <div
@@ -60,8 +54,8 @@ const FileActions: React.FC = () => {
         position: "relative",
       }}
     >
-      {/* Left: Select All and Version Toggle */}
-      <Group gap="md">
+      {/* Left: Select All */}
+      <div>
         <Tooltip
           label={allFilesSelected ? t("fileManager.deselectAll", "Deselect All") : t("fileManager.selectAll", "Select All")}
         >
@@ -76,30 +70,7 @@ const FileActions: React.FC = () => {
             <SelectAllIcon style={{ fontSize: "1rem" }} />
           </ActionIcon>
         </Tooltip>
-
-        {/* Version Toggle - only show if there are versioned files */}
-        {hasVersionedFiles && (
-          <Tooltip
-            label={showAllVersions ? 
-              t("fileManager.showLatestOnly", "Show latest versions only") : 
-              t("fileManager.showAllVersions", "Show all versions")
-            }
-          >
-            <Group gap="xs" style={{ cursor: 'pointer' }} onClick={onToggleVersions}>
-              <HistoryIcon style={{ fontSize: "1rem", color: 'var(--mantine-color-blue-6)' }} />
-              <Text size="xs" c="dimmed">
-                {showAllVersions ? t("fileManager.allVersions", "All") : t("fileManager.latestOnly", "Latest")}
-              </Text>
-              <Switch
-                size="xs"
-                checked={showAllVersions}
-                onChange={onToggleVersions}
-                style={{ pointerEvents: 'none' }}
-              />
-            </Group>
-          </Tooltip>
-        )}
-      </Group>
+      </div>
 
       {/* Center: Selected count */}
       <div

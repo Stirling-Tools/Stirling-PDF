@@ -12,6 +12,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
 import { FileId } from '../../types/file';
+import ToolChain from '../shared/ToolChain';
 
 interface FileItem {
   id: FileId;
@@ -417,15 +418,18 @@ const FileEditorThumbnail = ({
             left: '4px',
             right: '4px',
             padding: '4px 6px',
-            fontSize: '0.75rem',
             textAlign: 'center',
-            color: 'var(--mantine-color-gray-7)',
             fontWeight: 600,
             overflow: 'hidden',
-            textOverflow: 'ellipsis',
             whiteSpace: 'nowrap'
           }}>
-            {toolHistory.map(tool => tool.toolName).join(' → ')}
+            <ToolChain
+              toolChain={toolHistory}
+              displayStyle="text"
+              size="xs"
+              maxWidth={'100%'}
+              color='var(--mantine-color-gray-7)'
+            />
           </div>
         )}
       </div>
