@@ -19,7 +19,6 @@ const Flatten = (props: BaseToolProps) => {
   );
 
   return createToolFlow({
-    forceStepNumbers: true,
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
