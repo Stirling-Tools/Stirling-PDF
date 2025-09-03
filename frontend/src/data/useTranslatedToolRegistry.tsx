@@ -135,11 +135,11 @@ export function useFlatToolRegistry(): ToolRegistry {
     const allTools: ToolRegistry = {
       // Signing
 
-      manageSignatures: {
+      certSign: {
         icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.manageSignatures.title", "Sign with Certificate"),
+        name: t("home.certSign.title", "Certificate Sign"),
         component: ManageSignatures,
-        description: t("home.manageSignatures.desc", "Add digital signatures to PDF documents using certificates"),
+        description: t("home.certSign.desc", "Sign PDF documents using digital certificates"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
         maxFiles: -1,
@@ -247,6 +247,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       },
       // Verification
 
+      "validate-pdf-signature": {
+        icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.validateSignature.title", "Validate PDF Signature"),
+        component: null,
+        description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.VERIFICATION,
+      },
       "get-all-info-on-pdf": {
         icon: <LocalIcon icon="fact-check-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),

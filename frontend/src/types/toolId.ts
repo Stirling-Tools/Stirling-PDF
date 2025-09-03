@@ -12,8 +12,8 @@ const TOOL_IDS = [
   'flatten', 'remove-certificate-sign',
   'unlock-pdf-forms', 'compress', 'extract-page', 'reorganize-pages', 'extract-images',
   'add-stamp', 'add-attachments', 'change-metadata', 'overlay-pdfs',
-  'manage-certificates', 'get-all-info-on-pdf', 'manageSignatures', 'read', 'automate', 'replace-and-invert-color',
-  'show-javascript', 'dev-api', 'dev-folder-scanning', 'dev-sso-guide', 'dev-airgapped'
+  'manage-certificates', 'get-all-info-on-pdf', 'read', 'automate', 'replace-and-invert-color',
+  'show-javascript', 'dev-api', 'dev-folder-scanning', 'dev-sso-guide', 'dev-airgapped', 'validate-pdf-signature'
 ] as const;
 
 // Tool identity - what PDF operation we're performing (type-safe)
