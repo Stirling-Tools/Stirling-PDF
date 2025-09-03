@@ -6,9 +6,10 @@ import UploadIcon from '@mui/icons-material/Upload';
 import { useFilesModalContext } from "../../../contexts/FilesModalContext";
 import { useAllFiles } from "../../../contexts/FileContext";
 import { useFileManager } from "../../../hooks/useFileManager";
+import { FileWithId } from "../../../types/fileContext";
 
 export interface FileStatusIndicatorProps {
-  selectedFiles?: File[];
+  selectedFiles?: FileWithId[];
   placeholder?: string;
 }
 

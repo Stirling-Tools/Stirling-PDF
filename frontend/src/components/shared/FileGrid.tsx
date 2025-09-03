@@ -124,8 +124,12 @@ const FileGrid = ({
         style={{ overflowY: "auto", width: "100%" }}
       >
         {displayFiles.map((item, idx) => {
-          const fileId = item.record?.id || item.file.name as FileId /* FIX ME: This doesn't seem right */;
-          const originalIdx = files.findIndex(f => (f.record?.id || f.file.name) === fileId);
+          if (!item.record?.id) {
+            console.error('FileGrid: File missing FileRecord with proper ID:', item.file.name);
+            return null;
+          }
+          const fileId = item.record.id;
+          const originalIdx = files.findIndex(f => f.record?.id === fileId);
           const supported = isFileSupported ? isFileSupported(item.file.name) : true;
           return (
             <FileCard

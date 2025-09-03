@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { isFileObject } from '../types/fileContext';
 
 /**
  * Hook to convert a File object to { file: File; url: string } format
@@ -8,8 +9,8 @@ export function useFileWithUrl(file: File | Blob | null): { file: File | Blob; u
   return useMemo(() => {
     if (!file) return null;
 
-    // Validate that file is a proper File or Blob object
-    if (!(file instanceof File) && !(file instanceof Blob)) {
+    // Validate that file is a proper File, FileWithId, or Blob object
+    if (!isFileObject(file) && !(file instanceof Blob)) {
       console.warn('useFileWithUrl: Expected File or Blob, got:', file);
       return null;
     }

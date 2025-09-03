@@ -16,12 +16,12 @@ import styles from './FileEditor.module.css';
 import FileEditorThumbnail from './FileEditorThumbnail';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
-import { FileId } from '../../types/file';
+import { FileId, FileWithId } from '../../types/fileContext';
 
 
 interface FileEditorProps {
-  onOpenPageEditor?: (file: File) => void;
-  onMergeFiles?: (files: File[]) => void;
+  onOpenPageEditor?: (file: FileWithId) => void;
+  onMergeFiles?: (files: FileWithId[]) => void;
   toolMode?: boolean;
   showUpload?: boolean;
   showBulkActions?: boolean;
@@ -421,7 +421,7 @@ const FileEditor = ({
     if (startIndex === -1) return;
 
     const recordsToMerge = activeFileRecords.slice(startIndex);
-    const filesToMerge = recordsToMerge.map(r => selectors.getFile(r.id)).filter(Boolean) as File[];
+    const filesToMerge = recordsToMerge.map(r => selectors.getFile(r.id)).filter(Boolean) as FileWithId[];
     if (onMergeFiles) {
       onMergeFiles(filesToMerge);
     }

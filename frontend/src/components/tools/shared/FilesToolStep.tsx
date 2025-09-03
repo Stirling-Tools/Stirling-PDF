@@ -1,9 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import FileStatusIndicator from './FileStatusIndicator';
+import { FileWithId } from '../../../types/fileContext';
 
 export interface FilesToolStepProps {
-  selectedFiles: File[];
+  selectedFiles: FileWithId[];
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
   placeholder?: string;

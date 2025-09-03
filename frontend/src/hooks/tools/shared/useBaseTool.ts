@@ -4,10 +4,11 @@ import { useEndpointEnabled } from '../../useEndpointConfig';
 import { BaseToolProps } from '../../../types/tool';
 import { ToolOperationHook } from './useToolOperation';
 import { BaseParametersHook } from './useBaseParameters';
+import { FileWithId } from '../../../types/fileContext';
 
 interface BaseToolReturn<TParams> {
   // File management
-  selectedFiles: File[];
+  selectedFiles: FileWithId[];
 
   // Tool-specific hooks
   params: BaseParametersHook<TParams>;
