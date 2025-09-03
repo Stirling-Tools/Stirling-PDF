@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from '../../../contexts/FileContext';
@@ -9,6 +9,7 @@ import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { createOperation } from '../../../utils/toolOperationTracker';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { FileId } from '../../../types/file';
+import { FileRecord } from '../../../types/fileContext';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -114,6 +115,7 @@ export interface ToolOperationHook<TParams = void> {
   resetResults: () => void;
   clearError: () => void;
   cancelOperation: () => void;
+  undoOperation: () => Promise<void>;
 }
 
 // Re-export for backwards compatibility
@@ -135,12 +137,19 @@ export const useToolOperation = <TParams>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, findFileId } = useFileContext();
+  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, undoConsumeFiles, findFileId, actions: fileActions, selectors } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
   const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles } = useToolResources();
+
+  // Track last operation for undo functionality
+  const lastOperationRef = useRef<{
+    inputFiles: File[];
+    inputFileRecords: FileRecord[];
+    outputFileIds: FileId[];
+  } | null>(null);
 
   const executeOperation = useCallback(async (
     params: TParams,
@@ -240,8 +249,33 @@ export const useToolOperation = <TParams>(
         actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
 
         // Replace input files with processed files (consumeFiles handles pinning)
-        const inputFileIds = validFiles.map(file => findFileId(file)).filter(Boolean) as FileId[];
-        await consumeFiles(inputFileIds, processedFiles);
+        const inputFileIds: FileId[] = [];
+        const inputFileRecords: FileRecord[] = [];
+        
+        // Build parallel arrays of IDs and records for undo tracking
+        for (const file of validFiles) {
+          const fileId = findFileId(file);
+          if (fileId) {
+            const record = selectors.getFileRecord(fileId);
+            if (record) {
+              inputFileIds.push(fileId);
+              inputFileRecords.push(record);
+            } else {
+              console.warn(`No file record found for file: ${file.name}`);
+            }
+          } else {
+            console.warn(`No file ID found for file: ${file.name}`);
+          }
+        }
+        
+        const outputFileIds = await consumeFiles(inputFileIds, processedFiles);
+        
+        // Store operation data for undo (only store what we need to avoid memory bloat)
+        lastOperationRef.current = {
+          inputFiles: validFiles, // Keep original File objects for undo
+          inputFileRecords: inputFileRecords.map(record => ({ ...record })), // Deep copy to avoid reference issues
+          outputFileIds
+        };
 
         markOperationApplied(fileId, operationId);
       }
@@ -267,7 +301,64 @@ export const useToolOperation = <TParams>(
   const resetResults = useCallback(() => {
     cleanupBlobUrls();
     actions.resetResults();
+    // Clear undo data when results are reset to prevent memory leaks
+    lastOperationRef.current = null;
   }, [cleanupBlobUrls, actions]);
+
+  // Cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      lastOperationRef.current = null;
+    };
+  }, []);
+
+  const undoOperation = useCallback(async () => {
+    if (!lastOperationRef.current) {
+      actions.setError(t('noOperationToUndo', 'No operation to undo'));
+      return;
+    }
+
+    const { inputFiles, inputFileRecords, outputFileIds } = lastOperationRef.current;
+
+    // Validate that we have data to undo
+    if (inputFiles.length === 0 || inputFileRecords.length === 0) {
+      actions.setError(t('invalidUndoData', 'Cannot undo: invalid operation data'));
+      return;
+    }
+
+    if (outputFileIds.length === 0) {
+      actions.setError(t('noFilesToUndo', 'Cannot undo: no files were processed in the last operation'));
+      return;
+    }
+
+    try {
+      // Undo the consume operation
+      await undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds);
+      
+      // Clear results and operation tracking
+      resetResults();
+      lastOperationRef.current = null;
+      
+      // Show success message
+      actions.setStatus(t('undoSuccess', 'Operation undone successfully'));
+      
+    } catch (error: any) {
+      let errorMessage = extractErrorMessage(error);
+      
+      // Provide more specific error messages based on error type
+      if (error.message?.includes('Mismatch between input files')) {
+        errorMessage = t('undoDataMismatch', 'Cannot undo: operation data is corrupted');
+      } else if (error.message?.includes('IndexedDB')) {
+        errorMessage = t('undoStorageError', 'Undo completed but some files could not be saved to storage');
+      } else if (error.name === 'QuotaExceededError') {
+        errorMessage = t('undoQuotaError', 'Cannot undo: insufficient storage space');
+      }
+      
+      actions.setError(`${t('undoFailed', 'Failed to undo operation')}: ${errorMessage}`);
+      
+      // Don't clear the operation data if undo failed - user might want to try again
+    }
+  }, [undoConsumeFiles, resetResults, actions, t]);
 
   return {
     // State
@@ -285,6 +376,7 @@ export const useToolOperation = <TParams>(
     executeOperation,
     resetResults,
     clearError: actions.clearError,
-    cancelOperation
+    cancelOperation,
+    undoOperation
   };
 };

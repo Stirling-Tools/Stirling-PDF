@@ -50,6 +50,7 @@ const Compress = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("compress.title", "Compression Results"),
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };

@@ -48,6 +48,7 @@ const Sanitize = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("sanitize.sanitizationResults", "Sanitization Results"),
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };
