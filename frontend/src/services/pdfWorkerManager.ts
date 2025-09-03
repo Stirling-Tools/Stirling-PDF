@@ -8,7 +8,6 @@
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 
-
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
   private activeDocuments = new Set<any>();
