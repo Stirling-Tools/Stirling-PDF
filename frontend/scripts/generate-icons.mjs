@@ -2,7 +2,11 @@
 
 import { icons } from '@iconify-json/material-symbols';
 import fs from 'fs';
-import path from 'path';
+import { fileURLToPath } from 'url';
+import path, { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Check for verbose flag
 const isVerbose = process.argv.includes('--verbose') || process.argv.includes('-v');

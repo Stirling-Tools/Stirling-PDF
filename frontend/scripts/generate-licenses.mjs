@@ -2,7 +2,11 @@
 
 import { execSync } from 'child_process';
 import fs from 'fs';
-import path from 'path';
+import { fileURLToPath } from 'url';
+import path, { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Generate 3rd party licenses for frontend dependencies
