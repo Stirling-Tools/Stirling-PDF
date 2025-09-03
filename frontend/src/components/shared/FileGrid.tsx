@@ -123,12 +123,16 @@ const FileGrid = ({
         h="30rem"
         style={{ overflowY: "auto", width: "100%" }}
       >
-        {displayFiles.map((item, idx) => {
-          if (!item.record?.id) {
-            console.error('FileGrid: File missing WorkbenchFile with proper ID:', item.file.name);
-            return null;
-          }
-          const fileId = item.record.id;
+        {displayFiles
+          .filter(item => {
+            if (!item.record?.id) {
+              console.error('FileGrid: File missing WorkbenchFile with proper ID:', item.file.name);
+              return false;
+            }
+            return true;
+          })
+          .map((item, idx) => {
+          const fileId = item.record!.id; // Safe to assert after filter
           const originalIdx = files.findIndex(f => f.record?.id === fileId);
           const supported = isFileSupported ? isFileSupported(item.file.name) : true;
           return (
