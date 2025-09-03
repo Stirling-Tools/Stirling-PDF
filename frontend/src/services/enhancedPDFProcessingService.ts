@@ -1,4 +1,4 @@
-import * as pdfjsLib from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { ProcessedFile, ProcessingState, PDFPage, ProcessingStrategy, ProcessingConfig, ProcessingMetrics } from '../types/processing';
 import { ProcessingCache } from './processingCache';
 import { FileHasher } from '../utils/fileHash';
@@ -182,7 +182,7 @@ export class EnhancedPDFProcessingService {
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
-    
+
     try {
       const totalPages = pdf.numPages;
 
