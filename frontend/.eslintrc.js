@@ -5,8 +5,7 @@ module.exports = {
   ],
   rules: {
     // Custom rules to prevent dangerous file.name as ID patterns
-    'no-file-name-as-id': 'error',
-    'prefer-file-with-id': 'warn'
+    'no-file-name-as-id': 'error'
   },
   overrides: [
     {
