@@ -71,7 +71,6 @@ async function processRequestQueue() {
           
           console.log(`📸 Batch generating ${requests.length} thumbnails for pages: ${pageNumbers.slice(0, 5).join(', ')}${pageNumbers.length > 5 ? '...' : ''}`);
           
-          // Use quickKey for PDF document caching (same metadata, consistent format)
           const fileId = createQuickKey(file);
           
           const results = await thumbnailGenerationService.generateThumbnails(

@@ -69,14 +69,14 @@ export interface FileContextNormalizedFiles {
 export function createFileId(): FileId {
   // Use crypto.randomUUID for authoritative primary key
   if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
-    return window.crypto.randomUUID();
+    return window.crypto.randomUUID() as FileId;
   }
   // Fallback for environments without randomUUID
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
-  });
+  }) as FileId;
 }
 
 // Generate quick deduplication key from file metadata
@@ -102,22 +102,26 @@ export function createFileWithId(file: File, id?: FileId): FileWithId {
   const fileId = id || createFileId();
   const quickKey = createQuickKey(file);
   
-  // Create new File-like object with embedded fileId and quickKey
-  const fileWithId = Object.create(file);
-  Object.defineProperty(fileWithId, 'fileId', {
+  const newFile = new File([file], file.name, {
+    type: file.type,
+    lastModified: file.lastModified
+  });
+  
+  Object.defineProperty(newFile, 'fileId', {
     value: fileId,
     writable: false,
     enumerable: true,
     configurable: false
   });
-  Object.defineProperty(fileWithId, 'quickKey', {
+  
+  Object.defineProperty(newFile, 'quickKey', {
     value: quickKey,
     writable: false,
     enumerable: true,
     configurable: false
   });
   
-  return fileWithId as FileWithId;
+  return newFile as FileWithId;
 }
 
 // Wrap array of Files with FileIds
@@ -132,18 +136,21 @@ export function extractFileIds(files: FileWithId[]): FileId[] {
   return files.map(file => file.fileId);
 }
 
-// Extract regular File objects from FileWithId array
 export function extractFiles(files: FileWithId[]): File[] {
-  return files.map(file => {
-    // Create clean File object without the fileId property
-    return new File([file], file.name, {
-      type: file.type,
-      lastModified: file.lastModified
-    });
-  });
+  return files as File[];
 }
 
 // Type guards and validation functions
+
+// Check if an object is a File or FileWithId (replaces instanceof File checks)
+export function isFileObject(obj: any): obj is File | FileWithId {
+  return obj && 
+         typeof obj.name === 'string' &&
+         typeof obj.size === 'number' &&
+         typeof obj.type === 'string' &&
+         typeof obj.lastModified === 'number' &&
+         typeof obj.arrayBuffer === 'function';
+}
 
 // Validate that a string is a proper FileId (has UUID format)
 export function isValidFileId(id: string): id is FileId {
@@ -257,7 +264,7 @@ export interface FileOperation {
   id: string;
   type: OperationType;
   timestamp: number;
-  fileIds: string[];
+  fileIds: FileId[];
   status: 'pending' | 'applied' | 'failed';
   data?: any;
   metadata?: {
@@ -271,7 +278,7 @@ export interface FileOperation {
 }
 
 export interface FileOperationHistory {
-  fileId: string;
+  fileId: FileId;
   fileName: string;
   operations: (FileOperation | PageOperation)[];
   createdAt: number;
@@ -286,7 +293,7 @@ export interface ViewerConfig {
 }
 
 export interface FileEditHistory {
-  fileId: string;
+  fileId: FileId;
   pageOperations: PageOperation[];
   lastModified: number;
 }
@@ -369,26 +376,19 @@ export interface FileContextActions {
   
   // Resource management
   trackBlobUrl: (url: string) => void;
-  scheduleCleanup: (fileId: string, delay?: number) => void;
-  cleanupFile: (fileId: string) => void;
+  scheduleCleanup: (fileId: FileId, delay?: number) => void;
+  cleanupFile: (fileId: FileId) => void;
 }
 
 // File selectors (separate from actions to avoid re-renders)
 export interface FileContextSelectors {
-  // File access - now returns FileWithId for safer type checking
   getFile: (id: FileId) => FileWithId | undefined;
   getFiles: (ids?: FileId[]) => FileWithId[];
-  
-  // Record access - uses normalized state
   getFileRecord: (id: FileId) => FileRecord | undefined;
   getFileRecords: (ids?: FileId[]) => FileRecord[];
-  
-  // Derived selectors - now return FileWithId
   getAllFileIds: () => FileId[];
   getSelectedFiles: () => FileWithId[];
   getSelectedFileRecords: () => FileRecord[];
-  
-  // Pinned files selectors - now return FileWithId
   getPinnedFileIds: () => FileId[];
   getPinnedFiles: () => FileWithId[];
   getPinnedFileRecords: () => FileRecord[];

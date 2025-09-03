@@ -3,11 +3,12 @@ import { Stack, Text, Select, Alert } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters } from '../../../hooks/tools/convert/useConvertParameters';
 import { usePdfSignatureDetection } from '../../../hooks/usePdfSignatureDetection';
+import { FileWithId } from '../../../types/fileContext';
 
 interface ConvertToPdfaSettingsProps {
   parameters: ConvertParameters;
   onParameterChange: (key: keyof ConvertParameters, value: any) => void;
-  selectedFiles: File[];
+  selectedFiles: FileWithId[];
   disabled?: boolean;
 }
 

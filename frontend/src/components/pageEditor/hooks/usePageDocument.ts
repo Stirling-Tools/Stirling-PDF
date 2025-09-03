@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useFileState } from '../../../contexts/FileContext';
 import { PDFDocument, PDFPage } from '../../../types/pageEditor';
+import { FileId } from '../../../types/fileContext';
 
 export interface PageDocumentHook {
   document: PDFDocument | null;
@@ -70,7 +71,7 @@ export function usePageDocument(): PageDocumentHook {
     let totalPageCount = 0;
     
     // Helper function to create pages from a file
-    const createPagesFromFile = (fileId: string, startPageNumber: number): PDFPage[] => {
+    const createPagesFromFile = (fileId: FileId, startPageNumber: number): PDFPage[] => {
       const fileRecord = selectors.getFileRecord(fileId);
       if (!fileRecord) {
         return [];
@@ -111,7 +112,7 @@ export function usePageDocument(): PageDocumentHook {
     // Collect all pages from original files (without renumbering yet)
     const originalFilePages: PDFPage[] = [];
     originalFileIds.forEach(fileId => {
-      const filePages = createPagesFromFile(fileId, 1); // Temporary numbering
+      const filePages = createPagesFromFile(fileId as FileId, 1); // Temporary numbering
       originalFilePages.push(...filePages);
     });
     
@@ -130,7 +131,7 @@ export function usePageDocument(): PageDocumentHook {
       // Collect all pages to insert
       const allNewPages: PDFPage[] = [];
       fileIds.forEach(fileId => {
-        const insertedPages = createPagesFromFile(fileId, 1);
+        const insertedPages = createPagesFromFile(fileId as FileId, 1);
         allNewPages.push(...insertedPages);
       });
       

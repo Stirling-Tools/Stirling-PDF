@@ -89,19 +89,16 @@ function FileContextInner({
       }));
     }
     
-    // Convert to FileWithId objects
     return addedFilesWithIds.map(({ file, id }) => createFileWithId(file, id));
   }, [indexedDB, enablePersistence]);
 
   const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<FileWithId[]> => {
     const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch, lifecycleManager);
-    // Convert to FileWithId objects  
     return result.map(({ file, id }) => createFileWithId(file, id));
   }, []);
 
   const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>): Promise<FileWithId[]> => {
     const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
-    // Convert to FileWithId objects
     return result.map(({ file, id }) => createFileWithId(file, id));
   }, []);
 
@@ -111,11 +108,9 @@ function FileContextInner({
   // Helper functions for pinned files
   const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<FileWithId[]> => {
     const result = await consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch);
-    // Convert results to FileWithId objects
     return result.map(({ file, id }) => createFileWithId(file, id));
   }, []);
 
-  // File pinning functions - now use FileWithId directly
   const pinFileWrapper = useCallback((file: FileWithId) => {
     baseActions.pinFile(file.fileId);
   }, [baseActions]);

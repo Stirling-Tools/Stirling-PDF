@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useIndexedDB } from '../contexts/IndexedDBContext';
 import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+import { FileId } from '../types/fileContext';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
@@ -46,7 +47,7 @@ export const useFileManager = () => {
     
     // Regular file loading
     if (fileMetadata.id) {
-      const file = await indexedDB.loadFile(fileMetadata.id);
+      const file = await indexedDB.loadFile(fileMetadata.id as FileId);
       if (file) {
         return file;
       }
@@ -86,7 +87,7 @@ export const useFileManager = () => {
       throw new Error('IndexedDB context not available');
     }
     try {
-      await indexedDB.deleteFile(file.id);
+      await indexedDB.deleteFile(file.id as FileId);
       setFiles(files.filter((_, i) => i !== index));
     } catch (error) {
       console.error('Failed to remove file:', error);
@@ -100,7 +101,7 @@ export const useFileManager = () => {
     }
     try {
       // Store file with provided UUID from FileContext (thumbnail generated internally)
-      const metadata = await indexedDB.saveFile(file, fileId);
+      const metadata = await indexedDB.saveFile(file, fileId as FileId);
 
       // Convert file to ArrayBuffer for StoredFile interface compatibility
       const arrayBuffer = await file.arrayBuffer();
@@ -176,7 +177,7 @@ export const useFileManager = () => {
     try {
       // Update access time - this will be handled by the cache in IndexedDBContext
       // when the file is loaded, so we can just load it briefly to "touch" it
-      await indexedDB.loadFile(id);
+      await indexedDB.loadFile(id as FileId);
     } catch (error) {
       console.error('Failed to touch file:', error);
     }

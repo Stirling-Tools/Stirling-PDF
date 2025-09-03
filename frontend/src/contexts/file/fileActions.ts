@@ -361,7 +361,6 @@ export async function consumeFiles(
     })
   );
   
-  // Extract records for dispatch
   const outputFileRecords = processedOutputs.map(({ record }) => record);
   
   // Dispatch the consume action
@@ -375,7 +374,6 @@ export async function consumeFiles(
   
   if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputFileRecords.length} outputs`);
   
-  // Return file data for FileWithId conversion
   return processedOutputs.map(({ file, id, thumbnail }) => ({ file, id, thumbnail }));
 }
 

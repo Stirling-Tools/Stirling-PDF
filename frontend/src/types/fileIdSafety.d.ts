@@ -2,7 +2,7 @@
  * Type safety declarations to prevent file.name/UUID confusion
  */
 
-import { FileId, FileWithId } from './fileContext';
+import { FileId, FileWithId, OperationType, FileOperation } from './fileContext';
 
 declare global {
   namespace FileIdSafety {
@@ -31,14 +31,8 @@ declare global {
   }
 }
 
-// Module augmentation for stricter type checking on dangerous functions
-declare module '../utils/toolOperationTracker' {
-  export const createOperation: <TParams = void>(
-    operationType: string,
-    params: TParams,
-    selectedFiles: FileWithId[] // Must be FileWithId, not File[]
-  ) => { operation: FileOperation; operationId: string; fileId: string };
-}
+// Note: Module augmentation removed to prevent duplicate declaration
+// The actual implementation in toolOperationTracker.ts enforces FileWithId usage
 
 // Augment FileContext types to prevent bypassing FileWithId
 declare module '../contexts/FileContext' {

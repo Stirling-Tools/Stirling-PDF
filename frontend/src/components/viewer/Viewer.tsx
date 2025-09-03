@@ -15,6 +15,7 @@ import { fileStorage } from "../../services/fileStorage";
 import SkeletonLoader from '../shared/SkeletonLoader';
 import { useFileState, useFileActions, useCurrentFile } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
+import { isFileObject } from "../../types/fileContext";
 
 
 // Lazy loading page image component
@@ -200,7 +201,7 @@ const Viewer = ({
   const effectiveFile = React.useMemo(() => {
     if (previewFile) {
       // Validate the preview file
-      if (!(previewFile instanceof File)) {
+      if (!isFileObject(previewFile)) {
         return null;
       }
 

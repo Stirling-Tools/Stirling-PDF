@@ -18,6 +18,8 @@ import { FileContextProvider } from '../../contexts/FileContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n/config';
 import axios from 'axios';
+import { createTestFileWithId } from '../utils/testFileHelpers';
+import { FileWithId } from '../../types/fileContext';
 
 // Mock axios
 vi.mock('axios');
@@ -55,9 +57,9 @@ const createTestFile = (name: string, content: string, type: string): File => {
   return new File([content], name, { type });
 };
 
-const createPDFFile = (): File => {
+const createPDFFile = (): FileWithId => {
   const pdfContent = '%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\ntrailer\n<<\n/Size 2\n/Root 1 0 R\n>>\nstartxref\n0\n%%EOF';
-  return createTestFile('test.pdf', pdfContent, 'application/pdf');
+  return createTestFileWithId('test.pdf', pdfContent, 'application/pdf');
 };
 
 // Test wrapper component
@@ -162,7 +164,7 @@ describe('Convert Tool Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const testFile = createTestFile('invalid.txt', 'not a pdf', 'text/plain');
+      const testFile = createTestFileWithId('invalid.txt', 'not a pdf', 'text/plain');
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'png',
@@ -426,7 +428,7 @@ describe('Convert Tool Integration Tests', () => {
       });
       const files = [
         createPDFFile(),
-        createTestFile('test2.pdf', '%PDF-1.4...', 'application/pdf')
+        createTestFileWithId('test2.pdf', '%PDF-1.4...', 'application/pdf')
       ]
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
@@ -527,7 +529,7 @@ describe('Convert Tool Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const corruptedFile = createTestFile('corrupted.pdf', 'not-a-pdf', 'application/pdf');
+      const corruptedFile = createTestFileWithId('corrupted.pdf', 'not-a-pdf', 'application/pdf');
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'png',

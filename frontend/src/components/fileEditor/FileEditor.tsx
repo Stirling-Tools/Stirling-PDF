@@ -6,6 +6,7 @@ import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useFileSelection, useFileState, useFileManagement } from '../../contexts/FileContext';
+import { FileId } from '../../types/fileContext';
 import { useNavigationActions } from '../../contexts/NavigationContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
@@ -156,26 +157,6 @@ const FileEditor = ({
 
               if (extractionResult.success) {
                 allExtractedFiles.push(...extractionResult.extractedFiles);
-
-                // Record ZIP extraction operation
-                const operationId = `zip-extract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                const operation: FileOperation = {
-                id: operationId,
-                type: 'convert',
-                timestamp: Date.now(),
-                fileIds: extractionResult.extractedFiles.map(f => f.name),
-                status: 'pending',
-                metadata: {
-                  originalFileName: file.name,
-                  outputFileNames: extractionResult.extractedFiles.map(f => f.name),
-                  fileSize: file.size,
-                  parameters: {
-                    extractionType: 'zip',
-                    extractedCount: extractionResult.extractedCount,
-                    totalFiles: extractionResult.totalFiles
-                  }
-                }
-              };
               
               if (extractionResult.errors.length > 0) {
                 errors.push(...extractionResult.errors);
@@ -278,7 +259,7 @@ const FileEditor = ({
     }
 
     // Update context (this automatically updates tool selection since they use the same action)
-    setSelectedFiles(newSelection);
+    setSelectedFiles(newSelection.map(id => id as FileId));
   }, [setSelectedFiles, toolMode, setStatus, activeFileRecords]);
 
   const toggleSelectionMode = useCallback(() => {
@@ -306,7 +287,7 @@ const FileEditor = ({
 
     // Handle multi-file selection reordering
     const filesToMove = selectedFileIds.length > 1 
-      ? selectedFileIds.filter(id => currentIds.includes(id))
+      ? selectedFileIds.filter(id => currentIds.includes(id as any))
       : [sourceFileId];
 
     // Create new order
@@ -337,7 +318,7 @@ const FileEditor = ({
     }
 
     // Insert files at the calculated position
-    newOrder.splice(insertIndex, 0, ...filesToMove);
+    newOrder.splice(insertIndex, 0, ...filesToMove.map(id => id as any));
 
     // Update file order
     reorderFiles(newOrder);
@@ -355,31 +336,11 @@ const FileEditor = ({
     const file = record ? selectors.getFile(record.id) : null;
 
     if (record && file) {
-      // Record close operation
-      const fileName = file.name;
-      const contextFileId = record.id;
-      const operationId = `close-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const operation: FileOperation = {
-        id: operationId,
-        type: 'remove',
-        timestamp: Date.now(),
-        fileIds: [fileName],
-        status: 'pending',
-        metadata: {
-          originalFileName: fileName,
-          fileSize: record.size,
-          parameters: {
-            action: 'close',
-            reason: 'user_request'
-          }
-        }
-      };
-            
       // Remove file from context but keep in storage (close, don't delete)
-      removeFiles([contextFileId], false);
+      removeFiles([record.id], false);
 
       // Remove from context selections
-      const currentSelected = selectedFileIds.filter(id => id !== contextFileId);
+      const currentSelected = selectedFileIds.filter(id => id !== record.id);
       setSelectedFiles(currentSelected);
     }
   }, [activeFileRecords, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
@@ -388,7 +349,7 @@ const FileEditor = ({
     const record = activeFileRecords.find(r => r.id === fileId);
     if (record) {
       // Set the file as selected in context and switch to viewer for preview
-      setSelectedFiles([fileId]);
+      setSelectedFiles([fileId as FileId]);
       navActions.setMode('viewer');
     }
   }, [activeFileRecords, setSelectedFiles, navActions.setMode]);
@@ -405,7 +366,7 @@ const FileEditor = ({
   }, [activeFileRecords, selectors, onMergeFiles]);
 
   const handleSplitFile = useCallback((fileId: string) => {
-    const file = selectors.getFile(fileId);
+    const file = selectors.getFile(fileId as FileId);
     if (file && onOpenPageEditor) {
       onOpenPageEditor(file);
     }

@@ -9,7 +9,7 @@ import {
   FileContextStateValue,
   FileContextActionsValue 
 } from './contexts';
-import { FileId, FileRecord } from '../../types/fileContext';
+import { FileId, FileRecord, FileWithId } from '../../types/fileContext';
 
 /**
  * Hook for accessing file state (will re-render on any state change)
@@ -122,7 +122,7 @@ export function useFileRecord(fileId: FileId): { file?: File; record?: FileRecor
 /**
  * Hook for all files (use sparingly - causes re-renders on file list changes)
  */
-export function useAllFiles(): { files: File[]; records: FileRecord[]; fileIds: FileId[] } {
+export function useAllFiles(): { files: FileWithId[]; records: FileRecord[]; fileIds: FileId[] } {
   const { state, selectors } = useFileState();
   
   return useMemo(() => ({
@@ -135,7 +135,7 @@ export function useAllFiles(): { files: File[]; records: FileRecord[]; fileIds: 
 /**
  * Hook for selected files (optimized for selection-based UI)
  */
-export function useSelectedFiles(): { files: File[]; records: FileRecord[]; fileIds: FileId[] } {
+export function useSelectedFiles(): { files: FileWithId[]; records: FileRecord[]; fileIds: FileId[] } {
   const { state, selectors } = useFileState();
   
   return useMemo(() => ({
@@ -164,11 +164,6 @@ export function useFileContext() {
     // File management
     addFiles: actions.addFiles,
     consumeFiles: actions.consumeFiles,
-    recordOperation: (fileId: string, operation: any) => {}, // Operation tracking not implemented
-    markOperationApplied: (fileId: string, operationId: string) => {}, // Operation tracking not implemented  
-    markOperationFailed: (fileId: string, operationId: string, error: string) => {}, // Operation tracking not implemented
-    
-    // File ID lookup removed - use FileWithId.fileId directly for better performance and type safety
     
     // Pinned files
     pinnedFiles: state.pinnedFiles,

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useFileState, useFileActions } from '../contexts/FileContext';
 import { FileMetadata } from '../types/file';
+import { FileId } from '../types/fileContext';
 
 export const useFileHandler = () => {
   const { state } = useFileState(); // Still needed for addStoredFiles
@@ -20,11 +21,15 @@ export const useFileHandler = () => {
   const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: string; metadata: FileMetadata }>) => {
     // Filter out files that already exist with the same ID (exact match)
     const newFiles = filesWithMetadata.filter(({ originalId }) => {
-      return state.files.byId[originalId] === undefined;
+      return state.files.byId[originalId as FileId] === undefined;
     });
     
     if (newFiles.length > 0) {
-      await actions.addStoredFiles(newFiles);
+      await actions.addStoredFiles(newFiles.map(({file, originalId, metadata}) => ({
+        file, 
+        originalId: originalId as FileId, 
+        metadata
+      })));
     }
     
     console.log(`📁 Added ${newFiles.length} stored files (${filesWithMetadata.length - newFiles.length} skipped as duplicates)`);

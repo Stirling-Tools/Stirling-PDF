@@ -6,7 +6,6 @@ import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { createOperation } from '../../../utils/toolOperationTracker';
 import { FileWithId, extractFiles } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 
@@ -108,7 +107,7 @@ export const useToolOperation = <TParams = void>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles } = useFileContext();
+  const { addFiles, consumeFiles } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -131,9 +130,6 @@ export const useToolOperation = <TParams = void>(
       return;
     }
 
-    // Setup operation tracking with proper FileWithId
-    const { operation, operationId, fileId } = createOperation(config.operationType, params, selectedFiles);
-    recordOperation(fileId, operation);
 
     // Reset state
     actions.setLoading(true);
@@ -144,7 +140,6 @@ export const useToolOperation = <TParams = void>(
     try {
       let processedFiles: File[];
 
-      // Convert FileWithId to regular File objects for API processing
       const validRegularFiles = extractFiles(validFiles);
 
       if (config.customProcessor) {
@@ -214,20 +209,17 @@ export const useToolOperation = <TParams = void>(
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds = validFiles.map(file => file.fileId);
         await consumeFiles(inputFileIds, processedFiles);
-
-        markOperationApplied(fileId, operationId);
       }
 
     } catch (error: any) {
       const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
       actions.setError(errorMessage);
       actions.setStatus('');
-      markOperationFailed(fileId, operationId, errorMessage);
     } finally {
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
+  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();

@@ -123,10 +123,9 @@ const FileGrid = ({
         style={{ overflowY: "auto", width: "100%" }}
       >
         {displayFiles.map((item, idx) => {
-          // Use record ID if available, otherwise throw error for missing FileRecord
           if (!item.record?.id) {
             console.error('FileGrid: File missing FileRecord with proper ID:', item.file.name);
-            return null; // Skip rendering files without proper IDs
+            return null;
           }
           const fileId = item.record.id;
           const originalIdx = files.findIndex(f => f.record?.id === fileId);

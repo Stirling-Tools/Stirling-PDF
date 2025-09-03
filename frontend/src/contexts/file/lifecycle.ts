@@ -35,10 +35,10 @@ export class FileLifecycleManager {
    */
   cleanupFile = (fileId: string, stateRef?: React.MutableRefObject<any>): void => {
     // Use comprehensive cleanup (same as removeFiles)
-    this.cleanupAllResourcesForFile(fileId, stateRef);
+    this.cleanupAllResourcesForFile(fileId as FileId, stateRef);
     
     // Remove file from state
-    this.dispatch({ type: 'REMOVE_FILES', payload: { fileIds: [fileId] } });
+    this.dispatch({ type: 'REMOVE_FILES', payload: { fileIds: [fileId as FileId] } });
   };
 
   /**
