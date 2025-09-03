@@ -44,7 +44,7 @@ export interface ProcessedFileMetadata {
   [key: string]: any;
 }
 
-export interface FileRecord {
+export interface WorkbenchFile {
   id: FileId;
   name: string;
   size: number;
@@ -62,7 +62,7 @@ export interface FileRecord {
 
 export interface FileContextNormalizedFiles {
   ids: FileId[];
-  byId: Record<FileId, FileRecord>;
+  byId: Record<FileId, WorkbenchFile>;
 }
 
 // Helper functions - UUID-based primary keys (zero collisions, synchronous)
@@ -85,60 +85,60 @@ export function createQuickKey(file: File): string {
   return `${file.name}|${file.size}|${file.lastModified}`;
 }
 
-// File with embedded UUID - replaces loose File + FileId parameter passing
-export interface FileWithId extends File {
+// Stirling PDF file with embedded UUID - replaces loose File + FileId parameter passing
+export interface StirlingFile extends File {
   readonly fileId: FileId;
   readonly quickKey: string; // Fast deduplication key: name|size|lastModified
 }
 
 // Type guard to check if a File object has an embedded fileId
-export function isFileWithId(file: File): file is FileWithId {
+export function isStirlingFile(file: File): file is StirlingFile {
   return 'fileId' in file && typeof (file as any).fileId === 'string' &&
          'quickKey' in file && typeof (file as any).quickKey === 'string';
 }
 
-// Create a FileWithId from a regular File object
-export function createFileWithId(file: File, id?: FileId): FileWithId {
+// Create a StirlingFile from a regular File object
+export function createStirlingFile(file: File, id?: FileId): StirlingFile {
   const fileId = id || createFileId();
   const quickKey = createQuickKey(file);
-  
+
   // File properties are not enumerable, so we need to copy them explicitly
   // This avoids prototype chain issues while preserving all File functionality
-  const fileWithId = {
+  const stirlingFile = {
     // Explicitly copy File properties (they're not enumerable)
     name: file.name,
     size: file.size,
     type: file.type,
     lastModified: file.lastModified,
     webkitRelativePath: file.webkitRelativePath,
-    
+
     // Add our custom properties
     fileId: fileId,
     quickKey: quickKey,
-    
+
     // Preserve File prototype methods by binding them to the original file
     arrayBuffer: file.arrayBuffer.bind(file),
     slice: file.slice.bind(file),
     stream: file.stream.bind(file),
     text: file.text.bind(file)
-  } as FileWithId;
-  
-  return fileWithId;
+  } as StirlingFile;
+
+  return stirlingFile;
 }
 
-// Extract FileIds from FileWithId array
-export function extractFileIds(files: FileWithId[]): FileId[] {
+// Extract FileIds from StirlingFile array
+export function extractFileIds(files: StirlingFile[]): FileId[] {
   return files.map(file => file.fileId);
 }
 
-// Extract regular File objects from FileWithId array
-export function extractFiles(files: FileWithId[]): File[] {
+// Extract regular File objects from StirlingFile array
+export function extractFiles(files: StirlingFile[]): File[] {
   return files as File[];
 }
 
-// Check if an object is a File or FileWithId (replaces instanceof File checks)
-export function isFileObject(obj: any): obj is File | FileWithId {
-  return obj && 
+// Check if an object is a File or StirlingFile (replaces instanceof File checks)
+export function isFileObject(obj: any): obj is File | StirlingFile {
+  return obj &&
          typeof obj.name === 'string' &&
          typeof obj.size === 'number' &&
          typeof obj.type === 'string' &&
@@ -148,7 +148,7 @@ export function isFileObject(obj: any): obj is File | FileWithId {
 
 
 
-export function toFileRecord(file: File, id?: FileId): FileRecord {
+export function toWorkbenchFile(file: File, id?: FileId): WorkbenchFile {
   const fileId = id || createFileId();
   return {
     id: fileId,
@@ -161,7 +161,7 @@ export function toFileRecord(file: File, id?: FileId): FileRecord {
   };
 }
 
-export function revokeFileResources(record: FileRecord): void {
+export function revokeFileResources(record: WorkbenchFile): void {
   // Only revoke blob: URLs to prevent errors on other schemes
   if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
     try {
@@ -235,7 +235,7 @@ export interface FileContextState {
   // Core file management - lightweight file IDs only
   files: {
     ids: FileId[];
-    byId: Record<FileId, FileRecord>;
+    byId: Record<FileId, WorkbenchFile>;
   };
 
   // Pinned files - files that won't be consumed by tools
@@ -254,16 +254,16 @@ export interface FileContextState {
 // Action types for reducer pattern
 export type FileContextAction =
   // File management actions
-  | { type: 'ADD_FILES'; payload: { fileRecords: FileRecord[] } }
+  | { type: 'ADD_FILES'; payload: { workbenchFiles: WorkbenchFile[] } }
   | { type: 'REMOVE_FILES'; payload: { fileIds: FileId[] } }
-  | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<FileRecord> } }
+  | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<WorkbenchFile> } }
   | { type: 'REORDER_FILES'; payload: { orderedFileIds: FileId[] } }
 
   // Pinned files actions
   | { type: 'PIN_FILE'; payload: { fileId: FileId } }
   | { type: 'UNPIN_FILE'; payload: { fileId: FileId } }
-  | { type: 'CONSUME_FILES'; payload: { inputFileIds: FileId[]; outputFileRecords: FileRecord[] } }
-  | { type: 'UNDO_CONSUME_FILES'; payload: { inputFileRecords: FileRecord[]; outputFileIds: FileId[] } }
+  | { type: 'CONSUME_FILES'; payload: { inputFileIds: FileId[]; outputWorkbenchFiles: WorkbenchFile[] } }
+  | { type: 'UNDO_CONSUME_FILES'; payload: { inputWorkbenchFiles: WorkbenchFile[]; outputFileIds: FileId[] } }
 
   // UI actions
   | { type: 'SET_SELECTED_FILES'; payload: { fileIds: FileId[] } }
@@ -279,22 +279,22 @@ export type FileContextAction =
 
 export interface FileContextActions {
   // File management - lightweight actions only
-  addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<FileWithId[]>;
-  addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<FileWithId[]>;
-  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>, options?: { selectFiles?: boolean }) => Promise<FileWithId[]>;
+  addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
+  addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<StirlingFile[]>;
+  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>, options?: { selectFiles?: boolean }) => Promise<StirlingFile[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
-  updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
+  updateWorkbenchFile: (id: FileId, updates: Partial<WorkbenchFile>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;
 
-  // File pinning - accepts FileWithId for safer type checking
-  pinFile: (file: FileWithId) => void;
-  unpinFile: (file: FileWithId) => void;
+  // File pinning - accepts StirlingFile for safer type checking
+  pinFile: (file: StirlingFile) => void;
+  unpinFile: (file: StirlingFile) => void;
 
   // File consumption (replace unpinned files with outputs)
   consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileId[]>;
-  undoConsumeFiles: (inputFiles: File[], inputFileRecords: FileRecord[], outputFileIds: FileId[]) => Promise<void>;
+  undoConsumeFiles: (inputFiles: File[], inputWorkbenchFiles: WorkbenchFile[], outputFileIds: FileId[]) => Promise<void>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
@@ -317,17 +317,17 @@ export interface FileContextActions {
 
 // File selectors (separate from actions to avoid re-renders)
 export interface FileContextSelectors {
-  getFile: (id: FileId) => FileWithId | undefined;
-  getFiles: (ids?: FileId[]) => FileWithId[];
-  getFileRecord: (id: FileId) => FileRecord | undefined;
-  getFileRecords: (ids?: FileId[]) => FileRecord[];
+  getFile: (id: FileId) => StirlingFile | undefined;
+  getFiles: (ids?: FileId[]) => StirlingFile[];
+  getWorkbenchFile: (id: FileId) => WorkbenchFile | undefined;
+  getWorkbenchFiles: (ids?: FileId[]) => WorkbenchFile[];
   getAllFileIds: () => FileId[];
-  getSelectedFiles: () => FileWithId[];
-  getSelectedFileRecords: () => FileRecord[];
+  getSelectedFiles: () => StirlingFile[];
+  getSelectedWorkbenchFiles: () => WorkbenchFile[];
   getPinnedFileIds: () => FileId[];
-  getPinnedFiles: () => FileWithId[];
-  getPinnedFileRecords: () => FileRecord[];
-  isFilePinned: (file: FileWithId) => boolean;
+  getPinnedFiles: () => StirlingFile[];
+  getPinnedWorkbenchFiles: () => WorkbenchFile[];
+  isFilePinned: (file: StirlingFile) => boolean;
   getFilesSignature: () => string;
 }
 

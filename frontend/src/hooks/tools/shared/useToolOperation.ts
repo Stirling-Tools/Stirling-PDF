@@ -6,7 +6,7 @@ import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { FileWithId, extractFiles, FileId, FileRecord } from '../../../types/fileContext';
+import { StirlingFile, extractFiles, FileId, WorkbenchFile } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 
 // Re-export for backwards compatibility
@@ -102,7 +102,7 @@ export interface ToolOperationHook<TParams = void> {
   progress: ProcessingProgress | null;
 
   // Actions
-  executeOperation: (params: TParams, selectedFiles: FileWithId[]) => Promise<void>;
+  executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
   resetResults: () => void;
   clearError: () => void;
   cancelOperation: () => void;
@@ -138,13 +138,13 @@ export const useToolOperation = <TParams>(
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
     inputFiles: File[];
-    inputFileRecords: FileRecord[];
+    inputWorkbenchFiles: WorkbenchFile[];
     outputFileIds: FileId[];
   } | null>(null);
 
   const executeOperation = useCallback(async (
     params: TParams,
-    selectedFiles: FileWithId[]
+    selectedFiles: StirlingFile[]
   ): Promise<void> => {
     // Validation
     if (selectedFiles.length === 0) {
@@ -168,7 +168,7 @@ export const useToolOperation = <TParams>(
     try {
       let processedFiles: File[];
 
-      // Convert FileWithId to regular File objects for API processing
+      // Convert StirlingFile to regular File objects for API processing
       const validRegularFiles = extractFiles(validFiles);
 
       switch (config.toolType) {
@@ -240,15 +240,15 @@ export const useToolOperation = <TParams>(
 
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
-        const inputFileRecords: FileRecord[] = [];
+        const inputWorkbenchFiles: WorkbenchFile[] = [];
         
         // Build parallel arrays of IDs and records for undo tracking
         for (const file of validFiles) {
           const fileId = file.fileId;
-          const record = selectors.getFileRecord(fileId);
+          const record = selectors.getWorkbenchFile(fileId);
           if (record) {
             inputFileIds.push(fileId);
-            inputFileRecords.push(record);
+            inputWorkbenchFiles.push(record);
           } else {
             console.warn(`No file record found for file: ${file.name}`);
           }
@@ -259,7 +259,7 @@ export const useToolOperation = <TParams>(
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
           inputFiles: extractFiles(validFiles), // Convert to File objects for undo
-          inputFileRecords: inputFileRecords.map(record => ({ ...record })), // Deep copy to avoid reference issues
+          inputWorkbenchFiles: inputWorkbenchFiles.map(record => ({ ...record })), // Deep copy to avoid reference issues
           outputFileIds
         };
 
@@ -302,10 +302,10 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    const { inputFiles, inputFileRecords, outputFileIds } = lastOperationRef.current;
+    const { inputFiles, inputWorkbenchFiles, outputFileIds } = lastOperationRef.current;
 
     // Validate that we have data to undo
-    if (inputFiles.length === 0 || inputFileRecords.length === 0) {
+    if (inputFiles.length === 0 || inputWorkbenchFiles.length === 0) {
       actions.setError(t('invalidUndoData', 'Cannot undo: invalid operation data'));
       return;
     }
@@ -317,7 +317,7 @@ export const useToolOperation = <TParams>(
 
     try {
       // Undo the consume operation
-      await undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds);
+      await undoConsumeFiles(inputFiles, inputWorkbenchFiles, outputFileIds);
       
       // Clear results and operation tracking
       resetResults();

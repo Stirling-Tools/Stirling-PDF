@@ -2,7 +2,7 @@
  * Type safety declarations to prevent file.name/UUID confusion
  */
 
-import { FileId, FileWithId, OperationType, FileOperation } from './fileContext';
+import { FileId, StirlingFile, OperationType, FileOperation } from './fileContext';
 
 declare global {
   namespace FileIdSafety {
@@ -13,15 +13,15 @@ declare global {
         : T
       : T;
 
-    // Mark functions that should only accept FileWithId, not regular File
-    type FileWithIdOnlyFunction<T extends (...args: any[]) => any> = T extends (...args: infer P) => infer R
+    // Mark functions that should only accept StirlingFile, not regular File
+    type StirlingFileOnlyFunction<T extends (...args: any[]) => any> = T extends (...args: infer P) => infer R
       ? P extends readonly [File, ...any[]]
-        ? never // Reject File parameters in first position for FileWithId functions
+        ? never // Reject File parameters in first position for StirlingFile functions
         : T
       : T;
 
-    // Utility type to enforce FileWithId usage
-    type RequireFileWithId<T> = T extends File ? FileWithId : T;
+    // Utility type to enforce StirlingFile usage
+    type RequireStirlingFile<T> = T extends File ? StirlingFile : T;
   }
 
   // Extend Window interface to add runtime validation helpers
@@ -31,19 +31,19 @@ declare global {
   }
 }
 
-// Augment FileContext types to prevent bypassing FileWithId
+// Augment FileContext types to prevent bypassing StirlingFile
 declare module '../contexts/FileContext' {
   export interface StrictFileContextActions {
-    pinFile: (file: FileWithId) => void; // Must be FileWithId
-    unpinFile: (file: FileWithId) => void; // Must be FileWithId
-    addFiles: (files: File[], options?: { insertAfterPageId?: string }) => Promise<FileWithId[]>; // Returns FileWithId
-    consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileWithId[]>; // Returns FileWithId
+    pinFile: (file: StirlingFile) => void; // Must be StirlingFile
+    unpinFile: (file: StirlingFile) => void; // Must be StirlingFile
+    addFiles: (files: File[], options?: { insertAfterPageId?: string }) => Promise<StirlingFile[]>; // Returns StirlingFile
+    consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<StirlingFile[]>; // Returns StirlingFile
   }
   
   export interface StrictFileContextSelectors {
-    getFile: (id: FileId) => FileWithId | undefined; // Returns FileWithId
-    getFiles: (ids?: FileId[]) => FileWithId[]; // Returns FileWithId[]
-    isFilePinned: (file: FileWithId) => boolean; // Must be FileWithId
+    getFile: (id: FileId) => StirlingFile | undefined; // Returns StirlingFile
+    getFiles: (ids?: FileId[]) => StirlingFile[]; // Returns StirlingFile[]
+    isFilePinned: (file: StirlingFile) => boolean; // Must be StirlingFile
   }
 }
 

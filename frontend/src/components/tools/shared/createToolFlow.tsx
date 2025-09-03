@@ -4,10 +4,10 @@ import { createToolSteps, ToolStepProvider } from './ToolStep';
 import OperationButton from './OperationButton';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
 import { ToolWorkflowTitle, ToolWorkflowTitleProps } from './ToolWorkflowTitle';
-import { FileWithId } from '../../../types/fileContext';
+import { StirlingFile } from '../../../types/fileContext';
 
 export interface FilesStepConfig {
-  selectedFiles: FileWithId[];
+  selectedFiles: StirlingFile[];
   isCollapsed?: boolean;
   placeholder?: string;
   onCollapsedClick?: () => void;

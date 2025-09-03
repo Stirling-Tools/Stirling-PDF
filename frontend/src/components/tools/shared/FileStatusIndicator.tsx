@@ -6,10 +6,10 @@ import UploadIcon from '@mui/icons-material/Upload';
 import { useFilesModalContext } from "../../../contexts/FilesModalContext";
 import { useAllFiles } from "../../../contexts/FileContext";
 import { useFileManager } from "../../../hooks/useFileManager";
-import { FileWithId } from "../../../types/fileContext";
+import { StirlingFile } from "../../../types/fileContext";
 
 export interface FileStatusIndicatorProps {
-  selectedFiles?: FileWithId[];
+  selectedFiles?: StirlingFile[];
   placeholder?: string;
 }
 

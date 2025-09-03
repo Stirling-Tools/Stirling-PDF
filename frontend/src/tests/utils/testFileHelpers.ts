@@ -1,28 +1,28 @@
 /**
- * Test utilities for creating FileWithId objects in tests
+ * Test utilities for creating StirlingFile objects in tests
  */
 
-import { FileWithId, createFileWithId } from '../../types/fileContext';
+import { StirlingFile, createStirlingFile } from '../../types/fileContext';
 
 /**
- * Create a FileWithId object for testing purposes
+ * Create a StirlingFile object for testing purposes
  */
-export function createTestFileWithId(
+export function createTestStirlingFile(
   name: string,
   content: string = 'test content',
   type: string = 'application/pdf'
-): FileWithId {
+): StirlingFile {
   const file = new File([content], name, { type });
-  return createFileWithId(file);
+  return createStirlingFile(file);
 }
 
 /**
- * Create multiple FileWithId objects for testing
+ * Create multiple StirlingFile objects for testing
  */
 export function createTestFilesWithId(
   files: Array<{ name: string; content?: string; type?: string }>
-): FileWithId[] {
+): StirlingFile[] {
   return files.map(({ name, content = 'test content', type = 'application/pdf' }) =>
-    createTestFileWithId(name, content, type)
+    createTestStirlingFile(name, content, type)
   );
 }

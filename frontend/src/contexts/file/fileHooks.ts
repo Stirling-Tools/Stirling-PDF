@@ -9,7 +9,7 @@ import {
   FileContextStateValue,
   FileContextActionsValue
 } from './contexts';
-import { FileRecord, FileWithId } from '../../types/fileContext';
+import { WorkbenchFile, StirlingFile } from '../../types/fileContext';
 import { FileId } from '../../types/file';
 
 /**
@@ -38,13 +38,13 @@ export function useFileActions(): FileContextActionsValue {
 /**
  * Hook for current/primary file (first in list)
  */
-export function useCurrentFile(): { file?: File; record?: FileRecord } {
+export function useCurrentFile(): { file?: File; record?: WorkbenchFile } {
   const { state, selectors } = useFileState();
 
   const primaryFileId = state.files.ids[0];
   return useMemo(() => ({
     file: primaryFileId ? selectors.getFile(primaryFileId) : undefined,
-    record: primaryFileId ? selectors.getFileRecord(primaryFileId) : undefined
+    record: primaryFileId ? selectors.getWorkbenchFile(primaryFileId) : undefined
   }), [primaryFileId, selectors]);
 }
 
@@ -87,7 +87,7 @@ export function useFileManagement() {
     addFiles: actions.addFiles,
     removeFiles: actions.removeFiles,
     clearAllFiles: actions.clearAllFiles,
-    updateFileRecord: actions.updateFileRecord,
+    updateWorkbenchFile: actions.updateWorkbenchFile,
     reorderFiles: actions.reorderFiles
   }), [actions]);
 }
@@ -111,24 +111,24 @@ export function useFileUI() {
 /**
  * Hook for specific file by ID (optimized for individual file access)
  */
-export function useFileRecord(fileId: FileId): { file?: File; record?: FileRecord } {
+export function useWorkbenchFile(fileId: FileId): { file?: File; record?: WorkbenchFile } {
   const { selectors } = useFileState();
 
   return useMemo(() => ({
     file: selectors.getFile(fileId),
-    record: selectors.getFileRecord(fileId)
+    record: selectors.getWorkbenchFile(fileId)
   }), [fileId, selectors]);
 }
 
 /**
  * Hook for all files (use sparingly - causes re-renders on file list changes)
  */
-export function useAllFiles(): { files: FileWithId[]; records: FileRecord[]; fileIds: FileId[] } {
+export function useAllFiles(): { files: StirlingFile[]; records: WorkbenchFile[]; fileIds: FileId[] } {
   const { state, selectors } = useFileState();
 
   return useMemo(() => ({
     files: selectors.getFiles(),
-    records: selectors.getFileRecords(),
+    records: selectors.getWorkbenchFiles(),
     fileIds: state.files.ids
   }), [state.files.ids, selectors]);
 }
@@ -136,12 +136,12 @@ export function useAllFiles(): { files: FileWithId[]; records: FileRecord[]; fil
 /**
  * Hook for selected files (optimized for selection-based UI)
  */
-export function useSelectedFiles(): { files: FileWithId[]; records: FileRecord[]; fileIds: FileId[] } {
+export function useSelectedFiles(): { files: StirlingFile[]; records: WorkbenchFile[]; fileIds: FileId[] } {
   const { state, selectors } = useFileState();
 
   return useMemo(() => ({
     files: selectors.getSelectedFiles(),
-    records: selectors.getSelectedFileRecords(),
+    records: selectors.getSelectedWorkbenchFiles(),
     fileIds: state.ui.selectedFileIds
   }), [state.ui.selectedFileIds, selectors]);
 }

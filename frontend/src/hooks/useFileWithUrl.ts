@@ -9,7 +9,7 @@ export function useFileWithUrl(file: File | Blob | null): { file: File | Blob; u
   return useMemo(() => {
     if (!file) return null;
 
-    // Validate that file is a proper File, FileWithId, or Blob object
+    // Validate that file is a proper File, StirlingFile, or Blob object
     if (!isFileObject(file) && !(file instanceof Blob)) {
       console.warn('useFileWithUrl: Expected File or Blob, got:', file);
       return null;

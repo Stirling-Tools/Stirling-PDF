@@ -20,9 +20,9 @@ import {
   FileContextActionsValue,
   FileContextActions,
   FileId,
-  FileRecord,
-  FileWithId,
-  createFileWithId
+  WorkbenchFile,
+  StirlingFile,
+  createStirlingFile
 } from '../types/fileContext';
 
 // Import modular components
@@ -81,7 +81,7 @@ function FileContextInner({
   }
 
   // File operations using unified addFiles helper with persistence
-  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<FileWithId[]> => {
+  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
     const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
@@ -100,15 +100,15 @@ function FileContextInner({
       }));
     }
 
-    return addedFilesWithIds.map(({ file, id }) => createFileWithId(file, id));
+    return addedFilesWithIds.map(({ file, id }) => createStirlingFile(file, id));
   }, [indexedDB, enablePersistence]);
 
-  const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<FileWithId[]> => {
+  const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<StirlingFile[]> => {
     const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch, lifecycleManager);
-    return result.map(({ file, id }) => createFileWithId(file, id));
+    return result.map(({ file, id }) => createStirlingFile(file, id));
   }, []);
 
-  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<FileWithId[]> => {
+  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<StirlingFile[]> => {
     const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
@@ -116,7 +116,7 @@ function FileContextInner({
       selectFiles(result);
     }
 
-    return result.map(({ file, id }) => createFileWithId(file, id));
+    return result.map(({ file, id }) => createStirlingFile(file, id));
   }, []);
 
   // Action creators
@@ -127,8 +127,8 @@ function FileContextInner({
     return consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch, indexedDB);
   }, [indexedDB]);
 
-  const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputFileRecords: FileRecord[], outputFileIds: FileId[]): Promise<void> => {
-    return undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds, stateRef, filesRef, dispatch, indexedDB);
+  const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputWorkbenchFiles: WorkbenchFile[], outputFileIds: FileId[]): Promise<void> => {
+    return undoConsumeFiles(inputFiles, inputWorkbenchFiles, outputFileIds, stateRef, filesRef, dispatch, indexedDB);
   }, [indexedDB]);
 
   // Helper to find FileId from File object
@@ -142,12 +142,12 @@ function FileContextInner({
     });
   }, []);
 
-  // File pinning functions - use FileWithId directly
-  const pinFileWrapper = useCallback((file: FileWithId) => {
+  // File pinning functions - use StirlingFile directly
+  const pinFileWrapper = useCallback((file: StirlingFile) => {
     baseActions.pinFile(file.fileId);
   }, [baseActions]);
 
-  const unpinFileWrapper = useCallback((file: FileWithId) => {
+  const unpinFileWrapper = useCallback((file: StirlingFile) => {
     baseActions.unpinFile(file.fileId);
   }, [baseActions]);
 
@@ -170,8 +170,8 @@ function FileContextInner({
         }
       }
     },
-    updateFileRecord: (fileId: FileId, updates: Partial<FileRecord>) =>
-      lifecycleManager.updateFileRecord(fileId, updates, stateRef),
+    updateWorkbenchFile: (fileId: FileId, updates: Partial<WorkbenchFile>) =>
+      lifecycleManager.updateWorkbenchFile(fileId, updates, stateRef),
     reorderFiles: (orderedFileIds: FileId[]) => {
       dispatch({ type: 'REORDER_FILES', payload: { orderedFileIds } });
     },
@@ -295,7 +295,7 @@ export {
   useFileSelection,
   useFileManagement,
   useFileUI,
-  useFileRecord,
+  useWorkbenchFile,
   useAllFiles,
   useSelectedFiles,
   // Primary API hooks for tools

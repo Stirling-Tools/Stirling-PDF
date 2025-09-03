@@ -14,8 +14,8 @@ import i18n from '../../i18n/config';
 import axios from 'axios';
 import { detectFileExtension } from '../../utils/fileUtils';
 import { FIT_OPTIONS } from '../../constants/convertConstants';
-import { createTestFileWithId, createTestFilesWithId } from '../utils/testFileHelpers';
-import { FileWithId } from '../../types/fileContext';
+import { createTestStirlingFile, createTestFilesWithId } from '../utils/testFileHelpers';
+import { StirlingFile } from '../../types/fileContext';
 
 // Mock axios
 vi.mock('axios');
@@ -83,7 +83,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       // Create mock DOCX file
-      const docxFile = createTestFileWithId('document.docx', 'docx content', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      const docxFile = createTestStirlingFile('document.docx', 'docx content', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 
       // Test auto-detection
       act(() => {
@@ -119,7 +119,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       // Create mock unknown file
-      const unknownFile = createTestFileWithId('document.xyz', 'unknown content', 'application/octet-stream');
+      const unknownFile = createTestStirlingFile('document.xyz', 'unknown content', 'application/octet-stream');
 
       // Test auto-detection
       act(() => {
@@ -290,7 +290,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const htmlFile = createTestFileWithId('page.html', '<html>content</html>', 'text/html');
+      const htmlFile = createTestStirlingFile('page.html', '<html>content</html>', 'text/html');
 
       // Set up HTML conversion parameters
       act(() => {
@@ -320,7 +320,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const emlFile = createTestFileWithId('email.eml', 'email content', 'message/rfc822');
+      const emlFile = createTestStirlingFile('email.eml', 'email content', 'message/rfc822');
 
       // Set up email conversion parameters
       act(() => {
@@ -357,7 +357,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const pdfFile = createTestFileWithId('document.pdf', 'pdf content', 'application/pdf');
+      const pdfFile = createTestStirlingFile('document.pdf', 'pdf content', 'application/pdf');
 
       // Set up PDF/A conversion parameters
       act(() => {

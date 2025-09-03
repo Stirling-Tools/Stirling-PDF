@@ -6,7 +6,7 @@ import { FileId } from '../../types/file';
 import {
   FileContextState,
   FileContextAction,
-  FileRecord
+  WorkbenchFile
 } from '../../types/fileContext';
 
 // Initial state
@@ -29,7 +29,7 @@ export const initialFileContextState: FileContextState = {
 function processFileSwap(
   state: FileContextState,
   filesToRemove: FileId[],
-  filesToAdd: FileRecord[]
+  filesToAdd: WorkbenchFile[]
 ): FileContextState {
   // Only remove unpinned files
   const unpinnedRemoveIds = filesToRemove.filter(id => !state.pinnedFiles.has(id));
@@ -70,11 +70,11 @@ function processFileSwap(
 export function fileContextReducer(state: FileContextState, action: FileContextAction): FileContextState {
   switch (action.type) {
     case 'ADD_FILES': {
-      const { fileRecords } = action.payload;
+      const { workbenchFiles } = action.payload;
       const newIds: FileId[] = [];
-      const newById: Record<FileId, FileRecord> = { ...state.files.byId };
+      const newById: Record<FileId, WorkbenchFile> = { ...state.files.byId };
 
-      fileRecords.forEach(record => {
+      workbenchFiles.forEach(record => {
         // Only add if not already present (dedupe by stable ID)
         if (!newById[record.id]) {
           newIds.push(record.id);
@@ -233,13 +233,13 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
     }
 
     case 'CONSUME_FILES': {
-      const { inputFileIds, outputFileRecords } = action.payload;
-      return processFileSwap(state, inputFileIds, outputFileRecords);
+      const { inputFileIds, outputWorkbenchFiles } = action.payload;
+      return processFileSwap(state, inputFileIds, outputWorkbenchFiles);
     }
 
     case 'UNDO_CONSUME_FILES': {
-      const { inputFileRecords, outputFileIds } = action.payload;
-      return processFileSwap(state, outputFileIds, inputFileRecords);
+      const { inputWorkbenchFiles, outputFileIds } = action.payload;
+      return processFileSwap(state, outputFileIds, inputWorkbenchFiles);
     }
 
     case 'RESET_CONTEXT': {

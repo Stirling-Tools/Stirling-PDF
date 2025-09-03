@@ -18,8 +18,8 @@ import { FileContextProvider } from '../../contexts/FileContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n/config';
 import axios from 'axios';
-import { createTestFileWithId } from '../utils/testFileHelpers';
-import { FileWithId } from '../../types/fileContext';
+import { createTestStirlingFile } from '../utils/testFileHelpers';
+import { StirlingFile } from '../../types/fileContext';
 
 // Mock axios
 vi.mock('axios');
@@ -57,9 +57,9 @@ const createTestFile = (name: string, content: string, type: string): File => {
   return new File([content], name, { type });
 };
 
-const createPDFFile = (): FileWithId => {
+const createPDFFile = (): StirlingFile => {
   const pdfContent = '%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\ntrailer\n<<\n/Size 2\n/Root 1 0 R\n>>\nstartxref\n0\n%%EOF';
-  return createTestFileWithId('test.pdf', pdfContent, 'application/pdf');
+  return createTestStirlingFile('test.pdf', pdfContent, 'application/pdf');
 };
 
 // Test wrapper component
@@ -164,7 +164,7 @@ describe('Convert Tool Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const testFile = createTestFileWithId('invalid.txt', 'not a pdf', 'text/plain');
+      const testFile = createTestStirlingFile('invalid.txt', 'not a pdf', 'text/plain');
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'png',
@@ -428,7 +428,7 @@ describe('Convert Tool Integration Tests', () => {
       });
       const files = [
         createPDFFile(),
-        createTestFileWithId('test2.pdf', '%PDF-1.4...', 'application/pdf')
+        createTestStirlingFile('test2.pdf', '%PDF-1.4...', 'application/pdf')
       ]
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
@@ -529,7 +529,7 @@ describe('Convert Tool Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const corruptedFile = createTestFileWithId('corrupted.pdf', 'not-a-pdf', 'application/pdf');
+      const corruptedFile = createTestStirlingFile('corrupted.pdf', 'not-a-pdf', 'application/pdf');
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'png',

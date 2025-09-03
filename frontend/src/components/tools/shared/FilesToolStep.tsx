@@ -1,10 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import FileStatusIndicator from './FileStatusIndicator';
-import { FileWithId } from '../../../types/fileContext';
+import { StirlingFile } from '../../../types/fileContext';
 
 export interface FilesToolStepProps {
-  selectedFiles: FileWithId[];
+  selectedFiles: StirlingFile[];
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
   placeholder?: string;

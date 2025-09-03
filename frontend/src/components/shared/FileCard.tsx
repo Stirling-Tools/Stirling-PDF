@@ -6,13 +6,13 @@ import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 
-import { FileRecord } from "../../types/fileContext";
+import { WorkbenchFile } from "../../types/fileContext";
 import { getFileSize, getFileDate } from "../../utils/fileUtils";
 import { useIndexedDBThumbnail } from "../../hooks/useIndexedDBThumbnail";
 
 interface FileCardProps {
   file: File;
-  record?: FileRecord;
+  record?: WorkbenchFile;
   onRemove: () => void;
   onDoubleClick?: () => void;
   onView?: () => void;
