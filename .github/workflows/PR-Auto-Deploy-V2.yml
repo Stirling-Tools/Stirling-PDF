@@ -4,7 +4,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
-
 permissions:
   contents: read
   issues: write
@@ -16,14 +15,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_deploy: ${{ steps.check-conditions.outputs.should_deploy }}
+      is_fork: ${{ steps.detect-fork.outputs.is_fork }}
       pr_number: ${{ github.event.number }}
       pr_repository: ${{ steps.get-pr-info.outputs.repository }}
       pr_ref: ${{ steps.get-pr-info.outputs.ref }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
+
+      - name: Detect fork
+        id: detect-fork
+        run: |
+          echo "is_fork=${{ github.event.pull_request.head.repo.fork }}" >> $GITHUB_OUTPUT
 
       - name: Check deployment conditions
         id: check-conditions
@@ -31,12 +36,21 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          IS_FORK: ${{ steps.detect-fork.outputs.is_fork }}
         run: |
           echo "PR Title: $PR_TITLE"
           echo "PR Author: $PR_AUTHOR"
           echo "PR Branch: $PR_BRANCH"
-          echo "PR Base Branch: ${{ github.event.pull_request.base.ref }}"
-          
+          echo "PR Base Branch: $PR_BASE_BRANCH"
+          echo "Is Fork: $IS_FORK"
+
+          if [ "$IS_FORK" = "true" ]; then
+            echo "❌ Fork PR detected -> skip deployment"
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           # Define authorized users
           authorized_users=(
             "Frooodle"
@@ -50,7 +64,7 @@ jobs:
             "EthanHealy01"
             "jbrunton96"
           )
-          
+
           # Check if author is in the authorized list
           is_authorized=false
           for user in "${authorized_users[@]}"; do
@@ -59,26 +73,21 @@ jobs:
               break
             fi
           done
-          
+
           # If PR is targeting V2 and user is authorized, deploy unconditionally
-          PR_BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
           if [[ "$PR_BASE_BRANCH" == "V2" && "$is_authorized" == "true" ]]; then
             echo "✅ Deployment forced: PR targets V2 and author is authorized."
             echo "should_deploy=true" >> $GITHUB_OUTPUT
             exit 0
           fi
-          
+
           # Otherwise, continue with original keyword checks
           has_v2_keyword=false
-          if [[ "$PR_TITLE" =~ [Vv]2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?[Tt]wo ]]; then
-            has_v2_keyword=true
-          fi
-          
+          [[ "$PR_TITLE"  =~ [Vv]2|[Vv]ersion.?2|[Vv]ersion.?[Tt]wo ]] && has_v2_keyword=true
+
           has_branch_keyword=false
-          if [[ "$PR_BRANCH" =~ [Vv]2 ]] || [[ "$PR_BRANCH" =~ [Rr]eact ]]; then
-            has_branch_keyword=true
-          fi
-          
+          [[ "$PR_BRANCH" =~ [Vv]2|[Rr]eact ]] && has_branch_keyword=true
+
           if [[ "$is_authorized" == "true" && ( "$has_v2_keyword" == "true" || "$has_branch_keyword" == "true" ) ]]; then
             echo "✅ Deployment conditions met"
             echo "should_deploy=true" >> $GITHUB_OUTPUT
@@ -100,15 +109,14 @@ jobs:
           else
             repository="${{ github.repository }}"
           fi
-          
+
           echo "repository=$repository" >> $GITHUB_OUTPUT
           echo "ref=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
 
   deploy-v2-pr:
     needs: check-pr
     runs-on: ubuntu-latest
-    if: needs.check-pr.outputs.should_deploy == 'true'
-    # Concurrency control - only one deployment per PR at a time
+    if: needs.check-pr.outputs.should_deploy == 'true' && needs.check-pr.outputs.is_fork == 'false'
     concurrency:
       group: v2-deploy-pr-${{ needs.check-pr.outputs.pr_number }}
       cancel-in-progress: true
@@ -119,7 +127,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -154,13 +162,13 @@ jobs:
               issue_number: prNumber,
               per_page: 100
             });
-            
+
             const v2Comments = comments.filter(comment => 
               comment.body.includes('🚀 **Auto-deploying V2 version**') ||
               comment.body.includes('## 🚀 V2 Auto-Deployment Complete!') ||
               comment.body.includes('❌ **V2 Auto-deployment failed**')
             );
-            
+
             for (const comment of v2Comments) {
               console.log(`Deleting old V2 comment: ${comment.id}`);
               await github.rest.issues.deleteComment({
@@ -177,7 +185,6 @@ jobs:
               issue_number: prNumber,
               body: `🚀 **Auto-deploying V2 version** for PR #${prNumber}...\n\n_This is an automated deployment triggered by V2/version2 keywords in the PR title or V2/React keywords in the branch name._\n\n⚠️ **Note:** If new commits are pushed during deployment, this build will be cancelled and replaced with the latest version.`
             });
-            
             return newComment.id;
 
       - name: Checkout PR
@@ -188,15 +195,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # Fetch full history for commit hash detection
 
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Get version number
         id: versionNumber
         run: |
-          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
-          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
+          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}' || true)
+          echo "versionNumber=${VERSION:-unknown}" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
@@ -212,7 +218,7 @@ jobs:
           if [ -z "$FRONTEND_HASH" ]; then
             FRONTEND_HASH="no-frontend-changes"
           fi
-          
+
           # Get last commit that touched backend code, docker/backend, or docker/compose
           BACKEND_HASH=$(git log -1 --format="%H" -- app/ docker/backend/ docker/compose/ 2>/dev/null || echo "")
           if [ -z "$BACKEND_HASH" ]; then
@@ -321,7 +327,7 @@ jobs:
                 SWAGGER_SERVER_URL: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
                 baseUrl: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
               restart: on-failure:5
-              
+
             stirling-pdf-v2-frontend:
               container_name: stirling-pdf-v2-frontend-pr-${{ needs.check-pr.outputs.pr_number }}
               image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
@@ -354,7 +360,7 @@ jobs:
             
             # Clean up unused Docker resources to save space
             docker system prune -af --volumes || true
-            
+
             # Clean up old backend/frontend images (older than 2 weeks)
             docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
@@ -411,7 +417,6 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
-
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
@@ -492,7 +497,7 @@ jobs:
             
             # Clean up old unused images (older than 2 weeks) but keep recent ones for reuse
             docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
-            
+
             # Note: We don't remove the commit-based images since they can be reused across PRs
             # Only remove PR-specific containers and directories
           ENDSSH
@@ -502,4 +507,3 @@ jobs:
         run: |
           rm -f ../private.key
         continue-on-error: true
-
