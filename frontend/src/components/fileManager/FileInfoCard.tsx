@@ -125,11 +125,11 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
               <Divider />
               <Box py="xs">
                 <Text size="xs" c="dimmed" mb="xs">{t('fileManager.toolChain', 'Tools Applied')}</Text>
-                <ToolChain 
+                <ToolChain
                   toolChain={currentFile.historyInfo.toolChain}
                   displayStyle="badges"
                   size="xs"
-                  maxWidth={180}
+                  maxWidth={'180px'}
                 />
               </Box>
             </>

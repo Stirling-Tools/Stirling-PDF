@@ -103,12 +103,12 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   <Text span c="dimmed"> • {lineagePath.length} versions</Text>
                 )}
               </Text>
-              
+
               {/* Tool chain for processed files */}
               {file.historyInfo?.toolChain && file.historyInfo.toolChain.length > 0 && (
-                <ToolChain 
+                <ToolChain
                   toolChain={file.historyInfo.toolChain}
-                  maxWidth={150}
+                  maxWidth={'150px'}
                   displayStyle="text"
                   size="xs"
                 />
@@ -163,8 +163,8 @@ const FileListItem: React.FC<FileListItemProps> = ({
                       onToggleExpansion(leafFileId);
                     }}
                   >
-                    {isExpanded ? 
-                      t('fileManager.hideHistory', 'Hide History') : 
+                    {isExpanded ?
+                      t('fileManager.hideHistory', 'Hide History') :
                       t('fileManager.showHistory', 'Show History')
                     }
                   </Menu.Item>
