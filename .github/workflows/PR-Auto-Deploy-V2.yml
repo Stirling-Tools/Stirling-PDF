@@ -40,15 +40,13 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const { context, core, github } = require('@actions/github');
             const { owner, repo } = context.repo;
-            let prNumber;
-            if (context.eventName === 'workflow_dispatch') {
-              prNumber = parseInt(process.env.INPUT_PR, 10);
-              if (!Number.isInteger(prNumber)) { core.setFailed('Invalid PR number'); return; }
-            } else {
-              prNumber = context.payload.number;
-            }
+            let prNumber = context.eventName === 'workflow_dispatch'
+              ? parseInt(process.env.INPUT_PR, 10)
+              : context.payload.number;
+
+            if (!Number.isInteger(prNumber)) { core.setFailed('Invalid PR number'); return; }
+
             const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
             core.setOutput('pr_number', String(prNumber));
             core.setOutput('repository', pr.head.repo.full_name);
