@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "../contexts/FileContext";
 import { useFileSelection } from "../contexts/FileContext";
-import { useNavigation } from "../contexts/NavigationContext";
+import { useNavigationActions } from "../contexts/NavigationContext";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
@@ -21,7 +21,7 @@ import { AUTOMATION_STEPS } from "../constants/automation";
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
-  const { setMode } = useNavigation();
+  const { actions } = useNavigationActions();
   const { registerToolReset } = useToolWorkflow();
 
   const [currentStep, setCurrentStep] = useState<AutomationStep>(AUTOMATION_STEPS.SELECTION);
@@ -41,6 +41,11 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     automateOperation.clearError();
     setCurrentStep(AUTOMATION_STEPS.SELECTION);
     setStepData({ step: AUTOMATION_STEPS.SELECTION });
+  };
+
+  const handleUndo = async () => {
+    await automateOperation.undoOperation();
+    onPreviewFile?.(null);
   };
 
   // Register reset function with the tool workflow context - only once on mount
@@ -223,8 +228,9 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       title: t('automate.reviewTitle', 'Automation Results'),
       onFileClick: (file: File) => {
         onPreviewFile?.(file);
-        setMode('viewer');
-      }
+        actions.setWorkbench('viewer');
+      },
+      onUndo: handleUndo
     }
   });
 };

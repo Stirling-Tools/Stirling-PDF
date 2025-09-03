@@ -41,6 +41,7 @@
     "prebuild": "npm run generate-icons",
     "build": "npx tsc --noEmit && vite build",
     "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
     "generate-licenses": "node scripts/generate-licenses.js",
     "generate-icons": "node scripts/generate-icons.js",
     "generate-icons:verbose": "node scripts/generate-icons.js --verbose",

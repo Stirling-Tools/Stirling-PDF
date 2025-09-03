@@ -41,6 +41,7 @@ describe('useChangePermissionsOperation', () => {
     resetResults: vi.fn(),
     clearError: vi.fn(),
     cancelOperation: vi.fn(),
+    undoOperation: vi.fn(),
   };
 
   beforeEach(() => {

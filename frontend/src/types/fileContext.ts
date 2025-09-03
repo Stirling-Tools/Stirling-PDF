@@ -101,32 +101,32 @@ export function isFileWithId(file: File): file is FileWithId {
 export function createFileWithId(file: File, id?: FileId): FileWithId {
   const fileId = id || createFileId();
   const quickKey = createQuickKey(file);
-  
+
   const newFile = new File([file], file.name, {
     type: file.type,
     lastModified: file.lastModified
   });
-  
+
   Object.defineProperty(newFile, 'fileId', {
     value: fileId,
     writable: false,
     enumerable: true,
     configurable: false
   });
-  
+
   Object.defineProperty(newFile, 'quickKey', {
     value: quickKey,
     writable: false,
     enumerable: true,
     configurable: false
   });
-  
+
   return newFile as FileWithId;
 }
 
 // Wrap array of Files with FileIds
 export function wrapFilesWithIds(files: File[], ids?: FileId[]): FileWithId[] {
-  return files.map((file, index) => 
+  return files.map((file, index) =>
     createFileWithId(file, ids?.[index])
   );
 }
@@ -144,7 +144,7 @@ export function extractFiles(files: FileWithId[]): File[] {
 
 // Check if an object is a File or FileWithId (replaces instanceof File checks)
 export function isFileObject(obj: any): obj is File | FileWithId {
-  return obj && 
+  return obj &&
          typeof obj.name === 'string' &&
          typeof obj.size === 'number' &&
          typeof obj.type === 'string' &&
@@ -172,12 +172,12 @@ export function isDangerousFileNameAsId(fileName: string, context: string = ''):
   if (isValidFileId(fileName)) {
     return false;
   }
-  
+
   // Check if it's a quickKey (safe) - format: name|size|lastModified
   if (/^.+\|\d+\|\d+$/.test(fileName)) {
     return false; // quickKeys are legitimate, not dangerous
   }
-  
+
   // Common patterns that suggest file.name is being used as ID
   const dangerousPatterns = [
     /^[^-]+-page-\d+$/, // pattern: filename-page-123
@@ -187,14 +187,14 @@ export function isDangerousFileNameAsId(fileName: string, context: string = ''):
     /['"]/, // contains quotes
     /[^a-zA-Z0-9\-._]/ // contains special characters not in UUIDs
   ];
-  
+
   // Check dangerous patterns
   const isDangerous = dangerousPatterns.some(pattern => pattern.test(fileName));
-  
+
   if (isDangerous && context) {
     console.warn(`⚠️ Potentially dangerous file.name usage detected in ${context}: "${fileName}"`);
   }
-  
+
   return isDangerous;
 }
 
@@ -203,7 +203,7 @@ export function safeGetFileId(file: File, context: string = ''): FileId {
   if (isFileWithId(file)) {
     return file.fileId;
   }
-  
+
   // If we reach here, someone is trying to use a regular File without embedded ID
   throw new Error(`Attempted to get FileId from regular File object in ${context}. Use FileWithId instead.`);
 }
@@ -304,10 +304,10 @@ export interface FileContextState {
     ids: FileId[];
     byId: Record<FileId, FileRecord>;
   };
-  
-  // Pinned files - files that won't be consumed by tools  
+
+  // Pinned files - files that won't be consumed by tools
   pinnedFiles: Set<FileId>;
-  
+
   // UI state - file-related UI state only
   ui: {
     selectedFileIds: FileId[];
@@ -319,35 +319,36 @@ export interface FileContextState {
 }
 
 // Action types for reducer pattern
-export type FileContextAction = 
+export type FileContextAction =
   // File management actions
   | { type: 'ADD_FILES'; payload: { fileRecords: FileRecord[] } }
   | { type: 'REMOVE_FILES'; payload: { fileIds: FileId[] } }
   | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<FileRecord> } }
   | { type: 'REORDER_FILES'; payload: { orderedFileIds: FileId[] } }
-  
+
   // Pinned files actions
   | { type: 'PIN_FILE'; payload: { fileId: FileId } }
   | { type: 'UNPIN_FILE'; payload: { fileId: FileId } }
   | { type: 'CONSUME_FILES'; payload: { inputFileIds: FileId[]; outputFileRecords: FileRecord[] } }
-  
-  // UI actions  
+  | { type: 'UNDO_CONSUME_FILES'; payload: { inputFileRecords: FileRecord[]; outputFileIds: FileId[] } }
+
+  // UI actions
   | { type: 'SET_SELECTED_FILES'; payload: { fileIds: FileId[] } }
   | { type: 'SET_SELECTED_PAGES'; payload: { pageNumbers: number[] } }
   | { type: 'CLEAR_SELECTIONS' }
   | { type: 'SET_PROCESSING'; payload: { isProcessing: boolean; progress: number } }
-  
+
   // Navigation guard actions (minimal for file-related unsaved changes only)
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
-  
+
   // Context management
   | { type: 'RESET_CONTEXT' };
 
 export interface FileContextActions {
   // File management - lightweight actions only
-  addFiles: (files: File[], options?: { insertAfterPageId?: string }) => Promise<FileWithId[]>;
+  addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<FileWithId[]>;
   addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<FileWithId[]>;
-  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => Promise<FileWithId[]>;
+  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>, options?: { selectFiles?: boolean }) => Promise<FileWithId[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
@@ -358,22 +359,23 @@ export interface FileContextActions {
   pinFile: (file: FileWithId) => void;
   unpinFile: (file: FileWithId) => void;
 
-  // File consumption (replace unpinned files with outputs) - now returns FileWithId
-  consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileWithId[]>;
+  // File consumption (replace unpinned files with outputs)
+  consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileId[]>;
+  undoConsumeFiles: (inputFiles: File[], inputFileRecords: FileRecord[], outputFileIds: FileId[]) => Promise<void>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
   clearSelections: () => void;
-  
+
   // Processing state - simple flags only
   setProcessing: (isProcessing: boolean, progress?: number) => void;
-  
+
   // File-related unsaved changes (minimal navigation guard support)
   setHasUnsavedChanges: (hasChanges: boolean) => void;
-  
+
   // Context management
   resetContext: () => void;
-  
+
   // Resource management
   trackBlobUrl: (url: string) => void;
   scheduleCleanup: (fileId: FileId, delay?: number) => void;
@@ -393,7 +395,7 @@ export interface FileContextSelectors {
   getPinnedFiles: () => FileWithId[];
   getPinnedFileRecords: () => FileRecord[];
   isFilePinned: (file: FileWithId) => boolean;
-  
+
   // Stable signature for effect dependencies
   getFilesSignature: () => string;
 }

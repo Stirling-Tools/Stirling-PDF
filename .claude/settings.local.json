@@ -13,7 +13,9 @@
       "Bash(npx tsc:*)",
       "Bash(node:*)",
       "Bash(npm run dev:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

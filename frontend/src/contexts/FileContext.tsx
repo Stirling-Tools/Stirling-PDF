@@ -1,14 +1,14 @@
 /**
  * FileContext - Manages PDF files for Stirling PDF multi-tool workflow
- * 
+ *
  * Handles file state, memory management, and resource cleanup for large PDFs (up to 100GB+).
  * Users upload PDFs once and chain tools (split → merge → compress → view) without reloading.
- * 
+ *
  * Key hooks:
  * - useFileState() - access file state and UI state
- * - useFileActions() - file operations (add/remove/update)  
+ * - useFileActions() - file operations (add/remove/update)
  * - useFileSelection() - for file selection state and actions
- * 
+ *
  * Memory management handled by FileLifecycleManager (PDF.js cleanup, blob URL revocation).
  */
 
@@ -28,7 +28,7 @@ import {
 // Import modular components
 import { fileContextReducer, initialFileContextState } from './file/FileReducer';
 import { createFileSelectors } from './file/fileSelectors';
-import { addFiles, consumeFiles, createFileActions } from './file/fileActions';
+import { addFiles, consumeFiles, undoConsumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
@@ -40,16 +40,16 @@ const DEBUG = process.env.NODE_ENV === 'development';
 function FileContextInner({
   children,
   enableUrlSync = true,
-  enablePersistence = true 
+  enablePersistence = true
 }: FileContextProviderProps) {
   const [state, dispatch] = useReducer(fileContextReducer, initialFileContextState);
-  
+
   // IndexedDB context for persistence
   const indexedDB = enablePersistence ? useIndexedDB() : null;
 
   // File ref map - stores File objects outside React state
   const filesRef = useRef<Map<FileId, File>>(new Map());
-  
+
   // Stable state reference for selectors
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -62,8 +62,8 @@ function FileContextInner({
   const lifecycleManager = lifecycleManagerRef.current;
 
   // Create stable selectors (memoized once to avoid re-renders)
-  const selectors = useMemo<FileContextSelectors>(() => 
-    createFileSelectors(stateRef, filesRef), 
+  const selectors = useMemo<FileContextSelectors>(() =>
+    createFileSelectors(stateRef, filesRef),
     [] // Empty deps - selectors are stable
   );
 
@@ -74,10 +74,21 @@ function FileContextInner({
     dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
   }, []);
 
+  const selectFiles = useCallback((addedFilesWithIds: Array<{ file: File; id: FileId; thumbnail?: string }>) => {
+    const currentSelection = stateRef.current.ui.selectedFileIds;
+    const newFileIds = addedFilesWithIds.map(({ id }) => id);
+    dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
+  }, []);
+
   // File operations using unified addFiles helper with persistence
-  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string }): Promise<FileWithId[]> => {
+  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<FileWithId[]> => {
     const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
-    
+
+    // Auto-select the newly added files if requested
+    if (options?.selectFiles && addedFilesWithIds.length > 0) {
+      selectFiles(addedFilesWithIds);
+    }
+
     // Persist to IndexedDB if enabled
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
       await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
@@ -88,7 +99,7 @@ function FileContextInner({
         }
       }));
     }
-    
+
     return addedFilesWithIds.map(({ file, id }) => createFileWithId(file, id));
   }, [indexedDB, enablePersistence]);
 
@@ -97,8 +108,14 @@ function FileContextInner({
     return result.map(({ file, id }) => createFileWithId(file, id));
   }, []);
 
-  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>): Promise<FileWithId[]> => {
+  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<FileWithId[]> => {
     const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
+
+    // Auto-select the newly added files if requested
+    if (options?.selectFiles && result.length > 0) {
+      selectFiles(result);
+    }
+
     return result.map(({ file, id }) => createFileWithId(file, id));
   }, []);
 
@@ -106,10 +123,13 @@ function FileContextInner({
   const baseActions = useMemo(() => createFileActions(dispatch), []);
 
   // Helper functions for pinned files
-  const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<FileWithId[]> => {
-    const result = await consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch);
-    return result.map(({ file, id }) => createFileWithId(file, id));
-  }, []);
+  const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<FileId[]> => {
+    return consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch, indexedDB);
+  }, [indexedDB]);
+
+  const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputFileRecords: FileRecord[], outputFileIds: FileId[]): Promise<void> => {
+    return undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds, stateRef, filesRef, dispatch, indexedDB);
+  }, [indexedDB]);
 
   const pinFileWrapper = useCallback((file: FileWithId) => {
     baseActions.pinFile(file.fileId);
@@ -124,11 +144,11 @@ function FileContextInner({
     ...baseActions,
     addFiles: addRawFiles,
     addProcessedFiles,
-    addStoredFiles, 
+    addStoredFiles,
     removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
       // Remove from memory and cleanup resources
       lifecycleManager.removeFiles(fileIds, stateRef);
-      
+
       // Remove from IndexedDB if enabled
       if (indexedDB && enablePersistence && deleteFromStorage !== false) {
         try {
@@ -138,7 +158,7 @@ function FileContextInner({
         }
       }
     },
-    updateFileRecord: (fileId: FileId, updates: Partial<FileRecord>) => 
+    updateFileRecord: (fileId: FileId, updates: Partial<FileRecord>) =>
       lifecycleManager.updateFileRecord(fileId, updates, stateRef),
     reorderFiles: (orderedFileIds: FileId[]) => {
       dispatch({ type: 'REORDER_FILES', payload: { orderedFileIds } });
@@ -147,7 +167,7 @@ function FileContextInner({
       lifecycleManager.cleanupAllFiles();
       filesRef.current.clear();
       dispatch({ type: 'RESET_CONTEXT' });
-      
+
       // Don't clear IndexedDB automatically - only clear in-memory state
       // IndexedDB should only be cleared when explicitly requested by user
     },
@@ -156,7 +176,7 @@ function FileContextInner({
       lifecycleManager.cleanupAllFiles();
       filesRef.current.clear();
       dispatch({ type: 'RESET_CONTEXT' });
-      
+
       // Then clear IndexedDB storage
       if (indexedDB && enablePersistence) {
         try {
@@ -170,19 +190,21 @@ function FileContextInner({
     pinFile: pinFileWrapper,
     unpinFile: unpinFileWrapper,
     consumeFiles: consumeFilesWrapper,
+    undoConsumeFiles: undoConsumeFilesWrapper,
     setHasUnsavedChanges,
     trackBlobUrl: lifecycleManager.trackBlobUrl,
     cleanupFile: (fileId: string) => lifecycleManager.cleanupFile(fileId, stateRef),
-    scheduleCleanup: (fileId: string, delay?: number) => 
+    scheduleCleanup: (fileId: string, delay?: number) =>
       lifecycleManager.scheduleCleanup(fileId, delay, stateRef)
   }), [
-    baseActions, 
-    addRawFiles, 
-    addProcessedFiles, 
-    addStoredFiles, 
+    baseActions,
+    addRawFiles,
+    addProcessedFiles,
+    addStoredFiles,
     lifecycleManager,
     setHasUnsavedChanges,
     consumeFilesWrapper,
+    undoConsumeFilesWrapper,
     pinFileWrapper,
     unpinFileWrapper,
     indexedDB,
@@ -228,12 +250,12 @@ function FileContextInner({
 export function FileContextProvider({
   children,
   enableUrlSync = true,
-  enablePersistence = true 
+  enablePersistence = true
 }: FileContextProviderProps) {
   if (enablePersistence) {
     return (
       <IndexedDBProvider>
-        <FileContextInner 
+        <FileContextInner
           enableUrlSync={enableUrlSync}
           enablePersistence={enablePersistence}
         >
@@ -243,7 +265,7 @@ export function FileContextProvider({
     );
   } else {
     return (
-      <FileContextInner 
+      <FileContextInner
         enableUrlSync={enableUrlSync}
         enablePersistence={enablePersistence}
       >

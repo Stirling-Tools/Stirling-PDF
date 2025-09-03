@@ -62,6 +62,7 @@ const initialState: NavigationState = {
 // Navigation context actions interface
 export interface NavigationContextActions {
   setMode: (mode: ModeType) => void;
+  setWorkbench: (mode: ModeType) => void; // Alias for V2 compatibility
   setHasUnsavedChanges: (hasChanges: boolean) => void;
   showNavigationWarning: (show: boolean) => void;
   requestNavigation: (navigationFn: () => void) => void;
@@ -98,6 +99,10 @@ export const NavigationProvider: React.FC<{
 
   const actions: NavigationContextActions = {
     setMode: useCallback((mode: ModeType) => {
+      dispatch({ type: 'SET_MODE', payload: { mode } });
+    }, []),
+
+    setWorkbench: useCallback((mode: ModeType) => {
       dispatch({ type: 'SET_MODE', payload: { mode } });
     }, []),
 
