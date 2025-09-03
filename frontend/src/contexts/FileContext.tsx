@@ -19,7 +19,10 @@ import {
   FileContextStateValue,
   FileContextActionsValue,
   FileContextActions,
-  FileRecord
+  FileId,
+  FileRecord,
+  FileWithId,
+  createFileWithId
 } from '../types/fileContext';
 
 // Import modular components
@@ -29,7 +32,6 @@ import { AddedFile, addFiles, consumeFiles, undoConsumeFiles, createFileActions 
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
-import { FileId } from '../types/file';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -79,7 +81,7 @@ function FileContextInner({
   }
 
   // File operations using unified addFiles helper with persistence
-  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<File[]> => {
+  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<FileWithId[]> => {
     const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
@@ -98,15 +100,15 @@ function FileContextInner({
       }));
     }
 
-    return addedFilesWithIds.map(({ file }) => file);
+    return addedFilesWithIds.map(({ file, id }) => createFileWithId(file, id));
   }, [indexedDB, enablePersistence]);
 
-  const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<File[]> => {
+  const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<FileWithId[]> => {
     const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch, lifecycleManager);
-    return result.map(({ file }) => file);
+    return result.map(({ file, id }) => createFileWithId(file, id));
   }, []);
 
-  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<File[]> => {
+  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<FileWithId[]> => {
     const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
@@ -114,7 +116,7 @@ function FileContextInner({
       selectFiles(result);
     }
 
-    return result.map(({ file }) => file);
+    return result.map(({ file, id }) => createFileWithId(file, id));
   }, []);
 
   // Action creators
@@ -140,24 +142,14 @@ function FileContextInner({
     });
   }, []);
 
-  // File-to-ID wrapper functions for pinning
-  const pinFileWrapper = useCallback((file: File) => {
-    const fileId = findFileId(file);
-    if (fileId) {
-      baseActions.pinFile(fileId);
-    } else {
-      console.warn('File not found for pinning:', file.name);
-    }
-  }, [baseActions, findFileId]);
+  // File pinning functions - use FileWithId directly
+  const pinFileWrapper = useCallback((file: FileWithId) => {
+    baseActions.pinFile(file.fileId);
+  }, [baseActions]);
 
-  const unpinFileWrapper = useCallback((file: File) => {
-    const fileId = findFileId(file);
-    if (fileId) {
-      baseActions.unpinFile(fileId);
-    } else {
-      console.warn('File not found for unpinning:', file.name);
-    }
-  }, [baseActions, findFileId]);
+  const unpinFileWrapper = useCallback((file: FileWithId) => {
+    baseActions.unpinFile(file.fileId);
+  }, [baseActions]);
 
   // Complete actions object
   const actions = useMemo<FileContextActions>(() => ({

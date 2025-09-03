@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { thumbnailGenerationService } from '../services/thumbnailGenerationService';
+import { createQuickKey } from '../types/fileContext';
 import { FileId } from '../types/file';
 
 // Request queue to handle concurrent thumbnail requests
@@ -71,8 +72,8 @@ async function processRequestQueue() {
 
           console.log(`📸 Batch generating ${requests.length} thumbnails for pages: ${pageNumbers.slice(0, 5).join(', ')}${pageNumbers.length > 5 ? '...' : ''}`);
 
-          // Use file name as fileId for PDF document caching
-          const fileId = file.name + '_' + file.size + '_' + file.lastModified as FileId;
+          // Use quickKey for PDF document caching (same metadata, consistent format)
+          const fileId = createQuickKey(file) as FileId;
 
           const results = await thumbnailGenerationService.generateThumbnails(
             fileId,

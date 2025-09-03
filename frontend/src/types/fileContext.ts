@@ -5,6 +5,9 @@
 import { PageOperation } from './pageEditor';
 import { FileId, FileMetadata } from './file';
 
+// Re-export FileId for convenience
+export type { FileId };
+
 export type ModeType =
   | 'viewer'
   | 'pageEditor'
@@ -80,6 +83,67 @@ export function createFileId(): FileId {
 export function createQuickKey(file: File): string {
   // Format: name|size|lastModified for fast duplicate detection
   return `${file.name}|${file.size}|${file.lastModified}`;
+}
+
+// File with embedded UUID - replaces loose File + FileId parameter passing
+export interface FileWithId extends File {
+  readonly fileId: FileId;
+  readonly quickKey: string; // Fast deduplication key: name|size|lastModified
+}
+
+// Type guard to check if a File object has an embedded fileId
+export function isFileWithId(file: File): file is FileWithId {
+  return 'fileId' in file && typeof (file as any).fileId === 'string' &&
+         'quickKey' in file && typeof (file as any).quickKey === 'string';
+}
+
+// Create a FileWithId from a regular File object
+export function createFileWithId(file: File, id?: FileId): FileWithId {
+  const fileId = id || createFileId();
+  const quickKey = createQuickKey(file);
+  
+  // File properties are not enumerable, so we need to copy them explicitly
+  // This avoids prototype chain issues while preserving all File functionality
+  const fileWithId = {
+    // Explicitly copy File properties (they're not enumerable)
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    lastModified: file.lastModified,
+    webkitRelativePath: file.webkitRelativePath,
+    
+    // Add our custom properties
+    fileId: fileId,
+    quickKey: quickKey,
+    
+    // Preserve File prototype methods by binding them to the original file
+    arrayBuffer: file.arrayBuffer.bind(file),
+    slice: file.slice.bind(file),
+    stream: file.stream.bind(file),
+    text: file.text.bind(file)
+  } as FileWithId;
+  
+  return fileWithId;
+}
+
+// Extract FileIds from FileWithId array
+export function extractFileIds(files: FileWithId[]): FileId[] {
+  return files.map(file => file.fileId);
+}
+
+// Extract regular File objects from FileWithId array
+export function extractFiles(files: FileWithId[]): File[] {
+  return files as File[];
+}
+
+// Check if an object is a File or FileWithId (replaces instanceof File checks)
+export function isFileObject(obj: any): obj is File | FileWithId {
+  return obj && 
+         typeof obj.name === 'string' &&
+         typeof obj.size === 'number' &&
+         typeof obj.type === 'string' &&
+         typeof obj.lastModified === 'number' &&
+         typeof obj.arrayBuffer === 'function';
 }
 
 
@@ -215,18 +279,18 @@ export type FileContextAction =
 
 export interface FileContextActions {
   // File management - lightweight actions only
-  addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<File[]>;
-  addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<File[]>;
-  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>, options?: { selectFiles?: boolean }) => Promise<File[]>;
+  addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<FileWithId[]>;
+  addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<FileWithId[]>;
+  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>, options?: { selectFiles?: boolean }) => Promise<FileWithId[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateFileRecord: (id: FileId, updates: Partial<FileRecord>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;
 
-  // File pinning
-  pinFile: (file: File) => void;
-  unpinFile: (file: File) => void;
+  // File pinning - accepts FileWithId for safer type checking
+  pinFile: (file: FileWithId) => void;
+  unpinFile: (file: FileWithId) => void;
 
   // File consumption (replace unpinned files with outputs)
   consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileId[]>;
@@ -253,26 +317,17 @@ export interface FileContextActions {
 
 // File selectors (separate from actions to avoid re-renders)
 export interface FileContextSelectors {
-  // File access - no state dependency, uses ref
-  getFile: (id: FileId) => File | undefined;
-  getFiles: (ids?: FileId[]) => File[];
-
-  // Record access - uses normalized state
+  getFile: (id: FileId) => FileWithId | undefined;
+  getFiles: (ids?: FileId[]) => FileWithId[];
   getFileRecord: (id: FileId) => FileRecord | undefined;
   getFileRecords: (ids?: FileId[]) => FileRecord[];
-
-  // Derived selectors
   getAllFileIds: () => FileId[];
-  getSelectedFiles: () => File[];
+  getSelectedFiles: () => FileWithId[];
   getSelectedFileRecords: () => FileRecord[];
-
-  // Pinned files selectors
   getPinnedFileIds: () => FileId[];
-  getPinnedFiles: () => File[];
+  getPinnedFiles: () => FileWithId[];
   getPinnedFileRecords: () => FileRecord[];
-  isFilePinned: (file: File) => boolean;
-
-  // Stable signature for effect dependencies
+  isFilePinned: (file: FileWithId) => boolean;
   getFilesSignature: () => string;
 }
 

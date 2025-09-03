@@ -9,7 +9,7 @@ import {
   FileContextStateValue,
   FileContextActionsValue
 } from './contexts';
-import { FileRecord } from '../../types/fileContext';
+import { FileRecord, FileWithId } from '../../types/fileContext';
 import { FileId } from '../../types/file';
 
 /**
@@ -123,7 +123,7 @@ export function useFileRecord(fileId: FileId): { file?: File; record?: FileRecor
 /**
  * Hook for all files (use sparingly - causes re-renders on file list changes)
  */
-export function useAllFiles(): { files: File[]; records: FileRecord[]; fileIds: FileId[] } {
+export function useAllFiles(): { files: FileWithId[]; records: FileRecord[]; fileIds: FileId[] } {
   const { state, selectors } = useFileState();
 
   return useMemo(() => ({
@@ -136,7 +136,7 @@ export function useAllFiles(): { files: File[]; records: FileRecord[]; fileIds: 
 /**
  * Hook for selected files (optimized for selection-based UI)
  */
-export function useSelectedFiles(): { files: File[]; records: FileRecord[]; fileIds: FileId[] } {
+export function useSelectedFiles(): { files: FileWithId[]; records: FileRecord[]; fileIds: FileId[] } {
   const { state, selectors } = useFileState();
 
   return useMemo(() => ({
