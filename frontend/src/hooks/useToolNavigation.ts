@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { ToolId } from '../types/toolId';
 import { ToolRegistryEntry, getToolUrlPath } from '../data/toolsTaxonomy';
-import { useNavigationActions } from '../contexts/NavigationContext';
 import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
 
 export interface ToolNavigationProps {
@@ -18,19 +17,17 @@ export interface ToolNavigationProps {
 export function useToolNavigation(): {
   getToolNavigation: (toolId: string, tool: ToolRegistryEntry) => ToolNavigationProps;
 } {
-  const { actions } = useNavigationActions();
   const { handleToolSelect } = useToolWorkflow();
 
   const getToolNavigation = useCallback((toolId: string, tool: ToolRegistryEntry): ToolNavigationProps => {
-    // Generate the full URL for href attribute
+    // Generate SSR-safe relative path
     const path = getToolUrlPath(toolId, tool);
-    const href = `${window.location.origin}${path}`;
+    const href = path; // Relative path, no window.location needed
 
     // Click handler that maintains SPA behavior
     const onClick = (e: React.MouseEvent) => {
-      // Check if it's a special click (middle click, ctrl+click, etc.)
-      // These should use the default browser behavior to open in new tab
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
+      // Check if it's a special click (ctrl+click, etc.)
+      if (e.metaKey || e.ctrlKey || e.shiftKey) {
         return; // Let browser handle it via href
       }
 

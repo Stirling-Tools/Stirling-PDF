@@ -13,7 +13,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ActionIcon, Anchor } from '@mantine/core';
+import { ActionIcon } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
 import { useSidebarNavigation } from '../../../hooks/useSidebarNavigation';

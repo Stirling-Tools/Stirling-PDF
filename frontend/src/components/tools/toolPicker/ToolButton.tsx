@@ -49,8 +49,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
   );
 
   const handleExternalClick = (e: React.MouseEvent) => {
-    // Check if it's a special click (middle click, ctrl+click, etc.)
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
+    // Check if it's a special click (ctrl+click, etc.)
+    if (e.metaKey || e.ctrlKey || e.shiftKey) {
       return; // Let browser handle it via href
     }
 

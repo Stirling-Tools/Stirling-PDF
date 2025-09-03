@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActionIcon, Anchor } from '@mantine/core';
+import { ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from './Tooltip';
 import AppsIcon from '@mui/icons-material/AppsRounded';
@@ -54,6 +54,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
           onClick={handleNavClick}
           size={'lg'}
           variant="subtle"
+          aria-label={t("quickAccess.allTools", "All Tools")}
           style={{
             backgroundColor: isActive ? 'var(--icon-tools-bg)' : 'var(--icon-inactive-bg)',
             color: isActive ? 'var(--icon-tools-color)' : 'var(--icon-inactive-color)',

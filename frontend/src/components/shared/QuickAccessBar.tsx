@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
-import { ActionIcon, Stack, Divider, Anchor } from "@mantine/core";
+import { ActionIcon, Stack, Divider } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import LocalIcon from './LocalIcon';
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
@@ -70,6 +70,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
             onClick={(e: React.MouseEvent) => handleClick(e)}
             size={isActive ? (config.size || 'lg') : 'lg'}
             variant="subtle"
+            aria-label={config.name}
             style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
             className={isActive ? 'activeIconScale' : ''}
             data-testid={`${config.id}-button`}

@@ -20,31 +20,27 @@ export function useSidebarNavigation(): {
   const { getToolNavigation: getToolNavProps } = useToolNavigation();
   const { getSelectedTool } = useToolManagement();
 
-  const getHomeNavigation = useCallback((): SidebarNavigationProps => {
-    const href = window.location.origin + '/';
-    
-    const onClick = (e: React.MouseEvent) => {
-      // Check if it's a special click (middle click, ctrl+click, etc.)
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
-        return; // Let browser handle it via href
-      }
-
-      // For regular clicks, prevent default and handle via SPA navigation
-      e.preventDefault();
-      // The existing click handler will be called after this
-    };
-
-    return { href, onClick };
+  const defaultNavClick = useCallback((e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
   }, []);
 
-  const getToolNavigation = useCallback((toolId: string): SidebarNavigationProps | null => {
-    const tool = getSelectedTool(toolId);
-    if (!tool) {
-      return null;
-    }
+  const getHomeNavigation = useCallback((): SidebarNavigationProps => {
+    const href = '/'; // SSR-safe relative path
+    return { href, onClick: defaultNavClick };
+  }, [defaultNavClick]);
 
+  const getToolNavigation = useCallback((toolId: string): SidebarNavigationProps | null => {
+    // Handle special nav sections that aren't tools
+    if (toolId === 'read') return { href: '/read', onClick: defaultNavClick };
+    if (toolId === 'automate') return { href: '/automate', onClick: defaultNavClick };
+
+    const tool = getSelectedTool(toolId);
+    if (!tool) return null;
+    
+    // Delegate to useToolNavigation for true tools
     return getToolNavProps(toolId, tool);
-  }, [getToolNavProps, getSelectedTool]);
+  }, [getToolNavProps, getSelectedTool, defaultNavClick]);
 
   return {
     getHomeNavigation,
