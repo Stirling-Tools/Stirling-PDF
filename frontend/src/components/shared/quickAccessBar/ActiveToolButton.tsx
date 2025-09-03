@@ -13,9 +13,10 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ActionIcon } from '@mantine/core';
+import { ActionIcon, Anchor } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
+import { useSidebarNavigation } from '../../../hooks/useSidebarNavigation';
 import FitText from '../FitText';
 import { Tooltip } from '../Tooltip';
 
@@ -28,6 +29,7 @@ const NAV_IDS = ['read', 'sign', 'automate'];
 
 const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setActiveButton }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
+  const { getHomeNavigation } = useSidebarNavigation();
 
   // Determine if the indicator should be visible (do not require selectedTool to be resolved yet)
   const indicatorShouldShow = Boolean(
@@ -141,32 +143,44 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
           <div className="current-tool-content">
             <div className="flex flex-col items-center gap-1">
               <Tooltip content={isBackHover ? 'Back to all tools' : indicatorTool.name} position="right" arrow maxWidth={140}>
-                <ActionIcon
-                  size={'xl'}
-                  variant="subtle"
-                  onMouseEnter={() => setIsBackHover(true)}
-                  onMouseLeave={() => setIsBackHover(false)}
-                  onClick={() => {
+                <Anchor
+                  href={getHomeNavigation().href}
+                  onClick={(e: React.MouseEvent) => {
+                    // Check if it's a special click (middle click, ctrl+click, etc.)
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
+                      return; // Let browser handle it via href
+                    }
+
+                    // For regular clicks, prevent default and use SPA navigation
+                    e.preventDefault();
                     setActiveButton('tools');
                     handleBackToTools();
                   }}
-                  aria-label={isBackHover ? 'Back to all tools' : indicatorTool.name}
-                  style={{
-                    backgroundColor: isBackHover ? 'var(--color-gray-300)' : 'var(--icon-tools-bg)',
-                    color: isBackHover ? '#fff' : 'var(--icon-tools-color)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer'
-                  }}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
                 >
-                  <span className="iconContainer">
-                    {isBackHover ? (
-                      <ArrowBackRoundedIcon sx={{ fontSize: '1.5rem' }} />
-                    ) : (
-                      indicatorTool.icon
-                    )}
-                  </span>
-                </ActionIcon>
+                  <ActionIcon
+                    size={'xl'}
+                    variant="subtle"
+                    onMouseEnter={() => setIsBackHover(true)}
+                    onMouseLeave={() => setIsBackHover(false)}
+                    aria-label={isBackHover ? 'Back to all tools' : indicatorTool.name}
+                    style={{
+                      backgroundColor: isBackHover ? 'var(--color-gray-300)' : 'var(--icon-tools-bg)',
+                      color: isBackHover ? '#fff' : 'var(--icon-tools-color)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span className="iconContainer">
+                      {isBackHover ? (
+                        <ArrowBackRoundedIcon sx={{ fontSize: '1.5rem' }} />
+                      ) : (
+                        indicatorTool.icon
+                      )}
+                    </span>
+                  </ActionIcon>
+                </Anchor>
               </Tooltip>
               <FitText
                 as="span"
