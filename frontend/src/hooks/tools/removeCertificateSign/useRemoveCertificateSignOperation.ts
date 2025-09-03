@@ -16,7 +16,6 @@ export const removeCertificateSignOperationConfig = {
   buildFormData: buildRemoveCertificateSignFormData,
   operationType: 'remove-certificate-sign',
   endpoint: '/api/v1/security/remove-cert-sign',
-  filePrefix: 'unsigned_', // Will be overridden in hook with translation
   defaultParameters,
 } as const;
 
@@ -25,7 +24,6 @@ export const useRemoveCertificateSignOperation = () => {
 
   return useToolOperation<RemoveCertificateSignParameters>({
     ...removeCertificateSignOperationConfig,
-    filePrefix: t('removeCertSign.filenamePrefix', 'unsigned') + '_',
     getErrorMessage: createStandardErrorHandler(t('removeCertSign.error.failed', 'An error occurred while removing certificate signatures.'))
   });
 };

@@ -34,7 +34,7 @@ interface BaseToolOperationConfig<TParams> {
   operationType: string;
 
   /** Prefix added to processed filenames (e.g., 'compressed_', 'split_') */
-  filePrefix: string;
+  filePrefix?: string;
 
   /** How to handle API responses (e.g., ZIP extraction, single file response) */
   responseHandler?: ResponseHandler;
@@ -258,7 +258,7 @@ export const useToolOperation = <TParams>(
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
         const inputFileRecords: FileRecord[] = [];
-        
+
         // Build parallel arrays of IDs and records for undo tracking
         for (const file of validFiles) {
           const fileId = findFileId(file);
@@ -274,9 +274,9 @@ export const useToolOperation = <TParams>(
             console.warn(`No file ID found for file: ${file.name}`);
           }
         }
-        
+
         const outputFileIds = await consumeFiles(inputFileIds, processedFiles);
-        
+
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
           inputFiles: validFiles, // Keep original File objects for undo
@@ -341,17 +341,17 @@ export const useToolOperation = <TParams>(
     try {
       // Undo the consume operation
       await undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds);
-      
+
       // Clear results and operation tracking
       resetResults();
       lastOperationRef.current = null;
-      
+
       // Show success message
       actions.setStatus(t('undoSuccess', 'Operation undone successfully'));
-      
+
     } catch (error: any) {
       let errorMessage = extractErrorMessage(error);
-      
+
       // Provide more specific error messages based on error type
       if (error.message?.includes('Mismatch between input files')) {
         errorMessage = t('undoDataMismatch', 'Cannot undo: operation data is corrupted');
@@ -360,9 +360,9 @@ export const useToolOperation = <TParams>(
       } else if (error.name === 'QuotaExceededError') {
         errorMessage = t('undoQuotaError', 'Cannot undo: insufficient storage space');
       }
-      
+
       actions.setError(`${t('undoFailed', 'Failed to undo operation')}: ${errorMessage}`);
-      
+
       // Don't clear the operation data if undo failed - user might want to try again
     }
   }, [undoConsumeFiles, resetResults, actions, t]);
