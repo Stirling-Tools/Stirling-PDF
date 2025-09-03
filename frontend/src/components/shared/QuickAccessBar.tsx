@@ -57,38 +57,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       }
     };
 
-    // Render with URL navigation if available, otherwise regular div
-    if (navProps) {
-      return (
-        <div key={config.id} className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
-          <ActionIcon
-            component="a"
-            href={navProps.href}
-            onClick={(e: React.MouseEvent) => handleClick(e)}
-            size={isActive ? (config.size || 'lg') : 'lg'}
-            variant="subtle"
-            aria-label={config.name}
-            style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
-            className={isActive ? 'activeIconScale' : ''}
-            data-testid={`${config.id}-button`}
-          >
-            <span className="iconContainer">
-              {config.icon}
-            </span>
-          </ActionIcon>
-          <span className={`button-text ${isActive ? 'active' : 'inactive'}`}>
-            {config.name}
-          </span>
-        </div>
-      );
-    }
-
+    // Render navigation button with conditional URL support
     return (
       <div key={config.id} className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
         <ActionIcon
+          {...(navProps ? { 
+            component: "a" as const,
+            href: navProps.href,
+            onClick: (e: React.MouseEvent) => handleClick(e),
+            'aria-label': config.name
+          } : {
+            onClick: () => handleClick()
+          })}
           size={isActive ? (config.size || 'lg') : 'lg'}
           variant="subtle"
-          onClick={() => handleClick()}
           style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
           className={isActive ? 'activeIconScale' : ''}
           data-testid={`${config.id}-button`}
