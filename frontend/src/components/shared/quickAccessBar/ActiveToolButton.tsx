@@ -143,7 +143,8 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
           <div className="current-tool-content">
             <div className="flex flex-col items-center gap-1">
               <Tooltip content={isBackHover ? 'Back to all tools' : indicatorTool.name} position="right" arrow maxWidth={140}>
-                <Anchor
+                <ActionIcon
+                  component="a"
                   href={getHomeNavigation().href}
                   onClick={(e: React.MouseEvent) => {
                     // Check if it's a special click (middle click, ctrl+click, etc.)
@@ -156,31 +157,28 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
                     setActiveButton('tools');
                     handleBackToTools();
                   }}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
+                  size={'xl'}
+                  variant="subtle"
+                  onMouseEnter={() => setIsBackHover(true)}
+                  onMouseLeave={() => setIsBackHover(false)}
+                  aria-label={isBackHover ? 'Back to all tools' : indicatorTool.name}
+                  style={{
+                    backgroundColor: isBackHover ? 'var(--color-gray-300)' : 'var(--icon-tools-bg)',
+                    color: isBackHover ? '#fff' : 'var(--icon-tools-color)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textDecoration: 'none'
+                  }}
                 >
-                  <ActionIcon
-                    size={'xl'}
-                    variant="subtle"
-                    onMouseEnter={() => setIsBackHover(true)}
-                    onMouseLeave={() => setIsBackHover(false)}
-                    aria-label={isBackHover ? 'Back to all tools' : indicatorTool.name}
-                    style={{
-                      backgroundColor: isBackHover ? 'var(--color-gray-300)' : 'var(--icon-tools-bg)',
-                      color: isBackHover ? '#fff' : 'var(--icon-tools-color)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <span className="iconContainer">
-                      {isBackHover ? (
-                        <ArrowBackRoundedIcon sx={{ fontSize: '1.5rem' }} />
-                      ) : (
-                        indicatorTool.icon
-                      )}
-                    </span>
-                  </ActionIcon>
-                </Anchor>
+                  <span className="iconContainer">
+                    {isBackHover ? (
+                      <ArrowBackRoundedIcon sx={{ fontSize: '1.5rem' }} />
+                    ) : (
+                      indicatorTool.icon
+                    )}
+                  </span>
+                </ActionIcon>
               </Tooltip>
               <FitText
                 as="span"

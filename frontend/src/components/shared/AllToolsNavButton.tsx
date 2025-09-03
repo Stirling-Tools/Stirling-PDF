@@ -47,30 +47,28 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, set
 
   return (
     <Tooltip content={t("quickAccess.allTools", "All Tools")} position="right" arrow containerStyle={{ marginTop: "-1rem" }} maxWidth={200}>
-      <Anchor
-        href={navProps.href}
-        onClick={handleNavClick}
-        style={{ textDecoration: 'none', color: 'inherit' }}
-      >
-        <div className="flex flex-col items-center gap-1 mt-4 mb-2">
-          <ActionIcon
-            size={'lg'}
-            variant="subtle"
-            style={{
-              backgroundColor: isActive ? 'var(--icon-tools-bg)' : 'var(--icon-inactive-bg)',
-              color: isActive ? 'var(--icon-tools-color)' : 'var(--icon-inactive-color)',
-              border: 'none',
-              borderRadius: '8px',
-            }}
-            className={isActive ? 'activeIconScale' : ''}
-          >
-            {iconNode}
-          </ActionIcon>
-          <span className={`all-tools-text ${isActive ? 'active' : 'inactive'}`}>
-            {t("quickAccess.allTools", "All Tools")}
-          </span>
-        </div>
-      </Anchor>
+      <div className="flex flex-col items-center gap-1 mt-4 mb-2">
+        <ActionIcon
+          component="a"
+          href={navProps.href}
+          onClick={handleNavClick}
+          size={'lg'}
+          variant="subtle"
+          style={{
+            backgroundColor: isActive ? 'var(--icon-tools-bg)' : 'var(--icon-inactive-bg)',
+            color: isActive ? 'var(--icon-tools-color)' : 'var(--icon-inactive-color)',
+            border: 'none',
+            borderRadius: '8px',
+            textDecoration: 'none'
+          }}
+          className={isActive ? 'activeIconScale' : ''}
+        >
+          {iconNode}
+        </ActionIcon>
+        <span className={`all-tools-text ${isActive ? 'active' : 'inactive'}`}>
+          {t("quickAccess.allTools", "All Tools")}
+        </span>
+      </div>
     </Tooltip>
   );
 };

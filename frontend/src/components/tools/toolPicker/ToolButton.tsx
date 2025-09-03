@@ -48,27 +48,53 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
     </>
   );
 
+  const handleExternalClick = (e: React.MouseEvent) => {
+    // Check if it's a special click (middle click, ctrl+click, etc.)
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
+      return; // Let browser handle it via href
+    }
+
+    // For regular clicks, prevent default and use window.open
+    e.preventDefault();
+    handleClick(id);
+  };
+
   const buttonElement = navProps ? (
-    // For tools with URLs, wrap in anchor for proper link behavior
-    <Anchor
+    // For internal tools with URLs, render Button as an anchor for proper link behavior
+    <Button
+      component="a"
       href={navProps.href}
       onClick={navProps.onClick}
-      style={{ textDecoration: 'none', color: 'inherit' }}
+      variant={isSelected ? "filled" : "subtle"}
+      size="sm"
+      radius="md"
+      fullWidth
+      justify="flex-start"
+      className="tool-button"
+      styles={{ root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)" } }}
     >
-      <Button
-        variant={isSelected ? "filled" : "subtle"}
-        size="sm"
-        radius="md"
-        fullWidth
-        justify="flex-start"
-        className="tool-button"
-        styles={{ root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)" } }}
-      >
-        {buttonContent}
-      </Button>
-    </Anchor>
+      {buttonContent}
+    </Button>
+  ) : tool.link && !isUnavailable ? (
+    // For external links, render Button as an anchor with proper href
+    <Button
+      component="a"
+      href={tool.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={handleExternalClick}
+      variant={isSelected ? "filled" : "subtle"}
+      size="sm"
+      radius="md"
+      fullWidth
+      justify="flex-start"
+      className="tool-button"
+      styles={{ root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)" } }}
+    >
+      {buttonContent}
+    </Button>
   ) : (
-    // For external links and unavailable tools, use regular button
+    // For unavailable tools, use regular button
     <Button
       variant={isSelected ? "filled" : "subtle"}
       onClick={() => handleClick(id)}

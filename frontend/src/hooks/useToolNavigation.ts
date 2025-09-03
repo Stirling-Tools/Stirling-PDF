@@ -46,7 +46,7 @@ export function useToolNavigation(): {
     };
 
     return { href, onClick };
-  }, [actions, handleToolSelect]);
+  }, [handleToolSelect]);
 
   return { getToolNavigation };
 }

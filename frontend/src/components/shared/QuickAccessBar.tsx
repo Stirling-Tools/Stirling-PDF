@@ -60,8 +60,33 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
       config.onClick();
     };
 
-    const buttonElement = (
-      <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
+    // Render with URL navigation if available, otherwise regular div
+    if (navProps) {
+      return (
+        <div key={config.id} className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
+          <ActionIcon
+            component="a"
+            href={navProps.href}
+            onClick={(e: React.MouseEvent) => handleClick(e)}
+            size={isActive ? (config.size || 'lg') : 'lg'}
+            variant="subtle"
+            style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
+            className={isActive ? 'activeIconScale' : ''}
+            data-testid={`${config.id}-button`}
+          >
+            <span className="iconContainer">
+              {config.icon}
+            </span>
+          </ActionIcon>
+          <span className={`button-text ${isActive ? 'active' : 'inactive'}`}>
+            {config.name}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div key={config.id} className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
         <ActionIcon
           size={isActive ? (config.size || 'lg') : 'lg'}
           variant="subtle"
@@ -79,22 +104,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>(({
         </span>
       </div>
     );
-
-    // Wrap with Anchor if it has URL navigation
-    if (navProps) {
-      return (
-        <Anchor
-          key={config.id}
-          href={navProps.href}
-          onClick={handleClick}
-          style={{ textDecoration: 'none', color: 'inherit' }}
-        >
-          {buttonElement}
-        </Anchor>
-      );
-    }
-
-    return <div key={config.id}>{buttonElement}</div>;
   };
 
 
