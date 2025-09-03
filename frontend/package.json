@@ -77,12 +77,12 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.3.0",
-    "@types/pdfjs-dist": "^2.10.378",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
     "@vitejs/plugin-react-swc": "^4.0.1",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.34.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "jsdom": "^26.1.0",
@@ -96,7 +96,8 @@
     "ignoreMatches": [
       "@emotion/*",
       "tailwindcss",
-      "@testing-library/user-event"
+      "@testing-library/user-event",
+      "@vitest/coverage-v8"
     ]
   }
 }
