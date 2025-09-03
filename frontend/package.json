@@ -16,10 +16,6 @@
     "@mui/material": "^7.3.2",
     "@tailwindcss/postcss": "^4.1.12",
     "@tanstack/react-virtual": "^3.13.12",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.8.0",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
     "autoprefixer": "^10.4.21",
     "axios": "^1.11.0",
     "i18next": "^25.4.2",
@@ -55,8 +51,9 @@
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:react-hooks/recommended"
     ]
   },
   "browserslist": {
@@ -75,22 +72,31 @@
     "@iconify-json/material-symbols": "^1.2.33",
     "@iconify/utils": "^3.0.1",
     "@playwright/test": "^1.55.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.3.0",
     "@types/pdfjs-dist": "^2.10.378",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react": "^5.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
     "@vitejs/plugin-react-swc": "^4.0.1",
-    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.34.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "jsdom": "^26.1.0",
     "license-checker": "^25.0.1",
-    "madge": "^8.0.0",
     "postcss": "^8.5.6",
-    "postcss-cli": "^11.0.1",
-    "postcss-preset-mantine": "^1.18.0",
-    "postcss-simple-vars": "^7.0.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.4",
     "vitest": "^3.2.4"
+  },
+  "depcheck": {
+    "ignoreMatches": [
+      "@emotion/*",
+      "tailwindcss",
+      "@testing-library/user-event"
+    ]
   }
 }
