@@ -128,7 +128,7 @@ export const useToolOperation = <TParams>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { addFiles, consumeFiles, undoConsumeFiles, actions: fileActions, selectors } = useFileContext();
+  const { addFiles, consumeFiles, undoConsumeFiles, selectors } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -243,7 +243,7 @@ export const useToolOperation = <TParams>(
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
         const inputStirlingFileStubs: StirlingFileStub[] = [];
-        
+
         // Build parallel arrays of IDs and records for undo tracking
         for (const file of validFiles) {
           const fileId = file.fileId;
@@ -320,7 +320,7 @@ export const useToolOperation = <TParams>(
     try {
       // Undo the consume operation
       await undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds);
-      
+
 
       // Clear results and operation tracking
       resetResults();

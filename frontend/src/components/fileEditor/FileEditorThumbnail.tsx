@@ -44,7 +44,6 @@ const FileEditorThumbnail = ({
   selectedFiles,
   onToggleFile,
   onDeleteFile,
-  onViewFile,
   onSetStatus,
   onReorderFiles,
   onDownloadFile,

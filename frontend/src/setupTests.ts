@@ -63,7 +63,7 @@ for (let i = 0; i < 32; i++) {
 Object.defineProperty(globalThis, 'crypto', {
   value: {
     subtle: {
-      digest: vi.fn().mockImplementation(async (algorithm: string, data: any) => {
+      digest: vi.fn().mockImplementation(async (_algorithm: string, _data: any) => {
         // Always return the mock hash buffer regardless of input
         return mockHashBuffer.slice();
       }),

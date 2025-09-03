@@ -13,8 +13,7 @@ import {
 import { FileId, FileMetadata } from '../../types/file';
 import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
 import { FileLifecycleManager } from './lifecycle';
-import { fileProcessingService } from '../../services/fileProcessingService';
-import { buildQuickKeySet, buildQuickKeySetFromMetadata } from './fileSelectors';
+import { buildQuickKeySet } from './fileSelectors';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -407,7 +406,6 @@ export async function consumeFiles(
   });
 
   if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputStirlingFileStubs.length} outputs`);
-
   // Return the output file IDs for undo tracking
   return outputStirlingFileStubs.map(({ fileId }) => fileId);
 }
@@ -467,7 +465,6 @@ export async function undoConsumeFiles(
   inputFiles: File[],
   inputStirlingFileStubs: StirlingFileStub[],
   outputFileIds: FileId[],
-  stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>; deleteFile: (fileId: FileId) => Promise<void> } | null
@@ -507,7 +504,6 @@ export async function undoConsumeFiles(
     });
 
     if (DEBUG) console.log(`📄 undoConsumeFiles: Successfully undone consume operation - restored ${inputStirlingFileStubs.length} inputs, removed ${outputFileIds.length} outputs`);
-
   } catch (error) {
     // Rollback filesRef to previous state
     if (DEBUG) console.error('📄 undoConsumeFiles: Error during undo, rolling back filesRef', error);
