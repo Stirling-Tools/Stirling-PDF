@@ -35,8 +35,11 @@ function updatePosthogConsent(){
       return;
     }
     const optIn = (window.CookieConsent as any).acceptedCategory('analytics');
-    optIn?
-      posthog.opt_in_capturing() : posthog.opt_out_capturing();
+    if (optIn) {
+      posthog.opt_in_capturing();
+    } else {
+      posthog.opt_out_capturing();
+    }
 
     console.log("Updated analytics consent: ", optIn? "opted in" : "opted out");
   }
