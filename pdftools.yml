@@ -201,7 +201,7 @@ paths:
       description: >-
         This operation takes an input PDF file and redacts the provided
         listOfText. Input:PDF, Output:PDF, Type:SISO
-      operationId: redactPdf
+      operationId: redactPdfAuto
       requestBody:
         content:
           multipart/form-data:
