@@ -182,9 +182,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/SignPDFWithCertRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SignPDFWithCertRequest'
       responses:
         '200':
           description: OK
