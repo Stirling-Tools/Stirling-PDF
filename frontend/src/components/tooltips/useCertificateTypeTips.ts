@@ -17,10 +17,10 @@ export const useCertificateTypeTips = (): TooltipContent => {
         title: t("manageSignatures.certType.tooltip.which.title", "Which option should I use?"),
         description: t("manageSignatures.certType.tooltip.which.text", "Choose the format that matches your certificate file:"),
         bullets: [
-          t("manageSignatures.certType.tooltip.which.bullet1", "PKCS#12 (.p12 / .pfx) – one combined file (most common)"),
-          t("manageSignatures.certType.tooltip.which.bullet2", "PEM – separate private-key and certificate .pem files"),
-          t("manageSignatures.certType.tooltip.which.bullet3", "JKS – Java .jks keystore for dev / CI-CD workflows"),
-          t("manageSignatures.certType.tooltip.which.bullet4", "SERVER – use server's certificate (no files needed)")
+          t("manageSignatures.certType.tooltip.which.bullet1", "PKCS12 (.p12) – one combined file (most common)"),
+          t("manageSignatures.certType.tooltip.which.bullet2", "PFX (.pfx) – Microsoft's version of PKCS12"),
+          t("manageSignatures.certType.tooltip.which.bullet3", "PEM – separate private-key and certificate .pem files"),
+          t("manageSignatures.certType.tooltip.which.bullet4", "JKS – Java .jks keystore for dev / CI-CD workflows")
         ]
       },
       {

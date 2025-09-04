@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.service.ServerCertificateService;
+import stirling.software.common.service.ServerCertificateService;
 
 @RestController
 @RequestMapping("/api/v1/admin/server-certificate")

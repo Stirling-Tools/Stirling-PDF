@@ -1,4 +1,4 @@
-package stirling.software.SPDF.service;
+package stirling.software.proprietary.service;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -26,7 +26,7 @@ import stirling.software.common.configuration.InstallationPathConfig;
 
 @Service
 @Slf4j
-public class ServerCertificateService {
+public class ServerCertificateService implements stirling.software.common.service.ServerCertificateService {
 
     private static final String KEYSTORE_FILENAME = "server-certificate.p12";
     private static final String KEYSTORE_ALIAS = "stirling-pdf-server";
@@ -213,40 +213,4 @@ public class ServerCertificateService {
         }
     }
 
-    public static class ServerCertificateInfo {
-        private final boolean exists;
-        private final String subject;
-        private final String issuer;
-        private final Date validFrom;
-        private final Date validTo;
-
-        public ServerCertificateInfo(
-                boolean exists, String subject, String issuer, Date validFrom, Date validTo) {
-            this.exists = exists;
-            this.subject = subject;
-            this.issuer = issuer;
-            this.validFrom = validFrom;
-            this.validTo = validTo;
-        }
-
-        public boolean isExists() {
-            return exists;
-        }
-
-        public String getSubject() {
-            return subject;
-        }
-
-        public String getIssuer() {
-            return issuer;
-        }
-
-        public Date getValidFrom() {
-            return validFrom;
-        }
-
-        public Date getValidTo() {
-            return validTo;
-        }
-    }
 }

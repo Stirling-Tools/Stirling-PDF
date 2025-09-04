@@ -8,6 +8,7 @@ import { useManageSignaturesParameters } from "../hooks/tools/manageSignatures/u
 import { useManageSignaturesOperation } from "../hooks/tools/manageSignatures/useManageSignaturesOperation";
 import { useCertificateTypeTips } from "../components/tooltips/useCertificateTypeTips";
 import { useSignatureAppearanceTips } from "../components/tooltips/useSignatureAppearanceTips";
+import { useSignModeTips } from "../components/tooltips/useSignModeTips";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "../types/tool";
 
@@ -23,6 +24,7 @@ const ManageSignatures = (props: BaseToolProps) => {
   
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
+  const signModeTips = useSignModeTips();
 
   // Check if certificate files are configured for appearance step
   const areCertFilesConfigured = () => {
@@ -59,6 +61,7 @@ const ManageSignatures = (props: BaseToolProps) => {
         title: t("certSign.signMode.stepTitle", "Sign Mode"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        tooltip: signModeTips,
         content: (
           <CertificateTypeSettings
             parameters={base.params.parameters}

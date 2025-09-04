@@ -24,7 +24,7 @@ const CertificateFormatSettings = ({ parameters, onParameterChange, disabled = f
             style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
           >
             <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              PKCS#12<br />(.p12 file)
+              PKCS12
             </div>
           </Button>
           <Button
@@ -35,7 +35,7 @@ const CertificateFormatSettings = ({ parameters, onParameterChange, disabled = f
             style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
           >
             <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              PFX<br />(.pfx file)
+              PFX
             </div>
           </Button>
         </div>
@@ -49,7 +49,7 @@ const CertificateFormatSettings = ({ parameters, onParameterChange, disabled = f
             style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
           >
             <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              PEM<br />(Key + Cert files)
+              PEM
             </div>
           </Button>
           <Button
@@ -60,18 +60,11 @@ const CertificateFormatSettings = ({ parameters, onParameterChange, disabled = f
             style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
           >
             <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              JKS<br />(Java KeyStore)
+              JKS
             </div>
           </Button>
         </div>
       </div>
-      <Text size="xs" c="dimmed">
-        {parameters.certType === 'PKCS12' && "Upload a single .p12 file containing both certificate and private key"}
-        {parameters.certType === 'PFX' && "Upload a single .pfx file containing both certificate and private key"}
-        {parameters.certType === 'PEM' && "Upload separate certificate (.pem/.der/.crt/.cer) and private key (.pem/.der/.key) files"}  
-        {parameters.certType === 'JKS' && "Upload a Java KeyStore (.jks) file"}
-        {!parameters.certType && "Choose the format of your certificate files"}
-      </Text>
     </Stack>
   );
 };

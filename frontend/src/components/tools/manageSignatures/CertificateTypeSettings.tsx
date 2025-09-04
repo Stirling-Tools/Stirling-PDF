@@ -28,7 +28,7 @@ const CertificateTypeSettings = ({ parameters, onParameterChange, disabled = fal
           style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
         >
           <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-            Manual<br />(Provide Files)
+            Manual
           </div>
         </Button>
         <Button
@@ -43,15 +43,10 @@ const CertificateTypeSettings = ({ parameters, onParameterChange, disabled = fal
           style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
         >
           <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-            Auto<br />(Server Certificate)
+            Auto
           </div>
         </Button>
       </div>
-      <Text size="xs" c="dimmed">
-        {parameters.signMode === 'MANUAL' 
-          ? "Upload your own certificate files for signing"
-          : "Use the server's pre-configured certificate"}
-      </Text>
     </Stack>
   );
 };

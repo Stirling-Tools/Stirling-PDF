@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.service.ServerCertificateService;
+import stirling.software.common.service.ServerCertificateService;
 
 @Component
 @RequiredArgsConstructor

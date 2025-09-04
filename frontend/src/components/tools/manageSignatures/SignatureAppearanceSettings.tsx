@@ -15,9 +15,6 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
     <Stack gap="md">
       {/* Signature Visibility */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>
-          {t('certSign.appearance.title', 'Signature Appearance')}
-        </Text>
         <div style={{ display: 'flex', gap: '4px' }}>
           <Button
             variant={!parameters.showSignature ? 'filled' : 'outline'}
