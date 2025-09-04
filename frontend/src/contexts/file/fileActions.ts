@@ -15,7 +15,7 @@ import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
 import { FileLifecycleManager } from './lifecycle';
 import { fileProcessingService } from '../../services/fileProcessingService';
 import { buildQuickKeySet, buildQuickKeySetFromMetadata } from './fileSelectors';
-import { extractFileHistory } from '../../utils/fileHistoryUtils';
+import { extractFileHistory, extractBasicFileMetadata } from '../../utils/fileHistoryUtils';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -184,25 +184,23 @@ export async function addFiles(
           if (DEBUG) console.log(`📄 addFiles(raw): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
 
-        // Extract file history from PDF metadata (async)
-        extractFileHistory(file, record).then(updatedRecord => {
-          if (updatedRecord !== record && (updatedRecord.originalFileId || updatedRecord.versionNumber)) {
-            // History was found, dispatch update to trigger re-render
+        // Extract basic metadata (version number and tool chain) for display
+        extractBasicFileMetadata(file, record).then(updatedRecord => {
+          if (updatedRecord !== record && (updatedRecord.versionNumber || updatedRecord.toolHistory)) {
+            // Basic metadata found, dispatch update to trigger re-render
             dispatch({ 
               type: 'UPDATE_FILE_RECORD', 
               payload: { 
                 id: fileId, 
                 updates: {
-                  originalFileId: updatedRecord.originalFileId,
                   versionNumber: updatedRecord.versionNumber,
-                  parentFileId: updatedRecord.parentFileId,
                   toolHistory: updatedRecord.toolHistory
                 }
               } 
             });
           }
         }).catch(error => {
-          if (DEBUG) console.warn(`📄 Failed to extract history for ${file.name}:`, error);
+          if (DEBUG) console.warn(`📄 Failed to extract basic metadata for ${file.name}:`, error);
         });
 
         existingQuickKeys.add(quickKey);
@@ -247,36 +245,23 @@ export async function addFiles(
           if (DEBUG) console.log(`📄 addFiles(processed): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
 
-        // Extract file history from PDF metadata (async)
-        if (DEBUG) console.log(`📄 addFiles(processed): Starting async history extraction for ${file.name}`);
-        extractFileHistory(file, record).then(updatedRecord => {
-          if (DEBUG) console.log(`📄 addFiles(processed): History extraction completed for ${file.name}:`, {
-            hasChanges: updatedRecord !== record,
-            originalFileId: updatedRecord.originalFileId,
-            versionNumber: updatedRecord.versionNumber,
-            toolHistoryLength: updatedRecord.toolHistory?.length || 0
-          });
-          
-          if (updatedRecord !== record && (updatedRecord.originalFileId || updatedRecord.versionNumber)) {
-            // History was found, dispatch update to trigger re-render
-            if (DEBUG) console.log(`📄 addFiles(processed): Dispatching UPDATE_FILE_RECORD for ${file.name}`);
+        // Extract basic metadata (version number and tool chain) for display
+        extractBasicFileMetadata(file, record).then(updatedRecord => {
+          if (updatedRecord !== record && (updatedRecord.versionNumber || updatedRecord.toolHistory)) {
+            // Basic metadata found, dispatch update to trigger re-render
             dispatch({ 
               type: 'UPDATE_FILE_RECORD', 
               payload: { 
                 id: fileId, 
                 updates: {
-                  originalFileId: updatedRecord.originalFileId,
                   versionNumber: updatedRecord.versionNumber,
-                  parentFileId: updatedRecord.parentFileId,
                   toolHistory: updatedRecord.toolHistory
                 }
               } 
             });
-          } else {
-            if (DEBUG) console.log(`📄 addFiles(processed): No history found for ${file.name}, skipping update`);
           }
         }).catch(error => {
-          if (DEBUG) console.error(`📄 addFiles(processed): Failed to extract history for ${file.name}:`, error);
+          if (DEBUG) console.warn(`📄 Failed to extract basic metadata for ${file.name}:`, error);
         });
 
         existingQuickKeys.add(quickKey);
@@ -354,25 +339,23 @@ export async function addFiles(
           if (DEBUG) console.log(`📄 addFiles(stored): Created processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
 
-        // Extract file history from PDF metadata (async) - same as raw files
-        extractFileHistory(file, record).then(updatedRecord => {
-          if (updatedRecord !== record && (updatedRecord.originalFileId || updatedRecord.versionNumber)) {
-            // History was found, dispatch update to trigger re-render
+        // Extract basic metadata (version number and tool chain) for display
+        extractBasicFileMetadata(file, record).then(updatedRecord => {
+          if (updatedRecord !== record && (updatedRecord.versionNumber || updatedRecord.toolHistory)) {
+            // Basic metadata found, dispatch update to trigger re-render
             dispatch({ 
               type: 'UPDATE_FILE_RECORD', 
               payload: { 
                 id: fileId, 
                 updates: {
-                  originalFileId: updatedRecord.originalFileId,
                   versionNumber: updatedRecord.versionNumber,
-                  parentFileId: updatedRecord.parentFileId,
                   toolHistory: updatedRecord.toolHistory
                 }
               } 
             });
           }
         }).catch(error => {
-          if (DEBUG) console.warn(`📄 Failed to extract history for ${file.name}:`, error);
+          if (DEBUG) console.warn(`📄 Failed to extract basic metadata for ${file.name}:`, error);
         });
 
         existingQuickKeys.add(quickKey);
@@ -431,22 +414,20 @@ async function processFilesIntoRecords(
         record.processedFile = createProcessedFile(pageCount, thumbnail);
       }
 
-      // Extract file history from PDF metadata (synchronous during consumeFiles)
+      // Extract basic metadata synchronously during consumeFiles for immediate display
       if (file.type.includes('pdf')) {
         try {
-          const updatedRecord = await extractFileHistory(file, record);
+          const updatedRecord = await extractBasicFileMetadata(file, record);
           
-          if (updatedRecord !== record && (updatedRecord.originalFileId || updatedRecord.versionNumber)) {
-            // Update the record directly with history data
+          if (updatedRecord !== record && (updatedRecord.versionNumber || updatedRecord.toolHistory)) {
+            // Update the record directly with basic metadata
             Object.assign(record, {
-              originalFileId: updatedRecord.originalFileId,
               versionNumber: updatedRecord.versionNumber,
-              parentFileId: updatedRecord.parentFileId,
               toolHistory: updatedRecord.toolHistory
             });
           }
         } catch (error) {
-          if (DEBUG) console.warn(`📄 Failed to extract history for ${file.name}:`, error);
+          if (DEBUG) console.warn(`📄 Failed to extract basic metadata for ${file.name}:`, error);
         }
       }
 

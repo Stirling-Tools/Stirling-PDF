@@ -3,7 +3,8 @@ import { FileMetadata } from '../types/file';
 import { StoredFile, fileStorage } from '../services/fileStorage';
 import { downloadFiles } from '../utils/downloadUtils';
 import { FileId } from '../types/file';
-import { getLatestVersions, groupFilesByOriginal, getVersionHistory } from '../utils/fileHistoryUtils';
+import { getLatestVersions, groupFilesByOriginal, getVersionHistory, createFileMetadataWithHistory } from '../utils/fileHistoryUtils';
+import { useMultiFileHistory } from '../hooks/useFileHistory';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
@@ -17,6 +18,10 @@ interface FileManagerContextValue {
   selectedFilesSet: Set<string>;
   expandedFileIds: Set<string>;
   fileGroups: Map<string, FileMetadata[]>;
+
+  // History loading state
+  isLoadingHistory: (fileId: FileId) => boolean;
+  getHistoryError: (fileId: FileId) => string | null;
 
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
@@ -75,10 +80,19 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [expandedFileIds, setExpandedFileIds] = useState<Set<string>>(new Set());
+  const [loadedHistoryFiles, setLoadedHistoryFiles] = useState<Map<FileId, FileMetadata[]>>(new Map()); // Cache for loaded history
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
+
+  // History loading hook
+  const {
+    loadFileHistory,
+    getHistory,
+    isLoadingHistory,
+    getError: getHistoryError
+  } = useMultiFileHistory();
 
   // Computed values (with null safety)
   const selectedFilesSet = new Set(selectedFileIds);
@@ -101,36 +115,24 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const displayFiles = useMemo(() => {
     if (!recentFiles || recentFiles.length === 0) return [];
     
-    const recordsForGrouping = recentFiles.map(file => ({
-      ...file,
-      originalFileId: file.originalFileId,
-      versionNumber: file.versionNumber || 0
-    }));
-    
-    // Get branch groups (leaf files with their lineage paths)
-    const branchGroups = groupFilesByOriginal(recordsForGrouping);
-    
-    // Show only leaf files (end of branches) in main list
     const expandedFiles = [];
-    for (const [leafFileId, lineagePath] of branchGroups) {
-      const leafFile = recentFiles.find(f => f.id === leafFileId);
-      if (!leafFile) continue;
-      
-      // Add the leaf file (shown in main list)
+    
+    // Since we now only load leaf files, iterate through recent files directly
+    for (const leafFile of recentFiles) {
+      // Add the leaf file (main file shown in list)
       expandedFiles.push(leafFile);
       
-      // If expanded, add the lineage history (except the leaf itself)
-      if (expandedFileIds.has(leafFileId)) {
-        const historyFiles = lineagePath
-          .filter((record: any) => record.id !== leafFileId)
-          .map((record: any) => recentFiles.find(f => f.id === record.id))
-          .filter((f): f is FileMetadata => f !== undefined);
-        expandedFiles.push(...historyFiles);
+      // If expanded, add the loaded history files
+      if (expandedFileIds.has(leafFile.id)) {
+        const historyFiles = loadedHistoryFiles.get(leafFile.id) || [];
+        // Sort history files by version number (oldest first)
+        const sortedHistory = historyFiles.sort((a, b) => (a.versionNumber || 0) - (b.versionNumber || 0));
+        expandedFiles.push(...sortedHistory);
       }
     }
     
     return expandedFiles;
-  }, [recentFiles, expandedFileIds, fileGroups]);
+  }, [recentFiles, expandedFileIds, loadedHistoryFiles]);
 
   const selectedFiles = selectedFileIds.length === 0 ? [] :
     displayFiles.filter(file => selectedFilesSet.has(file.id));
@@ -331,7 +333,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, []);
 
-  const handleToggleExpansion = useCallback((fileId: string) => {
+  const handleToggleExpansion = useCallback(async (fileId: string) => {
+    const isCurrentlyExpanded = expandedFileIds.has(fileId);
+    
+    // Update expansion state
     setExpandedFileIds(prev => {
       const newSet = new Set(prev);
       if (newSet.has(fileId)) {
@@ -341,7 +346,124 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       }
       return newSet;
     });
-  }, []);
+
+    // Load complete history chain if expanding
+    if (!isCurrentlyExpanded) {
+      const currentFileMetadata = recentFiles.find(f => f.id === fileId);
+      if (currentFileMetadata && (currentFileMetadata.versionNumber || 0) > 0) {
+        try {
+          // Load the current file to get its full history
+          const storedFile = await fileStorage.getFile(fileId);
+          if (storedFile) {
+            const file = new File([storedFile.data], storedFile.name, {
+              type: storedFile.type,
+              lastModified: storedFile.lastModified
+            });
+            
+            // Get the complete history metadata (this will give us original/parent IDs)
+            const historyData = await loadFileHistory(file, fileId);
+            
+            if (historyData?.originalFileId) {
+              // Load complete history chain by traversing parent relationships
+              const historyFiles: FileMetadata[] = [];
+              
+              // Get all stored files for chain traversal
+              const allStoredMetadata = await fileStorage.getAllFileMetadata();
+              const fileMap = new Map(allStoredMetadata.map(f => [f.id, f]));
+              
+              // Build complete chain by following parent relationships backwards
+              const visitedIds = new Set([fileId]); // Don't include the current file
+              const toProcess = [historyData]; // Start with current file's history data
+              
+              while (toProcess.length > 0) {
+                const currentHistoryData = toProcess.shift()!;
+                
+                // Add original file if we haven't seen it
+                if (currentHistoryData.originalFileId && !visitedIds.has(currentHistoryData.originalFileId)) {
+                  visitedIds.add(currentHistoryData.originalFileId);
+                  const originalMeta = fileMap.get(currentHistoryData.originalFileId);
+                  if (originalMeta) {
+                    try {
+                      const origStoredFile = await fileStorage.getFile(originalMeta.id);
+                      if (origStoredFile) {
+                        const origFile = new File([origStoredFile.data], origStoredFile.name, {
+                          type: origStoredFile.type,
+                          lastModified: origStoredFile.lastModified
+                        });
+                        const origMetadata = await createFileMetadataWithHistory(origFile, originalMeta.id, originalMeta.thumbnail);
+                        historyFiles.push(origMetadata);
+                      }
+                    } catch (error) {
+                      console.warn(`Failed to load original file ${originalMeta.id}:`, error);
+                    }
+                  }
+                }
+                
+                // Add parent file if we haven't seen it
+                if (currentHistoryData.parentFileId && !visitedIds.has(currentHistoryData.parentFileId)) {
+                  visitedIds.add(currentHistoryData.parentFileId);
+                  const parentMeta = fileMap.get(currentHistoryData.parentFileId);
+                  if (parentMeta) {
+                    try {
+                      const parentStoredFile = await fileStorage.getFile(parentMeta.id);
+                      if (parentStoredFile) {
+                        const parentFile = new File([parentStoredFile.data], parentStoredFile.name, {
+                          type: parentStoredFile.type,
+                          lastModified: parentStoredFile.lastModified
+                        });
+                        const parentMetadata = await createFileMetadataWithHistory(parentFile, parentMeta.id, parentMeta.thumbnail);
+                        historyFiles.push(parentMetadata);
+                        
+                        // Load parent's history to continue the chain
+                        const parentHistoryData = await loadFileHistory(parentFile, parentMeta.id);
+                        if (parentHistoryData) {
+                          toProcess.push(parentHistoryData);
+                        }
+                      }
+                    } catch (error) {
+                      console.warn(`Failed to load parent file ${parentMeta.id}:`, error);
+                    }
+                  }
+                }
+              }
+              
+              // Also find any files that have the current file as their original (siblings/alternatives)
+              for (const [metaId, meta] of fileMap) {
+                if (!visitedIds.has(metaId) && meta.originalFileId === historyData.originalFileId) {
+                  visitedIds.add(metaId);
+                  try {
+                    const siblingStoredFile = await fileStorage.getFile(meta.id);
+                    if (siblingStoredFile) {
+                      const siblingFile = new File([siblingStoredFile.data], siblingStoredFile.name, {
+                        type: siblingStoredFile.type,
+                        lastModified: siblingStoredFile.lastModified
+                      });
+                      const siblingMetadata = await createFileMetadataWithHistory(siblingFile, meta.id, meta.thumbnail);
+                      historyFiles.push(siblingMetadata);
+                    }
+                  } catch (error) {
+                    console.warn(`Failed to load sibling file ${meta.id}:`, error);
+                  }
+                }
+              }
+              
+              // Cache the loaded history files
+              setLoadedHistoryFiles(prev => new Map(prev.set(fileId, historyFiles)));
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to load history chain for file ${fileId}:`, error);
+        }
+      }
+    } else {
+      // Clear loaded history when collapsing
+      setLoadedHistoryFiles(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(fileId);
+        return newMap;
+      });
+    }
+  }, [expandedFileIds, recentFiles, loadFileHistory]);
 
   const handleAddToRecents = useCallback(async (file: FileMetadata) => {
     try {
@@ -399,6 +521,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     expandedFileIds,
     fileGroups,
 
+    // History loading state
+    isLoadingHistory,
+    getHistoryError,
+
     // Handlers
     onSourceChange: handleSourceChange,
     onLocalFileClick: handleLocalFileClick,
@@ -429,6 +555,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     fileInputRef,
     expandedFileIds,
     fileGroups,
+    isLoadingHistory,
+    getHistoryError,
     handleSourceChange,
     handleLocalFileClick,
     handleFileSelect,

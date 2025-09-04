@@ -30,8 +30,8 @@ export const useFileManager = () => {
         return [];
       }
 
-      // Load regular files metadata only
-      const storedFileMetadata = await indexedDB.loadAllMetadata();
+      // Load only leaf files metadata (processed files that haven't been used as input for other tools)
+      const storedFileMetadata = await indexedDB.loadLeafMetadata();
 
       // For now, only regular files - drafts will be handled separately in the future
       const allFiles = storedFileMetadata;

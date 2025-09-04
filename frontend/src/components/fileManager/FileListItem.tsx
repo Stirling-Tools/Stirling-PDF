@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge, Button } from '@mantine/core';
+import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge, Button, Loader } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -38,7 +38,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const { fileGroups, expandedFileIds, onToggleExpansion, onAddToRecents } = useFileManagerContext();
+  const { fileGroups, expandedFileIds, onToggleExpansion, onAddToRecents, isLoadingHistory, getHistoryError } = useFileManagerContext();
 
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
@@ -46,9 +46,13 @@ const FileListItem: React.FC<FileListItemProps> = ({
   // Get version information for this file
   const leafFileId = isLatestVersion ? file.id : (file.originalFileId || file.id);
   const lineagePath = fileGroups.get(leafFileId) || [];
-  const hasVersionHistory = lineagePath.length > 1;
+  const hasVersionHistory = (file.versionNumber || 0) > 0; // Show history for any processed file (v1+)
   const currentVersion = file.versionNumber || 0; // Display original files as v0
   const isExpanded = expandedFileIds.has(leafFileId);
+  
+  // Get loading state for this file's history
+  const isLoadingFileHistory = isLoadingHistory(file.id);
+  const historyError = getHistoryError(file.id);
 
   return (
     <>
@@ -91,6 +95,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Group gap="xs" align="center">
               <Text size="sm" fw={500} truncate style={{ flex: 1 }}>{file.name}</Text>
+              {isLoadingFileHistory && <Loader size={14} />}
                 <Badge size="xs" variant="light" color={currentVersion > 0 ? "blue" : "gray"}>
                   v{currentVersion}
                 </Badge>
@@ -100,7 +105,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               <Text size="xs" c="dimmed">
                 {getFileSize(file)} • {getFileDate(file)}
                 {hasVersionHistory && (
-                  <Text span c="dimmed"> • {lineagePath.length} versions</Text>
+                  <Text span c="dimmed"> • has history</Text>
                 )}
               </Text>
 
@@ -157,17 +162,30 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {isLatestVersion && hasVersionHistory && (
                 <>
                   <Menu.Item
-                    leftSection={<HistoryIcon style={{ fontSize: 16 }} />}
+                    leftSection={
+                      isLoadingFileHistory ? 
+                        <Loader size={16} /> : 
+                        <HistoryIcon style={{ fontSize: 16 }} />
+                    }
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleExpansion(leafFileId);
                     }}
+                    disabled={isLoadingFileHistory}
                   >
-                    {isExpanded ?
-                      t('fileManager.hideHistory', 'Hide History') :
-                      t('fileManager.showHistory', 'Show History')
+                    {isLoadingFileHistory ? 
+                      t('fileManager.loadingHistory', 'Loading History...') :
+                      (isExpanded ?
+                        t('fileManager.hideHistory', 'Hide History') :
+                        t('fileManager.showHistory', 'Show History')
+                      )
                     }
                   </Menu.Item>
+                  {historyError && (
+                    <Menu.Item disabled c="red" style={{ fontSize: '12px' }}>
+                      {t('fileManager.historyError', 'Error loading history')}
+                    </Menu.Item>
+                  )}
                   <Menu.Divider />
                 </>
               )}

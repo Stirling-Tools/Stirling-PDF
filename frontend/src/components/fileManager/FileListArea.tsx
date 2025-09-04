@@ -53,12 +53,10 @@ const FileListArea: React.FC<FileListAreaProps> = ({
             </Center>
           ) : (
             filteredFiles.map((file, index) => {
-              // Check if this file is a leaf (appears in group keys) or a history file
-              const isLeafFile = fileGroups.has(file.id);
-              const lineagePath = fileGroups.get(file.id) || [];
-              const isHistoryFile = !isLeafFile; // If not a leaf, it's a history file
-              const isLatestVersion = isLeafFile; // Leaf files are the latest in their branch
-              const hasVersionHistory = lineagePath.length > 1;
+              // Determine if this is a history file based on whether it's in the recent files or loaded as history
+              const isLeafFile = recentFiles.some(rf => rf.id === file.id);
+              const isHistoryFile = !isLeafFile; // If not in recent files, it's a loaded history file
+              const isLatestVersion = isLeafFile; // Only leaf files (from recent files) are latest versions
 
               return (
                 <FileListItem
@@ -71,7 +69,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
                   onDownload={() => onDownloadSingle(file)}
                   onDoubleClick={() => onFileDoubleClick(file)}
                   isHistoryFile={isHistoryFile}
-                  isLatestVersion={isLatestVersion && hasVersionHistory}
+                  isLatestVersion={isLatestVersion}
                 />
               );
             })

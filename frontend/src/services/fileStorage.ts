@@ -62,13 +62,11 @@ class FileStorageService {
         const store = transaction.objectStore(this.storeName);
 
         // Debug logging
-        console.log('Object store keyPath:', store.keyPath);
-        console.log('Storing file with UUID:', {
-          id: storedFile.id, // Now a UUID from FileContext
+        console.log('📄 LEAF FLAG DEBUG - Storing file:', {
+          id: storedFile.id,
           name: storedFile.name,
-          hasData: !!storedFile.data,
-          dataSize: storedFile.data.byteLength,
-          isLeaf: storedFile.isLeaf
+          isLeaf: storedFile.isLeaf,
+          dataSize: storedFile.data.byteLength
         });
 
         const request = store.add(storedFile);
@@ -222,11 +220,18 @@ class FileStorageService {
       getRequest.onsuccess = () => {
         const file = getRequest.result;
         if (file) {
+          console.log('📄 LEAF FLAG DEBUG - Marking as processed:', {
+            id: file.id,
+            name: file.name,
+            wasLeaf: file.isLeaf,
+            nowLeaf: false
+          });
           file.isLeaf = false;
           const updateRequest = store.put(file);
           updateRequest.onsuccess = () => resolve(true);
           updateRequest.onerror = () => reject(updateRequest.error);
         } else {
+          console.warn('📄 LEAF FLAG DEBUG - File not found for processing:', id);
           resolve(false); // File not found
         }
       };
@@ -293,6 +298,7 @@ class FileStorageService {
           }
           cursor.continue();
         } else {
+          console.log('📄 LEAF FLAG DEBUG - Found leaf files:', files.map(f => ({ id: f.id, name: f.name, isLeaf: f.isLeaf })));
           resolve(files);
         }
       };

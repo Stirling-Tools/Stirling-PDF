@@ -21,6 +21,7 @@ interface IndexedDBContextValue {
 
   // Batch operations
   loadAllMetadata: () => Promise<FileMetadata[]>;
+  loadLeafMetadata: () => Promise<FileMetadata[]>; // Only leaf files for recent files list
   deleteMultiple: (fileIds: FileId[]) => Promise<void>;
   clearAll: () => Promise<void>;
 
@@ -140,6 +141,64 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     await fileStorage.deleteFile(fileId);
   }, []);
 
+  const loadLeafMetadata = useCallback(async (): Promise<FileMetadata[]> => {
+    const metadata = await fileStorage.getLeafFileMetadata(); // Only get leaf files
+
+    // Separate PDF and non-PDF files for different processing
+    const pdfFiles = metadata.filter(m => m.type.includes('pdf'));
+    const nonPdfFiles = metadata.filter(m => !m.type.includes('pdf'));
+
+    // Process non-PDF files immediately (no history extraction needed)
+    const nonPdfMetadata: FileMetadata[] = nonPdfFiles.map(m => ({
+      id: m.id,
+      name: m.name,
+      type: m.type,
+      size: m.size,
+      lastModified: m.lastModified,
+      thumbnail: m.thumbnail,
+      isLeaf: m.isLeaf
+    }));
+
+    // Process PDF files with controlled concurrency to avoid memory issues
+    const BATCH_SIZE = 5; // Process 5 PDFs at a time to avoid overwhelming memory
+    const pdfMetadata: FileMetadata[] = [];
+
+    for (let i = 0; i < pdfFiles.length; i += BATCH_SIZE) {
+      const batch = pdfFiles.slice(i, i + BATCH_SIZE);
+
+      const batchResults = await Promise.all(batch.map(async (m) => {
+        try {
+          // For PDF files, load and extract basic history for display only
+          const storedFile = await fileStorage.getFile(m.id);
+          if (storedFile?.data) {
+            const file = new File([storedFile.data], m.name, {
+              type: m.type,
+              lastModified: m.lastModified
+            });
+            return await createFileMetadataWithHistory(file, m.id, m.thumbnail);
+          }
+        } catch (error) {
+          if (DEBUG) console.warn('🗂️ Failed to extract basic metadata from leaf file:', m.name, error);
+        }
+
+        // Fallback to basic metadata without history
+        return {
+          id: m.id,
+          name: m.name,
+          type: m.type,
+          size: m.size,
+          lastModified: m.lastModified,
+          thumbnail: m.thumbnail,
+          isLeaf: m.isLeaf
+        };
+      }));
+
+      pdfMetadata.push(...batchResults);
+    }
+
+    return [...nonPdfMetadata, ...pdfMetadata];
+  }, []);
+
   const loadAllMetadata = useCallback(async (): Promise<FileMetadata[]> => {
     const metadata = await fileStorage.getAllFileMetadata();
 
@@ -230,6 +289,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     loadMetadata,
     deleteFile,
     loadAllMetadata,
+    loadLeafMetadata,
     deleteMultiple,
     clearAll,
     getStorageStats,

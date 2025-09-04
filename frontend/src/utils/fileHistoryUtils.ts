@@ -335,6 +335,97 @@ export async function getRecentLeafFileMetadata(): Promise<Omit<import('../servi
 }
 
 /**
+ * Extract basic file metadata (version number and tool chain) without full history calculation
+ * This is lightweight and used for displaying essential info on file thumbnails
+ */
+export async function extractBasicFileMetadata(
+  file: File,
+  record: FileRecord
+): Promise<FileRecord> {
+  // Only process PDF files
+  if (!file.type.includes('pdf')) {
+    return record;
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const historyMetadata = await pdfMetadataService.extractHistoryMetadata(arrayBuffer);
+
+    if (historyMetadata) {
+      const history = historyMetadata.stirlingHistory;
+
+      // Update record with essential metadata only (no parent/original relationships)
+      return {
+        ...record,
+        versionNumber: history.versionNumber,
+        toolHistory: history.toolChain
+      };
+    }
+  } catch (error) {
+    if (DEBUG) console.warn('📄 Failed to extract basic metadata:', file.name, error);
+  }
+
+  return record;
+}
+
+/**
+ * Load file history on-demand for a specific file
+ * This replaces the automatic history extraction during file loading
+ */
+export async function loadFileHistoryOnDemand(
+  file: File,
+  fileId: FileId,
+  updateFileRecord?: (id: FileId, updates: Partial<FileRecord>) => void
+): Promise<{
+  originalFileId?: string;
+  versionNumber?: number;
+  parentFileId?: FileId;
+  toolHistory?: Array<{
+    toolName: string;
+    timestamp: number;
+    parameters?: Record<string, any>;
+  }>;
+} | null> {
+  // Only process PDF files
+  if (!file.type.includes('pdf')) {
+    return null;
+  }
+
+  try {
+    const baseRecord: FileRecord = {
+      id: fileId,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    };
+
+    const updatedRecord = await extractFileHistory(file, baseRecord);
+    
+    if (updatedRecord !== baseRecord && (updatedRecord.originalFileId || updatedRecord.versionNumber)) {
+      const historyData = {
+        originalFileId: updatedRecord.originalFileId,
+        versionNumber: updatedRecord.versionNumber,
+        parentFileId: updatedRecord.parentFileId,
+        toolHistory: updatedRecord.toolHistory
+      };
+
+      // Update the file record if update function is provided
+      if (updateFileRecord) {
+        updateFileRecord(fileId, historyData);
+      }
+
+      return historyData;
+    }
+
+    return null;
+  } catch (error) {
+    console.warn(`Failed to load history for ${file.name}:`, error);
+    return null;
+  }
+}
+
+/**
  * Create metadata for storing files with history information
  */
 export async function createFileMetadataWithHistory(
@@ -368,12 +459,11 @@ export async function createFileMetadataWithHistory(
         result.pdfMetadata = standardMetadata;
       }
 
-      // Add history metadata if available
+      // Add history metadata if available (basic version for display)
       if (historyMetadata) {
         const history = historyMetadata.stirlingHistory;
-        result.originalFileId = history.originalFileId;
+        // Only add basic metadata needed for display, not full history relationships
         result.versionNumber = history.versionNumber;
-        result.parentFileId = history.parentFileId as FileId | undefined;
         result.historyInfo = {
           originalFileId: history.originalFileId,
           parentFileId: history.parentFileId,
