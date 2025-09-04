@@ -1,0 +1,234 @@
+.panelGroup {
+  max-width: 100%;
+  flex-wrap: wrap;
+  min-width: 24rem;
+}
+
+.textInput {
+  flex: 1;
+  max-width: 100%;
+}
+
+.dropdownContainer {
+  margin-top: 0.5rem;
+}
+
+.menuDropdown {
+  min-width: 22.5rem;
+}
+
+.dropdownContent {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.leftCol {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: calc(100% - 8rem - 0.75rem);
+  overflow: hidden;
+}
+
+.rightCol {
+  width: 8rem;
+  border-left: 0.0625rem solid var(--mantine-color-gray-3);
+  padding-left: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.operatorGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.operatorChip {
+  width: 100%;
+  border-radius: 1.25rem;
+  border: 0.0625rem solid var(--mantine-color-gray-4);
+  background-color: var(--mantine-color-white);
+  transition: all 0.2s ease;
+  min-height: 2rem;
+}
+
+.operatorChip:hover:not(:disabled) {
+  border-color: var(--primary-color, #3b82f6);
+  background-color: var(--mantine-color-blue-0);
+  transform: translateY(-0.0625rem);
+  box-shadow: 0 0.125rem 0.25rem rgba(59, 130, 246, 0.1);
+}
+
+.operatorChip:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 0.0625rem 0.125rem rgba(59, 130, 246, 0.1);
+}
+
+.operatorChip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+:global([data-mantine-color-scheme='dark']) .operatorChip {
+  background-color: var(--mantine-color-dark-6);
+  border-color: var(--mantine-color-dark-4);
+}
+
+:global([data-mantine-color-scheme='dark']) .operatorChip:hover:not(:disabled) {
+  background-color: var(--mantine-color-dark-5);
+  border-color: var(--primary-color, #3b82f6);
+}
+ 
+ .dropdownHeader {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 0.75rem;
+   border-bottom: 0.0625rem solid var(--mantine-color-gray-3);
+   margin-bottom: 0.5rem;
+ }
+ 
+ .closeButton {
+   min-width: 1.5rem;
+   height: 1.5rem;
+   padding: 0;
+   font-size: 1.25rem;
+   font-weight: bold;
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+ }
+
+.menuItemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chevron {
+  color: var(--mantine-color-dimmed);
+}
+
+/* Icon-based chevrons */
+.chevronIcon {
+  transition: transform 150ms ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.chevronDown {
+  transform: rotate(90deg);
+}
+
+.chevronUp {
+  transform: rotate(270deg);
+}
+
+.inlineRow {
+  padding: 0.75rem 0.5rem;
+}
+
+.inlineRowCompact {
+  padding: 0.5rem 0.5rem 0.75rem 0.5rem;
+}
+
+.menuItemCloseHover {
+  background-color: var(--mantine-color-red-1);
+  transition: background-color 150ms ease;
+}
+
+:global([data-mantine-color-scheme='dark']) .menuItemCloseHover {
+  background-color: var(--mantine-color-red-9);
+}
+
+.selectedList {
+  max-height: 8rem;
+  overflow: auto;
+  border: 0.0625rem solid var(--mantine-color-gray-3);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  min-width: 24rem;
+}
+
+.selectedText {
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.advancedSection {
+  margin-top: 0.5rem;
+  min-width: 24rem;
+}
+
+.advancedHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-bottom: 0.0625rem solid var(--mantine-color-gray-3);
+  margin-bottom: 0.5rem;
+}
+
+.advancedContent {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0 0.75rem 0.75rem 0.75rem;
+}
+
+.advancedItem {
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: background-color 150ms ease;
+}
+
+.advancedItem:hover {
+  background-color: var(--mantine-color-gray-1);
+}
+
+:global([data-mantine-color-scheme='dark']) .advancedItem:hover {
+  background-color: var(--mantine-color-gray-8);
+}
+
+.advancedCard {
+  background-color: var(--mantine-color-gray-0);
+  border: 0.0625rem solid var(--mantine-color-gray-2);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.advancedCard:hover {
+  border-color: var(--mantine-color-gray-3);
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+}
+
+:global([data-mantine-color-scheme='dark']) .advancedCard {
+  background-color: var(--mantine-color-dark-7);
+  border-color: var(--mantine-color-dark-5);
+}
+
+:global([data-mantine-color-scheme='dark']) .advancedCard:hover {
+  border-color: var(--mantine-color-dark-4);
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2);
+}
+
+.inputGroup {
+  width: 100%;
+}
+
+.fullWidthInput {
+  flex: 1;
+}
+
+.applyButton {
+  min-width: 4rem;
+  flex-shrink: 0;
+}
+

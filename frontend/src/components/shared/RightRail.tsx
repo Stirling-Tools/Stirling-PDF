@@ -11,6 +11,7 @@ import LanguageSelector from '../shared/LanguageSelector';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { Tooltip } from '../shared/Tooltip';
 import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
+import { parseSelection } from '../../utils/bulkselection/parseSelection';
 
 export default function RightRail() {
   const { t } = useTranslation();
@@ -112,50 +113,13 @@ export default function RightRail() {
     setSelectedFiles([]);
   }, [currentView, selectedFileIds, removeFiles, setSelectedFiles]);
 
-  // CSV parsing functions for page selection
-  const parseCSVInput = useCallback((csv: string) => {
-    const pageNumbers: number[] = [];
-    const ranges = csv.split(',').map(s => s.trim()).filter(Boolean);
-
-    ranges.forEach(range => {
-      if (range.includes('-')) {
-        const [start, end] = range.split('-').map(n => parseInt(n.trim()));
-        for (let i = start; i <= end; i++) {
-          if (i > 0) {
-            pageNumbers.push(i);
-          }
-        }
-      } else {
-        const pageNum = parseInt(range);
-        if (pageNum > 0) {
-          pageNumbers.push(pageNum);
-        }
-      }
-    });
-
-    return pageNumbers;
-  }, []);
-
-  const updatePagesFromCSV = useCallback(() => {
-    const rawPages = parseCSVInput(csvInput);
-    // Use PageEditor's total pages for validation
+  const updatePagesFromCSV = useCallback((override?: string) => {
     const maxPages = pageEditorFunctions?.totalPages || 0;
-    const normalized = Array.from(new Set(rawPages.filter(n => Number.isFinite(n) && n > 0 && n <= maxPages))).sort((a,b)=>a-b);
-    // Use PageEditor's function to set selected pages
+    const normalized = parseSelection(override ?? csvInput, maxPages);
     pageEditorFunctions?.handleSetSelectedPages?.(normalized);
-  }, [csvInput, parseCSVInput, pageEditorFunctions]);
+  }, [csvInput, pageEditorFunctions]);
 
-  // Sync csvInput with PageEditor's selected pages
-  useEffect(() => {
-    const sortedPageNumbers = Array.isArray(pageEditorFunctions?.selectedPageIds) && pageEditorFunctions.displayDocument
-      ? pageEditorFunctions.selectedPageIds.map(id => {
-          const page = pageEditorFunctions.displayDocument!.pages.find(p => p.id === id);
-          return page?.pageNumber || 0;
-        }).filter(num => num > 0).sort((a, b) => a - b)
-      : [];
-    const newCsvInput = sortedPageNumbers.join(', ');
-    setCsvInput(newCsvInput);
-  }, [pageEditorFunctions?.selectedPageIds]);
+  // Do not overwrite user's expression input when selection changes.
 
   // Clear CSV input when files change (use stable signature to avoid ref churn)
   useEffect(() => {
@@ -261,7 +225,7 @@ export default function RightRail() {
                       </div>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <div style={{ minWidth: 280 }}>
+                    <div style={{ minWidth: "16rem", maxWidth: '24rem' }}>
                       <BulkSelectionPanel
                         csvInput={csvInput}
                         setCsvInput={setCsvInput}
