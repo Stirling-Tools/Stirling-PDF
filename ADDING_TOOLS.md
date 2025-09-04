@@ -62,7 +62,7 @@ export const build[ToolName]FormData = (parameters: [ToolName]Parameters, file: 
 };
 
 export const [toolName]OperationConfig = {
-  toolType: ToolType.singleFile, // or ToolType.multiFile
+  toolType: ToolType.singleFile, // or ToolType.multiFile (buildFormData's file parameter will need to be updated)
   buildFormData: build[ToolName]FormData,
   operationType: '[toolName]',
   endpoint: '/api/v1/category/endpoint-name',
