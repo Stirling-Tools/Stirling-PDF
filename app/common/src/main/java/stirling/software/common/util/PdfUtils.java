@@ -35,6 +35,7 @@ import io.github.pixee.security.Filenames;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j
@@ -141,22 +142,31 @@ public class PdfUtils {
             ImageType colorType,
             boolean singleImage,
             int DPI,
-            String filename)
+            String filename,
+            boolean includeAnnotations)
             throws IOException, Exception {
 
         // Validate and limit DPI to prevent excessive memory usage
-        final int MAX_SAFE_DPI = 500; // Maximum safe DPI to prevent memory issues
-        if (DPI > MAX_SAFE_DPI) {
+        int maxSafeDpi = 500; // Default maximum safe DPI
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        if (properties != null && properties.getSystem() != null) {
+            maxSafeDpi = properties.getSystem().getMaxDPI();
+        }
+        if (DPI > maxSafeDpi) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.dpiExceedsLimit",
                     "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause memory issues and crashes. Please use a lower DPI value.",
                     DPI,
-                    MAX_SAFE_DPI);
+                    maxSafeDpi);
         }
 
         try (PDDocument document = pdfDocumentFactory.load(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
+            if (!includeAnnotations) {
+                pdfRenderer.setAnnotationsFilter(annotation -> false);
+            }
             int pageCount = document.getNumberOfPages();
 
             // Create a ByteArrayOutputStream to save the image(s) to

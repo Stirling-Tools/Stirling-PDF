@@ -66,14 +66,16 @@ public class ConvertImgPDFController {
         String colorType = request.getColorType();
         int dpi = request.getDpi();
         String pageNumbers = request.getPageNumbers();
+        boolean includeAnnotations = Boolean.TRUE.equals(request.getIncludeAnnotations());
         Path tempFile = null;
         Path tempOutputDir = null;
         Path tempPdfPath = null;
-        byte[] result;
+        byte[] result = null;
         String[] pageOrderArr =
                 (pageNumbers != null && !pageNumbers.trim().isEmpty())
                         ? pageNumbers.split(",")
                         : new String[] {"all"};
+        ;
         try {
             // Load the input PDF
             byte[] newPdfBytes = rearrangePdfPages(file, pageOrderArr);
@@ -100,8 +102,9 @@ public class ConvertImgPDFController {
                             colorTypeResult,
                             singleImage,
                             dpi,
-                            filename);
-            if (result.length == 0) {
+                            filename,
+                            includeAnnotations);
+            if (result == null || result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }
             if ("webp".equalsIgnoreCase(imageFormat) && !CheckProgramInstall.isPythonAvailable()) {
@@ -158,7 +161,7 @@ public class ConvertImgPDFController {
                             "No WebP files were created. " + resultProcess.getMessages());
                 }
 
-                byte[] bodyBytes;
+                byte[] bodyBytes = new byte[0];
 
                 if (webpFiles.size() == 1) {
                     // Return the single WebP file directly
@@ -178,7 +181,7 @@ public class ConvertImgPDFController {
                 }
                 // Clean up the temporary files
                 Files.deleteIfExists(tempFile);
-                FileUtils.deleteDirectory(tempOutputDir.toFile());
+                if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
                 result = bodyBytes;
             }
 

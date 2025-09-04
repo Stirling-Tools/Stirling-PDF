@@ -41,6 +41,7 @@ import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.model.oauth2.Provider;
+import stirling.software.common.service.SsrfProtectionService.SsrfProtectionLevel;
 import stirling.software.common.util.ValidationUtils;
 
 @Data
@@ -119,6 +120,7 @@ public class ApplicationProperties {
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
+        private Jwt jwt = new Jwt();
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -197,7 +199,7 @@ public class ApplicationProperties {
             @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
-                    return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
+                    return new ClassPathResource(idpMetadataUri.substring("classpath:".length()))
                             .getInputStream();
                 }
                 try {
@@ -233,6 +235,7 @@ public class ApplicationProperties {
 
             @JsonIgnore
             public Resource getPrivateKey() {
+                if (privateKey == null) return null;
                 if (privateKey.startsWith("classpath:")) {
                     return new ClassPathResource(privateKey.substring("classpath:".length()));
                 } else {
@@ -297,6 +300,15 @@ public class ApplicationProperties {
                 }
             }
         }
+
+        @Data
+        public static class Jwt {
+            private boolean enableKeystore = true;
+            private boolean enableKeyRotation = false;
+            private boolean enableKeyCleanup = true;
+            private int keyRetentionDays = 7;
+            private boolean secureCookie;
+        }
     }
 
     @Data
@@ -311,6 +323,7 @@ public class ApplicationProperties {
         private Boolean enableAnalytics;
         private Datasource datasource;
         private Boolean disableSanitize;
+        private int maxDPI;
         private Boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
@@ -378,7 +391,7 @@ public class ApplicationProperties {
         @Data
         public static class UrlSecurity {
             private boolean enabled = true;
-            private String level = "MEDIUM"; // MAX, MEDIUM, OFF
+            private SsrfProtectionLevel level = SsrfProtectionLevel.MEDIUM; // MAX, MEDIUM, OFF
             private List<String> allowedDomains = new ArrayList<>();
             private List<String> blockedDomains = new ArrayList<>();
             private List<String> internalTlds =
