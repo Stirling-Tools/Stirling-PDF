@@ -27,7 +27,7 @@ export default defineConfig(
         {
           // Allow empty extending interfaces because there's no real reason not to, and it makes it obvious where to put extra attributes in the future
           allowInterfaces: 'with-single-extends',
-        }
+        },
       ],
       "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-require-imports": "off", // Temporarily disabled until codebase conformant
