@@ -104,7 +104,7 @@ public class RedactController {
                     "This endpoint redacts content from a PDF file based on manually specified areas. "
                             + "Users can specify areas to redact and optionally convert the PDF to an image. "
                             + "Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
+    public ResponseEntity<byte[]> redactPdfManual(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
 
         MultipartFile file = request.getFileInput();

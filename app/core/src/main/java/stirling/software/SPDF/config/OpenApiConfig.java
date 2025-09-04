@@ -41,8 +41,7 @@ public class OpenApiConfig {
                                 new License()
                                         .name("MIT")
                                         .url(
-                                                "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/LICENSE")
-                                        .identifier("MIT"))
+                                                "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/LICENSE"))
                         .termsOfService("https://www.stirlingpdf.com/terms")
                         .contact(
                                 new Contact()

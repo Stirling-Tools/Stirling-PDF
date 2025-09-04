@@ -114,7 +114,7 @@ class RedactControllerTest {
         request.setConvertPDFToImage(convertToImage);
 
         try {
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+            ResponseEntity<byte[]> response = redactController.redactPdfManual(request);
 
             if (response != null) {
                 assertNotNull(response);
@@ -700,7 +700,7 @@ class RedactControllerTest {
             ManualRedactPdfRequest request = createManualRedactPdfRequest();
             request.setRedactions(null);
 
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+            ResponseEntity<byte[]> response = redactController.redactPdfManual(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
@@ -712,7 +712,7 @@ class RedactControllerTest {
             ManualRedactPdfRequest request = createManualRedactPdfRequest();
             request.setPageNumbers("100-200");
 
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+            ResponseEntity<byte[]> response = redactController.redactPdfManual(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
