@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
