@@ -7,14 +7,14 @@ import java.io.Reader;
 
 import org.thymeleaf.templateresource.ITemplateResource;
 
-public class InputStreamTemplateResource implements ITemplateResource {
-    private InputStream inputStream;
-    private String characterEncoding;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-    public InputStreamTemplateResource(InputStream inputStream, String characterEncoding) {
-        this.inputStream = inputStream;
-        this.characterEncoding = characterEncoding;
-    }
+@RequiredArgsConstructor
+@Getter
+public class InputStreamTemplateResource implements ITemplateResource {
+    private final InputStream inputStream;
+    private final String characterEncoding;
 
     @Override
     public Reader reader() throws IOException {
