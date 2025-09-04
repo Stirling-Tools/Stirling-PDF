@@ -41,6 +41,7 @@ import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.model.oauth2.Provider;
+import stirling.software.common.service.SsrfProtectionService.SsrfProtectionLevel;
 import stirling.software.common.util.ValidationUtils;
 
 @Data
@@ -328,10 +329,16 @@ public class ApplicationProperties {
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
+        private DatabaseBackup databaseBackup = new DatabaseBackup();
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
         }
+    }
+
+    @Data
+    public static class DatabaseBackup {
+        private String cron = "0 0 0 * * ?"; // daily at midnight
     }
 
     @Data
@@ -390,7 +397,7 @@ public class ApplicationProperties {
         @Data
         public static class UrlSecurity {
             private boolean enabled = true;
-            private String level = "MEDIUM"; // MAX, MEDIUM, OFF
+            private SsrfProtectionLevel level = SsrfProtectionLevel.MEDIUM; // MAX, MEDIUM, OFF
             private List<String> allowedDomains = new ArrayList<>();
             private List<String> blockedDomains = new ArrayList<>();
             private List<String> internalTlds =
