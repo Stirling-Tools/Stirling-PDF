@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -360,6 +362,8 @@ public class MetricsController {
         return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
     }
 
+    @Setter
+    @Getter
     public static class EndpointCount {
 
         private String endpoint;
@@ -371,20 +375,5 @@ public class MetricsController {
             this.count = count;
         }
 
-        public String getEndpoint() {
-            return endpoint;
-        }
-
-        public void setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
-        }
-
-        public double getCount() {
-            return count;
-        }
-
-        public void setCount(double count) {
-            this.count = count;
-        }
     }
 }
