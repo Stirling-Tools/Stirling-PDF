@@ -20,17 +20,17 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
           <FileUploadButton
             file={parameters.privateKeyFile}
             onChange={(file) => onParameterChange('privateKeyFile', file || undefined)}
-            accept=".pem,.der"
+            accept=".pem,.der,.key"
             disabled={disabled}
-            placeholder={t('manageSignatures.signing.choosePrivateKey', 'Choose Private Key File')}
+            placeholder={t('certSign.choosePrivateKey', 'Choose Private Key File')}
           />
           {parameters.privateKeyFile && (
             <FileUploadButton
               file={parameters.certFile}
               onChange={(file) => onParameterChange('certFile', file || undefined)}
-              accept=".pem,.der"
+              accept=".pem,.der,.crt,.cer"
               disabled={disabled}
-              placeholder={t('manageSignatures.signing.chooseCertificate', 'Choose Certificate File')}
+              placeholder={t('certSign.chooseCertificate', 'Choose Certificate File')}
             />
           )}
         </Stack>
@@ -40,9 +40,19 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
         <FileUploadButton
           file={parameters.p12File}
           onChange={(file) => onParameterChange('p12File', file || undefined)}
-          accept=".p12,.pfx"
+          accept=".p12"
           disabled={disabled}
-          placeholder={t('manageSignatures.signing.chooseP12File', 'Choose PKCS12 File')}
+          placeholder={t('certSign.chooseP12File', 'Choose PKCS12 File')}
+        />
+      )}
+
+      {parameters.certType === 'PFX' && (
+        <FileUploadButton
+          file={parameters.p12File}
+          onChange={(file) => onParameterChange('p12File', file || undefined)}
+          accept=".pfx"
+          disabled={disabled}
+          placeholder={t('certSign.choosePfxFile', 'Choose PFX File')}
         />
       )}
 
@@ -52,13 +62,13 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
           onChange={(file) => onParameterChange('jksFile', file || undefined)}
           accept=".jks,.keystore"
           disabled={disabled}
-          placeholder={t('manageSignatures.signing.chooseJksFile', 'Choose JKS File')}
+          placeholder={t('certSign.chooseJksFile', 'Choose JKS File')}
         />
       )}
 
       {parameters.certType === 'SERVER' && (
         <Text c="dimmed" size="sm">
-          {t('manageSignatures.signing.serverCertMessage', 'Using server certificate - no files or password required')}
+          {t('certSign.serverCertMessage', 'Using server certificate - no files or password required')}
         </Text>
       )}
 
@@ -66,11 +76,12 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
       {parameters.certType && (
         (parameters.certType === 'PEM' && parameters.privateKeyFile && parameters.certFile) ||
         (parameters.certType === 'PKCS12' && parameters.p12File) ||
+        (parameters.certType === 'PFX' && parameters.p12File) ||
         (parameters.certType === 'JKS' && parameters.jksFile)
       ) && (
         <TextInput
-          label={t('manageSignatures.signing.password', 'Certificate Password')}
-          placeholder={t('manageSignatures.signing.passwordOptional', 'Leave empty if no password')}
+          label={t('certSign.password', 'Certificate Password')}
+          placeholder={t('certSign.passwordOptional', 'Leave empty if no password')}
           type="password"
           value={parameters.password}
           onChange={(event) => onParameterChange('password', event.currentTarget.value)}

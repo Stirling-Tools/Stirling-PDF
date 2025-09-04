@@ -5,7 +5,7 @@ export interface ManageSignaturesParameters extends BaseParameters {
   // Sign mode selection
   signMode: 'MANUAL' | 'AUTO';
   // Certificate signing options (only for manual mode)
-  certType: '' | 'PEM' | 'PKCS12' | 'JKS';
+  certType: '' | 'PEM' | 'PKCS12' | 'PFX' | 'JKS';
   privateKeyFile?: File;
   certFile?: File;
   p12File?: File;
@@ -55,6 +55,7 @@ export const useManageSignaturesParameters = (): ManageSignaturesParametersHook 
         case 'PEM':
           return !!(params.privateKeyFile && params.certFile);
         case 'PKCS12':
+        case 'PFX':
           return !!params.p12File;
         case 'JKS':
           return !!params.jksFile;

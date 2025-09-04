@@ -38,6 +38,7 @@ const ManageSignatures = (props: BaseToolProps) => {
       case 'PEM':
         return !!(params.privateKeyFile && params.certFile);
       case 'PKCS12':
+      case 'PFX':
         return !!params.p12File;
       case 'JKS':
         return !!params.jksFile;
@@ -51,11 +52,11 @@ const ManageSignatures = (props: BaseToolProps) => {
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
-      placeholder: t("manageSignatures.files.placeholder", "Select PDF files to sign with certificates"),
+      placeholder: t("certSign.files.placeholder", "Select PDF files to sign with certificates"),
     },
     steps: [
       {
-        title: t("manageSignatures.signMode.stepTitle", "Sign Mode"),
+        title: t("certSign.signMode.stepTitle", "Sign Mode"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
         content: (
@@ -67,7 +68,7 @@ const ManageSignatures = (props: BaseToolProps) => {
         ),
       },
       ...(base.params.parameters.signMode === 'MANUAL' ? [{
-        title: t("manageSignatures.certType.stepTitle", "Certificate Format"),
+        title: t("certSign.certTypeStep.stepTitle", "Certificate Format"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
         tooltip: certTypeTips,
@@ -80,7 +81,7 @@ const ManageSignatures = (props: BaseToolProps) => {
         ),
       }] : []),
       ...(base.params.parameters.signMode === 'MANUAL' ? [{
-        title: t("manageSignatures.certFiles.stepTitle", "Certificate Files"),
+        title: t("certSign.certFiles.stepTitle", "Certificate Files"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
         content: (
@@ -92,7 +93,7 @@ const ManageSignatures = (props: BaseToolProps) => {
         ),
       }] : []),
       {
-        title: t("manageSignatures.appearance.stepTitle", "Signature Appearance"),
+        title: t("certSign.appearance.stepTitle", "Signature Appearance"),
         isCollapsed: base.settingsCollapsed || !areCertFilesConfigured(),
         onCollapsedClick: (base.settingsCollapsed || !areCertFilesConfigured()) ? base.handleSettingsReset : undefined,
         tooltip: appearanceTips,
@@ -106,7 +107,7 @@ const ManageSignatures = (props: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t("manageSignatures.sign.submit", "Sign PDF"),
+      text: t("certSign.sign.submit", "Sign PDF"),
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
@@ -115,7 +116,7 @@ const ManageSignatures = (props: BaseToolProps) => {
     review: {
       isVisible: base.hasResults,
       operation: base.operation,
-      title: t("manageSignatures.sign.results", "Signed PDF"),
+      title: t("certSign.sign.results", "Signed PDF"),
       onFileClick: base.handleThumbnailClick,
       onUndo: base.handleUndo,
     },

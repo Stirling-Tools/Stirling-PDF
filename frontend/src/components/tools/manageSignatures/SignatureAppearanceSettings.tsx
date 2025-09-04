@@ -16,7 +16,7 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
       {/* Signature Visibility */}
       <Stack gap="sm">
         <Text size="sm" fw={500}>
-          {t('manageSignatures.appearance.title', 'Signature Appearance')}
+          {t('certSign.appearance.title', 'Signature Appearance')}
         </Text>
         <div style={{ display: 'flex', gap: '4px' }}>
           <Button
@@ -27,7 +27,7 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
             style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
           >
             <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              {t('manageSignatures.appearance.invisible', 'Invisible')}
+              {t('certSign.appearance.invisible', 'Invisible')}
             </div>
           </Button>
           <Button
@@ -38,7 +38,7 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
             style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
           >
             <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              {t('manageSignatures.appearance.visible', 'Visible')}
+              {t('certSign.appearance.visible', 'Visible')}
             </div>
           </Button>
         </div>
@@ -48,28 +48,28 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
       {parameters.showSignature && (
         <Stack gap="sm">
           <Text size="sm" fw={500}>
-            {t('manageSignatures.appearance.options.title', 'Signature Details')}
+            {t('certSign.appearance.options.title', 'Signature Details')}
           </Text>
           <TextInput
-            label={t('manageSignatures.signing.reason', 'Reason for Signing')}
+            label={t('certSign.reason', 'Reason')}
             value={parameters.reason}
             onChange={(event) => onParameterChange('reason', event.currentTarget.value)}
             disabled={disabled}
           />
           <TextInput
-            label={t('manageSignatures.signing.location', 'Location')}
+            label={t('certSign.location', 'Location')}
             value={parameters.location}
             onChange={(event) => onParameterChange('location', event.currentTarget.value)}
             disabled={disabled}
           />
           <TextInput
-            label={t('manageSignatures.signing.name', 'Signer Name')}
+            label={t('certSign.name', 'Name')}
             value={parameters.name}
             onChange={(event) => onParameterChange('name', event.currentTarget.value)}
             disabled={disabled}
           />
           <NumberInput
-            label={t('manageSignatures.signing.pageNumber', 'Page Number')}
+            label={t('certSign.pageNumber', 'Page Number')}
             value={parameters.pageNumber}
             onChange={(value) => onParameterChange('pageNumber', value || 1)}
             min={1}
@@ -77,7 +77,7 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
           />
           <Stack gap="xs">
             <Text size="sm" fw={500}>
-              {t('manageSignatures.signing.logoTitle', 'Logo')}
+              {t('certSign.logoTitle', 'Logo')}
             </Text>
             <div style={{ display: 'flex', gap: '4px' }}>
               <Button
@@ -88,7 +88,7 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
                 style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
               >
                 <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-                  {t('manageSignatures.signing.noLogo', 'No Logo')}
+                  {t('certSign.noLogo', 'No Logo')}
                 </div>
               </Button>
               <Button
@@ -99,7 +99,7 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
                 style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
               >
                 <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-                  {t('manageSignatures.signing.showLogo', 'Show Logo')}
+                  {t('certSign.showLogo', 'Show Logo')}
                 </div>
               </Button>
             </div>

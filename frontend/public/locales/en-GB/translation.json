@@ -1396,26 +1396,27 @@
     "location": "Location",
     "name": "Name",
     "showLogo": "Show Logo",
-    "submit": "Sign PDF"
-  },
-  "manageSignatures": {
-    "tags": "sign,certificate,PEM,PKCS12,JKS,server,manual,auto",
-    "title": "Manage Signatures",
-    "header": "Sign PDFs with Certificates",
+    "submit": "Sign PDF",
     "files": {
       "placeholder": "Select PDF files to sign with certificates"
     },
     "signMode": {
       "stepTitle": "Sign Mode"
     },
-    "certType": {
+    "certTypeStep": {
       "stepTitle": "Certificate Format"
     },
     "certFiles": {
       "stepTitle": "Certificate Files"
     },
     "appearance": {
-      "stepTitle": "Signature Appearance"
+      "stepTitle": "Signature Appearance",
+      "title": "Signature Appearance",
+      "invisible": "Invisible",
+      "visible": "Visible",
+      "options": {
+        "title": "Signature Details"
+      }
     },
     "sign": {
       "submit": "Sign PDF",
@@ -1423,7 +1424,22 @@
     },
     "error": {
       "failed": "An error occurred whilst signing the PDF."
-    }
+    },
+    "choosePrivateKey": "Choose Private Key File",
+    "chooseCertificate": "Choose Certificate File",
+    "chooseP12File": "Choose PKCS12 File",
+    "choosePfxFile": "Choose PFX File",
+    "chooseJksFile": "Choose JKS File",
+    "passwordOptional": "Leave empty if no password",
+    "serverCertMessage": "Using server certificate - no files or password required",
+    "pageNumber": "Page Number",
+    "logoTitle": "Logo",
+    "noLogo": "No Logo"
+  },
+  "manageSignatures": {
+    "tags": "sign,certificate,PEM,PKCS12,JKS,server,manual,auto",
+    "title": "Manage Signatures",
+    "desc": "Sign PDFs with certificates using manual or server-managed keys"
   },
   "removeCertSign": {
     "tags": "authenticate,PEM,P12,official,decrypt",
