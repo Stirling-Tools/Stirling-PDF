@@ -186,6 +186,7 @@ public class CertSignController {
                         "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
                 break;
             case "PKCS12":
+            case "PFX":
                 ks = KeyStore.getInstance("PKCS12");
                 ks.load(p12File.getInputStream(), password.toCharArray());
                 break;

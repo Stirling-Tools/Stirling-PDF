@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
     private final ApplicationProperties applicationProperties;
+    @Getter
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
     private Set<String> disabledGroups = new HashSet<>();
@@ -44,10 +46,6 @@ public class EndpointConfiguration {
             log.debug("Disabling endpoint: {}", endpoint);
         }
         endpointStatuses.put(endpoint, false);
-    }
-
-    public Map<String, Boolean> getEndpointStatuses() {
-        return endpointStatuses;
     }
 
     public boolean isEndpointEnabled(String endpoint) {
