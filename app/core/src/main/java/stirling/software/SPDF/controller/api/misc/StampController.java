@@ -56,10 +56,9 @@ public class StampController {
     private final TempFileManager tempFileManager;
 
     /**
-     * Initialize data binder for multipart file uploads.
-     * This method registers a custom editor for MultipartFile to handle file uploads.
-     * It sets the MultipartFile to null if the uploaded file is empty.
-     * This is necessary to avoid binding errors when the file is not present.
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
      */
     @InitBinder
     public void initBinder(WebDataBinder binder) {

@@ -31,8 +31,6 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Enumeration;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.CMSException;
@@ -44,24 +42,25 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public abstract class CreateSignatureBase implements SignatureInterface {
     private PrivateKey privateKey;
-    @Getter
-    private Certificate[] certificateChain;
-    @Setter
-    private String tsaUrl;
+    @Getter private Certificate[] certificateChain;
+    @Setter private String tsaUrl;
+
     /**
-     * Specifies whether the external signing scenario should be used.
-     * If set to {@code true}, external signing will be performed and
-     * {@link SignatureInterface} will be used for signing.
+     * Specifies whether the external signing scenario should be used. If set to {@code true},
+     * external signing will be performed and {@link SignatureInterface} will be used for signing.
      * If set to {@code false}, internal signing will be performed.
+     *
      * <p>Default: {@code false}
      *
-     * @param externalSigning {@code true} if external signing should be performed; {@code false} for internal signing
+     * @param externalSigning {@code true} if external signing should be performed; {@code false}
+     *     for internal signing
      */
-    @Setter
-    @Getter
-    private boolean externalSigning;
+    @Setter @Getter private boolean externalSigning;
 
     /**
      * Initialize the signature creator with a keystore (pkcs12) and pin that should be used for the
@@ -158,5 +157,4 @@ public abstract class CreateSignatureBase implements SignatureInterface {
             throw new IOException(e);
         }
     }
-
 }
