@@ -15,6 +15,5 @@ export const useFlattenParameters = (): FlattenParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: 'flatten',
-    validateFn: () => true, // Always valid - no required parameters
   });
 };
