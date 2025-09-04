@@ -73,7 +73,7 @@ class IndexedDBManager {
       request.onsuccess = () => {
         const db = request.result;
         console.log(`Successfully opened ${config.name}`);
-        
+
         // Set up close handler to clean up our references
         db.onclose = () => {
           console.log(`Database ${config.name} closed`);
@@ -87,13 +87,11 @@ class IndexedDBManager {
       request.onupgradeneeded = (event) => {
         const db = request.result;
         const oldVersion = event.oldVersion;
-        
+
         console.log(`Upgrading ${config.name} from v${oldVersion} to v${config.version}`);
 
         // Create or update object stores
         config.stores.forEach(storeConfig => {
-          let store: IDBObjectStore;
-
           if (db.objectStoreNames.contains(storeConfig.name)) {
             // Store exists - for now, just continue (could add migration logic here)
             console.log(`Object store '${storeConfig.name}' already exists`);
@@ -109,7 +107,7 @@ class IndexedDBManager {
             options.autoIncrement = storeConfig.autoIncrement;
           }
 
-          store = db.createObjectStore(storeConfig.name, options);
+          const store = db.createObjectStore(storeConfig.name, options);
           console.log(`Created object store '${storeConfig.name}'`);
 
           // Create indexes
@@ -168,7 +166,7 @@ class IndexedDBManager {
 
     return new Promise((resolve, reject) => {
       const deleteRequest = indexedDB.deleteDatabase(name);
-      
+
       deleteRequest.onerror = () => reject(deleteRequest.error);
       deleteRequest.onsuccess = () => {
         console.log(`Deleted database: ${name}`);
