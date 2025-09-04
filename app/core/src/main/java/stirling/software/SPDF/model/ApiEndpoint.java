@@ -4,10 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.Getter;
 
 public class ApiEndpoint {
     private final String name;
     private Map<String, JsonNode> parameters;
+    @Getter
     private final String description;
 
     public ApiEndpoint(String name, JsonNode postNode) {
@@ -29,10 +31,6 @@ public class ApiEndpoint {
             }
         }
         return true;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
     @Override
