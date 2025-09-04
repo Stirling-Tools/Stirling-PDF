@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.security;
+package stirling.software.proprietary.security.controller.api;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
