@@ -3,7 +3,7 @@
  */
 
 import {
-  WorkbenchFile,
+  StirlingFileStub,
   FileContextAction,
   FileContextState,
   toWorkbenchFile,
@@ -109,7 +109,7 @@ export async function addFiles(
   await addFilesMutex.lock();
 
   try {
-    const workbenchFiles: WorkbenchFile[] = [];
+    const stirlingFileStubs: StirlingFileStub[] = [];
     const addedFiles: AddedFile[] = [];
 
   // Build quickKey lookup from existing files for deduplication
@@ -184,7 +184,7 @@ export async function addFiles(
         }
 
         existingQuickKeys.add(quickKey);
-        workbenchFiles.push(record);
+        stirlingFileStubs.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
         }
       break;
@@ -226,7 +226,7 @@ export async function addFiles(
         }
 
         existingQuickKeys.add(quickKey);
-        workbenchFiles.push(record);
+        stirlingFileStubs.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
       }
       break;
@@ -301,7 +301,7 @@ export async function addFiles(
         }
 
         existingQuickKeys.add(quickKey);
-        workbenchFiles.push(record);
+        stirlingFileStubs.push(record);
         addedFiles.push({ file, id: fileId, thumbnail: metadata.thumbnail });
 
       }
@@ -310,9 +310,9 @@ export async function addFiles(
   }
 
   // Dispatch ADD_FILES action if we have new files
-  if (workbenchFiles.length > 0) {
-    dispatch({ type: 'ADD_FILES', payload: { workbenchFiles } });
-    if (DEBUG) console.log(`📄 addFiles(${kind}): Successfully added ${workbenchFiles.length} files`);
+  if (stirlingFileStubs.length > 0) {
+    dispatch({ type: 'ADD_FILES', payload: { stirlingFileStubs } });
+    if (DEBUG) console.log(`📄 addFiles(${kind}): Successfully added ${stirlingFileStubs.length} files`);
   }
 
   return addedFiles;
@@ -328,7 +328,7 @@ export async function addFiles(
 async function processFilesIntoRecords(
   files: File[],
   filesRef: React.MutableRefObject<Map<FileId, File>>
-): Promise<Array<{ record: WorkbenchFile; file: File; fileId: FileId; thumbnail?: string }>> {
+): Promise<Array<{ record: StirlingFileStub; file: File; fileId: FileId; thumbnail?: string }>> {
   return Promise.all(
     files.map(async (file) => {
       const fileId = createFileId();
@@ -365,10 +365,10 @@ async function processFilesIntoRecords(
  * Helper function to persist files to IndexedDB
  */
 async function persistFilesToIndexedDB(
-  workbenchFiles: Array<{ file: File; fileId: FileId; thumbnail?: string }>,
+  stirlingFileStubs: Array<{ file: File; fileId: FileId; thumbnail?: string }>,
   indexedDB: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any> }
 ): Promise<void> {
-  await Promise.all(workbenchFiles.map(async ({ file, fileId, thumbnail }) => {
+  await Promise.all(stirlingFileStubs.map(async ({ file, fileId, thumbnail }) => {
     try {
       await indexedDB.saveFile(file, fileId, thumbnail);
     } catch (error) {
@@ -390,11 +390,11 @@ export async function consumeFiles(
   if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputFiles.length} output files`);
 
   // Process output files with thumbnails and metadata
-  const outputWorkbenchFiles = await processFilesIntoRecords(outputFiles, filesRef);
+  const outputStirlingFileStubs = await processFilesIntoRecords(outputFiles, filesRef);
 
   // Persist output files to IndexedDB if available
   if (indexedDB) {
-    await persistFilesToIndexedDB(outputWorkbenchFiles, indexedDB);
+    await persistFilesToIndexedDB(outputStirlingFileStubs, indexedDB);
   }
 
   // Dispatch the consume action
@@ -402,21 +402,21 @@ export async function consumeFiles(
     type: 'CONSUME_FILES',
     payload: {
       inputFileIds,
-      outputWorkbenchFiles: outputWorkbenchFiles.map(({ record }) => record)
+      outputStirlingFileStubs: outputStirlingFileStubs.map(({ record }) => record)
     }
   });
 
-  if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputWorkbenchFiles.length} outputs`);
+  if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputStirlingFileStubs.length} outputs`);
 
   // Return the output file IDs for undo tracking
-  return outputWorkbenchFiles.map(({ fileId }) => fileId);
+  return outputStirlingFileStubs.map(({ fileId }) => fileId);
 }
 
 /**
  * Helper function to restore files to filesRef and manage IndexedDB cleanup
  */
 async function restoreFilesAndCleanup(
-  filesToRestore: Array<{ file: File; record: WorkbenchFile }>,
+  filesToRestore: Array<{ file: File; record: StirlingFileStub }>,
   fileIdsToRemove: FileId[],
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   indexedDB?: { deleteFile: (fileId: FileId) => Promise<void> } | null
@@ -465,18 +465,18 @@ async function restoreFilesAndCleanup(
  */
 export async function undoConsumeFiles(
   inputFiles: File[],
-  inputWorkbenchFiles: WorkbenchFile[],
+  inputStirlingFileStubs: StirlingFileStub[],
   outputFileIds: FileId[],
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>; deleteFile: (fileId: FileId) => Promise<void> } | null
 ): Promise<void> {
-  if (DEBUG) console.log(`📄 undoConsumeFiles: Restoring ${inputWorkbenchFiles.length} input files, removing ${outputFileIds.length} output files`);
+  if (DEBUG) console.log(`📄 undoConsumeFiles: Restoring ${inputStirlingFileStubs.length} input files, removing ${outputFileIds.length} output files`);
 
   // Validate inputs
-  if (inputFiles.length !== inputWorkbenchFiles.length) {
-    throw new Error(`Mismatch between input files (${inputFiles.length}) and records (${inputWorkbenchFiles.length})`);
+  if (inputFiles.length !== inputStirlingFileStubs.length) {
+    throw new Error(`Mismatch between input files (${inputFiles.length}) and records (${inputStirlingFileStubs.length})`);
   }
 
   // Create a backup of current filesRef state for rollback
@@ -486,7 +486,7 @@ export async function undoConsumeFiles(
     // Prepare files to restore
     const filesToRestore = inputFiles.map((file, index) => ({
       file,
-      record: inputWorkbenchFiles[index]
+      record: inputStirlingFileStubs[index]
     }));
 
     // Restore input files and clean up output files
@@ -501,12 +501,12 @@ export async function undoConsumeFiles(
     dispatch({
       type: 'UNDO_CONSUME_FILES',
       payload: {
-        inputWorkbenchFiles,
+        inputStirlingFileStubs,
         outputFileIds
       }
     });
 
-    if (DEBUG) console.log(`📄 undoConsumeFiles: Successfully undone consume operation - restored ${inputWorkbenchFiles.length} inputs, removed ${outputFileIds.length} outputs`);
+    if (DEBUG) console.log(`📄 undoConsumeFiles: Successfully undone consume operation - restored ${inputStirlingFileStubs.length} inputs, removed ${outputFileIds.length} outputs`);
 
   } catch (error) {
     // Rollback filesRef to previous state

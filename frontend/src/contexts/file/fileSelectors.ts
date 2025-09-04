@@ -4,7 +4,7 @@
 
 import { FileId } from '../../types/file';
 import {
-  WorkbenchFile,
+  StirlingFileStub,
   FileContextState,
   FileContextSelectors,
   StirlingFile,
@@ -34,9 +34,9 @@ export function createFileSelectors(
         .filter(Boolean) as StirlingFile[];
     },
 
-    getWorkbenchFile: (id: FileId) => stateRef.current.files.byId[id],
+    getStirlingFileStub: (id: FileId) => stateRef.current.files.byId[id],
 
-    getWorkbenchFiles: (ids?: FileId[]) => {
+    getStirlingFileStubs: (ids?: FileId[]) => {
       const currentIds = ids || stateRef.current.files.ids;
       return currentIds.map(id => stateRef.current.files.byId[id]).filter(Boolean);
     },
@@ -52,7 +52,7 @@ export function createFileSelectors(
         .filter(Boolean) as StirlingFile[];
     },
 
-    getSelectedWorkbenchFiles: () => {
+    getSelectedStirlingFileStubs: () => {
       return stateRef.current.ui.selectedFileIds
         .map(id => stateRef.current.files.byId[id])
         .filter(Boolean);
@@ -72,7 +72,7 @@ export function createFileSelectors(
         .filter(Boolean) as StirlingFile[];
     },
 
-    getPinnedWorkbenchFiles: () => {
+    getPinnedStirlingFileStubs: () => {
       return Array.from(stateRef.current.pinnedFiles)
         .map(id => stateRef.current.files.byId[id])
         .filter(Boolean);
@@ -98,9 +98,9 @@ export function createFileSelectors(
 /**
  * Helper for building quickKey sets for deduplication
  */
-export function buildQuickKeySet(workbenchFiles: Record<FileId, WorkbenchFile>): Set<string> {
+export function buildQuickKeySet(stirlingFileStubs: Record<FileId, StirlingFileStub>): Set<string> {
   const quickKeys = new Set<string>();
-  Object.values(workbenchFiles).forEach(record => {
+  Object.values(stirlingFileStubs).forEach(record => {
     if (record.quickKey) {
       quickKeys.add(record.quickKey);
     }
@@ -127,7 +127,7 @@ export function buildQuickKeySetFromMetadata(metadata: Array<{ name: string; siz
 export function getPrimaryFile(
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>
-): { file?: File; record?: WorkbenchFile } {
+): { file?: File; record?: StirlingFileStub } {
   const primaryFileId = stateRef.current.files.ids[0];
   if (!primaryFileId) return {};
 

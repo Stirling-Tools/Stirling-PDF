@@ -44,25 +44,32 @@ export interface ProcessedFileMetadata {
   [key: string]: any;
 }
 
-export interface WorkbenchFile {
-  id: FileId;
-  name: string;
-  size: number;
-  type: string;
-  lastModified: number;
-  quickKey?: string; // Fast deduplication key: name|size|lastModified
-  thumbnailUrl?: string;
-  blobUrl?: string;
-  createdAt?: number;
-  processedFile?: ProcessedFileMetadata;
-  insertAfterPageId?: string; // Page ID after which this file should be inserted
-  isPinned?: boolean;
+/**
+ * StirlingFileStub - Metadata record for files in the active workbench session
+ * 
+ * Contains UI display data and processing state. Actual File objects stored
+ * separately in refs for memory efficiency. Supports multi-tool workflows
+ * where files persist across tool operations.
+ */
+export interface StirlingFileStub {
+  id: FileId;                    // UUID primary key for collision-free operations
+  name: string;                  // Display name for UI
+  size: number;                  // File size for progress indicators
+  type: string;                  // MIME type for format validation
+  lastModified: number;          // Original timestamp for deduplication
+  quickKey?: string;             // Fast deduplication key: name|size|lastModified
+  thumbnailUrl?: string;         // Generated thumbnail blob URL for visual display
+  blobUrl?: string;             // File access blob URL for downloads/processing
+  createdAt?: number;           // When added to workbench for sorting
+  processedFile?: ProcessedFileMetadata; // PDF page data and processing results
+  insertAfterPageId?: string;   // Page ID after which this file should be inserted
+  isPinned?: boolean;           // Protected from tool consumption (replace/remove)
   // Note: File object stored in provider ref, not in state
 }
 
 export interface FileContextNormalizedFiles {
   ids: FileId[];
-  byId: Record<FileId, WorkbenchFile>;
+  byId: Record<FileId, StirlingFileStub>;
 }
 
 // Helper functions - UUID-based primary keys (zero collisions, synchronous)
@@ -143,7 +150,7 @@ export function isFileObject(obj: any): obj is File | StirlingFile {
 
 
 
-export function toWorkbenchFile(file: File, id?: FileId): WorkbenchFile {
+export function toWorkbenchFile(file: File, id?: FileId): StirlingFileStub {
   const fileId = id || createFileId();
   return {
     id: fileId,
@@ -156,7 +163,7 @@ export function toWorkbenchFile(file: File, id?: FileId): WorkbenchFile {
   };
 }
 
-export function revokeFileResources(record: WorkbenchFile): void {
+export function revokeFileResources(record: StirlingFileStub): void {
   // Only revoke blob: URLs to prevent errors on other schemes
   if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
     try {
@@ -230,7 +237,7 @@ export interface FileContextState {
   // Core file management - lightweight file IDs only
   files: {
     ids: FileId[];
-    byId: Record<FileId, WorkbenchFile>;
+    byId: Record<FileId, StirlingFileStub>;
   };
 
   // Pinned files - files that won't be consumed by tools
@@ -249,16 +256,16 @@ export interface FileContextState {
 // Action types for reducer pattern
 export type FileContextAction =
   // File management actions
-  | { type: 'ADD_FILES'; payload: { workbenchFiles: WorkbenchFile[] } }
+  | { type: 'ADD_FILES'; payload: { stirlingFileStubs: StirlingFileStub[] } }
   | { type: 'REMOVE_FILES'; payload: { fileIds: FileId[] } }
-  | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<WorkbenchFile> } }
+  | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<StirlingFileStub> } }
   | { type: 'REORDER_FILES'; payload: { orderedFileIds: FileId[] } }
 
   // Pinned files actions
   | { type: 'PIN_FILE'; payload: { fileId: FileId } }
   | { type: 'UNPIN_FILE'; payload: { fileId: FileId } }
-  | { type: 'CONSUME_FILES'; payload: { inputFileIds: FileId[]; outputWorkbenchFiles: WorkbenchFile[] } }
-  | { type: 'UNDO_CONSUME_FILES'; payload: { inputWorkbenchFiles: WorkbenchFile[]; outputFileIds: FileId[] } }
+  | { type: 'CONSUME_FILES'; payload: { inputFileIds: FileId[]; outputStirlingFileStubs: StirlingFileStub[] } }
+  | { type: 'UNDO_CONSUME_FILES'; payload: { inputStirlingFileStubs: StirlingFileStub[]; outputFileIds: FileId[] } }
 
   // UI actions
   | { type: 'SET_SELECTED_FILES'; payload: { fileIds: FileId[] } }
@@ -278,7 +285,7 @@ export interface FileContextActions {
   addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<StirlingFile[]>;
   addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>, options?: { selectFiles?: boolean }) => Promise<StirlingFile[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
-  updateWorkbenchFile: (id: FileId, updates: Partial<WorkbenchFile>) => void;
+  updateStirlingFileStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -289,7 +296,7 @@ export interface FileContextActions {
 
   // File consumption (replace unpinned files with outputs)
   consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileId[]>;
-  undoConsumeFiles: (inputFiles: File[], inputWorkbenchFiles: WorkbenchFile[], outputFileIds: FileId[]) => Promise<void>;
+  undoConsumeFiles: (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]) => Promise<void>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
@@ -314,14 +321,14 @@ export interface FileContextActions {
 export interface FileContextSelectors {
   getFile: (id: FileId) => StirlingFile | undefined;
   getFiles: (ids?: FileId[]) => StirlingFile[];
-  getWorkbenchFile: (id: FileId) => WorkbenchFile | undefined;
-  getWorkbenchFiles: (ids?: FileId[]) => WorkbenchFile[];
+  getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined;
+  getStirlingFileStubs: (ids?: FileId[]) => StirlingFileStub[];
   getAllFileIds: () => FileId[];
   getSelectedFiles: () => StirlingFile[];
-  getSelectedWorkbenchFiles: () => WorkbenchFile[];
+  getSelectedStirlingFileStubs: () => StirlingFileStub[];
   getPinnedFileIds: () => FileId[];
   getPinnedFiles: () => StirlingFile[];
-  getPinnedWorkbenchFiles: () => WorkbenchFile[];
+  getPinnedStirlingFileStubs: () => StirlingFileStub[];
   isFilePinned: (file: StirlingFile) => boolean;
   getFilesSignature: () => string;
 }

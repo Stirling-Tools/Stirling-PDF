@@ -20,7 +20,7 @@ import {
   FileContextActionsValue,
   FileContextActions,
   FileId,
-  WorkbenchFile,
+  StirlingFileStub,
   StirlingFile,
   createStirlingFile
 } from '../types/fileContext';
@@ -127,8 +127,8 @@ function FileContextInner({
     return consumeFiles(inputFileIds, outputFiles, filesRef, dispatch, indexedDB);
   }, [indexedDB]);
 
-  const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputWorkbenchFiles: WorkbenchFile[], outputFileIds: FileId[]): Promise<void> => {
-    return undoConsumeFiles(inputFiles, inputWorkbenchFiles, outputFileIds, stateRef, filesRef, dispatch, indexedDB);
+  const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]): Promise<void> => {
+    return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, stateRef, filesRef, dispatch, indexedDB);
   }, [indexedDB]);
 
   // Helper to find FileId from File object
@@ -170,8 +170,8 @@ function FileContextInner({
         }
       }
     },
-    updateWorkbenchFile: (fileId: FileId, updates: Partial<WorkbenchFile>) =>
-      lifecycleManager.updateWorkbenchFile(fileId, updates, stateRef),
+    updateStirlingFileStub: (fileId: FileId, updates: Partial<StirlingFileStub>) =>
+      lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef),
     reorderFiles: (orderedFileIds: FileId[]) => {
       dispatch({ type: 'REORDER_FILES', payload: { orderedFileIds } });
     },
@@ -295,7 +295,7 @@ export {
   useFileSelection,
   useFileManagement,
   useFileUI,
-  useWorkbenchFile,
+  useStirlingFileStub,
   useAllFiles,
   useSelectedFiles,
   // Primary API hooks for tools

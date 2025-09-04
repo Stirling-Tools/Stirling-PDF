@@ -6,7 +6,7 @@ import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { StirlingFile, extractFiles, FileId, WorkbenchFile } from '../../../types/fileContext';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 
 // Re-export for backwards compatibility
@@ -138,7 +138,7 @@ export const useToolOperation = <TParams>(
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
     inputFiles: File[];
-    inputWorkbenchFiles: WorkbenchFile[];
+    inputStirlingFileStubs: StirlingFileStub[];
     outputFileIds: FileId[];
   } | null>(null);
 
@@ -240,15 +240,15 @@ export const useToolOperation = <TParams>(
 
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
-        const inputWorkbenchFiles: WorkbenchFile[] = [];
+        const inputStirlingFileStubs: StirlingFileStub[] = [];
         
         // Build parallel arrays of IDs and records for undo tracking
         for (const file of validFiles) {
           const fileId = file.fileId;
-          const record = selectors.getWorkbenchFile(fileId);
+          const record = selectors.getStirlingFileStub(fileId);
           if (record) {
             inputFileIds.push(fileId);
-            inputWorkbenchFiles.push(record);
+            inputStirlingFileStubs.push(record);
           } else {
             console.warn(`No file record found for file: ${file.name}`);
           }
@@ -259,7 +259,7 @@ export const useToolOperation = <TParams>(
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
           inputFiles: extractFiles(validFiles), // Convert to File objects for undo
-          inputWorkbenchFiles: inputWorkbenchFiles.map(record => ({ ...record })), // Deep copy to avoid reference issues
+          inputStirlingFileStubs: inputStirlingFileStubs.map(record => ({ ...record })), // Deep copy to avoid reference issues
           outputFileIds
         };
 
@@ -302,10 +302,10 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    const { inputFiles, inputWorkbenchFiles, outputFileIds } = lastOperationRef.current;
+    const { inputFiles, inputStirlingFileStubs, outputFileIds } = lastOperationRef.current;
 
     // Validate that we have data to undo
-    if (inputFiles.length === 0 || inputWorkbenchFiles.length === 0) {
+    if (inputFiles.length === 0 || inputStirlingFileStubs.length === 0) {
       actions.setError(t('invalidUndoData', 'Cannot undo: invalid operation data'));
       return;
     }
@@ -317,7 +317,7 @@ export const useToolOperation = <TParams>(
 
     try {
       // Undo the consume operation
-      await undoConsumeFiles(inputFiles, inputWorkbenchFiles, outputFileIds);
+      await undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds);
       
       // Clear results and operation tracking
       resetResults();

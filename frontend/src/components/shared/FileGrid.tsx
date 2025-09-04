@@ -4,15 +4,15 @@ import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
 import FileCard from "./FileCard";
-import { WorkbenchFile } from "../../types/fileContext";
+import { StirlingFileStub } from "../../types/fileContext";
 import { FileId } from "../../types/file";
 
 interface FileGridProps {
-  files: Array<{ file: File; record?: WorkbenchFile }>;
+  files: Array<{ file: File; record?: StirlingFileStub }>;
   onRemove?: (index: number) => void;
-  onDoubleClick?: (item: { file: File; record?: WorkbenchFile }) => void;
-  onView?: (item: { file: File; record?: WorkbenchFile }) => void;
-  onEdit?: (item: { file: File; record?: WorkbenchFile }) => void;
+  onDoubleClick?: (item: { file: File; record?: StirlingFileStub }) => void;
+  onView?: (item: { file: File; record?: StirlingFileStub }) => void;
+  onEdit?: (item: { file: File; record?: StirlingFileStub }) => void;
   onSelect?: (fileId: FileId) => void;
   selectedFiles?: FileId[];
   showSearch?: boolean;
@@ -126,7 +126,7 @@ const FileGrid = ({
         {displayFiles
           .filter(item => {
             if (!item.record?.id) {
-              console.error('FileGrid: File missing WorkbenchFile with proper ID:', item.file.name);
+              console.error('FileGrid: File missing StirlingFileStub with proper ID:', item.file.name);
               return false;
             }
             return true;
