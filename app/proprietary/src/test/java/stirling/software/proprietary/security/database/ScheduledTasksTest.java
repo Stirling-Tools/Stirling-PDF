@@ -49,11 +49,14 @@ class ScheduledTasksTest {
     }
 
     @Test
-    void hasScheduledAnnotation_withExpectedCron() throws Exception {
+    void hasScheduledAnnotation_withSpELCron() throws Exception {
         Method m = ScheduledTasks.class.getDeclaredMethod("performBackup");
         Scheduled scheduled = m.getAnnotation(Scheduled.class);
         assertNotNull(scheduled, "@Scheduled annotation missing on performBackup()");
-        assertEquals("0 0 0 * * ?", scheduled.cron(), "Unexpected cron expression");
+        assertEquals(
+                "#{applicationProperties.system.databaseBackup.cron}",
+                scheduled.cron(),
+                "Unexpected cron SpEL expression");
     }
 
     @Test
