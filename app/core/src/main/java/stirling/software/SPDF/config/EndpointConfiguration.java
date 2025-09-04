@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -20,8 +20,7 @@ public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
     private final ApplicationProperties applicationProperties;
-    @Getter
-    private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
+    @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
     private Set<String> disabledGroups = new HashSet<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();

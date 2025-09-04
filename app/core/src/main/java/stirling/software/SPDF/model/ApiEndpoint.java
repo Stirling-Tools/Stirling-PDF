@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
 import lombok.Getter;
 
 public class ApiEndpoint {
     private final String name;
     private Map<String, JsonNode> parameters;
-    @Getter
-    private final String description;
+    @Getter private final String description;
 
     public ApiEndpoint(String name, JsonNode postNode) {
         this.name = name;

@@ -15,8 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TempFile implements AutoCloseable {
 
     private final TempFileManager manager;
-    @Getter
-    private final File file;
+    @Getter private final File file;
 
     public TempFile(TempFileManager manager, String suffix) throws IOException {
         this.manager = manager;
