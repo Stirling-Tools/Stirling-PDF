@@ -268,9 +268,9 @@ Update translation files. **Important: Only update `en-GB` files** - other langu
 When migrating existing Thymeleaf templates:
 
 1. **Identify Form Parameters**: Look at the original `<form>` inputs to determine parameter structure
-2. **Extract Translation Keys**: Find `#{key.name}` references and add them to JSON translations
+2. **Extract Translation Keys**: Find `#{key.name}` references and add them to JSON translations (For many tools these translations will already exist but some parts will be missing)
 3. **Map API Endpoint**: Note the `th:action` URL for the operation hook
-4. **Preserve Functionality**: Ensure all original form behavior is replicated
+4. **Preserve Functionality**: Ensure all original form behaviour is replicated which is applicable to V2 react UI
 
 ## 7. Testing Your Tool
 - Verify tool appears in UI with correct icon and description
@@ -298,11 +298,3 @@ When migrating existing Thymeleaf templates:
 - Tools with complex routing logic or non-standard processing
 - Provide `customProcessor` for full control
 - Examples: Convert, OCR
-
-## Benefits of This Architecture:
-- **No Timeouts**: Operations run until completion (supports 100GB+ files)
-- **Consistent**: All tools follow same pattern and interface  
-- **Maintainable**: Single responsibility hooks, easy to test and modify
-- **i18n Ready**: Built-in internationalization support
-- **Type Safe**: Full TypeScript support with generic interfaces
-- **Memory Safe**: Automatic resource cleanup and blob URL management
