@@ -87,7 +87,7 @@ jobs:
       - name: AI PR Title Analysis
         if: steps.actor.outputs.is_repo_dev == 'true'
         id: ai-title-analysis
-        uses: actions/ai-inference@b81b2afb8390ee6839b494a404766bef6493c7d9 # v1.2.8
+        uses: actions/ai-inference@a1c11829223a786afe3b5663db904a3aa1eac3a2 # v2.0.1
         with:
           model: openai/gpt-4o
           system-prompt-file: ".github/config/system-prompt.txt"
