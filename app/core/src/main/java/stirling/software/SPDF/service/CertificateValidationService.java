@@ -77,7 +77,7 @@ public class CertificateValidationService {
         try {
             CertPathValidator validator = CertPathValidator.getInstance("PKIX");
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            List<X509Certificate> certList = Arrays.asList(cert);
+            List<X509Certificate> certList = Collections.singletonList(cert);
             CertPath certPath = cf.generateCertPath(certList);
 
             Set<TrustAnchor> anchors = new HashSet<>();
