@@ -8,13 +8,13 @@ export default defineConfig(
   eslint.configs.recommended,
   tseslint.configs.recommended,
   {
-    "ignores": [
+    ignores: [
       "dist", // Contains 3rd party code
       "public", // Contains 3rd party code
     ],
   },
   {
-    "rules": {
+    rules: {
       "no-empty": "off", // Temporarily disabled until codebase conformant
       "no-empty-pattern": "off", // Temporarily disabled until codebase conformant
       "no-undef": "off", // Temporarily disabled until codebase conformant
