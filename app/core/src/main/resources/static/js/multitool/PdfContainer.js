@@ -702,7 +702,7 @@ class PdfContainer {
       const documentBlob = new Blob([pdfBytesArray[i]], {
         type: 'application/pdf',
       });
-      zip.file(baseNameString + '-' + (i + 1) + '.pdf', documentBlob);
+      zip.file(baseNameString + '-' + String(i + 1).padStart(1 + Math.floor(Math.log10(pdfBytesArray.length)), "0") + '.pdf', documentBlob);
     }
 
     return zip;
