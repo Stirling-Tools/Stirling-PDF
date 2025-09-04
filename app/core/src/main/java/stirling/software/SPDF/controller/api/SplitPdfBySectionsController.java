@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +17,13 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,8 +55,8 @@ public class SplitPdfBySectionsController {
                     "Split each page of a PDF into smaller sections based on the user's choice"
                             + " (halves, thirds, quarters, etc.), both vertically and horizontally."
                             + " Input:PDF Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfBySectionsRequest request)
-            throws Exception {
+    public ResponseEntity<StreamingResponseBody> splitPdf(
+            @ModelAttribute SplitPdfBySectionsRequest request) throws Exception {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 
         MultipartFile file = request.getFileInput();
@@ -71,14 +72,14 @@ public class SplitPdfBySectionsController {
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
         if (merge) {
+            TempFile tempFile = new TempFile(tempFileManager, ".pdf");
             try (PDDocument merged = pdfService.mergeDocuments(splitDocuments);
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                merged.save(baos);
+                    OutputStream out = Files.newOutputStream(tempFile.getPath())) {
+                merged.save(out);
                 for (PDDocument d : splitDocuments) d.close();
                 sourceDocument.close();
-                return WebResponseUtils.bytesToWebResponse(
-                        baos.toByteArray(), filename + "_split.pdf");
             }
+            return WebResponseUtils.pdfFileToWebResponse(tempFile, filename + "_split.pdf");
         }
         for (PDDocument doc : splitDocuments) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -89,28 +90,24 @@ public class SplitPdfBySectionsController {
 
         sourceDocument.close();
 
-        byte[] data;
-        try (TempFile zipTempFile = new TempFile(tempFileManager, ".zip")) {
-            try (ZipOutputStream zipOut =
-                    new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
-                int pageNum = 1;
-                for (int i = 0; i < splitDocumentsBoas.size(); i++) {
-                    ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
-                    int sectionNum = (i % (horiz * verti)) + 1;
-                    String fileName = filename + "_" + pageNum + "_" + sectionNum + ".pdf";
-                    byte[] pdf = baos.toByteArray();
-                    ZipEntry pdfEntry = new ZipEntry(fileName);
-                    zipOut.putNextEntry(pdfEntry);
-                    zipOut.write(pdf);
-                    zipOut.closeEntry();
+        TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
+        try (ZipOutputStream zipOut =
+                new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+            int pageNum = 1;
+            for (int i = 0; i < splitDocumentsBoas.size(); i++) {
+                ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
+                int sectionNum = (i % (horiz * verti)) + 1;
+                String fileName = filename + "_" + pageNum + "_" + sectionNum + ".pdf";
+                byte[] pdf = baos.toByteArray();
+                ZipEntry pdfEntry = new ZipEntry(fileName);
+                zipOut.putNextEntry(pdfEntry);
+                zipOut.write(pdf);
+                zipOut.closeEntry();
 
-                    if (sectionNum == horiz * verti) pageNum++;
-                }
+                if (sectionNum == horiz * verti) pageNum++;
             }
-            data = Files.readAllBytes(zipTempFile.getPath());
         }
-        return WebResponseUtils.bytesToWebResponse(
-                data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + "_split.zip");
     }
 
     public List<PDDocument> splitPdfPages(

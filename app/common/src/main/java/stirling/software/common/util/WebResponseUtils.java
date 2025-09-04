@@ -72,18 +72,44 @@ public class WebResponseUtils {
     }
 
     /**
-     * Convert a File to a web response.
+     * Convert a File to a web response (PDF default).
      *
      * @param outputTempFile The temporary file to be sent as a response.
      * @param docName The name of the document.
      * @return A ResponseEntity containing the file as a resource.
      */
-    public static ResponseEntity<StreamingResponseBody> fileToWebResponse(
+    public static ResponseEntity<StreamingResponseBody> pdfFileToWebResponse(
             TempFile outputTempFile, String docName) throws IOException {
+        return fileToWebResponse(outputTempFile, docName, MediaType.APPLICATION_PDF);
+    }
+
+    /**
+     * Convert a File to a web response (ZIP default).
+     *
+     * @param outputTempFile The temporary file to be sent as a response.
+     * @param docName The name of the document.
+     * @return A ResponseEntity containing the file as a resource.
+     */
+    public static ResponseEntity<StreamingResponseBody> zipFileToWebResponse(
+            TempFile outputTempFile, String docName) throws IOException {
+        return fileToWebResponse(outputTempFile, docName, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    /**
+     * Convert a File to a web response with explicit media type (e.g., ZIP).
+     *
+     * @param outputTempFile The temporary file to be sent as a response.
+     * @param docName The name of the document.
+     * @param mediaType The content type to set on the response.
+     * @return A ResponseEntity containing the file as a resource.
+     */
+    public static ResponseEntity<StreamingResponseBody> fileToWebResponse(
+            TempFile outputTempFile, String docName, MediaType mediaType) throws IOException {
+
         Path path = outputTempFile.getFile().toPath().normalize();
         long len = Files.size(path);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentType(mediaType);
         headers.setContentLength(len);
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + docName + "\"");
 

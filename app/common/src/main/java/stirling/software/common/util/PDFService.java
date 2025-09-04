@@ -3,8 +3,8 @@ package stirling.software.common.util;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -17,19 +17,18 @@ public class PDFService {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    /**
-     * Merges the given documents into a new PDDocument. Caller owns/should close the result.
+    /*
+     * Merge multiple PDF documents into a single PDF document
      *
-     * @param documents The list of PDDocuments to merge
-     * @return A new PDDocument containing the merged pages
+     * @param documents List of PDDocument to be merged
+     * @return Merged PDDocument
      * @throws IOException If an error occurs during merging
      */
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument merged = pdfDocumentFactory.createNewDocument();
+        PDFMergerUtility merger = new PDFMergerUtility();
         for (PDDocument doc : documents) {
-            for (PDPage page : doc.getPages()) {
-                merged.addPage(page);
-            }
+            merger.appendDocument(merged, doc);
         }
         return merged;
     }
