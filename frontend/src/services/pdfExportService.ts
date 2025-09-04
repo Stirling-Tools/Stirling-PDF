@@ -130,7 +130,7 @@ export class PDFExportService {
     newDoc.setModificationDate(new Date());
 
     const pdfBytes = await newDoc.save();
-    return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+    return new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
   }
 
   /**
@@ -176,7 +176,7 @@ export class PDFExportService {
     newDoc.setModificationDate(new Date());
 
     const pdfBytes = await newDoc.save();
-    return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+    return new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
   }
 
 
