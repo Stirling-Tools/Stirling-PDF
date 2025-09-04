@@ -102,15 +102,23 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
   const fileId = id || createFileId();
   const quickKey = createQuickKey(file);
 
-  // Create a new object that inherits from the File instance
-  // This preserves all File methods and properties while avoiding binding issues
-  const stirlingFile = Object.assign(
-    Object.create(Object.getPrototypeOf(file)), // Proper prototype chain
-    file, // Copy all properties (enumerable and non-enumerable)
-    { fileId, quickKey } // Add our custom properties
-  ) as StirlingFile;
+  // Use Object.defineProperty to add properties while preserving the original File object
+  // This maintains proper method binding and avoids "Illegal invocation" errors
+  Object.defineProperty(file, 'fileId', {
+    value: fileId,
+    writable: false,
+    enumerable: true,
+    configurable: false
+  });
+  
+  Object.defineProperty(file, 'quickKey', {
+    value: quickKey,
+    writable: false,
+    enumerable: true,
+    configurable: false
+  });
 
-  return stirlingFile;
+  return file as StirlingFile;
 }
 
 // Extract FileIds from StirlingFile array
