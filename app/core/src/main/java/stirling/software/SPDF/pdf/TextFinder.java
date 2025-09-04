@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import lombok.Getter;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
@@ -20,6 +21,7 @@ public class TextFinder extends PDFTextStripper {
     private final String searchTerm;
     private final boolean useRegex;
     private final boolean wholeWordSearch;
+    @Getter
     private final List<PDFText> foundTexts = new ArrayList<>();
 
     private final List<TextPosition> pageTextPositions = new ArrayList<>();
@@ -185,10 +187,6 @@ public class TextFinder extends PDFTextStripper {
                 processedSearchTerm);
 
         super.endPage(page);
-    }
-
-    public List<PDFText> getFoundTexts() {
-        return foundTexts;
     }
 
     public String getDebugInfo() {
