@@ -82,8 +82,8 @@ export function adjustFontSizeToFit(
 
   return () => {
     cancelAnimationFrame(raf);
-    try { ro.disconnect(); } catch {}
-    try { mo.disconnect(); } catch {}
+    try { ro.disconnect(); } catch { /* Ignore errors */ }
+    try { mo.disconnect(); } catch { /* Ignore errors */ }
   };
 }
 
