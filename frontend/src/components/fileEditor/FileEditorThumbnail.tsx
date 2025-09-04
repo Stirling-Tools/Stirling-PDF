@@ -12,6 +12,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
 import { FileId } from '../../types/file';
+import ToolChain from '../shared/ToolChain';
 
 interface FileItem {
   id: FileId;
@@ -51,7 +52,7 @@ const FileEditorThumbnail = ({
   isSupported = true,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
-  const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
+  const { pinFile, unpinFile, isFilePinned, activeFiles, selectors } = useFileContext();
 
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
@@ -64,6 +65,13 @@ const FileEditorThumbnail = ({
     return activeFiles.find((f: File) => f.name === file.name && f.size === file.size);
   }, [activeFiles, file.name, file.size]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
+
+  // Get file record to access tool history
+  const fileRecord = selectors.getFileRecord(file.id);
+  const toolHistory = fileRecord?.toolHistory || [];
+  const hasToolHistory = toolHistory.length > 0;
+  const versionNumber = fileRecord?.versionNumber || 0;
+
 
   const downloadSelectedFile = useCallback(() => {
     // Prefer parent-provided handler if available
@@ -351,7 +359,8 @@ const FileEditorThumbnail = ({
           lineClamp={3}
           title={`${extUpper || 'FILE'} • ${prettySize}`}
         >
-          {/* e.g., Jan 29, 2025 - PDF file - 3 Pages */}
+          {/* e.g.,  v2 - Jan 29, 2025 - PDF file - 3 Pages */}
+          {hasToolHistory ? ` v${versionNumber} - ` : ''}
           {dateLabel}
           {extUpper ? ` - ${extUpper} file` : ''}
           {pageLabel ? ` - ${pageLabel}` : ''}
@@ -400,6 +409,29 @@ const FileEditorThumbnail = ({
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
           <DragIndicatorIcon fontSize="small" />
         </span>
+
+        {/* Tool chain display at bottom */}
+        {hasToolHistory && (
+          <div style={{
+            position: 'absolute',
+            bottom: '4px',
+            left: '4px',
+            right: '4px',
+            padding: '4px 6px',
+            textAlign: 'center',
+            fontWeight: 600,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap'
+          }}>
+            <ToolChain
+              toolChain={toolHistory}
+              displayStyle="text"
+              size="xs"
+              maxWidth={'100%'}
+              color='var(--mantine-color-gray-7)'
+            />
+          </div>
+        )}
       </div>
     </div>
   );

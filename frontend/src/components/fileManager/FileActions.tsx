@@ -1,15 +1,22 @@
 import React from "react";
-import { Group, Text, ActionIcon, Tooltip } from "@mantine/core";
+import { Group, Text, ActionIcon, Tooltip, Switch } from "@mantine/core";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
+import HistoryIcon from "@mui/icons-material/History";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "../../contexts/FileManagerContext";
 
 const FileActions: React.FC = () => {
   const { t } = useTranslation();
-  const { recentFiles, selectedFileIds, filteredFiles, onSelectAll, onDeleteSelected, onDownloadSelected } =
-    useFileManagerContext();
+  const { 
+    recentFiles, 
+    selectedFileIds, 
+    filteredFiles, 
+    onSelectAll, 
+    onDeleteSelected, 
+    onDownloadSelected
+  } = useFileManagerContext();
 
   const handleSelectAll = () => {
     onSelectAll();

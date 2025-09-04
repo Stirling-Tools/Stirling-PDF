@@ -72,10 +72,17 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
           <Text size="xs" c="dimmed">
             {currentFile ? getFileSize(currentFile) : ''}
             {selectedFiles.length > 1 && ` • ${selectedFiles.length} files`}
+            {currentFile && ` • v${currentFile.versionNumber || 0}`}
           </Text>
           {hasMultipleFiles && (
             <Text size="xs" c="blue">
               {currentFileIndex + 1} of {selectedFiles.length}
+            </Text>
+          )}
+          {/* Compact tool chain for mobile */}
+          {currentFile?.historyInfo?.toolChain && currentFile.historyInfo.toolChain.length > 0 && (
+            <Text size="xs" c="dimmed">
+              {currentFile.historyInfo.toolChain.map(tool => tool.toolName).join(' → ')}
             </Text>
           )}
         </Box>

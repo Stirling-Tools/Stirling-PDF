@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 import { executeAutomationSequence } from '../../../utils/automationExecutor';
 import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
 import { AutomateParameters } from '../../../types/automation';
-import { AUTOMATION_CONSTANTS } from '../../../constants/automation';
 
 export function useAutomateOperation() {
   const toolRegistry = useFlatToolRegistry();
@@ -43,6 +42,5 @@ export function useAutomateOperation() {
     toolType: ToolType.custom,
     operationType: 'automate',
     customProcessor,
-    filePrefix: '' // No prefix needed since automation handles naming internally
   });
 }

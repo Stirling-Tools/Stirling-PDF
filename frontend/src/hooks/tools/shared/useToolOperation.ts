@@ -10,6 +10,7 @@ import { createOperation } from '../../../utils/toolOperationTracker';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { FileId } from '../../../types/file';
 import { FileRecord } from '../../../types/fileContext';
+import { prepareFilesWithHistory, verifyToolMetadataPreservation } from '../../../utils/fileHistoryUtils';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -33,7 +34,7 @@ interface BaseToolOperationConfig<TParams> {
   operationType: string;
 
   /** Prefix added to processed filenames (e.g., 'compressed_', 'split_') */
-  filePrefix: string;
+  filePrefix?: string;
 
   /** How to handle API responses (e.g., ZIP extraction, single file response) */
   responseHandler?: ResponseHandler;
@@ -170,6 +171,20 @@ export const useToolOperation = <TParams>(
     actions.resetResults();
     cleanupBlobUrls();
 
+    // Prepare files with history metadata injection (for PDFs)
+    actions.setStatus('Preparing files...');
+    const getFileRecord = (file: File) => {
+      const fileId = findFileId(file);
+      return fileId ? selectors.getFileRecord(fileId) : undefined;
+    };
+
+    const filesWithHistory = await prepareFilesWithHistory(
+      validFiles,
+      getFileRecord,
+      config.operationType,
+      params as Record<string, any>
+    );
+
     try {
       let processedFiles: File[];
 
@@ -184,7 +199,7 @@ export const useToolOperation = <TParams>(
           };
           processedFiles = await processFiles(
             params,
-            validFiles,
+            filesWithHistory,
             apiCallsConfig,
             actions.setProgress,
             actions.setStatus
@@ -194,7 +209,7 @@ export const useToolOperation = <TParams>(
         case ToolType.multiFile:
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');
-          const formData = config.buildFormData(params, validFiles);
+          const formData = config.buildFormData(params, filesWithHistory);
           const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
 
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
@@ -202,11 +217,11 @@ export const useToolOperation = <TParams>(
           // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
           if (config.responseHandler) {
             // Use custom responseHandler for multi-file (handles ZIP extraction)
-            processedFiles = await config.responseHandler(response.data, validFiles);
+            processedFiles = await config.responseHandler(response.data, filesWithHistory);
           } else if (response.data.type === 'application/pdf' ||
                      (response.headers && response.headers['content-type'] === 'application/pdf')) {
             // Single PDF response (e.g. split with merge option) - use original filename
-            const originalFileName = validFiles[0]?.name || 'document.pdf';
+            const originalFileName = filesWithHistory[0]?.name || 'document.pdf';
             const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
             processedFiles = [singleFile];
           } else {
@@ -222,12 +237,15 @@ export const useToolOperation = <TParams>(
 
         case ToolType.custom:
           actions.setStatus('Processing files...');
-          processedFiles = await config.customProcessor(params, validFiles);
+          processedFiles = await config.customProcessor(params, filesWithHistory);
           break;
       }
 
       if (processedFiles.length > 0) {
         actions.setFiles(processedFiles);
+
+        // Verify metadata preservation for backend quality tracking
+        await verifyToolMetadataPreservation(validFiles, processedFiles, config.operationType);
 
         // Generate thumbnails and download URL concurrently
         actions.setGeneratingThumbnails(true);
@@ -243,7 +261,7 @@ export const useToolOperation = <TParams>(
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
         const inputFileRecords: FileRecord[] = [];
-        
+
         // Build parallel arrays of IDs and records for undo tracking
         for (const file of validFiles) {
           const fileId = findFileId(file);
@@ -259,9 +277,9 @@ export const useToolOperation = <TParams>(
             console.warn(`No file ID found for file: ${file.name}`);
           }
         }
-        
+
         const outputFileIds = await consumeFiles(inputFileIds, processedFiles);
-        
+
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
           inputFiles: validFiles, // Keep original File objects for undo
@@ -326,17 +344,17 @@ export const useToolOperation = <TParams>(
     try {
       // Undo the consume operation
       await undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds);
-      
+
       // Clear results and operation tracking
       resetResults();
       lastOperationRef.current = null;
-      
+
       // Show success message
       actions.setStatus(t('undoSuccess', 'Operation undone successfully'));
-      
+
     } catch (error: any) {
       let errorMessage = extractErrorMessage(error);
-      
+
       // Provide more specific error messages based on error type
       if (error.message?.includes('Mismatch between input files')) {
         errorMessage = t('undoDataMismatch', 'Cannot undo: operation data is corrupted');
@@ -345,9 +363,9 @@ export const useToolOperation = <TParams>(
       } else if (error.name === 'QuotaExceededError') {
         errorMessage = t('undoQuotaError', 'Cannot undo: insufficient storage space');
       }
-      
+
       actions.setError(`${t('undoFailed', 'Failed to undo operation')}: ${errorMessage}`);
-      
+
       // Don't clear the operation data if undo failed - user might want to try again
     }
   }, [undoConsumeFiles, resetResults, actions, t]);

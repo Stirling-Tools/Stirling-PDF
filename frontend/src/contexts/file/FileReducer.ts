@@ -125,16 +125,18 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         return state; // File doesn't exist, no-op
       }
 
+      const updatedRecord = {
+        ...existingRecord,
+        ...updates
+      };
+
       return {
         ...state,
         files: {
           ...state.files,
           byId: {
             ...state.files.byId,
-            [id]: {
-              ...existingRecord,
-              ...updates
-            }
+            [id]: updatedRecord
           }
         }
       };

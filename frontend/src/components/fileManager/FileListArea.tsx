@@ -20,6 +20,8 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     recentFiles,
     filteredFiles,
     selectedFilesSet,
+    fileGroups,
+    expandedFileIds,
     onFileSelect,
     onFileRemove,
     onFileDoubleClick,
@@ -50,18 +52,29 @@ const FileListArea: React.FC<FileListAreaProps> = ({
               </Stack>
             </Center>
           ) : (
-            filteredFiles.map((file, index) => (
-              <FileListItem
-                key={file.id}
-                file={file}
-                isSelected={selectedFilesSet.has(file.id)}
-                isSupported={isFileSupported(file.name)}
-                onSelect={(shiftKey) => onFileSelect(file, index, shiftKey)}
-                onRemove={() => onFileRemove(index)}
-                onDownload={() => onDownloadSingle(file)}
-                onDoubleClick={() => onFileDoubleClick(file)}
-              />
-            ))
+            filteredFiles.map((file, index) => {
+              // Check if this file is a leaf (appears in group keys) or a history file
+              const isLeafFile = fileGroups.has(file.id);
+              const lineagePath = fileGroups.get(file.id) || [];
+              const isHistoryFile = !isLeafFile; // If not a leaf, it's a history file
+              const isLatestVersion = isLeafFile; // Leaf files are the latest in their branch
+              const hasVersionHistory = lineagePath.length > 1;
+
+              return (
+                <FileListItem
+                  key={file.id}
+                  file={file}
+                  isSelected={selectedFilesSet.has(file.id)}
+                  isSupported={isFileSupported(file.name)}
+                  onSelect={(shiftKey) => onFileSelect(file, index, shiftKey)}
+                  onRemove={() => onFileRemove(index)}
+                  onDownload={() => onDownloadSingle(file)}
+                  onDoubleClick={() => onFileDoubleClick(file)}
+                  isHistoryFile={isHistoryFile}
+                  isLatestVersion={isLatestVersion && hasVersionHistory}
+                />
+              );
+            })
           )}
         </Stack>
       </ScrollArea>

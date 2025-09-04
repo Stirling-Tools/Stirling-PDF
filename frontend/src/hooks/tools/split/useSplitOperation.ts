@@ -61,7 +61,6 @@ export const splitOperationConfig = {
   buildFormData: buildSplitFormData,
   operationType: 'splitPdf',
   endpoint: getSplitEndpoint,
-  filePrefix: 'split_',
   defaultParameters,
 } as const;
 

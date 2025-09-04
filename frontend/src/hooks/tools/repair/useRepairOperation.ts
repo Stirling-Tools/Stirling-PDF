@@ -16,7 +16,6 @@ export const repairOperationConfig = {
   buildFormData: buildRepairFormData,
   operationType: 'repair',
   endpoint: '/api/v1/misc/repair',
-  filePrefix: 'repaired_', // Will be overridden in hook with translation
   defaultParameters,
 } as const;
 
@@ -25,7 +24,6 @@ export const useRepairOperation = () => {
 
   return useToolOperation<RepairParameters>({
     ...repairOperationConfig,
-    filePrefix: t('repair.filenamePrefix', 'repaired') + '_',
     getErrorMessage: createStandardErrorHandler(t('repair.error.failed', 'An error occurred while repairing the PDF.'))
   });
 };
