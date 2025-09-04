@@ -37,6 +37,7 @@ export interface FileMetadata {
   size: number;
   lastModified: number;
   thumbnail?: string;
+  isLeaf?: boolean; // True if this file is a leaf node (hasn't been processed yet)
 
   // File history tracking (extracted from PDF metadata)
   historyInfo?: FileHistoryInfo;

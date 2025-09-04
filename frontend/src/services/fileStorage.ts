@@ -16,6 +16,7 @@ export interface StoredFile {
   data: ArrayBuffer;
   thumbnail?: string;
   url?: string; // For compatibility with existing components
+  isLeaf?: boolean; // True if this file is a leaf node (hasn't been processed yet)
 }
 
 export interface StorageStats {
@@ -39,7 +40,7 @@ class FileStorageService {
   /**
    * Store a file in IndexedDB with external UUID
    */
-  async storeFile(file: File, fileId: FileId, thumbnail?: string): Promise<StoredFile> {
+  async storeFile(file: File, fileId: FileId, thumbnail?: string, isLeaf: boolean = true): Promise<StoredFile> {
     const db = await this.getDatabase();
 
     const arrayBuffer = await file.arrayBuffer();
@@ -51,7 +52,8 @@ class FileStorageService {
       size: file.size,
       lastModified: file.lastModified,
       data: arrayBuffer,
-      thumbnail
+      thumbnail,
+      isLeaf
     };
 
     return new Promise((resolve, reject) => {
@@ -65,7 +67,8 @@ class FileStorageService {
           id: storedFile.id, // Now a UUID from FileContext
           name: storedFile.name,
           hasData: !!storedFile.data,
-          dataSize: storedFile.data.byteLength
+          dataSize: storedFile.data.byteLength,
+          isLeaf: storedFile.isLeaf
         });
 
         const request = store.add(storedFile);
@@ -203,6 +206,96 @@ class FileStorageService {
         }
       };
       getRequest.onerror = () => reject(getRequest.error);
+    });
+  }
+
+  /**
+   * Mark a file as no longer being a leaf (it has been processed)
+   */
+  async markFileAsProcessed(id: FileId): Promise<boolean> {
+    const db = await this.getDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+
+      const getRequest = store.get(id);
+      getRequest.onsuccess = () => {
+        const file = getRequest.result;
+        if (file) {
+          file.isLeaf = false;
+          const updateRequest = store.put(file);
+          updateRequest.onsuccess = () => resolve(true);
+          updateRequest.onerror = () => reject(updateRequest.error);
+        } else {
+          resolve(false); // File not found
+        }
+      };
+      getRequest.onerror = () => reject(getRequest.error);
+    });
+  }
+
+  /**
+   * Get only leaf files (files that haven't been processed yet)
+   */
+  async getLeafFiles(): Promise<StoredFile[]> {
+    const db = await this.getDatabase();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], 'readonly');
+      const store = transaction.objectStore(this.storeName);
+      const request = store.openCursor();
+      const leafFiles: StoredFile[] = [];
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+        if (cursor) {
+          const storedFile = cursor.value;
+          if (storedFile && storedFile.isLeaf !== false) { // Default to true if undefined
+            leafFiles.push(storedFile);
+          }
+          cursor.continue();
+        } else {
+          resolve(leafFiles);
+        }
+      };
+    });
+  }
+
+  /**
+   * Get metadata of only leaf files (without loading data into memory)
+   */
+  async getLeafFileMetadata(): Promise<Omit<StoredFile, 'data'>[]> {
+    const db = await this.getDatabase();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], 'readonly');
+      const store = transaction.objectStore(this.storeName);
+      const request = store.openCursor();
+      const files: Omit<StoredFile, 'data'>[] = [];
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+        if (cursor) {
+          const storedFile = cursor.value;
+          // Only include leaf files (default to true if undefined for backward compatibility)
+          if (storedFile && storedFile.name && typeof storedFile.size === 'number' && storedFile.isLeaf !== false) {
+            files.push({
+              id: storedFile.id,
+              name: storedFile.name,
+              type: storedFile.type,
+              size: storedFile.size,
+              lastModified: storedFile.lastModified,
+              thumbnail: storedFile.thumbnail,
+              isLeaf: storedFile.isLeaf
+            });
+          }
+          cursor.continue();
+        } else {
+          resolve(files);
+        }
+      };
     });
   }
 

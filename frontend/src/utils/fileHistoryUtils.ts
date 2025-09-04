@@ -239,20 +239,29 @@ export function groupFilesByOriginal(fileRecords: FileRecord[]): Map<string, Fil
 }
 
 /**
- * Get the latest version of each file group
+ * Get the latest version of each file group (optimized version using leaf flags)
  */
 export function getLatestVersions(fileRecords: FileRecord[]): FileRecord[] {
-  const groups = groupFilesByOriginal(fileRecords);
-  const latestVersions: FileRecord[] = [];
+  // If we have leaf flags, use them for much faster filtering
+  const hasLeafFlags = fileRecords.some(record => record.isLeaf !== undefined);
+  
+  if (hasLeafFlags) {
+    // Fast path: just return files marked as leaf nodes
+    return fileRecords.filter(record => record.isLeaf !== false); // Default to true if undefined
+  } else {
+    // Fallback to expensive calculation for backward compatibility
+    const groups = groupFilesByOriginal(fileRecords);
+    const latestVersions: FileRecord[] = [];
 
-  for (const [_, records] of groups) {
-    if (records.length > 0) {
-      // First item is the latest version (sorted desc by version number)
-      latestVersions.push(records[0]);
+    for (const [_, records] of groups) {
+      if (records.length > 0) {
+        // First item is the latest version (sorted desc by version number)
+        latestVersions.push(records[0]);
+      }
     }
-  }
 
-  return latestVersions;
+    return latestVersions;
+  }
 }
 
 /**
@@ -298,6 +307,34 @@ export function generateVersionName(record: FileRecord): string {
 }
 
 /**
+ * Get recent files efficiently using leaf flags from IndexedDB
+ * This is much faster than loading all files and calculating leaf nodes
+ */
+export async function getRecentLeafFiles(): Promise<import('../services/fileStorage').StoredFile[]> {
+  try {
+    const { fileStorage } = await import('../services/fileStorage');
+    return await fileStorage.getLeafFiles();
+  } catch (error) {
+    console.warn('Failed to get recent leaf files from IndexedDB:', error);
+    return [];
+  }
+}
+
+/**
+ * Get recent file metadata efficiently using leaf flags from IndexedDB
+ * This is much faster than loading all files and calculating leaf nodes
+ */
+export async function getRecentLeafFileMetadata(): Promise<Omit<import('../services/fileStorage').StoredFile, 'data'>[]> {
+  try {
+    const { fileStorage } = await import('../services/fileStorage');
+    return await fileStorage.getLeafFileMetadata();
+  } catch (error) {
+    console.warn('Failed to get recent leaf file metadata from IndexedDB:', error);
+    return [];
+  }
+}
+
+/**
  * Create metadata for storing files with history information
  */
 export async function createFileMetadataWithHistory(
@@ -311,7 +348,8 @@ export async function createFileMetadataWithHistory(
     type: file.type,
     size: file.size,
     lastModified: file.lastModified,
-    thumbnail
+    thumbnail,
+    isLeaf: true // New files are leaf nodes by default
   };
 
   // Extract metadata for PDF files

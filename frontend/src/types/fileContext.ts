@@ -54,6 +54,7 @@ export interface FileRecord {
   processedFile?: ProcessedFileMetadata;
   insertAfterPageId?: string; // Page ID after which this file should be inserted
   isPinned?: boolean;
+  isLeaf?: boolean; // True if this file is a leaf node (hasn't been processed yet)
   
   // File history tracking (from PDF metadata)
   originalFileId?: string; // Root file ID for grouping versions
@@ -104,7 +105,8 @@ export function toFileRecord(file: File, id?: FileId): FileRecord {
     type: file.type,
     lastModified: file.lastModified,
     quickKey: createQuickKey(file),
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    isLeaf: true // New files are leaf nodes by default
   };
 }
 

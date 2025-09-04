@@ -480,16 +480,42 @@ export async function consumeFiles(
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
-  indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any> } | null
+  indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>; markFileAsProcessed: (fileId: FileId) => Promise<boolean> } | null
 ): Promise<FileId[]> {
   if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputFiles.length} output files`);
 
   // Process output files with thumbnails and metadata
   const outputFileRecords = await processFilesIntoRecords(outputFiles, filesRef);
 
-  // Persist output files to IndexedDB if available
+  // Mark input files as processed in IndexedDB (no longer leaf nodes)
   if (indexedDB) {
-    await persistFilesToIndexedDB(outputFileRecords, indexedDB);
+    await Promise.all([
+      // Mark input files as processed
+      ...inputFileIds.map(async (fileId) => {
+        try {
+          await indexedDB.markFileAsProcessed(fileId);
+          // Update file record to reflect that it's no longer a leaf
+          dispatch({
+            type: 'UPDATE_FILE_RECORD',
+            payload: {
+              id: fileId,
+              updates: { isLeaf: false }
+            }
+          });
+          if (DEBUG) console.log(`📄 consumeFiles: Marked file ${fileId} as processed`);
+        } catch (error) {
+          if (DEBUG) console.warn(`📄 consumeFiles: Failed to mark file ${fileId} as processed:`, error);
+        }
+      }),
+      // Persist output files to IndexedDB
+      ...outputFileRecords.map(async ({ file, fileId, thumbnail }) => {
+        try {
+          await indexedDB.saveFile(file, fileId, thumbnail);
+        } catch (error) {
+          console.error('Failed to persist file to IndexedDB:', file.name, error);
+        }
+      })
+    ]);
   }
 
   // Dispatch the consume action
