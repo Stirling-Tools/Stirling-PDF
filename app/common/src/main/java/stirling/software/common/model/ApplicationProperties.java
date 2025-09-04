@@ -41,6 +41,7 @@ import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.model.oauth2.Provider;
+import stirling.software.common.service.SsrfProtectionService.SsrfProtectionLevel;
 import stirling.software.common.util.ValidationUtils;
 
 @Data
@@ -390,7 +391,7 @@ public class ApplicationProperties {
         @Data
         public static class UrlSecurity {
             private boolean enabled = true;
-            private String level = "MEDIUM"; // MAX, MEDIUM, OFF
+            private SsrfProtectionLevel level = SsrfProtectionLevel.MEDIUM; // MAX, MEDIUM, OFF
             private List<String> allowedDomains = new ArrayList<>();
             private List<String> blockedDomains = new ArrayList<>();
             private List<String> internalTlds =
