@@ -97,6 +97,7 @@ class PDFWorkerManager {
         try {
           loadingTask.destroy();
         } catch (destroyError) {
+          // Ignore errors
         }
       }
       throw error;
@@ -169,6 +170,7 @@ class PDFWorkerManager {
       try {
         pdf.destroy();
       } catch (error) {
+        // Ignore errors
       }
     });
 

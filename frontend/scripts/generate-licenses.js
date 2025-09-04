@@ -234,7 +234,7 @@ function getLicenseUrl(licenseType) {
     // Handle complex SPDX expressions like "(MIT AND Zlib)" or "(MIT OR CC0-1.0)"
     if (licenseType.includes('AND') || licenseType.includes('OR')) {
         // Extract the first license from compound expressions for URL
-        const match = licenseType.match(/\(?\s*([A-Za-z0-9\-\.]+)/);
+        const match = licenseType.match(/\(?\s*([A-Za-z0-9\-.]+)/);
         if (match && licenseUrls[match[1]]) {
             return licenseUrls[match[1]];
         }
