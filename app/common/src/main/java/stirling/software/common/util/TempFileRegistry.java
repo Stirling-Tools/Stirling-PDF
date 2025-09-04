@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +25,22 @@ import lombok.extern.slf4j.Slf4j;
 public class TempFileRegistry {
 
     private final ConcurrentMap<Path, Instant> registeredFiles = new ConcurrentHashMap<>();
+    /**
+     * -- GETTER --
+     *  Get all registered third-party temporary files.
+     *
+     * @return Set of third-party file paths
+     */
+    @Getter
     private final Set<Path> thirdPartyTempFiles =
             Collections.newSetFromMap(new ConcurrentHashMap<>());
+    /**
+     * -- GETTER --
+     *  Get all registered temporary directories.
+     *
+     * @return Set of temporary directory paths
+     */
+    @Getter
     private final Set<Path> tempDirectories = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
@@ -131,24 +146,6 @@ public class TempFileRegistry {
                 .filter(entry -> entry.getValue().isBefore(cutoffTime))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
-    }
-
-    /**
-     * Get all registered third-party temporary files.
-     *
-     * @return Set of third-party file paths
-     */
-    public Set<Path> getThirdPartyTempFiles() {
-        return thirdPartyTempFiles;
-    }
-
-    /**
-     * Get all registered temporary directories.
-     *
-     * @return Set of temporary directory paths
-     */
-    public Set<Path> getTempDirectories() {
-        return tempDirectories;
     }
 
     /**
