@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GenericToolProps } from './toolDefinition';
 import { useBaseTool } from '../../../hooks/tools/shared/useBaseTool';
@@ -19,8 +20,31 @@ function GenericTool<TParams>(props: GenericToolProps<TParams>) {
     props
   );
 
+  // Get steps (either static array or dynamic function result)
+  const stepDefinitions = typeof definition.steps === 'function'
+    ? definition.steps(base.params.parameters, base.hasFiles, base.hasResults)
+    : definition.steps;
+
+  // State for individual step collapse - each step manages its own collapse state
+  const [stepCollapseStates, setStepCollapseStates] = useState<Record<string, boolean>>(() => {
+    // Initialize collapse states for all steps
+    const initialStates: Record<string, boolean> = {};
+    stepDefinitions.forEach((stepDef, index) => {
+      // First step starts expanded, others start collapsed
+      initialStates[stepDef.key] = index > 0;
+    });
+    return initialStates;
+  });
+
+  const toggleStepCollapse = useCallback((stepKey: string) => {
+    setStepCollapseStates(prev => ({
+      ...prev,
+      [stepKey]: !prev[stepKey]
+    }));
+  }, []);
+
   // Build steps from definition - filter and map in separate operations for better typing
-  const visibleSteps = definition.steps.filter((stepDef) => {
+  const visibleSteps = stepDefinitions.filter((stepDef) => {
     const isVisible = typeof stepDef.isVisible === 'function'
       ? stepDef.isVisible(base.params.parameters, base.hasFiles, base.hasResults)
       : stepDef.isVisible ?? true;
@@ -29,8 +53,8 @@ function GenericTool<TParams>(props: GenericToolProps<TParams>) {
 
   const steps: MiddleStepConfig[] = visibleSteps.map((stepDef) => ({
     title: stepDef.title(t),
-    isCollapsed: base.settingsCollapsed,
-    onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
+    isCollapsed: base.hasResults ? true : (stepCollapseStates[stepDef.key] ?? false),
+    onCollapsedClick: base.hasResults ? base.handleSettingsReset : () => toggleStepCollapse(stepDef.key),
     tooltip: stepDef.tooltip?.(t),
     content: (
       <stepDef.component

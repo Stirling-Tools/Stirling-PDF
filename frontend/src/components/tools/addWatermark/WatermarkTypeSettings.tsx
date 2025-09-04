@@ -3,21 +3,21 @@ import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 interface WatermarkTypeSettingsProps {
-  watermarkType?: 'text' | 'image';
-  onWatermarkTypeChange: (type: 'text' | 'image') => void;
+  parameters: { watermarkType?: 'text' | 'image' };
+  onParameterChange: (key: 'watermarkType', value: 'text' | 'image') => void;
   disabled?: boolean;
 }
 
-const WatermarkTypeSettings = ({ watermarkType, onWatermarkTypeChange, disabled = false }: WatermarkTypeSettingsProps) => {
+const WatermarkTypeSettings = ({ parameters, onParameterChange, disabled = false }: WatermarkTypeSettingsProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="sm">
       <div style={{ display: 'flex', gap: '4px' }}>
         <Button
-          variant={watermarkType === 'text' ? 'filled' : 'outline'}
-          color={watermarkType === 'text' ? 'blue' : 'var(--text-muted)'}
-          onClick={() => onWatermarkTypeChange('text')}
+          variant={parameters.watermarkType === 'text' ? 'filled' : 'outline'}
+          color={parameters.watermarkType === 'text' ? 'blue' : 'var(--text-muted)'}
+          onClick={() => onParameterChange('watermarkType', 'text')}
           disabled={disabled}
           style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
         >
@@ -26,9 +26,9 @@ const WatermarkTypeSettings = ({ watermarkType, onWatermarkTypeChange, disabled 
           </div>
         </Button>
         <Button
-          variant={watermarkType === 'image' ? 'filled' : 'outline'}
-          color={watermarkType === 'image' ? 'blue' : 'var(--text-muted)'}
-          onClick={() => onWatermarkTypeChange('image')}
+          variant={parameters.watermarkType === 'image' ? 'filled' : 'outline'}
+          color={parameters.watermarkType === 'image' ? 'blue' : 'var(--text-muted)'}
+          onClick={() => onParameterChange('watermarkType', 'image')}
           disabled={disabled}
           style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
         >

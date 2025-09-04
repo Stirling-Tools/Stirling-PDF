@@ -74,8 +74,8 @@ export interface ToolDefinition<TParams> {
   /** Hook that provides operation execution */
   useOperation: () => ToolOperationHook<TParams>;
 
-  /** Configuration steps for the tool */
-  steps: ToolStepDefinition<TParams>[];
+  /** Configuration steps for the tool - can be static array or dynamic function */
+  steps: ToolStepDefinition<TParams>[] | ((params: TParams, hasFiles: boolean, hasResults: boolean) => ToolStepDefinition<TParams>[]);
 
   /** Execute button configuration */
   executeButton: ToolExecuteButtonDefinition;
