@@ -4,7 +4,7 @@ import { FlattenParameters } from "../../../hooks/tools/flatten/useFlattenParame
 
 interface FlattenSettingsProps {
   parameters: FlattenParameters;
-  onParameterChange: (key: keyof FlattenParameters, value: boolean) => void;
+  onParameterChange: <K extends keyof FlattenParameters>(key: K, value: FlattenParameters[K]) => void;
   disabled?: boolean;
 }
 
