@@ -329,10 +329,16 @@ public class ApplicationProperties {
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
+        private DatabaseBackup databaseBackup = new DatabaseBackup();
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
         }
+    }
+
+    @Data
+    public static class DatabaseBackup {
+        private String cron = "0 0 0 * * ?"; // daily at midnight
     }
 
     @Data
