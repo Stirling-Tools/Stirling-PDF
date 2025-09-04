@@ -471,7 +471,7 @@ public class PdfUtilsTest {
 
         byte[] imageBytes =
                 PdfUtils.convertFromPdf(
-                        factory, pdfBytes, "png", ImageType.RGB, true, 72, "test.pdf");
+                        factory, pdfBytes, "png", ImageType.RGB, true, 72, "test.pdf", false);
 
         // Should be readable as a single combined PNG image
         BufferedImage img = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
@@ -499,7 +499,7 @@ public class PdfUtilsTest {
         // Act: singleImage=false -> ZIP with separate images
         byte[] zipBytes =
                 PdfUtils.convertFromPdf(
-                        factory, pdfBytes, "png", ImageType.RGB, false, 72, "test.pdf");
+                        factory, pdfBytes, "png", ImageType.RGB, false, 72, "test.pdf", false);
 
         // Assert: open ZIP, read first entry as PNG
         try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
@@ -729,7 +729,7 @@ public class PdfUtilsTest {
 
         byte[] jpgBytes =
                 PdfUtils.convertFromPdf(
-                        factory, pdfBytes, "jpg", ImageType.RGB, true, 72, "sample.pdf");
+                        factory, pdfBytes, "jpg", ImageType.RGB, true, 72, "sample.pdf", false);
 
         BufferedImage img = ImageIO.read(new ByteArrayInputStream(jpgBytes));
         assertNotNull(img, "JPG should be readable");
