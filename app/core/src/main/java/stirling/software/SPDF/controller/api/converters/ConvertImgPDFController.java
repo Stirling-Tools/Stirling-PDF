@@ -66,6 +66,7 @@ public class ConvertImgPDFController {
         String colorType = request.getColorType();
         int dpi = request.getDpi();
         String pageNumbers = request.getPageNumbers();
+        boolean includeAnnotations = Boolean.TRUE.equals(request.getIncludeAnnotations());
         Path tempFile = null;
         Path tempOutputDir = null;
         Path tempPdfPath = null;
@@ -101,7 +102,8 @@ public class ConvertImgPDFController {
                             colorTypeResult,
                             singleImage,
                             dpi,
-                            filename);
+                            filename,
+                            includeAnnotations);
             if (result == null || result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }

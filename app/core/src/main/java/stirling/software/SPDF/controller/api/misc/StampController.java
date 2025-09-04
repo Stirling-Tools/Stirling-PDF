@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyEditorSupport;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,6 +26,8 @@ import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,6 +54,24 @@ public class StampController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+
+    /**
+     * Initialize data binder for multipart file uploads.
+     * This method registers a custom editor for MultipartFile to handle file uploads.
+     * It sets the MultipartFile to null if the uploaded file is empty.
+     * This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-stamp")
     @Operation(
@@ -91,13 +112,14 @@ public class StampController {
         float overrideY = request.getOverrideY(); // New field for Y override
 
         String customColor = request.getCustomColor();
-        float marginFactor = switch (request.getCustomMargin().toLowerCase()) {
-            case "small" -> 0.02f;
-            case "medium" -> 0.035f;
-            case "large" -> 0.05f;
-            case "x-large" -> 0.075f;
-            default -> 0.035f;
-        };
+        float marginFactor =
+                switch (request.getCustomMargin().toLowerCase()) {
+                    case "small" -> 0.02f;
+                    case "medium" -> 0.035f;
+                    case "large" -> 0.05f;
+                    case "x-large" -> 0.075f;
+                    default -> 0.035f;
+                };
 
         // Load the input PDF
         PDDocument document = pdfDocumentFactory.load(pdfFile);
@@ -173,14 +195,16 @@ public class StampController {
             throws IOException {
         String resourceDir = "";
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        resourceDir = switch (alphabet) {
-            case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
-            case "japanese" -> "static/fonts/Meiryo.ttf";
-            case "korean" -> "static/fonts/malgun.ttf";
-            case "chinese" -> "static/fonts/SimSun.ttf";
-            case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
-            default -> "static/fonts/NotoSans-Regular.ttf";
-        };
+        resourceDir =
+                switch (alphabet) {
+                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
+                    case "japanese" -> "static/fonts/Meiryo.ttf";
+                    case "korean" -> "static/fonts/malgun.ttf";
+                    case "chinese" -> "static/fonts/SimSun.ttf";
+                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
+                    case "roman" -> "static/fonts/NotoSans-Regular.ttf";
+                    default -> "static/fonts/NotoSans-Regular.ttf";
+                };
 
         if (!"".equals(resourceDir)) {
             ClassPathResource classPathResource = new ClassPathResource(resourceDir);
@@ -303,26 +327,28 @@ public class StampController {
         float actualWidth =
                 (text != null) ? calculateTextWidth(text, font, fontSize) : contentWidth;
         return switch (position % 3) {
-            case 1 -> // Left
-                pageSize.getLowerLeftX() + margin;
-            case 2 -> // Center
-                (pageSize.getWidth() - actualWidth) / 2;
-            case 0 -> // Right
-                pageSize.getUpperRightX() - actualWidth - margin;
-            default -> 0;
+            case 1: // Left
+                yield pageSize.getLowerLeftX() + margin;
+            case 2: // Center
+                yield (pageSize.getWidth() - actualWidth) / 2;
+            case 0: // Right
+                yield pageSize.getUpperRightX() - actualWidth - margin;
+            default:
+                yield 0;
         };
     }
 
     private float calculatePositionY(
             PDRectangle pageSize, int position, float height, float margin) {
         return switch ((position - 1) / 3) {
-            case 0 -> // Top
-                pageSize.getUpperRightY() - height - margin;
-            case 1 -> // Middle
-                (pageSize.getHeight() - height) / 2;
-            case 2 -> // Bottom
-                pageSize.getLowerLeftY() + margin;
-            default -> 0;
+            case 0: // Top
+                yield pageSize.getUpperRightY() - height - margin;
+            case 1: // Middle
+                yield (pageSize.getHeight() - height) / 2;
+            case 2: // Bottom
+                yield pageSize.getLowerLeftY() + margin;
+            default:
+                yield 0;
         };
     }
 

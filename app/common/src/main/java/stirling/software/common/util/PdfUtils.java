@@ -142,7 +142,8 @@ public class PdfUtils {
             ImageType colorType,
             boolean singleImage,
             int DPI,
-            String filename)
+            String filename,
+            boolean includeAnnotations)
             throws IOException, Exception {
 
         // Validate and limit DPI to prevent excessive memory usage
@@ -163,6 +164,9 @@ public class PdfUtils {
         try (PDDocument document = pdfDocumentFactory.load(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
+            if (!includeAnnotations) {
+                pdfRenderer.setAnnotationsFilter(annotation -> false);
+            }
             int pageCount = document.getNumberOfPages();
 
             // Create a ByteArrayOutputStream to save the image(s) to

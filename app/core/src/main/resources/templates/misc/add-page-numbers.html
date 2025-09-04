@@ -100,6 +100,24 @@
               </select>
             </div>
             <div class="mb-3">
+              <label for="fontColor" th:text="#{addPageNumbers.fontColor}"></label>
+              <div class="form-control form-control-color" style="background-color: #000000;">
+                <input type="color" id="fontColor" name="fontColor" value="#000000">
+              </div>
+                <script>
+                  let colorInput = document.getElementById("fontColor");
+                  if (colorInput) {
+                    let colorInputContainer = colorInput.parentElement;
+                    if (colorInputContainer) {
+                      colorInput.onchange = function() {
+                        colorInputContainer.style.backgroundColor = colorInput.value;
+                      }
+                      colorInputContainer.style.backgroundColor = colorInput.value;
+                    }
+                  }
+                </script>
+            </div>
+            <div class="mb-3">
               <label for="startingNumber" th:text="#{addPageNumbers.selectText.4}"></label>
               <input type="number" class="form-control" id="startingNumber" name="startingNumber" min="1" required value="1">
             </div>
