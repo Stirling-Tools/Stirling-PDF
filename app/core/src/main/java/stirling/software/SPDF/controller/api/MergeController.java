@@ -19,7 +19,6 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -238,7 +237,7 @@ public class MergeController {
             String mergedFileName =
                     files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
                             + "_merged_unsigned.pdf";
-            return WebResponseUtils.fileToWebResponse(
+            return WebResponseUtils.pdfFileToWebResponse(
                     outputTempFile, mergedFileName); // Return the modified PDF as stream
         } catch (Exception ex) {
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
