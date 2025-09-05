@@ -196,13 +196,47 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [filteredFiles, lastClickedIndex]);
 
-  const handleFileRemove = useCallback((index: number) => {
+  const handleFileRemove = useCallback(async (index: number) => {
     const fileToRemove = filteredFiles[index];
     if (fileToRemove) {
-      setSelectedFileIds(prev => prev.filter(id => id !== fileToRemove.id));
+      const deletedFileId = fileToRemove.id;
+      
+      // Clear from selection immediately
+      setSelectedFileIds(prev => prev.filter(id => id !== deletedFileId));
+      
+      // Clear from expanded state to prevent ghost entries
+      setExpandedFileIds(prev => {
+        const newExpanded = new Set(prev);
+        newExpanded.delete(deletedFileId);
+        return newExpanded;
+      });
+      
+      // Clear from history cache - need to remove this file from any cached history
+      setLoadedHistoryFiles(prev => {
+        const newCache = new Map(prev);
+        
+        // If the deleted file was a main file with cached history, remove its cache
+        newCache.delete(deletedFileId);
+        
+        // Also remove the deleted file from any other file's history cache
+        for (const [mainFileId, historyFiles] of newCache.entries()) {
+          const filteredHistory = historyFiles.filter(histFile => histFile.id !== deletedFileId);
+          if (filteredHistory.length !== historyFiles.length) {
+            // The deleted file was in this history, update the cache
+            newCache.set(mainFileId, filteredHistory);
+          }
+        }
+        
+        return newCache;
+      });
+
+      // Call the parent's deletion logic
+      await onFileRemove(index);
+      
+      // Refresh to ensure consistent state
+      await refreshRecentFiles();
     }
-    onFileRemove(index);
-  }, [filteredFiles, onFileRemove]);
+  }, [filteredFiles, onFileRemove, refreshRecentFiles]);
 
   const handleFileDoubleClick = useCallback((file: FileMetadata) => {
     if (isFileSupported(file.name)) {
@@ -254,57 +288,67 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (selectedFileIds.length === 0) return;
 
     try {
-      // Get files to delete based on current filtered view
-      const filesToDelete = filteredFiles.filter(file =>
+      // Use the same logic as individual file deletion for consistency
+      // Delete each selected file individually using the same cache update logic
+      const allFilesToDelete = filteredFiles.filter(file =>
         selectedFileIds.includes(file.id)
       );
-
-      // For each selected file, determine which files to delete based on branch logic
-      const fileIdsToDelete = new Set<string>();
       
-      for (const file of filesToDelete) {
-        // If this is a leaf file (main entry), delete its entire branch
-        const branchLineage = fileGroups.get(file.id) || [];
+      // Deduplicate by file ID since shared files can appear multiple times in the display
+      const uniqueFilesToDelete = allFilesToDelete.reduce((unique: typeof allFilesToDelete, file) => {
+        if (!unique.some(f => f.id === file.id)) {
+          unique.push(file);
+        }
+        return unique;
+      }, []);
+      
+      const filesToDelete = uniqueFilesToDelete;
+      const deletedFileIds = new Set(filesToDelete.map(f => f.id));
+
+      // Update history cache synchronously
+      setLoadedHistoryFiles(prev => {
+        const newCache = new Map(prev);
         
-        if (branchLineage.length > 0) {
-          // This is a leaf file with a lineage - check each file in the branch
-          for (const branchFile of branchLineage) {
-            // Check if this file is part of OTHER branches (shared between branches)
-            const isPartOfOtherBranches = Array.from(fileGroups.values()).some(otherLineage => {
-              // Check if this file appears in a different branch lineage
-              return otherLineage !== branchLineage && 
-                     otherLineage.some((f: any) => f.id === branchFile.id);
-            });
-            
-            if (isPartOfOtherBranches) {
-              // File is shared between branches - don't delete it
-              console.log(`Keeping shared file: ${branchFile.name} (part of other branches)`);
-            } else {
-              // File is exclusive to this branch - safe to delete
-              fileIdsToDelete.add(branchFile.id);
-              console.log(`Deleting branch-exclusive file: ${branchFile.name}`);
+        for (const fileToDelete of filesToDelete) {
+          // If the deleted file was a main file with cached history, remove its cache
+          newCache.delete(fileToDelete.id);
+          
+          // Also remove the deleted file from any other file's history cache
+          for (const [mainFileId, historyFiles] of newCache.entries()) {
+            const filteredHistory = historyFiles.filter(histFile => histFile.id !== fileToDelete.id);
+            if (filteredHistory.length !== historyFiles.length) {
+              // The deleted file was in this history, update the cache
+              newCache.set(mainFileId, filteredHistory);
             }
           }
-        } else {
-          // This is a standalone file or history file - just delete it
-          fileIdsToDelete.add(file.id);
         }
+        
+        return newCache;
+      });
+
+      // Also clear any expanded state for deleted files to prevent ghost entries
+      setExpandedFileIds(prev => {
+        const newExpanded = new Set(prev);
+        for (const deletedId of deletedFileIds) {
+          newExpanded.delete(deletedId);
+        }
+        return newExpanded;
+      });
+
+      // Clear selection immediately to prevent ghost selections
+      setSelectedFileIds(prev => prev.filter(id => !deletedFileIds.has(id)));
+
+      // Delete files from IndexedDB
+      for (const file of filesToDelete) {
+        await fileStorage.deleteFile(file.id);
       }
 
-      // Delete files from storage
-      for (const fileId of fileIdsToDelete) {
-        await fileStorage.deleteFile(fileId as FileId);
-      }
-
-      // Clear selection
-      setSelectedFileIds([]);
-
-      // Refresh the file list
+      // Refresh the file list to get updated data
       await refreshRecentFiles();
     } catch (error) {
       console.error('Failed to delete selected files:', error);
     }
-  }, [selectedFileIds, filteredFiles, fileGroups, recentFiles, refreshRecentFiles]);
+  }, [selectedFileIds, filteredFiles, refreshRecentFiles]);
 
 
   const handleDownloadSelected = useCallback(async () => {
@@ -353,7 +397,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       if (currentFileMetadata && (currentFileMetadata.versionNumber || 0) > 0) {
         try {
           // Load the current file to get its full history
-          const storedFile = await fileStorage.getFile(fileId);
+          const storedFile = await fileStorage.getFile(fileId as FileId);
           if (storedFile) {
             const file = new File([storedFile.data], storedFile.name, {
               type: storedFile.type,
@@ -361,7 +405,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             });
             
             // Get the complete history metadata (this will give us original/parent IDs)
-            const historyData = await loadFileHistory(file, fileId);
+            const historyData = await loadFileHistory(file, fileId as FileId);
             
             if (historyData?.originalFileId) {
               // Load complete history chain by traversing parent relationships
@@ -381,7 +425,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
                 // Add original file if we haven't seen it
                 if (currentHistoryData.originalFileId && !visitedIds.has(currentHistoryData.originalFileId)) {
                   visitedIds.add(currentHistoryData.originalFileId);
-                  const originalMeta = fileMap.get(currentHistoryData.originalFileId);
+                  const originalMeta = fileMap.get(currentHistoryData.originalFileId as FileId);
                   if (originalMeta) {
                     try {
                       const origStoredFile = await fileStorage.getFile(originalMeta.id);
@@ -429,7 +473,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
               
               // Also find any files that have the current file as their original (siblings/alternatives)
               for (const [metaId, meta] of fileMap) {
-                if (!visitedIds.has(metaId) && meta.originalFileId === historyData.originalFileId) {
+                if (!visitedIds.has(metaId) && (meta as any).originalFileId === historyData.originalFileId) {
                   visitedIds.add(metaId);
                   try {
                     const siblingStoredFile = await fileStorage.getFile(meta.id);
@@ -448,7 +492,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
               }
               
               // Cache the loaded history files
-              setLoadedHistoryFiles(prev => new Map(prev.set(fileId, historyFiles)));
+              setLoadedHistoryFiles(prev => new Map(prev.set(fileId as FileId, historyFiles)));
             }
           }
         } catch (error) {
@@ -459,7 +503,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       // Clear loaded history when collapsing
       setLoadedHistoryFiles(prev => {
         const newMap = new Map(prev);
-        newMap.delete(fileId);
+        newMap.delete(fileId as FileId);
         return newMap;
       });
     }
