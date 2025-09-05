@@ -8,7 +8,7 @@ import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { StirlingFile, extractFiles, FileId, StirlingFileStub } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
-import { prepareFilesWithHistory, verifyToolMetadataPreservation } from '../../../utils/fileHistoryUtils';
+import { prepareStirlingFilesWithHistory, verifyToolMetadataPreservation } from '../../../utils/fileHistoryUtils';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -159,7 +159,6 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-
     // Reset state
     actions.setLoading(true);
     actions.setError(null);
@@ -168,14 +167,13 @@ export const useToolOperation = <TParams>(
 
     // Prepare files with history metadata injection (for PDFs)
     actions.setStatus('Preparing files...');
-    const getFileStub = (file: File) => {
-      const fileId = findFileId(file);
-      return fileId ? selectors.getStirlingFileStub(fileId) : undefined;
+    const getFileStubById = (fileId: FileId) => {
+      return selectors.getStirlingFileStub(fileId);
     };
 
-    const filesWithHistory = await prepareFilesWithHistory(
+    const filesWithHistory = await prepareStirlingFilesWithHistory(
       validFiles,
-      getFileStub,
+      getFileStubById,
       config.operationType,
       params as Record<string, any>
     );
@@ -183,8 +181,9 @@ export const useToolOperation = <TParams>(
     try {
       let processedFiles: File[];
 
-      // Convert StirlingFile to regular File objects for API processing
-      const validRegularFiles = extractFiles(validFiles);
+      // Convert StirlingFiles with history to regular Files for API processing
+      // The history is already injected into the File data, we just need to extract the File objects
+      const filesForAPI = extractFiles(filesWithHistory);
 
       switch (config.toolType) {
         case ToolType.singleFile: {
@@ -197,7 +196,7 @@ export const useToolOperation = <TParams>(
           };
           processedFiles = await processFiles(
             params,
-            validRegularFiles,
+            filesForAPI,
             apiCallsConfig,
             actions.setProgress,
             actions.setStatus
@@ -207,7 +206,7 @@ export const useToolOperation = <TParams>(
         case ToolType.multiFile: {
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');
-          const formData = config.buildFormData(params, validRegularFiles);
+          const formData = config.buildFormData(params, filesForAPI);
           const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
 
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
@@ -215,11 +214,11 @@ export const useToolOperation = <TParams>(
           // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
           if (config.responseHandler) {
             // Use custom responseHandler for multi-file (handles ZIP extraction)
-            processedFiles = await config.responseHandler(response.data, validRegularFiles);
+            processedFiles = await config.responseHandler(response.data, filesForAPI);
           } else if (response.data.type === 'application/pdf' ||
                     (response.headers && response.headers['content-type'] === 'application/pdf')) {
             // Single PDF response (e.g. split with merge option) - use original filename
-            const originalFileName = validRegularFiles[0]?.name || 'document.pdf';
+            const originalFileName = filesForAPI[0]?.name || 'document.pdf';
             const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
             processedFiles = [singleFile];
           } else {
@@ -236,7 +235,7 @@ export const useToolOperation = <TParams>(
 
         case ToolType.custom:
           actions.setStatus('Processing files...');
-          processedFiles = await config.customProcessor(params, validRegularFiles);
+          processedFiles = await config.customProcessor(params, filesForAPI);
           break;
       }
 

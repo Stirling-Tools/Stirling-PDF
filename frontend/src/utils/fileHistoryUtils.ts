@@ -123,25 +123,51 @@ export async function injectHistoryForTool(
 }
 
 /**
- * Prepare FormData with history-injected PDFs for tool operations
+ * Prepare StirlingFiles with history-injected PDFs for tool operations
+ * Preserves fileId and all StirlingFile metadata while injecting history
  */
-export async function prepareFilesWithHistory(
-  files: File[],
-  getStirlingFileStub: (file: File) => StirlingFileStub | undefined,
+export async function prepareStirlingFilesWithHistory(
+  stirlingFiles: import('../types/fileContext').StirlingFile[],
+  getStirlingFileStub: (fileId: import('../types/file').FileId) => StirlingFileStub | undefined,
   toolName: string,
   parameters?: Record<string, any>
-): Promise<File[]> {
-  const processedFiles: File[] = [];
+): Promise<import('../types/fileContext').StirlingFile[]> {
+  const processedFiles: import('../types/fileContext').StirlingFile[] = [];
 
-  for (const file of files) {
-    const record = getStirlingFileStub(file);
-    if (!record) {
-      processedFiles.push(file);
+  for (const stirlingFile of stirlingFiles) {
+    const fileStub = getStirlingFileStub(stirlingFile.fileId);
+
+    if (!fileStub) {
+      // If no stub found, keep original file
+      processedFiles.push(stirlingFile);
       continue;
     }
 
-    const fileWithHistory = await injectHistoryForTool(file, record, toolName, parameters);
-    processedFiles.push(fileWithHistory);
+    // Inject history into the file data
+    const fileWithHistory = await injectHistoryForTool(stirlingFile, fileStub, toolName, parameters);
+
+    // Create new StirlingFile with the updated file data but preserve fileId and quickKey
+    const updatedStirlingFile = new File([fileWithHistory], fileWithHistory.name, {
+      type: fileWithHistory.type,
+      lastModified: fileWithHistory.lastModified
+    }) as import('../types/fileContext').StirlingFile;
+
+    // Preserve the original fileId and quickKey
+    Object.defineProperty(updatedStirlingFile, 'fileId', {
+      value: stirlingFile.fileId,
+      writable: false,
+      enumerable: true,
+      configurable: false
+    });
+
+    Object.defineProperty(updatedStirlingFile, 'quickKey', {
+      value: stirlingFile.quickKey,
+      writable: false,
+      enumerable: true,
+      configurable: false
+    });
+
+    processedFiles.push(updatedStirlingFile);
   }
 
   return processedFiles;

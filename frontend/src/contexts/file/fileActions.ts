@@ -466,8 +466,21 @@ export async function consumeFiles(
   // Process output files with thumbnails and metadata
   const outputStirlingFileStubs = await processFilesIntoRecords(outputFiles, filesRef);
 
-  // Mark input files as processed in IndexedDB (no longer leaf nodes)
+  // Mark input files as processed in IndexedDB (no longer leaf nodes) and save output files
   if (indexedDB) {
+    // Mark input files as processed (isLeaf = false)
+    await Promise.all(
+      inputFileIds.map(async (fileId) => {
+        try {
+          await indexedDB.markFileAsProcessed(fileId);
+          if (DEBUG) console.log(`📄 Marked file ${fileId} as processed (no longer leaf)`);
+        } catch (error) {
+          if (DEBUG) console.warn(`📄 Failed to mark file ${fileId} as processed:`, error);
+        }
+      })
+    );
+
+    // Save output files to IndexedDB
     await persistFilesToIndexedDB(outputStirlingFileStubs, indexedDB);
   }
 
