@@ -76,7 +76,7 @@ public class OCRController {
                 .toList();
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/ocr-pdf")
     @Operation(
             summary = "Process a PDF file with OCR",
             description =

@@ -25,6 +25,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -72,7 +73,7 @@ public class StampController {
                 });
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-stamp")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
     @Operation(
             summary = "Add stamp to a PDF file",
             description =

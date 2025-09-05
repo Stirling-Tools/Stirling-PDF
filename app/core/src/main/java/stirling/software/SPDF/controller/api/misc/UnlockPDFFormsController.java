@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +38,7 @@ public class UnlockPDFFormsController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/unlock-pdf-forms")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/unlock-pdf-forms")
     @Operation(
             summary = "Remove read-only property from form fields",
             description =

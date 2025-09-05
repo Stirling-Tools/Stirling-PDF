@@ -1,5 +1,6 @@
 package stirling.software.SPDF.model.api.converters;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +19,7 @@ import stirling.software.common.util.PDFToFile;
 @RequestMapping("/api/v1/convert")
 public class ConvertPDFToMarkdown {
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/markdown")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/markdown")
     @Operation(
             summary = "Convert PDF to Markdown",
             description =

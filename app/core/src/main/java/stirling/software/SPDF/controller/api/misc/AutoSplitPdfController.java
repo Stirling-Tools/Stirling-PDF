@@ -102,7 +102,7 @@ public class AutoSplitPdfController {
         }
     }
 
-    @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
+    @PostMapping(value = "/auto-split-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Auto split PDF pages into separate documents",
             description =

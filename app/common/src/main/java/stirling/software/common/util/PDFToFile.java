@@ -36,7 +36,7 @@ public class PDFToFile {
 
     public ResponseEntity<byte[]> processPdfToMarkdown(MultipartFile inputFile)
             throws IOException, InterruptedException {
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -153,7 +153,7 @@ public class PDFToFile {
 
     public ResponseEntity<byte[]> processPdfToHtml(MultipartFile inputFile)
             throws IOException, InterruptedException {
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -223,7 +223,7 @@ public class PDFToFile {
             MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
             throws IOException, InterruptedException {
 
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 

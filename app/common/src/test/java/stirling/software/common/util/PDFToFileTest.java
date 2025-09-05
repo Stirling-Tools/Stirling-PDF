@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,7 +58,10 @@ class PDFToFileTest {
         // Prepare
         MultipartFile nonPdfFile =
                 new MockMultipartFile(
-                        "file", "test.txt", "text/plain", "This is not a PDF".getBytes());
+                        "file",
+                        "test.txt",
+                        MediaType.TEXT_PLAIN_VALUE,
+                        "This is not a PDF".getBytes());
 
         // Execute
         ResponseEntity<byte[]> response = pdfToFile.processPdfToMarkdown(nonPdfFile);
@@ -71,7 +75,10 @@ class PDFToFileTest {
         // Prepare
         MultipartFile nonPdfFile =
                 new MockMultipartFile(
-                        "file", "test.txt", "text/plain", "This is not a PDF".getBytes());
+                        "file",
+                        "test.txt",
+                        MediaType.TEXT_PLAIN_VALUE,
+                        "This is not a PDF".getBytes());
 
         // Execute
         ResponseEntity<byte[]> response = pdfToFile.processPdfToHtml(nonPdfFile);
@@ -86,7 +93,10 @@ class PDFToFileTest {
         // Prepare
         MultipartFile nonPdfFile =
                 new MockMultipartFile(
-                        "file", "test.txt", "text/plain", "This is not a PDF".getBytes());
+                        "file",
+                        "test.txt",
+                        MediaType.TEXT_PLAIN_VALUE,
+                        "This is not a PDF".getBytes());
 
         // Execute
         ResponseEntity<byte[]> response =
@@ -102,7 +112,10 @@ class PDFToFileTest {
         // Prepare
         MultipartFile pdfFile =
                 new MockMultipartFile(
-                        "file", "test.pdf", "application/pdf", "Fake PDF content".getBytes());
+                        "file",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "Fake PDF content".getBytes());
 
         // Execute with invalid format
         ResponseEntity<byte[]> response =
@@ -120,7 +133,10 @@ class PDFToFileTest {
             // Create a mock PDF file
             MultipartFile pdfFile =
                     new MockMultipartFile(
-                            "file", "test.pdf", "application/pdf", "Fake PDF content".getBytes());
+                            "file",
+                            "test.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "Fake PDF content".getBytes());
 
             // Create a mock HTML output file
             Path htmlOutputFile = tempDir.resolve("test.html");
@@ -168,7 +184,7 @@ class PDFToFileTest {
                     new MockMultipartFile(
                             "file",
                             "multipage.pdf",
-                            "application/pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
                             "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
@@ -245,7 +261,10 @@ class PDFToFileTest {
             // Create a mock PDF file
             MultipartFile pdfFile =
                     new MockMultipartFile(
-                            "file", "test.pdf", "application/pdf", "Fake PDF content".getBytes());
+                            "file",
+                            "test.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -324,7 +343,7 @@ class PDFToFileTest {
                     new MockMultipartFile(
                             "file",
                             "document.pdf",
-                            "application/pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
                             "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
@@ -386,7 +405,7 @@ class PDFToFileTest {
                     new MockMultipartFile(
                             "file",
                             "document.pdf",
-                            "application/pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
                             "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
@@ -472,7 +491,7 @@ class PDFToFileTest {
                     new MockMultipartFile(
                             "file",
                             "document.pdf",
-                            "application/pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
                             "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
@@ -531,7 +550,10 @@ class PDFToFileTest {
             // Create a mock PDF file with no filename
             MultipartFile pdfFile =
                     new MockMultipartFile(
-                            "file", "", "application/pdf", "Fake PDF content".getBytes());
+                            "file",
+                            "",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor

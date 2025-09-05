@@ -37,6 +37,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.Data;
@@ -118,7 +119,7 @@ public class PdfAttachmentHandler {
             public String getContentType() {
                 return attachment.getContentType() != null
                         ? attachment.getContentType()
-                        : "application/octet-stream";
+                        : MediaType.APPLICATION_OCTET_STREAM_VALUE;
             }
 
             @Override

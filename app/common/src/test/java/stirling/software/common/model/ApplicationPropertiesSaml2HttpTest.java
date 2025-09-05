@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -23,7 +24,7 @@ class ApplicationPropertiesSaml2HttpTest {
             server.enqueue(
                     new MockResponse()
                             .setResponseCode(200)
-                            .addHeader("Content-Type", "application/xml")
+                            .addHeader("Content-Type", MediaType.APPLICATION_XML_VALUE)
                             .setBody("<EntityDescriptor/>"));
             server.start();
 

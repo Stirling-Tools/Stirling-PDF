@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,7 +36,10 @@ class ReplaceAndInvertColorStrategyTest {
         // Arrange
         MultipartFile mockFile =
                 new MockMultipartFile(
-                        "file", "test.pdf", "application/pdf", "test content".getBytes());
+                        "file",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "test content".getBytes());
         ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.CUSTOM_COLOR;
 
         // Act
@@ -56,7 +60,7 @@ class ReplaceAndInvertColorStrategyTest {
         // Arrange
         byte[] content = "test pdf content".getBytes();
         MultipartFile mockFile =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", content);
+                new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, content);
         ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.CUSTOM_COLOR;
 
         ReplaceAndInvertColorStrategy strategy =
@@ -74,10 +78,16 @@ class ReplaceAndInvertColorStrategyTest {
         // Arrange
         MultipartFile mockFile1 =
                 new MockMultipartFile(
-                        "file1", "test1.pdf", "application/pdf", "content1".getBytes());
+                        "file1",
+                        "test1.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "content1".getBytes());
         MultipartFile mockFile2 =
                 new MockMultipartFile(
-                        "file2", "test2.pdf", "application/pdf", "content2".getBytes());
+                        "file2",
+                        "test2.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "content2".getBytes());
 
         // Act
         ReplaceAndInvertColorStrategy strategy =

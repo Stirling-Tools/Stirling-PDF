@@ -40,7 +40,7 @@ public class ConvertEmlToPDF {
     private final TempFileManager tempFileManager;
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/eml/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/eml/pdf")
     @Operation(
             summary = "Convert EML to PDF",
             description =

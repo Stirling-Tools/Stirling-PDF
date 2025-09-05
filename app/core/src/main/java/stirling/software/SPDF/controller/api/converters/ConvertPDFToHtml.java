@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +19,7 @@ import stirling.software.common.util.PDFToFile;
 @RequestMapping("/api/v1/convert")
 public class ConvertPDFToHtml {
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/html")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/html")
     @Operation(
             summary = "Convert PDF to HTML",
             description =

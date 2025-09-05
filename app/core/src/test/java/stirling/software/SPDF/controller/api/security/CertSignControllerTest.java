@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -117,7 +118,8 @@ class CertSignControllerTest {
     @Test
     void testSignPdfWithPfx() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("fileInput", "test.pdf", "application/pdf", pdfBytes);
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
         MockMultipartFile pfxFile =
                 new MockMultipartFile("p12File", "test-cert.pfx", "application/x-pkcs12", pfxBytes);
 
@@ -142,7 +144,8 @@ class CertSignControllerTest {
     @Test
     void testSignPdfWithPkcs12() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("fileInput", "test.pdf", "application/pdf", pdfBytes);
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
         MockMultipartFile p12File =
                 new MockMultipartFile("p12File", "test-cert.p12", "application/x-pkcs12", p12Bytes);
 
@@ -167,7 +170,8 @@ class CertSignControllerTest {
     @Test
     void testSignPdfWithJks() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("fileInput", "test.pdf", "application/pdf", pdfBytes);
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
         MockMultipartFile jksFile =
                 new MockMultipartFile(
                         "jksFile", "test-cert.jks", "application/octet-stream", jksBytes);
@@ -193,7 +197,8 @@ class CertSignControllerTest {
     @Test
     void testSignPdfWithPem() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("fileInput", "test.pdf", "application/pdf", pdfBytes);
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
         MockMultipartFile keyFile =
                 new MockMultipartFile(
                         "privateKeyFile", "test-key.pem", "application/x-pem-file", pemKeyBytes);
@@ -223,7 +228,8 @@ class CertSignControllerTest {
     @Test
     void testSignPdfWithCrt() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("fileInput", "test.pdf", "application/pdf", pdfBytes);
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
         MockMultipartFile keyFile =
                 new MockMultipartFile(
                         "privateKeyFile", "test-key.key", "application/x-pem-file", keyBytes);
@@ -253,7 +259,8 @@ class CertSignControllerTest {
     @Test
     void testSignPdfWithCer() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("fileInput", "test.pdf", "application/pdf", pdfBytes);
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
         MockMultipartFile keyFile =
                 new MockMultipartFile(
                         "privateKeyFile", "test-key.key", "application/x-pem-file", keyBytes);
@@ -283,7 +290,8 @@ class CertSignControllerTest {
     @Test
     void testSignPdfWithDer() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("fileInput", "test.pdf", "application/pdf", pdfBytes);
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
         MockMultipartFile keyFile =
                 new MockMultipartFile(
                         "privateKeyFile", "test-key.key", "application/x-pem-file", keyBytes);

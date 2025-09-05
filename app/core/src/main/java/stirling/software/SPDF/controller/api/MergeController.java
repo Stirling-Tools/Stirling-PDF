@@ -20,6 +20,7 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -154,7 +155,7 @@ public class MergeController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/merge-pdfs")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/merge-pdfs")
     @Operation(
             summary = "Merge multiple PDF files into one",
             description =

@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +39,7 @@ public class AutoRenameController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/auto-rename")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/auto-rename")
     @Operation(
             summary = "Extract header from PDF file",
             description =

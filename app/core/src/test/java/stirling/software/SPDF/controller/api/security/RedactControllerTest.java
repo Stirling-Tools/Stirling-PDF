@@ -42,6 +42,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -130,7 +131,10 @@ class RedactControllerTest {
     void setUp() throws IOException {
         mockPdfFile =
                 new MockMultipartFile(
-                        "fileInput", "test.pdf", "application/pdf", createSimplePdfContent());
+                        "fileInput",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        createSimplePdfContent());
 
         // Mock PDF document and related objects
         mockDocument = mock(PDDocument.class);
@@ -632,7 +636,7 @@ class RedactControllerTest {
                     new MockMultipartFile(
                             "fileInput",
                             "malformed.pdf",
-                            "application/pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
                             "Not a real PDF content".getBytes());
 
             RedactPdfRequest request = new RedactPdfRequest();

@@ -27,7 +27,7 @@ public class ReplaceAndInvertColorController {
 
     private final ReplaceAndInvertColorService replaceAndInvertColorService;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/replace-invert-pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/replace-invert-pdf")
     @Operation(
             summary = "Replace-Invert Color PDF",
             description =

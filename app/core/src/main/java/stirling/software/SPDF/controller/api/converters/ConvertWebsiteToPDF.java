@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,7 +44,7 @@ public class ConvertWebsiteToPDF {
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/url/pdf")
     @Operation(
             summary = "Convert a URL to a PDF",
             description =

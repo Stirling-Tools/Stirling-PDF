@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +30,7 @@ public class AnalysisController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/page-count", consumes = "multipart/form-data")
+    @PostMapping(value = "/page-count", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Get PDF page count",
             description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
@@ -39,7 +40,7 @@ public class AnalysisController {
         }
     }
 
-    @PostMapping(value = "/basic-info", consumes = "multipart/form-data")
+    @PostMapping(value = "/basic-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Get basic PDF information",
             description = "Returns page count, version, file size. Input:PDF Output:JSON Type:SISO")
@@ -53,7 +54,7 @@ public class AnalysisController {
         }
     }
 
-    @PostMapping(value = "/document-properties", consumes = "multipart/form-data")
+    @PostMapping(value = "/document-properties", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Get PDF document properties",
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
@@ -76,7 +77,7 @@ public class AnalysisController {
         }
     }
 
-    @PostMapping(value = "/page-dimensions", consumes = "multipart/form-data")
+    @PostMapping(value = "/page-dimensions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Get page dimensions for all pages",
             description = "Returns width and height of each page. Input:PDF Output:JSON Type:SISO")
@@ -96,7 +97,7 @@ public class AnalysisController {
         }
     }
 
-    @PostMapping(value = "/form-fields", consumes = "multipart/form-data")
+    @PostMapping(value = "/form-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Get form field information",
             description =
@@ -119,7 +120,7 @@ public class AnalysisController {
         }
     }
 
-    @PostMapping(value = "/annotation-info", consumes = "multipart/form-data")
+    @PostMapping(value = "/annotation-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Get annotation information",
             description = "Returns count and types of annotations. Input:PDF Output:JSON Type:SISO")
@@ -143,7 +144,7 @@ public class AnalysisController {
         }
     }
 
-    @PostMapping(value = "/font-info", consumes = "multipart/form-data")
+    @PostMapping(value = "/font-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Get font information",
             description =
@@ -165,7 +166,7 @@ public class AnalysisController {
         }
     }
 
-    @PostMapping(value = "/security-info", consumes = "multipart/form-data")
+    @PostMapping(value = "/security-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Get security information",
             description =

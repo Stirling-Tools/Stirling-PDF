@@ -69,7 +69,7 @@ public class BlankPageController {
         return whitePixelPercentage >= whitePercent;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-blanks")
     @Operation(
             summary = "Remove blank pages from a PDF file",
             description =

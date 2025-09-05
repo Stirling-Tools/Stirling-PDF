@@ -38,7 +38,7 @@ public class DecompressPdfController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/decompress-pdf", consumes = "multipart/form-data")
+    @PostMapping(value = "/decompress-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Decompress PDF streams",
             description = "Fully decompresses all PDF streams including text content")

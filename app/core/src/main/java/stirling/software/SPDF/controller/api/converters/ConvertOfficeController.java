@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -171,7 +172,7 @@ public class ConvertOfficeController {
         return fileExtension.matches(extensionPattern);
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/file/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/file/pdf")
     @Operation(
             summary = "Convert a file to a PDF using LibreOffice",
             description =

@@ -51,7 +51,7 @@ public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/img")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
     @Operation(
             summary = "Convert PDF to image(s)",
             description =
@@ -213,7 +213,7 @@ public class ConvertImgPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/img/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/img/pdf")
     @Operation(
             summary = "Convert images to a PDF file",
             description =
@@ -244,7 +244,7 @@ public class ConvertImgPDFController {
 
     private String getMediaType(String imageFormat) {
         String mimeType = URLConnection.guessContentTypeFromName("." + imageFormat);
-        return "null".equals(mimeType) ? "application/octet-stream" : mimeType;
+        return "null".equals(mimeType) ? MediaType.APPLICATION_OCTET_STREAM_VALUE : mimeType;
     }
 
     /**
