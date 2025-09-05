@@ -6,7 +6,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
-import { Tooltip } from "./Tooltip";
+
 
 const viewOptionStyle = {
   display: 'inline-flex',
@@ -18,7 +18,7 @@ const viewOptionStyle = {
 }
 
 
-// Build view options showing text only for current view; others icon-only with tooltip
+// Build view options showing text always
 const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchType | null) => [
   {
     label: (
@@ -35,35 +35,37 @@ const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchTyp
   },
   {
     label: (
-      <Tooltip content="Page Editor" position="bottom" arrow={true}>
-        <div style={viewOptionStyle as React.CSSProperties}>
-          {currentView === "pageEditor" ? (
-            <>
-              {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
-              <span>Page Editor</span>
-            </>
-          ) : (
-            switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />
-          )}
-        </div>
-      </Tooltip>
+      <div style={viewOptionStyle as React.CSSProperties}>
+        {currentView === "pageEditor" ? (
+          <>
+            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
+            <span>Page Editor</span>
+          </>
+        ) : (
+          <>
+            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
+            <span>Page Editor</span>
+          </>
+        )}
+      </div>
     ),
     value: "pageEditor",
   },
   {
     label: (
-      <Tooltip content="Active Files" position="bottom" arrow={true}>
-        <div style={viewOptionStyle as React.CSSProperties}>
-          {currentView === "fileEditor" ? (
-            <>
-              {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
-              <span>Active Files</span>
-            </>
-          ) : (
-            switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />
-          )}
-        </div>
-      </Tooltip>
+      <div style={viewOptionStyle as React.CSSProperties}>
+        {currentView === "fileEditor" ? (
+          <>
+            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
+            <span>Active Files</span>
+          </>
+        ) : (
+          <>
+            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
+            <span>Active Files</span>
+          </>
+        )}
+      </div>
     ),
     value: "fileEditor",
   },

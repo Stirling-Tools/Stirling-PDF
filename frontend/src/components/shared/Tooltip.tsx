@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import LocalIcon from './LocalIcon';
-import { isClickOutside, addEventListenerWithCleanup } from '../../utils/genericUtils';
+import { addEventListenerWithCleanup } from '../../utils/genericUtils';
 import { useTooltipPosition } from '../../hooks/useTooltipPosition';
 import { TooltipTip } from '../../types/tips';
 import { TooltipContent } from './tooltip/TooltipContent';
 import { useSidebarContext } from '../../contexts/SidebarContext';
-import styles from './tooltip/Tooltip.module.css'
+import styles from './tooltip/Tooltip.module.css';
 
 export interface TooltipProps {
   sidebarTooltip?: boolean;
@@ -21,12 +21,12 @@ export interface TooltipProps {
   onOpenChange?: (open: boolean) => void;
   arrow?: boolean;
   portalTarget?: HTMLElement;
-  header?: {
-    title: string;
-    logo?: React.ReactNode;
-  };
+  header?: { title: string; logo?: React.ReactNode };
   delay?: number;
   containerStyle?: React.CSSProperties;
+  pinOnClick?: boolean;
+  /** If true, clicking outside also closes when not pinned (default true) */
+  closeOnOutside?: boolean;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -44,57 +44,41 @@ export const Tooltip: React.FC<TooltipProps> = ({
   portalTarget,
   header,
   delay = 0,
-  containerStyle={},
+  containerStyle = {},
+  pinOnClick = false,
+  closeOnOutside = true,
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
-  const triggerRef = useRef<HTMLElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
   const openTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-  const clearTimers = () => {
+  const clickPendingRef = useRef(false);
+  const tooltipIdRef = useRef(`tooltip-${Math.random().toString(36).slice(2)}`);
+
+  const clearTimers = useCallback(() => {
     if (openTimeoutRef.current) {
       clearTimeout(openTimeoutRef.current);
       openTimeoutRef.current = null;
     }
-  };
-  
-  // Get sidebar context for tooltip positioning
+  }, []);
+
   const sidebarContext = sidebarTooltip ? useSidebarContext() : null;
 
-  // Always use controlled mode - if no controlled props provided, use internal state
   const isControlled = controlledOpen !== undefined;
-  const open = isControlled ? controlledOpen : internalOpen;
+  const open = isControlled ? !!controlledOpen : internalOpen;
 
-  const handleOpenChange = (newOpen: boolean) => {
-    clearTimers();
-    if (isControlled) {
-      onOpenChange?.(newOpen);
-    } else {
-      setInternalOpen(newOpen);
-    }
+  const setOpen = useCallback(
+    (newOpen: boolean) => {
+      if (newOpen === open) return; // avoid churn
+      if (isControlled) onOpenChange?.(newOpen);
+      else setInternalOpen(newOpen);
+      if (!newOpen) setIsPinned(false);
+    },
+    [isControlled, onOpenChange, open]
+  );
 
-    // Reset pin state when closing
-    if (!newOpen) {
-      setIsPinned(false);
-    }
-
-  };
-
-  const handleTooltipClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsPinned(true);
-  };
-
-  const handleDocumentClick = (e: MouseEvent) => {
-    // If tooltip is pinned and we click outside of it, unpin it
-    if (isPinned && isClickOutside(e, tooltipRef.current)) {
-      setIsPinned(false);
-      handleOpenChange(false);
-    }
-  };
-
-  // Use the positioning hook
   const { coords, positionReady } = useTooltipPosition({
     open,
     sidebarTooltip,
@@ -103,56 +87,209 @@ export const Tooltip: React.FC<TooltipProps> = ({
     triggerRef,
     tooltipRef,
     sidebarRefs: sidebarContext?.sidebarRefs,
-    sidebarState: sidebarContext?.sidebarState
+    sidebarState: sidebarContext?.sidebarState,
   });
 
-  // Add document click listener for unpinning
+  // Close on outside click: pinned → close; not pinned → optionally close
+  const handleDocumentClick = useCallback(
+    (e: MouseEvent) => {
+      const tEl = tooltipRef.current;
+      const trg = triggerRef.current;
+      const target = e.target as Node | null;
+      const insideTooltip = tEl && target && tEl.contains(target);
+      const insideTrigger = trg && target && trg.contains(target);
+
+      // If pinned: only close when clicking outside BOTH tooltip & trigger
+      if (isPinned) {
+        if (!insideTooltip && !insideTrigger) {
+          setIsPinned(false);
+          setOpen(false);
+        }
+        return;
+      }
+
+      // Not pinned and configured to close on outside
+      if (closeOnOutside && !insideTooltip && !insideTrigger) {
+        setOpen(false);
+      }
+    },
+    [isPinned, closeOnOutside, setOpen]
+  );
+
   useEffect(() => {
-    if (isPinned) {
+    // Attach global click when open (so hover tooltips can also close on outside if desired)
+    if (open || isPinned) {
       return addEventListenerWithCleanup(document, 'click', handleDocumentClick as EventListener);
     }
-  }, [isPinned]);
+  }, [open, isPinned, handleDocumentClick]);
 
-  useEffect(() => {
-    return () => {
-      clearTimers();
-    };
-  }, []);
+  useEffect(() => () => clearTimers(), [clearTimers]);
 
-
-  const getArrowClass = () => {
-    // No arrow for sidebar tooltips
+  const arrowClass = useMemo(() => {
     if (sidebarTooltip) return null;
+    const map: Record<NonNullable<TooltipProps['position']>, string> = {
+      top: 'tooltip-arrow-bottom',
+      bottom: 'tooltip-arrow-top',
+      left: 'tooltip-arrow-left',
+      right: 'tooltip-arrow-right',
+    };
+    return map[position] || map.right;
+  }, [position, sidebarTooltip]);
 
-    switch (position) {
-      case 'top': return "tooltip-arrow tooltip-arrow-bottom";
-      case 'bottom': return "tooltip-arrow tooltip-arrow-top";
-      case 'left': return "tooltip-arrow tooltip-arrow-left";
-      case 'right': return "tooltip-arrow tooltip-arrow-right";
-      default: return "tooltip-arrow tooltip-arrow-right";
-    }
-  };
+  const getArrowStyleClass = useCallback(
+    (key: string) =>
+      styles[key as keyof typeof styles] ||
+      styles[key.replace(/-([a-z])/g, (_, l) => l.toUpperCase()) as keyof typeof styles] ||
+      '',
+    []
+  );
 
-  const getArrowStyleClass = (arrowClass: string) => {
-    const styleKey = arrowClass.split(' ')[1];
-    // Handle both kebab-case and camelCase CSS module exports
-    return styles[styleKey as keyof typeof styles] ||
-      styles[styleKey.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase()) as keyof typeof styles] ||
-      '';
-  };
+  // === Trigger handlers ===
+  const openWithDelay = useCallback(() => {
+    clearTimers();
+    openTimeoutRef.current = setTimeout(() => setOpen(true), Math.max(0, delay || 0));
+  }, [clearTimers, setOpen, delay]);
 
-  // Always mount when open so we can measure; hide until positioned to avoid flash
+  const handlePointerEnter = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isPinned) openWithDelay();
+      (children.props as any)?.onPointerEnter?.(e);
+    },
+    [isPinned, openWithDelay, children.props]
+  );
+
+  const handlePointerLeave = useCallback(
+    (e: React.PointerEvent) => {
+      const related = e.relatedTarget as Node | null;
+
+      // Moving into the tooltip → keep open
+      if (related && tooltipRef.current && tooltipRef.current.contains(related)) {
+        (children.props as any)?.onPointerLeave?.(e);
+        return;
+      }
+
+      // Ignore transient leave between mousedown and click
+      if (clickPendingRef.current) {
+        (children.props as any)?.onPointerLeave?.(e);
+        return;
+      }
+
+      clearTimers();
+      if (!isPinned) setOpen(false);
+      (children.props as any)?.onPointerLeave?.(e);
+    },
+    [clearTimers, isPinned, setOpen, children.props]
+  );
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      clickPendingRef.current = true;
+      (children.props as any)?.onMouseDown?.(e);
+    },
+    [children.props]
+  );
+
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      // allow microtask turn so click can see this false
+      queueMicrotask(() => (clickPendingRef.current = false));
+      (children.props as any)?.onMouseUp?.(e);
+    },
+    [children.props]
+  );
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      clearTimers();
+      if (pinOnClick) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        if (!open) setOpen(true);
+        setIsPinned(true);
+        clickPendingRef.current = false;
+        return;
+      }
+      clickPendingRef.current = false;
+      (children.props as any)?.onClick?.(e);
+    },
+    [clearTimers, pinOnClick, open, setOpen, children.props]
+  );
+
+  // Keyboard / focus accessibility
+  const handleFocus = useCallback(
+    (e: React.FocusEvent) => {
+      if (!isPinned) openWithDelay();
+      (children.props as any)?.onFocus?.(e);
+    },
+    [isPinned, openWithDelay, children.props]
+  );
+
+  const handleBlur = useCallback(
+    (e: React.FocusEvent) => {
+      const related = e.relatedTarget as Node | null;
+      if (related && tooltipRef.current && tooltipRef.current.contains(related)) {
+        (children.props as any)?.onBlur?.(e);
+        return;
+      }
+      if (!isPinned) setOpen(false);
+      (children.props as any)?.onBlur?.(e);
+    },
+    [isPinned, setOpen, children.props]
+  );
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') setOpen(false);
+  }, [setOpen]);
+
+  // Keep open while pointer is over the tooltip; close when leaving it (if not pinned)
+  const handleTooltipPointerEnter = useCallback(() => {
+    clearTimers();
+  }, [clearTimers]);
+
+  const handleTooltipPointerLeave = useCallback(
+    (e: React.PointerEvent) => {
+      const related = e.relatedTarget as Node | null;
+      if (related && triggerRef.current && triggerRef.current.contains(related)) return;
+      if (!isPinned) setOpen(false);
+    },
+    [isPinned, setOpen]
+  );
+
+  // Enhance child with handlers and ref
+  const childWithHandlers = React.cloneElement(children as any, {
+    ref: (node: HTMLElement | null) => {
+      triggerRef.current = node || null;
+      const originalRef = (children as any).ref;
+      if (typeof originalRef === 'function') originalRef(node);
+      else if (originalRef && typeof originalRef === 'object') (originalRef as any).current = node;
+    },
+    'aria-describedby': open ? tooltipIdRef.current : undefined,
+    onPointerEnter: handlePointerEnter,
+    onPointerLeave: handlePointerLeave,
+    onMouseDown: handleMouseDown,
+    onMouseUp: handleMouseUp,
+    onClick: handleClick,
+    onFocus: handleFocus,
+    onBlur: handleBlur,
+    onKeyDown: handleKeyDown,
+  });
+
   const shouldShowTooltip = open;
 
   const tooltipElement = shouldShowTooltip ? (
     <div
+      id={tooltipIdRef.current}
       ref={tooltipRef}
+      role="tooltip"
+      tabIndex={-1}
+      onPointerEnter={handleTooltipPointerEnter}
+      onPointerLeave={handleTooltipPointerLeave}
       style={{
         position: 'fixed',
         top: coords.top,
         left: coords.left,
-        width: (maxWidth !== undefined ? maxWidth : (sidebarTooltip ? '25rem' : undefined)),
-        minWidth: minWidth,
+        width: maxWidth !== undefined ? maxWidth : (sidebarTooltip ? '25rem' as const : undefined),
+        minWidth,
         zIndex: 9999,
         visibility: positionReady ? 'visible' : 'hidden',
         opacity: positionReady ? 1 : 0,
@@ -160,7 +297,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         ...containerStyle,
       }}
       className={`${styles['tooltip-container']} ${isPinned ? styles.pinned : ''}`}
-      onClick={handleTooltipClick}
+      onClick={pinOnClick ? (e) => { e.stopPropagation(); setIsPinned(true); } : undefined}
     >
       {isPinned && (
         <button
@@ -168,97 +305,48 @@ export const Tooltip: React.FC<TooltipProps> = ({
           onClick={(e) => {
             e.stopPropagation();
             setIsPinned(false);
-            handleOpenChange(false);
+            setOpen(false);
           }}
           title="Close tooltip"
+          aria-label="Close tooltip"
         >
           <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
         </button>
       )}
-      {arrow && getArrowClass() && (
+      {arrow && !sidebarTooltip && (
         <div
-          className={`${styles['tooltip-arrow']} ${getArrowStyleClass(getArrowClass()!)}`}
-          style={coords.arrowOffset !== null ? {
-            [position === 'top' || position === 'bottom' ? 'left' : 'top']: coords.arrowOffset
-          } : undefined}
+          className={`${styles['tooltip-arrow']} ${getArrowStyleClass(arrowClass!)}`}
+          style={
+            coords.arrowOffset !== null
+              ? { [position === 'top' || position === 'bottom' ? 'left' : 'top']: coords.arrowOffset }
+              : undefined
+          }
         />
       )}
       {header && (
         <div className={styles['tooltip-header']}>
           <div className={styles['tooltip-logo']}>
-            {header.logo || <img src="/logo-tooltip.svg" alt="Stirling PDF" style={{ width: '1.4rem', height: '1.4rem', display: 'block' }} />}
+            {header.logo || (
+              <img
+                src="/logo-tooltip.svg"
+                alt="Stirling PDF"
+                style={{ width: '1.4rem', height: '1.4rem', display: 'block' }}
+              />
+            )}
           </div>
           <span className={styles['tooltip-title']}>{header.title}</span>
         </div>
       )}
-      <TooltipContent
-        content={content}
-        tips={tips}
-      />
+      <TooltipContent content={content} tips={tips} />
     </div>
   ) : null;
 
-  const handleMouseEnter = (e: React.MouseEvent) => {
-      clearTimers();
-    if (!isPinned) {
-      const effectiveDelay = Math.max(0, delay || 0);
-      openTimeoutRef.current = setTimeout(() => {
-        handleOpenChange(true);
-      }, effectiveDelay);
-    }
-
-    (children.props as any)?.onMouseEnter?.(e);
-  };
-
-  const handleMouseLeave = (e: React.MouseEvent) => {
-      clearTimers();
-      openTimeoutRef.current = null;
-
-    if (!isPinned) {
-      handleOpenChange(false);
-    }
-
-    (children.props as any)?.onMouseLeave?.(e);
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    // Toggle pin state on click
-    if (open) {
-      setIsPinned(!isPinned);
-    } else {
-      clearTimers();
-      handleOpenChange(true);
-      setIsPinned(true);
-    }
-
-    (children.props as any)?.onClick?.(e);
-  };
-
-  // Take the child element and add tooltip behavior to it
-  const childWithTooltipHandlers = React.cloneElement(children as any, {
-    // Keep track of the element for positioning
-    ref: (node: HTMLElement) => {
-      triggerRef.current = node;
-      // Don't break if the child already has a ref
-      const originalRef = (children as any).ref;
-      if (typeof originalRef === 'function') {
-        originalRef(node);
-      } else if (originalRef && typeof originalRef === 'object') {
-        originalRef.current = node;
-      }
-    },
-    // Add mouse events to show/hide tooltip
-    onMouseEnter: handleMouseEnter,
-    onMouseLeave: handleMouseLeave,
-    onClick: handleClick,
-  });
-
   return (
     <>
-      {childWithTooltipHandlers}
+      {childWithHandlers}
       {portalTarget && document.body.contains(portalTarget)
         ? tooltipElement && createPortal(tooltipElement, portalTarget)
         : tooltipElement}
     </>
   );
-}; 
+};
