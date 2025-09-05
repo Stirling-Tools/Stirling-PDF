@@ -44,7 +44,7 @@ public class ServerCertificateController {
         }
     }
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = "multipart/form-data")
     @Operation(
             summary = "Upload server certificate",
             description =

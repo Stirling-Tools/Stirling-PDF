@@ -39,7 +39,7 @@ import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous PDF APIs")
+@Tag(name = "Misc", description = "Miscellaneous APIs")
 @RequiredArgsConstructor
 @Slf4j
 public class ScannerEffectController {

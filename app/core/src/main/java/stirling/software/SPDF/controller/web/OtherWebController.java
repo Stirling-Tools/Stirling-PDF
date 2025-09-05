@@ -17,7 +17,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.CheckProgramInstall;
 
 // @Controller // Disabled - Backend-only mode, no Thymeleaf UI
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+// @Tag(name = "Misc", description = "Miscellaneous APIs") // Disabled - not a controller
 @RequiredArgsConstructor
 public class OtherWebController {
 

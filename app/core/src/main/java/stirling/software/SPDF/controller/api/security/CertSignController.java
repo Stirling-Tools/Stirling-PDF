@@ -141,10 +141,7 @@ public class CertSignController {
     }
 
     @AutoJobPostMapping(
-            consumes = {
-                MediaType.MULTIPART_FORM_DATA_VALUE,
-                MediaType.APPLICATION_FORM_URLENCODED_VALUE
-            },
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/cert-sign")
     @Operation(
             summary = "Sign PDF with a Digital Certificate",

@@ -58,12 +58,13 @@ public class RedactController {
 
     @AutoJobPostMapping(value = "/redact", consumes = "multipart/form-data")
     @Operation(
+            operationId = "redactPdfManual",
             summary = "Redacts areas and pages in a PDF document",
             description =
                     "This operation takes an input PDF file with a list of areas, page"
                             + " number(s)/range(s)/function(s) to redact. Input:PDF, Output:PDF,"
                             + " Type:SISO")
-    public ResponseEntity<byte[]> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
+    public ResponseEntity<byte[]> redactPdfManual(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         List<RedactionArea> redactionAreas = request.getRedactions();
@@ -192,6 +193,7 @@ public class RedactController {
 
     @AutoJobPostMapping(value = "/auto-redact", consumes = "multipart/form-data")
     @Operation(
+            operationId = "redactPdfAuto",
             summary = "Redacts listOfText in a PDF document",
             description =
                     "This operation takes an input PDF file and redacts the provided listOfText."
