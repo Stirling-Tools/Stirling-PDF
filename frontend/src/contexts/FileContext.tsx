@@ -19,7 +19,10 @@ import {
   FileContextStateValue,
   FileContextActionsValue,
   FileContextActions,
-  FileRecord
+  FileId,
+  StirlingFileStub,
+  StirlingFile,
+  createStirlingFile
 } from '../types/fileContext';
 
 // Import modular components
@@ -29,7 +32,6 @@ import { AddedFile, addFiles, consumeFiles, undoConsumeFiles, createFileActions 
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
-import { FileId } from '../types/file';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -37,7 +39,6 @@ const DEBUG = process.env.NODE_ENV === 'development';
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
   children,
-  enableUrlSync = true,
   enablePersistence = true
 }: FileContextProviderProps) {
   const [state, dispatch] = useReducer(fileContextReducer, initialFileContextState);
@@ -79,7 +80,7 @@ function FileContextInner({
   }
 
   // File operations using unified addFiles helper with persistence
-  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<File[]> => {
+  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
     const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
@@ -98,15 +99,15 @@ function FileContextInner({
       }));
     }
 
-    return addedFilesWithIds.map(({ file }) => file);
+    return addedFilesWithIds.map(({ file, id }) => createStirlingFile(file, id));
   }, [indexedDB, enablePersistence]);
 
-  const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<File[]> => {
+  const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<StirlingFile[]> => {
     const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch, lifecycleManager);
-    return result.map(({ file }) => file);
+    return result.map(({ file, id }) => createStirlingFile(file, id));
   }, []);
 
-  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<File[]> => {
+  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<StirlingFile[]> => {
     const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
@@ -114,7 +115,7 @@ function FileContextInner({
       selectFiles(result);
     }
 
-    return result.map(({ file }) => file);
+    return result.map(({ file, id }) => createStirlingFile(file, id));
   }, []);
 
   // Action creators
@@ -122,42 +123,21 @@ function FileContextInner({
 
   // Helper functions for pinned files
   const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<FileId[]> => {
-    return consumeFiles(inputFileIds, outputFiles, stateRef, filesRef, dispatch, indexedDB);
+    return consumeFiles(inputFileIds, outputFiles, filesRef, dispatch, indexedDB);
   }, [indexedDB]);
 
-  const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputFileRecords: FileRecord[], outputFileIds: FileId[]): Promise<void> => {
-    return undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds, stateRef, filesRef, dispatch, indexedDB);
+  const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]): Promise<void> => {
+    return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, filesRef, dispatch, indexedDB);
   }, [indexedDB]);
 
-  // Helper to find FileId from File object
-  const findFileId = useCallback((file: File): FileId | undefined => {
-    return (Object.keys(stateRef.current.files.byId) as FileId[]).find(id => {
-      const storedFile = filesRef.current.get(id);
-      return storedFile &&
-             storedFile.name === file.name &&
-             storedFile.size === file.size &&
-             storedFile.lastModified === file.lastModified;
-    });
-  }, []);
+  // File pinning functions - use StirlingFile directly
+  const pinFileWrapper = useCallback((file: StirlingFile) => {
+    baseActions.pinFile(file.fileId);
+  }, [baseActions]);
 
-  // File-to-ID wrapper functions for pinning
-  const pinFileWrapper = useCallback((file: File) => {
-    const fileId = findFileId(file);
-    if (fileId) {
-      baseActions.pinFile(fileId);
-    } else {
-      console.warn('File not found for pinning:', file.name);
-    }
-  }, [baseActions, findFileId]);
-
-  const unpinFileWrapper = useCallback((file: File) => {
-    const fileId = findFileId(file);
-    if (fileId) {
-      baseActions.unpinFile(fileId);
-    } else {
-      console.warn('File not found for unpinning:', file.name);
-    }
-  }, [baseActions, findFileId]);
+  const unpinFileWrapper = useCallback((file: StirlingFile) => {
+    baseActions.unpinFile(file.fileId);
+  }, [baseActions]);
 
   // Complete actions object
   const actions = useMemo<FileContextActions>(() => ({
@@ -178,8 +158,8 @@ function FileContextInner({
         }
       }
     },
-    updateFileRecord: (fileId: FileId, updates: Partial<FileRecord>) =>
-      lifecycleManager.updateFileRecord(fileId, updates, stateRef),
+    updateStirlingFileStub: (fileId: FileId, updates: Partial<StirlingFileStub>) =>
+      lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef),
     reorderFiles: (orderedFileIds: FileId[]) => {
       dispatch({ type: 'REORDER_FILES', payload: { orderedFileIds } });
     },
@@ -303,7 +283,7 @@ export {
   useFileSelection,
   useFileManagement,
   useFileUI,
-  useFileRecord,
+  useStirlingFileStub,
   useAllFiles,
   useSelectedFiles,
   // Primary API hooks for tools

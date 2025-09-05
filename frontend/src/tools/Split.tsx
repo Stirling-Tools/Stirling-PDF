@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import SplitSettings from "../components/tools/split/SplitSettings";

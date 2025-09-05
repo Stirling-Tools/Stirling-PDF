@@ -1,13 +1,7 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import {
-  Button, Text, Center, Box,
-  Notification, TextInput, LoadingOverlay, Modal, Alert,
-  Stack, Group, Portal
-} from "@mantine/core";
-import { useTranslation } from "react-i18next";
-import { useFileState, useFileActions, useCurrentFile, useFileSelection } from "../../contexts/FileContext";
-import { PDFDocument, PDFPage, PageEditorFunctions } from "../../types/pageEditor";
-import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
+import { useFileState, useFileActions } from "../../contexts/FileContext";
+import { PDFDocument, PageEditorFunctions } from "../../types/pageEditor";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
 // Thumbnail generation is now handled by individual PageThumbnail components
@@ -19,16 +13,11 @@ import NavigationWarningModal from '../shared/NavigationWarningModal';
 import { FileId } from "../../types/file";
 
 import {
-  DOMCommand,
-  RotatePageCommand,
   DeletePagesCommand,
   ReorderPagesCommand,
   SplitCommand,
   BulkRotateCommand,
-  BulkSplitCommand,
-  SplitAllCommand,
   PageBreakCommand,
-  BulkPageBreakCommand,
   UndoManager
 } from './commands/pageCommands';
 import { GRID_CONSTANTS } from './constants';
@@ -49,35 +38,24 @@ const PageEditor = ({
 
   // Prefer IDs + selectors to avoid array identity churn
   const activeFileIds = state.files.ids;
-  const primaryFileId = activeFileIds[0] ?? null;
-  const selectedFiles = selectors.getSelectedFiles();
-
-  // Stable signature for effects (prevents loops)
-  const filesSignature = selectors.getFilesSignature();
 
   // UI state
   const globalProcessing = state.ui.isProcessing;
-  const processingProgress = state.ui.processingProgress;
-  const hasUnsavedChanges = state.ui.hasUnsavedChanges;
 
   // Edit state management
   const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(null);
-  const [hasUnsavedDraft, setHasUnsavedDraft] = useState(false);
-  const [showResumeModal, setShowResumeModal] = useState(false);
-  const [foundDraft, setFoundDraft] = useState<any>(null);
-  const autoSaveTimer = useRef<number | null>(null);
 
   // DOM-first undo manager (replaces the old React state undo system)
   const undoManagerRef = useRef(new UndoManager());
 
   // Document state management
-  const { document: mergedPdfDocument, isVeryLargeDocument, isLoading: documentLoading } = usePageDocument();
+  const { document: mergedPdfDocument } = usePageDocument();
 
 
   // UI state management
   const {
     selectionMode, selectedPageIds, movingPage, isAnimating, splitPositions, exportLoading,
-    setSelectionMode, setSelectedPageIds, setMovingPage, setIsAnimating, setSplitPositions, setExportLoading,
+    setSelectionMode, setSelectedPageIds, setMovingPage, setSplitPositions, setExportLoading,
     togglePage, toggleSelectAll, animateReorder
   } = usePageEditorState();
 
@@ -145,12 +123,6 @@ const PageEditor = ({
       return page?.id || '';
     }).filter(id => id !== '');
   }, [displayDocument]);
-
-  // Convert selectedPageIds to numbers for components that still need numbers
-  const selectedPageNumbers = useMemo(() =>
-    getPageNumbersFromIds(selectedPageIds),
-    [selectedPageIds, getPageNumbersFromIds]
-  );
 
   // Select all pages by default when document initially loads
   const hasInitializedSelection = useRef(false);

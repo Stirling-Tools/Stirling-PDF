@@ -72,7 +72,7 @@ public class ServerCertificateController {
             return ResponseEntity.ok("Server certificate uploaded successfully");
         } catch (IllegalArgumentException e) {
             log.warn("Invalid certificate upload: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid certificate or password.");
         } catch (Exception e) {
             log.error("Failed to upload server certificate", e);
             return ResponseEntity.internalServerError().body("Failed to upload server certificate");
