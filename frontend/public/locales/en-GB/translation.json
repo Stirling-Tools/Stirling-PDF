@@ -1469,6 +1469,7 @@
     "tags": "auto-detect,header-based,organize,relabel",
     "title": "Auto Rename",
     "header": "Auto Rename PDF",
+    "description": "Automatically finds the best title from your PDF content and uses it as the filename.",
     "submit": "Auto Rename",
     "files": {
       "placeholder": "Select a PDF file in the main view to get started"
