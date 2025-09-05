@@ -15,7 +15,6 @@ export default defineConfig(
   },
   {
     rules: {
-      "no-empty-pattern": "off", // Temporarily disabled until codebase conformant
       "no-undef": "off", // Temporarily disabled until codebase conformant
       "no-case-declarations": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-empty-object-type": "off", // Temporarily disabled until codebase conformant
