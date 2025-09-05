@@ -753,7 +753,7 @@ public class KeygenLicenseVerifier {
 
         HttpResponse<String> response =
                 httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        log.info("activateMachine Response body: " + response.body());
+        log.info("activateMachine Response body: {}", response.body());
         if (response.statusCode() == 201) {
             log.info("Machine activated successfully");
             return true;

@@ -220,9 +220,7 @@ public class LoadingWindow extends JDialog {
                                                                             if (!existingPids
                                                                                     .contains(
                                                                                             pid)) {
-                                                                                log.debug(
-                                                                                        "Found new explorer.exe with PID: "
-                                                                                                + pid);
+                                                                                log.debug("Found new explorer.exe with PID: {}", pid);
                                                                                 ProcessBuilder
                                                                                         killProcess =
                                                                                                 new ProcessBuilder(
@@ -240,9 +238,7 @@ public class LoadingWindow extends JDialog {
                                                                                         2,
                                                                                         TimeUnit
                                                                                                 .SECONDS);
-                                                                                log.debug(
-                                                                                        "Explorer process terminated: "
-                                                                                                + pid);
+                                                                                log.debug("Explorer process terminated: {}", pid);
                                                                             }
                                                                         }
                                                                     }
@@ -313,7 +309,7 @@ public class LoadingWindow extends JDialog {
                         mainPanel.revalidate();
                         mainPanel.repaint();
                     } catch (Exception e) {
-                        log.error("Error updating progress to " + progress, e);
+                        log.error("Error updating progress to {}", progress, e);
                     }
                 });
     }
@@ -338,7 +334,7 @@ public class LoadingWindow extends JDialog {
                         mainPanel.revalidate();
                         mainPanel.repaint();
                     } catch (Exception e) {
-                        log.error("Error updating status to: " + status, e);
+                        log.error("Error updating status to: {}", status, e);
                     }
                 });
     }
