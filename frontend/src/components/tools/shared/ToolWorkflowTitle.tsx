@@ -5,6 +5,7 @@ import { Tooltip } from '../../shared/Tooltip';
 
 export interface ToolWorkflowTitleProps {
   title: string;
+  description?: string;
   tooltip?: {
     content?: React.ReactNode;
     tips?: any[];
@@ -15,10 +16,19 @@ export interface ToolWorkflowTitleProps {
   };
 }
 
-export function ToolWorkflowTitle({ title, tooltip }: ToolWorkflowTitleProps) {
-  if (tooltip) {
-    return (
-      <>
+export function ToolWorkflowTitle({ title, tooltip, description }: ToolWorkflowTitleProps) {
+  const titleContent = (
+    <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
+      <Text fw={500} size="lg" p="xs">
+        {title}
+      </Text>
+      {tooltip && <LocalIcon icon="gpp-maybe-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />}
+    </Flex>
+  );
+
+  return (
+    <>
+      {tooltip ? (
         <Flex justify="center" w="100%">
           <Tooltip
             content={tooltip.content}
@@ -26,27 +36,17 @@ export function ToolWorkflowTitle({ title, tooltip }: ToolWorkflowTitleProps) {
             header={tooltip.header}
             sidebarTooltip={true}
           >
-            <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
-              <Text fw={500} size="xl" p="md">
-                {title}
-              </Text>
-              <LocalIcon icon="gpp-maybe-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />
-            </Flex>
+            {titleContent}
           </Tooltip>
         </Flex>
-        <Divider />
-      </>
-    );
-  }
+      ) : (
+        titleContent
+      )}
 
-  return (
-    <>
-      <Flex justify="center" w="100%">
-        <Text fw={500} size="xl" p="md">
-          {title}
-        </Text>
-      </Flex>
-      <Divider />
+      <Text size="sm" mb="md" p="sm" style={{borderRadius:'var(--mantine-radius-md)', background: 'var(--color-gray-200)', color: 'var(--mantine-color-text)' }}>
+        {description}
+      </Text>
+      <Divider mb="sm" />
     </>
   );
 }

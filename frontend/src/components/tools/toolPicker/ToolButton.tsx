@@ -12,9 +12,10 @@ interface ToolButtonProps {
   isSelected: boolean;
   onSelect: (id: string) => void;
   rounded?: boolean;
+  disableNavigation?: boolean;
 }
 
-const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect }) => {
+const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false }) => {
   const isUnavailable = !tool.component && !tool.link;
   const { getToolNavigation } = useToolNavigation();
 
@@ -29,8 +30,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect 
     onSelect(id);
   };
 
-  // Get navigation props for URL support
-  const navProps = !isUnavailable && !tool.link ? getToolNavigation(id, tool) : null;
+  // Get navigation props for URL support (only if navigation is not disabled)
+  const navProps = !isUnavailable && !tool.link && !disableNavigation ? getToolNavigation(id, tool) : null;
 
   const tooltipContent = isUnavailable
     ? (<span><strong>Coming soon:</strong> {tool.description}</span>)

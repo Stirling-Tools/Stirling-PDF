@@ -25,7 +25,8 @@ export type ModeType =
   | 'single-large-page'
   | 'repair'
   | 'unlockPdfForms'
-  | 'removeCertificateSign';
+  | 'removeCertificateSign'
+  | 'auto-rename-pdf-file';
 
 // Normalized state types
 export interface ProcessedFilePage {

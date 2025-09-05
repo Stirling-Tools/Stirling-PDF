@@ -8,6 +8,7 @@ export interface ApiCallsConfig<TParams = void> {
   buildFormData: (params: TParams, file: File) => FormData;
   filePrefix: string;
   responseHandler?: ResponseHandler;
+  preserveBackendFilename?: boolean;
 }
 
 export const useToolApiCalls = <TParams = void>() => {
@@ -46,7 +47,8 @@ export const useToolApiCalls = <TParams = void>() => {
           response.data,
           [file],
           config.filePrefix,
-          config.responseHandler
+          config.responseHandler,
+          config.preserveBackendFilename ? response.headers : undefined
         );
         processedFiles.push(...responseFiles);
 
