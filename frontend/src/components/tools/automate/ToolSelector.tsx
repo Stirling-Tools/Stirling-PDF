@@ -93,7 +93,7 @@ export default function ToolSelector({
 
   const renderedTools = useMemo(() =>
     displayGroups.map((subcategory) =>
-      renderToolButtons(t, subcategory, null, handleToolSelect, !isSearching)
+      renderToolButtons(t, subcategory, null, handleToolSelect, !isSearching, true)
     ), [displayGroups, handleToolSelect, isSearching, t]
   );
 
@@ -150,7 +150,7 @@ export default function ToolSelector({
           <div onClick={handleSearchFocus} style={{ cursor: 'pointer',
            borderRadius: "var(--mantine-radius-lg)" }}>
             <ToolButton id='tool' tool={toolRegistry[selectedValue]}  isSelected={false}
-          onSelect={()=>{}} rounded={true}></ToolButton>
+          onSelect={()=>{}} rounded={true} disableNavigation={true}></ToolButton>
           </div>
         ) : (
           // Show search input when no tool selected OR when dropdown is opened
