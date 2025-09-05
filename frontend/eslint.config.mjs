@@ -15,13 +15,7 @@ export default defineConfig(
   },
   {
     rules: {
-      "no-empty": "off", // Temporarily disabled until codebase conformant
-      "no-empty-pattern": "off", // Temporarily disabled until codebase conformant
       "no-undef": "off", // Temporarily disabled until codebase conformant
-      "no-useless-escape": "off", // Temporarily disabled until codebase conformant
-      "no-case-declarations": "off", // Temporarily disabled until codebase conformant
-      "prefer-const": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/ban-ts-comment": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-empty-object-type": [
         "error",
         {
@@ -31,7 +25,6 @@ export default defineConfig(
       ],
       "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-require-imports": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/no-unused-expressions": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-unused-vars": "off", // Temporarily disabled until codebase conformant
     },
   }
