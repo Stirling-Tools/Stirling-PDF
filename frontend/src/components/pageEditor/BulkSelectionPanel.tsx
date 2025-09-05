@@ -11,7 +11,7 @@ import {
   lastNExpression,
   everyNthExpression,
   rangeExpression,
-} from './BulkSelectionPanel';
+} from './BulkSelection';
 
 interface BulkSelectionPanelProps {
   csvInput: string;
