@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import stirling.software.common.util.GeneralUtils;
+
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -17,6 +19,11 @@ public class PDFFile {
             contentMediaType = "application/pdf",
             format = "binary")
     private MultipartFile fileInput;
+
+    public MultipartFile getFileInput() {
+        GeneralUtils.checkMaxUploadSize(fileInput);
+        return fileInput;
+    }
 
     @Schema(
             description = "File ID for server-side files (can be used instead of fileInput)",

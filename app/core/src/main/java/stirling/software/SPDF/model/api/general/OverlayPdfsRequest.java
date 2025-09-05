@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.util.GeneralUtils;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -19,6 +20,15 @@ public class OverlayPdfsRequest extends PDFFile {
                             + " these files is applied based on the selected mode.",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] overlayFiles;
+
+    public MultipartFile[] getOverlayFiles() {
+        if (overlayFiles != null) {
+            for (MultipartFile file : overlayFiles) {
+                GeneralUtils.checkMaxUploadSize(file);
+            }
+        }
+        return overlayFiles;
+    }
 
     @Schema(
             description =

@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import stirling.software.common.util.GeneralUtils;
+
 @Data
 @EqualsAndHashCode
 public class ConvertToPdfRequest {
@@ -15,6 +17,15 @@ public class ConvertToPdfRequest {
             description = "The input images to be converted to a PDF file",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] fileInput;
+
+    public MultipartFile[] getFileInput() {
+        if (fileInput != null) {
+            for (MultipartFile file : fileInput) {
+                GeneralUtils.checkMaxUploadSize(file);
+            }
+        }
+        return fileInput;
+    }
 
     @Schema(
             description = "Option to determine how the image will fit onto the page",

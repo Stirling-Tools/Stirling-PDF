@@ -1,20 +1,21 @@
-package stirling.software.SPDF.controller.web;
+package stirling.software.common.service;
 
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 
 @Service
+@AllArgsConstructor
 @Slf4j
 public class UploadLimitService {
 
-    @Autowired private ApplicationProperties applicationProperties;
+    private ApplicationProperties applicationProperties;
 
     public long getUploadLimit() {
         String maxUploadSize =
@@ -28,7 +29,8 @@ public class UploadLimitService {
                 .matcher(maxUploadSize)
                 .matches()) {
             log.error(
-                    "Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb], but got: {}",
+                    "Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb],"
+                            + " but got: {}",
                     maxUploadSize);
             return 0;
         } else {
@@ -44,7 +46,6 @@ public class UploadLimitService {
         }
     }
 
-    // TODO: why do this server side not client?
     public String getReadableUploadLimit() {
         return humanReadableByteCount(getUploadLimit());
     }

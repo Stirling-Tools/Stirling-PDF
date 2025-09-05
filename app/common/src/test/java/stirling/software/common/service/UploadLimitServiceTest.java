@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.web;
+package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -25,15 +25,7 @@ class UploadLimitServiceTest {
         systemProps = mock(ApplicationProperties.System.class);
         when(applicationProperties.getSystem()).thenReturn(systemProps);
 
-        uploadLimitService = new UploadLimitService();
-        // inject mock
-        try {
-            var field = UploadLimitService.class.getDeclaredField("applicationProperties");
-            field.setAccessible(true);
-            field.set(uploadLimitService, applicationProperties);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
+        uploadLimitService = new UploadLimitService(applicationProperties);
     }
 
     @ParameterizedTest(name = "getUploadLimit case #{index}: input={0}, expected={1}")
