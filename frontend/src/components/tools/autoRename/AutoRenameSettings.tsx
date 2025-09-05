@@ -8,11 +8,8 @@ interface AutoRenameSettingsProps {
   disabled?: boolean;
 }
 
-const AutoRenameSettings: React.FC<AutoRenameSettingsProps> = ({ 
-  parameters, 
-  onParameterChange, // Used for parameter changes
-  disabled = false 
-}) => {
+const AutoRenameSettings: React.FC<AutoRenameSettingsProps> = (
+  ) => {
   const { t } = useTranslation();
 
   return (

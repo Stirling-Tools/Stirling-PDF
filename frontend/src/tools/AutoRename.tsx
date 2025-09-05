@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { BaseToolProps } from "../types/tool";
 
 import { useAutoRenameParameters } from "../hooks/tools/autoRename/useAutoRenameParameters";
 import { useAutoRenameOperation } from "../hooks/tools/autoRename/useAutoRenameOperation";

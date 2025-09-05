@@ -2,7 +2,6 @@ import axios from 'axios';
 import { ToolRegistry } from '../data/toolsTaxonomy';
 import { AUTOMATION_CONSTANTS } from '../constants/automation';
 import { AutomationFileProcessor } from './automationFileProcessor';
-import { ResourceManager } from './resourceManager';
 import { ToolType } from '../hooks/tools/shared/useToolOperation';
 import { processResponse } from './toolResponseProcessor';
 

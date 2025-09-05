@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, ScrollArea } from '@mantine/core';
 import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
