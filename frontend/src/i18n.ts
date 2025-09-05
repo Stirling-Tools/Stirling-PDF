@@ -59,6 +59,7 @@ i18n
   .init({
     fallbackLng: 'en-GB',
     supportedLngs: Object.keys(supportedLanguages),
+    load: 'currentOnly',
     nonExplicitSupportedLngs: false,
     debug: process.env.NODE_ENV === 'development',
 
