@@ -347,9 +347,9 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
 
       const malformedFiles: Array<{name: string}> = [
         { name: 'valid.pdf' },
-        // @ts-ignore - Testing runtime resilience
+        // @ts-expect-error - Testing runtime resilience
         { name: null },
-        // @ts-ignore
+        // @ts-expect-error - Testing runtime resilience
         { name: undefined }
       ];
 
