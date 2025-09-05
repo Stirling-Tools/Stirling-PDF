@@ -6,8 +6,6 @@
   "proxy": "http://localhost:8080",
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.4",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
     "@iconify/react": "^6.0.0",
     "@mantine/core": "^8.0.1",
     "@mantine/dropzone": "^8.0.1",
@@ -19,7 +17,6 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^13.5.0",
     "autoprefixer": "^10.4.21",
     "axios": "^1.9.0",
     "i18next": "^25.2.1",
@@ -33,8 +30,7 @@
     "react-dom": "^19.1.0",
     "react-i18next": "^15.5.2",
     "react-router-dom": "^7.6.0",
-    "tailwindcss": "^4.1.8",
-    "web-vitals": "^2.1.4"
+    "tailwindcss": "^4.1.8"
   },
   "scripts": {
     "predev": "npm run generate-icons",
@@ -87,11 +83,7 @@
     "jsdom": "^23.0.0",
     "knip": "^5.63.1",
     "license-checker": "^25.0.1",
-    "madge": "^8.0.0",
     "postcss": "^8.5.3",
-    "postcss-cli": "^11.0.1",
-    "postcss-preset-mantine": "^1.17.0",
-    "postcss-simple-vars": "^7.0.1",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.42.0",
     "vite": "^6.3.5",
