@@ -6,10 +6,8 @@ import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { createOperation } from '../../../utils/toolOperationTracker';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
-import { FileId } from '../../../types/file';
-import { FileRecord } from '../../../types/fileContext';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -104,7 +102,7 @@ export interface ToolOperationHook<TParams = void> {
   progress: ProcessingProgress | null;
 
   // Actions
-  executeOperation: (params: TParams, selectedFiles: File[]) => Promise<void>;
+  executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
   resetResults: () => void;
   clearError: () => void;
   cancelOperation: () => void;
@@ -130,7 +128,7 @@ export const useToolOperation = <TParams>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, undoConsumeFiles, findFileId, actions: fileActions, selectors } = useFileContext();
+  const { addFiles, consumeFiles, undoConsumeFiles, actions: fileActions, selectors } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -140,13 +138,13 @@ export const useToolOperation = <TParams>(
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
     inputFiles: File[];
-    inputFileRecords: FileRecord[];
+    inputStirlingFileStubs: StirlingFileStub[];
     outputFileIds: FileId[];
   } | null>(null);
 
   const executeOperation = useCallback(async (
     params: TParams,
-    selectedFiles: File[]
+    selectedFiles: StirlingFile[]
   ): Promise<void> => {
     // Validation
     if (selectedFiles.length === 0) {
@@ -160,9 +158,6 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    // Setup operation tracking
-    const { operation, operationId, fileId } = createOperation(config.operationType, params, selectedFiles);
-    recordOperation(fileId, operation);
 
     // Reset state
     actions.setLoading(true);
@@ -173,8 +168,11 @@ export const useToolOperation = <TParams>(
     try {
       let processedFiles: File[];
 
+      // Convert StirlingFile to regular File objects for API processing
+      const validRegularFiles = extractFiles(validFiles);
+
       switch (config.toolType) {
-        case ToolType.singleFile:
+        case ToolType.singleFile: {
           // Individual file processing - separate API call per file
           const apiCallsConfig: ApiCallsConfig<TParams> = {
             endpoint: config.endpoint,
@@ -184,17 +182,18 @@ export const useToolOperation = <TParams>(
           };
           processedFiles = await processFiles(
             params,
-            validFiles,
+            validRegularFiles,
             apiCallsConfig,
             actions.setProgress,
             actions.setStatus
           );
           break;
+        }
 
-        case ToolType.multiFile:
+        case ToolType.multiFile: {
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');
-          const formData = config.buildFormData(params, validFiles);
+          const formData = config.buildFormData(params, validRegularFiles);
           const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
 
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
@@ -202,11 +201,11 @@ export const useToolOperation = <TParams>(
           // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
           if (config.responseHandler) {
             // Use custom responseHandler for multi-file (handles ZIP extraction)
-            processedFiles = await config.responseHandler(response.data, validFiles);
+            processedFiles = await config.responseHandler(response.data, validRegularFiles);
           } else if (response.data.type === 'application/pdf' ||
-                     (response.headers && response.headers['content-type'] === 'application/pdf')) {
+                    (response.headers && response.headers['content-type'] === 'application/pdf')) {
             // Single PDF response (e.g. split with merge option) - use original filename
-            const originalFileName = validFiles[0]?.name || 'document.pdf';
+            const originalFileName = validRegularFiles[0]?.name || 'document.pdf';
             const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
             processedFiles = [singleFile];
           } else {
@@ -219,10 +218,11 @@ export const useToolOperation = <TParams>(
             }
           }
           break;
+        }
 
         case ToolType.custom:
           actions.setStatus('Processing files...');
-          processedFiles = await config.customProcessor(params, validFiles);
+          processedFiles = await config.customProcessor(params, validRegularFiles);
           break;
       }
 
@@ -242,46 +242,40 @@ export const useToolOperation = <TParams>(
 
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
-        const inputFileRecords: FileRecord[] = [];
+        const inputStirlingFileStubs: StirlingFileStub[] = [];
         
         // Build parallel arrays of IDs and records for undo tracking
         for (const file of validFiles) {
-          const fileId = findFileId(file);
-          if (fileId) {
-            const record = selectors.getFileRecord(fileId);
-            if (record) {
-              inputFileIds.push(fileId);
-              inputFileRecords.push(record);
-            } else {
-              console.warn(`No file record found for file: ${file.name}`);
-            }
+          const fileId = file.fileId;
+          const record = selectors.getStirlingFileStub(fileId);
+          if (record) {
+            inputFileIds.push(fileId);
+            inputStirlingFileStubs.push(record);
           } else {
-            console.warn(`No file ID found for file: ${file.name}`);
+            console.warn(`No file stub found for file: ${file.name}`);
           }
         }
-        
+
         const outputFileIds = await consumeFiles(inputFileIds, processedFiles);
-        
+
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
-          inputFiles: validFiles, // Keep original File objects for undo
-          inputFileRecords: inputFileRecords.map(record => ({ ...record })), // Deep copy to avoid reference issues
+          inputFiles: extractFiles(validFiles), // Convert to File objects for undo
+          inputStirlingFileStubs: inputStirlingFileStubs.map(record => ({ ...record })), // Deep copy to avoid reference issues
           outputFileIds
         };
 
-        markOperationApplied(fileId, operationId);
       }
 
     } catch (error: any) {
       const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
       actions.setError(errorMessage);
       actions.setStatus('');
-      markOperationFailed(fileId, operationId, errorMessage);
     } finally {
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, findFileId, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
+  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();
@@ -310,10 +304,10 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    const { inputFiles, inputFileRecords, outputFileIds } = lastOperationRef.current;
+    const { inputFiles, inputStirlingFileStubs, outputFileIds } = lastOperationRef.current;
 
     // Validate that we have data to undo
-    if (inputFiles.length === 0 || inputFileRecords.length === 0) {
+    if (inputFiles.length === 0 || inputStirlingFileStubs.length === 0) {
       actions.setError(t('invalidUndoData', 'Cannot undo: invalid operation data'));
       return;
     }
@@ -325,18 +319,19 @@ export const useToolOperation = <TParams>(
 
     try {
       // Undo the consume operation
-      await undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds);
+      await undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds);
       
+
       // Clear results and operation tracking
       resetResults();
       lastOperationRef.current = null;
-      
+
       // Show success message
       actions.setStatus(t('undoSuccess', 'Operation undone successfully'));
-      
+
     } catch (error: any) {
       let errorMessage = extractErrorMessage(error);
-      
+
       // Provide more specific error messages based on error type
       if (error.message?.includes('Mismatch between input files')) {
         errorMessage = t('undoDataMismatch', 'Cannot undo: operation data is corrupted');
@@ -345,9 +340,9 @@ export const useToolOperation = <TParams>(
       } else if (error.name === 'QuotaExceededError') {
         errorMessage = t('undoQuotaError', 'Cannot undo: insufficient storage space');
       }
-      
+
       actions.setError(`${t('undoFailed', 'Failed to undo operation')}: ${errorMessage}`);
-      
+
       // Don't clear the operation data if undo failed - user might want to try again
     }
   }, [undoConsumeFiles, resetResults, actions, t]);

@@ -126,7 +126,7 @@ const ToolSearch = ({
                 key={id}
                 variant="subtle"
                 onClick={() => {
-                  onToolSelect && onToolSelect(id);
+                  onToolSelect?.(id);
                   setDropdownOpen(false);
                 }}
                 leftSection={<div style={{ color: "var(--tools-text-and-icon-color)" }}>{tool.icon}</div>}
