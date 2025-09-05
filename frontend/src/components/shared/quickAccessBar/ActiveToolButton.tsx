@@ -16,6 +16,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActionIcon } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
+import { useSidebarNavigation } from '../../../hooks/useSidebarNavigation';
+import { handleUnlessSpecialClick } from '../../../utils/clickHandlers';
 import FitText from '../FitText';
 import { Tooltip } from '../Tooltip';
 
@@ -28,6 +30,7 @@ const NAV_IDS = ['read', 'sign', 'automate'];
 
 const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
+  const { getHomeNavigation } = useSidebarNavigation();
 
   // Determine if the indicator should be visible (do not require selectedTool to be resolved yet)
   const indicatorShouldShow = Boolean(
@@ -135,21 +138,26 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
             <div className="flex flex-col items-center gap-1">
               <Tooltip content={isBackHover ? 'Back to all tools' : indicatorTool.name} position="right" arrow maxWidth={140}>
                 <ActionIcon
+                  component="a"
+                  href={getHomeNavigation().href}
+                  onClick={(e: React.MouseEvent) => {
+                    handleUnlessSpecialClick(e, () => {
+                      setActiveButton('tools');
+                      handleBackToTools();
+                    });
+                  }}
                   size={'xl'}
                   variant="subtle"
                   onMouseEnter={() => setIsBackHover(true)}
                   onMouseLeave={() => setIsBackHover(false)}
-                  onClick={() => {
-                    setActiveButton('tools');
-                    handleBackToTools();
-                  }}
                   aria-label={isBackHover ? 'Back to all tools' : indicatorTool.name}
                   style={{
                     backgroundColor: isBackHover ? 'var(--color-gray-300)' : 'var(--icon-tools-bg)',
                     color: isBackHover ? '#fff' : 'var(--icon-tools-color)',
                     border: 'none',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    textDecoration: 'none'
                   }}
                 >
                   <span className="iconContainer">

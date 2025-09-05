@@ -6,6 +6,8 @@ import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import { useIsOverflowing } from '../../hooks/useIsOverflowing';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
+import { useSidebarNavigation } from '../../hooks/useSidebarNavigation';
+import { handleUnlessSpecialClick } from '../../utils/clickHandlers';
 import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
@@ -21,6 +23,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
+  const { getToolNavigation } = useSidebarNavigation();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -33,6 +36,52 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
   const handleFilesButtonClick = () => {
     openFilesModal();
+  };
+
+  // Helper function to render navigation buttons with URL support
+  const renderNavButton = (config: ButtonConfig, index: number) => {
+    const isActive = isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
+    
+    // Check if this button has URL navigation support
+    const navProps = config.type === 'navigation' && (config.id === 'read' || config.id === 'automate') 
+      ? getToolNavigation(config.id) 
+      : null;
+
+    const handleClick = (e?: React.MouseEvent) => {
+      if (navProps && e) {
+        handleUnlessSpecialClick(e, config.onClick);
+      } else {
+        config.onClick();
+      }
+    };
+
+    // Render navigation button with conditional URL support
+    return (
+      <div key={config.id} className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
+        <ActionIcon
+          {...(navProps ? { 
+            component: "a" as const,
+            href: navProps.href,
+            onClick: (e: React.MouseEvent) => handleClick(e),
+            'aria-label': config.name
+          } : {
+            onClick: () => handleClick()
+          })}
+          size={isActive ? (config.size || 'lg') : 'lg'}
+          variant="subtle"
+          style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
+          className={isActive ? 'activeIconScale' : ''}
+          data-testid={`${config.id}-button`}
+        >
+          <span className="iconContainer">
+            {config.icon}
+          </span>
+        </ActionIcon>
+        <span className={`button-text ${isActive ? 'active' : 'inactive'}`}>
+          {config.name}
+        </span>
+      </div>
+    );
   };
 
 
@@ -151,27 +200,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           <Stack gap="lg" align="center">
             {buttonConfigs.slice(0, -1).map((config, index) => (
               <React.Fragment key={config.id}>
-
-                  <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
-                    <ActionIcon
-                      size={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? (config.size || 'lg') : 'lg'}
-                      variant="subtle"
-                       onClick={() => {
-                         config.onClick();
-                       }}
-                      style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
-                      className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'activeIconScale' : ''}
-                      data-testid={`${config.id}-button`}
-                    >
-                      <span className="iconContainer">
-                        {config.icon}
-                      </span>
-                    </ActionIcon>
-                    <span className={`button-text ${isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'active' : 'inactive'}`}>
-                      {config.name}
-                    </span>
-                  </div>
-
+                {renderNavButton(config, index)}
 
                 {/* Add divider after Automate button (index 1) and Files button (index 2) */}
                 {index === 1 && (
