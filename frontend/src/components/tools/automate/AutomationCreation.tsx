@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import CheckIcon from '@mui/icons-material/Check';
 import { ToolRegistry } from '../../../data/toolsTaxonomy';
-import ToolConfigurationModal from './ToolConfigurationModal';
+import EnhancedToolConfigurationModal from './EnhancedToolConfigurationModal';
 import ToolList from './ToolList';
 import IconSelector from './IconSelector';
 import { AutomationConfig, AutomationMode, AutomationTool } from '../../../types/automation';
@@ -216,7 +216,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
       {/* Tool Configuration Modal */}
       {currentConfigTool && (
-        <ToolConfigurationModal
+        <EnhancedToolConfigurationModal
           opened={configModalOpen}
           tool={currentConfigTool}
           onSave={handleToolConfigSave}

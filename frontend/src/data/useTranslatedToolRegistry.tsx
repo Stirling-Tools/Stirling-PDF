@@ -9,37 +9,31 @@ import Sanitize from "../tools/Sanitize";
 import AddPassword from "../tools/AddPassword";
 import ChangePermissions from "../tools/ChangePermissions";
 import RemovePassword from "../tools/RemovePassword";
-import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
+import { SubcategoryId, ToolCategoryId, ToolRegistry, ToolRegistryEntry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
 import Repair from "../tools/Repair";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
-import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
-import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
+// Tool definitions
+import { compressDefinition } from "../tools/definitions/compressDefinition";
+import { splitDefinition } from "../tools/definitions/splitDefinition";
+import { addWatermarkDefinition } from "../tools/definitions/addWatermarkDefinition";
+import { repairDefinition } from "../tools/definitions/repairDefinition";
+import { sanitizeDefinition } from "../tools/definitions/sanitizeDefinition";
+import { removePasswordDefinition } from "../tools/definitions/removePasswordDefinition";
+import { unlockPdfFormsDefinition } from "../tools/definitions/unlockPdfFormsDefinition";
+import { singleLargePageDefinition } from "../tools/definitions/singleLargePageDefinition";
+import { removeCertificateSignDefinition } from "../tools/definitions/removeCertificateSignDefinition";
+import { changePermissionsDefinition } from "../tools/definitions/changePermissionsDefinition";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
-import { removePasswordOperationConfig } from "../hooks/tools/removePassword/useRemovePasswordOperation";
-import { sanitizeOperationConfig } from "../hooks/tools/sanitize/useSanitizeOperation";
-import { repairOperationConfig } from "../hooks/tools/repair/useRepairOperation";
-import { addWatermarkOperationConfig } from "../hooks/tools/addWatermark/useAddWatermarkOperation";
-import { unlockPdfFormsOperationConfig } from "../hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
-import { singleLargePageOperationConfig } from "../hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperation";
-import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
-import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
-import CompressSettings from "../components/tools/compress/CompressSettings";
-import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
-import RemovePasswordSettings from "../components/tools/removePassword/RemovePasswordSettings";
-import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
-import RepairSettings from "../components/tools/repair/RepairSettings";
-import UnlockPdfFormsSettings from "../components/tools/unlockPdfForms/UnlockPdfFormsSettings";
-import AddWatermarkSingleStepSettings from "../components/tools/addWatermark/AddWatermarkSingleStepSettings";
 import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
-import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 import { ToolId } from "../types/toolId";
+import { ToolDefinition } from "../components/tools/shared/toolDefinition";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -167,13 +161,12 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="branding-watermark-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.watermark.title", "Add Watermark"),
         component: AddWatermark,
+        definition: addWatermarkDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         maxFiles: -1,
         description: t("home.watermark.desc", "Add a custom watermark to your PDF document."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
         endpoints: ["add-watermark"],
-        operationConfig: addWatermarkOperationConfig,
-        settingsComponent: AddWatermarkSingleStepSettings,
       },
       "add-stamp": {
         icon: <LocalIcon icon="approval-rounded" width="1.5rem" height="1.5rem" />,
@@ -187,13 +180,12 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="cleaning-services-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.sanitize.title", "Sanitize"),
         component: Sanitize,
+        definition: sanitizeDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         maxFiles: -1,
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
         description: t("home.sanitize.desc", "Remove potentially harmful elements from PDF files"),
         endpoints: ["sanitize-pdf"],
-        operationConfig: sanitizeOperationConfig,
-        settingsComponent: SanitizeSettings,
       },
       flatten: {
         icon: <LocalIcon icon="layers-clear-rounded" width="1.5rem" height="1.5rem" />,
@@ -207,13 +199,12 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="preview-off-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
         component: UnlockPdfForms,
+        definition: unlockPdfFormsDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         description: t("home.unlockPDFForms.desc", "Remove read-only property of form fields in a PDF document."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
         endpoints: ["unlock-pdf-forms"],
-        operationConfig: unlockPdfFormsOperationConfig,
-        settingsComponent: UnlockPdfFormsSettings,
       },
       "manage-certificates": {
         icon: <LocalIcon icon="license-rounded" width="1.5rem" height="1.5rem" />,
@@ -230,13 +221,12 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.changePermissions.title", "Change Permissions"),
         component: ChangePermissions,
+        definition: changePermissionsDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         description: t("home.changePermissions.desc", "Change document restrictions and permissions"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
         maxFiles: -1,
         endpoints: ["add-password"],
-        operationConfig: changePermissionsOperationConfig,
-        settingsComponent: ChangePermissionsSettings,
       },
       // Verification
 
@@ -301,11 +291,10 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="content-cut-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.split.title", "Split"),
         component: SplitPdfPanel,
+        definition: splitDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         description: t("home.split.desc", "Split PDFs into multiple documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
-        operationConfig: splitOperationConfig,
-        settingsComponent: SplitSettings,
       },
       "reorganize-pages": {
         icon: <LocalIcon icon="move-down-rounded" width="1.5rem" height="1.5rem" />,
@@ -350,13 +339,12 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="looks-one-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.pdfToSinglePage.title", "PDF to Single Large Page"),
         component: SingleLargePage,
-
+        definition: singleLargePageDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         description: t("home.pdfToSinglePage.desc", "Merges all PDF pages into one large single page"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
         endpoints: ["pdf-to-single-page"],
-        operationConfig: singleLargePageOperationConfig,
       },
       "add-attachments": {
         icon: <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />,
@@ -425,24 +413,23 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="lock-open-right-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removePassword.title", "Remove Password"),
         component: RemovePassword,
+        definition: removePasswordDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         description: t("home.removePassword.desc", "Remove password protection from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
         endpoints: ["remove-password"],
         maxFiles: -1,
-        operationConfig: removePasswordOperationConfig,
-        settingsComponent: RemovePasswordSettings,
       },
       "remove-certificate-sign": {
         icon: <LocalIcon icon="remove-moderator-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeCertSign.title", "Remove Certificate Sign"),
         component: RemoveCertificateSign,
+        definition: removeCertificateSignDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         description: t("home.removeCertSign.desc", "Remove digital signature from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: -1,
         endpoints: ["remove-certificate-sign"],
-        operationConfig: removeCertificateSignOperationConfig,
       },
 
       // Automation
@@ -500,13 +487,12 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="build-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.repair.title", "Repair"),
         component: Repair,
+        definition: repairDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         description: t("home.repair.desc", "Repair corrupted or damaged PDF files"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         maxFiles: -1,
         endpoints: ["repair"],
-        operationConfig: repairOperationConfig,
-        settingsComponent: RepairSettings,
       },
       "detect-split-scanned-photos": {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
@@ -617,12 +603,11 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="zoom-in-map-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.compress.title", "Compress"),
         component: CompressPdfPanel,
+        definition: compressDefinition as ToolDefinition<unknown>, // Somewhat ugly hack for the sake of prototyping
         description: t("home.compress.desc", "Compress PDFs to reduce their file size."),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
-        operationConfig: compressOperationConfig,
-        settingsComponent: CompressSettings,
       },
       convert: {
         icon: <LocalIcon icon="sync-alt-rounded" width="1.5rem" height="1.5rem" />,

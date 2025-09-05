@@ -4,6 +4,7 @@ import { ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
 import { BaseToolProps } from '../types/tool';
 import { WorkbenchType } from '../types/workbench';
 import { ToolId } from '../types/toolId';
+import { ToolDefinition } from '../components/tools/shared/toolDefinition';
 
 export enum SubcategoryId {
   SIGNING = 'signing',
@@ -41,6 +42,8 @@ export type ToolRegistryEntry = {
 	urlPath?: string;
 	// Workbench type for navigation
 	workbench?: WorkbenchType;
+	// Tool definition for definition-based tools (cast to specific type at point of use)
+	definition?: ToolDefinition<unknown>;
 	// Operation configuration for automation
 	operationConfig?: ToolOperationConfig<any>;
 	// Settings component for automation configuration

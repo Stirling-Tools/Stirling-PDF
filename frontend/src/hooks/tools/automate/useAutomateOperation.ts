@@ -15,9 +15,11 @@ export function useAutomateOperation() {
       throw new Error('No automation configuration provided');
     }
 
-    // Execute the automation sequence and return the final results
+    console.log('🔍 Full automation config:', params.automationConfig);
+    
+    // Execute the automation sequence using the regular executor
     const finalResults = await executeAutomationSequence(
-      params.automationConfig!,
+      params.automationConfig,
       files,
       toolRegistry,
       (stepIndex: number, operationName: string) => {
@@ -31,7 +33,6 @@ export function useAutomateOperation() {
       (stepIndex: number, error: string) => {
         console.error(`Step ${stepIndex + 1} failed:`, error);
         params.onStepError?.(stepIndex, error);
-        throw new Error(`Automation step ${stepIndex + 1} failed: ${error}`);
       }
     );
 

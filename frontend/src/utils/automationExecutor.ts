@@ -1,11 +1,65 @@
 import axios from 'axios';
 import { ToolRegistry } from '../data/toolsTaxonomy';
-import { AutomationConfig, AutomationExecutionCallbacks } from '../types/automation';
 import { AUTOMATION_CONSTANTS } from '../constants/automation';
 import { AutomationFileProcessor } from './automationFileProcessor';
 import { ResourceManager } from './resourceManager';
 import { ToolType } from '../hooks/tools/shared/useToolOperation';
 
+/**
+ * Execute operation using a static config (for definition-based tools)
+ */
+const executeWithStaticConfig = async (
+  config: any,
+  parameters: any,
+  files: File[]
+): Promise<File[]> => {
+  if (config.toolType === ToolType.singleFile) {
+    // Single file processing - process each file individually
+    const processedFiles: File[] = [];
+    for (const file of files) {
+      const endpoint = typeof config.endpoint === 'function'
+        ? config.endpoint(parameters)
+        : config.endpoint;
+
+      const formData = config.buildFormData(parameters, file);
+
+      const response = await axios.post(endpoint, formData, {
+        responseType: 'blob',
+        timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
+      });
+
+      const prefix = config.filePrefix || '';
+      const fileName = file.name.replace(/\.[^/.]+$/, '') + '.pdf';
+      const processedFile = new File([response.data], `${prefix}${fileName}`, { type: 'application/pdf' });
+      processedFiles.push(processedFile);
+    }
+    return processedFiles;
+  } else if (config.toolType === ToolType.multiFile) {
+    // Multi-file processing - single API call with all files
+    const endpoint = typeof config.endpoint === 'function'
+      ? config.endpoint(parameters)
+      : config.endpoint;
+
+    const formData = config.buildFormData(parameters, files);
+
+    const response = await axios.post(endpoint, formData, {
+      responseType: 'blob',
+      timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
+    });
+
+    // Handle multi-file response (usually ZIP)
+    if (response.data.type === 'application/pdf') {
+      const fileName = files[0]?.name || 'document.pdf';
+      return [new File([response.data], fileName, { type: 'application/pdf' })];
+    } else {
+      // Extract ZIP files
+      const { extractZipFiles } = await import('./automationFileProcessor');
+      return await extractZipFiles(response.data);
+    }
+  }
+
+  throw new Error(`Unsupported tool type: ${config.toolType}`);
+};
 
 /**
  * Execute a tool operation directly without using React hooks
@@ -31,17 +85,44 @@ export const executeToolOperationWithPrefix = async (
 ): Promise<File[]> => {
   console.log(`🔧 Executing tool: ${operationName}`, { parameters, fileCount: files.length });
 
-  const config = toolRegistry[operationName as keyof ToolRegistry]?.operationConfig;
-  if (!config) {
-    console.error(`❌ Tool operation not supported: ${operationName}`);
+  const toolInfo = toolRegistry[operationName as keyof ToolRegistry];
+  const config = toolInfo?.operationConfig;
+  const definition = toolInfo?.definition;
+
+  if (!config && !definition) {
+    console.error(`❌ Tool operation not supported: ${operationName}. Missing both operationConfig and definition.`);
     throw new Error(`Tool operation not supported: ${operationName}`);
   }
 
-  console.log(`📋 Using config:`, config);
+  console.log(`📋 Using config:`, config, `definition:`, definition);
 
   try {
+    // Handle definition-based tools by extracting their static execution logic
+    if (definition && !config) {
+      console.log(`🎯 Using definition-based tool: ${definition.id}`);
+
+      // Get the static operation config from the tool's operation hook
+      // This is exported as a static config object from each tool
+      const operationModule = await import(`../hooks/tools/${definition.id}/use${definition.id.charAt(0).toUpperCase() + definition.id.slice(1)}Operation`);
+      const staticConfig = operationModule[`${definition.id}OperationConfig`];
+
+      if (staticConfig) {
+        console.log(`📋 Using static config for ${definition.id}:`, staticConfig);
+        // Use the static config to execute the operation
+        if (staticConfig.customProcessor) {
+          const resultFiles = await staticConfig.customProcessor(parameters, files);
+          return resultFiles;
+        } else {
+          // Handle single/multi-file operations using the static config
+          return await executeWithStaticConfig(staticConfig, parameters, files);
+        }
+      } else {
+        throw new Error(`Definition-based tool ${definition.id} does not have a static config`);
+      }
+    }
+
     // Check if tool uses custom processor (like Convert tool)
-    if (config.customProcessor) {
+    if (config && config.customProcessor) {
       console.log(`🎯 Using custom processor for ${config.operationType}`);
       const resultFiles = await config.customProcessor(parameters, files);
       console.log(`✅ Custom processor returned ${resultFiles.length} files`);
