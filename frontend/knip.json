@@ -1,0 +1,5 @@
+{
+  "ignore": [
+    "public/js/thirdParty/cookieconsent.umd.js"
+  ]
+}

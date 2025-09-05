@@ -31,7 +31,8 @@ class PDFWorkerManager {
    */
   private initializeWorker(): void {
     if (!this.isInitialized) {
-      GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+      // Use the worker from node_modules instead of local copy
+      GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.js', import.meta.url).toString();
       this.isInitialized = true;
     }
   }
