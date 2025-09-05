@@ -174,7 +174,7 @@ export const useToolOperation = <TParams>(
       let processedFiles: File[];
 
       switch (config.toolType) {
-        case ToolType.singleFile:
+        case ToolType.singleFile: {
           // Individual file processing - separate API call per file
           const apiCallsConfig: ApiCallsConfig<TParams> = {
             endpoint: config.endpoint,
@@ -190,8 +190,9 @@ export const useToolOperation = <TParams>(
             actions.setStatus
           );
           break;
+        }
 
-        case ToolType.multiFile:
+        case ToolType.multiFile: {
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');
           const formData = config.buildFormData(params, validFiles);
@@ -204,7 +205,7 @@ export const useToolOperation = <TParams>(
             // Use custom responseHandler for multi-file (handles ZIP extraction)
             processedFiles = await config.responseHandler(response.data, validFiles);
           } else if (response.data.type === 'application/pdf' ||
-                     (response.headers && response.headers['content-type'] === 'application/pdf')) {
+                    (response.headers && response.headers['content-type'] === 'application/pdf')) {
             // Single PDF response (e.g. split with merge option) - use original filename
             const originalFileName = validFiles[0]?.name || 'document.pdf';
             const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
@@ -219,6 +220,7 @@ export const useToolOperation = <TParams>(
             }
           }
           break;
+        }
 
         case ToolType.custom:
           actions.setStatus('Processing files...');
@@ -243,7 +245,7 @@ export const useToolOperation = <TParams>(
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
         const inputFileRecords: FileRecord[] = [];
-        
+
         // Build parallel arrays of IDs and records for undo tracking
         for (const file of validFiles) {
           const fileId = findFileId(file);
@@ -259,9 +261,9 @@ export const useToolOperation = <TParams>(
             console.warn(`No file ID found for file: ${file.name}`);
           }
         }
-        
+
         const outputFileIds = await consumeFiles(inputFileIds, processedFiles);
-        
+
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
           inputFiles: validFiles, // Keep original File objects for undo
@@ -326,17 +328,17 @@ export const useToolOperation = <TParams>(
     try {
       // Undo the consume operation
       await undoConsumeFiles(inputFiles, inputFileRecords, outputFileIds);
-      
+
       // Clear results and operation tracking
       resetResults();
       lastOperationRef.current = null;
-      
+
       // Show success message
       actions.setStatus(t('undoSuccess', 'Operation undone successfully'));
-      
+
     } catch (error: any) {
       let errorMessage = extractErrorMessage(error);
-      
+
       // Provide more specific error messages based on error type
       if (error.message?.includes('Mismatch between input files')) {
         errorMessage = t('undoDataMismatch', 'Cannot undo: operation data is corrupted');
@@ -345,9 +347,9 @@ export const useToolOperation = <TParams>(
       } else if (error.name === 'QuotaExceededError') {
         errorMessage = t('undoQuotaError', 'Cannot undo: insufficient storage space');
       }
-      
+
       actions.setError(`${t('undoFailed', 'Failed to undo operation')}: ${errorMessage}`);
-      
+
       // Don't clear the operation data if undo failed - user might want to try again
     }
   }, [undoConsumeFiles, resetResults, actions, t]);

@@ -148,15 +148,17 @@ export class FileAnalyzer {
       case 'immediate_full':
         return pageCount * baseTime;
 
-      case 'priority_pages':
+      case 'priority_pages': {
         // Estimate time for priority pages (first 10)
         const priorityPages = Math.min(pageCount, 10);
         return priorityPages * baseTime;
+      }
 
-      case 'progressive_chunked':
+      case 'progressive_chunked': {
         // Estimate time for first chunk (20 pages)
         const firstChunk = Math.min(pageCount, 20);
         return firstChunk * baseTime;
+      }
 
       default:
         return pageCount * baseTime;
