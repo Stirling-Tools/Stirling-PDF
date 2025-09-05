@@ -41,7 +41,7 @@ const BulkSelectionPanel = ({
 
   const handleClear = () => {
     setCsvInput('');
-    onUpdatePagesFromCSV();
+    onUpdatePagesFromCSV('');
   };
 
   return (

@@ -239,7 +239,7 @@
 }
 
 /* Dark-mode adjustments */
-::global([data-mantine-color-scheme='dark']) .selectedList {
+:global([data-mantine-color-scheme='dark']) .selectedList {
   background-color: var(--mantine-color-dark-6);
 }
 

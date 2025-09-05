@@ -224,7 +224,7 @@ export default function RightRail() {
                       </div>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <div style={{ minWidth: "16rem", maxWidth: '24rem' }}>
+                    <div style={{ minWidth: '24rem', maxWidth: '32rem' }}>
                       <BulkSelectionPanel
                         csvInput={csvInput}
                         setCsvInput={setCsvInput}
