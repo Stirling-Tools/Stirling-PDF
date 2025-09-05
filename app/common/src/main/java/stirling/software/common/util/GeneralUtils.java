@@ -48,15 +48,31 @@ public class GeneralUtils {
     private static final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
     private static final String PYTHON_SCRIPTS_DIR = "python";
 
+    /**
+     * Get UploadLimitService instance from Spring context
+     *
+     * @return UploadLimitService instance or null if not available
+     */
     private static UploadLimitService getUploadLimitService() {
         return ApplicationContextProvider.getBean(UploadLimitService.class);
     }
 
+    /**
+     * Get the maximum upload size in bytes
+     *
+     * @return maximum upload size in bytes, or 0 if no limit is set
+     */
     private static long getMaxUploadSize() {
         UploadLimitService uploadLimitService = getUploadLimitService();
         return uploadLimitService != null ? uploadLimitService.getUploadLimit() : 0;
     }
 
+    /**
+     * Check if the uploaded file exceeds the maximum allowed size
+     *
+     * @param file the uploaded MultipartFile
+     * @throws FileTooLargeException if the file size exceeds the maximum allowed size
+     */
     public static void checkMaxUploadSize(MultipartFile file) {
         long maxUploadSize = getMaxUploadSize();
         if (maxUploadSize > 0 && file != null && file.getSize() > maxUploadSize) {
