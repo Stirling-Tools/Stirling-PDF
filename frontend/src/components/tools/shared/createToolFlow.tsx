@@ -4,9 +4,10 @@ import { createToolSteps, ToolStepProvider } from './ToolStep';
 import OperationButton from './OperationButton';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
 import { ToolWorkflowTitle, ToolWorkflowTitleProps } from './ToolWorkflowTitle';
+import { StirlingFile } from '../../../types/fileContext';
 
 export interface FilesStepConfig {
-  selectedFiles: File[];
+  selectedFiles: StirlingFile[];
   isCollapsed?: boolean;
   placeholder?: string;
   onCollapsedClick?: () => void;
@@ -80,7 +81,7 @@ export function createToolFlow(config: ToolFlowConfig) {
         })}
 
         {/* Middle Steps */}
-        {config.steps.map((stepConfig, index) =>
+        {config.steps.map((stepConfig) =>
           steps.create(stepConfig.title, {
             isVisible: stepConfig.isVisible,
             isCollapsed: stepConfig.isCollapsed,

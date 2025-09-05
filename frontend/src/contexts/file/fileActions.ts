@@ -3,18 +3,17 @@
  */
 
 import {
-  FileRecord,
+  StirlingFileStub,
   FileContextAction,
   FileContextState,
-  toFileRecord,
+  toStirlingFileStub,
   createFileId,
   createQuickKey
 } from '../../types/fileContext';
 import { FileId, FileMetadata } from '../../types/file';
 import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
 import { FileLifecycleManager } from './lifecycle';
-import { fileProcessingService } from '../../services/fileProcessingService';
-import { buildQuickKeySet, buildQuickKeySetFromMetadata } from './fileSelectors';
+import { buildQuickKeySet } from './fileSelectors';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -109,8 +108,8 @@ export async function addFiles(
   await addFilesMutex.lock();
 
   try {
-  const fileRecords: FileRecord[] = [];
-  const addedFiles: AddedFile[] = [];
+    const stirlingFileStubs: StirlingFileStub[] = [];
+    const addedFiles: AddedFile[] = [];
 
   // Build quickKey lookup from existing files for deduplication
   const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
@@ -163,7 +162,7 @@ export async function addFiles(
         }
 
         // Create record with immediate thumbnail and page metadata
-        const record = toFileRecord(file, fileId);
+        const record = toStirlingFileStub(file, fileId);
         if (thumbnail) {
           record.thumbnailUrl = thumbnail;
           // Track blob URLs for cleanup (images return blob URLs that need revocation)
@@ -184,7 +183,7 @@ export async function addFiles(
         }
 
         existingQuickKeys.add(quickKey);
-        fileRecords.push(record);
+        stirlingFileStubs.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
         }
       break;
@@ -205,7 +204,7 @@ export async function addFiles(
         const fileId = createFileId();
         filesRef.current.set(fileId, file);
 
-        const record = toFileRecord(file, fileId);
+        const record = toStirlingFileStub(file, fileId);
         if (thumbnail) {
           record.thumbnailUrl = thumbnail;
           // Track blob URLs for cleanup (images return blob URLs that need revocation)
@@ -226,7 +225,7 @@ export async function addFiles(
         }
 
         existingQuickKeys.add(quickKey);
-        fileRecords.push(record);
+        stirlingFileStubs.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
       }
       break;
@@ -254,7 +253,7 @@ export async function addFiles(
 
         filesRef.current.set(fileId, file);
 
-        const record = toFileRecord(file, fileId);
+        const record = toStirlingFileStub(file, fileId);
 
         // Generate processedFile metadata for stored files
         let pageCount: number = 1;
@@ -301,7 +300,7 @@ export async function addFiles(
         }
 
         existingQuickKeys.add(quickKey);
-        fileRecords.push(record);
+        stirlingFileStubs.push(record);
         addedFiles.push({ file, id: fileId, thumbnail: metadata.thumbnail });
 
       }
@@ -310,9 +309,9 @@ export async function addFiles(
   }
 
   // Dispatch ADD_FILES action if we have new files
-  if (fileRecords.length > 0) {
-    dispatch({ type: 'ADD_FILES', payload: { fileRecords } });
-    if (DEBUG) console.log(`📄 addFiles(${kind}): Successfully added ${fileRecords.length} files`);
+  if (stirlingFileStubs.length > 0) {
+    dispatch({ type: 'ADD_FILES', payload: { stirlingFileStubs } });
+    if (DEBUG) console.log(`📄 addFiles(${kind}): Successfully added ${stirlingFileStubs.length} files`);
   }
 
   return addedFiles;
@@ -328,7 +327,7 @@ export async function addFiles(
 async function processFilesIntoRecords(
   files: File[],
   filesRef: React.MutableRefObject<Map<FileId, File>>
-): Promise<Array<{ record: FileRecord; file: File; fileId: FileId; thumbnail?: string }>> {
+): Promise<Array<{ record: StirlingFileStub; file: File; fileId: FileId; thumbnail?: string }>> {
   return Promise.all(
     files.map(async (file) => {
       const fileId = createFileId();
@@ -347,7 +346,7 @@ async function processFilesIntoRecords(
         if (DEBUG) console.warn(`📄 Failed to generate thumbnail for file ${file.name}:`, error);
       }
 
-      const record = toFileRecord(file, fileId);
+      const record = toStirlingFileStub(file, fileId);
       if (thumbnail) {
         record.thumbnailUrl = thumbnail;
       }
@@ -365,10 +364,10 @@ async function processFilesIntoRecords(
  * Helper function to persist files to IndexedDB
  */
 async function persistFilesToIndexedDB(
-  fileRecords: Array<{ file: File; fileId: FileId; thumbnail?: string }>,
+  stirlingFileStubs: Array<{ file: File; fileId: FileId; thumbnail?: string }>,
   indexedDB: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any> }
 ): Promise<void> {
-  await Promise.all(fileRecords.map(async ({ file, fileId, thumbnail }) => {
+  await Promise.all(stirlingFileStubs.map(async ({ file, fileId, thumbnail }) => {
     try {
       await indexedDB.saveFile(file, fileId, thumbnail);
     } catch (error) {
@@ -383,7 +382,6 @@ async function persistFilesToIndexedDB(
 export async function consumeFiles(
   inputFileIds: FileId[],
   outputFiles: File[],
-  stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any> } | null
@@ -391,11 +389,11 @@ export async function consumeFiles(
   if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputFiles.length} output files`);
 
   // Process output files with thumbnails and metadata
-  const outputFileRecords = await processFilesIntoRecords(outputFiles, filesRef);
+  const outputStirlingFileStubs = await processFilesIntoRecords(outputFiles, filesRef);
 
   // Persist output files to IndexedDB if available
   if (indexedDB) {
-    await persistFilesToIndexedDB(outputFileRecords, indexedDB);
+    await persistFilesToIndexedDB(outputStirlingFileStubs, indexedDB);
   }
 
   // Dispatch the consume action
@@ -403,21 +401,20 @@ export async function consumeFiles(
     type: 'CONSUME_FILES',
     payload: {
       inputFileIds,
-      outputFileRecords: outputFileRecords.map(({ record }) => record)
+      outputStirlingFileStubs: outputStirlingFileStubs.map(({ record }) => record)
     }
   });
 
-  if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputFileRecords.length} outputs`);
-  
+  if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputStirlingFileStubs.length} outputs`);
   // Return the output file IDs for undo tracking
-  return outputFileRecords.map(({ fileId }) => fileId);
+  return outputStirlingFileStubs.map(({ fileId }) => fileId);
 }
 
 /**
  * Helper function to restore files to filesRef and manage IndexedDB cleanup
  */
 async function restoreFilesAndCleanup(
-  filesToRestore: Array<{ file: File; record: FileRecord }>,
+  filesToRestore: Array<{ file: File; record: StirlingFileStub }>,
   fileIdsToRemove: FileId[],
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   indexedDB?: { deleteFile: (fileId: FileId) => Promise<void> } | null
@@ -440,7 +437,7 @@ async function restoreFilesAndCleanup(
         if (DEBUG) console.warn(`📄 Skipping empty file ${file.name}`);
         return;
       }
-      
+
       // Restore the file to filesRef
       if (DEBUG) console.log(`📄 Restoring file ${file.name} with id ${record.id} to filesRef`);
       filesRef.current.set(record.id, file);
@@ -455,7 +452,7 @@ async function restoreFilesAndCleanup(
         throw error; // Re-throw to trigger rollback
       })
     );
-    
+
     // Execute all IndexedDB operations
     await Promise.all(indexedDBPromises);
   }
@@ -466,28 +463,27 @@ async function restoreFilesAndCleanup(
  */
 export async function undoConsumeFiles(
   inputFiles: File[],
-  inputFileRecords: FileRecord[],
+  inputStirlingFileStubs: StirlingFileStub[],
   outputFileIds: FileId[],
-  stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>; deleteFile: (fileId: FileId) => Promise<void> } | null
 ): Promise<void> {
-  if (DEBUG) console.log(`📄 undoConsumeFiles: Restoring ${inputFileRecords.length} input files, removing ${outputFileIds.length} output files`);
+  if (DEBUG) console.log(`📄 undoConsumeFiles: Restoring ${inputStirlingFileStubs.length} input files, removing ${outputFileIds.length} output files`);
 
   // Validate inputs
-  if (inputFiles.length !== inputFileRecords.length) {
-    throw new Error(`Mismatch between input files (${inputFiles.length}) and records (${inputFileRecords.length})`);
+  if (inputFiles.length !== inputStirlingFileStubs.length) {
+    throw new Error(`Mismatch between input files (${inputFiles.length}) and records (${inputStirlingFileStubs.length})`);
   }
 
   // Create a backup of current filesRef state for rollback
   const backupFilesRef = new Map(filesRef.current);
-  
+
   try {
     // Prepare files to restore
     const filesToRestore = inputFiles.map((file, index) => ({
       file,
-      record: inputFileRecords[index]
+      record: inputStirlingFileStubs[index]
     }));
 
     // Restore input files and clean up output files
@@ -502,13 +498,12 @@ export async function undoConsumeFiles(
     dispatch({
       type: 'UNDO_CONSUME_FILES',
       payload: {
-        inputFileRecords,
+        inputStirlingFileStubs,
         outputFileIds
       }
     });
 
-    if (DEBUG) console.log(`📄 undoConsumeFiles: Successfully undone consume operation - restored ${inputFileRecords.length} inputs, removed ${outputFileIds.length} outputs`);
-    
+    if (DEBUG) console.log(`📄 undoConsumeFiles: Successfully undone consume operation - restored ${inputStirlingFileStubs.length} inputs, removed ${outputFileIds.length} outputs`);
   } catch (error) {
     // Rollback filesRef to previous state
     if (DEBUG) console.error('📄 undoConsumeFiles: Error during undo, rolling back filesRef', error);

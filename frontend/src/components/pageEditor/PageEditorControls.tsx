@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Tooltip,
   ActionIcon,
@@ -9,9 +8,7 @@ import ContentCutIcon from "@mui/icons-material/ContentCut";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteIcon from "@mui/icons-material/Delete";
-import CloseIcon from "@mui/icons-material/Close";
 import InsertPageBreakIcon from "@mui/icons-material/InsertPageBreak";
-import DownloadIcon from "@mui/icons-material/Download";
 
 interface PageEditorControlsProps {
   // Close/Reset functions
@@ -46,7 +43,6 @@ interface PageEditorControlsProps {
 }
 
 const PageEditorControls = ({
-  onClosePdf,
   onUndo,
   onRedo,
   canUndo,
@@ -54,12 +50,7 @@ const PageEditorControls = ({
   onRotate,
   onDelete,
   onSplit,
-  onSplitAll,
   onPageBreak,
-  onPageBreakAll,
-  onExportAll,
-  exportLoading,
-  selectionMode,
   selectedPageIds,
   displayDocument,
   splitPositions,
