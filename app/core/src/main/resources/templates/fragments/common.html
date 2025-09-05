@@ -169,7 +169,8 @@
   <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
 
   <!-- Pixel, doesn't collect any PII-->
-  <div th:if="${!@disablePixel and @analyticsEnabled}" id="pixel-tracker-container" style="display: none;"></div>
+  <img th:if="${!@disablePixel and @analyticsEnabled}" id="pixel-tracker" referrerpolicy="no-referrer-when-downgrade"
+     style="position: absolute; visibility: hidden; display: none;" />
      
   <!-- Custom -->
   <link rel="stylesheet" th:href="@{'/css/general.css'}">
@@ -220,29 +221,25 @@
     }
 
     function UpdatePixelConsent(){
-      const pixelContainer = document.getElementById('pixel-tracker-container');
-      if(!pixelContainer) {
+      const pixelTracker = document.getElementById('pixel-tracker');
+      if(!pixelTracker) {
         return;
       }
 
       if(window.CookieConsent.acceptedCategory('analytics')) {
-        // Only create and load the pixel if consent is given and it hasn't been loaded yet
-        if(pixelContainer.children.length === 0) {
-          const pixelImg = document.createElement('img');
-          pixelImg.referrerPolicy = 'no-referrer-when-downgrade';
-          pixelImg.src = 'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92' 
-                        + '&machineType=' + /*[[${@machineType}]]*/ ''
-                        + '&appVersion=' + /*[[${@appVersion}]]*/ ''
-                        + '&licenseType=' + /*[[${@license}]]*/ ''
-                        + '&loginEnabled=' + /*[[${@loginEnabled}]]*/ '';
-          pixelImg.style.cssText = 'position: absolute; visibility: hidden;';
-          pixelContainer.appendChild(pixelImg);
+        // Only set the src if consent is given and it hasn't been loaded yet
+        if(!pixelTracker.src) {
+          pixelTracker.src = 'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92' 
+                           + '&machineType=' + /*[[${@machineType}]]*/ ''
+                           + '&appVersion=' + /*[[${@appVersion}]]*/ ''
+                           + '&licenseType=' + /*[[${@license}]]*/ ''
+                           + '&loginEnabled=' + /*[[${@loginEnabled}]]*/ '';
         }
-        pixelContainer.style.display = 'block';
+        pixelTracker.style.display = 'block';
       } else {
-        pixelContainer.style.display = 'none';
-        // Remove pixel image to prevent any tracking
-        pixelContainer.innerHTML = '';
+        pixelTracker.style.display = 'none';
+        // Remove src to prevent any tracking
+        pixelTracker.src = '';
       }
     }
     const stirlingPDFLabel = /*[[${@StirlingPDFLabel}]]*/ '';
