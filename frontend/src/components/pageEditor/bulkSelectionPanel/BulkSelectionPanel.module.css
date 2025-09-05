@@ -31,7 +31,7 @@
 
 .rightCol {
   width: 8rem;
-  border-left: 0.0625rem solid var(--mantine-color-gray-3);
+  border-left: 0.0625rem solid var(--border-default);
   padding-left: 0.75rem;
   display: flex;
   flex-direction: column;
@@ -46,22 +46,23 @@
 .operatorChip {
   width: 100%;
   border-radius: 1.25rem;
-  border: 0.0625rem solid var(--mantine-color-gray-4);
-  background-color: var(--mantine-color-white);
+  border: 0.0625rem solid var(--bulk-card-border);
+  background-color: var(--bulk-card-bg);
+  color: var(--text-primary);
   transition: all 0.2s ease;
   min-height: 2rem;
 }
 
 .operatorChip:hover:not(:disabled) {
-  border-color: var(--primary-color, #3b82f6);
-  background-color: var(--mantine-color-blue-0);
+  border-color: var(--bulk-card-hover-border);
+  background-color: var(--hover-bg);
   transform: translateY(-0.0625rem);
-  box-shadow: 0 0.125rem 0.25rem rgba(59, 130, 246, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .operatorChip:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 0.0625rem 0.125rem rgba(59, 130, 246, 0.1);
+  box-shadow: var(--shadow-xs);
 }
 
 .operatorChip:disabled {
@@ -70,13 +71,15 @@
 }
 
 :global([data-mantine-color-scheme='dark']) .operatorChip {
-  background-color: var(--mantine-color-dark-6);
-  border-color: var(--mantine-color-dark-4);
+  background-color: var(--bulk-card-bg);
+  border-color: var(--bulk-card-border);
+  color: var(--text-primary);
 }
 
 :global([data-mantine-color-scheme='dark']) .operatorChip:hover:not(:disabled) {
-  background-color: var(--mantine-color-dark-5);
-  border-color: var(--primary-color, #3b82f6);
+  background-color: var(--hover-bg);
+  border-color: var(--bulk-card-hover-border);
+  color: var(--text-primary);
 }
  
  .dropdownHeader {
@@ -84,7 +87,7 @@
    justify-content: space-between;
    align-items: center;
    padding: 0.75rem;
-   border-bottom: 0.0625rem solid var(--mantine-color-gray-3);
+   border-bottom: 0.0625rem solid var(--border-default);
    margin-bottom: 0.5rem;
  }
  
@@ -108,7 +111,7 @@
 }
 
 .chevron {
-  color: var(--mantine-color-dimmed);
+  color: var(--text-muted);
 }
 
 /* Icon-based chevrons */
@@ -135,22 +138,26 @@
 }
 
 .menuItemCloseHover {
-  background-color: var(--mantine-color-red-1);
+  background-color: var(--text-brand-accent);
+  opacity: 0.1;
   transition: background-color 150ms ease;
 }
 
 :global([data-mantine-color-scheme='dark']) .menuItemCloseHover {
-  background-color: var(--mantine-color-red-9);
+  background-color: var(--text-brand-accent);
+  opacity: 0.2;
 }
 
 .selectedList {
   max-height: 8rem;
   overflow: auto;
-  background-color: var(--mantine-color-gray-0);
-  border-radius: 0.5rem;
+  background-color: var(--bg-raised);
+  border: 0.0625rem solid var(--border-default);
+  border-radius: 0.75rem;
   padding: 0.5rem 0.75rem;
   margin-top: 0.5rem;
   min-width: 24rem;
+  color: var(--text-primary);
 }
 
 .selectedText {
@@ -168,14 +175,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  border-bottom: 0.0625rem solid var(--mantine-color-gray-3);
+  border-bottom: 0.0625rem solid var(--border-default);
   margin-bottom: 0.5rem;
 }
 
 .advancedContent {
   display: flex;
-  gap: 0.75rem;
-  padding: 0 0.75rem 0.75rem 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .advancedItem {
@@ -186,37 +193,38 @@
 }
 
 .advancedItem:hover {
-  background-color: var(--mantine-color-gray-1);
+  background-color: var(--hover-bg);
 }
 
 :global([data-mantine-color-scheme='dark']) .advancedItem:hover {
-  background-color: var(--mantine-color-gray-8);
+  background-color: var(--hover-bg);
 }
 
 .advancedCard {
-  background-color: var(--mantine-color-gray-0);
-  border: 0.0625rem solid var(--mantine-color-gray-2);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  background-color: var(--bulk-card-bg);
+  border: 0.0625rem solid var(--bulk-card-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
   width: 100%;
   box-sizing: border-box;
   transition: all 0.2s ease;
+  color: var(--text-primary);
 }
 
 .advancedCard:hover {
-  border-color: var(--mantine-color-gray-3);
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+  border-color: var(--bulk-card-hover-border);
+  box-shadow: var(--shadow-sm);
 }
 
 :global([data-mantine-color-scheme='dark']) .advancedCard {
-  background-color: var(--mantine-color-dark-7);
-  border-color: var(--mantine-color-dark-5);
+  background-color: var(--bulk-card-bg);
+  border-color: var(--bulk-card-border);
 }
 
 :global([data-mantine-color-scheme='dark']) .advancedCard:hover {
-  border-color: var(--mantine-color-dark-4);
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2);
+  border-color: var(--bulk-card-hover-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .inputGroup {
@@ -232,15 +240,33 @@
   flex-shrink: 0;
 }
 
+/* Style inputs and buttons within advanced cards to match bg-raised */
+.advancedCard :global(.mantine-NumberInput-input) {
+  background-color: var(--bg-raised) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.advancedCard :global(.mantine-Button-root) {
+  background-color: var(--bg-raised) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.advancedCard :global(.mantine-Button-root:hover) {
+  background-color: var(--hover-bg) !important;
+  border-color: var(--border-strong) !important;
+}
+
 /* Error helper text above the input */
 .errorText {
   margin-top: 0.25rem;
-  color: var(--mantine-color-red-6);
+  color: var(--text-brand-accent);
 }
 
 /* Dark-mode adjustments */
 :global([data-mantine-color-scheme='dark']) .selectedList {
-  background-color: var(--mantine-color-dark-6);
+  background-color: var(--bg-raised);
 }
 
 /* Small screens: allow the section to shrink instead of enforcing a large min width */
@@ -257,5 +283,25 @@
 .panelContainer {
   max-height: 95vh;
   overflow: auto;
+  background-color: var(--bulk-panel-bg);
+  color: var(--text-primary);
+  border-radius: 0.5rem;
+}
+
+/* Override Mantine Popover dropdown background */
+:global(.mantine-Popover-dropdown) {
+  background-color: var(--bulk-panel-bg) !important;
+  border-color: var(--bulk-card-border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Override Mantine Switch outline */
+.advancedSwitch :global(.mantine-Switch-input) {
+  outline: none !important;
+}
+
+.advancedSwitch :global(.mantine-Switch-input:focus) {
+  outline: none !important;
+  box-shadow: none !important;
 }
 

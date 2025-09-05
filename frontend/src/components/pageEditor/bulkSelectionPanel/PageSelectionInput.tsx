@@ -1,4 +1,4 @@
-import { Group, TextInput, Button, Text, Flex } from '@mantine/core';
+import { Group, TextInput, Button, Text, Flex, Switch } from '@mantine/core';
 import LocalIcon from '../../shared/LocalIcon';
 import { Tooltip } from '../../shared/Tooltip';
 import { usePageSelectionTips } from '../../tooltips/usePageSelectionTips';
@@ -9,6 +9,8 @@ interface PageSelectionInputProps {
   setCsvInput: (value: string) => void;
   onUpdatePagesFromCSV: (override?: string) => void;
   onClear: () => void;
+  advancedOpened?: boolean;
+  onToggleAdvanced?: (v: boolean) => void;
 }
 
 const PageSelectionInput = ({
@@ -16,11 +18,44 @@ const PageSelectionInput = ({
   setCsvInput,
   onUpdatePagesFromCSV,
   onClear,
+  advancedOpened,
+  onToggleAdvanced,
 }: PageSelectionInputProps) => {
   const pageSelectionTips = usePageSelectionTips();
 
   return (
-    <Group className={classes.panelGroup}>
+    <div className={classes.panelGroup}>
+      {/* Header row with tooltip/title and advanced toggle */}
+      <Flex justify="space-between" align="center" mb="sm">
+        <Tooltip
+          position="left"
+          offset={20}
+          header={pageSelectionTips.header}
+          portalTarget={document.body}
+          pinOnClick={true}
+          containerStyle={{ marginTop: "1rem"}}
+          tips={pageSelectionTips.tips}
+        >
+          <Flex onClick={(e) => e.stopPropagation()} align="center" gap="xs">
+            <LocalIcon icon="gpp-maybe-outline-rounded" width="1rem" height="1rem" style={{ color: 'var(--text-instruction)' }} />
+            <Text>Page Selection</Text>
+          </Flex>
+        </Tooltip>
+        {typeof advancedOpened === 'boolean' && (
+          <Flex align="center" gap="xs">
+            <Text size="sm" c="var(--text-secondary)">Advanced</Text>
+            <Switch
+              size="sm"
+              checked={!!advancedOpened}
+              onChange={(e) => onToggleAdvanced?.(e.currentTarget.checked)}
+              title="Advanced"
+              className={classes.advancedSwitch}
+            />
+          </Flex>
+        )}
+      </Flex>
+      
+      {/* Text input */}
       <TextInput
         value={csvInput}
         onChange={(e) => {
@@ -36,7 +71,7 @@ const PageSelectionInput = ({
               size="xs"
               onClick={onClear}
               style={{ 
-                color: 'var(--mantine-color-gray-6)',
+                color: 'var(--text-muted)',
                 minWidth: 'auto',
                 width: '24px',
                 height: '24px',
@@ -47,26 +82,10 @@ const PageSelectionInput = ({
             </Button>
           )
         }
-        label={
-            <Tooltip
-              position="left"
-              offset={20}
-              header={pageSelectionTips.header}
-              portalTarget={document.body}
-              pinOnClick={true}
-              containerStyle={{ marginTop: "1rem"}}
-              tips={pageSelectionTips.tips}
-            >
-              <Flex onClick={(e) => e.stopPropagation()} align="center" gap="xs" my="sm">
-              <LocalIcon icon="gpp-maybe-outline-rounded" width="1rem" height="1rem" style={{ color: 'var(--primary-color, #3b82f6)' }} />
-              <Text>Page Selection</Text>
-              </Flex>
-            </Tooltip>
-        }
         onKeyDown={(e) => e.key === 'Enter' && onUpdatePagesFromCSV()}
         className={classes.textInput}
       />
-    </Group>
+    </div>
   );
 };
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Text, NumberInput, Group } from '@mantine/core';
+import { Button, Text, NumberInput, Group, Flex } from '@mantine/core';
 import classes from './BulkSelectionPanel.module.css';
 import {
   appendExpression,
@@ -15,6 +15,7 @@ interface AdvancedSelectionPanelProps {
   setCsvInput: (value: string) => void;
   onUpdatePagesFromCSV: (override?: string) => void;
   maxPages: number;
+  advancedOpened?: boolean;
 }
 
 const AdvancedSelectionPanel = ({
@@ -22,8 +23,9 @@ const AdvancedSelectionPanel = ({
   setCsvInput,
   onUpdatePagesFromCSV,
   maxPages,
+  advancedOpened,
 }: AdvancedSelectionPanelProps) => {
-  const [advancedOpened, setAdvancedOpened] = useState<boolean>(false);
+  // Visibility now controlled by parent
   const [firstNValue, setFirstNValue] = useState<number | ''>('');
   const [lastNValue, setLastNValue] = useState<number | ''>('');
   const [everyNthValue, setEveryNthValue] = useState<number | ''>('');
@@ -46,40 +48,17 @@ const AdvancedSelectionPanel = ({
 
   return (
     <>
-      {/* Advanced button */}
-      <div className={classes.dropdownContainer}>
-        <Button 
-          variant="light" 
-          size="xs"
-          onClick={() => setAdvancedOpened(!advancedOpened)}
-        >
-          Advanced
-        </Button>
-      </div>
-
       {/* Advanced section */}
       {advancedOpened && (
         <div className={classes.advancedSection}>
-          <div className={classes.advancedHeader}>
-            <Text size="sm" fw={500}>Advanced Selection</Text>
-            <Button
-              size="xs"
-              variant="subtle"
-              color="gray"
-              onClick={() => setAdvancedOpened(false)}
-              className={classes.closeButton}
-            >
-              ×
-            </Button>
-          </div>
           <div className={classes.advancedContent}>
-            <div className={classes.leftCol}>
+            {/* Cards row */}
+            <Flex direction="row" mb="xs" wrap="wrap">
               {/* First N Pages - Card Style */}
               <div className={classes.advancedCard}>
-                <Text size="sm" fw={600} c="gray.7" mb="sm">First N Pages</Text>
-                {firstNError && (<Text size="xs" c="red" mb="xs">{firstNError}</Text>)}
+                <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">First N Pages</Text>
+                {firstNError && (<Text size="xs" c="var(--text-brand-accent)" mb="xs">{firstNError}</Text>)}
                 <div className={classes.inputGroup}>
-                  <Text size="xs" c="gray.6" mb="xs">Number of pages:</Text>
                   <Group gap="sm" align="flex-end" wrap="nowrap">
                     <NumberInput
                       size="sm"
@@ -92,7 +71,7 @@ const AdvancedSelectionPanel = ({
                         else setFirstNError(null);
                       }}
                       min={1}
-                      placeholder="10"
+                      placeholder="Number of pages"
                       className={classes.fullWidthInput}
                       error={Boolean(firstNError)}
                     />
@@ -115,12 +94,11 @@ const AdvancedSelectionPanel = ({
               
               {/* Range - Card Style */}
               <div className={classes.advancedCard}>
-                <Text size="sm" fw={600} c="gray.7" mb="sm">Range</Text>
-                {rangeError && (<Text size="xs" c="red" mb="xs">{rangeError}</Text>)}
+                <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">Range</Text>
+                {rangeError && (<Text size="xs" c="var(--text-brand-accent)" mb="xs">{rangeError}</Text>)}
                 <div className={classes.inputGroup}>
-                  <Group gap="sm" align="flex-end" wrap="nowrap" mb="sm">
+                  <Group gap="sm" align="flex-end" wrap="nowrap" mb="xs">
                     <div style={{ flex: 1 }}>
-                      <Text size="xs" c="gray.6" mb="xs">From:</Text>
                       <NumberInput
                         size="sm"
                         value={rangeStart}
@@ -134,12 +112,11 @@ const AdvancedSelectionPanel = ({
                           else setRangeError(null);
                         }}
                         min={1}
-                        placeholder="5"
+                        placeholder="From"
                         error={Boolean(rangeError)}
                       />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <Text size="xs" c="gray.6" mb="xs">To:</Text>
                       <NumberInput
                         size="sm"
                         value={rangeEnd}
@@ -153,7 +130,7 @@ const AdvancedSelectionPanel = ({
                           else setRangeError(null);
                         }}
                         min={1}
-                        placeholder="10"
+                        placeholder="To"
                         error={Boolean(rangeError)}
                       />
                     </div>
@@ -180,10 +157,9 @@ const AdvancedSelectionPanel = ({
               
               {/* Last N Pages - Card Style */}
               <div className={classes.advancedCard}>
-                <Text size="sm" fw={600} c="gray.7" mb="sm">Last N Pages</Text>
-                {lastNError && (<Text size="xs" c="red" mb="xs">{lastNError}</Text>)}
+                <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">Last N Pages</Text>
+                {lastNError && (<Text size="xs" c="var(--text-brand-accent)" mb="xs">{lastNError}</Text>)}
                 <div className={classes.inputGroup}>
-                  <Text size="xs" c="gray.6" mb="xs">Number of pages:</Text>
                   <Group gap="sm" align="flex-end" wrap="nowrap">
                     <NumberInput
                       size="sm"
@@ -196,7 +172,7 @@ const AdvancedSelectionPanel = ({
                         else setLastNError(null);
                       }}
                       min={1}
-                      placeholder="10"
+                      placeholder="Number of pages"
                       className={classes.fullWidthInput}
                       error={Boolean(lastNError)}
                     />
@@ -219,16 +195,15 @@ const AdvancedSelectionPanel = ({
               
               {/* Every Nth Page - Card Style */}
               <div className={classes.advancedCard}>
-                <Text size="sm" fw={600} c="gray.7" mb="sm">Every Nth Page</Text>
+                <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">Every Nth Page</Text>
                 <div className={classes.inputGroup}>
-                  <Text size="xs" c="gray.6" mb="xs">Step size:</Text>
                   <Group gap="sm" align="flex-end" wrap="nowrap">
                     <NumberInput 
                       size="sm" 
                       value={everyNthValue} 
                       onChange={(val) => setEveryNthValue(typeof val === 'number' ? val : '')} 
                       min={1} 
-                      placeholder="5" 
+                      placeholder="Step size" 
                       className={classes.fullWidthInput}
                     />
                     <Button 
@@ -247,10 +222,11 @@ const AdvancedSelectionPanel = ({
                   </Group>
                 </div>
               </div>
-            </div>
-            <div className={classes.rightCol}>
-              <Text size="xs" c="gray.6" fw={500} mb="sm">Add Operators:</Text>
-              <div className={classes.operatorGroup}>
+            </Flex>
+            {/* Operators row at bottom */}
+            <div>
+              <Text size="xs" c="var(--text-muted)" fw={500} mb="xs">Add Operators:</Text>
+              <Group gap="sm" wrap="nowrap">
                 <Button 
                   size="sm" 
                   variant="outline"
@@ -281,7 +257,7 @@ const AdvancedSelectionPanel = ({
                 >
                   <Text size="xs" fw={500}>not</Text>
                 </Button>
-              </div>
+              </Group>
             </div>
           </div>
         </div>

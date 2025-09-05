@@ -21,6 +21,7 @@ const BulkSelectionPanel = ({
   onUpdatePagesFromCSV,
 }: BulkSelectionPanelProps) => {
   const [syntaxError, setSyntaxError] = useState<string | null>(null);
+  const [advancedOpened, setAdvancedOpened] = useState<boolean>(false);
   const maxPages = displayDocument?.pages?.length ?? 0;
 
 
@@ -51,6 +52,8 @@ const BulkSelectionPanel = ({
         setCsvInput={setCsvInput}
         onUpdatePagesFromCSV={onUpdatePagesFromCSV}
         onClear={handleClear}
+        advancedOpened={advancedOpened}
+        onToggleAdvanced={setAdvancedOpened}
       />
 
       <SelectedPagesDisplay
@@ -64,6 +67,7 @@ const BulkSelectionPanel = ({
         setCsvInput={setCsvInput}
         onUpdatePagesFromCSV={onUpdatePagesFromCSV}
         maxPages={maxPages}
+        advancedOpened={advancedOpened}
       />
     </div>
   );
