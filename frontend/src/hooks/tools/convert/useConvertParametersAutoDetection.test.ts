@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useConvertParameters } from './useConvertParameters';
 
 describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
@@ -347,9 +347,9 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
 
       const malformedFiles: Array<{name: string}> = [
         { name: 'valid.pdf' },
-        // @ts-ignore - Testing runtime resilience
+        // @ts-expect-error - Testing runtime resilience
         { name: null },
-        // @ts-ignore
+        // @ts-expect-error - Testing runtime resilience
         { name: undefined }
       ];
 

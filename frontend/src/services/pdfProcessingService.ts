@@ -1,6 +1,7 @@
 import { ProcessedFile, ProcessingState, PDFPage } from '../types/processing';
 import { ProcessingCache } from './processingCache';
 import { pdfWorkerManager } from './pdfWorkerManager';
+import { createQuickKey } from '../types/fileContext';
 
 export class PDFProcessingService {
   private static instance: PDFProcessingService;
@@ -113,7 +114,7 @@ export class PDFProcessingService {
         const thumbnail = canvas.toDataURL();
 
         pages.push({
-          id: `${file.name}-page-${i}`,
+          id: `${createQuickKey(file)}-page-${i}`,
           pageNumber: i,
           thumbnail,
           rotation: 0,

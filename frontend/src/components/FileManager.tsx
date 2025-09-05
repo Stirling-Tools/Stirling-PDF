@@ -4,7 +4,6 @@ import { Dropzone } from '@mantine/dropzone';
 import { FileMetadata } from '../types/file';
 import { useFileManager } from '../hooks/useFileManager';
 import { useFilesModalContext } from '../contexts/FilesModalContext';
-import { createFileId } from '../types/fileContext';
 import { Tool } from '../types/tool';
 import MobileLayout from './fileManager/MobileLayout';
 import DesktopLayout from './fileManager/DesktopLayout';
@@ -21,13 +20,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile } = useFileManager();
-
-  // Wrapper for storeFile that generates UUID
-  const storeFileWithId = useCallback(async (file: File) => {
-    const fileId = createFileId(); // Generate UUID for storage
-    return await storeFile(file, fileId);
-  }, [storeFile]);
+  const { loadRecentFiles, handleRemoveFile, convertToFile } = useFileManager();
 
   // File management handlers
   const isFileSupported = useCallback((fileName: string) => {

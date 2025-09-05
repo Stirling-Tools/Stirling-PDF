@@ -14,6 +14,7 @@ import i18n from '../../i18n/config';
 import axios from 'axios';
 import { detectFileExtension } from '../../utils/fileUtils';
 import { FIT_OPTIONS } from '../../constants/convertConstants';
+import { createTestStirlingFile, createTestFilesWithId } from '../utils/testFileHelpers';
 
 // Mock axios
 vi.mock('axios');
@@ -81,7 +82,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       // Create mock DOCX file
-      const docxFile = new File(['docx content'], 'document.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      const docxFile = createTestStirlingFile('document.docx', 'docx content', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 
       // Test auto-detection
       act(() => {
@@ -117,7 +118,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       // Create mock unknown file
-      const unknownFile = new File(['unknown content'], 'document.xyz', { type: 'application/octet-stream' });
+      const unknownFile = createTestStirlingFile('document.xyz', 'unknown content', 'application/octet-stream');
 
       // Test auto-detection
       act(() => {
@@ -156,11 +157,11 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       // Create mock image files
-      const imageFiles = [
-        new File(['jpg content'], 'photo1.jpg', { type: 'image/jpeg' }),
-        new File(['png content'], 'photo2.png', { type: 'image/png' }),
-        new File(['gif content'], 'photo3.gif', { type: 'image/gif' })
-      ];
+      const imageFiles = createTestFilesWithId([
+        { name: 'photo1.jpg', content: 'jpg content', type: 'image/jpeg' },
+        { name: 'photo2.png', content: 'png content', type: 'image/png' },
+        { name: 'photo3.gif', content: 'gif content', type: 'image/gif' }
+      ]);
 
       // Test smart detection for all images
       act(() => {
@@ -202,11 +203,11 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       // Create mixed file types
-      const mixedFiles = [
-        new File(['pdf content'], 'document.pdf', { type: 'application/pdf' }),
-        new File(['docx content'], 'spreadsheet.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
-        new File(['pptx content'], 'presentation.pptx', { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' })
-      ];
+      const mixedFiles = createTestFilesWithId([
+        { name: 'document.pdf', content: 'pdf content', type: 'application/pdf' },
+        { name: 'spreadsheet.xlsx', content: 'docx content', type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+        { name: 'presentation.pptx', content: 'pptx content', type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }
+      ]);
 
       // Test smart detection for mixed types
       act(() => {
@@ -243,10 +244,10 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       // Create mock web files
-      const webFiles = [
-        new File(['<html>content</html>'], 'page1.html', { type: 'text/html' }),
-        new File(['zip content'], 'site.zip', { type: 'application/zip' })
-      ];
+      const webFiles = createTestFilesWithId([
+        { name: 'page1.html', content: '<html>content</html>', type: 'text/html' },
+        { name: 'site.zip', content: 'zip content', type: 'application/zip' }
+      ]);
 
       // Test smart detection for web files
       act(() => {
@@ -288,7 +289,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const htmlFile = new File(['<html>content</html>'], 'page.html', { type: 'text/html' });
+      const htmlFile = createTestStirlingFile('page.html', '<html>content</html>', 'text/html');
 
       // Set up HTML conversion parameters
       act(() => {
@@ -318,7 +319,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const emlFile = new File(['email content'], 'email.eml', { type: 'message/rfc822' });
+      const emlFile = createTestStirlingFile('email.eml', 'email content', 'message/rfc822');
 
       // Set up email conversion parameters
       act(() => {
@@ -355,7 +356,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const pdfFile = new File(['pdf content'], 'document.pdf', { type: 'application/pdf' });
+      const pdfFile = createTestStirlingFile('document.pdf', 'pdf content', 'application/pdf');
 
       // Set up PDF/A conversion parameters
       act(() => {
@@ -392,10 +393,10 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const imageFiles = [
-        new File(['jpg1'], 'photo1.jpg', { type: 'image/jpeg' }),
-        new File(['jpg2'], 'photo2.jpg', { type: 'image/jpeg' })
-      ];
+      const imageFiles = createTestFilesWithId([
+        { name: 'photo1.jpg', content: 'jpg1', type: 'image/jpeg' },
+        { name: 'photo2.jpg', content: 'jpg2', type: 'image/jpeg' }
+      ]);
 
       // Set up image conversion parameters
       act(() => {
@@ -432,10 +433,10 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const imageFiles = [
-        new File(['jpg1'], 'photo1.jpg', { type: 'image/jpeg' }),
-        new File(['jpg2'], 'photo2.jpg', { type: 'image/jpeg' })
-      ];
+      const imageFiles = createTestFilesWithId([
+        { name: 'photo1.jpg', content: 'jpg1', type: 'image/jpeg' },
+        { name: 'photo2.jpg', content: 'jpg2', type: 'image/jpeg' }
+      ]);
 
       // Set up for separate processing
       act(() => {
@@ -477,10 +478,10 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         })
         .mockRejectedValueOnce(new Error('File 2 failed'));
 
-      const mixedFiles = [
-        new File(['file1'], 'doc1.txt', { type: 'text/plain' }),
-        new File(['file2'], 'doc2.xyz', { type: 'application/octet-stream' })
-      ];
+      const mixedFiles = createTestFilesWithId([
+        { name: 'doc1.txt', content: 'file1', type: 'text/plain' },
+        { name: 'doc2.xyz', content: 'file2', type: 'application/octet-stream' }
+      ]);
 
       // Set up for separate processing (mixed smart detection)
       act(() => {
@@ -505,7 +506,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
   describe('Real File Extension Detection', () => {
 
     test('should correctly detect various file extensions', async () => {
-      const { result } = renderHook(() => useConvertParameters(), {
+      renderHook(() => useConvertParameters(), {
         wrapper: TestWrapper
       });
 

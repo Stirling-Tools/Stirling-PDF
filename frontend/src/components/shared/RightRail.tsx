@@ -30,12 +30,11 @@ export default function RightRail() {
 
   // File state and selection
   const { state, selectors } = useFileState();
-  const { selectedFiles, selectedFileIds, selectedPageNumbers, setSelectedFiles, setSelectedPages } = useFileSelection();
+  const { selectedFiles, selectedFileIds, setSelectedFiles } = useFileSelection();
   const { removeFiles } = useFileManagement();
 
   const activeFiles = selectors.getFiles();
   const filesSignature = selectors.getFilesSignature();
-  const fileRecords = selectors.getFileRecords();
 
   // Compute selection state and total items
   const getSelectionState = useCallback(() => {
@@ -86,7 +85,7 @@ export default function RightRail() {
     if (currentView === 'fileEditor' || currentView === 'viewer') {
       // Download selected files (or all if none selected)
       const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
-      
+
       filesToDownload.forEach(file => {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(file);
@@ -170,8 +169,8 @@ export default function RightRail() {
         )}
 
         {/* Group: Selection controls + Close, animate as one unit when entering/leaving viewer */}
-        <div 
-          className={`right-rail-slot ${currentView !== 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`} 
+        <div
+          className={`right-rail-slot ${currentView !== 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
           aria-hidden={currentView === 'viewer'}
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
@@ -322,14 +321,14 @@ export default function RightRail() {
           <LanguageSelector position="left-start" offset={6} compact />
 
           <Tooltip content={
-            currentView === 'pageEditor' 
-              ? t('rightRail.exportAll', 'Export PDF') 
+            currentView === 'pageEditor'
+              ? t('rightRail.exportAll', 'Export PDF')
               : (selectedCount > 0 ? t('rightRail.downloadSelected', 'Download Selected Files') : t('rightRail.downloadAll', 'Download All'))
           } position="left" offset={12} arrow>
             <div>
-              <ActionIcon 
-                variant="subtle" 
-                radius="md" 
+              <ActionIcon
+                variant="subtle"
+                radius="md"
                 className="right-rail-icon"
                 onClick={handleExportAll}
                 disabled={currentView === 'viewer' || totalItems === 0}

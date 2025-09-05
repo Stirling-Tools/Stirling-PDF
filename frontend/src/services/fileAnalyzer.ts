@@ -128,7 +128,7 @@ export class FileAnalyzer {
    * Estimate processing time based on file characteristics and strategy
    */
   private static estimateProcessingTime(
-    fileSize: number,
+    _fileSize: number,
     pageCount: number = 0,
     strategy: ProcessingStrategy
   ): number {
@@ -148,15 +148,17 @@ export class FileAnalyzer {
       case 'immediate_full':
         return pageCount * baseTime;
 
-      case 'priority_pages':
+      case 'priority_pages': {
         // Estimate time for priority pages (first 10)
         const priorityPages = Math.min(pageCount, 10);
         return priorityPages * baseTime;
+      }
 
-      case 'progressive_chunked':
+      case 'progressive_chunked': {
         // Estimate time for first chunk (20 pages)
         const firstChunk = Math.min(pageCount, 20);
         return firstChunk * baseTime;
+      }
 
       default:
         return pageCount * baseTime;
@@ -232,7 +234,7 @@ export class FileAnalyzer {
       const headerString = String.fromCharCode(...headerBytes);
 
       return headerString.startsWith('%PDF-');
-    } catch (error) {
+    } catch {
       return false;
     }
   }
