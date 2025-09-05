@@ -4,9 +4,11 @@
 
 import { FileId } from '../../types/file';
 import {
-  FileRecord,
+  StirlingFileStub,
   FileContextState,
-  FileContextSelectors
+  FileContextSelectors,
+  StirlingFile,
+  createStirlingFile
 } from '../../types/fileContext';
 
 /**
@@ -17,16 +19,24 @@ export function createFileSelectors(
   filesRef: React.MutableRefObject<Map<FileId, File>>
 ): FileContextSelectors {
   return {
-    getFile: (id: FileId) => filesRef.current.get(id),
+    getFile: (id: FileId) => {
+      const file = filesRef.current.get(id);
+      return file ? createStirlingFile(file, id) : undefined;
+    },
 
     getFiles: (ids?: FileId[]) => {
       const currentIds = ids || stateRef.current.files.ids;
-      return currentIds.map(id => filesRef.current.get(id)).filter(Boolean) as File[];
+      return currentIds
+        .map(id => {
+          const file = filesRef.current.get(id);
+          return file ? createStirlingFile(file, id) : undefined;
+        })
+        .filter(Boolean) as StirlingFile[];
     },
 
-    getFileRecord: (id: FileId) => stateRef.current.files.byId[id],
+    getStirlingFileStub: (id: FileId) => stateRef.current.files.byId[id],
 
-    getFileRecords: (ids?: FileId[]) => {
+    getStirlingFileStubs: (ids?: FileId[]) => {
       const currentIds = ids || stateRef.current.files.ids;
       return currentIds.map(id => stateRef.current.files.byId[id]).filter(Boolean);
     },
@@ -35,11 +45,14 @@ export function createFileSelectors(
 
     getSelectedFiles: () => {
       return stateRef.current.ui.selectedFileIds
-        .map(id => filesRef.current.get(id))
-        .filter(Boolean) as File[];
+        .map(id => {
+          const file = filesRef.current.get(id);
+          return file ? createStirlingFile(file, id) : undefined;
+        })
+        .filter(Boolean) as StirlingFile[];
     },
 
-    getSelectedFileRecords: () => {
+    getSelectedStirlingFileStubs: () => {
       return stateRef.current.ui.selectedFileIds
         .map(id => stateRef.current.files.byId[id])
         .filter(Boolean);
@@ -52,26 +65,21 @@ export function createFileSelectors(
 
     getPinnedFiles: () => {
       return Array.from(stateRef.current.pinnedFiles)
-        .map(id => filesRef.current.get(id))
-        .filter(Boolean) as File[];
+        .map(id => {
+          const file = filesRef.current.get(id);
+          return file ? createStirlingFile(file, id) : undefined;
+        })
+        .filter(Boolean) as StirlingFile[];
     },
 
-    getPinnedFileRecords: () => {
+    getPinnedStirlingFileStubs: () => {
       return Array.from(stateRef.current.pinnedFiles)
         .map(id => stateRef.current.files.byId[id])
         .filter(Boolean);
     },
 
-    isFilePinned: (file: File) => {
-      // Find FileId by matching File object properties
-      const fileId = (Object.keys(stateRef.current.files.byId) as FileId[]).find(id => {
-        const storedFile = filesRef.current.get(id);
-        return storedFile &&
-               storedFile.name === file.name &&
-               storedFile.size === file.size &&
-               storedFile.lastModified === file.lastModified;
-      });
-      return fileId ? stateRef.current.pinnedFiles.has(fileId) : false;
+    isFilePinned: (file: StirlingFile) => {
+      return stateRef.current.pinnedFiles.has(file.fileId);
     },
 
     // Stable signature for effects - prevents unnecessary re-renders
@@ -90,9 +98,9 @@ export function createFileSelectors(
 /**
  * Helper for building quickKey sets for deduplication
  */
-export function buildQuickKeySet(fileRecords: Record<FileId, FileRecord>): Set<string> {
+export function buildQuickKeySet(stirlingFileStubs: Record<FileId, StirlingFileStub>): Set<string> {
   const quickKeys = new Set<string>();
-  Object.values(fileRecords).forEach(record => {
+  Object.values(stirlingFileStubs).forEach(record => {
     if (record.quickKey) {
       quickKeys.add(record.quickKey);
     }
@@ -119,7 +127,7 @@ export function buildQuickKeySetFromMetadata(metadata: Array<{ name: string; siz
 export function getPrimaryFile(
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>
-): { file?: File; record?: FileRecord } {
+): { file?: File; record?: StirlingFileStub } {
   const primaryFileId = stateRef.current.files.ids[0];
   if (!primaryFileId) return {};
 
