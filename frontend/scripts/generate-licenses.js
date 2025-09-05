@@ -1,47 +1,57 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { join, dirname } from 'path';
+
+import { argv } from 'node:process';
+const inputIdx = argv.indexOf('--input');
+const INPUT_FILE = inputIdx > -1 ? argv[inputIdx + 1] : null;
+const POSTPROCESS_ONLY = !!INPUT_FILE;
 
 /**
  * Generate 3rd party licenses for frontend dependencies
  * This script creates a JSON file similar to the Java backend's 3rdPartyLicenses.json
  */
 
-const OUTPUT_FILE = path.join(__dirname, '..', 'src', 'assets', '3rdPartyLicenses.json');
-const PACKAGE_JSON = path.join(__dirname, '..', 'package.json');
+const OUTPUT_FILE = join(__dirname, '..', 'src', 'assets', '3rdPartyLicenses.json');
+const PACKAGE_JSON = join(__dirname, '..', 'package.json');
 
 // Ensure the output directory exists
-const outputDir = path.dirname(OUTPUT_FILE);
-if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+const outputDir = dirname(OUTPUT_FILE);
+if (!existsSync(outputDir)) {
+    mkdirSync(outputDir, { recursive: true });
 }
 
 console.log('🔍 Generating frontend license report...');
 
 try {
-    // Install license-checker if not present
-    try {
-        require.resolve('license-checker');
-    } catch (e) {
-        console.log('📦 Installing license-checker...');
-        execSync('npm install --save-dev license-checker', { stdio: 'inherit' });
+    // Safety guard: don't run this script on fork PRs (workflow setzt PR_IS_FORK)
+    if (process.env.PR_IS_FORK === 'true' && !POSTPROCESS_ONLY) {
+        console.error('Fork PR detected: only --input (postprocess-only) mode is allowed.');
+        process.exit(2);
     }
 
-    // Generate license report using license-checker (more reliable)
-    const licenseReport = execSync('npx license-checker --production --json', {
-        encoding: 'utf8',
-        cwd: path.dirname(PACKAGE_JSON)
-    });
-
     let licenseData;
-    try {
-        licenseData = JSON.parse(licenseReport);
-    } catch (parseError) {
-        console.error('❌ Failed to parse license data:', parseError.message);
-        console.error('Raw output:', licenseReport.substring(0, 500) + '...');
-        process.exit(1);
+    // Generate license report using pinned license-checker; disable lifecycle scripts
+    if (POSTPROCESS_ONLY) {
+      licenseData = JSON.parse(require('fs').readFileSync(INPUT_FILE, 'utf8'));
+    } else {
+      const licenseReport = execSync(
+          'npx --yes license-checker@25.0.1 --production --json',
+          {
+              encoding: 'utf8',
+              cwd: dirname(PACKAGE_JSON),
+              env: { ...process.env, NPM_CONFIG_IGNORE_SCRIPTS: 'true' }
+          }
+      );
+      try {
+          licenseData = JSON.parse(licenseReport);
+      } catch (parseError) {
+          console.error('❌ Failed to parse license data:', parseError.message);
+          console.error('Raw output:', licenseReport.substring(0, 500) + '...');
+          process.exit(1);
+      }
     }
 
     if (!licenseData || typeof licenseData !== 'object') {
@@ -152,8 +162,8 @@ try {
         });
 
         // Write license warnings to a separate file for CI/CD
-        const warningsFile = path.join(__dirname, '..', 'src', 'assets', 'license-warnings.json');
-        fs.writeFileSync(warningsFile, JSON.stringify({
+        const warningsFile = join(__dirname, '..', 'src', 'assets', 'license-warnings.json');
+        writeFileSync(warningsFile, JSON.stringify({
             warnings: problematicLicenses,
             generated: new Date().toISOString()
         }, null, 2));
@@ -163,7 +173,7 @@ try {
     }
 
     // Write to file
-    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(transformedData, null, 4));
+    writeFileSync(OUTPUT_FILE, JSON.stringify(transformedData, null, 4));
 
     console.log(`✅ License report generated successfully!`);
     console.log(`📄 Found ${transformedData.dependencies.length} dependencies`);
