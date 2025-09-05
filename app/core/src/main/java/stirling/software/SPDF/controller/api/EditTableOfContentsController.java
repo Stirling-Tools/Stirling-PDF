@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
@@ -29,7 +27,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
@@ -242,6 +242,5 @@ public class EditTableOfContentsController {
         private String title;
         private int pageNumber;
         private List<BookmarkItem> children = new ArrayList<>();
-
     }
 }
