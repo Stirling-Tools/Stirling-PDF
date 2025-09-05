@@ -1,5 +1,4 @@
-import { Stack, Button, Text, Divider } from "@mantine/core";
-import { useTranslation } from "react-i18next";
+import { Stack, Button } from "@mantine/core";
 import { ManageSignaturesParameters } from "../../../hooks/tools/manageSignatures/useManageSignaturesParameters";
 
 interface CertificateTypeSettingsProps {
@@ -9,7 +8,6 @@ interface CertificateTypeSettingsProps {
 }
 
 const CertificateTypeSettings = ({ parameters, onParameterChange, disabled = false }: CertificateTypeSettingsProps) => {
-  const { t } = useTranslation();
 
   return (
     <Stack gap="md">
