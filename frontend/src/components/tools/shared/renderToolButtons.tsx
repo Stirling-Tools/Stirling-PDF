@@ -12,7 +12,8 @@ export const renderToolButtons = (
   subcategory: SubcategoryGroup,
   selectedToolKey: string | null,
   onSelect: (id: string) => void,
-  showSubcategoryHeader: boolean = true
+  showSubcategoryHeader: boolean = true,
+  disableNavigation: boolean = false
 ) => (
   <Box key={subcategory.subcategoryId} w="100%">
     {showSubcategoryHeader && (
@@ -26,6 +27,7 @@ export const renderToolButtons = (
           tool={tool}
           isSelected={selectedToolKey === id}
           onSelect={onSelect}
+          disableNavigation={disableNavigation}
         />
       ))}
     </div>
