@@ -36,6 +36,7 @@ return createToolFlow({
       operation: base.operation,
       title: t("auto-rename.results.title", "Auto-Rename Results"),
       onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };
