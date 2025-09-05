@@ -117,7 +117,7 @@ public class SplitPdfByChaptersController {
         return bookmarks;
     }
 
-    @PostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
+    @PostMapping(value = "/split-pdf-by-chapters", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Split PDFs by Chapters",
             description = "Splits a PDF into chapters and returns a ZIP file.")

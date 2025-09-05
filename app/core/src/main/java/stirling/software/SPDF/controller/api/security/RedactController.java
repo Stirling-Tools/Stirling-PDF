@@ -7,6 +7,15 @@ import java.util.Objects;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -74,7 +83,7 @@ public class RedactController {
         return redactionService;
     }
 
-    @PostMapping(value = "/redact", consumes = "multipart/form-data")
+    @PostMapping(value = "/redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Redact PDF manually",
             description =
@@ -93,7 +102,7 @@ public class RedactController {
                         + "_redacted.pdf");
     }
 
-    @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
+    @PostMapping(value = "/auto-redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Redact PDF automatically",
             description =

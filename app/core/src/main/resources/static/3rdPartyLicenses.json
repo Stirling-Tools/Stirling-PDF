@@ -732,6 +732,13 @@
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
+            "moduleName": "jakarta.mail:jakarta.mail-api",
+            "moduleUrl": "https://www.eclipse.org",
+            "moduleVersion": "2.1.4",
+            "moduleLicense": "GPL2 w/ CPE",
+            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
+        },
+        {
             "moduleName": "jakarta.persistence:jakarta.persistence-api",
             "moduleUrl": "https://www.eclipse.org",
             "moduleVersion": "3.1.0",

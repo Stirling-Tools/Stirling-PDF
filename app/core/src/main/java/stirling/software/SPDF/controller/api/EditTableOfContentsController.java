@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
@@ -29,7 +27,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
@@ -46,7 +46,7 @@ public class EditTableOfContentsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
 
-    @PostMapping(value = "/extract-bookmarks", consumes = "multipart/form-data")
+    @PostMapping(value = "/extract-bookmarks", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
@@ -154,7 +154,7 @@ public class EditTableOfContentsController {
         return bookmark;
     }
 
-    @PostMapping(value = "/edit-table-of-contents", consumes = "multipart/form-data")
+    @PostMapping(value = "/edit-table-of-contents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Edit Table of Contents",
             description = "Add or edit bookmarks/table of contents in a PDF document.")
@@ -242,6 +242,5 @@ public class EditTableOfContentsController {
         private String title;
         private int pageNumber;
         private List<BookmarkItem> children = new ArrayList<>();
-
     }
 }
