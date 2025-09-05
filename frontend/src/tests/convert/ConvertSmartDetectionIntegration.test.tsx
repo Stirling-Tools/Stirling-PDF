@@ -15,7 +15,6 @@ import axios from 'axios';
 import { detectFileExtension } from '../../utils/fileUtils';
 import { FIT_OPTIONS } from '../../constants/convertConstants';
 import { createTestStirlingFile, createTestFilesWithId } from '../utils/testFileHelpers';
-import { StirlingFile } from '../../types/fileContext';
 
 // Mock axios
 vi.mock('axios');
@@ -507,7 +506,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
   describe('Real File Extension Detection', () => {
 
     test('should correctly detect various file extensions', async () => {
-      const { result } = renderHook(() => useConvertParameters(), {
+      renderHook(() => useConvertParameters(), {
         wrapper: TestWrapper
       });
 

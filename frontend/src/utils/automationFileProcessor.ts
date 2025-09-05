@@ -2,7 +2,7 @@
  * File processing utilities specifically for automation workflows
  */
 
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import { zipFileService } from '../services/zipFileService';
 import { ResourceManager } from './resourceManager';
 import { AUTOMATION_CONSTANTS } from '../constants/automation';

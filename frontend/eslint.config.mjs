@@ -25,7 +25,18 @@ export default defineConfig(
       ],
       "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-require-imports": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/no-unused-vars": "off", // Temporarily disabled until codebase conformant
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "args": "all", // All function args must be used (or explicitly ignored)
+          "argsIgnorePattern": "^_", // Allow unused variables beginning with an underscore
+          "caughtErrors": "all", // Caught errors must be used (or explicitly ignored)
+          "caughtErrorsIgnorePattern": "^_", // Allow unused variables beginning with an underscore
+          "destructuredArrayIgnorePattern": "^_", // Allow unused variables beginning with an underscore
+          "varsIgnorePattern": "^_", // Allow unused variables beginning with an underscore
+          "ignoreRestSiblings": true, // Allow unused variables when removing attributes from objects (otherwise this requires explicit renaming like `({ x: _x, ...y }) => y`, which is clunky)
+        },
+      ],
     },
   }
 );

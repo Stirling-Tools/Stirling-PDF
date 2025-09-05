@@ -29,7 +29,7 @@ export default function RightRail() {
 
   // File state and selection
   const { state, selectors } = useFileState();
-  const { selectedFiles, selectedFileIds, selectedPageNumbers, setSelectedFiles, setSelectedPages } = useFileSelection();
+  const { selectedFiles, selectedFileIds, setSelectedFiles } = useFileSelection();
   const { removeFiles } = useFileManagement();
 
   const activeFiles = selectors.getFiles();

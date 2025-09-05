@@ -11,10 +11,11 @@ export const getFilenameFromHeaders = (contentDisposition: string = ''): string 
   const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
   if (match && match[1]) {
     const filename = match[1].replace(/['"]/g, '');
-    // Decode URL-encoded characters (e.g., %20 for spaces)
+
+    // Decode URL-encoded characters (e.g., %20 -> space)
     try {
       return decodeURIComponent(filename);
-    } catch (error) {
+    } catch {
       // If decoding fails, return the original filename
       return filename;
     }
