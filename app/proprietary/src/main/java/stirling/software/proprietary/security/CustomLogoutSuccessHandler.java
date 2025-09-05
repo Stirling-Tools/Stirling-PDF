@@ -71,7 +71,9 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                             authentication.getClass().getSimpleName());
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 }
-            } else if (!jwtService.extractToken(request).isBlank()) {
+            } else if (jwtService != null
+                    && jwtService.extractToken(request) != null
+                    && !jwtService.extractToken(request).isBlank()) {
                 jwtService.clearToken(response);
                 getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
             } else {
