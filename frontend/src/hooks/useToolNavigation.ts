@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { ToolId } from '../types/toolId';
 import { ToolRegistryEntry, getToolUrlPath } from '../data/toolsTaxonomy';
 import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
 import { handleUnlessSpecialClick } from '../utils/clickHandlers';
