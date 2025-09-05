@@ -14,7 +14,13 @@
       "Bash(node:*)",
       "Bash(npm run dev:*)",
       "Bash(sed:*)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(echo:*)",
+      "Bash(keys=\"files.placeholder signMode.stepTitle certTypeStep.stepTitle certFiles.stepTitle appearance.stepTitle appearance.title appearance.invisible appearance.visible appearance.options.title sign.submit sign.results choosePrivateKey chooseCertificate chooseP12File choosePfxFile chooseJksFile password passwordOptional serverCertMessage reason location name showLogo pageNumber logoTitle noLogo\")",
+      "Bash(__NEW_LINE__ echo \"\")",
+      "Bash(for key in $keys)",
+      "Bash(do)",
+      "Bash(done)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
