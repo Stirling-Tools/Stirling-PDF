@@ -54,6 +54,7 @@ public class AddStampRequest extends PDFWithPageNums {
                     "Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center,"
                             + " 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right,"
                             + " 7: top-left, 8: top-center, 9: top-right)",
+            type = "integer",
             allowableValues = {"1", "2", "3", "4", "5", "6", "7", "8", "9"},
             defaultValue = "5",
             requiredMode = Schema.RequiredMode.REQUIRED)

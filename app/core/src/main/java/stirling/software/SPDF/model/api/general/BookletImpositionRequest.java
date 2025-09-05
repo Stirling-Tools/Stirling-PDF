@@ -21,7 +21,7 @@ public class BookletImpositionRequest extends PDFFile {
 
     @Schema(
             description = "The number of pages to fit onto a single sheet in the output PDF.",
-            type = "number",
+            type = "integer",
             defaultValue = "2",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"2", "4"})

@@ -15,6 +15,7 @@ public class OptimizePdfRequest extends PDFFile {
             description =
                     "The level of optimization to apply to the PDF file. Higher values indicate"
                             + " greater compression but may reduce quality.",
+            type = "integer",
             defaultValue = "5",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
