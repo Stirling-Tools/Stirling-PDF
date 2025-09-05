@@ -1,6 +1,5 @@
 import React from "react";
 import { Button, Stack, Text, Divider } from "@mantine/core";
-import { useTranslation } from "react-i18next";
 import { BookletImpositionParameters } from "../../../hooks/tools/bookletImposition/useBookletImpositionParameters";
 
 interface BookletImpositionSettingsProps {
@@ -10,7 +9,6 @@ interface BookletImpositionSettingsProps {
 }
 
 const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = false }: BookletImpositionSettingsProps) => {
-  const { t } = useTranslation();
 
   return (
     <Stack gap="md">
