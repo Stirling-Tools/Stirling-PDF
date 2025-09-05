@@ -41,7 +41,7 @@ public class SplitPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/split-pages")
     @Operation(
             summary = "Split a PDF file into separate documents",
             description =
