@@ -39,7 +39,6 @@ const DEBUG = process.env.NODE_ENV === 'development';
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
   children,
-  enableUrlSync = true,
   enablePersistence = true
 }: FileContextProviderProps) {
   const [state, dispatch] = useReducer(fileContextReducer, initialFileContextState);
@@ -128,19 +127,8 @@ function FileContextInner({
   }, [indexedDB]);
 
   const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]): Promise<void> => {
-    return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, stateRef, filesRef, dispatch, indexedDB);
+    return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, filesRef, dispatch, indexedDB);
   }, [indexedDB]);
-
-  // Helper to find FileId from File object
-  const findFileId = useCallback((file: File): FileId | undefined => {
-    return (Object.keys(stateRef.current.files.byId) as FileId[]).find(id => {
-      const storedFile = filesRef.current.get(id);
-      return storedFile &&
-             storedFile.name === file.name &&
-             storedFile.size === file.size &&
-             storedFile.lastModified === file.lastModified;
-    });
-  }, []);
 
   // File pinning functions - use StirlingFile directly
   const pinFileWrapper = useCallback((file: StirlingFile) => {

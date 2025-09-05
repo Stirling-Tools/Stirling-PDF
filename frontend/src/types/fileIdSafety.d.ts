@@ -2,19 +2,19 @@
  * Type safety declarations to prevent file.name/UUID confusion
  */
 
-import { FileId, StirlingFile, OperationType, FileOperation } from './fileContext';
+import { FileId, StirlingFile } from './fileContext';
 
 declare global {
   namespace FileIdSafety {
     // Mark functions that should never accept file.name as parameters
-    type SafeFileIdFunction<T extends (...args: any[]) => any> = T extends (...args: infer P) => infer R
+    type SafeFileIdFunction<T extends (...args: any[]) => any> = T extends (...args: infer P) => infer _R
       ? P extends readonly [string, ...any[]]
         ? never // Reject string parameters in first position for FileId functions
         : T
       : T;
 
     // Mark functions that should only accept StirlingFile, not regular File
-    type StirlingFileOnlyFunction<T extends (...args: any[]) => any> = T extends (...args: infer P) => infer R
+    type StirlingFileOnlyFunction<T extends (...args: any[]) => any> = T extends (...args: infer P) => infer _R
       ? P extends readonly [File, ...any[]]
         ? never // Reject File parameters in first position for StirlingFile functions
         : T
@@ -38,7 +38,7 @@ declare module '../contexts/FileContext' {
     addFiles: (files: File[], options?: { insertAfterPageId?: string }) => Promise<StirlingFile[]>; // Returns StirlingFile
     consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<StirlingFile[]>; // Returns StirlingFile
   }
-  
+
   export interface StrictFileContextSelectors {
     getFile: (id: FileId) => StirlingFile | undefined; // Returns StirlingFile
     getFiles: (ids?: FileId[]) => StirlingFile[]; // Returns StirlingFile[]

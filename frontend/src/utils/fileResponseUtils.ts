@@ -11,11 +11,11 @@ export const getFilenameFromHeaders = (contentDisposition: string = ''): string 
   const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
   if (match && match[1]) {
     const filename = match[1].replace(/['"]/g, '');
-    
+
     // Decode URL-encoded characters (e.g., %20 -> space)
     try {
       return decodeURIComponent(filename);
-    } catch (error) {
+    } catch {
       // If decoding fails, return the original filename
       return filename;
     }
@@ -37,9 +37,9 @@ export const createFileFromApiResponse = (
 ): File => {
   const contentType = headers?.['content-type'] || 'application/octet-stream';
   const contentDisposition = headers?.['content-disposition'] || '';
-  
+
   const filename = getFilenameFromHeaders(contentDisposition) || fallbackFilename;
   const blob = new Blob([responseData], { type: contentType });
-  
+
   return new File([blob], filename, { type: contentType });
 };

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { thumbnailGenerationService } from '../services/thumbnailGenerationService';
 import { createQuickKey } from '../types/fileContext';
 import { FileId } from '../types/file';

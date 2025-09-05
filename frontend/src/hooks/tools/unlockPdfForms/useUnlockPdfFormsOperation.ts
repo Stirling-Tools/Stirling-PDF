@@ -4,7 +4,7 @@ import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { UnlockPdfFormsParameters, defaultParameters } from './useUnlockPdfFormsParameters';
 
 // Static function that can be used by both the hook and automation executor
-export const buildUnlockPdfFormsFormData = (parameters: UnlockPdfFormsParameters, file: File): FormData => {
+export const buildUnlockPdfFormsFormData = (_parameters: UnlockPdfFormsParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   return formData;
