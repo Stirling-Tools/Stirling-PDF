@@ -1,6 +1,6 @@
 /**
  * PDF.js Worker Manager - Centralized worker lifecycle management
- * 
+ *
  * Prevents infinite worker creation by managing PDF.js workers globally
  * and ensuring proper cleanup when operations complete.
  */
@@ -86,7 +86,7 @@ class PDFWorkerManager {
       const pdf = await loadingTask.promise;
       this.activeDocuments.add(pdf);
       this.workerCount++;
-      
+
       return pdf;
     } catch (error) {
       // If document creation fails, make sure to clean up the loading task
@@ -94,6 +94,7 @@ class PDFWorkerManager {
         try {
           loadingTask.destroy();
         } catch (destroyError) {
+          // Ignore errors
         }
       }
       throw error;
@@ -125,7 +126,7 @@ class PDFWorkerManager {
     documentsToDestroy.forEach(pdf => {
       this.destroyDocument(pdf);
     });
-    
+
     this.activeDocuments.clear();
     this.workerCount = 0;
   }
@@ -166,9 +167,10 @@ class PDFWorkerManager {
       try {
         pdf.destroy();
       } catch (error) {
+        // Ignore errors
       }
     });
-    
+
     this.activeDocuments.clear();
     this.workerCount = 0;
   }
