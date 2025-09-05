@@ -1,11 +1,30 @@
 {
-  "editor.wordSegmenterLocales": "",
+  "editor.wordSegmenterLocales": [
+    "en-GB",
+    "en-US"
+  ],
   "editor.guides.bracketPairs": "active",
   "editor.guides.bracketPairsHorizontal": "active",
   "editor.defaultFormatter": "EditorConfig.EditorConfig",
   "cSpell.enabled": false,
+  "cSpell.language": "en-GB,en-US",
   "[feature]": {
     "editor.defaultFormatter": "alexkrechik.cucumberautocomplete"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[java]": {
     "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
@@ -53,7 +72,21 @@
   "java.saveActions.cleanup": true,
   "java.cleanup.actions": [
     "invertEquals", // Inverts calls to Object.equals(Object) and String.equalsIgnoreCase(String) to avoid useless null pointer exception.
-    "instanceofPatternMatch" // Replaces instanceof checks with pattern matching.
+    "instanceofPatternMatch", // Replaces instanceof checks with pattern matching.
+    "useSwitchForInstanceofPattern", // Replaces instanceof checks with switch expressions.
+    "renameUnusedLocalVariables", // Renames unused local variables.
+    "switchExpression", // Replaces switch statements with switch expressions.
+    "lambdaExpressionFromAnonymousClass", // Replaces anonymous classes with lambda expressions.
+    "tryWithResource", // Replaces try-with-resources statements with the new syntax.
+    "lambdaExpression", // Converts anonymous classes to lambda expressions.
+    "redundantComparisonStatement", // Removes redundant comparison statements.
+    "redundantFallingThroughBlockEnd", // Removes redundant block ends in switch statements.
+    "redundantIfCondition", // Removes redundant if conditions.
+    "redundantModifiers", // Removes redundant modifiers.
+    "addOverride", // Adds @Override annotations where applicable.
+    "addDeprecated", // Adds @Deprecated annotations where applicable.
+    // "addFinalModifier", // Adds final modifiers to fields and methods where applicable.
+    "redundantSuperCall", // Removes redundant super calls in constructors.
   ],
   // (DE) Aktiviert die Code-Vervollständigung für Java.
   // (EN) Enables code completion for Java.
@@ -135,9 +168,22 @@
   "html.format.preserveNewLines": true,
   "html.format.maxPreserveNewLines": 2,
   "stylelint.configFile": "devTools/.stylelintrc.json",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  },
   "java.project.sourcePaths": [
     "app/core/src/main/java",
     "app/common/src/main/java",
     "app/proprietary/src/main/java"
-  ]
+  ],
+  "java.compile.nullAnalysis.nonnull": [],
+  "java.compile.nullAnalysis.nullable": [],
+  "java.errors.incompleteClasspath.severity": "warning",
 }
