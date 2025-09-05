@@ -66,7 +66,7 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
         />
       )}
 
-      {parameters.certType === 'SERVER' && (
+      {parameters.signMode === 'AUTO' && (
         <Text c="dimmed" size="sm">
           {t('certSign.serverCertMessage', 'Using server certificate - no files or password required')}
         </Text>
