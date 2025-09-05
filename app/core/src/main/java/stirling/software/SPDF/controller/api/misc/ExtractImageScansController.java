@@ -55,7 +55,7 @@ public class ExtractImageScansController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/extract-image-scans")
     @Operation(
             summary = "Extract image scans from an input file",
             description =
