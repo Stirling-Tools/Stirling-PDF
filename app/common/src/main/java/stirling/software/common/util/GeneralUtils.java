@@ -31,6 +31,8 @@ import io.github.pixee.security.Urls;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.exception.FileTooLargeException;
+import stirling.software.common.service.UploadLimitService;
 
 @Slf4j
 public class GeneralUtils {
@@ -45,6 +47,20 @@ public class GeneralUtils {
 
     private static final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
     private static final String PYTHON_SCRIPTS_DIR = "python";
+
+    private static long getMaxUploadSize() {
+        UploadLimitService uploadLimitService =
+                ApplicationContextProvider.getBean(UploadLimitService.class);
+        long limit = uploadLimitService != null ? uploadLimitService.getUploadLimit() : 0;
+        return limit;
+    }
+
+    public static void checkMaxUploadSize(MultipartFile file) {
+        long maxUploadSize = getMaxUploadSize();
+        if (maxUploadSize > 0 && file != null && file.getSize() > maxUploadSize) {
+            throw new FileTooLargeException(maxUploadSize);
+        }
+    }
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
@@ -134,6 +150,13 @@ public class GeneralUtils {
 
     public static boolean isURLReachable(String urlStr) {
         try {
+            // SsrfProtectionService ssrfService =
+            //         SpringContextHolder.getBean(SsrfProtectionService.class);
+            // if (ssrfService != null && !ssrfService.isUrlAllowed(urlStr)) {
+            //     log.info("Blocked SSRF attempt to URL: {}", urlStr);
+            //     return false; // Block URLs not explicitly allowed
+            // }
+
             // Parse the URL
             URL url = URI.create(urlStr).toURL();
 
