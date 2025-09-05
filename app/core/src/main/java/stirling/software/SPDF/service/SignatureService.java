@@ -68,8 +68,7 @@ public class SignatureService {
     private List<SignatureFile> getSignaturesFromFolder(Path folder, String category)
             throws IOException {
         try (Stream<Path> stream = Files.list(folder)) {
-            return stream
-                    .filter(path -> isImageFile(path))
+            return stream.filter(this::isImageFile)
                     .map(path -> new SignatureFile(path.getFileName().toString(), category))
                     .toList();
         }

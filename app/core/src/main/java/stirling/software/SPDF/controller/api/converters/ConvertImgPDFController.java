@@ -153,9 +153,8 @@ public class ConvertImgPDFController {
                 // Find all WebP files in the output directory
                 List<Path> webpFiles;
                 try (Stream<Path> walkStream = Files.walk(tempOutputDir)) {
-                    webpFiles = walkStream
-                            .filter(path -> path.toString().endsWith(".webp"))
-                            .toList();
+                    webpFiles =
+                            walkStream.filter(path -> path.toString().endsWith(".webp")).toList();
                 }
 
                 if (webpFiles.isEmpty()) {
