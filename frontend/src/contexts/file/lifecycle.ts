@@ -3,7 +3,7 @@
  */
 
 import { FileId } from '../../types/file';
-import { FileContextAction, FileRecord, ProcessedFilePage } from '../../types/fileContext';
+import { FileContextAction, StirlingFileStub, ProcessedFilePage } from '../../types/fileContext';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -50,7 +50,7 @@ export class FileLifecycleManager {
     this.blobUrls.forEach(url => {
       try {
         URL.revokeObjectURL(url);
-      } catch (error) {
+      } catch {
         // Ignore revocation errors
       }
     });
@@ -134,7 +134,7 @@ export class FileLifecycleManager {
         if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
           try {
             URL.revokeObjectURL(record.thumbnailUrl);
-          } catch (error) {
+          } catch {
             // Ignore revocation errors
           }
         }
@@ -142,18 +142,18 @@ export class FileLifecycleManager {
         if (record.blobUrl && record.blobUrl.startsWith('blob:')) {
           try {
             URL.revokeObjectURL(record.blobUrl);
-          } catch (error) {
+          } catch {
             // Ignore revocation errors
           }
         }
 
         // Clean up processed file thumbnails
         if (record.processedFile?.pages) {
-          record.processedFile.pages.forEach((page: ProcessedFilePage, index: number) => {
+          record.processedFile.pages.forEach((page: ProcessedFilePage) => {
             if (page.thumbnail && page.thumbnail.startsWith('blob:')) {
               try {
                 URL.revokeObjectURL(page.thumbnail);
-              } catch (error) {
+              } catch {
                 // Ignore revocation errors
               }
             }
@@ -166,7 +166,7 @@ export class FileLifecycleManager {
   /**
    * Update file record with race condition guards
    */
-  updateFileRecord = (fileId: FileId, updates: Partial<FileRecord>, stateRef?: React.MutableRefObject<any>): void => {
+  updateStirlingFileStub = (fileId: FileId, updates: Partial<StirlingFileStub>, stateRef?: React.MutableRefObject<any>): void => {
     // Guard against updating removed files (race condition protection)
     if (!this.filesRef.current.has(fileId)) {
       if (DEBUG) console.warn(`🗂️ Attempted to update removed file (filesRef): ${fileId}`);
