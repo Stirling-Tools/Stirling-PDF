@@ -26,8 +26,8 @@ const AddWatermarkSingleStepSettings = ({ parameters, onParameterChange, disable
     <Stack gap="lg">
       {/* Watermark Type Selection */}
       <WatermarkTypeSettings
-        watermarkType={parameters.watermarkType}
-        onWatermarkTypeChange={(type) => onParameterChange("watermarkType", type)}
+        parameters={parameters}
+        onParameterChange={onParameterChange}
         disabled={disabled}
       />
 
