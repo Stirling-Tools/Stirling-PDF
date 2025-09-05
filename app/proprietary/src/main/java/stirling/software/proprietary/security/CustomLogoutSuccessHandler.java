@@ -71,9 +71,12 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                             authentication.getClass().getSimpleName());
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 }
-            } else if (!jwtService.extractToken(request).isBlank()) {
-                jwtService.clearToken(response);
-                getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+            } else if (jwtService != null) {
+                String token = jwtService.extractToken(request);
+                if (token != null && !token.isBlank()) {
+                    jwtService.clearToken(response);
+                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                }
             } else {
                 // Redirect to login page after logout
                 String path = checkForErrors(request);
@@ -165,7 +168,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
                 } else {
                     log.info(
-                            "No redirect URL for {} available. Redirecting to default logout URL: {}",
+                            "No redirect URL for {} available. Redirecting to default logout URL:"
+                                    + " {}",
                             registrationId,
                             logoutUrl);
                 }
