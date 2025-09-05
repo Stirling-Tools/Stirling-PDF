@@ -54,8 +54,7 @@ public class GeneralUtils {
 
     private static long getMaxUploadSize() {
         UploadLimitService uploadLimitService = getUploadLimitService();
-        long limit = uploadLimitService != null ? uploadLimitService.getUploadLimit() : 0;
-        return limit;
+        return uploadLimitService != null ? uploadLimitService.getUploadLimit() : 0;
     }
 
     public static void checkMaxUploadSize(MultipartFile file) {
