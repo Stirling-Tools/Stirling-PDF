@@ -122,13 +122,13 @@ Stirling-PDF currently supports 40 languages!
 | Bulgarian (Български) (bg_BG)                | ![68%](https://geps.dev/progress/68)   |
 | Catalan (Català) (ca_CA)                     | ![67%](https://geps.dev/progress/67)   |
 | Croatian (Hrvatski) (hr_HR)                  | ![60%](https://geps.dev/progress/60)   |
-| Czech (Česky) (cs_CZ)                        | ![70%](https://geps.dev/progress/70)   |
+| Czech (Česky) (cs_CZ)                        | ![69%](https://geps.dev/progress/69)   |
 | Danish (Dansk) (da_DK)                       | ![61%](https://geps.dev/progress/61)   |
 | Dutch (Nederlands) (nl_NL)                   | ![60%](https://geps.dev/progress/60)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                    | ![88%](https://geps.dev/progress/88)   |
-| German (Deutsch) (de_DE)                     | ![98%](https://geps.dev/progress/98)   |
+| German (Deutsch) (de_DE)                     | ![97%](https://geps.dev/progress/97)   |
 | Greek (Ελληνικά) (el_GR)                     | ![67%](https://geps.dev/progress/67)   |
 | Hindi (हिंदी) (hi_IN)                          | ![67%](https://geps.dev/progress/67)   |
 | Hungarian (Magyar) (hu_HU)                   | ![99%](https://geps.dev/progress/99)   |
@@ -144,7 +144,7 @@ Stirling-PDF currently supports 40 languages!
 | Portuguese Brazilian (Português) (pt_BR)     | ![76%](https://geps.dev/progress/76)   |
 | Romanian (Română) (ro_RO)                    | ![57%](https://geps.dev/progress/57)   |
 | Russian (Русский) (ru_RU)                    | ![88%](https://geps.dev/progress/88)   |
-| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![95%](https://geps.dev/progress/95)   |
+| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![94%](https://geps.dev/progress/94)   |
 | Simplified Chinese (简体中文) (zh_CN)         | ![93%](https://geps.dev/progress/93)   |
 | Slovakian (Slovensky) (sk_SK)                | ![51%](https://geps.dev/progress/51)   |
 | Slovenian (Slovenščina) (sl_SI)              | ![71%](https://geps.dev/progress/71)   |
