@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Group, TextInput, Button, Text, Menu, NumberInput, Divider, Box, Flex } from '@mantine/core';
+import { useState } from 'react';
+import { Group, TextInput, Button, Text, NumberInput, Flex } from '@mantine/core';
 import LocalIcon from '../shared/LocalIcon';
 import { Tooltip } from '../shared/Tooltip';
 import { usePageSelectionTips } from '../tooltips/usePageSelectionTips';
@@ -30,7 +30,6 @@ const BulkSelectionPanel = ({
 }: BulkSelectionPanelProps) => {
   const pageSelectionTips = usePageSelectionTips();
   const [advancedOpened, setAdvancedOpened] = useState<boolean>(false);
-  const [pendingAction, setPendingAction] = useState<null | 'firstN' | 'lastN' | 'everyNth' | 'range'>(null);
   const [firstNValue, setFirstNValue] = useState<number | ''>('');
   const [lastNValue, setLastNValue] = useState<number | ''>('');
   const [everyNthValue, setEveryNthValue] = useState<number | ''>('');
@@ -47,31 +46,15 @@ const BulkSelectionPanel = ({
     const nextInput = appendExpression(csvInput, expr);
     setCsvInput(nextInput);
     onUpdatePagesFromCSV(nextInput);
-    setPendingAction(null);
   };
 
   const handleNone = () => {
     setCsvInput('');
     onUpdatePagesFromCSV();
-    setPendingAction(null);
     setFirstNValue('');
     setLastNValue('');
     setEveryNthValue('');
   };
-
-  const selectAction = (action: 'firstN' | 'lastN' | 'everyNth' | 'range') => {
-    setPendingAction(action);
-    setFirstNValue('');
-    setLastNValue('');
-    setEveryNthValue('');
-    setRangeStart('');
-    setRangeEnd('');
-    setFirstNError(null);
-    setLastNError(null);
-    setRangeError(null);
-  };
-
-
 
   const insertOperator = (op: 'and' | 'or' | 'not') => {
     const next = insertOperatorSmart(csvInput, op);
