@@ -45,7 +45,6 @@ const FileEditorThumbnail = ({
   selectedFiles,
   onToggleFile,
   onDeleteFile,
-  onViewFile,
   onSetStatus,
   onReorderFiles,
   onDownloadFile,
@@ -62,8 +61,8 @@ const FileEditorThumbnail = ({
 
   // Resolve the actual File object for pin/unpin operations
   const actualFile = useMemo(() => {
-    return activeFiles.find((f: File) => f.name === file.name && f.size === file.size);
-  }, [activeFiles, file.name, file.size]);
+    return activeFiles.find(f => f.fileId === file.id);
+  }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
   // Get file record to access tool history

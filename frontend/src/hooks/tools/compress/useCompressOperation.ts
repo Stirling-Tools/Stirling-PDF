@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolOperationConfig, ToolType } from '../shared/useToolOperation';
+import { useToolOperation, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { CompressParameters, defaultParameters } from './useCompressParameters';
 

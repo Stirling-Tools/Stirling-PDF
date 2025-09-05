@@ -31,7 +31,7 @@ export class PDFExportService {
       const originalPDFBytes = await pdfDocument.file.arrayBuffer();
       const sourceDoc = await PDFLibDocument.load(originalPDFBytes, { ignoreEncryption: true });
       const blob = await this.createSingleDocument(sourceDoc, pagesToExport);
-      const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly, false);
+      const exportFilename = this.generateFilename(filename || pdfDocument.name);
 
       return { blob, filename: exportFilename };
     } catch (error) {
@@ -62,7 +62,7 @@ export class PDFExportService {
       }
 
       const blob = await this.createMultiSourceDocument(sourceFiles, pagesToExport);
-      const exportFilename = this.generateFilename(filename || pdfDocument.name, selectedOnly, false);
+      const exportFilename = this.generateFilename(filename || pdfDocument.name);
 
       return { blob, filename: exportFilename };
     } catch (error) {
@@ -130,7 +130,7 @@ export class PDFExportService {
     newDoc.setModificationDate(new Date());
 
     const pdfBytes = await newDoc.save();
-    return new Blob([pdfBytes], { type: 'application/pdf' });
+    return new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
   }
 
   /**
@@ -176,14 +176,14 @@ export class PDFExportService {
     newDoc.setModificationDate(new Date());
 
     const pdfBytes = await newDoc.save();
-    return new Blob([pdfBytes], { type: 'application/pdf' });
+    return new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
   }
 
 
   /**
    * Generate appropriate filename for export
    */
-  private generateFilename(originalName: string, selectedOnly: boolean, appendSuffix: boolean): string {
+  private generateFilename(originalName: string): string {
     const baseName = originalName.replace(/\.pdf$/i, '');
     return `${baseName}.pdf`;
   }
@@ -210,7 +210,7 @@ export class PDFExportService {
   /**
    * Download multiple files as a ZIP
    */
-  async downloadAsZip(blobs: Blob[], filenames: string[], zipFilename: string): Promise<void> {
+  async downloadAsZip(blobs: Blob[], filenames: string[]): Promise<void> {
     blobs.forEach((blob, index) => {
       setTimeout(() => {
         this.downloadFile(blob, filenames[index]);

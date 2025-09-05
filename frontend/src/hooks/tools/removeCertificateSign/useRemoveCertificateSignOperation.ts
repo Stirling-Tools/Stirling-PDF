@@ -4,7 +4,7 @@ import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RemoveCertificateSignParameters, defaultParameters } from './useRemoveCertificateSignParameters';
 
 // Static function that can be used by both the hook and automation executor
-export const buildRemoveCertificateSignFormData = (parameters: RemoveCertificateSignParameters, file: File): FormData => {
+export const buildRemoveCertificateSignFormData = (_parameters: RemoveCertificateSignParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   return formData;

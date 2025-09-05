@@ -70,7 +70,7 @@ export const useSplitOperation = () => {
 
   // Custom response handler that extracts ZIP files
   // Can't add to exported config because it requires access to the zip code so must be part of the hook
-  const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
+  const responseHandler = useCallback(async (blob: Blob, _originalFiles: File[]): Promise<File[]> => {
     // Split operations return ZIP files with multiple PDF pages
     return await extractZipFiles(blob);
   }, [extractZipFiles]);

@@ -2,9 +2,8 @@ import { useCallback } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters, defaultParameters } from './useConvertParameters';
-import { detectFileExtension } from '../../../utils/fileUtils';
 import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
-import { useToolOperation, ToolOperationConfig, ToolType } from '../shared/useToolOperation';
+import { useToolOperation, ToolType } from '../shared/useToolOperation';
 import { getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
 
 // Static function that can be used by both the hook and automation executor

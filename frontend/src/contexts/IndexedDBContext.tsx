@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useCallback, useRef } from 'react';
 
 const DEBUG = process.env.NODE_ENV === 'development';
-import { fileStorage, StoredFile } from '../services/fileStorage';
+import { fileStorage } from '../services/fileStorage';
 import { FileId } from '../types/file';
 import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
@@ -64,7 +64,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     const thumbnail = existingThumbnail || await generateThumbnailForFile(file);
 
     // Store in IndexedDB
-    const storedFile = await fileStorage.storeFile(file, fileId, thumbnail);
+    await fileStorage.storeFile(file, fileId, thumbnail);
 
     // Cache the file object for immediate reuse
     fileCache.current.set(fileId, { file, lastAccessed: Date.now() });
