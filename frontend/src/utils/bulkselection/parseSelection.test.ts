@@ -1,13 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseSelection } from './parseSelection';
 
-// Helper to stringify result for readability
-function arr(max: number, fn: (i: number) => boolean): number[] {
-  const out: number[] = [];
-  for (let i = 1; i <= max; i++) if (fn(i)) out.push(i);
-  return out;
-}
-
 describe('parseSelection', () => {
   const max = 120;
 

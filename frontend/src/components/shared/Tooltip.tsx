@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import LocalIcon from './LocalIcon';
-import { addEventListenerWithCleanup, isClickOutside } from '../../utils/genericUtils';
+import { addEventListenerWithCleanup } from '../../utils/genericUtils';
 import { useTooltipPosition } from '../../hooks/useTooltipPosition';
 import { TooltipTip } from '../../types/tips';
 import { TooltipContent } from './tooltip/TooltipContent';
