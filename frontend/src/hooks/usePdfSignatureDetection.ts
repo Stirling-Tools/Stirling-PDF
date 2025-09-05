@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import * as pdfjsLib from 'pdfjs-dist';
 import { pdfWorkerManager } from '../services/pdfWorkerManager';
+import { StirlingFile } from '../types/fileContext';
 
 export interface PdfSignatureDetectionResult {
   hasDigitalSignatures: boolean;
   isChecking: boolean;
 }
 
-export const usePdfSignatureDetection = (files: File[]): PdfSignatureDetectionResult => {
+export const usePdfSignatureDetection = (files: StirlingFile[]): PdfSignatureDetectionResult => {
   const [hasDigitalSignatures, setHasDigitalSignatures] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
@@ -25,7 +25,7 @@ export const usePdfSignatureDetection = (files: File[]): PdfSignatureDetectionRe
 
         for (const file of files) {
           const arrayBuffer = await file.arrayBuffer();
-          
+
           try {
             const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
 
@@ -41,7 +41,7 @@ export const usePdfSignatureDetection = (files: File[]): PdfSignatureDetectionRe
 
               if (foundSignature) break;
             }
-            
+
             // Clean up PDF document using worker manager
             pdfWorkerManager.destroyDocument(pdf);
           } catch (error) {

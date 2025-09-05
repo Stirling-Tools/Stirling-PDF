@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { clamp } from '../utils/genericUtils';
 import { getSidebarInfo } from '../utils/sidebarUtils';
 import { SidebarRefs, SidebarState } from '../types/sidebar';
@@ -65,10 +65,10 @@ export function useTooltipPosition({
   sidebarRefs?: SidebarRefs;
   sidebarState?: SidebarState;
 }): PositionState {
-  const [coords, setCoords] = useState<{ top: number; left: number; arrowOffset: number | null }>({ 
-    top: 0, 
-    left: 0, 
-    arrowOffset: null 
+  const [coords, setCoords] = useState<{ top: number; left: number; arrowOffset: number | null }>({
+    top: 0,
+    left: 0,
+    arrowOffset: null
   });
   const [positionReady, setPositionReady] = useState(false);
 
@@ -174,4 +174,4 @@ export function useTooltipPosition({
   }, [open, sidebarLeft, position, gap, sidebarTooltip]);
 
   return { coords, positionReady };
-} 
+}

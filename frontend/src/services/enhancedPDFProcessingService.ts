@@ -1,10 +1,10 @@
-import * as pdfjsLib from 'pdfjs-dist';
-import { ProcessedFile, ProcessingState, PDFPage, ProcessingStrategy, ProcessingConfig, ProcessingMetrics } from '../types/processing';
+import { ProcessedFile, ProcessingState, PDFPage, ProcessingConfig, ProcessingMetrics } from '../types/processing';
 import { ProcessingCache } from './processingCache';
 import { FileHasher } from '../utils/fileHash';
 import { FileAnalyzer } from './fileAnalyzer';
 import { ProcessingErrorHandler } from './processingErrorHandler';
 import { pdfWorkerManager } from './pdfWorkerManager';
+import { createQuickKey } from '../types/fileContext';
 
 export class EnhancedPDFProcessingService {
   private static instance: EnhancedPDFProcessingService;
@@ -182,7 +182,7 @@ export class EnhancedPDFProcessingService {
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
-    
+
     try {
       const totalPages = pdf.numPages;
 
@@ -201,7 +201,7 @@ export class EnhancedPDFProcessingService {
         const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
 
         pages.push({
-          id: `${file.name}-page-${i}`,
+          id: `${createQuickKey(file)}-page-${i}`,
           pageNumber: i,
           thumbnail,
           rotation: 0,
@@ -251,7 +251,7 @@ export class EnhancedPDFProcessingService {
       const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
 
       pages.push({
-        id: `${file.name}-page-${i}`,
+        id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail,
         rotation: 0,
@@ -266,7 +266,7 @@ export class EnhancedPDFProcessingService {
     // Create placeholder pages for remaining pages
     for (let i = priorityCount + 1; i <= totalPages; i++) {
       pages.push({
-        id: `${file.name}-page-${i}`,
+        id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail: null, // Will be loaded lazily
         rotation: 0,
@@ -313,7 +313,7 @@ export class EnhancedPDFProcessingService {
       const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
 
       pages.push({
-        id: `${file.name}-page-${i}`,
+        id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail,
         rotation: 0,
@@ -334,7 +334,7 @@ export class EnhancedPDFProcessingService {
     // Create placeholders for remaining pages
     for (let i = firstChunkEnd + 1; i <= totalPages; i++) {
       pages.push({
-        id: `${file.name}-page-${i}`,
+        id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail: null,
         rotation: 0,
@@ -354,7 +354,7 @@ export class EnhancedPDFProcessingService {
    */
   private async processMetadataOnly(
     file: File,
-    config: ProcessingConfig,
+    _config: ProcessingConfig,
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
@@ -368,7 +368,7 @@ export class EnhancedPDFProcessingService {
     const pages: PDFPage[] = [];
     for (let i = 1; i <= totalPages; i++) {
       pages.push({
-        id: `${file.name}-page-${i}`,
+        id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail: null,
         rotation: 0,
@@ -459,11 +459,12 @@ export class EnhancedPDFProcessingService {
       case 'failed':
         this.metrics.failedFiles++;
         break;
-      case 'cacheHit':
+      case 'cacheHit': {
         // Update cache hit rate
         const totalAttempts = this.metrics.totalFiles + 1;
         this.metrics.cacheHitRate = (this.metrics.cacheHitRate * this.metrics.totalFiles + 1) / totalAttempts;
         break;
+      }
     }
   }
 
@@ -508,7 +509,7 @@ export class EnhancedPDFProcessingService {
    */
   clearAllProcessing(): void {
     // Cancel all ongoing processing
-    this.processing.forEach((state, key) => {
+    this.processing.forEach((state) => {
       if (state.cancellationToken) {
         state.cancellationToken.abort();
       }
@@ -519,10 +520,7 @@ export class EnhancedPDFProcessingService {
     this.notifyListeners();
 
     // Force memory cleanup hint
-    if (typeof window !== 'undefined' && window.gc) {
-      let gc = window.gc;
-      setTimeout(() => gc(), 100);
-    }
+    setTimeout(() => window.gc?.(), 100);
   }
 
   /**

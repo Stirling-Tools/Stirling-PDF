@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Text, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import FolderIcon from '@mui/icons-material/Folder';
@@ -6,9 +6,10 @@ import UploadIcon from '@mui/icons-material/Upload';
 import { useFilesModalContext } from "../../../contexts/FilesModalContext";
 import { useAllFiles } from "../../../contexts/FileContext";
 import { useFileManager } from "../../../hooks/useFileManager";
+import { StirlingFile } from "../../../types/fileContext";
 
 export interface FileStatusIndicatorProps {
-  selectedFiles?: File[];
+  selectedFiles?: StirlingFile[];
   placeholder?: string;
 }
 
@@ -17,7 +18,7 @@ const FileStatusIndicator = ({
 }: FileStatusIndicatorProps) => {
   const { t } = useTranslation();
   const { openFilesModal, onFilesSelect } = useFilesModalContext();
-  const { files: workbenchFiles } = useAllFiles();
+  const { files: stirlingFileStubs } = useAllFiles();
   const { loadRecentFiles } = useFileManager();
   const [hasRecentFiles, setHasRecentFiles] = useState<boolean | null>(null);
 
@@ -27,7 +28,7 @@ const FileStatusIndicator = ({
       try {
         const recentFiles = await loadRecentFiles();
         setHasRecentFiles(recentFiles.length > 0);
-      } catch (error) {
+      } catch {
         setHasRecentFiles(false);
       }
     };
@@ -55,7 +56,7 @@ const FileStatusIndicator = ({
   }
 
   // Check if there are no files in the workbench
-  if (workbenchFiles.length === 0) {
+  if (stirlingFileStubs.length === 0) {
     // If no recent files, show upload button
     if (!hasRecentFiles) {
       return (
