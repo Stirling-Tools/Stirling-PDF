@@ -16,12 +16,12 @@ import styles from './FileEditor.module.css';
 import FileEditorThumbnail from './FileEditorThumbnail';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
-import { FileId } from '../../types/file';
+import { FileId, StirlingFile } from '../../types/fileContext';
 
 
 interface FileEditorProps {
-  onOpenPageEditor?: (file: File) => void;
-  onMergeFiles?: (files: File[]) => void;
+  onOpenPageEditor?: (file: StirlingFile) => void;
+  onMergeFiles?: (files: StirlingFile[]) => void;
   toolMode?: boolean;
   showUpload?: boolean;
   showBulkActions?: boolean;
@@ -50,7 +50,7 @@ const FileEditor = ({
 
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeFiles = useMemo(() => selectors.getFiles(), [selectors.getFilesSignature()]);
-  const activeFileRecords = useMemo(() => selectors.getFileRecords(), [selectors.getFilesSignature()]);
+  const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [selectors.getFilesSignature()]);
   const selectedFileIds = state.ui.selectedFileIds;
   const isProcessing = state.ui.isProcessing;
 
@@ -92,10 +92,10 @@ const FileEditor = ({
   const contextSelectedIdsRef = useRef<FileId[]>([]);
   contextSelectedIdsRef.current = contextSelectedIds;
 
-  // Use activeFileRecords directly - no conversion needed
+  // Use activeStirlingFileStubs directly - no conversion needed
   const localSelectedIds = contextSelectedIds;
 
-  // Helper to convert FileRecord to FileThumbnail format
+  // Helper to convert StirlingFileStub to FileThumbnail format
   const recordToFileItem = useCallback((record: any) => {
     const file = selectors.getFile(record.id);
     if (!file) return null;
@@ -253,26 +253,26 @@ const FileEditor = ({
   }, [addFiles]);
 
   const selectAll = useCallback(() => {
-    setSelectedFiles(activeFileRecords.map(r => r.id)); // Use FileRecord IDs directly
-  }, [activeFileRecords, setSelectedFiles]);
+    setSelectedFiles(activeStirlingFileStubs.map(r => r.id)); // Use StirlingFileStub IDs directly
+  }, [activeStirlingFileStubs, setSelectedFiles]);
 
   const deselectAll = useCallback(() => setSelectedFiles([]), [setSelectedFiles]);
 
   const closeAllFiles = useCallback(() => {
-    if (activeFileRecords.length === 0) return;
+    if (activeStirlingFileStubs.length === 0) return;
 
     // Remove all files from context but keep in storage
-    const allFileIds = activeFileRecords.map(record => record.id);
+    const allFileIds = activeStirlingFileStubs.map(record => record.id);
     removeFiles(allFileIds, false); // false = keep in storage
 
     // Clear selections
     setSelectedFiles([]);
-  }, [activeFileRecords, removeFiles, setSelectedFiles]);
+  }, [activeStirlingFileStubs, removeFiles, setSelectedFiles]);
 
   const toggleFile = useCallback((fileId: FileId) => {
     const currentSelectedIds = contextSelectedIdsRef.current;
 
-    const targetRecord = activeFileRecords.find(r => r.id === fileId);
+    const targetRecord = activeStirlingFileStubs.find(r => r.id === fileId);
     if (!targetRecord) return;
 
     const contextFileId = fileId; // No need to create a new ID
@@ -302,7 +302,7 @@ const FileEditor = ({
 
     // Update context (this automatically updates tool selection since they use the same action)
     setSelectedFiles(newSelection);
-  }, [setSelectedFiles, toolMode, setStatus, activeFileRecords]);
+  }, [setSelectedFiles, toolMode, setStatus, activeStirlingFileStubs]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
@@ -316,7 +316,7 @@ const FileEditor = ({
 
   // File reordering handler for drag and drop
   const handleReorderFiles = useCallback((sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => {
-    const currentIds = activeFileRecords.map(r => r.id);
+    const currentIds = activeStirlingFileStubs.map(r => r.id);
 
     // Find indices
     const sourceIndex = currentIds.findIndex(id => id === sourceFileId);
@@ -368,13 +368,13 @@ const FileEditor = ({
     // Update status
     const moveCount = filesToMove.length;
     setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
-  }, [activeFileRecords, reorderFiles, setStatus]);
+  }, [activeStirlingFileStubs, reorderFiles, setStatus]);
 
 
 
   // File operations using context
   const handleDeleteFile = useCallback((fileId: FileId) => {
-    const record = activeFileRecords.find(r => r.id === fileId);
+    const record = activeStirlingFileStubs.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
 
     if (record && file) {
@@ -405,27 +405,27 @@ const FileEditor = ({
       const currentSelected = selectedFileIds.filter(id => id !== contextFileId);
       setSelectedFiles(currentSelected);
     }
-  }, [activeFileRecords, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
+  }, [activeStirlingFileStubs, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
 
   const handleViewFile = useCallback((fileId: FileId) => {
-    const record = activeFileRecords.find(r => r.id === fileId);
+    const record = activeStirlingFileStubs.find(r => r.id === fileId);
     if (record) {
       // Set the file as selected in context and switch to viewer for preview
       setSelectedFiles([fileId]);
       navActions.setWorkbench('viewer');
     }
-  }, [activeFileRecords, setSelectedFiles, navActions.setWorkbench]);
+  }, [activeStirlingFileStubs, setSelectedFiles, navActions.setWorkbench]);
 
   const handleMergeFromHere = useCallback((fileId: FileId) => {
-    const startIndex = activeFileRecords.findIndex(r => r.id === fileId);
+    const startIndex = activeStirlingFileStubs.findIndex(r => r.id === fileId);
     if (startIndex === -1) return;
 
-    const recordsToMerge = activeFileRecords.slice(startIndex);
-    const filesToMerge = recordsToMerge.map(r => selectors.getFile(r.id)).filter(Boolean) as File[];
+    const recordsToMerge = activeStirlingFileStubs.slice(startIndex);
+    const filesToMerge = recordsToMerge.map(r => selectors.getFile(r.id)).filter(Boolean) as StirlingFile[];
     if (onMergeFiles) {
       onMergeFiles(filesToMerge);
     }
-  }, [activeFileRecords, selectors, onMergeFiles]);
+  }, [activeStirlingFileStubs, selectors, onMergeFiles]);
 
   const handleSplitFile = useCallback((fileId: FileId) => {
     const file = selectors.getFile(fileId);
@@ -467,7 +467,7 @@ const FileEditor = ({
         <Box p="md" pt="xl">
 
 
-        {activeFileRecords.length === 0 && !zipExtractionProgress.isExtracting ? (
+        {activeStirlingFileStubs.length === 0 && !zipExtractionProgress.isExtracting ? (
           <Center h="60vh">
             <Stack align="center" gap="md">
               <Text size="lg" c="dimmed">📁</Text>
@@ -475,7 +475,7 @@ const FileEditor = ({
               <Text size="sm" c="dimmed">Upload PDF files, ZIP archives, or load from storage to get started</Text>
             </Stack>
           </Center>
-        ) : activeFileRecords.length === 0 && zipExtractionProgress.isExtracting ? (
+        ) : activeStirlingFileStubs.length === 0 && zipExtractionProgress.isExtracting ? (
           <Box>
             <SkeletonLoader type="controls" />
 
@@ -522,7 +522,7 @@ const FileEditor = ({
               pointerEvents: 'auto'
             }}
           >
-            {activeFileRecords.map((record, index) => {
+            {activeStirlingFileStubs.map((record, index) => {
               const fileItem = recordToFileItem(record);
               if (!fileItem) return null;
 
@@ -531,7 +531,7 @@ const FileEditor = ({
                   key={record.id}
                   file={fileItem}
                   index={index}
-                  totalFiles={activeFileRecords.length}
+                  totalFiles={activeStirlingFileStubs.length}
                   selectedFiles={localSelectedIds}
                   selectionMode={selectionMode}
                   onToggleFile={toggleFile}

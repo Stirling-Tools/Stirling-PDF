@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { PDFDocument, PDFPage } from '../types/pageEditor';
 import { pdfWorkerManager } from '../services/pdfWorkerManager';
+import { createQuickKey } from '../types/fileContext';
 
 export function usePDFProcessor() {
   const [loading, setLoading] = useState(false);
@@ -75,7 +76,7 @@ export function usePDFProcessor() {
       // Create pages without thumbnails initially - load them lazily
       for (let i = 1; i <= totalPages; i++) {
         pages.push({
-          id: `${file.name}-page-${i}`,
+          id: `${createQuickKey(file)}-page-${i}`,
           pageNumber: i,
           originalPageNumber: i,
           thumbnail: null, // Will be loaded lazily

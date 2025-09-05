@@ -24,7 +24,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile } = useFileManager();
 
   // Wrapper for storeFile that generates UUID
-  const storeFileWithId = useCallback(async (file: File) => {
+  const storeStirlingFile = useCallback(async (file: File) => {
     const fileId = createFileId(); // Generate UUID for storage
     return await storeFile(file, fileId);
   }, [storeFile]);

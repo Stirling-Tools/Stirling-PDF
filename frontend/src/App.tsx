@@ -14,6 +14,9 @@ import "./styles/cookieconsent.css";
 import "./index.css";
 import { RightRailProvider } from "./contexts/RightRailContext";
 
+// Import file ID debugging helpers (development only)
+import "./utils/fileIdSafety";
+
 // Loading component for i18next suspense
 const LoadingFallback = () => (
   <div

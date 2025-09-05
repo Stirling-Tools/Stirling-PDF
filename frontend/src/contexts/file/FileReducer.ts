@@ -6,7 +6,7 @@ import { FileId } from '../../types/file';
 import {
   FileContextState,
   FileContextAction,
-  FileRecord
+  StirlingFileStub
 } from '../../types/fileContext';
 
 // Initial state
@@ -29,7 +29,7 @@ export const initialFileContextState: FileContextState = {
 function processFileSwap(
   state: FileContextState,
   filesToRemove: FileId[],
-  filesToAdd: FileRecord[]
+  filesToAdd: StirlingFileStub[]
 ): FileContextState {
   // Only remove unpinned files
   const unpinnedRemoveIds = filesToRemove.filter(id => !state.pinnedFiles.has(id));
@@ -70,11 +70,11 @@ function processFileSwap(
 export function fileContextReducer(state: FileContextState, action: FileContextAction): FileContextState {
   switch (action.type) {
     case 'ADD_FILES': {
-      const { fileRecords } = action.payload;
+      const { stirlingFileStubs } = action.payload;
       const newIds: FileId[] = [];
-      const newById: Record<FileId, FileRecord> = { ...state.files.byId };
+      const newById: Record<FileId, StirlingFileStub> = { ...state.files.byId };
 
-      fileRecords.forEach(record => {
+      stirlingFileStubs.forEach(record => {
         // Only add if not already present (dedupe by stable ID)
         if (!newById[record.id]) {
           newIds.push(record.id);
@@ -233,13 +233,13 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
     }
 
     case 'CONSUME_FILES': {
-      const { inputFileIds, outputFileRecords } = action.payload;
-      return processFileSwap(state, inputFileIds, outputFileRecords);
+      const { inputFileIds, outputStirlingFileStubs } = action.payload;
+      return processFileSwap(state, inputFileIds, outputStirlingFileStubs);
     }
 
     case 'UNDO_CONSUME_FILES': {
-      const { inputFileRecords, outputFileIds } = action.payload;
-      return processFileSwap(state, outputFileIds, inputFileRecords);
+      const { inputStirlingFileStubs, outputFileIds } = action.payload;
+      return processFileSwap(state, outputFileIds, inputStirlingFileStubs);
     }
 
     case 'RESET_CONTEXT': {
