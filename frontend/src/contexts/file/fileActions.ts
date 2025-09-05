@@ -6,7 +6,7 @@ import {
   StirlingFileStub,
   FileContextAction,
   FileContextState,
-  toWorkbenchFile,
+  toStirlingFileStub,
   createFileId,
   createQuickKey
 } from '../../types/fileContext';
@@ -163,7 +163,7 @@ export async function addFiles(
         }
 
         // Create record with immediate thumbnail and page metadata
-        const record = toWorkbenchFile(file, fileId);
+        const record = toStirlingFileStub(file, fileId);
         if (thumbnail) {
           record.thumbnailUrl = thumbnail;
           // Track blob URLs for cleanup (images return blob URLs that need revocation)
@@ -205,7 +205,7 @@ export async function addFiles(
         const fileId = createFileId();
         filesRef.current.set(fileId, file);
 
-        const record = toWorkbenchFile(file, fileId);
+        const record = toStirlingFileStub(file, fileId);
         if (thumbnail) {
           record.thumbnailUrl = thumbnail;
           // Track blob URLs for cleanup (images return blob URLs that need revocation)
@@ -254,7 +254,7 @@ export async function addFiles(
 
         filesRef.current.set(fileId, file);
 
-        const record = toWorkbenchFile(file, fileId);
+        const record = toStirlingFileStub(file, fileId);
 
         // Generate processedFile metadata for stored files
         let pageCount: number = 1;
@@ -347,7 +347,7 @@ async function processFilesIntoRecords(
         if (DEBUG) console.warn(`📄 Failed to generate thumbnail for file ${file.name}:`, error);
       }
 
-      const record = toWorkbenchFile(file, fileId);
+      const record = toStirlingFileStub(file, fileId);
       if (thumbnail) {
         record.thumbnailUrl = thumbnail;
       }

@@ -46,7 +46,7 @@ export interface ProcessedFileMetadata {
 
 /**
  * StirlingFileStub - Metadata record for files in the active workbench session
- * 
+ *
  * Contains UI display data and processing state. Actual File objects stored
  * separately in refs for memory efficiency. Supports multi-tool workflows
  * where files persist across tool operations.
@@ -117,7 +117,7 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
     enumerable: true,
     configurable: false
   });
-  
+
   Object.defineProperty(file, 'quickKey', {
     value: quickKey,
     writable: false,
@@ -150,7 +150,10 @@ export function isFileObject(obj: any): obj is File | StirlingFile {
 
 
 
-export function toWorkbenchFile(file: File, id?: FileId): StirlingFileStub {
+export function toStirlingFileStub(
+  file: File,
+  id?: FileId
+): StirlingFileStub {
   const fileId = id || createFileId();
   return {
     id: fileId,
@@ -350,6 +353,3 @@ export interface FileContextActionsValue {
   actions: FileContextActions;
   dispatch: (action: FileContextAction) => void;
 }
-
-// TODO: URL parameter types will be redesigned for new routing system
-
