@@ -66,7 +66,7 @@ const FileEditorThumbnail = ({
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
   // Get file record to access tool history
-  const fileRecord = selectors.getFileRecord(file.id);
+  const fileRecord = selectors.getStirlingFileStub(file.id);
   const toolHistory = fileRecord?.toolHistory || [];
   const hasToolHistory = toolHistory.length > 0;
   const versionNumber = fileRecord?.versionNumber || 0;

@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { FileId } from '../types/file';
-import { FileRecord } from '../types/fileContext';
+import { StirlingFileStub } from '../types/fileContext';
 import { loadFileHistoryOnDemand } from '../utils/fileHistoryUtils';
 
 interface FileHistoryState {
@@ -23,7 +23,7 @@ interface UseFileHistoryResult {
   historyData: FileHistoryState | null;
   isLoading: boolean;
   error: string | null;
-  loadHistory: (file: File, fileId: FileId, updateFileRecord?: (id: FileId, updates: Partial<FileRecord>) => void) => Promise<void>;
+  loadHistory: (file: File, fileId: FileId, updateFileStub?: (id: FileId, updates: Partial<StirlingFileStub>) => void) => Promise<void>;
   clearHistory: () => void;
 }
 
@@ -35,13 +35,13 @@ export function useFileHistory(): UseFileHistoryResult {
   const loadHistory = useCallback(async (
     file: File,
     fileId: FileId,
-    updateFileRecord?: (id: FileId, updates: Partial<FileRecord>) => void
+    updateFileStub?: (id: FileId, updates: Partial<StirlingFileStub>) => void
   ) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const history = await loadFileHistoryOnDemand(file, fileId, updateFileRecord);
+      const history = await loadFileHistoryOnDemand(file, fileId, updateFileStub);
       setHistoryData(history);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load file history';
@@ -78,7 +78,7 @@ export function useMultiFileHistory() {
   const loadFileHistory = useCallback(async (
     file: File,
     fileId: FileId,
-    updateFileRecord?: (id: FileId, updates: Partial<FileRecord>) => void
+    updateFileStub?: (id: FileId, updates: Partial<StirlingFileStub>) => void
   ) => {
     // Don't reload if already loaded or currently loading
     if (historyCache.has(fileId) || loadingFiles.has(fileId)) {
@@ -93,12 +93,12 @@ export function useMultiFileHistory() {
     });
 
     try {
-      const history = await loadFileHistoryOnDemand(file, fileId, updateFileRecord);
-      
+      const history = await loadFileHistoryOnDemand(file, fileId, updateFileStub);
+
       if (history) {
         setHistoryCache(prev => new Map(prev).set(fileId, history));
       }
-      
+
       return history;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load file history';

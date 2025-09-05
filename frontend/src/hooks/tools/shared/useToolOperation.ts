@@ -129,7 +129,7 @@ export const useToolOperation = <TParams>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { addFiles, consumeFiles, undoConsumeFiles, selectors } = useFileContext();
+  const { addFiles, consumeFiles, undoConsumeFiles, selectors, findFileId } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -168,14 +168,14 @@ export const useToolOperation = <TParams>(
 
     // Prepare files with history metadata injection (for PDFs)
     actions.setStatus('Preparing files...');
-    const getFileRecord = (file: File) => {
+    const getFileStub = (file: File) => {
       const fileId = findFileId(file);
-      return fileId ? selectors.getFileRecord(fileId) : undefined;
+      return fileId ? selectors.getStirlingFileStub(fileId) : undefined;
     };
 
     const filesWithHistory = await prepareFilesWithHistory(
       validFiles,
-      getFileRecord,
+      getFileStub,
       config.operationType,
       params as Record<string, any>
     );
@@ -197,7 +197,6 @@ export const useToolOperation = <TParams>(
           };
           processedFiles = await processFiles(
             params,
-            filesWithHistory,
             validRegularFiles,
             apiCallsConfig,
             actions.setProgress,
@@ -205,7 +204,6 @@ export const useToolOperation = <TParams>(
           );
           break;
         }
-
         case ToolType.multiFile: {
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');

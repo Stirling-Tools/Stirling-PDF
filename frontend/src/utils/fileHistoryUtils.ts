@@ -6,19 +6,19 @@
  */
 
 import { pdfMetadataService, type ToolOperation } from '../services/pdfMetadataService';
-import { FileRecord } from '../types/fileContext';
+import { StirlingFileStub } from '../types/fileContext';
 import { FileId, FileMetadata } from '../types/file';
 import { createFileId } from '../types/fileContext';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
 /**
- * Extract history information from a PDF file and update FileRecord
+ * Extract history information from a PDF file and update StirlingFileStub
  */
 export async function extractFileHistory(
   file: File,
-  record: FileRecord
-): Promise<FileRecord> {
+  record: StirlingFileStub
+): Promise<StirlingFileStub> {
   // Only process PDF files
   if (!file.type.includes('pdf')) {
     return record;
@@ -52,7 +52,7 @@ export async function extractFileHistory(
  */
 export async function injectHistoryForTool(
   file: File,
-  sourceFileRecord: FileRecord,
+  sourceStirlingFileStub: StirlingFileStub,
   toolName: string,
   parameters?: Record<string, any>
 ): Promise<File> {
@@ -86,20 +86,20 @@ export async function injectHistoryForTool(
       const history = existingHistoryMetadata.stirlingHistory;
       newVersionNumber = history.versionNumber + 1;
       originalFileId = history.originalFileId;
-      parentFileId = sourceFileRecord.id; // This file becomes the parent
+      parentFileId = sourceStirlingFileStub.id; // This file becomes the parent
       parentToolChain = history.toolChain || [];
 
-    } else if (sourceFileRecord.originalFileId && sourceFileRecord.versionNumber) {
+    } else if (sourceStirlingFileStub.originalFileId && sourceStirlingFileStub.versionNumber) {
       // File record has history but PDF doesn't (shouldn't happen, but fallback)
-      newVersionNumber = sourceFileRecord.versionNumber + 1;
-      originalFileId = sourceFileRecord.originalFileId;
-      parentFileId = sourceFileRecord.id;
-      parentToolChain = sourceFileRecord.toolHistory || [];
+      newVersionNumber = sourceStirlingFileStub.versionNumber + 1;
+      originalFileId = sourceStirlingFileStub.originalFileId;
+      parentFileId = sourceStirlingFileStub.id;
+      parentToolChain = sourceStirlingFileStub.toolHistory || [];
     } else {
       // File has no history - this becomes version 1
       newVersionNumber = 1;
-      originalFileId = sourceFileRecord.id; // Use source file ID as original
-      parentFileId = sourceFileRecord.id; // Parent is the source file
+      originalFileId = sourceStirlingFileStub.id; // Use source file ID as original
+      parentFileId = sourceStirlingFileStub.id; // Parent is the source file
       parentToolChain = []; // No previous tools
     }
 
@@ -127,14 +127,14 @@ export async function injectHistoryForTool(
  */
 export async function prepareFilesWithHistory(
   files: File[],
-  getFileRecord: (file: File) => FileRecord | undefined,
+  getStirlingFileStub: (file: File) => StirlingFileStub | undefined,
   toolName: string,
   parameters?: Record<string, any>
 ): Promise<File[]> {
   const processedFiles: File[] = [];
 
   for (const file of files) {
-    const record = getFileRecord(file);
+    const record = getStirlingFileStub(file);
     if (!record) {
       processedFiles.push(file);
       continue;
@@ -180,57 +180,57 @@ export async function verifyToolMetadataPreservation(
  * Group files by processing branches - each branch ends in a leaf file
  * Returns Map<fileId, lineagePath[]> where fileId is the leaf and lineagePath is the path back to original
  */
-export function groupFilesByOriginal(fileRecords: FileRecord[]): Map<string, FileRecord[]> {
-  const groups = new Map<string, FileRecord[]>();
+export function groupFilesByOriginal(StirlingFileStubs: StirlingFileStub[]): Map<string, StirlingFileStub[]> {
+  const groups = new Map<string, StirlingFileStub[]>();
 
   // Create a map for quick lookups
-  const fileMap = new Map<string, FileRecord>();
-  for (const record of fileRecords) {
+  const fileMap = new Map<string, StirlingFileStub>();
+  for (const record of StirlingFileStubs) {
     fileMap.set(record.id, record);
   }
 
   // Find leaf files (files that are not parents of any other files AND have version history)
   // Original files (v0) should only be leaves if they have no processed versions at all
-  const leafFiles = fileRecords.filter(record => {
-    const isParentOfOthers = fileRecords.some(otherRecord => otherRecord.parentFileId === record.id);
-    const isOriginalOfOthers = fileRecords.some(otherRecord => otherRecord.originalFileId === record.id);
-    
+  const leafFiles = StirlingFileStubs.filter(stub => {
+    const isParentOfOthers = StirlingFileStubs.some(otherStub => otherStub.parentFileId === stub.id);
+    const isOriginalOfOthers = StirlingFileStubs.some(otherStub => otherStub.originalFileId === stub.id);
+
     // A file is a leaf if:
     // 1. It's not a parent of any other files, AND
     // 2. It has processing history (versionNumber > 0) OR it's not referenced as original by others
-    return !isParentOfOthers && (record.versionNumber && record.versionNumber > 0 || !isOriginalOfOthers);
+    return !isParentOfOthers && (stub.versionNumber && stub.versionNumber > 0 || !isOriginalOfOthers);
   });
 
   // For each leaf file, build its complete lineage path back to original
   for (const leafFile of leafFiles) {
-    const lineagePath: FileRecord[] = [];
-    let currentFile: FileRecord | undefined = leafFile;
-    
+    const lineagePath: StirlingFileStub[] = [];
+    let currentFile: StirlingFileStub | undefined = leafFile;
+
     // Trace back through parentFileId chain to build this specific branch
     while (currentFile) {
       lineagePath.push(currentFile);
-      
+
       // Move to parent file in this branch
-      let nextFile: FileRecord | undefined = undefined;
-      
+      let nextFile: StirlingFileStub | undefined = undefined;
+
       if (currentFile.parentFileId) {
         nextFile = fileMap.get(currentFile.parentFileId);
       } else if (currentFile.originalFileId && currentFile.originalFileId !== currentFile.id) {
         // For v1 files, the original file might be referenced by originalFileId
         nextFile = fileMap.get(currentFile.originalFileId);
       }
-      
+
       // Check for infinite loops before moving to next
       if (nextFile && lineagePath.some(file => file.id === nextFile!.id)) {
         break;
       }
-      
+
       currentFile = nextFile;
     }
-    
+
     // Sort lineage with latest version first (leaf at top)
     lineagePath.sort((a, b) => (b.versionNumber || 0) - (a.versionNumber || 0));
-    
+
     // Use leaf file ID as the group key - each branch gets its own group
     groups.set(leafFile.id, lineagePath);
   }
@@ -241,22 +241,22 @@ export function groupFilesByOriginal(fileRecords: FileRecord[]): Map<string, Fil
 /**
  * Get the latest version of each file group (optimized version using leaf flags)
  */
-export function getLatestVersions(fileRecords: FileRecord[]): FileRecord[] {
+export function getLatestVersions(fileStubs: StirlingFileStub[]): StirlingFileStub[] {
   // If we have leaf flags, use them for much faster filtering
-  const hasLeafFlags = fileRecords.some(record => record.isLeaf !== undefined);
-  
+  const hasLeafFlags = fileStubs.some(fileStub => fileStub.isLeaf !== undefined);
+
   if (hasLeafFlags) {
     // Fast path: just return files marked as leaf nodes
-    return fileRecords.filter(record => record.isLeaf !== false); // Default to true if undefined
+    return fileStubs.filter(fileStub => fileStub.isLeaf !== false); // Default to true if undefined
   } else {
     // Fallback to expensive calculation for backward compatibility
-    const groups = groupFilesByOriginal(fileRecords);
-    const latestVersions: FileRecord[] = [];
+    const groups = groupFilesByOriginal(fileStubs);
+    const latestVersions: StirlingFileStub[] = [];
 
-    for (const [_, records] of groups) {
-      if (records.length > 0) {
+    for (const [_, fileStubs] of groups) {
+      if (fileStubs.length > 0) {
         // First item is the latest version (sorted desc by version number)
-        latestVersions.push(records[0]);
+        latestVersions.push(fileStubs[0]);
       }
     }
 
@@ -268,15 +268,15 @@ export function getLatestVersions(fileRecords: FileRecord[]): FileRecord[] {
  * Get version history for a file
  */
 export function getVersionHistory(
-  targetRecord: FileRecord,
-  allRecords: FileRecord[]
-): FileRecord[] {
-  const originalId = targetRecord.originalFileId || targetRecord.id;
+  targetFileStub: StirlingFileStub,
+  allFileStubs: StirlingFileStub[]
+): StirlingFileStub[] {
+  const originalId = targetFileStub.originalFileId || targetFileStub.id;
 
-  return allRecords
-    .filter(record => {
-      const recordOriginalId = record.originalFileId || record.id;
-      return recordOriginalId === originalId;
+  return allFileStubs
+    .filter(fileStub => {
+      const fileStubOriginalId = fileStub.originalFileId || fileStub.id;
+      return fileStubOriginalId === originalId;
     })
     .sort((a, b) => (b.versionNumber || 0) - (a.versionNumber || 0));
 }
@@ -284,23 +284,23 @@ export function getVersionHistory(
 /**
  * Check if a file has version history
  */
-export function hasVersionHistory(record: FileRecord): boolean {
-  return !!(record.originalFileId && record.versionNumber && record.versionNumber > 0);
+export function hasVersionHistory(fileStub: StirlingFileStub): boolean {
+  return !!(fileStub.originalFileId && fileStub.versionNumber && fileStub.versionNumber > 0);
 }
 
 /**
  * Generate a descriptive name for a file version
  */
-export function generateVersionName(record: FileRecord): string {
-  const baseName = record.name.replace(/\.pdf$/i, '');
+export function generateVersionName(fileStub: StirlingFileStub): string {
+  const baseName = fileStub.name.replace(/\.pdf$/i, '');
 
-  if (!hasVersionHistory(record)) {
-    return record.name;
+  if (!hasVersionHistory(fileStub)) {
+    return fileStub.name;
   }
 
-  const versionInfo = record.versionNumber ? ` (v${record.versionNumber})` : '';
-  const toolInfo = record.toolHistory && record.toolHistory.length > 0
-    ? ` - ${record.toolHistory[record.toolHistory.length - 1].toolName}`
+  const versionInfo = fileStub.versionNumber ? ` (v${fileStub.versionNumber})` : '';
+  const toolInfo = fileStub.toolHistory && fileStub.toolHistory.length > 0
+    ? ` - ${fileStub.toolHistory[fileStub.toolHistory.length - 1].toolName}`
     : '';
 
   return `${baseName}${versionInfo}${toolInfo}.pdf`;
@@ -340,11 +340,11 @@ export async function getRecentLeafFileMetadata(): Promise<Omit<import('../servi
  */
 export async function extractBasicFileMetadata(
   file: File,
-  record: FileRecord
-): Promise<FileRecord> {
+  fileStub: StirlingFileStub
+): Promise<StirlingFileStub> {
   // Only process PDF files
   if (!file.type.includes('pdf')) {
-    return record;
+    return fileStub;
   }
 
   try {
@@ -354,9 +354,9 @@ export async function extractBasicFileMetadata(
     if (historyMetadata) {
       const history = historyMetadata.stirlingHistory;
 
-      // Update record with essential metadata only (no parent/original relationships)
+      // Update fileStub with essential metadata only (no parent/original relationships)
       return {
-        ...record,
+        ...fileStub,
         versionNumber: history.versionNumber,
         toolHistory: history.toolChain
       };
@@ -365,7 +365,7 @@ export async function extractBasicFileMetadata(
     if (DEBUG) console.warn('📄 Failed to extract basic metadata:', file.name, error);
   }
 
-  return record;
+  return fileStub;
 }
 
 /**
@@ -375,7 +375,7 @@ export async function extractBasicFileMetadata(
 export async function loadFileHistoryOnDemand(
   file: File,
   fileId: FileId,
-  updateFileRecord?: (id: FileId, updates: Partial<FileRecord>) => void
+  updateFileStub?: (id: FileId, updates: Partial<StirlingFileStub>) => void
 ): Promise<{
   originalFileId?: string;
   versionNumber?: number;
@@ -392,7 +392,7 @@ export async function loadFileHistoryOnDemand(
   }
 
   try {
-    const baseRecord: FileRecord = {
+    const baseFileStub: StirlingFileStub = {
       id: fileId,
       name: file.name,
       size: file.size,
@@ -400,19 +400,19 @@ export async function loadFileHistoryOnDemand(
       lastModified: file.lastModified
     };
 
-    const updatedRecord = await extractFileHistory(file, baseRecord);
-    
-    if (updatedRecord !== baseRecord && (updatedRecord.originalFileId || updatedRecord.versionNumber)) {
+    const updatedFileStub = await extractFileHistory(file, baseFileStub);
+
+    if (updatedFileStub !== baseFileStub && (updatedFileStub.originalFileId || updatedFileStub.versionNumber)) {
       const historyData = {
-        originalFileId: updatedRecord.originalFileId,
-        versionNumber: updatedRecord.versionNumber,
-        parentFileId: updatedRecord.parentFileId,
-        toolHistory: updatedRecord.toolHistory
+        originalFileId: updatedFileStub.originalFileId,
+        versionNumber: updatedFileStub.versionNumber,
+        parentFileId: updatedFileStub.parentFileId,
+        toolHistory: updatedFileStub.toolHistory
       };
 
-      // Update the file record if update function is provided
-      if (updateFileRecord) {
-        updateFileRecord(fileId, historyData);
+      // Update the file stub if update function is provided
+      if (updateFileStub) {
+        updateFileStub(fileId, historyData);
       }
 
       return historyData;

@@ -119,7 +119,11 @@ export class PDFMetadataService {
         });
       }
 
-      return await pdfDoc.save();
+      const savedPdfBytes = await pdfDoc.save();
+      // Convert Uint8Array to ArrayBuffer
+      const arrayBuffer = new ArrayBuffer(savedPdfBytes.byteLength);
+      new Uint8Array(arrayBuffer).set(savedPdfBytes);
+      return arrayBuffer;
     } catch (error) {
       if (DEBUG) console.error('📄 Failed to inject PDF metadata:', error);
       // Return original bytes if metadata injection fails

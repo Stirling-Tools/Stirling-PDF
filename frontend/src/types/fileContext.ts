@@ -64,8 +64,7 @@ export interface StirlingFileStub {
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string;   // Page ID after which this file should be inserted
   isPinned?: boolean;           // Protected from tool consumption (replace/remove)
-
-    isLeaf?: boolean; // True if this file is a leaf node (hasn't been processed yet)
+  isLeaf?: boolean; // True if this file is a leaf node (hasn't been processed yet)
 
   // File history tracking (from PDF metadata)
   originalFileId?: string; // Root file ID for grouping versions
