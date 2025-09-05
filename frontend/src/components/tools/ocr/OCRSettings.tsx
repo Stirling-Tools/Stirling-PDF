@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Select, Text, Divider } from '@mantine/core';
+import { Stack, Select, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LanguagePicker from './LanguagePicker';
 import { OCRParameters } from '../../../hooks/tools/ocr/useOCRParameters';

@@ -52,16 +52,13 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   pageRefs,
   onReorderPages,
   onTogglePage,
-  onAnimateReorder,
   onExecuteCommand,
   onSetStatus,
   onSetMovingPage,
   onDeletePage,
   createRotateCommand,
-  createDeleteCommand,
   createSplitCommand,
   pdfDocument,
-  setPdfDocument,
   splitPositions,
   onInsertFiles,
 }: PageThumbnailProps) => {
@@ -172,7 +169,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           type: 'page',
           pageNumber: page.pageNumber
         }),
-        onDrop: ({ source }) => {}
+        onDrop: (_) => {}
       });
 
       (element as any).__dragCleanup = () => {

@@ -1,5 +1,3 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
@@ -8,12 +6,11 @@ import ToolRenderer from './ToolRenderer';
 import ToolSearch from './toolPicker/ToolSearch';
 import { useSidebarContext } from "../../contexts/SidebarContext";
 import rainbowStyles from '../../styles/rainbow.module.css';
-import { Stack, ScrollArea } from '@mantine/core';
+import { ScrollArea } from '@mantine/core';
 
 // No props needed - component uses context
 
 export default function ToolPanel() {
-  const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef } = sidebarRefs;
@@ -27,7 +24,6 @@ export default function ToolPanel() {
     filteredTools,
     toolRegistry,
     setSearchQuery,
-    handleBackToTools
   } = useToolWorkflow();
 
   const { selectedToolKey, handleToolSelect } = useToolWorkflow();

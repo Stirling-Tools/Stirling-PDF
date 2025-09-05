@@ -1,6 +1,4 @@
-import React from 'react';
 import { Box } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
@@ -19,7 +17,6 @@ import Footer from '../shared/Footer';
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
-  const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Use context-based hooks to eliminate all prop drilling
@@ -78,11 +75,9 @@ export default function Workbench() {
         return (
           <FileEditor
             toolMode={!!selectedToolId}
-            showUpload={true}
-            showBulkActions={!selectedToolId}
             supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
             {...(!selectedToolId && {
-              onOpenPageEditor: (file) => {
+              onOpenPageEditor: () => {
                 setCurrentView("pageEditor");
               },
               onMergeFiles: (filesToMerge) => {

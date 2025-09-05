@@ -44,9 +44,9 @@ export function useSavedAutomations() {
   const copyFromSuggested = useCallback(async (suggestedAutomation: SuggestedAutomation) => {
     try {
       const { automationStorage } = await import('../../../services/automationStorage');
-      
+
       // Map suggested automation icons to MUI icon keys
-      const getIconKey = (suggestedIcon: {id: string}): string => {
+      const getIconKey = (_suggestedIcon: {id: string}): string => {
         // Check the automation ID or name to determine the appropriate icon
         switch (suggestedAutomation.id) {
           case 'secure-pdf-ingestion':
@@ -60,7 +60,7 @@ export function useSavedAutomations() {
             return 'SettingsIcon'; // Default fallback
         }
       };
-      
+
       // Convert suggested automation to saved automation format
       const savedAutomation = {
         name: suggestedAutomation.name,
@@ -68,7 +68,7 @@ export function useSavedAutomations() {
         icon: getIconKey(suggestedAutomation.icon),
         operations: suggestedAutomation.operations
       };
-      
+
       await automationStorage.saveAutomation(savedAutomation);
       // Refresh the list after saving
       refreshAutomations();

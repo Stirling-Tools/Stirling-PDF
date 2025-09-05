@@ -1,42 +1,28 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   Text, Center, Box, Notification, LoadingOverlay, Stack, Group, Portal
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { useTranslation } from 'react-i18next';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
+import { useFileSelection, useFileState, useFileManagement } from '../../contexts/FileContext';
 import { useNavigationActions } from '../../contexts/NavigationContext';
-import { FileOperation } from '../../types/fileContext';
-import { fileStorage } from '../../services/fileStorage';
-import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
-import styles from './FileEditor.module.css';
 import FileEditorThumbnail from './FileEditorThumbnail';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import { FileId, StirlingFile } from '../../types/fileContext';
 
-
 interface FileEditorProps {
-  onOpenPageEditor?: (file: StirlingFile) => void;
+  onOpenPageEditor?: () => void;
   onMergeFiles?: (files: StirlingFile[]) => void;
   toolMode?: boolean;
-  showUpload?: boolean;
-  showBulkActions?: boolean;
   supportedExtensions?: string[];
 }
 
 const FileEditor = ({
-  onOpenPageEditor,
-  onMergeFiles,
   toolMode = false,
-  showUpload = true,
-  showBulkActions = true,
   supportedExtensions = ["pdf"]
 }: FileEditorProps) => {
-  const { t } = useTranslation();
 
   // Utility function to check if a file extension is supported
   const isFileSupported = useCallback((fileName: string): boolean => {
@@ -49,13 +35,10 @@ const FileEditor = ({
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
 
   // Extract needed values from state (memoized to prevent infinite loops)
-  const activeFiles = useMemo(() => selectors.getFiles(), [selectors.getFilesSignature()]);
   const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [selectors.getFilesSignature()]);
   const selectedFileIds = state.ui.selectedFileIds;
-  const isProcessing = state.ui.isProcessing;
 
-  // Get the real context actions
-  const { actions } = useFileActions();
+  // Get navigation actions
   const { actions: navActions } = useNavigationActions();
 
   // Get file selection context
@@ -161,29 +144,9 @@ const FileEditor = ({
               if (extractionResult.success) {
                 allExtractedFiles.push(...extractionResult.extractedFiles);
 
-                // Record ZIP extraction operation
-                const operationId = `zip-extract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                const operation: FileOperation = {
-                id: operationId,
-                type: 'convert',
-                timestamp: Date.now(),
-                fileIds: extractionResult.extractedFiles.map(f => f.name) as FileId[] /* FIX ME: This doesn't seem right */,
-                status: 'pending',
-                metadata: {
-                  originalFileName: file.name,
-                  outputFileNames: extractionResult.extractedFiles.map(f => f.name),
-                  fileSize: file.size,
-                  parameters: {
-                    extractionType: 'zip',
-                    extractedCount: extractionResult.extractedCount,
-                    totalFiles: extractionResult.totalFiles
-                  }
+                if (extractionResult.errors.length > 0) {
+                  errors.push(...extractionResult.errors);
                 }
-              };
-
-              if (extractionResult.errors.length > 0) {
-                errors.push(...extractionResult.errors);
-              }
               } else {
                 errors.push(`Failed to extract ZIP file "${file.name}": ${extractionResult.errors.join(', ')}`);
               }
@@ -213,25 +176,6 @@ const FileEditor = ({
 
       // Process all extracted files
       if (allExtractedFiles.length > 0) {
-        // Record upload operations for PDF files
-        for (const file of allExtractedFiles) {
-          const operationId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const operation: FileOperation = {
-            id: operationId,
-            type: 'upload',
-            timestamp: Date.now(),
-            fileIds: [file.name as FileId /* This doesn't seem right */],
-            status: 'pending',
-            metadata: {
-              originalFileName: file.name,
-              fileSize: file.size,
-              parameters: {
-                uploadMethod: 'drag-drop'
-              }
-            }
-          };
-        }
-
         // Add files to context (they will be processed automatically)
         await addFiles(allExtractedFiles);
         setStatus(`Added ${allExtractedFiles.length} files`);
@@ -251,23 +195,6 @@ const FileEditor = ({
       });
     }
   }, [addFiles]);
-
-  const selectAll = useCallback(() => {
-    setSelectedFiles(activeStirlingFileStubs.map(r => r.id)); // Use StirlingFileStub IDs directly
-  }, [activeStirlingFileStubs, setSelectedFiles]);
-
-  const deselectAll = useCallback(() => setSelectedFiles([]), [setSelectedFiles]);
-
-  const closeAllFiles = useCallback(() => {
-    if (activeStirlingFileStubs.length === 0) return;
-
-    // Remove all files from context but keep in storage
-    const allFileIds = activeStirlingFileStubs.map(record => record.id);
-    removeFiles(allFileIds, false); // false = keep in storage
-
-    // Clear selections
-    setSelectedFiles([]);
-  }, [activeStirlingFileStubs, removeFiles, setSelectedFiles]);
 
   const toggleFile = useCallback((fileId: FileId) => {
     const currentSelectedIds = contextSelectedIdsRef.current;
@@ -304,15 +231,6 @@ const FileEditor = ({
     setSelectedFiles(newSelection);
   }, [setSelectedFiles, toolMode, setStatus, activeStirlingFileStubs]);
 
-  const toggleSelectionMode = useCallback(() => {
-    setSelectionMode(prev => {
-      const newMode = !prev;
-      if (!newMode) {
-        setSelectedFiles([]);
-      }
-      return newMode;
-    });
-  }, [setSelectedFiles]);
 
   // File reordering handler for drag and drop
   const handleReorderFiles = useCallback((sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => {
@@ -378,27 +296,8 @@ const FileEditor = ({
     const file = record ? selectors.getFile(record.id) : null;
 
     if (record && file) {
-      // Record close operation
-      const fileName = file.name;
-      const contextFileId = record.id;
-      const operationId = `close-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const operation: FileOperation = {
-        id: operationId,
-        type: 'remove',
-        timestamp: Date.now(),
-        fileIds: [fileName as FileId /* FIX ME: This doesn't seem right */],
-        status: 'pending',
-        metadata: {
-          originalFileName: fileName,
-          fileSize: record.size,
-          parameters: {
-            action: 'close',
-            reason: 'user_request'
-          }
-        }
-      };
-
       // Remove file from context but keep in storage (close, don't delete)
+      const contextFileId = record.id;
       removeFiles([contextFileId], false);
 
       // Remove from context selections
@@ -415,24 +314,6 @@ const FileEditor = ({
       navActions.setWorkbench('viewer');
     }
   }, [activeStirlingFileStubs, setSelectedFiles, navActions.setWorkbench]);
-
-  const handleMergeFromHere = useCallback((fileId: FileId) => {
-    const startIndex = activeStirlingFileStubs.findIndex(r => r.id === fileId);
-    if (startIndex === -1) return;
-
-    const recordsToMerge = activeStirlingFileStubs.slice(startIndex);
-    const filesToMerge = recordsToMerge.map(r => selectors.getFile(r.id)).filter(Boolean) as StirlingFile[];
-    if (onMergeFiles) {
-      onMergeFiles(filesToMerge);
-    }
-  }, [activeStirlingFileStubs, selectors, onMergeFiles]);
-
-  const handleSplitFile = useCallback((fileId: FileId) => {
-    const file = selectors.getFile(fileId);
-    if (file && onOpenPageEditor) {
-      onOpenPageEditor(file);
-    }
-  }, [selectors, onOpenPageEditor]);
 
   const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;

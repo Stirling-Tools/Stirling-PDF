@@ -68,7 +68,6 @@ export function usePageDocument(): PageDocumentHook {
 
     // Build pages by interleaving original pages with insertions
     let pages: PDFPage[] = [];
-    let totalPageCount = 0;
 
     // Helper function to create pages from a file
     const createPagesFromFile = (fileId: FileId, startPageNumber: number): PDFPage[] => {
@@ -143,8 +142,6 @@ export function usePageDocument(): PageDocumentHook {
         page.pageNumber = index + 1;
       });
     }
-
-    totalPageCount = pages.length;
 
     if (pages.length === 0) {
       return null;

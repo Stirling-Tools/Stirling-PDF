@@ -20,11 +20,11 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   const { selectedFiles } = useFileSelection();
   const toolRegistry = useFlatToolRegistry();
   const cleanup = useResourceCleanup();
-  
+
   // Progress tracking state
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
-  
+
   // Use the operation hook's loading state
   const isExecuting = automateOperation?.isLoading || false;
   const hasResults = automateOperation?.files.length > 0 || automateOperation?.downloadUrl !== null;
@@ -74,15 +74,15 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
     try {
       // Use the automateOperation.executeOperation to handle file consumption properly
       await automateOperation.executeOperation(
-        { 
+        {
           automationConfig: automation,
-          onStepStart: (stepIndex: number, operationName: string) => {
+          onStepStart: (stepIndex: number, _operationName: string) => {
             setCurrentStepIndex(stepIndex);
             setExecutionSteps(prev => prev.map((step, idx) =>
               idx === stepIndex ? { ...step, status: EXECUTION_STATUS.RUNNING } : step
             ));
           },
-          onStepComplete: (stepIndex: number, resultFiles: File[]) => {
+          onStepComplete: (stepIndex: number, _resultFiles: File[]) => {
             setExecutionSteps(prev => prev.map((step, idx) =>
               idx === stepIndex ? { ...step, status: EXECUTION_STATUS.COMPLETED } : step
             ));
@@ -95,7 +95,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
         },
         selectedFiles
       );
-      
+
       // Mark all as completed and reset current step
       setCurrentStepIndex(-1);
       console.log(`✅ Automation completed successfully`);
@@ -118,20 +118,20 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
       case EXECUTION_STATUS.ERROR:
         return <span style={{ fontSize: 16, color: 'red' }}>✕</span>;
       case EXECUTION_STATUS.RUNNING:
-        return <div style={{ 
-          width: 16, 
-          height: 16, 
-          border: '2px solid #ccc', 
-          borderTop: '2px solid #007bff', 
+        return <div style={{
+          width: 16,
+          height: 16,
+          border: '2px solid #ccc',
+          borderTop: '2px solid #007bff',
           borderRadius: '50%',
-          animation: `spin ${AUTOMATION_CONSTANTS.SPINNER_ANIMATION_DURATION} linear infinite` 
+          animation: `spin ${AUTOMATION_CONSTANTS.SPINNER_ANIMATION_DURATION} linear infinite`
         }} />;
       default:
-        return <div style={{ 
-          width: 16, 
-          height: 16, 
-          border: '2px solid #ccc', 
-          borderRadius: '50%' 
+        return <div style={{
+          width: 16,
+          height: 16,
+          border: '2px solid #ccc',
+          borderRadius: '50%'
         }} />;
     }
   };
@@ -170,8 +170,8 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
               {getStepIcon(step)}
 
               <div style={{ flex: 1 }}>
-                <Text 
-                  size="sm" 
+                <Text
+                  size="sm"
                   style={{
                     color: step.status === EXECUTION_STATUS.RUNNING ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-text)',
                     fontWeight: step.status === EXECUTION_STATUS.RUNNING ? 500 : 400

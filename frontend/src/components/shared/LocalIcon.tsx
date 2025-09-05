@@ -13,7 +13,7 @@ try {
     localIconCount = Object.keys(iconSet.icons || {}).length;
     console.info(`✅ Local icons loaded: ${localIconCount} icons (${Math.round(JSON.stringify(iconSet).length / 1024)}KB)`);
   }
-} catch (error) {
+} catch {
   console.info('ℹ️  Local icons not available - using CDN fallback');
 }
 
@@ -31,10 +31,10 @@ interface LocalIconProps {
  */
 export const LocalIcon: React.FC<LocalIconProps> = ({ icon, ...props }) => {
   // Convert our icon naming convention to the local collection format
-  const iconName = icon.startsWith('material-symbols:') 
-    ? icon 
+  const iconName = icon.startsWith('material-symbols:')
+    ? icon
     : `material-symbols:${icon}`;
-  
+
   // Development logging (only in dev mode)
   if (process.env.NODE_ENV === 'development') {
     const logKey = `icon-${iconName}`;
@@ -44,7 +44,7 @@ export const LocalIcon: React.FC<LocalIconProps> = ({ icon, ...props }) => {
       sessionStorage.setItem(logKey, 'logged');
     }
   }
-  
+
   // Always render the icon - Iconify will use local if available, CDN if not
   return <Icon icon={iconName} {...props} />;
 };

@@ -1,5 +1,4 @@
-import * as pdfjsLib from 'pdfjs-dist';
-import { ProcessedFile, ProcessingState, PDFPage, ProcessingStrategy, ProcessingConfig, ProcessingMetrics } from '../types/processing';
+import { ProcessedFile, ProcessingState, PDFPage, ProcessingConfig, ProcessingMetrics } from '../types/processing';
 import { ProcessingCache } from './processingCache';
 import { FileHasher } from '../utils/fileHash';
 import { FileAnalyzer } from './fileAnalyzer';
@@ -355,7 +354,7 @@ export class EnhancedPDFProcessingService {
    */
   private async processMetadataOnly(
     file: File,
-    config: ProcessingConfig,
+    _config: ProcessingConfig,
     state: ProcessingState
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
@@ -510,7 +509,7 @@ export class EnhancedPDFProcessingService {
    */
   clearAllProcessing(): void {
     // Cancel all ongoing processing
-    this.processing.forEach((state, key) => {
+    this.processing.forEach((state) => {
       if (state.cancellationToken) {
         state.cancellationToken.abort();
       }

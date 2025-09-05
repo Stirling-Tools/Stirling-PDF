@@ -3,7 +3,6 @@ import { ActionIcon, Stack, Divider } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import LocalIcon from './LocalIcon';
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
-import AppConfigModal from './AppConfigModal';
 import { useIsOverflowing } from '../../hooks/useIsOverflowing';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';

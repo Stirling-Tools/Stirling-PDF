@@ -1,6 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileContext } from "../contexts/FileContext";
 import { useFileSelection } from "../contexts/FileContext";
 import { useNavigationActions } from "../contexts/NavigationContext";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";

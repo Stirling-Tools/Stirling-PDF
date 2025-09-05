@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Button, Group, Stack } from "@mantine/core";
+import React, { useEffect, useRef } from "react";
+import { Button, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import UndoIcon from "@mui/icons-material/Undo";

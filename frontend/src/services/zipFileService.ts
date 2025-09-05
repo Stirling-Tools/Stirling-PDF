@@ -277,7 +277,7 @@ export class ZipFileService {
              bytes[2] === 0x44 && // D
              bytes[3] === 0x46 && // F
              bytes[4] === 0x2D;   // -
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -324,7 +324,7 @@ export class ZipFileService {
       await zip.loadAsync(file);
 
       // Check if any files are encrypted
-      for (const [filename, zipEntry] of Object.entries(zip.files)) {
+      for (const [_filename, zipEntry] of Object.entries(zip.files)) {
         if (zipEntry.options?.compression === 'STORE' && getData(zipEntry)?.compressedSize === 0) {
           // This might indicate encryption, but JSZip doesn't provide direct encryption detection
           // We'll handle this in the extraction phase

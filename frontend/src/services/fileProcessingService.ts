@@ -4,7 +4,6 @@
  * Called when files are added to FileContext, before any view sees them
  */
 
-import * as pdfjsLib from 'pdfjs-dist';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 import { pdfWorkerManager } from './pdfWorkerManager';
 import { FileId } from '../types/file';

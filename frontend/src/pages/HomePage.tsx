@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
@@ -11,7 +10,6 @@ import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import RightRail from "../components/shared/RightRail";
 import FileManager from "../components/FileManager";
-import Footer from "../components/shared/Footer";
 
 
 export default function HomePage() {

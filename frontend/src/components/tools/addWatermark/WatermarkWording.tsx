@@ -1,5 +1,5 @@
 import React from "react";
-import { Stack, Text, TextInput } from "@mantine/core";
+import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
 import { removeEmojis } from "../../../utils/textUtils";

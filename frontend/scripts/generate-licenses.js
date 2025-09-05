@@ -24,7 +24,7 @@ try {
     // Install license-checker if not present
     try {
         require.resolve('license-checker');
-    } catch (e) {
+    } catch {
         console.log('📦 Installing license-checker...');
         execSync('npm install --save-dev license-checker', { stdio: 'inherit' });
     }

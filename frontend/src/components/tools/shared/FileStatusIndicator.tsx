@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Text, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import FolderIcon from '@mui/icons-material/Folder';
@@ -28,7 +28,7 @@ const FileStatusIndicator = ({
       try {
         const recentFiles = await loadRecentFiles();
         setHasRecentFiles(recentFiles.length > 0);
-      } catch (error) {
+      } catch {
         setHasRecentFiles(false);
       }
     };

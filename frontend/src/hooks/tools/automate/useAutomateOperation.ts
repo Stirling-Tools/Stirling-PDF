@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 import { executeAutomationSequence } from '../../../utils/automationExecutor';
 import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
 import { AutomateParameters } from '../../../types/automation';
-import { AUTOMATION_CONSTANTS } from '../../../constants/automation';
 
 export function useAutomateOperation() {
   const toolRegistry = useFlatToolRegistry();

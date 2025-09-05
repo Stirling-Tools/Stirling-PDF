@@ -89,6 +89,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   clearToolSelection: () => void;
 
   // Tool Reset Actions
+  toolResetFunctions: Record<string, () => void>;
   registerToolReset: (toolId: string, resetFunction: () => void) => void;
   resetTool: (toolId: string) => void;
 
@@ -258,6 +259,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     clearToolSelection: () => actions.setSelectedTool(null),
 
     // Tool Reset Actions
+    toolResetFunctions,
     registerToolReset,
     resetTool,
 

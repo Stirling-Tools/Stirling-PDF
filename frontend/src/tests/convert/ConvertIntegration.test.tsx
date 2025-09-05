@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { describe, test, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useConvertOperation } from '../../hooks/tools/convert/useConvertOperation';
 import { ConvertParameters } from '../../hooks/tools/convert/useConvertParameters';
 import { FileContextProvider } from '../../contexts/FileContext';
@@ -53,10 +53,6 @@ vi.mock('../../services/thumbnailGenerationService', () => ({
 }));
 
 // Create realistic test files
-const createTestFile = (name: string, content: string, type: string): File => {
-  return new File([content], name, { type });
-};
-
 const createPDFFile = (): StirlingFile => {
   const pdfContent = '%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\ntrailer\n<<\n/Size 2\n/Root 1 0 R\n>>\nstartxref\n0\n%%EOF';
   return createTestStirlingFile('test.pdf', pdfContent, 'application/pdf');

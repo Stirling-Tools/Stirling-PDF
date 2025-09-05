@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { ToolRegistry } from '../data/toolsTaxonomy';
-import { AutomationConfig, AutomationExecutionCallbacks } from '../types/automation';
 import { AUTOMATION_CONSTANTS } from '../constants/automation';
 import { AutomationFileProcessor } from './automationFileProcessor';
 import { ResourceManager } from './resourceManager';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Text, Button, Checkbox, Group, useMantineColorScheme } from '@mantine/core';
+import { Container, Button, Group, useMantineColorScheme } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import LocalIcon from './LocalIcon';
 import { useTranslation } from 'react-i18next';

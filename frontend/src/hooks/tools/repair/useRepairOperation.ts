@@ -4,7 +4,7 @@ import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RepairParameters, defaultParameters } from './useRepairParameters';
 
 // Static function that can be used by both the hook and automation executor
-export const buildRepairFormData = (parameters: RepairParameters, file: File): FormData => {
+export const buildRepairFormData = (_parameters: RepairParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   return formData;

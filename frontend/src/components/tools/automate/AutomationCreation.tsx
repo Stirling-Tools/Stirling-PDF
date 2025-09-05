@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -38,10 +38,8 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     automationIcon,
     setAutomationIcon,
     selectedTools,
-    addTool,
     removeTool,
     updateTool,
-    hasUnsavedChanges,
     canSaveAutomation,
     getToolName,
     getToolDefaultParameters
@@ -82,14 +80,6 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       parameters: {}
     };
     updateTool(selectedTools.length, newTool);
-  };
-
-  const handleBackClick = () => {
-    if (hasUnsavedChanges()) {
-      setUnsavedWarningOpen(true);
-    } else {
-      onBack();
-    }
   };
 
   const handleConfirmBack = () => {

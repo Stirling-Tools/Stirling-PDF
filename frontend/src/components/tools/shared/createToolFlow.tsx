@@ -81,7 +81,7 @@ export function createToolFlow(config: ToolFlowConfig) {
         })}
 
         {/* Middle Steps */}
-        {config.steps.map((stepConfig, index) =>
+        {config.steps.map((stepConfig) =>
           steps.create(stepConfig.title, {
             isVisible: stepConfig.isVisible,
             isCollapsed: stepConfig.isCollapsed,

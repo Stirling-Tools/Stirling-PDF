@@ -8,11 +8,7 @@ interface UnlockPdfFormsSettingsProps {
   disabled?: boolean;
 }
 
-const UnlockPdfFormsSettings: React.FC<UnlockPdfFormsSettingsProps> = ({ 
-  parameters, 
-  onParameterChange, // Unused - kept for interface consistency and future extensibility
-  disabled = false 
-}) => {
+const UnlockPdfFormsSettings: React.FC<UnlockPdfFormsSettingsProps> = (_) => {
   const { t } = useTranslation();
 
   return (

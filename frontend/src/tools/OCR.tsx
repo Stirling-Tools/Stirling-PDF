@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileSelection } from "../contexts/FileContext";
-import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 

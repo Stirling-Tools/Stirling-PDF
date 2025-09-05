@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { FileMetadata } from '../types/file';
-import { StoredFile, fileStorage } from '../services/fileStorage';
+import { fileStorage } from '../services/fileStorage';
 import { downloadFiles } from '../utils/downloadUtils';
 import { FileId } from '../types/file';
 

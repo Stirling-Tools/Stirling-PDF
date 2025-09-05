@@ -184,11 +184,6 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
           // Force show after initialization
           setTimeout(() => {
             window.CookieConsent.show();
-
-            // Debug: Check if modal elements exist
-            const ccMain = document.getElementById('cc-main');
-            const consentModal = document.querySelector('.cm-wrapper');
-
           }, 200);
 
         } catch (error) {

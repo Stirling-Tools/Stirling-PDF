@@ -4,7 +4,7 @@ import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SingleLargePageParameters, defaultParameters } from './useSingleLargePageParameters';
 
 // Static function that can be used by both the hook and automation executor
-export const buildSingleLargePageFormData = (parameters: SingleLargePageParameters, file: File): FormData => {
+export const buildSingleLargePageFormData = (_parameters: SingleLargePageParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   return formData;

@@ -1,4 +1,4 @@
-import { Stack, Text, Checkbox } from "@mantine/core";
+import { Stack, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ChangePermissionsParameters } from "../../../hooks/tools/changePermissions/useChangePermissionsParameters";
 

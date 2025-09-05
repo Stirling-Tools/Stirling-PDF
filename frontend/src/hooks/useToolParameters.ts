@@ -10,8 +10,8 @@ type ToolParameterValues = Record<string, any>;
  * Register tool parameters and get current values
  */
 export function useToolParameters(
-  toolName: string, 
-  parameters: Record<string, any>
+  _toolName: string,
+  _parameters: Record<string, any>
 ): [ToolParameterValues, (updates: Partial<ToolParameterValues>) => void] {
 
   // Return empty values and noop updater
@@ -30,9 +30,9 @@ export function useToolParameter<T = any>(
   definition: any
 ): [T, (value: T) => void] {
   const [allParams, updateParams] = useToolParameters(toolName, { [paramName]: definition });
-  
+
   const value = allParams[paramName] as T;
-  
+
   const setValue = useCallback((newValue: T) => {
     updateParams({ [paramName]: newValue });
   }, [paramName, updateParams]);

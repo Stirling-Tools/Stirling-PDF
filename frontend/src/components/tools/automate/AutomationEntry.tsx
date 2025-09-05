@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Group, Text, ActionIcon, Menu, Box } from '@mantine/core';
+import { Group, Text, ActionIcon, Menu, Box } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -69,11 +69,11 @@ export default function AutomationEntry({
 
     const toolChain = operations.map((op, index) => (
       <React.Fragment key={`${op}-${index}`}>
-        <Text 
-          component="span" 
-          size="sm" 
+        <Text
+          component="span"
+          size="sm"
           fw={600}
-          style={{ 
+          style={{
             color: 'var(--mantine-primary-color-filled)',
             background: 'var(--mantine-primary-color-light)',
             padding: '2px 6px',
@@ -241,12 +241,12 @@ export default function AutomationEntry({
 
   // Show tooltip if there's a description OR operations to display
   const shouldShowTooltip = description || operations.length > 0;
-  
+
   return shouldShowTooltip ? (
-    <Tooltip 
-      content={createTooltipContent()} 
-      position="right" 
-      arrow={true} 
+    <Tooltip
+      content={createTooltipContent()}
+      position="right"
+      arrow={true}
       delay={500}
     >
       {boxContent}

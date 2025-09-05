@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useMemo, useRef } from 'react';
-import { Text, Stack, Box, Flex, Divider } from '@mantine/core';
+import React, { createContext, useContext, useMemo } from 'react';
+import { Text, Stack, Flex, Divider } from '@mantine/core';
 import LocalIcon from '../../shared/LocalIcon';
 import { Tooltip } from '../../shared/Tooltip';
 import { TooltipTip } from '../../../types/tips';

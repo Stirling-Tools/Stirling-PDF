@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Box } from '@mantine/core';
+import { Box } from '@mantine/core';
 import FileSourceButtons from './FileSourceButtons';
 import FileDetails from './FileDetails';
 import SearchInput from './SearchInput';
@@ -19,14 +19,14 @@ const MobileLayout: React.FC = () => {
   const calculateFileListHeight = () => {
     // Base modal height minus padding and gaps
     const baseHeight = `calc(${modalHeight} - 2rem)`; // Account for Stack padding
-    
+
     // Estimate heights of fixed components
     const fileSourceHeight = '3rem'; // FileSourceButtons height
     const fileDetailsHeight = selectedFiles.length > 0 ? '10rem' : '8rem'; // FileDetails compact height
     const fileActionsHeight = activeSource === 'recent' ? '3rem' : '0rem'; // FileActions height (now at bottom)
     const searchHeight = activeSource === 'recent' ? '3rem' : '0rem'; // SearchInput height
     const gapHeight = activeSource === 'recent' ? '3.75rem' : '2rem'; // Stack gaps
-    
+
     return `calc(${baseHeight} - ${fileSourceHeight} - ${fileDetailsHeight} - ${fileActionsHeight} - ${searchHeight} - ${gapHeight})`;
   };
 
@@ -36,15 +36,15 @@ const MobileLayout: React.FC = () => {
       <Box style={{ flexShrink: 0 }}>
         <FileSourceButtons horizontal={true} />
       </Box>
-      
+
       <Box style={{ flexShrink: 0 }}>
         <FileDetails compact={true} />
       </Box>
-      
+
       {/* Section 3 & 4: Search Bar + File List - Unified background extending to modal edge */}
-      <Box style={{ 
+      <Box style={{
         flex: 1,
-        display: 'flex', 
+        display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'var(--bg-file-list)',
         borderRadius: '0.5rem',
@@ -54,13 +54,13 @@ const MobileLayout: React.FC = () => {
       }}>
         {activeSource === 'recent' && (
           <>
-            <Box style={{ 
+            <Box style={{
               flexShrink: 0,
               borderBottom: '1px solid var(--mantine-color-gray-2)'
             }}>
               <SearchInput />
             </Box>
-            <Box style={{ 
+            <Box style={{
               flexShrink: 0,
               borderBottom: '1px solid var(--mantine-color-gray-2)'
             }}>
@@ -68,11 +68,11 @@ const MobileLayout: React.FC = () => {
             </Box>
           </>
         )}
-        
+
         <Box style={{ flex: 1, minHeight: 0 }}>
           <FileListArea
             scrollAreaHeight={calculateFileListHeight()}
-            scrollAreaStyle={{ 
+            scrollAreaStyle={{
               height: calculateFileListHeight(),
               maxHeight: '60vh',
               minHeight: '9.375rem',
@@ -83,7 +83,7 @@ const MobileLayout: React.FC = () => {
           />
         </Box>
       </Box>
-      
+
       {/* Hidden file input for local file selection */}
       <HiddenFileInput />
     </Box>

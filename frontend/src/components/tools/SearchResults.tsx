@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Box, Stack, Text } from '@mantine/core';
+import React from 'react';
+import { Box, Stack } from '@mantine/core';
 import { getSubcategoryLabel, ToolRegistryEntry } from '../../data/toolsTaxonomy';
 import ToolButton from './toolPicker/ToolButton';
 import { useTranslation } from 'react-i18next';
@@ -40,12 +40,10 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }
           </Stack>
         </Box>
       ))}
-      {/* global spacer to allow scrolling past last row in search mode */}
+      {/* Global spacer to allow scrolling past last row in search mode */}
       <div aria-hidden style={{ height: 200 }} />
     </Stack>
   );
 };
 
 export default SearchResults;
-
-

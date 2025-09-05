@@ -1,5 +1,4 @@
-import React from "react";
-import { Stack, Text, PasswordInput, Select } from "@mantine/core";
+import { Stack, PasswordInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "../../../hooks/tools/addPassword/useAddPasswordParameters";
 

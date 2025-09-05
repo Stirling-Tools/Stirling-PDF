@@ -128,7 +128,7 @@ export class FileAnalyzer {
    * Estimate processing time based on file characteristics and strategy
    */
   private static estimateProcessingTime(
-    fileSize: number,
+    _fileSize: number,
     pageCount: number = 0,
     strategy: ProcessingStrategy
   ): number {
@@ -234,7 +234,7 @@ export class FileAnalyzer {
       const headerString = String.fromCharCode(...headerBytes);
 
       return headerString.startsWith('%PDF-');
-    } catch (error) {
+    } catch {
       return false;
     }
   }

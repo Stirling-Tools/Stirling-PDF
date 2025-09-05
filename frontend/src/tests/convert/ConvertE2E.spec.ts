@@ -17,7 +17,6 @@ import * as fs from 'fs';
 
 // Test configuration
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
 /**
  * Resolves test fixture paths dynamically based on current working directory.
@@ -266,7 +265,6 @@ async function testConversion(page: Page, conversion: ConversionEndpoint) {
 }
 
 // Discover conversions at module level before tests are defined
-let allConversions: ConversionEndpoint[] = [];
 let availableConversions: ConversionEndpoint[] = [];
 let unavailableConversions: ConversionEndpoint[] = [];
 
@@ -275,7 +273,6 @@ let unavailableConversions: ConversionEndpoint[] = [];
   try {
     availableConversions = await conversionDiscovery.getAvailableConversions();
     unavailableConversions = await conversionDiscovery.getUnavailableConversions();
-    allConversions = [...availableConversions, ...unavailableConversions];
   } catch (error) {
     console.error('Failed to discover conversions during module load:', error);
   }

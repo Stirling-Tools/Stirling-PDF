@@ -166,9 +166,9 @@ export function useFileContext() {
     addFiles: actions.addFiles,
     consumeFiles: actions.consumeFiles,
     undoConsumeFiles: actions.undoConsumeFiles,
-    recordOperation: (fileId: FileId, operation: any) => {}, // Operation tracking not implemented
-    markOperationApplied: (fileId: FileId, operationId: string) => {}, // Operation tracking not implemented
-    markOperationFailed: (fileId: FileId, operationId: string, error: string) => {}, // Operation tracking not implemented
+    recordOperation: (_fileId: FileId, _operation: any) => {}, // Operation tracking not implemented
+    markOperationApplied: (_fileId: FileId, _operationId: string) => {}, // Operation tracking not implemented
+    markOperationFailed: (_fileId: FileId, _operationId: string, _error: string) => {}, // Operation tracking not implemented
 
     // File ID lookup
     findFileId: (file: File) => {
