@@ -52,7 +52,8 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:install": "playwright install"
+    "test:e2e:install": "playwright install",
+    "knip": "knip"
   },
   "eslintConfig": {
     "extends": [
@@ -77,13 +78,14 @@
     "@iconify-json/material-symbols": "^1.2.33",
     "@iconify/utils": "^3.0.1",
     "@playwright/test": "^1.40.0",
-    "@types/node": "^24.2.1",
+    "@types/node": "^24.3.1",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.5.0",
     "@vitest/coverage-v8": "^1.0.0",
     "eslint": "^9.34.0",
     "jsdom": "^23.0.0",
+    "knip": "^5.63.1",
     "license-checker": "^25.0.1",
     "madge": "^8.0.0",
     "postcss": "^8.5.3",
