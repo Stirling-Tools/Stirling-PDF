@@ -2,8 +2,6 @@ package stirling.software.common.annotations;
 
 import java.lang.annotation.*;
 
-import javax.print.attribute.standard.Media;
-
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;

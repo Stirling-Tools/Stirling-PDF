@@ -58,7 +58,10 @@ class PDFToFileTest {
         // Prepare
         MultipartFile nonPdfFile =
                 new MockMultipartFile(
-                        "file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "This is not a PDF".getBytes());
+                        "file",
+                        "test.txt",
+                        MediaType.TEXT_PLAIN_VALUE,
+                        "This is not a PDF".getBytes());
 
         // Execute
         ResponseEntity<byte[]> response = pdfToFile.processPdfToMarkdown(nonPdfFile);
@@ -72,7 +75,10 @@ class PDFToFileTest {
         // Prepare
         MultipartFile nonPdfFile =
                 new MockMultipartFile(
-                        "file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "This is not a PDF".getBytes());
+                        "file",
+                        "test.txt",
+                        MediaType.TEXT_PLAIN_VALUE,
+                        "This is not a PDF".getBytes());
 
         // Execute
         ResponseEntity<byte[]> response = pdfToFile.processPdfToHtml(nonPdfFile);
@@ -87,7 +93,10 @@ class PDFToFileTest {
         // Prepare
         MultipartFile nonPdfFile =
                 new MockMultipartFile(
-                        "file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "This is not a PDF".getBytes());
+                        "file",
+                        "test.txt",
+                        MediaType.TEXT_PLAIN_VALUE,
+                        "This is not a PDF".getBytes());
 
         // Execute
         ResponseEntity<byte[]> response =
