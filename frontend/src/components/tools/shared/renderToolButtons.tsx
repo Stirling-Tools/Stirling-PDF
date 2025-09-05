@@ -1,5 +1,4 @@
-import React from 'react';
-import { Box, Stack } from '@mantine/core';
+import { Box } from '@mantine/core';
 import ToolButton from '../toolPicker/ToolButton';
 import SubcategoryHeader from './SubcategoryHeader';
 

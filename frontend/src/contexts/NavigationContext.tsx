@@ -103,7 +103,7 @@ const NavigationActionsContext = createContext<NavigationContextActionsValue | u
 export const NavigationProvider: React.FC<{
   children: React.ReactNode;
   enableUrlSync?: boolean;
-}> = ({ children, enableUrlSync = true }) => {
+}> = ({ children }) => {
   const [state, dispatch] = useReducer(navigationReducer, initialState);
   const toolRegistry = useFlatToolRegistry();
 
