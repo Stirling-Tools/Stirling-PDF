@@ -496,7 +496,7 @@ class FileStorageService {
   async updateThumbnail(id: FileId, thumbnail: string): Promise<boolean> {
     const db = await this.getDatabase();
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       try {
         const transaction = db.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);

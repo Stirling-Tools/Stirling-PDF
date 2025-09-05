@@ -3,8 +3,6 @@ import { Stack, Text, Divider, Card, Group, Anchor } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSuggestedTools } from '../../../hooks/useSuggestedTools';
 
-export interface SuggestedToolsSectionProps {}
-
 export function SuggestedToolsSection(): React.ReactElement {
   const { t } = useTranslation();
   const suggestedTools = useSuggestedTools();

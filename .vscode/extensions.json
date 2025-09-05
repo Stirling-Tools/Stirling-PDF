@@ -19,5 +19,6 @@
     "yzhang.markdown-all-in-one", // Markdown All-in-One extension for enhanced Markdown editing
     "stylelint.vscode-stylelint", // Stylelint extension for CSS and SCSS linting
     "redhat.vscode-yaml", // YAML extension for Visual Studio Code
+    "dbaeumer.vscode-eslint", // ESLint extension for TypeScript linting
   ]
 }
