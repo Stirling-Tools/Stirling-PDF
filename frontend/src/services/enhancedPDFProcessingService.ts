@@ -459,11 +459,12 @@ export class EnhancedPDFProcessingService {
       case 'failed':
         this.metrics.failedFiles++;
         break;
-      case 'cacheHit':
+      case 'cacheHit': {
         // Update cache hit rate
         const totalAttempts = this.metrics.totalFiles + 1;
         this.metrics.cacheHitRate = (this.metrics.cacheHitRate * this.metrics.totalFiles + 1) / totalAttempts;
         break;
+      }
     }
   }
 
