@@ -169,13 +169,7 @@
   <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
 
   <!-- Pixel, doesn't collect any PII-->
-  <img th:if="${!@disablePixel}" referrerpolicy="no-referrer-when-downgrade"
-     th:src="'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92' 
-             + '&machineType=' + ${@machineType} 
-             + '&appVersion=' + ${@appVersion} 
-             + '&licenseType=' + ${@license} 
-             + '&loginEnabled=' + ${@loginEnabled}"
-     style="position: absolute; visibility: hidden;" />
+  <div th:if="${!@disablePixel and @analyticsEnabled}" id="pixel-tracker-container" style="display: none;"></div>
      
   <!-- Custom -->
   <link rel="stylesheet" th:href="@{'/css/general.css'}">
@@ -223,6 +217,33 @@
 
       window.CookieConsent.acceptedCategory('analytics')?
         posthog.opt_in_capturing() : posthog.opt_out_capturing();
+    }
+
+    function UpdatePixelConsent(){
+      const pixelContainer = document.getElementById('pixel-tracker-container');
+      if(!pixelContainer) {
+        return;
+      }
+
+      if(window.CookieConsent.acceptedCategory('analytics')) {
+        // Only create and load the pixel if consent is given and it hasn't been loaded yet
+        if(pixelContainer.children.length === 0) {
+          const pixelImg = document.createElement('img');
+          pixelImg.referrerPolicy = 'no-referrer-when-downgrade';
+          pixelImg.src = 'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92' 
+                        + '&machineType=' + /*[[${@machineType}]]*/ ''
+                        + '&appVersion=' + /*[[${@appVersion}]]*/ ''
+                        + '&licenseType=' + /*[[${@license}]]*/ ''
+                        + '&loginEnabled=' + /*[[${@loginEnabled}]]*/ '';
+          pixelImg.style.cssText = 'position: absolute; visibility: hidden;';
+          pixelContainer.appendChild(pixelImg);
+        }
+        pixelContainer.style.display = 'block';
+      } else {
+        pixelContainer.style.display = 'none';
+        // Remove pixel image to prevent any tracking
+        pixelContainer.innerHTML = '';
+      }
     }
     const stirlingPDFLabel = /*[[${@StirlingPDFLabel}]]*/ '';
     const analyticsEnabled = /*[[${@analyticsEnabled}]]*/ false;
@@ -289,6 +310,8 @@
 
     window.addEventListener("cc:onConsent", UpdatePosthogConsent);
     window.addEventListener("cc:onChange", UpdatePosthogConsent);
+    window.addEventListener("cc:onConsent", UpdatePixelConsent);
+    window.addEventListener("cc:onChange", UpdatePixelConsent);
   </script>
 </th:block>
 
