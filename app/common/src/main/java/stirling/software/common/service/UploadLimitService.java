@@ -50,7 +50,7 @@ public class UploadLimitService {
         return humanReadableByteCount(getUploadLimit());
     }
 
-    private String humanReadableByteCount(long bytes) {
+    public String humanReadableByteCount(long bytes) {
         if (bytes < 1024) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(1024));
         String pre = "KMGTPE".charAt(exp - 1) + "B";

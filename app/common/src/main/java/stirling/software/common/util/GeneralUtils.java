@@ -48,9 +48,12 @@ public class GeneralUtils {
     private static final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
     private static final String PYTHON_SCRIPTS_DIR = "python";
 
+    private static UploadLimitService getUploadLimitService() {
+        return ApplicationContextProvider.getBean(UploadLimitService.class);
+    }
+
     private static long getMaxUploadSize() {
-        UploadLimitService uploadLimitService =
-                ApplicationContextProvider.getBean(UploadLimitService.class);
+        UploadLimitService uploadLimitService = getUploadLimitService();
         long limit = uploadLimitService != null ? uploadLimitService.getUploadLimit() : 0;
         return limit;
     }
@@ -58,7 +61,8 @@ public class GeneralUtils {
     public static void checkMaxUploadSize(MultipartFile file) {
         long maxUploadSize = getMaxUploadSize();
         if (maxUploadSize > 0 && file != null && file.getSize() > maxUploadSize) {
-            throw new FileTooLargeException(maxUploadSize);
+            throw new FileTooLargeException(
+                    getUploadLimitService().humanReadableByteCount(maxUploadSize));
         }
     }
 
