@@ -146,9 +146,9 @@
 .selectedList {
   max-height: 8rem;
   overflow: auto;
-  border: 0.0625rem solid var(--mantine-color-gray-3);
-  border-radius: 0.25rem;
-  padding: 0.5rem;
+  background-color: var(--mantine-color-gray-0);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
   margin-top: 0.5rem;
   min-width: 24rem;
 }
@@ -230,5 +230,32 @@
 .applyButton {
   min-width: 4rem;
   flex-shrink: 0;
+}
+
+/* Error helper text above the input */
+.errorText {
+  margin-top: 0.25rem;
+  color: var(--mantine-color-red-6);
+}
+
+/* Dark-mode adjustments */
+::global([data-mantine-color-scheme='dark']) .selectedList {
+  background-color: var(--mantine-color-dark-6);
+}
+
+/* Small screens: allow the section to shrink instead of enforcing a large min width */
+@media (max-width: 480px) {
+  .panelGroup,
+  .selectedList,
+  .advancedSection,
+  .panelContainer {
+    min-width: 0;
+  }
+}
+
+/* Outermost panel container scrolling */
+.panelContainer {
+  max-height: 95vh;
+  overflow: auto;
 }
 

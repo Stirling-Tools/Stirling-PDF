@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Group, TextInput, Button, Text, NumberInput, Flex } from '@mantine/core';
 import LocalIcon from '../shared/LocalIcon';
 import { Tooltip } from '../shared/Tooltip';
 import { usePageSelectionTips } from '../tooltips/usePageSelectionTips';
 import classes from './BulkSelectionPanel.module.css';
+import { parseSelectionWithDiagnostics } from '../../utils/bulkselection/parseSelection';
 import {
   appendExpression,
   insertOperatorSmart,
@@ -38,9 +39,25 @@ const BulkSelectionPanel = ({
   const [firstNError, setFirstNError] = useState<string | null>(null);
   const [lastNError, setLastNError] = useState<string | null>(null);
   const [rangeError, setRangeError] = useState<string | null>(null);
+  const [syntaxError, setSyntaxError] = useState<string | null>(null);
 
   const maxPages = displayDocument?.pages?.length ?? 0;
 
+
+  // Validate input syntax and show lightweight feedback
+  useEffect(() => {
+    const text = (csvInput || '').trim();
+    if (!text) {
+      setSyntaxError(null);
+      return;
+    }
+    try {
+      const { warning } = parseSelectionWithDiagnostics(text, maxPages);
+      setSyntaxError(warning ? 'There is a syntax issue. See Page Selection tips for help.' : null);
+    } catch {
+      setSyntaxError('There is a syntax issue. See Page Selection tips for help.');
+    }
+  }, [csvInput, maxPages]);
 
   const applyExpression = (expr: string) => {
     const nextInput = appendExpression(csvInput, expr);
@@ -62,7 +79,10 @@ const BulkSelectionPanel = ({
   };
 
   return (
-    <>
+    <div className={classes.panelContainer}>
+      {syntaxError && (
+        <Text size="xs" className={classes.errorText}>{syntaxError}</Text>
+      )}
       <Group className={classes.panelGroup}>
         <TextInput
           value={csvInput}
@@ -106,7 +126,6 @@ const BulkSelectionPanel = ({
                 </Flex>
               </Tooltip>
           }
-          onBlur={() => onUpdatePagesFromCSV()}
           onKeyDown={(e) => e.key === 'Enter' && onUpdatePagesFromCSV()}
           className={classes.textInput}
         />
@@ -364,7 +383,7 @@ const BulkSelectionPanel = ({
           </div>
         </div>
       )}
-      </>
+      </div>
   );
 };
 
