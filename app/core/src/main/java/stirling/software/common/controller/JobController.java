@@ -260,7 +260,7 @@ public class JobController {
                                 "fileName",
                                 "unknown",
                                 "contentType",
-                                "application/octet-stream",
+                                MediaType.APPLICATION_OCTET_STREAM_VALUE,
                                 "fileSize",
                                 fileSize));
             }
@@ -295,7 +295,9 @@ public class JobController {
 
             String fileName = resultFile != null ? resultFile.getFileName() : "download";
             String contentType =
-                    resultFile != null ? resultFile.getContentType() : "application/octet-stream";
+                    resultFile != null
+                            ? resultFile.getContentType()
+                            : MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
             return ResponseEntity.ok()
                     .header("Content-Type", contentType)
