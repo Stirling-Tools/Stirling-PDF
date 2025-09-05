@@ -17,8 +17,7 @@ import {
   getActiveNavButton,
 } from './quickAccessBar/QuickAccessBar';
 
-const QuickAccessBar = forwardRef<HTMLDivElement>(({
-}, ref) => {
+const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
