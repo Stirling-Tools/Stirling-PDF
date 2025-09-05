@@ -48,10 +48,12 @@ public class FilterController {
         String text = request.getText();
         String pageNumber = request.getPageNumbers();
 
-        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile);
-        if (PdfUtils.hasText(pdfDocument, pageNumber, text))
-            return WebResponseUtils.pdfDocToWebResponse(
-                    pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+        try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
+            if (PdfUtils.hasText(pdfDocument, pageNumber, text)) {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+            }
+        }
         return null;
     }
 
@@ -217,3 +219,4 @@ public class FilterController {
         return null;
     }
 }
+

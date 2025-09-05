@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -150,10 +151,12 @@ public class ConvertImgPDFController {
                                 .runCommandWithOutputHandling(command);
 
                 // Find all WebP files in the output directory
-                List<Path> webpFiles =
-                        Files.walk(tempOutputDir)
-                                .filter(path -> path.toString().endsWith(".webp"))
-                                .toList();
+                List<Path> webpFiles;
+                try (Stream<Path> walkStream = Files.walk(tempOutputDir)) {
+                    webpFiles = walkStream
+                            .filter(path -> path.toString().endsWith(".webp"))
+                            .toList();
+                }
 
                 if (webpFiles.isEmpty()) {
                     log.error("No WebP files were created in: {}", tempOutputDir.toString());
