@@ -74,7 +74,7 @@ public class PDFToFile {
         Path tempInputFile = null;
         Path tempOutputDir = null;
         byte[] fileBytes;
-        String fileName = "temp.file";
+        String fileName;
 
         try {
             tempInputFile = Files.createTempFile("input_", ".pdf");
@@ -167,7 +167,7 @@ public class PDFToFile {
         Path tempInputFile = null;
         Path tempOutputDir = null;
         byte[] fileBytes;
-        String fileName = "temp.file";
+        String fileName;
 
         try {
             // Save the uploaded file to a temporary location
@@ -230,7 +230,7 @@ public class PDFToFile {
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
 
-        if (originalPdfFileName == null || "".equals(originalPdfFileName.trim())) {
+        if (originalPdfFileName == null || originalPdfFileName.trim().isEmpty()) {
             originalPdfFileName = "output.pdf";
         }
         // Assume file is pdf if no extension
@@ -248,7 +248,7 @@ public class PDFToFile {
         Path tempInputFile = null;
         Path tempOutputDir = null;
         byte[] fileBytes;
-        String fileName = "temp.file";
+        String fileName;
 
         try {
             // Save the uploaded file to a temporary location

@@ -87,7 +87,7 @@ public class FilterController {
         PDDocument document = pdfDocumentFactory.load(inputFile);
         int actualPageCount = document.getNumberOfPages();
 
-        boolean valid = false;
+        boolean valid;
         // Perform the comparison
         switch (comparator) {
             case "Greater":
@@ -130,7 +130,7 @@ public class FilterController {
         PDRectangle standardSize = PdfUtils.textToPageSize(standardPageSize);
         float standardArea = standardSize.getWidth() * standardSize.getHeight();
 
-        boolean valid = false;
+        boolean valid;
         // Perform the comparison
         switch (comparator) {
             case "Greater":
@@ -163,7 +163,7 @@ public class FilterController {
         // Get the file size
         long actualFileSize = inputFile.getSize();
 
-        boolean valid = false;
+        boolean valid;
         // Perform the comparison
         switch (comparator) {
             case "Greater":
@@ -199,7 +199,7 @@ public class FilterController {
         // Get the rotation of the first page
         PDPage firstPage = document.getPage(0);
         int actualRotation = firstPage.getRotation();
-        boolean valid = false;
+        boolean valid;
         // Perform the comparison
         switch (comparator) {
             case "Greater":
