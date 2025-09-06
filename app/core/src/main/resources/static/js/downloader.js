@@ -218,7 +218,7 @@
             formData.append('password', password);
 
             // Use handleSingleDownload to send the request
-            const decryptionResult = await fetch(removePasswordUrl, {method: 'POST', body: formData});
+            const decryptionResult = await fetchWithCsrf(removePasswordUrl, {method: 'POST', body: formData});
 
             if (decryptionResult && decryptionResult.blob) {
               const decryptedBlob = await decryptionResult.blob();
@@ -482,6 +482,11 @@
     }
     progressBar.css('width', '100%');
     progressBar.attr('aria-valuenow', Array.from(files).length);
+    setTimeout(() => {
+      progressBar.closest('.progressBarContainer').hide();
+      progressBar.css('width', '0%');
+      progressBar.attr('aria-valuenow', 0);
+    }, 1000);
   }
 
   function updateProgressBar(progressBar, files) {

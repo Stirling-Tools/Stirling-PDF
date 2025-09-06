@@ -52,7 +52,7 @@ public class ScannerEffectController {
     private static final int MAX_IMAGE_HEIGHT = 8192;
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
-    @PostMapping(value = "/scanner-effect", consumes = "multipart/form-data")
+    @PostMapping(value = "/scanner-effect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Apply scanner effect to PDF",
             description =

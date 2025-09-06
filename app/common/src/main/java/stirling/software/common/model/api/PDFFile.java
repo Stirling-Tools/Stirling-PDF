@@ -1,5 +1,6 @@
 package stirling.software.common.model.api;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class PDFFile {
     @Schema(
             description = "The input PDF file",
-            contentMediaType = "application/pdf",
+            contentMediaType = MediaType.APPLICATION_PDF_VALUE,
             format = "binary")
     private MultipartFile fileInput;
 
