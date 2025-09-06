@@ -30,6 +30,7 @@ class PdfContainer {
     this.setDownloadAttribute = this.setDownloadAttribute.bind(this);
     this.preventIllegalChars = this.preventIllegalChars.bind(this);
     this.addImageFile = this.addImageFile.bind(this);
+    this.duplicatePage = this.duplicatePage.bind(this);
     this.nameAndArchiveFiles = this.nameAndArchiveFiles.bind(this);
     this.splitPDF = this.splitPDF.bind(this);
     this.splitAll = this.splitAll.bind(this);
@@ -56,6 +57,7 @@ class PdfContainer {
         rotateElement: this.rotateElement,
         updateFilename: this.updateFilename,
         deleteSelected: this.deleteSelected,
+        duplicatePage: this.duplicatePage,
       });
     });
 
@@ -154,19 +156,31 @@ class PdfContainer {
     return movePageCommand;
   }
 
-  async addFiles(element) {
-    let addFilesCommand = new AddFilesCommand(
+  /**
+   * Adds files or a single blank page (when blank=true) near an anchor element.
+   * @param {HTMLElement|null} element - Anchor element (insert before its nextSibling).
+   * @param {boolean} [blank=false] - When true, insert a single blank page.
+   */
+  async addFiles(element, blank = false) {
+    // Choose the action: real file picker or blank page generator.
+    const action = blank
+      ? async (nextSiblingElement) => {
+          // Create exactly one blank page and return the created elements array.
+          const pages = await this.addFilesBlank(nextSiblingElement, []);
+          return pages; // array of inserted elements
+        }
+      : this.addFilesAction.bind(this);
+
+    const addFilesCommand = new AddFilesCommand(
       element,
       window.selectedPages,
-      this.addFilesAction.bind(this),
+      action,
       this.pagesContainer
     );
 
     await addFilesCommand.execute();
-
     this.undoManager.pushUndoClearRedo(addFilesCommand);
     window.tooltipSetup();
-
   }
 
   async addFilesAction(nextSiblingElement) {
@@ -347,6 +361,30 @@ class PdfContainer {
     }
     pages.push(div);
     return pages;
+  }
+
+  duplicatePage(element) {
+    const clone = document.createElement('div');
+    clone.classList.add('page-container');
+
+    const originalImg = element.querySelector('img');
+    const img = document.createElement('img');
+    img.classList.add('page-image');
+    img.src = originalImg.src;
+    img.pageIdx = originalImg.pageIdx;
+    img.rend = originalImg.rend;
+    img.doc = originalImg.doc;
+    img.style.rotate = originalImg.style.rotate;
+    clone.appendChild(img);
+
+    this.pdfAdapters.forEach((adapter) => {
+      adapter?.adapt?.(clone);
+    });
+
+    const nextSibling = element.nextSibling;
+    this.pagesContainer.insertBefore(clone, nextSibling);
+    this.updatePageNumbersAndCheckboxes();
+    return clone;
   }
 
   async loadFile(file) {
