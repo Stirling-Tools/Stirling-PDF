@@ -4,63 +4,7 @@
 
 <head>
   <th:block th:insert="~{fragments/common :: head(title=#{autoRedact.title}, header=#{autoRedact.header})}"></th:block>
-  <style>
-    .redaction-options-group {
-      margin-bottom: 1rem;
-    }
-
-    .form-text.text-muted {
-      color: #6c757d !important;
-    }
-
-    .btn-primary:focus, .form-check-input:focus, .form-control:focus, .form-select:focus {
-      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-      outline: 2px solid #0d6efd;
-      outline-offset: 2px;
-    }
-
-    .form-check-input:checked {
-      background-color: #0d6efd;
-      border-color: #0d6efd;
-    }
-
-    /* OCR language list styling */
-    #languages {
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid var(--md-sys-color-surface-3);
-      border-radius: 5px;
-      padding: 10px;
-    }
-
-    /* Better visibility for selected redaction option */
-    .redaction-options-group .form-check {
-      border: 1px solid var(--md-sys-color-surface-3);
-      border-radius: 8px;
-      padding: 10px 12px;
-      transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
-    }
-
-    .redaction-options-group .form-check + .form-check { margin-top: .5rem; }
-
-    .redaction-options-group .form-check:hover {
-      background-color: var(--md-sys-color-surface-1);
-    }
-
-    .redaction-options-group .form-check.selected {
-      border-color: #0d6efd;
-      background-color: rgba(13,110,253,0.06);
-      box-shadow: 0 0 0 2px rgba(13,110,253,0.1) inset;
-    }
-
-    .redaction-options-group .form-check .form-check-label {
-      font-weight: 600;
-    }
-
-    .redaction-options-group small.form-text {
-      margin-left: 1.8rem; /* align with radio */
-    }
-  </style>
+  <link rel="stylesheet" th:href="@{'/css/redact.css'}">
 </head>
 
 <body>
