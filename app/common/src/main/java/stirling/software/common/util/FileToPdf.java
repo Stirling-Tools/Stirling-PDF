@@ -124,20 +124,21 @@ public class FileToPdf {
     private static void zipDirectory(Path sourceDir, Path zipFilePath) throws IOException {
         try (ZipOutputStream zos =
                 new ZipOutputStream(new FileOutputStream(zipFilePath.toFile()))) {
-            Files.walk(sourceDir)
-                    .filter(path -> !Files.isDirectory(path))
-                    .forEach(
-                            path -> {
-                                ZipEntry zipEntry =
-                                        new ZipEntry(sourceDir.relativize(path).toString());
-                                try {
-                                    zos.putNextEntry(zipEntry);
-                                    Files.copy(path, zos);
-                                    zos.closeEntry();
-                                } catch (IOException e) {
-                                    throw new UncheckedIOException(e);
-                                }
-                            });
+            try (Stream<Path> walk = Files.walk(sourceDir)) {
+                walk.filter(path -> !Files.isDirectory(path))
+                        .forEach(
+                                path -> {
+                                    ZipEntry zipEntry =
+                                            new ZipEntry(sourceDir.relativize(path).toString());
+                                    try {
+                                        zos.putNextEntry(zipEntry);
+                                        Files.copy(path, zos);
+                                        zos.closeEntry();
+                                    } catch (IOException e) {
+                                        throw new UncheckedIOException(e);
+                                    }
+                                });
+            }
         }
     }
 
