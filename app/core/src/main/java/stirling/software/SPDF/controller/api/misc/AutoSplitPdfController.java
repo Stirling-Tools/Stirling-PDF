@@ -134,7 +134,7 @@ public class AutoSplitPdfController {
                 BufferedImage bim;
 
                 // Use global maximum DPI setting, fallback to 300 if not set
-                int renderDpi = 300; // Default fallback
+                int renderDpi = 150; // Default fallback
                 ApplicationProperties properties =
                         ApplicationContextProvider.getBean(ApplicationProperties.class);
                 if (properties != null && properties.getSystem() != null) {

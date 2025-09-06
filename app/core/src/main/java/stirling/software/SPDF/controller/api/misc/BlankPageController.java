@@ -113,8 +113,8 @@ public class BlankPageController {
                         // Render image and save as temp file
                         BufferedImage image;
 
-                        // Use global maximum DPI setting, fallback to 300 if not set
-                        int renderDpi = 300; // Default fallback
+                        // Use global maximum DPI setting
+                        int renderDpi = 30; // Default fallback
                         ApplicationProperties properties =
                                 ApplicationContextProvider.getBean(ApplicationProperties.class);
                         if (properties != null && properties.getSystem() != null) {
