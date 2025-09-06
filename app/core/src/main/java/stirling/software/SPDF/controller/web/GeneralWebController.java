@@ -9,8 +9,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -24,6 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.SignatureFile;
@@ -334,6 +334,5 @@ public class GeneralWebController {
             this.extension = extension;
             this.type = getFormatFromExtension(extension);
         }
-
     }
 }

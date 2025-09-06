@@ -25,6 +25,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -56,10 +57,9 @@ public class StampController {
     private final TempFileManager tempFileManager;
 
     /**
-     * Initialize data binder for multipart file uploads.
-     * This method registers a custom editor for MultipartFile to handle file uploads.
-     * It sets the MultipartFile to null if the uploaded file is empty.
-     * This is necessary to avoid binding errors when the file is not present.
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
      */
     @InitBinder
     public void initBinder(WebDataBinder binder) {
@@ -73,7 +73,7 @@ public class StampController {
                 });
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-stamp")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
     @Operation(
             summary = "Add stamp to a PDF file",
             description =

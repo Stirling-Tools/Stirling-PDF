@@ -53,7 +53,7 @@ public class ApiDocService {
 
     public List<String> getExtensionTypes(boolean output, String operationName) {
         if (outputToFileTypes.isEmpty()) {
-            outputToFileTypes.put("PDF", Arrays.asList("pdf"));
+            outputToFileTypes.put("PDF", List.of("pdf"));
             outputToFileTypes.put(
                     "IMAGE",
                     Arrays.asList(
@@ -63,10 +63,10 @@ public class ApiDocService {
                     "ZIP",
                     Arrays.asList("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "lz", "lzma", "z"));
             outputToFileTypes.put("WORD", Arrays.asList("doc", "docx", "odt", "rtf"));
-            outputToFileTypes.put("CSV", Arrays.asList("csv"));
+            outputToFileTypes.put("CSV", List.of("csv"));
             outputToFileTypes.put("JS", Arrays.asList("js", "jsx"));
             outputToFileTypes.put("HTML", Arrays.asList("html", "htm", "xhtml"));
-            outputToFileTypes.put("JSON", Arrays.asList("json"));
+            outputToFileTypes.put("JSON", List.of("json"));
             outputToFileTypes.put("TXT", Arrays.asList("txt", "text", "md", "markdown"));
             outputToFileTypes.put("PPT", Arrays.asList("ppt", "pptx", "odp"));
             outputToFileTypes.put("XML", Arrays.asList("xml", "xsd", "xsl"));

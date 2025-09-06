@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +38,7 @@ public class FilterController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-contains-text")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-contains-text")
     @Operation(
             summary = "Checks if a PDF contains set text, returns true if does",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -47,15 +48,17 @@ public class FilterController {
         String text = request.getText();
         String pageNumber = request.getPageNumbers();
 
-        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile);
-        if (PdfUtils.hasText(pdfDocument, pageNumber, text))
-            return WebResponseUtils.pdfDocToWebResponse(
-                    pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+        try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
+            if (PdfUtils.hasText(pdfDocument, pageNumber, text)) {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+            }
+        }
         return null;
     }
 
     // TODO
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-contains-image")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-contains-image")
     @Operation(
             summary = "Checks if a PDF contains an image",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -71,7 +74,7 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-page-count")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-count")
     @Operation(
             summary = "Checks if a PDF is greater, less or equal to a setPageCount",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -104,7 +107,7 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-page-size")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-size")
     @Operation(
             summary = "Checks if a PDF is of a certain size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -147,7 +150,7 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-file-size")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-file-size")
     @Operation(
             summary = "Checks if a PDF is a set file size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -180,7 +183,7 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-page-rotation")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-rotation")
     @Operation(
             summary = "Checks if a PDF is of a certain rotation",
             description = "Input:PDF Output:Boolean Type:SISO")

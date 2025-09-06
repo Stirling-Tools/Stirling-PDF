@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -50,7 +51,7 @@ public class ExtractImageScansController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/extract-image-scans")
     @Operation(
             summary = "Extract image scans from an input file",
             description =
@@ -142,7 +143,10 @@ public class ExtractImageScansController {
                                 .runCommandWithOutputHandling(command);
 
                 // Read the output photos in temp directory
-                List<Path> tempOutputFiles = Files.list(tempDir).sorted().toList();
+                List<Path> tempOutputFiles;
+                try (Stream<Path> listStream = Files.list(tempDir)) {
+                    tempOutputFiles = listStream.sorted().toList();
+                }
                 for (Path tempOutputFile : tempOutputFiles) {
                     byte[] imageBytes = Files.readAllBytes(tempOutputFile);
                     processedImageBytes.add(imageBytes);

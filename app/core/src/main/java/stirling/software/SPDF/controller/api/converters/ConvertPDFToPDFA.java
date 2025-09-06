@@ -78,7 +78,7 @@ import stirling.software.common.util.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/pdfa")
     @Operation(
             summary = "Convert a PDF to a PDF/A",
             description =
@@ -89,7 +89,7 @@ public class ConvertPDFToPDFA {
         String outputFormat = request.getOutputFormat();
 
         // Validate input file type
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             log.error("Invalid input file type: {}", inputFile.getContentType());
             throw ExceptionUtils.createPdfFileRequiredException();
         }
