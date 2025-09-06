@@ -10,6 +10,7 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.AttributeProvider;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,7 +46,7 @@ public class ConvertMarkdownToPdf {
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/markdown/pdf")
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =

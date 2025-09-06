@@ -39,7 +39,7 @@ public class PageNumbersController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/add-page-numbers", consumes = "multipart/form-data")
+    @PostMapping(value = "/add-page-numbers", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Add page numbers to a PDF document",
             description =
