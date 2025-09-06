@@ -29,6 +29,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -142,7 +143,8 @@ public class PdfUtils {
             ImageType colorType,
             boolean singleImage,
             int DPI,
-            String filename)
+            String filename,
+            boolean includeAnnotations)
             throws IOException, Exception {
 
         // Validate and limit DPI to prevent excessive memory usage
@@ -155,7 +157,8 @@ public class PdfUtils {
         if (DPI > maxSafeDpi) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.dpiExceedsLimit",
-                    "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause memory issues and crashes. Please use a lower DPI value.",
+                    "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause"
+                            + " memory issues and crashes. Please use a lower DPI value.",
                     DPI,
                     maxSafeDpi);
         }
@@ -163,6 +166,9 @@ public class PdfUtils {
         try (PDDocument document = pdfDocumentFactory.load(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
+            if (!includeAnnotations) {
+                pdfRenderer.setAnnotationsFilter(annotation -> false);
+            }
             int pageCount = document.getNumberOfPages();
 
             // Create a ByteArrayOutputStream to save the image(s) to
@@ -192,7 +198,9 @@ public class PdfUtils {
                                                 .contains("Maximum size of image exceeded")) {
                                     throw ExceptionUtils.createIllegalArgumentException(
                                             "error.pageTooBigForDpi",
-                                            "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                            "PDF page {0} is too large to render at {1} DPI. Please"
+                                                    + " try a lower DPI value (recommended: 150 or"
+                                                    + " less).",
                                             i + 1,
                                             DPI);
                                 }
@@ -237,7 +245,10 @@ public class PdfUtils {
                                                 .contains("Maximum size of image exceeded")) {
                                     throw ExceptionUtils.createIllegalArgumentException(
                                             "error.pageTooBigExceedsArray",
-                                            "PDF page {0} is too large to render at {1} DPI. The resulting image would exceed Java's maximum array size. Please try a lower DPI value (recommended: 150 or less).",
+                                            "PDF page {0} is too large to render at {1} DPI. The"
+                                                    + " resulting image would exceed Java's maximum"
+                                                    + " array size. Please try a lower DPI value"
+                                                    + " (recommended: 150 or less).",
                                             i + 1,
                                             DPI);
                                 }
@@ -278,7 +289,9 @@ public class PdfUtils {
                                                 .contains("Maximum size of image exceeded")) {
                                     throw ExceptionUtils.createIllegalArgumentException(
                                             "error.pageTooBigForDpi",
-                                            "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                            "PDF page {0} is too large to render at {1} DPI. Please"
+                                                    + " try a lower DPI value (recommended: 150 or"
+                                                    + " less).",
                                             i + 1,
                                             DPI);
                                 }
@@ -311,7 +324,8 @@ public class PdfUtils {
                                     && e.getMessage().contains("Maximum size of image exceeded")) {
                                 throw ExceptionUtils.createIllegalArgumentException(
                                         "error.pageTooBigForDpi",
-                                        "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                        "PDF page {0} is too large to render at {1} DPI. Please try"
+                                                + " a lower DPI value (recommended: 150 or less).",
                                         i + 1,
                                         DPI);
                             }
@@ -362,7 +376,9 @@ public class PdfUtils {
                         && e.getMessage().contains("Maximum size of image exceeded")) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.pageTooBigFor300Dpi",
-                            "PDF page {0} is too large to render at 300 DPI. The resulting image would exceed Java's maximum array size. Please use a lower DPI value for PDF-to-image conversion.",
+                            "PDF page {0} is too large to render at 300 DPI. The resulting image"
+                                    + " would exceed Java's maximum array size. Please use a lower DPI"
+                                    + " value for PDF-to-image conversion.",
                             page + 1);
                 }
                 throw e;
@@ -431,7 +447,7 @@ public class PdfUtils {
                             ImageProcessingUtils.convertColorType(image, colorType);
                     // Use JPEGFactory if it's JPEG since JPEG is lossy
                     PDImageXObject pdImage =
-                            (contentType != null && "image/jpeg".equals(contentType))
+                            (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
                                     ? JPEGFactory.createFromImage(doc, convertedImage)
                                     : LosslessFactory.createFromImage(doc, convertedImage);
                     addImageToDocument(doc, pdImage, fitOption, autoRotate);

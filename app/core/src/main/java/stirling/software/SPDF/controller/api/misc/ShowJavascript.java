@@ -29,7 +29,7 @@ public class ShowJavascript {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/show-javascript")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/show-javascript")
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
             description = "desc. Input:PDF Output:JS Type:SISO")
