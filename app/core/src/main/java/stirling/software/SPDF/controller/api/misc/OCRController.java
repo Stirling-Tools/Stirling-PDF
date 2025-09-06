@@ -359,7 +359,21 @@ public class OCRController {
 
                     if (shouldOcr) {
                         // Convert page to image
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 300);
+                        BufferedImage image;
+
+                        // Use global maximum DPI setting, fallback to 300 if not set
+                        int renderDpi = 300; // Default fallback
+                        if (applicationProperties != null
+                                && applicationProperties.getSystem() != null) {
+                            renderDpi = applicationProperties.getSystem().getMaxDPI();
+                        }
+
+                        try {
+                            image = pdfRenderer.renderImageWithDPI(pageNum, renderDpi);
+                        } catch (OutOfMemoryError e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(
+                                    pageNum + 1, renderDpi, e);
+                        }
                         File imagePath =
                                 new File(tempImagesDir, String.format("page_%d.png", pageNum));
                         ImageIO.write(image, "png", imagePath);

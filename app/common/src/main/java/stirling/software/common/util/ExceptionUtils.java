@@ -324,4 +324,40 @@ public class ExceptionUtils {
         return createIllegalArgumentException(
                 "error.argumentRequired", "{0} must not be null", argumentName);
     }
+
+    /**
+     * Create a RuntimeException for OutOfMemoryError when rendering PDF images with DPI.
+     *
+     * @param pageNumber the page number that caused the error
+     * @param dpi the DPI value used
+     * @param cause the original OutOfMemoryError
+     * @return RuntimeException with user-friendly message
+     */
+    public static RuntimeException createOutOfMemoryDpiException(
+            int pageNumber, int dpi, OutOfMemoryError cause) {
+        String message =
+                MessageFormat.format(
+                        "Out of memory error occurred while rendering PDF page {0} at {1} DPI. "
+                                + "The image is too large to fit in memory. Please try using a lower DPI value "
+                                + "(recommended: 150 or less) or process the document in smaller chunks.",
+                        pageNumber, dpi);
+        return new RuntimeException(message, cause);
+    }
+
+    /**
+     * Create a RuntimeException for OutOfMemoryError when rendering PDF images with DPI.
+     *
+     * @param dpi the DPI value used
+     * @param cause the original OutOfMemoryError
+     * @return RuntimeException with user-friendly message
+     */
+    public static RuntimeException createOutOfMemoryDpiException(int dpi, OutOfMemoryError cause) {
+        String message =
+                MessageFormat.format(
+                        "Out of memory error occurred while rendering PDF at {0} DPI. "
+                                + "The image is too large to fit in memory. Please try using a lower DPI value "
+                                + "(recommended: 150 or less) or process the document in smaller chunks.",
+                        dpi);
+        return new RuntimeException(message, cause);
+    }
 }

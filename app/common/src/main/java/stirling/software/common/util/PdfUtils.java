@@ -205,6 +205,8 @@ public class PdfUtils {
                                             DPI);
                                 }
                                 throw e;
+                            } catch (OutOfMemoryError e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                             writer.writeToSequence(new IIOImage(image, null, null), param);
                         }
@@ -253,6 +255,8 @@ public class PdfUtils {
                                             DPI);
                                 }
                                 throw e;
+                            } catch (OutOfMemoryError e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                             pdfSizeImageIndex = i;
                             dimension =
@@ -296,6 +300,8 @@ public class PdfUtils {
                                             DPI);
                                 }
                                 throw e;
+                            } catch (OutOfMemoryError e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                         }
 
@@ -330,6 +336,8 @@ public class PdfUtils {
                                         DPI);
                             }
                             throw e;
+                        } catch (OutOfMemoryError e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                         }
                         try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
                             ImageIO.write(image, imageType, baosImage);
@@ -369,8 +377,17 @@ public class PdfUtils {
         pdfRenderer.setSubsamplingAllowed(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim;
+
+            // Use global maximum DPI setting, fallback to 300 if not set
+            int renderDpi = 300; // Default fallback
+            ApplicationProperties properties =
+                    ApplicationContextProvider.getBean(ApplicationProperties.class);
+            if (properties != null && properties.getSystem() != null) {
+                renderDpi = properties.getSystem().getMaxDPI();
+            }
+
             try {
-                bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
+                bim = pdfRenderer.renderImageWithDPI(page, renderDpi, ImageType.RGB);
             } catch (IllegalArgumentException e) {
                 if (e.getMessage() != null
                         && e.getMessage().contains("Maximum size of image exceeded")) {
@@ -382,6 +399,8 @@ public class PdfUtils {
                             page + 1);
                 }
                 throw e;
+            } catch (OutOfMemoryError e) {
+                throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, 300, e);
             }
             PDPage originalPage = document.getPage(page);
 
