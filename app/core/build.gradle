@@ -1,0 +1,162 @@
+apply plugin: 'org.springframework.boot'
+
+repositories {
+    maven { url = 'https://build.shibboleth.net/maven/releases' }
+    maven { url = 'https://maven.pkg.github.com/jcefmaven/jcefmaven' }
+}
+
+configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+}
+
+spotless {
+    java {
+        target 'src/**/java/**/*.java'
+        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+
+        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
+        toggleOffOn()
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    yaml {
+        target '**/*.yml', '**/*.yaml'
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    format 'gradle', {
+        target '**/gradle/*.gradle', '**/*.gradle'
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+}
+
+dependencies {
+    if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
+        || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
+        && project.getProperty('STIRLING_PDF_DESKTOP_UI') != 'false')) {
+        implementation 'me.friwi:jcefmaven:132.3.1'
+        implementation 'org.openjfx:javafx-controls:21'
+        implementation 'org.openjfx:javafx-swing:21'
+    }
+
+    if (System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
+        || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
+        && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
+        implementation project(':proprietary')
+    }
+
+    implementation project(':common')
+    implementation 'org.springframework.boot:spring-boot-starter-jetty'
+    implementation 'com.posthog.java:posthog:1.2.0'
+    implementation 'commons-io:commons-io:2.20.0'
+    implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
+    implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
+    implementation 'io.micrometer:micrometer-core:1.15.3'
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
+    implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
+
+    // General PDF dependencies
+    implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
+    implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
+
+    // https://mvnrepository.com/artifact/technology.tabula/tabula
+    implementation ('technology.tabula:tabula:1.0.5')  {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
+    implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
+    implementation 'com.opencsv:opencsv:5.12.0' // https://mvnrepository.com/artifact/com.opencsv/opencsv
+
+    // Batik
+    implementation 'org.apache.xmlgraphics:batik-all:1.19'
+
+    // TwelveMonkeys
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs += ['../configs']
+        }
+        java {
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+                exclude 'stirling/software/SPDF/UI/impl/**'
+            }
+
+        }
+    }
+    test {
+        java {
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+                exclude 'stirling/software/SPDF/UI/impl/**'
+            }
+        }
+    }
+
+}
+
+
+// Disable regular jar
+jar {
+    enabled = false
+}
+
+// Configure and enable bootJar for this project
+bootJar {
+    enabled = true
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    zip64 = true
+
+    // Don't include all dependencies directly like the old jar task did
+    // from {
+    //     configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    // }
+
+    // Exclude signature files to prevent "Invalid signature file digest" errors
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/*.EC'
+
+    manifest {
+        attributes(
+            'Implementation-Title': 'Stirling-PDF',
+            'Implementation-Version': project.version
+        )
+    }
+}
+
+// Configure main class for Spring Boot
+springBoot {
+    mainClass = 'stirling.software.SPDF.SPDFApplication'
+}
+
+bootJar.dependsOn ':common:jar'
+bootJar.dependsOn ':proprietary:jar'

@@ -1,11 +1,10 @@
 # Main stage
-FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715
+FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
 
 # Copy necessary files
 COPY scripts /scripts
-COPY pipeline /pipeline
-COPY stirling-pdf/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY stirling-pdf/build/libs/*.jar app.jar
+COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+COPY app/core/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
@@ -51,7 +50,6 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     tini \
     bash \
     curl \
-    qpdf \
     shadow \
     su-exec \
     openssl \
@@ -69,23 +67,28 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
 	tesseract-ocr-data-deu \
 	tesseract-ocr-data-fra \
 	tesseract-ocr-data-por \
+    unpaper \
     # CV
     py3-opencv \
     python3 \
+    ocrmypdf \
     py3-pip \
     py3-pillow@testing \
-    py3-pdf2image@testing && \
+    py3-pdf2image@testing \
+    # URW Base 35 fonts for better PDF rendering
+    font-urw-base35 && \
     python3 -m venv /opt/venv && \
-    /opt/venv/bin/pip install --upgrade pip setuptools && \
+    /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
+    # Configure URW Base 35 fonts
+    ln -s /usr/share/fontconfig/conf.avail/69-urw-*.conf /etc/fonts/conf.d/ && \
     fc-cache -f -v && \
     chmod +x /scripts/* && \
-    chmod +x /scripts/init.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \

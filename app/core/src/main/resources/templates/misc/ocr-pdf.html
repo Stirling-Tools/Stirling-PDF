@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{ocr.title}, header=#{ocr.header})}"></th:block>
+    <style>
+      #languages {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid var(--md-sys-color-surface-3);
+        border-radius: 5px;
+        padding: 10px;
+      }
+    </style>
+    <script>
+      function handleLangSelection() {
+        let checkboxes = document.getElementsByName("languages");
+        let selected = false;
+        for (let i = 0; i < checkboxes.length; i++) {
+          if (checkboxes[i].checked) {
+            selected = true;
+            checkboxes[i].setAttribute('required', 'false');
+          }
+        }
+        if (selected) {
+          for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].removeAttribute('required');
+          }
+        }
+        else {
+          for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].setAttribute('required', 'true');
+          }
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">quick_reference_all</span>
+                <span class="tool-header-text" th:text="#{ocr.header}"></span>
+              </div>
+              <form th:if="${#lists.size(languages) > 0}" action="#" th:action="@{'/api/v1/misc/ocr-pdf'}" method="post" enctype="multipart/form-data" class="mb-3">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div class="mb-3">
+                  <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
+                  <hr>
+                  <div id="languages">
+                    <div class="form-check" th:each="language, iterStat : ${languages}">
+                      <input type="checkbox" th:name="languages" th:value="${language}" required th:id="${'language-' + language}" onchange="handleLangSelection()" />
+                      <label th:for="${'language-' + language}" th:text="${language}"></label>
+                    </div>
+                  </div>
+                  <hr>
+                </div>
+                <div class="mb-3">
+                  <label th:text="#{ocr.selectText.10}"></label>
+                  <select class="form-control" name="ocrType">
+                    <option value="skip-text" th:text="#{ocr.selectText.6}"></option>
+                    <option selected value="force-ocr" th:text="#{ocr.selectText.7}"></option>
+                    <option value="Normal" th:text="#{ocr.selectText.8}"></option>
+                  </select>
+                </div>
+                <br>
+                <label for="languages" class="form-label" th:text="#{ocr.selectText.9}"></label>
+                <div class="mb-3">
+                  <label th:text="#{ocr.selectText.12}"></label>
+                  <select class="form-control" name="ocrRenderType">
+                    <option value="hocr">HOCR (Latin/Roman alphabet only)</option>
+                    <option value="sandwich">Sandwich</option>
+                  </select>
+                </div>
+                <br>
+                <div class="mb-3" th:if="${@endpointConfiguration.isGroupEnabled('OCRmyPDF')}">
+                  <label class="form-label">OCR Options</label>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="sidecar" name="sidecar" value="true">
+                    <label class="form-check-label" for="sidecar">Include OCR text in sidecar text file</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="deskew" name="deskew" value="true">
+                    <label class="form-check-label" for="deskew">Deskew input file</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="clean" name="clean" value="true">
+                    <label class="form-check-label" for="clean">Clean input file</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="cleanFinal" name="cleanFinal" value="true">
+                    <label class="form-check-label" for="cleanFinal">Clean final output</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="removeImagesAfter" name="removeImagesAfter" value="true">
+                    <label class="form-check-label" for="removeImagesAfter">Remove images from output PDF</label>
+                  </div>
+                </div>
+                <br>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{ocr.submit}"></button>
+              </form>
+              <script th:inline="javascript">
+                // Get language translations from Thymeleaf messages
+                const languageTranslations = {};
+                /*[# th:each="lang : ${languages}"]*/
+                  languageTranslations['[(${lang})]'] = /*[[#{${'lang.' + lang}}]]*/[(${lang})];
+                /*[/]*/
+                
+                // Map two-letter language codes to Tesseract language codes
+                const localeToTesseract = {
+                  'en': 'eng',
+                  'fr': 'fra',
+                  'de': 'deu',
+                  'es': 'spa',
+                  'it': 'ita',
+                  'pt': 'por',
+                  'ru': 'rus',
+                  'zh': 'chi_sim',
+                  'ja': 'jpn',
+                  'ko': 'kor',
+                  'ar': 'ara',
+                  'hi': 'hin',
+                  'nl': 'nld',
+                  'cs': 'ces',
+                  'pl': 'pol',
+                  'tr': 'tur',
+                  'uk': 'ukr',
+                  'vi': 'vie',
+                  'sv': 'swe',
+                  'no': 'nor',
+                  'fi': 'fin',
+                  'da': 'dan',
+                  'el': 'ell',
+                  'he': 'heb',
+                  'hu': 'hun',
+                  'bg': 'bul',
+                  'ro': 'ron',
+                  'hr': 'hrv',
+                  'sk': 'slk',
+                  'id': 'ind',
+                  'th': 'tha',
+                  'sl': 'slv'
+                };
+
+                // Function to get the translated language name
+                function getTranslatedLanguageName(shortCode) {
+                  return languageTranslations[shortCode] || shortCode;
+                }
+
+                // Function to prioritize languages based on browser locale
+                function prioritizeLanguages() {
+                  const languageContainer = document.getElementById('languages');
+                  if (!languageContainer) return;
+                  
+                  // Update all labels with translated language names
+                  const formChecks = Array.from(languageContainer.getElementsByClassName('form-check'));
+                  if (formChecks.length === 0) return;
+                  
+                  formChecks.forEach(element => {
+                    const label = element.querySelector('label');
+                    if (label) {
+                      const langCode = label.getAttribute('for').split('-')[1];
+                      label.textContent = getTranslatedLanguageName(langCode);
+                    }
+                  });
+                  
+                  // Get browser/UI language
+                  const browserLanguage = document.documentElement.lang || navigator.language || navigator.userLanguage;
+                  const uiLanguage = document.documentElement.getAttribute('data-language') || browserLanguage;
+                  
+                  // Extract primary language code
+                  const primaryLanguageCode = (uiLanguage || '').split(/[-_]/)[0].toLowerCase();
+                  const tesseractPrimaryCode = localeToTesseract[primaryLanguageCode];
+                  
+                  // Define priority language array
+                  const priorityLanguages = [];
+                  
+                  // Primary language first
+                  if (tesseractPrimaryCode) {
+                    priorityLanguages.push(tesseractPrimaryCode);
+                  }
+                  
+                  // English second (if not already added)
+                  if (tesseractPrimaryCode !== 'eng') {
+                    priorityLanguages.push('eng');
+                  }
+                  
+                  // Sort the elements
+                  const sortedElements = formChecks.sort((a, b) => {
+                    const aInput = a.querySelector('input');
+                    const bInput = b.querySelector('input');
+                    
+                    if (!aInput || !bInput) return 0;
+                    
+                    const aLangCode = aInput.id.split('-')[1];
+                    const bLangCode = bInput.id.split('-')[1];
+                    
+                    const aIsPriority = priorityLanguages.includes(aLangCode);
+                    const bIsPriority = priorityLanguages.includes(bLangCode);
+                    
+                    if (aIsPriority && !bIsPriority) return -1;
+                    if (!aIsPriority && bIsPriority) return 1;
+                    
+                    if (aIsPriority && bIsPriority) {
+                      // If both are priority, sort by priority order
+                      return priorityLanguages.indexOf(aLangCode) - priorityLanguages.indexOf(bLangCode);
+                    }
+                    
+                    // For non-priority languages, sort alphabetically by full name
+                    return getTranslatedLanguageName(aLangCode).localeCompare(getTranslatedLanguageName(bLangCode));
+                  });
+                  
+                  // Clear container and append sorted elements
+                  languageContainer.innerHTML = '';
+                  sortedElements.forEach(element => {
+                    languageContainer.appendChild(element);
+                  });
+                }
+
+                // Initialize on page load
+                document.addEventListener('DOMContentLoaded', () => {
+                  prioritizeLanguages();
+                });
+              </script>
+              <p th:text="#{ocr.help}"></p>
+              <a href="https://docs.stirlingpdf.com/Advanced%20Configuration/OCR">https://docs.stirlingpdf.com/Advanced%20Configuration/OCR</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

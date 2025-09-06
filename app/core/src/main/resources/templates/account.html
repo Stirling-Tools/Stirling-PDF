@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{account.title})}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/modern-tables.css}">
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        
+        <div class="data-container">
+          <div class="data-panel">
+            <div class="data-header">
+              <h1 class="data-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">settings_account_box</span>
+                </span>
+                <span th:text="#{account.accountSettings}">User Settings</span>
+              </h1>
+            </div>
+            
+            <div class="data-body">
+              <div th:if="${messageType}" class="alert alert-danger data-mb-3">
+                <span th:text="#{${messageType}}">Default message if not found</span>
+              </div>
+              
+              <div th:if="${error}" class="alert alert-danger data-mb-3" role="alert">
+                <span th:text="${error}">Error Message</span>
+              </div>
+              
+              <!-- Admin Settings Banner (for admins only) -->
+              <div th:if="${role == 'ROLE_ADMIN'}" class="data-panel data-mb-3" style="background-color: var(--md-sys-color-secondary-container);">
+				  <div class="data-body" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; background-color: var(--md-sys-color-secondary-container);">
+				    <div style="display: flex; align-items: center; gap: 1rem;">
+				      <span class="material-symbols-rounded" style="font-size: 2rem; color: var(--md-sys-color-secondary);">
+				        admin_panel_settings
+				      </span>
+				      <div>
+				        <h4 style="margin: 0; color: var(--md-sys-color-secondary);" th:text="#{account.adminTitle}">Administrator Tools</h4>
+				        <p style="margin: 0.25rem 0 0 0; color: var(--md-sys-color-secondary);" th:text="#{account.adminNotif}">You have admin privileges. Access system settings and user management.</p>
+				      </div>
+				    </div>
+				    <a class="data-btn" th:href="@{'/adminSettings'}" role="button" target="_blank"
+				       style="background-color: var(--md-sys-color-secondary); color: var(--md-sys-color-on-secondary); display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.5rem; font-weight: 500; border: none; cursor: pointer; text-decoration: none;">
+				      <span class="material-symbols-rounded">admin_panel_settings</span>
+				      <span th:text="#{account.adminSettings}">Admin Settings</span>
+				    </a>
+				  </div>
+				</div>
+				
+              <!-- Account Management Buttons -->
+              <th:block th:if="not ${oAuth2Login} or not ${saml2Login}">
+                <div class="data-section-title">Account Management</div>
+                <div class="data-actions data-actions-start data-mb-3">
+                  <button class="data-btn data-btn-primary" data-bs-toggle="modal" data-bs-target="#changeUsernameModal">
+                    <span class="material-symbols-rounded">edit</span>
+                    <span th:text="#{account.changeUsername}">Change Username</span>
+                  </button>
+                  <button class="data-btn data-btn-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <span class="material-symbols-rounded">key</span>
+                    <span th:text="#{account.changePassword}">Change Password</span>
+                  </button>
+                </div>
+              </th:block>
+
+              <!-- API Key Section -->
+              <div class="data-section-title" th:text="#{account.yourApiKey}">API Key</div>
+              <div class="data-panel data-mb-3">
+                <div class="data-header">
+                  <h5 class="data-title">
+                    <span class="data-icon">
+                      <span class="material-symbols-rounded">key</span>
+                    </span>
+                    <span th:text="#{account.yourApiKey}">API Key</span>
+                  </h5>
+                </div>
+                <div class="data-body">
+                  <div style="display: flex; gap: 0.5rem;">
+                    <input class="data-form-control" id="apiKey" th:placeholder="#{account.yourApiKey}" readonly style="flex: 1;">
+                    <button class="data-btn data-btn-secondary" id="copyBtn" type="button" onclick="copyToClipboard()" title="Copy to clipboard">
+                      <span class="material-symbols-rounded">content_copy</span>
+                    </button>
+                    <button class="data-btn data-btn-secondary" id="showBtn" type="button" onclick="showApiKey()" title="Show/hide API key">
+                      <span class="material-symbols-rounded" id="eyeIcon">visibility</span>
+                    </button>
+                    <button class="data-btn data-btn-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()" title="Refresh API key">
+                      <span class="material-symbols-rounded">refresh</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Settings Sync Section -->
+              <div class="data-section-title" th:text="#{account.syncTitle}">Sync browser settings with Account</div>
+              <div class="data-panel data-mb-3">
+                <div class="data-header">
+                  <h5 class="data-title">
+                    <span class="data-icon">
+                      <span class="material-symbols-rounded">sync</span>
+                    </span>
+                    <span th:text="#{account.settingsCompare}">Settings Comparison</span>
+                  </h5>
+                </div>
+                <div class="data-body">
+                  <div class="table-responsive">
+                    <table id="settingsTable" class="data-table">
+                      <thead>
+                        <tr>
+                          <th scope="col" th:text="#{account.property}">Property</th>
+                          <th scope="col" th:text="#{account.accountSettings}">Account Setting</th>
+                          <th scope="col" th:text="#{account.webBrowserSettings}">Web Browser Setting</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <!-- This will be dynamically populated by JavaScript -->
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="data-actions data-mt-3">
+                    <button id="syncToBrowser" class="data-btn data-btn-primary">
+                      <span class="material-symbols-rounded">cloud_download</span>
+                      <span th:text="#{account.syncToBrowser}">Sync Account -> Browser</span>
+                    </button>
+                    <button id="syncToAccount" class="data-btn data-btn-secondary">
+                      <span class="material-symbols-rounded">cloud_upload</span>
+                      <span th:text="#{account.syncToAccount}">Sync Account <- Browser</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Change Username Modal -->
+      <div class="modal fade" id="changeUsernameModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <form id="formsavechangeusername" th:action="@{'/api/v1/user/change-username'}" method="post" class="modal-content data-modal">
+            <div class="data-modal-header">
+              <h5 class="data-modal-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">edit</span>
+                </span>
+                <span th:text="#{account.changeUsername}">Change Username</span>
+              </h5>
+              <button type="button" class="data-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </div>
+            <div class="data-modal-body">
+              <div class="data-form-group">
+                <label for="newUsername" class="data-form-label" th:text="#{account.newUsername}">New Username</label>
+                <input type="text" class="data-form-control" name="newUsername" id="newUsername" th:placeholder="#{account.newUsername}">
+                <span id="usernameError" style="display: none; color: var(--md-sys-color-error);" th:text="#{invalidUsernameMessage}">Invalid username!</span>
+              </div>
+              <div class="data-form-group">
+                <label for="currentPasswordChangeUsername" class="data-form-label" th:text="#{password}">Password</label>
+                <input type="password" class="data-form-control" name="currentPasswordChangeUsername" id="currentPasswordChangeUsername" th:placeholder="#{password}">
+              </div>
+              <div class="data-form-actions">
+                <button type="button" class="data-btn data-btn-secondary" data-bs-dismiss="modal">
+                  <span class="material-symbols-rounded">close</span>
+                  <span th:text="#{cancel}">Cancel</span>
+                </button>
+                <button type="submit" class="data-btn data-btn-primary">
+                  <span class="material-symbols-rounded">check</span>
+                  <span th:text="#{account.changeUsername}">Change Username</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Change Password Modal -->
+      <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <form id="formsavechangepassword" th:action="@{'/api/v1/user/change-password'}" method="post" class="modal-content data-modal">
+            <div class="data-modal-header">
+              <h5 class="data-modal-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">key</span>
+                </span>
+                <span th:text="#{account.changePassword}">Change Password</span>
+              </h5>
+              <button type="button" class="data-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </div>
+            <div class="data-modal-body">
+              <div class="data-form-group">
+                <label for="currentPassword" class="data-form-label" th:text="#{account.oldPassword}">Old Password</label>
+                <input type="password" class="data-form-control" name="currentPassword" id="currentPassword" th:placeholder="#{account.oldPassword}">
+              </div>
+              <div class="data-form-group">
+                <label for="newPassword" class="data-form-label" th:text="#{account.newPassword}">New Password</label>
+                <input type="password" class="data-form-control" name="newPassword" id="newPassword" th:placeholder="#{account.newPassword}">
+              </div>
+              <div class="data-form-group">
+                <label for="confirmNewPassword" class="data-form-label" th:text="#{account.confirmNewPassword}">Confirm New Password</label>
+                <input type="password" class="data-form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
+                <span id="confirmPasswordError" style="display: none; color: var(--md-sys-color-error);" th:text="#{confirmPasswordErrorMessage}">New Password and Confirm New Password must match.</span>
+              </div>
+              <div class="data-form-actions">
+                <button type="button" class="data-btn data-btn-secondary" data-bs-dismiss="modal">
+                  <span class="material-symbols-rounded">close</span>
+                  <span th:text="#{cancel}">Cancel</span>
+                </button>
+                <button type="submit" class="data-btn data-btn-primary">
+                  <span class="material-symbols-rounded">check</span>
+                  <span th:text="#{account.changePassword}">Change Password</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    
+    <!-- JavaScript for validation -->
+    <script th:inline="javascript">
+      jQuery.validator.addMethod("usernamePattern", function(value, element) {
+        // Regular expression for user name: Min. 3 characters, max. 50 characters
+        const regexUsername = /^[a-zA-Z0-9](?!.*[-@._+]{2,})([a-zA-Z0-9@._+-]{1,48})[a-zA-Z0-9]$/;
+
+        // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
+        const regexEmail = /^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*(?:\.[A-Za-z]{2,})$/;
+
+        // Check if the field is optional or meets the requirements
+        return this.optional(element) || regexUsername.test(value) || regexEmail.test(value);
+      }, /*[[#{invalidUsernameMessage}]]*/ "Invalid username format");
+      
+      $(document).ready(function() {
+        $.validator.addMethod("passwordMatch", function(value, element) {
+          return $('#newPassword').val() === $('#confirmNewPassword').val();
+        }, /*[[#{confirmPasswordErrorMessage}]]*/ "New Password and Confirm New Password must match.");
+        
+        $('#formsavechangepassword').validate({
+          rules: {
+            currentPassword: {
+              required: true
+            },
+            newPassword: {
+              required: true
+            },
+            confirmNewPassword: {
+              required: true,
+              passwordMatch: true
+            }
+          },
+          errorPlacement: function(error, element) {
+            if (element.attr("name") === "newPassword" || element.attr("name") === "confirmNewPassword") {
+              $("#confirmPasswordError").text(error.text()).show();
+            } else {
+              error.insertAfter(element);
+            }
+          },
+          success: function(label, element) {
+            if ($(element).attr("name") === "newPassword" || $(element).attr("name") === "confirmNewPassword") {
+              $("#confirmPasswordError").hide();
+            }
+          }
+        });
+
+        $('#formsavechangeusername').validate({
+          rules: {
+            newUsername: {
+              required: true,
+              usernamePattern: true
+            },
+            currentPasswordChangeUsername: {
+              required: true
+            }
+          },
+          messages: {
+            newUsername: {
+              usernamePattern: /*[[#{invalidUsernameMessage}]]*/ "Invalid username format"
+            },
+          },
+          errorPlacement: function(error, element) {
+            if (element.attr("name") === "newUsername") {
+              $("#usernameError").text(error.text()).show();
+            } else {
+              error.insertAfter(element);
+            }
+          },
+          success: function(label, element) {
+            if ($(element).attr("name") === "newUsername") {
+              $("#usernameError").hide();
+            }
+          }
+        });
+      });
+    </script>
+
+    <!-- JavaScript for API Key -->
+    <script th:inline="javascript">
+      function copyToClipboard() {
+        const apiKeyElement = document.getElementById("apiKey");
+        apiKeyElement.select();
+        document.execCommand("copy");
+      }
+
+      function showApiKey() {
+        const apiKeyElement = document.getElementById("apiKey");
+        const copyBtn = document.getElementById("copyBtn");
+        const eyeIcon = document.getElementById("eyeIcon");
+        if (apiKeyElement.type === "password") {
+          apiKeyElement.type = "text";
+          eyeIcon.textContent = "visibility_off";
+          copyBtn.disabled = false;  // Enable copy button when API key is visible
+        } else {
+          apiKeyElement.type = "password";
+          eyeIcon.textContent = "visibility";
+          copyBtn.disabled = true;  // Disable copy button when API key is hidden
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", async function() {
+        try {
+          /*<![CDATA[*/
+          const urlGetApiKey = /*[[@{/api/v1/user/get-api-key}]]*/ "/api/v1/user/get-api-key";
+          /*]]>*/
+          let response = await window.fetchWithCsrf(urlGetApiKey, { method: 'POST' });
+          if (response.status === 200) {
+            let apiKey = await response.text();
+            manageUIState(apiKey);
+          } else {
+            manageUIState(null);
+          }
+        } catch (error) {
+          console.error('There was an error:', error);
+        }
+        finally {
+          showApiKey();
+        }
+      });
+
+      async function refreshApiKey() {
+        try {
+          /*<![CDATA[*/
+          const urlUpdateApiKey = /*[[@{/api/v1/user/update-api-key}]]*/ "/api/v1/user/update-api-key";
+          /*]]>*/
+          let response = await window.fetchWithCsrf(urlUpdateApiKey, { method: 'POST' });
+          if (response.status === 200) {
+            let apiKey = await response.text();
+            manageUIState(apiKey);
+            document.getElementById("apiKey").type = 'text';
+            document.getElementById("copyBtn").disabled = false;
+          } else {
+            alert('Error refreshing API key.');
+          }
+        } catch (error) {
+          console.error('There was an error:', error);
+        }
+      }
+
+      function manageUIState(apiKey) {
+        const apiKeyElement = document.getElementById("apiKey");
+        const showBtn = document.getElementById("showBtn");
+        const copyBtn = document.getElementById("copyBtn");
+
+        if (apiKey && apiKey.trim().length > 0) {
+          apiKeyElement.value = apiKey;
+          showBtn.disabled = false;
+          copyBtn.disabled = false;
+        } else {
+          apiKeyElement.value = "";
+          showBtn.disabled = true;
+          copyBtn.disabled = true;
+        }
+      }
+    </script>
+
+    <!-- JavaScript for Settings Sync -->
+   <script th:inline="javascript">
+	  document.addEventListener("DOMContentLoaded", async function() {
+	    const settingsTableBody = document.querySelector("#settingsTable tbody");
+	    
+	    // Helper function to check if a key should be ignored
+	    function shouldIgnoreKey(key) {
+	      return key === 'debug' || 
+	             key === '0' || 
+	             key === '1' || 
+	             key.includes('pdfjs') || 
+	             key.includes('clientSubmissionOrder') || 
+	             key.includes('lastSubmitTime') || 
+	             key.includes('lastClientId') || 
+	             key.includes('stirling_jwt') ||
+	             key.includes('JSESSIONID') ||
+	             key.includes('XSRF-TOKEN') ||
+	             key.includes('remember-me') ||
+	             key.includes('auth') ||
+	             key.includes('token') ||
+	             key.includes('session') ||
+	             key.includes('posthog') || key.includes('ssoRedirectAttempts') || key.includes('lastRedirectAttempt') || key.includes('surveyVersion') || 
+	             key.includes('pageViews');
+	    }
+	
+	    /*<![CDATA[*/
+	    var accountSettingsString = /*[[${settings}]]*/ {};
+	    /*]]>*/
+	    var accountSettings = JSON.parse(accountSettingsString);
+	
+	    let allKeys = new Set([...Object.keys(accountSettings), ...Object.keys(localStorage)]);
+	
+	    allKeys.forEach(key => {
+	      if(shouldIgnoreKey(key)) return;  // Using our helper function
+	
+	      const accountValue = accountSettings[key] || '-';
+	      const browserValue = localStorage.getItem(key) || '-';
+	
+	      const row = settingsTableBody.insertRow();
+	      const propertyCell = row.insertCell(0);
+	      const accountCell = row.insertCell(1);
+	      const browserCell = row.insertCell(2);
+	
+	      propertyCell.textContent = key;
+	      accountCell.textContent = accountValue;
+	      browserCell.textContent = browserValue;
+	    });
+	
+	    document.getElementById('syncToBrowser').addEventListener('click', function() {
+	      // First, clear the local storage
+	      localStorage.clear();
+	
+	      // Then, set the account settings to local storage
+	      for (let key in accountSettings) {
+	        if(!shouldIgnoreKey(key)) { // Using our helper function
+	          localStorage.setItem(key, accountSettings[key]);
+	        }
+	      }
+	      location.reload();  // Refresh the page after sync
+	    });
+	
+	    document.getElementById('syncToAccount').addEventListener('click', async function() {
+	      /*<![CDATA[*/
+	      const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
+	      /*]]>*/
+	
+	      let settings = {};
+	      for (let i = 0; i < localStorage.length; i++) {
+	        const key = localStorage.key(i);
+	        if(!shouldIgnoreKey(key)) { // Using our helper function
+	          settings[key] = localStorage.getItem(key);
+	        }
+	      }
+	
+	      try {
+	        const response = await window.fetchWithCsrf(urlUpdateUserSettings, {
+	          method: 'POST',
+	          headers: {
+	            'Content-Type': 'application/json',
+	          },
+	          body: JSON.stringify(settings)
+	        });
+	
+	        if (response.ok) {
+	          location.reload();
+	        } else {
+	          alert('Error syncing settings to account');
+	        }
+	      } catch (error) {
+	        console.error('Error:', error);
+	        alert('Error syncing settings to account');
+	      }
+	    });
+	  });
+	</script>
+              
+      
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

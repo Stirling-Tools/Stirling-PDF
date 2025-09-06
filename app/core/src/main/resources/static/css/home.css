@@ -1,0 +1,111 @@
+#searchBar {
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container-low);
+  width: 100%;
+  font-size: 16px;
+  margin-bottom: 2rem;
+  padding: 0.75rem 3.5rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 3rem;
+  outline-color: var(--md-sys-color-outline-variant);
+}
+
+#filtersContainer {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.filter-button {
+  color: var(--md-sys-color-secondary);
+  user-select: none;
+  cursor: pointer;
+  transition: transform 0.3s;
+  transform-origin: center center;
+}
+
+.filter-button:hover {
+  transform: scale(1.08);
+}
+
+.search-icon {
+  position: absolute;
+  margin: 0.75rem 1rem;
+  border: 0.1rem solid transparent;
+}
+
+.favorite-icon {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: var(--md-sys-color-secondary);
+}
+
+#tool-icon {
+  height: 100%;
+}
+
+#tool-text {
+  margin: 0.0rem 0 0 1.25rem;
+}
+
+.favorite-icon img {
+  filter: brightness(0) invert(var(--md-theme-filter-color));
+}
+
+.favorite-icon:hover .material-symbols-rounded {
+  transform: scale(1.2);
+}
+
+.favorite-icon .material-symbols-rounded.fill{
+  color: #f5c000;
+}
+
+.jumbotron {
+  padding: 3rem 3rem;
+  /* Reduce vertical padding */
+}
+
+.lookatme {
+  opacity: 1;
+  position: relative;
+  display: inline-block;
+}
+
+.lookatme::after {
+  color: #e33100;
+  text-shadow: 0 0 5px #e33100;
+  /* in the html, the data-lookatme-text attribute must */
+  /* contain the same text as the .lookatme element */
+  content: attr(data-lookatme-text);
+  padding: inherit;
+  position: absolute;
+  inset: 0 0 0 0;
+  z-index: 1;
+  /* 20 steps / 2 seconds = 10fps */
+  -webkit-animation: 2s infinite Pulse steps(20);
+  animation: 2s infinite Pulse steps(20);
+}
+
+.newfeature{
+  display: flex;
+  width:fit-content
+}
+.recent-features{
+  display: flex;
+  flex-direction: row;
+  max-width: 100%;
+  overflow: hidden;
+  justify-content: center;
+
+}
+
+ .close-icon {
+  color: var(--favourite-remove) !important;
+}
+ .add-icon {
+  color: var(--favourite-add) !important;
+}

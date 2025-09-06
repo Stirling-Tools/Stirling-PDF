@@ -1,0 +1,322 @@
+<div th:fragment="navbar" class="mx-auto" style="position: sticky; top:0; z-index:10000; width:100%">
+  <script th:src="@{'/js/languageSelection.js'}"></script>
+  <script th:src="@{'/js/navbar.js'}"></script>
+  <script th:src="@{'/js/additionalLanguageCode.js'}"></script>
+  <script th:inline="javascript">
+    // Initializing the scripts
+    initLanguageSettings();
+    document.addEventListener('DOMContentLoaded', function () {
+      toolsManager();
+    });
+  </script>
+  <script th:inline="javascript">
+    const currentVersion = /*[[${@appVersion}]]*/ '';
+    const licenseType = /*[[${@license}]]*/ '';
+    const machineType = /*[[${@machineType}]]*/ '';
+    const activeSecurity = /*[[${@activeSecurity}]]*/ false;
+    const noFavourites = /*[[#{noFavourites}]]*/ '';
+    console.log(noFavourites);
+    const updateAvailable = /*[[#{settings.updateAvailable}]]*/ '';
+    
+    // Update notification i18n constants
+    const urgentUpdateAvailable = /*[[#{update.urgentUpdateAvailable}]]*/ '🚨 Update Available';
+    const updateAvailableText = /*[[#{update.updateAvailable}]]*/ 'Update Available';
+    const updateModalTitle = /*[[#{update.modalTitle}]]*/ 'Update Available';
+    const updateCurrent = /*[[#{update.current}]]*/ 'Current';
+    const updateLatest = /*[[#{update.latest}]]*/ 'Latest';
+    const updateLatestStable = /*[[#{update.latestStable}]]*/ 'Latest Stable';
+    const updatePriority = /*[[#{update.priority}]]*/ 'Priority';
+    const updateRecommendedAction = /*[[#{update.recommendedAction}]]*/ 'Recommended Action';
+    const updateBreakingChangesDetected = /*[[#{update.breakingChangesDetected}]]*/ '⚠️ Breaking Changes Detected';
+    const updateBreakingChangesMessage = /*[[#{update.breakingChangesMessage}]]*/ 'This update contains breaking changes. Please review the migration guides below.';
+    const updateMigrationGuides = /*[[#{update.migrationGuides}]]*/ 'Migration Guides:';
+    const updateViewGuide = /*[[#{update.viewGuide}]]*/ 'View Guide';
+    const updateLoadingDetailedInfo = /*[[#{update.loadingDetailedInfo}]]*/ 'Loading detailed version information...';
+    const updateClose = /*[[#{update.close}]]*/ 'Close';
+    const updateViewAllReleases = /*[[#{update.viewAllReleases}]]*/ 'View All Releases';
+    const updateDownloadLatest = /*[[#{update.downloadLatest}]]*/ 'Download Latest';
+    const updateAvailableUpdates = /*[[#{update.availableUpdates}]]*/ 'Available Updates:';
+    const updateUnableToLoadDetails = /*[[#{update.unableToLoadDetails}]]*/ 'Unable to load detailed version information.';
+    const updateVersion = /*[[#{update.version}]]*/ 'Version';
+    
+    // Update priority levels
+    const updatePriorityUrgent = /*[[#{update.priority.urgent}]]*/ 'URGENT';
+    const updatePriorityNormal = /*[[#{update.priority.normal}]]*/ 'NORMAL';
+    const updatePriorityMinor = /*[[#{update.priority.minor}]]*/ 'MINOR';
+    const updatePriorityLow = /*[[#{update.priority.low}]]*/ 'LOW';
+    
+    // Breaking changes text
+    const updateBreakingChanges = /*[[#{update.breakingChanges}]]*/ 'Breaking Changes:';
+    const updateBreakingChangesDefault = /*[[#{update.breakingChangesDefault}]]*/ 'This version contains breaking changes';
+    const updateMigrationGuide = /*[[#{update.migrationGuide}]]*/ 'Migration Guide';
+  </script>
+  <script th:src="@{'/js/homecard.js'}"></script>
+  <script th:src="@{'/js/githubVersion.js'}"></script>
+  <form th:action="@{'/dummyFormToPopulateCSRF'}" method="post" enctype="multipart/form-data"></form>
+  <nav class="navbar navbar-expand-xl" style="
+  background: var(--md-nav-background);
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-color: var(--md-nav-color-on-separator)">
+    <div class="container " style="max-width: 100%;">
+      <a class="navbar-brand" th:href="${@contextPath}" style="display: flex;">
+        <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon">
+        <span class="icon-text" th:text="${@navBarText}"></span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="material-symbols-rounded">
+          menu
+        </span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto flex-nowrap">
+
+          <!-- All Tools -->
+          <li id="navItemToHide" class="nav-item dropdown dropdown-mega position-static">
+            <a class="nav-link" id="navbarDropdown-1" href="#" role="button" data-bs-toggle="dropdown"
+              aria-haspopup="true" aria-expanded="false">
+              <span class="material-symbols-rounded">
+                apps
+              </span>
+              <span class="icon-text" th:data-text="#{navbar.allTools}" th:text="#{navbar.allTools}"></span>
+              <span class="material-symbols-rounded chevron-icon">expand_more</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="navbarDropdown-1">
+              <div class="dropdown-menu-wrapper scroll-lock-y" style="max-width: 95vw !important;">
+                <div class="feature-rows">
+
+                  <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
+                </div>
+              </div>
+            </div>
+
+          </li>
+
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('multi-tool')}">
+            <a class="nav-link" href="#" th:href="@{'/multi-tool'}"
+              th:classappend="${currentPage}=='multi-tool' ? 'active' : ''" th:title="#{home.multiTool.desc}">
+              <span class="material-symbols-rounded">
+                construction
+              </span>
+              <span class="icon-text" th:data-text="#{navbar.multiTool}" th:text="#{navbar.multiTool}"></span>
+            </a>
+          </li>
+
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}">
+            <a class="nav-link" href="#" th:href="@{'/pipeline'}"
+              th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
+              <span class="material-symbols-rounded">
+                family_history
+              </span>
+              <span class="icon-text" th:data-text="#{home.pipeline.title}" th:text="#{home.pipeline.title}"></span>
+            </a>
+          </li>
+
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('compress-pdf')}">
+            <a class="nav-link" href="#" title="#{home.compressPdfs.title}" th:href="@{'/compress-pdf'}"
+              th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:title="#{home.compressPdfs.desc}">
+              <span class="material-symbols-rounded">
+                zoom_in_map
+              </span>
+              <span class="icon-text" th:data-text="#{home.compressPdfs.title}"
+                th:text="#{home.compressPdfs.title}"></span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#" th:href="@{'/view-pdf'}"
+              th:classappend="${currentPage}=='view-pdf' ? 'active' : ''" th:title="#{home.viewPdf.desc}">
+              <span class="material-symbols-rounded">
+                menu_book
+              </span>
+              <span class="icon-text" th:data-text="#{home.viewPdf.title}" th:text="#{home.viewPdf.title}"></span>
+            </a>
+          </li>
+
+          <!-- <li class="nav-item">
+            <a class="nav-link" href="#" th:href="@{'/merge-pdfs'}"
+              th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''" th:title="#{home.merge.desc}">
+              <span class="material-symbols-rounded">
+                add_to_photos
+              </span>
+              <span class="icon-text" th:data-text="#{home.merge.title}" th:text="#{home.merge.title}"></span>
+            </a>
+          </li> -->
+
+        </ul>
+        <ul class="navbar-nav flex-nowrap">
+          <li class="nav-item dropdown">
+            <a class="nav-link" id="navbarDropdown-5" href="#" role="button" data-bs-toggle="dropdown"
+              aria-haspopup="true" aria-expanded="false" th:title="#{navbar.favorite}">
+              <span class="material-symbols-rounded">
+                star
+              </span>
+              <span class="icon-text icon-hide" th:data-text="#{navbar.favorite}" th:text="#{navbar.favorite}"></span>
+              <span class="material-symbols-rounded chevron-icon">expand_more</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-tp dropdown-mw-28" role="menu" aria-labelledby="navbarDropdown-5">
+              <div class="dropdown-menu-wrapper px-xl-2 px-2 scroll-lock-y" id="favoritesDropdown" style="max-width: 95vw !important; ">
+                <!-- Dropdown items will be added here by JavaScript -->
+              </div>
+            </div>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="dark-mode-toggle" href="#" th:title="#{navbar.darkmode}">
+              <span class="material-symbols-rounded" id="dark-mode-icon">
+                dark_mode
+              </span>
+              <span class="icon-text icon-hide" id="dark-mode-text" th:data-text="#{navbar.darkmode}"
+                th:text="#{navbar.darkmode}"></span>
+            </a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown"
+              aria-haspopup="true" aria-expanded="false" th:title="#{navbar.language}">
+              <span class="material-symbols-rounded">
+                language
+              </span>
+              <span class="icon-text icon-hide" th:data-text="#{navbar.language}" th:text="#{navbar.language}"></span>
+              <span class="material-symbols-rounded chevron-icon">expand_more</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="languageDropdown">
+              <div class="dropdown-menu-wrapper px-xl-2 px-2 scroll-lock-y" style="max-width: 95vw !important;">
+                <div id="languageSelection" class="scrollable-y lang_dropdown-mw scalable-languages-container">
+                  <th:block th:insert="~{fragments/languages :: langs}"></th:block>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <li class="nav-item dropdown">
+            <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown"
+              aria-haspopup="true" aria-expanded="false" th:title="#{navbar.search}">
+              <span class="material-symbols-rounded">
+                search
+              </span>
+              <span class="icon-text icon-hide">Search</span>
+              <span class="material-symbols-rounded chevron-icon">expand_more</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="searchDropdown">
+              <div class="dropdown-menu-wrapper px-xl-2 px-2" style="max-width: 95vw !important;">
+                <form th:action="@{''}" class="d-flex p-2 search-form" id="searchForm">
+                  <input class="form-control search-input" type="search" th:placeholder="#{navbar.search}"
+                    aria-label="Search" id="navbarSearchInput">
+                </form>
+                <!-- Search Results -->
+                <div id="searchResults" class="search-results scroll-lock-y dropdown-mw-20"></div>
+              </div>
+            </div>
+          </li>
+
+          <li class="nav-item" th:if="${!@runningProOrHigher}">
+            <a href="https://stirlingpdf.com/pricing" class="nav-link go-pro-link" target="_blank"
+              rel="noopener noreferrer">
+              <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <!-- Settings Button -->
+            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#settingsModal"
+              th:title="#{navbar.settings}">
+              <span class="material-symbols-rounded">
+                settings
+              </span>
+              <span class="icon-text icon-hide" th:data-text="#{navbar.settings}" th:text="#{navbar.settings}"></span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <script th:src="@{'/js/favourites.js'}"></script>
+    <script th:src="@{'/js/search.js'}"></script>
+  </nav>
+
+  <th:block th:insert="~{fragments/errorBannerPerPage.html :: errorBannerPerPage}"></th:block>
+  <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+            <span class="material-symbols-rounded">
+              close
+            </span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0" th:utext="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
+          <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+            <div class="footer-center" style="flex-direction: row;">
+              <a href="https://github.com/Stirling-Tools/Stirling-PDF" class="mx-1" role="button" target="_blank"
+                th:title="#{visitGithub}">
+                <img th:src="@{'/images/github.svg'}" alt="github">
+              </a>
+              <a href="https://hub.docker.com/r/stirlingtools/stirling-pdf" class="mx-1" role="button" target="_blank"
+                th:title="#{seeDockerHub}">
+                <img th:src="@{'/images/docker.svg'}" alt="docker">
+              </a>
+              <a href="https://discord.gg/Cn8pWhQRxZ" class="mx-1" role="button" target="_blank"
+                th:title="#{joinDiscord}">
+                <img th:src="@{'/images/discord.svg'}" alt="discord">
+              </a>
+            </div>
+
+            <a th:href="@{'/swagger-ui/index.html'}" class="btn btn-sm btn-outline-primary mx-1" role="button"
+              target="_blank">API</a>
+            <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
+              class="btn btn-sm btn-outline-primary mx-1" id="update-btn" th:utext="#{settings.update}" role="button"
+              target="_blank"></a>
+          </div>
+
+          <div class="mb-3">
+            <label for="downloadOption" th:utext="#{settings.downloadOption.title}"></label>
+            <select class="form-control" id="downloadOption">
+              <option value="sameWindow" th:utext="#{settings.downloadOption.1}"></option>
+              <option value="newWindow" th:utext="#{settings.downloadOption.2}"></option>
+              <option value="downloadFile" th:utext="#{settings.downloadOption.3}"></option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label><br />
+            <input type="range" class="form-range" min="1" max="9" step="1" id="zipThreshold" value="4">
+            <span id="zipThresholdValue" class="ms-2"></span>
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" id="boredWaiting" th:title="#{settings.bored.help}">
+            <label for="boredWaiting" th:text="#{bored}"></label>
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" id="cacheInputs" th:title="#{settings.cacheInputs.help}">
+            <label for="cacheInputs" th:text="#{settings.cacheInputs.name}"></label>
+          </div>
+
+          <a th:if="${@loginEnabled and @activeSecurity}" th:href="@{'/account'}" class="btn btn-sm btn-outline-primary"
+            role="button" th:text="#{settings.accountSettings}" target="_blank">Account Settings</a>
+        </div>
+        <div class="modal-footer">
+          <a th:if="${@loginEnabled and @activeSecurity}" class="btn btn-danger" role="button"
+            th:text="#{settings.signOut}" th:href="@{'/logout'}">Sign Out</a>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script th:src="@{'/js/settings.js'}"></script>
+  <script th:inline="javascript">
+    window.onload = function () {
+      updateFavoritesDropdown();
+
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+      const navbarLink = document.querySelector(".navbar-brand");
+      const contentPath = /*[[${@contextPath}]]*/ '';
+      if (localStorage.getItem("defaultView") === "home-legacy") {
+        navbarLink.setAttribute("href", contentPath + "home-legacy");
+      } else {
+        navbarLink.setAttribute("href", contentPath);
+      }
+    });
+  </script>
+</div>

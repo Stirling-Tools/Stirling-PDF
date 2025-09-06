@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}"
+  th:dir="#{language.direction}"
+  th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+  <head>
+    <th:block
+      th:insert="~{fragments/common :: head(title=#{editTableOfContents.title}, header=#{editTableOfContents.header})}">
+    </th:block>
+    <link rel="stylesheet"
+      th:href="@{'/css/edit-table-of-contents.css'}">
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-8 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon edit">bookmark_add</span>
+                <span class="tool-header-text"
+                  th:text="#{editTableOfContents.header}"></span>
+              </div>
+              <form th:action="@{'/api/v1/general/edit-table-of-contents'}"
+                method="post"
+                enctype="multipart/form-data"
+                id="editTocForm">
+                <div
+                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+                </div>
+
+                <div class="mb-3 form-check">
+                  <input type="checkbox"
+                    class="form-check-input"
+                    id="replaceExisting"
+                    name="replaceExisting"
+                    checked>
+                  <label class="form-check-label"
+                    for="replaceExisting"
+                    th:text="#{editTableOfContents.replaceExisting}"></label>
+                  <input type="hidden"
+                    name="replaceExisting"
+                    value="false" />
+                </div>
+
+                <div class="bookmark-editor">
+                  <h5 th:text="#{editTableOfContents.editorTitle}"></h5>
+                  <p th:text="#{editTableOfContents.editorDesc}"></p>
+
+                  <div id="error-message-container">
+                    <!-- Error messages will be added here dynamically -->
+                  </div>
+
+                  <div id="bookmarks-container">
+                    <!-- Bookmarks will be added here dynamically -->
+                  </div>
+
+                  <div class="bookmark-actions">
+                    <button type="button"
+                      id="addBookmarkBtn"
+                      class="btn btn-outline-primary"
+                      th:text="#{editTableOfContents.addBookmark}"></button>
+
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                      <!-- Import Split Button -->
+                      <div class="btn-group">
+                        <label
+                          id="importDefaultBtn"
+                          for="importUploadJsonFileInput"
+                          class="btn btn-outline-primary"
+                          style="border-top-left-radius: 1.25rem !important; border-bottom-left-radius: 1.25rem !important;"
+                          th:text="#{editTableOfContents.importBookmarksDefault}">
+                        </label>
+                        <button type="button"
+                          class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false">
+                          <span class="visually-hidden">Toggle Import Options</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><label class="dropdown-item"
+                              id="importUploadJsonFileBtn"
+                              for="importUploadJsonFileInput"
+                              style="cursor: pointer;"
+                              th:text="#{editTableOfContents.importBookmarksFromJsonFile}"></label></li>
+                          <li class="d-none"><a class="dropdown-item"
+                              href="#bookmarks-container"
+                              id="importPasteFromClipboardBtn"
+                              th:text="#{editTableOfContents.importBookmarksFromClipboard}"></a></li>
+                        </ul>
+                      </div>
+
+                      <!-- Export Split Button -->
+                      <div class="btn-group">
+                        <button type="button"
+                          id="exportDefaultBtn"
+                          class="btn btn-outline-primary"
+                          th:text="#{editTableOfContents.exportBookmarksDefault}"></button>
+                        <button type="button"
+                          class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false">
+                          <span class="visually-hidden">Toggle Export Options</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><a class="dropdown-item"
+                              href="#bookmarks-container"
+                              id="exportDownloadJsonFileBtn"
+                              th:text="#{editTableOfContents.exportBookmarksAsJson}"></a></li>
+                          <li class="d-none"><a class="dropdown-item"
+                              href="#bookmarks-container"
+                              id="exportCopyToClipboardBtn"
+                              th:text="#{editTableOfContents.exportBookmarksAsText}"></a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hidden field to store JSON data -->
+                  <input type="hidden"
+                    id="bookmarkData"
+                    name="bookmarkData"
+                    value="[]">
+                </div>
+
+                <p>
+                  <a class="btn btn-outline-primary"
+                    data-bs-toggle="collapse"
+                    href="#info"
+                    role="button"
+                    aria-expanded="false"
+                    aria-controls="info"
+                    th:text="#{info}"></a>
+                </p>
+                <div class="collapse"
+                  id="info">
+                  <p th:text="#{editTableOfContents.desc.1}"></p>
+                  <p th:text="#{editTableOfContents.desc.2}"></p>
+                  <p th:text="#{editTableOfContents.desc.3}"></p>
+                </div>
+
+                <br>
+                <button type="submit"
+                  id="submitBtn"
+                  class="btn btn-primary"
+                  th:text="#{editTableOfContents.submit}"></button>
+              </form>
+
+              <!-- Hidden file input for JSON import (outside of form)-->
+              <input type="file"
+                id="importUploadJsonFileInput"
+                accept="application/json"
+                style="display: none;">
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+
+    <script th:src="@{'/js/pages/edit-table-of-contents.js'}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize Bootstrap tooltips
+      if (typeof $ !== 'undefined') {
+        $('[data-bs-toggle="tooltip"]').tooltip();
+      }
+    });
+  </script>
+  </body>
+
+</html>

@@ -195,7 +195,14 @@ ignore = [
     'PDFToBook.selectText.1',
     'PDFToText.tags',
     'addPageNumbers.selectText.3',
+    'adminUserSettings.team',
     'alphabet',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.status',
+    'audit.dashboard.tab.dashboard',
+    'audit.dashboard.tab.export',
+    'audit.dashboard.table.details',
+    'audit.dashboard.table.id',
     'certSign.name',
     'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
@@ -234,7 +241,9 @@ ignore = [
     'pipelineOptions.pipelineHeader',
     'pro',
     'redact.zoom',
+    'scannerEffect.quality.medium',
     'sponsor',
+    'team.status',
     'text',
     'validateSignature.cert.bits',
     'validateSignature.cert.version',
@@ -420,27 +429,17 @@ ignore = [
 
 [hu_HU]
 ignore = [
-    'AddStampRequest.alphabet',
-    'AddStampRequest.position',
-    'adminUserSettings.admin',
-    'alphabet',
     'audit.dashboard.export.json',
     'audit.dashboard.modal.id',
     'audit.dashboard.table.id',
-    'certSign.name',
-    'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
+    'home.pipeline.title',
     'language.direction',
-    'licenses.version',
-    'poweredBy',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
     'pro',
-    'sponsor',
-    'text',
-    'validateSignature.cert.bits',
-    'validateSignature.cert.version',
-    'validateSignature.status',
-    'watermark.type.1',
+    'showJS.tags',
 ]
 
 [id_ID]
@@ -495,7 +494,6 @@ ignore = [
 [it_IT]
 ignore = [
     'lang.asm',
-    'lang.aze',
     'lang.ceb',
     'lang.chr',
     'lang.div',
@@ -531,7 +529,6 @@ ignore = [
 
 [ja_JP]
 ignore = [
-    'lang.jav',
     'language.direction',
 ]
 
@@ -858,7 +855,14 @@ ignore = [
 
 [sr_LATN_RS]
 ignore = [
-    'language.direction',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.status',
+    'audit.dashboard.table.id',
+    'endpointStatistics.top',
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
+    'font',
+    'info',
     'lang.div',
     'lang.epo',
     'lang.hin',
@@ -869,18 +873,11 @@ ignore = [
     'lang.tel',
     'lang.tgl',
     'lang.urd',
-    'font',
-    'info',
+    'language.direction',
     'pro',
-    'team.status',
-    'endpointStatistics.top10',
-    'endpointStatistics.top20',
-    'endpointStatistics.top',
     'showJS.tags',
+    'team.status',
     'validateSignature.status',
-    'audit.dashboard.status',
-    'audit.dashboard.table.id',
-    'audit.dashboard.modal.id',
 ]
 
 [sv_SE]
@@ -929,35 +926,15 @@ ignore = [
 
 [tr_TR]
 ignore = [
-    'lang.afr',
-    'lang.bre',
     'lang.ceb',
-    'lang.chr',
-    'lang.div',
     'lang.dzo',
     'lang.epo',
-    'lang.fao',
-    'lang.guj',
     'lang.kan',
-    'lang.lao',
-    'lang.mal',
     'lang.mar',
-    'lang.mri',
-    'lang.msa',
     'lang.ori',
-    'lang.pus',
-    'lang.que',
-    'lang.sin',
-    'lang.slk',
-    'lang.slk_frak',
-    'lang.snd',
-    'lang.tam',
-    'lang.tat',
     'lang.tel',
-    'lang.tgk',
     'lang.tgl',
     'lang.tir',
-    'lang.urd',
     'lang.yor',
     'language.direction',
 ]
@@ -1029,8 +1006,7 @@ ignore = [
 
 [zh_TW]
 ignore = [
-    'lang.dzo',
-    'lang.iku',
-    'lang.que',
     'language.direction',
+    'poweredBy',
+    'showJS.tags',
 ]

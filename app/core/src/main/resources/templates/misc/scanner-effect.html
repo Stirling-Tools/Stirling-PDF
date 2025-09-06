@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{scannerEffect.title}, header=#{scannerEffect.header})}"></th:block>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon advance">scanner</span>
+                <span class="tool-header-text" th:text="#{scannerEffect.title}"></span>
+              </div>
+
+              <form method="post" enctype="multipart/form-data" id="uploadForm" th:action="@{'/api/v1/misc/scanner-effect'}">
+                <input type="hidden" name="advancedEnabled" id="advancedEnabled" value="false">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <br>
+                <div class="mb-3">
+                  <label for="quality" class="form-label" th:text="#{scannerEffect.quality}"></label>
+                  <select class="form-select" id="quality" name="quality">
+                    <option value="low" th:text="#{scannerEffect.quality.low}"></option>
+                    <option value="medium" th:text="#{scannerEffect.quality.medium}"></option>
+                    <option value="high" th:text="#{scannerEffect.quality.high}" selected></option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="rotation" class="form-label" th:text="#{scannerEffect.rotation}"></label>
+                  <select class="form-select" id="rotation" name="rotation">
+                    <option value="none" th:text="#{scannerEffect.rotation.none}"></option>
+                    <option value="slight" th:text="#{scannerEffect.rotation.slight}" selected></option>
+                    <option value="moderate" th:text="#{scannerEffect.rotation.moderate}"></option>
+                    <option value="severe" th:text="#{scannerEffect.rotation.severe}"></option>
+                  </select>
+                </div>
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="advancedSettingsToggle">
+                  <label class="form-check-label" for="advancedSettingsToggle" th:text="#{scannerEffect.advancedSettings}"></label>
+                </div>
+                <div id="advancedSettings" style="display:none; border:1px solid #eee; padding:1em; border-radius:8px; margin-bottom:1em;">
+                  <div class="mb-3">
+                    <label for="colorspace" class="form-label" th:text="#{scannerEffect.colorspace}"></label>
+                    <select class="form-select" id="colorspace" name="colorspace">
+                      <option value="grayscale" th:text="#{scannerEffect.colorspace.grayscale}" selected></option>
+                      <option value="color" th:text="#{scannerEffect.colorspace.color}"></option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="border" class="form-label" th:text="#{scannerEffect.border}"></label>
+                    <input type="number" class="form-control" id="border" name="border" min="0" max="100" value="20">
+                  </div>
+                  <div class="mb-3">
+                    <label for="rotate" class="form-label" th:text="#{scannerEffect.rotate}"></label>
+                    <input type="number" class="form-control" id="rotate" name="rotate" min="-15" max="15" value="0">
+                  </div>
+                  <div class="mb-3">
+                    <label for="rotateVariance" class="form-label" th:text="#{scannerEffect.rotateVariance}"></label>
+                    <input type="number" class="form-control" id="rotateVariance" name="rotateVariance" min="0" max="10" value="2">
+                  </div>
+                  <div class="mb-3">
+                    <label for="brightness" class="form-label" th:text="#{scannerEffect.brightness}"></label>
+                    <input type="range" class="form-range" id="brightness" name="brightness" min="0.5" max="1.5" step="0.01" value="1.0">
+                  </div>
+                  <div class="mb-3">
+                    <label for="contrast" class="form-label" th:text="#{scannerEffect.contrast}"></label>
+                    <input type="range" class="form-range" id="contrast" name="contrast" min="0.5" max="1.5" step="0.01" value="1.0">
+                  </div>
+                  <div class="mb-3">
+                    <label for="blur" class="form-label" th:text="#{scannerEffect.blur}"></label>
+                    <input type="range" class="form-range" id="blur" name="blur" min="0" max="5" step="0.1" value="1.0">
+                  </div>
+                  <div class="mb-3">
+                    <label for="noise" class="form-label" th:text="#{scannerEffect.noise}"></label>
+                    <input type="range" class="form-range" id="noise" name="noise" min="0" max="20" step="0.1" value="8.0">
+                  </div>
+                  <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="yellowish" name="yellowish">
+                    <label class="form-check-label" for="yellowish" th:text="#{scannerEffect.yellowish}"></label>
+                  </div>
+                  <div class="mb-3">
+                    <label for="resolution" class="form-label" th:text="#{scannerEffect.resolution}"></label>
+                    <input type="number" class="form-control" id="resolution" name="resolution" min="72" max="600" value="300">
+                  </div>
+                </div>
+                <div class="mb-3 text-left">
+                  <button type="submit" class="btn btn-primary" th:text="#{scannerEffect.submit}" id="submitBtn"></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+    <script th:inline="javascript">
+      // Show/hide advanced settings
+      document.getElementById('advancedSettingsToggle').addEventListener('change', function() {
+        document.getElementById('advancedSettings').style.display = this.checked ? 'block' : 'none';
+      });
+
+      // Form submission handling
+      const form = document.getElementById('uploadForm');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          // If advanced settings are not enabled, remove advanced fields
+          if (!document.getElementById('advancedSettingsToggle').checked) {
+            const formData = new FormData(form);
+            formData.delete('colorspace');
+            formData.delete('border');
+            formData.delete('rotate');
+            formData.delete('rotateVariance');
+            formData.delete('brightness');
+            formData.delete('contrast');
+            formData.delete('blur');
+            formData.delete('noise');
+            formData.delete('yellowish');
+            formData.delete('resolution');
+          }
+        });
+      }
+
+      // Initialize advanced settings state
+      const advancedSettingsToggle = document.getElementById('advancedSettingsToggle');
+      const advancedSettings = document.getElementById('advancedSettings');
+      if (advancedSettingsToggle && advancedSettings) {
+        // Helper: enable/disable all fields in advanced settings
+        function setAdvancedFieldsEnabled(enabled) {
+          const fields = advancedSettings.querySelectorAll('input, select');
+          fields.forEach(field => {
+            field.disabled = !enabled;
+            // If enabling and value is empty, set to default
+            if (enabled && (field.value === '' || field.value == null)) {
+              if (field.type === 'number' || field.type === 'range') {
+                field.value = field.defaultValue;
+              } else if (field.type === 'checkbox') {
+                field.checked = field.defaultChecked;
+              } else if (field.tagName === 'SELECT') {
+                field.value = field.querySelector('option[selected]')?.value || field.options[0].value;
+              }
+            }
+          });
+        }
+        // Set initial state
+        setAdvancedFieldsEnabled(advancedSettingsToggle.checked);
+        advancedSettings.style.display = advancedSettingsToggle.checked ? 'block' : 'none';
+        document.getElementById('advancedEnabled').value = advancedSettingsToggle.checked ? 'true' : 'false';
+        // Add change listener
+        advancedSettingsToggle.addEventListener('change', function() {
+          advancedSettings.style.display = this.checked ? 'block' : 'none';
+          setAdvancedFieldsEnabled(this.checked);
+          document.getElementById('advancedEnabled').value = this.checked ? 'true' : 'false';
+        });
+      }
+    </script>
+  </body>
+</html>

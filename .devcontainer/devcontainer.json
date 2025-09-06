@@ -49,7 +49,7 @@
                 "java.configuration.updateBuildConfiguration": "interactive",
                 "java.format.enabled": true,
                 "java.format.settings.profile": "GoogleStyle",
-                "java.format.settings.google.version": "1.26.0",
+                "java.format.settings.google.version": "1.28.0",
                 "java.format.settings.google.extra": "--aosp --skip-sorting-imports --skip-javadoc-formatting",
                 "java.saveActions.cleanup": true,
                 "java.cleanup.actions": [
@@ -79,9 +79,17 @@
                     ".venv*/",
                     ".vscode/",
                     "bin/",
+                    "app/core/bin/",
+                    "app/common/bin/",
+                    "app/proprietary/bin/",
                     "build/",
+                    "app/core/build/",
+                    "app/common/build/",
+                    "app/proprietary/build/",
                     "configs/",
+                    "app/core/configs/",
                     "customFiles/",
+                    "app/core/customFiles/",
                     "docs/",
                     "exampleYmlFiles",
                     "gradle/",
@@ -93,6 +101,9 @@
                     ".git-blame-ignore-revs",
                     ".gitattributes",
                     ".gitignore",
+                    "app/core/.gitignore",
+                    "app/common/.gitignore",
+                    "app/proprietary/.gitignore",
                     ".pre-commit-config.yaml"
                 ],
                 "java.signatureHelp.enabled": true,
@@ -119,7 +130,9 @@
                 "EditorConfig.EditorConfig", // EditorConfig support for maintaining consistent coding styles
                 "ms-azuretools.vscode-docker", // Docker extension for Visual Studio Code
                 "charliermarsh.ruff", // Ruff extension for Ruff language support
-                "github.vscode-github-actions" // GitHub Actions extension for Visual Studio Code
+                "github.vscode-github-actions", // GitHub Actions extension for Visual Studio Code
+                "stylelint.vscode-stylelint", // Stylelint extension for CSS and SCSS linting
+                "redhat.vscode-yaml" // YAML extension for Visual Studio Code
             ]
         }
     },

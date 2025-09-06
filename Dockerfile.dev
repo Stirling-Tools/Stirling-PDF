@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
 # settings.yml | tessdataDir: /usr/share/tesseract-ocr/5/tessdata
   tesseract-ocr \
   tesseract-ocr-eng \
-  fonts-terminus fonts-dejavu fonts-font-awesome fonts-noto fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-liberation fonts-linuxlibertine \
+  fonts-terminus fonts-dejavu fonts-font-awesome fonts-noto fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-liberation fonts-linuxlibertine fonts-urw-base35 \
   python3-uno \
   python3-venv \
 # ss -tln
@@ -34,10 +34,10 @@ ENV SETUPTOOLS_USE_DISTUTILS=local \
     TMP=/tmp/stirling-pdf
 
 # Installation der benötigten Python-Pakete
+COPY .github/scripts/requirements_dev.txt /tmp/requirements_dev.txt
 RUN python3 -m venv --system-site-packages /opt/venv \
   && . /opt/venv/bin/activate \
-  && pip install --upgrade pip setuptools \
-  && pip install --no-cache-dir WeasyPrint pdf2image pillow unoserver opencv-python-headless pre-commit
+  && pip install --no-cache-dir --require-hashes -r /tmp/requirements_dev.txt
 
 # Füge den venv-Pfad zur globalen PATH-Variable hinzu, damit die Tools verfügbar sind
 ENV PATH="/opt/venv/bin:$PATH"
@@ -45,6 +45,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY . /workspace
 
 RUN mkdir -p /tmp/stirling-pdf \
+  && fc-cache -f -v \
   && adduser --disabled-password --gecos '' devuser \
   && chown -R devuser:devuser /home/devuser /workspace /tmp/stirling-pdf
 RUN echo "devuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/devuser \
@@ -53,8 +54,7 @@ RUN echo "devuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/devuser \
 # Setze das Arbeitsverzeichnis (wird später per Bind-Mount überschrieben)
 WORKDIR /workspace
 
-RUN chmod +x /workspace/.devcontainer/git-init.sh
-RUN sudo chmod +x /workspace/.devcontainer/init-setup.sh
+RUN chmod +x /workspace/.devcontainer/git-init.sh /workspace/.devcontainer/init-setup.sh
 
 # Wechsel zum Nicht‑Root Benutzer
 USER devuser

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
+</head>
+
+<body>
+  <div class="page-container" style="max-height:100vh;">
+    <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+    <div style="transform-origin: center top; flex:0 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;" id="scale-wrap">
+      <br class="d-md-none">
+      <!-- Features -->
+      <script th:src="@{'/js/homecard.js'}"></script>
+      <div style="
+      width: 100%;
+      display: flex;
+      flex-direction: column;"
+      >
+        <div>
+          <br>
+          <div style="justify-content: center; display: flex;">
+            <div style="margin:0 3rem">
+              <div>
+                <div
+                  style="display:flex; flex-direction: column; justify-content: center; width:100%; margin-bottom:1rem">
+                  <div style="width:fit-content; margin: 0 auto; padding: 0 3rem">
+                    <div class="lead fs-4"
+                      th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
+                  </div>
+                  </div>
+                  <div id="groupRecent" style="width: fit-content; margin: 0 auto">
+                    <div
+                      th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.recent})}">
+                    </div>
+                    <div class="recent-features">
+                      <div class="newfeature"
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('add-attachments', 'attachment', 'home.attachments.title', 'home.attachments.desc', 'attachments.tags', 'other')}">
+                      </div>
+                      <div class="newfeature"
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('scanner-effect', 'scanner', 'scannerEffect.title', 'scannerEffect.description', 'scannerEffect.tags', 'advance')}">
+                      </div>
+                      <div class="newfeature"
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('compress-pdf', 'zoom_in_map', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPDFs.tags', 'advance')}">
+                      </div>
+                      <div class="newfeature"
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('edit-table-of-contents', 'bookmark_add', 'home.editTableOfContents.title', 'home.editTableOfContents.desc', 'editTableOfContents.tags', 'advance')}">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
+              </div>
+
+              <div style="display: flex; column-gap: 3rem; flex-wrap: wrap; margin-left:1rem">
+                <div
+                  style="height:2.5rem;  display: flex; align-items: center; cursor: pointer; justify-content: center;">
+                  <label for="sort-options" th:text="#{home.sortBy}">Sort by:</label>
+                  <select id="sort-options" style="border:none;">
+                    <option value="alphabetical" th:text="#{home.alphabetical}"> </option>
+                    <!-- <option value="personal">Your most used</option> -->
+                    <option value="global" th:text="#{home.globalPopularity}"></option>
+                    <!-- <option value="server">Popularity in organisation</option> -->
+                  </select>
+                </div>
+                <div
+                  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:2rem;  justify-content: center;" >
+                  <div th:title="#{home.setFavorites}" style="display: flex; align-items: center; cursor: pointer;"
+                    onclick="toggleFavoritesMode()">
+                    <span class="material-symbols-rounded toggle-favourites"
+                      style="font-size: 2rem;  margin-left: 0.2rem;">
+                      star
+                    </span>
+                  </div>
+                  <div onclick="toggleFavoritesView()" th:title="#{home.hideFavorites}" id="favouritesVisibility"
+                    style="display: flex; align-items: center; cursor: pointer;">
+                    <span id="toggle-favourites-icon" class="material-symbols-rounded toggle-favourites"
+                      style="font-size: 2rem;  margin-left: 0.2rem;">
+                      visibility
+                    </span>
+                  </div>
+                  <a th:if="${@shouldShow}" href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
+                    target="_blank" id="update-link" rel="noopener" th:title="#{settings.update}"
+                    style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
+                    <span class="material-symbols-rounded toggle-favourites"
+                      style="font-size: 2rem; margin-left: 0.2rem;">
+                      update
+                    </span>
+                  </a>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+        </div>
+        <div style="width:100%; overflow-x:visible;">
+        <div class="features-container" style="  border-top: 1px;
+        border-top-style: solid;
+        border-color: var(--md-nav-color-on-separator);
+        margin-top: 1rem;
+      ">
+          <div class="feature-rows">
+            <div id="groupFavorites" class="feature-group">
+              <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.favorite})}">
+              </div>
+              <div class="nav-group-container">
+              </div>
+            </div>
+            <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
+          </div>
+
+        </div>
+</div>
+
+      </div>   
+          <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </div>
+
+
+  <!-- Survey Modal -->
+  <div class="modal fade" id="surveyModal" tabindex="-1" role="dialog" aria-labelledby="surveyModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="surveyModalLabel" th:text="#{survey.title}">Stirling-PDF Survey</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+		<p th:text="#{survey.meeting.1}">If you're using Stirling PDF at work, we'd love to speak to you. We're offering free technical support in exchange for a 15 minute user discovery session.</p>
+		<p th:text="#{survey.meeting.2}">This is a chance to:</p>
+		<p><span>🛠️</span><span th:text="#{survey.meeting.3}">Get help with deployment, integrations, or troubleshooting</span></p>
+		<p><span>📢</span><span th:text="#{survey.meeting.4}">Provide direct feedback on performance, edge cases, and feature gaps</span></p>
+		<p><span>🔍</span><span th:text="#{survey.meeting.5}">Help us refine Stirling PDF for real-world enterprise use</span></p>
+		<p th:text="#{survey.meeting.6}">If you're interested, you can book time with our team directly.</p>
+		<p th:text="#{survey.meeting.7}">Looking forward to digging into your use cases and making Stirling PDF even better!</p>
+		<a href="https://calendly.com/d/crsr-tz6-487" target="_blank" class="btn btn-primary" id="takeSurvey2" th:text="#{survey.meeting.button}">Book meeting</a>
+		</br>
+		</br>
+		 <p th:text="#{survey.meeting.notInterested}">Not a business and/or interested in a meeting?</p>
+ 
+          <p th:text="#{survey.please}">Please consider taking our survey!</p>
+          <a href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu" target="_blank" class="btn btn-primary"
+            id="takeSurvey" th:text="#{survey.button}">Take Survey</a>
+        </div>
+        <div class="modal-footer">
+          <div class="form-check mb-3">
+            <input type="checkbox" id="dontShowAgain">
+            <label for="dontShowAgain" th:text="#{survey.dontShowAgain}">Don't show again</label>
+          </div>
+
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}">Close</button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Analytics Modal -->
+  <div class="modal fade" id="analyticsModal" tabindex="-1" role="dialog" aria-labelledby="analyticsModalLabel"
+    aria-hidden="true" th:if="${@analyticsPrompt}">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="analyticsModalLabel" th:text="#{analytics.title}">Do you want make Stirling PDF
+            better?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p th:text="#{analytics.paragraph1}">Stirling PDF has opt in analytics to help us improve the product. We do
+            not track any personal information or file contents.</p>
+          <p th:text="#{analytics.paragraph2}">Please consider enabling analytics to help Stirling-PDF grow and to allow
+            us to understand our users better.</p>
+          <p th:text="#{analytics.settings}">You can change the settings for analytics in the config/settings.yml file
+          </p>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="setAnalytics(false)"
+            th:text="#{analytics.disable}">Disable analytics</button>
+          <button type="button" class="btn btn-primary" th:text="#{analytics.enable}"
+            onclick="setAnalytics(true)">Enable analytics</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <style>
+    .favorite-icon {
+      cursor: pointer;
+      width: 0rem;
+      font-size: 2rem;
+    }
+
+    .toggle-favourites {
+      cursor: pointer;
+    }
+
+    .toggle-favourites.active {
+      color: gold;
+    }
+  </style>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    window.analyticsPromptBoolean = /*[[${@analyticsPrompt}]]*/ false;
+    /*]]>*/
+
+    window.showSurvey = /*[[${showSurveyFromDocker}]]*/ true
+  </script>
+  <script th:src="@{'/js/pages/home.js'}" th:inline="javascript"></script>
+  <script>
+    function scaleStuff() {
+      const w = 1440;
+      const h = 1000;
+      
+      const sx = window.innerWidth / w;
+      const sy = window.innerHeight / h;
+      const s = Math.max(0.9, Math.min(sx, sy));
+      const el = document.getElementById('scale-wrap');
+      const container = document.querySelector('.page-container');
+      
+      const nav = document.querySelector('.navbar, nav');
+      const navH = nav ? nav.offsetHeight : 0;
+      const space = container.offsetHeight - navH;
+      const origH = el.scrollHeight;
+      
+      // Progressive bonus based on how tall the screen is
+      const aspectRatio = window.innerWidth / window.innerHeight;
+      const tallScreenBonus = Math.max(0, (1.8 - aspectRatio) * 0.15); // More bonus for taller screens
+      
+      let finalS = Math.min(s * 0.75, (space * (0.98 + tallScreenBonus)) / origH);
+      finalS = Math.max(0.7, Math.min(1.0, finalS)); // Never scale above 100%
+      
+      el.style.transform = `scale(${finalS})`;
+      el.style.transformOrigin = 'top center';
+      el.style.height = `${origH * finalS}px`;
+      
+      // Dynamically adjust features container width based on scale
+      const featuresContainer = document.querySelector('.features-container');
+      if (featuresContainer) {
+        const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
+        const dynamicWidth = Math.min(120, 100 / finalS);
+        const offset = (dynamicWidth - 100) / 2;
+        
+        featuresContainer.style.width = `${dynamicWidth}%`;
+        
+        if (isRTL) {
+          featuresContainer.style.right = `-${offset}%`;
+          featuresContainer.style.left = 'auto';
+        } else {
+          featuresContainer.style.left = `-${offset}%`;
+          featuresContainer.style.right = 'auto';
+        }
+      }
+      
+    }
+    let prevW = window.innerWidth;
+    let prevH = window.innerHeight;
+    let prevDPR = window.devicePixelRatio;
+    
+    function onResize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const dpr = window.devicePixelRatio;
+      
+      if (w !== prevW || h !== prevH) {
+        if (dpr === prevDPR) {
+          scaleStuff();
+        }
+      }
+      
+      prevW = w;
+      prevH = h;
+      prevDPR = dpr;
+    }
+    
+    window.addEventListener('load', () => {
+      setTimeout(scaleStuff, 100);
+    });
+    
+    window.addEventListener('resize', onResize);
+  </script>
+</body>
+
+</html>
