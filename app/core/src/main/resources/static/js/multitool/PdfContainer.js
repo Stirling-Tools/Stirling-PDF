@@ -329,12 +329,20 @@ class PdfContainer {
   }
 
   async addImageFile(file, nextSiblingElement, pages) {
+    // Ensure the provided file is a safe image type to prevent DOM XSS when
+    // rendering user-supplied content. Reject SVG and non-image files that could
+    // contain executable scripts.
+    if (!(file instanceof File) || !file.type.startsWith('image/') || file.type === 'image/svg+xml') {
+      throw new Error('Invalid image file');
+    }
     const div = document.createElement('div');
     div.classList.add('page-container');
 
-    var img = document.createElement('img');
+    const img = document.createElement('img');
     img.classList.add('page-image');
-    img.src = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    img.src = objectUrl;
+    img.onload = () => URL.revokeObjectURL(objectUrl);
     div.appendChild(img);
 
     this.pdfAdapters.forEach((adapter) => {
@@ -714,9 +722,11 @@ class PdfContainer {
           pdfDoc.addPage(page);
         } else {
           page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);
-          const imageBytes = await fetch(img.src).then((res) => res.arrayBuffer());
+
+          // NEU: Bildbytes robust ermitteln (Canvas für blob:, fetch für http/https)
+          const { bytes: imageBytes, forcedType } = await bytesFromImageElement(img);
           const uint8Array = new Uint8Array(imageBytes);
-          const imageType = detectImageType(uint8Array);
+          const imageType = forcedType || detectImageType(uint8Array);
 
           let image;
           switch (imageType) {
@@ -939,6 +949,36 @@ class PdfContainer {
       checkbox.checked = window.selectedPages.includes(pageNumber);
     });
   }
+}
+
+async function bytesFromImageElement(img) {
+  // Handle Blob URLs without using fetch()
+  if (img.src.startsWith('blob:')) {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('Canvas toBlob() failed');
+    const buf = await blob.arrayBuffer();
+    return { bytes: buf, forcedType: 'PNG' }; // Canvas always generates PNG
+  }
+
+  // Fetch http(s)/data:-URLs normally (if necessary)
+  const res = await fetch(img.src, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status} beim Laden von ${img.src}`);
+  const buf = await res.arrayBuffer();
+
+  // Use Content-Type as a hint (optional)
+  let forcedType = null;
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('png')) forcedType = 'PNG';
+  else if (ct.includes('jpeg') || ct.includes('jpg')) forcedType = 'JPEG';
+  else if (ct.includes('tiff')) forcedType = 'TIFF';
+  else if (ct.includes('gif')) forcedType = 'GIF';
+
+  return { bytes: buf, forcedType };
 }
 
 function detectImageType(uint8Array) {
