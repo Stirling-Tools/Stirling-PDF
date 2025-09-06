@@ -1,8 +1,9 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
@@ -13,16 +14,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import io.github.pixee.security.Filenames;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import lombok.RequiredArgsConstructor;
-
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.WebResponseUtils;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -38,7 +35,8 @@ public class ShowJavascript {
             description = "desc. Input:PDF Output:JS Type:SISO")
     public ResponseEntity<byte[]> extractHeader(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
-        String script = "";
+        StringBuilder script = new StringBuilder();
+        boolean foundScript = false;
 
         try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
 
@@ -55,28 +53,28 @@ public class ShowJavascript {
                         PDActionJavaScript jsAction = entry.getValue();
                         String jsCodeStr = jsAction.getAction();
 
-                        script +=
-                                "// File: "
-                                        + Filenames.toSimpleFileName(
-                                                inputFile.getOriginalFilename())
-                                        + ", Script: "
-                                        + name
-                                        + "\n"
-                                        + jsCodeStr
-                                        + "\n";
+                        if (jsCodeStr != null && !jsCodeStr.trim().isEmpty()) {
+                            script.append("// File: ")
+                                .append(Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                                .append(", Script: ")
+                                .append(name)
+                                .append("\n")
+                                .append(jsCodeStr)
+                                .append("\n");
+                            foundScript = true;
+                        }
                     }
                 }
             }
 
-            if (script.isEmpty()) {
-                script =
-                        "PDF '"
-                                + Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                + "' does not contain Javascript";
+            if (!foundScript) {
+                script = new StringBuilder("PDF '")
+                    .append(Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                    .append("' does not contain Javascript");
             }
 
             return WebResponseUtils.bytesToWebResponse(
-                    script.getBytes(StandardCharsets.UTF_8),
+                    script.toString().getBytes(StandardCharsets.UTF_8),
                     Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js",
                     MediaType.TEXT_PLAIN);
         }
