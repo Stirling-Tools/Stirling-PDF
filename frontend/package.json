@@ -18,7 +18,7 @@
     "@tanstack/react-virtual": "^3.13.12",
     "autoprefixer": "^10.4.21",
     "axios": "^1.11.0",
-    "i18next": "^25.5.0",
+    "i18next": "^25.5.2",
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-http-backend": "^3.0.2",
     "jszip": "^3.10.1",
@@ -70,7 +70,7 @@
     ]
   },
   "devDependencies": {
-    "@eslint/js": "^9.34.0",
+    "@eslint/js": "^9.35.0",
     "@iconify-json/material-symbols": "^1.2.34",
     "@iconify/utils": "^3.0.1",
     "@playwright/test": "^1.55.0",
@@ -85,7 +85,7 @@
     "@typescript-eslint/parser": "^8.42.0",
     "@vitejs/plugin-react-swc": "^4.0.1",
     "@vitest/coverage-v8": "^3.2.4",
-    "eslint": "^9.34.0",
+    "eslint": "^9.35.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "jsdom": "^26.1.0",
     "license-checker": "^25.0.1",
