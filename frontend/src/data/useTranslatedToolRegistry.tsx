@@ -12,9 +12,11 @@ import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
 import Repair from "../tools/Repair";
+import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
+import Flatten from "../tools/Flatten";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -28,6 +30,8 @@ import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
+import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
+import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -39,6 +43,7 @@ import AddWatermarkSingleStepSettings from "../components/tools/addWatermark/Add
 import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
+import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import { ToolId } from "../types/toolId";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
@@ -198,10 +203,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       flatten: {
         icon: <LocalIcon icon="layers-clear-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.flatten.title", "Flatten"),
-        component: null,
+        component: Flatten,
         description: t("home.flatten.desc", "Remove all interactive elements and forms from a PDF"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
+        maxFiles: -1,
+        endpoints: ["flatten"],
+        operationConfig: flattenOperationConfig,
+        settingsComponent: FlattenSettings,
       },
       "unlock-pdf-forms": {
         icon: <LocalIcon icon="preview-off-rounded" width="1.5rem" height="1.5rem" />,
@@ -355,6 +364,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
+        urlPath: '/pdf-to-single-page',
         endpoints: ["pdf-to-single-page"],
         operationConfig: singleLargePageOperationConfig,
       },
@@ -464,7 +474,10 @@ export function useFlatToolRegistry(): ToolRegistry {
       "auto-rename-pdf-file": {
         icon: <LocalIcon icon="match-word-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.auto-rename.title", "Auto Rename PDF File"),
-        component: null,
+        component: AutoRename,
+        maxFiles: -1,
+        endpoints: ["remove-certificate-sign"],
+        operationConfig: autoRenameOperationConfig,
         description: t("home.auto-rename.desc", "Automatically rename PDF files based on their content"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION,
@@ -681,6 +694,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        urlPath: '/ocr-pdf',
         operationConfig: ocrOperationConfig,
         settingsComponent: OCRSettings,
       },

@@ -1,5 +1,4 @@
-import React from 'react';
-import { Box, Stack } from '@mantine/core';
+import { Box } from '@mantine/core';
 import ToolButton from '../toolPicker/ToolButton';
 import SubcategoryHeader from './SubcategoryHeader';
 
@@ -13,7 +12,8 @@ export const renderToolButtons = (
   subcategory: SubcategoryGroup,
   selectedToolKey: string | null,
   onSelect: (id: string) => void,
-  showSubcategoryHeader: boolean = true
+  showSubcategoryHeader: boolean = true,
+  disableNavigation: boolean = false
 ) => (
   <Box key={subcategory.subcategoryId} w="100%">
     {showSubcategoryHeader && (
@@ -27,6 +27,7 @@ export const renderToolButtons = (
           tool={tool}
           isSelected={selectedToolKey === id}
           onSelect={onSelect}
+          disableNavigation={disableNavigation}
         />
       ))}
     </div>

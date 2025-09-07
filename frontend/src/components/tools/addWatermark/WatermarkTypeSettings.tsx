@@ -1,5 +1,4 @@
-import React from "react";
-import { Button, Stack, Text } from "@mantine/core";
+import { Button, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 interface WatermarkTypeSettingsProps {

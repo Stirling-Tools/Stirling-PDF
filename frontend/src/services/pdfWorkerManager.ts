@@ -96,7 +96,7 @@ class PDFWorkerManager {
       if (loadingTask) {
         try {
           loadingTask.destroy();
-        } catch (destroyError) {
+        } catch {
           // Ignore errors
         }
       }
@@ -113,7 +113,7 @@ class PDFWorkerManager {
         pdf.destroy();
         this.activeDocuments.delete(pdf);
         this.workerCount = Math.max(0, this.workerCount - 1);
-      } catch (error) {
+      } catch {
         // Still remove from tracking even if destroy failed
         this.activeDocuments.delete(pdf);
         this.workerCount = Math.max(0, this.workerCount - 1);
@@ -169,7 +169,7 @@ class PDFWorkerManager {
     this.activeDocuments.forEach(pdf => {
       try {
         pdf.destroy();
-      } catch (error) {
+      } catch {
         // Ignore errors
       }
     });
