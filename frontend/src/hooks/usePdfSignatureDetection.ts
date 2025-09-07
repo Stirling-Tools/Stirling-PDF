@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { pdfWorkerManager } from '../services/pdfWorkerManager';
 
 export interface PdfSignatureDetectionResult {
