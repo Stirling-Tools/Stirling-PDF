@@ -1,24 +1,28 @@
 #!/usr/bin/env node
 
-import { execSync } from 'child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
+import { execSync } from 'node:child_process';
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { argv } from 'node:process';
 const inputIdx = argv.indexOf('--input');
 const INPUT_FILE = inputIdx > -1 ? argv[inputIdx + 1] : null;
 const POSTPROCESS_ONLY = !!INPUT_FILE;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /**
  * Generate 3rd party licenses for frontend dependencies
  * This script creates a JSON file similar to the Java backend's 3rdPartyLicenses.json
  */
 
-const OUTPUT_FILE = join(__dirname, '..', 'src', 'assets', '3rdPartyLicenses.json');
-const PACKAGE_JSON = join(__dirname, '..', 'package.json');
+const OUTPUT_FILE = path.join(__dirname, '..', 'src', 'assets', '3rdPartyLicenses.json');
+const PACKAGE_JSON = path.join(__dirname, '..', 'package.json');
 
 // Ensure the output directory exists
-const outputDir = dirname(OUTPUT_FILE);
+const outputDir = path.dirname(OUTPUT_FILE);
 if (!existsSync(outputDir)) {
     mkdirSync(outputDir, { recursive: true });
 }
@@ -35,13 +39,17 @@ try {
     let licenseData;
     // Generate license report using pinned license-checker; disable lifecycle scripts
     if (POSTPROCESS_ONLY) {
-      licenseData = JSON.parse(require('fs').readFileSync(INPUT_FILE, 'utf8'));
+      if (!INPUT_FILE || !existsSync(INPUT_FILE)) {
+        console.error('❌ --input file missing or not found');
+        process.exit(1);
+      }
+      licenseData = JSON.parse(readFileSync(INPUT_FILE, 'utf8'));
     } else {
       const licenseReport = execSync(
           'npx --yes license-checker@25.0.1 --production --json',
           {
               encoding: 'utf8',
-              cwd: dirname(PACKAGE_JSON),
+              cwd: path.dirname(PACKAGE_JSON),
               env: { ...process.env, NPM_CONFIG_IGNORE_SCRIPTS: 'true' }
           }
       );
@@ -162,7 +170,7 @@ try {
         });
 
         // Write license warnings to a separate file for CI/CD
-        const warningsFile = join(__dirname, '..', 'src', 'assets', 'license-warnings.json');
+        const warningsFile = path.join(__dirname, '..', 'src', 'assets', 'license-warnings.json');
         writeFileSync(warningsFile, JSON.stringify({
             warnings: problematicLicenses,
             generated: new Date().toISOString()
