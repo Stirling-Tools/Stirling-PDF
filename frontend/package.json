@@ -49,7 +49,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install",
-    "update-deps": "npx npm-check-updates -u && npm install"
+    "update:minor": "npm outdated || true && npm update && npm audit fix && npm test",
+    "update:major": "npx npm-check-updates -u && npm install",
+    "update:interactive": "npx npm-check-updates -i",
+    "update:minor-strict": "npx npm-check-updates -u --target minor && npm install"
   },
   "eslintConfig": {
     "extends": [
