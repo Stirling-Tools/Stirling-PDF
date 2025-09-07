@@ -48,7 +48,8 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:install": "playwright install"
+    "test:e2e:install": "playwright install",
+    "update-deps": "npx npm-check-updates -u && npm install"
   },
   "eslintConfig": {
     "extends": [
@@ -83,7 +84,6 @@
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
-    "@vitejs/plugin-react": "^4.7.0",
     "@vitejs/plugin-react-swc": "^4.0.1",
     "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.35.0",
