@@ -223,6 +223,22 @@ public class SecurityConfiguration {
                                     .rememberMeCookieName( // Cookie name
                                             "remember-me")
                                     .alwaysRemember(false));
+            String impressumUrl = appConfig.impressum();
+            boolean internalImpressum = impressumUrl != null && impressumUrl.equals("/impressum");
+            String accessibilityStatementUrl = appConfig.accessibilityStatement();
+            boolean internalAccessibilityStatement =
+                    accessibilityStatementUrl != null
+                            && accessibilityStatementUrl.equals("/accessibilityStatement");
+            String cookiePolicyUrl = appConfig.cookiePolicy();
+            boolean internalCookiePolicy =
+                    cookiePolicyUrl != null && cookiePolicyUrl.equals("/cookiePolicy");
+            String termsAndConditionsUrl = appConfig.termsAndConditions();
+            boolean internalTermsAndConditions =
+                    termsAndConditionsUrl != null
+                            && termsAndConditionsUrl.equals("/termsAndConditions");
+            String privacyPolicyUrl = appConfig.privacyPolicy();
+            boolean internalPrivacyPolicy =
+                    privacyPolicyUrl != null && privacyPolicyUrl.equals("/privacyPolicy");
             http.authorizeHttpRequests(
                     authz ->
                             authz.requestMatchers(
@@ -250,6 +266,21 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/pdfjs/")
                                                         || trimmedUri.startsWith("/pdfjs-legacy/")
                                                         || trimmedUri.startsWith("/favicon")
+                                                        || (internalAccessibilityStatement
+                                                                && trimmedUri.startsWith(
+                                                                        "/accessibilityStatement"))
+                                                        || (internalImpressum
+                                                                && trimmedUri.startsWith(
+                                                                        "/impressum"))
+                                                        || (internalCookiePolicy
+                                                                && trimmedUri.startsWith(
+                                                                        "/cookiePolicy"))
+                                                        || (internalTermsAndConditions
+                                                                && trimmedUri.startsWith(
+                                                                        "/termsAndConditions"))
+                                                        || (internalPrivacyPolicy
+                                                                && trimmedUri.startsWith(
+                                                                        "/privacyPolicy"))
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/info/status")
                                                         || trimmedUri.startsWith("/v1/api-docs")
