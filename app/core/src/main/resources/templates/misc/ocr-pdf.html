@@ -55,8 +55,8 @@
                   <hr>
                   <div id="languages">
                     <div class="form-check" th:each="language, iterStat : ${languages}">
-                      <input type="checkbox" th:name="languages" th:value="${language}" required th:id="${'language-' + language}" onchange="handleLangSelection()" />
-                      <label th:for="${'language-' + language}" th:text="${language}"></label>
+                      <input class="form-check-input" onchange="handleLangSelection()" required th:id="${'language-' + language}" th:name="languages" th:value="${language}" type="checkbox" />
+                      <label class="form-check-label" th:for="${'language-' + language}" th:text="${language}"></label>
                     </div>
                   </div>
                   <hr>

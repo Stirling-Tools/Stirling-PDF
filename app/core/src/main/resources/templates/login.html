@@ -130,8 +130,8 @@
           </div>
 
           <div class="form-check m-2 mb-3">
-            <input type="checkbox" name="remember-me" id="remember-me">
-            <label for="remember-me" th:text="#{login.rememberme}"></label>
+            <input class="form-check-input" id="remember-me" name="remember-me" type="checkbox">
+            <label class="form-check-label" for="remember-me" th:text="#{login.rememberme}"></label>
           </div>
           <button type="submit" class="w-100 btn btn-lg btn-primary" th:text="#{login.signin}">Sign in</button>
         </form>

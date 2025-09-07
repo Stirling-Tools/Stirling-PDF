@@ -58,8 +58,8 @@
                   <input type="password" class="form-control" id="password" name="password">
                 </div>
                 <div class="form-check mb-3">
-                  <input type="checkbox" id="showSignature" name="showSignature">
-                  <label th:text="#{certSign.showSig}" for="showSignature"></label>
+                  <input class="form-check-input" id="showSignature" name="showSignature" type="checkbox">
+                  <label class="form-check-label" for="showSignature" th:text="#{certSign.showSig}"></label>
                 </div>
                 <div id="signatureDetails" style="display: none;">
                   <div class="mb-3">
@@ -75,8 +75,8 @@
                     <label for="pageNumber" th:text="#{pageNum}"></label> <input type="number" class="form-control" id="pageNumber" name="pageNumber" min="1" value="1">
                   </div>
                   <div class="form-check mb-3">
-                    <input type="checkbox" id="showLogo" name="showLogo" checked />
-                    <label th:text="#{certSign.showLogo}" for="showLogo"></label>
+                    <input checked class="form-check-input" id="showLogo" name="showLogo" type="checkbox" />
+                    <label class="form-check-label" for="showLogo" th:text="#{certSign.showLogo}"></label>
                   </div>
                 </div>
                 <div class="mb-3 text-left">

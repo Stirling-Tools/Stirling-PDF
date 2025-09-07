@@ -20,12 +20,12 @@
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
                 <div class="form-check mb-3-inline ms-3">
-                  <input type="checkbox" id="deleteAll" name="deleteAll">
-                  <label for="deleteAll" th:text="#{changeMetadata.selectText.2}" ></label>
+                  <input class="form-check-input" id="deleteAll" name="deleteAll" type="checkbox">
+                  <label class="form-check-label" for="deleteAll" th:text="#{changeMetadata.selectText.2}" ></label>
                 </div>
                 <div class="form-check mb-3-inline ms-3">
-                  <input type="checkbox" id="customModeCheckbox">
-                  <label for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
+                  <input class="form-check-input" id="customModeCheckbox" type="checkbox">
+                  <label class="form-check-label" for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
                 </div>
                 <div class="mb-3">
                   <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label>
