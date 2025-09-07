@@ -47,8 +47,20 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.servlet.ServletContext;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -56,6 +68,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
@@ -65,7 +78,9 @@ import stirling.software.SPDF.utils.text.TextEncodingHelper;
 import stirling.software.SPDF.utils.text.TextFinderUtils;
 import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.model.api.security.RedactionArea;
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -85,11 +100,16 @@ public class RedactionService {
     private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
     private static final COSString EMPTY_COS_STRING = new COSString("");
     private static final int MAX_SWEEPS = 3;
-    private static final Pattern PATTERN = Pattern.compile(".*(placeholder|temp|generated).*");
     private boolean aggressiveMode = false;
     private Map<Integer, List<AggressiveSegMatch>> aggressiveSegMatches = null;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+
+    @Autowired(required = false)
+    private ServletContext servletContext;
+
+    @Autowired(required = false)
+    private UserServiceInterface userService;
 
     private static List<Object> parseAllTokens(PDFStreamParser parser) throws IOException {
         if (parser == null) {
@@ -945,7 +965,16 @@ public class RedactionService {
     }
 
     private static String getDecodedString(COSString cosString, PDFont font) {
+        if (cosString == null) return "";
+        if (font == null) return cosString.getString();
+
         try {
+            String enhanced =
+                    TextDecodingHelper.decodeCharactersEnhanced(font, cosString.getBytes());
+            if (enhanced != null && !enhanced.trim().isEmpty() && !isGibberish(enhanced)) {
+                return enhanced;
+            }
+
             String decoded = TextDecodingHelper.tryDecodeWithFont(font, cosString);
             return (decoded != null && !decoded.trim().isEmpty()) ? decoded : cosString.getString();
         } catch (Exception e) {
@@ -970,14 +999,6 @@ public class RedactionService {
             return newString;
         } catch (Exception e) {
             return new COSString(text);
-        }
-    }
-
-    private static String tryFontBasedExtraction(COSString cosString, PDFont font) {
-        try {
-            return TextDecodingHelper.tryDecodeWithFont(font, cosString);
-        } catch (Exception e) {
-            return null;
         }
     }
 
@@ -1027,13 +1048,7 @@ public class RedactionService {
 
     private static boolean isFontSuitableForWidthCalculation(PDFont font) {
         try {
-            String fontName = font.getName();
-            if (fontName == null
-                    || isProperFontSubset(fontName)
-                    || PATTERN.matcher(fontName.toLowerCase()).matches()) {
-                return false;
-            }
-            return hasReliableWidthMetrics(font);
+            return TextEncodingHelper.canCalculateBasicWidths(font);
         } catch (Exception e) {
             return false;
         }
@@ -1057,8 +1072,7 @@ public class RedactionService {
     private static float safeGetStringWidth(PDFont font, String text) {
         if (font == null || text == null || text.isEmpty()) return 0f;
         try {
-            float widthAtSize1 = WidthCalculator.calculateAccurateWidth(font, text, 1.0f);
-            return widthAtSize1 * FONT_SCALE_FACTOR;
+            return WidthCalculator.calculateAccurateWidth(font, text, 1.0f) * FONT_SCALE_FACTOR;
         } catch (Exception e) {
             return 0f;
         }
@@ -1068,6 +1082,8 @@ public class RedactionService {
         if (originalWord == null || originalWord.isEmpty()) return " ";
 
         final String repeat = " ".repeat(Math.max(1, originalWord.length()));
+
+        // Check if font supports character encoding
         if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
             try {
                 float originalWidth =
@@ -1126,22 +1142,6 @@ public class RedactionService {
         }
     }
 
-    private static float calculateCharacterSumWidth(PDFont font, String text) {
-        if (font == null || text == null || text.isEmpty()) {
-            return -1f;
-        }
-
-        float totalWidth = 0f;
-        for (char c : text.toCharArray()) {
-            try {
-                totalWidth += font.getStringWidth(String.valueOf(c));
-            } catch (Exception e) {
-                return -1f;
-            }
-        }
-        return totalWidth;
-    }
-
     private static boolean isValidTokenIndex(List<Object> tokens, int index) {
         return tokens != null && index >= 0 && index < tokens.size();
     }
@@ -1158,20 +1158,6 @@ public class RedactionService {
             }
         }
         return sb.toString();
-    }
-
-    private static boolean isProperFontSubset(String fontName) {
-        if (fontName == null || fontName.length() < 7) {
-            return false;
-        }
-
-        for (int i = 0; i < 6; i++) {
-            char c = fontName.charAt(i);
-            if (c < 'A' || c > 'Z') {
-                return false;
-            }
-        }
-        return fontName.charAt(6) == '+';
     }
 
     private static TokenModificationResult modifySimpleTextOperator(
@@ -1244,27 +1230,6 @@ public class RedactionService {
         };
     }
 
-    private static boolean hasReliableWidthMetrics(PDFont font) {
-        if (font == null) {
-            return false;
-        }
-
-        try {
-            String testString = "AbCdEf123";
-            float width1 = font.getStringWidth(testString);
-            float width2 = calculateCharacterSumWidth(font, testString);
-
-            if (width1 <= 0 || width2 <= 0) {
-                return false;
-            }
-
-            float maxWidth = Math.max(width1, width2);
-            return Math.abs(width1 - width2) / maxWidth < 0.05f;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     public byte[] performVisualRedactionWithOcrRestoration(
             RedactPdfRequest request,
             String[] listOfText,
@@ -1306,20 +1271,16 @@ public class RedactionService {
         return res;
     }
 
-    private byte[] performOcrRestoration(byte[] redactedPdfBytes, RedactPdfRequest request)
-            throws IOException, InterruptedException {
-        try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
-                TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf")) {
-            java.nio.file.Files.write(tempInputFile.getPath(), redactedPdfBytes);
+    private static float calculateSafeWidth(String text, PDFont font, float fontSize) {
+        if (text == null || text.isEmpty() || font == null || fontSize <= 0) {
+            return 0f;
+        }
 
-            if (isOcrMyPdfAvailable()) {
-                return processWithOcrMyPdfForRestoration(
-                        tempInputFile.getPath(), tempOutputFile.getPath(), request);
-            } else if (isTesseractAvailable()) {
-                return processWithTesseractForRestoration(
-                        tempInputFile.getPath(), tempOutputFile.getPath(), request);
-            }
-            return redactedPdfBytes;
+        try {
+            return WidthCalculator.calculateAccurateWidth(font, text, fontSize);
+        } catch (Exception e) {
+            log.error("Failed to calculate safe width for text: {}", text, e);
+            return 0f;
         }
     }
 
@@ -1445,15 +1406,44 @@ public class RedactionService {
         }
     }
 
-    private static float calculateSafeWidth(String text, PDFont font, float fontSize) {
-        try {
-            if (font != null && fontSize > 0) {
-                return WidthCalculator.calculateAccurateWidth(font, text, fontSize);
-            }
-        } catch (Exception e) {
-            log.error("Failed to calculate safe width for text: {}", text, e);
+    private static String createAlternativePlaceholder(
+            String originalWord, float targetWidth, PDFont font, float fontSize) {
+        final String repeat =
+                " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
+
+        if (font == null || fontSize <= 0) {
+            return repeat;
         }
-        return 0f;
+
+        try {
+            String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
+
+            if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
+                float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
+                if (spaceWidth > 0) {
+                    int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
+                    int maxSpaces = (originalWord != null ? originalWord.length() : 1) * 2;
+                    return " ".repeat(Math.min(spaceCount, maxSpaces));
+                }
+            }
+
+            for (String alt : alternatives) {
+                if (" ".equals(alt)) continue; // Already tried above
+
+                if (TextEncodingHelper.fontSupportsCharacter(font, alt)) {
+                    float altWidth = WidthCalculator.calculateAccurateWidth(font, alt, fontSize);
+                    if (altWidth > 0) {
+                        int altCount = Math.max(1, Math.round(targetWidth / altWidth));
+                        int maxAlts = (originalWord != null ? originalWord.length() : 1) * 3;
+                        return alt.repeat(Math.min(altCount, maxAlts));
+                    }
+                }
+            }
+
+            return repeat;
+        } catch (Exception e) {
+            return repeat;
+        }
     }
 
     private static boolean isValidTJArray(COSArray array) {
@@ -1469,38 +1459,14 @@ public class RedactionService {
         return true;
     }
 
-    private static String createAlternativePlaceholder(
-            String originalWord, float targetWidth, PDFont font, float fontSize) {
-        final String repeat =
-                " ".repeat(Math.max(1, originalWord != null ? originalWord.length() : 1));
+    private static WidthMeasurement measureTextWidth(PDFont font, String text, float fontSize) {
         try {
-            String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
-            if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
-                float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
-                if (spaceWidth > 0) {
-                    int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
-                    int maxSpaces = (originalWord != null ? originalWord.length() : 1) * 2;
-                    return " ".repeat(Math.min(spaceCount, maxSpaces));
-                }
-            }
-            for (String alt : alternatives) {
-                if (" ".equals(alt)) continue;
-                try {
-                    if (!TextEncodingHelper.fontSupportsCharacter(font, alt)) continue;
-                    float cw = WidthCalculator.calculateAccurateWidth(font, alt, fontSize);
-                    if (cw > 0) {
-                        int count = Math.max(1, Math.round(targetWidth / cw));
-                        int max = (originalWord != null ? originalWord.length() : 1) * 2;
-                        // Repeat the chosen alternative character, not spaces
-                        return alt.repeat(Math.min(count, max));
-                    }
-                } catch (Exception ignored) {
-                    log.error("Failed to calculate alternative placeholder width for {}", alt);
-                }
-            }
-            return repeat;
+            float fontUnits = safeGetStringWidth(font, text);
+            if (fontUnits <= 0) return WidthMeasurement.invalid();
+            float actualWidth = (fontUnits / FONT_SCALE_FACTOR) * fontSize;
+            return new WidthMeasurement(actualWidth, true);
         } catch (Exception e) {
-            return repeat;
+            return WidthMeasurement.invalid();
         }
     }
 
@@ -1665,25 +1631,39 @@ public class RedactionService {
         return Math.abs(adjustment) > maxReasonable ? 0f : adjustment;
     }
 
-    private static WidthMeasurement measureTextWidth(PDFont font, String text, float fontSize) {
+    private static String extractStringWithFallbacks(COSString cosString, PDFont font) {
+        if (cosString == null) return "";
+
         try {
-            float fontUnits = safeGetStringWidth(font, text);
-            if (fontUnits < 0) return WidthMeasurement.invalid();
-
-            float actualWidth = (fontUnits / FONT_SCALE_FACTOR) * fontSize;
-            float characterSumWidth = calculateCharacterSumWidth(font, text);
-
-            if (characterSumWidth > 0) {
-                float characterActualWidth = (characterSumWidth / FONT_SCALE_FACTOR) * fontSize;
-                if (actualWidth != 0
-                        && Math.abs(actualWidth - characterActualWidth) / actualWidth > 0.1f) {
-                    actualWidth = Math.max(actualWidth, characterActualWidth);
+            // Use the enhanced decoding from TextDecodingHelper first
+            if (font != null) {
+                String enhanced =
+                        TextDecodingHelper.decodeCharactersEnhanced(font, cosString.getBytes());
+                if (enhanced != null && !enhanced.trim().isEmpty() && !isGibberish(enhanced)) {
+                    return enhanced;
                 }
             }
 
-            return new WidthMeasurement(actualWidth, true);
+            // Try basic font-based decoding
+            if (font != null) {
+                String fontBasedText = TextDecodingHelper.tryDecodeWithFont(font, cosString);
+                if (fontBasedText != null
+                        && !fontBasedText.trim().isEmpty()
+                        && !isGibberish(fontBasedText)) {
+                    return fontBasedText;
+                }
+            }
+
+            // Fallback to raw COSString if it seems valid
+            String text = cosString.getString();
+            if (!text.trim().isEmpty() && !isGibberish(text)) {
+                return text;
+            }
+
+            // Last resort: sanitized raw text
+            return sanitizeText(text);
         } catch (Exception e) {
-            return WidthMeasurement.invalid();
+            return "\uFFFD";
         }
     }
 
@@ -2391,27 +2371,77 @@ public class RedactionService {
         return newTokens;
     }
 
-    private static String extractStringWithFallbacks(COSString cosString, PDFont font) {
-        if (cosString == null) return "";
+    private byte[] performOcrRestoration(byte[] redactedPdfBytes, RedactPdfRequest request)
+            throws IOException, InterruptedException {
+        // Prefer using the internal OCR endpoint over local CLI tools
         try {
-            // Prefer font-guided decoding for correctness
-            if (font != null) {
-                String enhanced =
-                        TextDecodingHelper.decodeCharactersEnhanced(font, cosString.getBytes());
-                if (enhanced != null && !isGibberish(enhanced)) return enhanced;
+            // Build URL to internal endpoint
+            String contextPath = servletContext != null ? servletContext.getContextPath() : "";
+            String port = SPDFApplication.getStaticPort();
+            String url = "http://localhost:" + port + contextPath + "/api/v1/misc/ocr-pdf";
+
+            LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add(
+                    "fileInput",
+                    new ByteArrayResource(redactedPdfBytes) {
+                        @Override
+                        public String getFilename() {
+                            return "input.pdf";
+                        }
+                    });
+
+            List<String> langs = request != null ? request.getLanguages() : null;
+            if (langs == null || langs.isEmpty()) {
+                // Default to English if none provided
+                langs = List.of("eng");
             }
-            // Fallback to COSString raw string if it seems valid
-            String text = cosString.getString();
-            if (!text.trim().isEmpty() && !isGibberish(text)) return text;
-            // Fallback: try basic font-based extraction
-            if (font != null) {
-                String fontBasedText = tryFontBasedExtraction(cosString, font);
-                if (fontBasedText != null && !isGibberish(fontBasedText)) return fontBasedText;
+            for (String lang : langs) {
+                if (lang != null && !lang.isBlank()) {
+                    body.add("languages", lang);
+                }
             }
-            // Last resort: sanitized raw
-            return sanitizeText(text);
+            // Align with previous local settings for best restoration
+            body.add("sidecar", false);
+            body.add("deskew", true);
+            body.add("clean", true);
+            body.add("cleanFinal", true);
+            body.add("ocrType", "force-ocr");
+            body.add("ocrRenderType", "sandwich");
+            body.add("removeImagesAfter", false);
+
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            if (userService != null) {
+                String apiKey = userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
+                if (apiKey != null && !apiKey.isEmpty()) {
+                    headers.add("X-API-KEY", apiKey);
+                }
+            }
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+            ResponseEntity<byte[]> response =
+                    restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            }
+            log.warn("OCR endpoint returned non-OK status: {}", response.getStatusCode());
         } catch (Exception e) {
-            return "\uFFFD";
+            log.warn("Failed to use OCR endpoint, falling back to local tools: {}", e.getMessage());
+        }
+
+        // Fallback to previous local implementation to preserve functionality
+        try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
+                TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf")) {
+            java.nio.file.Files.write(tempInputFile.getPath(), redactedPdfBytes);
+
+            if (isOcrMyPdfAvailable()) {
+                return processWithOcrMyPdfForRestoration(
+                        tempInputFile.getPath(), tempOutputFile.getPath(), request);
+            } else if (isTesseractAvailable()) {
+                return processWithTesseractForRestoration(
+                        tempInputFile.getPath(), tempOutputFile.getPath(), request);
+            }
+            return redactedPdfBytes;
         }
     }
 
@@ -2834,9 +2864,9 @@ public class RedactionService {
                 if (availableGlyphs.contains(codePoint)) {
                     return true;
                 }
+                // Use TextEncodingHelper for consistent font support checking
                 String testChar = new String(Character.toChars(codePoint));
-                byte[] encoded = font.encode(testChar);
-                return encoded.length > 0;
+                return TextEncodingHelper.fontSupportsCharacter(font, testChar);
             } catch (Exception e) {
                 return false;
             }
@@ -2862,13 +2892,19 @@ public class RedactionService {
 
         private float getAverageFontWidth(float fontSize) {
             try {
+                // Use TextEncodingHelper to check if we can calculate basic widths
+                if (!TextEncodingHelper.canCalculateBasicWidths(font)) {
+                    return fontSize * 0.5f; // fallback
+                }
+
                 String[] testChars = {"a", "e", "i", "o", "u", "n", "r", "t", "s"};
                 float totalWidth = 0;
                 int validChars = 0;
 
                 for (String ch : testChars) {
                     try {
-                        float width = font.getStringWidth(ch);
+                        // Use WidthCalculator for consistent width calculation
+                        float width = WidthCalculator.calculateAccurateWidth(font, ch, fontSize);
                         if (width > 0) {
                             totalWidth += width;
                             validChars++;
@@ -2879,12 +2915,11 @@ public class RedactionService {
                 }
 
                 if (validChars > 0) {
-                    return (totalWidth / validChars) / FONT_SCALE_FACTOR * fontSize;
+                    return totalWidth / validChars;
                 }
 
                 try {
-                    float spaceWidth = font.getStringWidth(" ");
-                    return spaceWidth / FONT_SCALE_FACTOR * fontSize;
+                    return WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
                 } catch (Exception e) {
                     return fontSize * 0.5f;
                 }
@@ -2898,7 +2933,8 @@ public class RedactionService {
             if (hasGlyph(codePoint)) {
                 try {
                     String charStr = new String(Character.toChars(codePoint));
-                    return font.getStringWidth(charStr) / FONT_SCALE_FACTOR * fontSize;
+                    // Use WidthCalculator for consistent width calculation
+                    return WidthCalculator.calculateAccurateWidth(font, charStr, fontSize);
                 } catch (Exception e) {
                     log.debug("Failed to get width for codepoint {}", codePoint, e);
                 }
