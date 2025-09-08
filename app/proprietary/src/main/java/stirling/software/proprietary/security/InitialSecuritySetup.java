@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -26,6 +27,9 @@ import stirling.software.proprietary.security.service.UserService;
 @RequiredArgsConstructor
 public class InitialSecuritySetup {
 
+    @Value("${v2:false}")
+    private boolean v2Enabled = false;
+
     private final UserService userService;
     private final TeamService teamService;
     private final ApplicationProperties applicationProperties;
@@ -43,11 +47,25 @@ public class InitialSecuritySetup {
                 }
             }
 
+            configureJWTSettings();
             assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
+        }
+    }
+
+    private void configureJWTSettings() {
+        ApplicationProperties.Security.Jwt jwtProperties =
+                applicationProperties.getSecurity().getJwt();
+
+        if (!v2Enabled) {
+            log.debug("v2 is disabled - disabling all JWT features");
+            jwtProperties.setEnableKeystore(false);
+            jwtProperties.setEnableKeyRotation(false);
+            jwtProperties.setEnableKeyCleanup(false);
+            jwtProperties.setSecureCookie(false);
         }
     }
 

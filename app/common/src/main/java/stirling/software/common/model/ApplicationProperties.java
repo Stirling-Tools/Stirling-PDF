@@ -379,7 +379,7 @@ public class ApplicationProperties {
         public String getBaseTmpDir() {
             return baseTmpDir != null && !baseTmpDir.isEmpty()
                     ? baseTmpDir
-                    : java.lang.System.getProperty("java.io.tmpdir") + "/stirling-pdf";
+                    : java.lang.System.getProperty("java.io.tmpdir") + "stirling-pdf";
         }
 
         @JsonIgnore
