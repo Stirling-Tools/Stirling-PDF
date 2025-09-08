@@ -62,9 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        validateAndNormalizeJwtSettings();
-
-        if (!jwtService.isJwtEnabled()) {
+        if (!validateAndNormalizeJwtSettings() && !jwtService.isJwtEnabled()) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -114,7 +112,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void validateAndNormalizeJwtSettings() {
+    private boolean validateAndNormalizeJwtSettings() {
         ApplicationProperties.Security.Jwt jwtProperties = securityProperties.getJwt();
 
         boolean enableKeystore = jwtProperties.isEnableKeystore();
@@ -137,7 +135,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             jwtProperties.setEnableKeyRotation(false);
             jwtProperties.setEnableKeyCleanup(false);
             jwtProperties.setSecureCookie(false);
+
+            return false;
         }
+
+        return true;
     }
 
     private boolean apiKeyExists(HttpServletRequest request, HttpServletResponse response)
