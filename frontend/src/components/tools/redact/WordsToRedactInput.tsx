@@ -32,10 +32,6 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
 
   return (
     <Stack gap="sm">
-      <Text size="sm" fw={500}>
-        {t('redact.auto.wordsToRedact.title', 'Words to Redact')}
-      </Text>
-
       {/* Current words */}
       {wordsToRedact.map((word, index) => (
         <Group key={index} justify="space-between" style={{
