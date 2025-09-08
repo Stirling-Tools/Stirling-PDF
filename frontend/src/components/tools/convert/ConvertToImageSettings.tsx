@@ -6,7 +6,7 @@ import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParame
 
 interface ConvertToImageSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: (key: keyof ConvertParameters, value: any) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
   disabled?: boolean;
 }
 

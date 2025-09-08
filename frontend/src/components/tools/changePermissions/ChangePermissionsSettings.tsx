@@ -4,7 +4,7 @@ import { ChangePermissionsParameters } from "../../../hooks/tools/changePermissi
 
 interface ChangePermissionsSettingsProps {
   parameters: ChangePermissionsParameters;
-  onParameterChange: (key: keyof ChangePermissionsParameters, value: boolean) => void;
+  onParameterChange: <K extends keyof ChangePermissionsParameters>(key: K, value: ChangePermissionsParameters[K]) => void;
   disabled?: boolean;
 }
 

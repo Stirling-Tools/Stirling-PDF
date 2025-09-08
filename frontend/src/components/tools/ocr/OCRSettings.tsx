@@ -6,7 +6,7 @@ import { OCRParameters } from '../../../hooks/tools/ocr/useOCRParameters';
 
 interface OCRSettingsProps {
   parameters: OCRParameters;
-  onParameterChange: (key: keyof OCRParameters, value: any) => void;
+  onParameterChange: <K extends keyof OCRParameters>(key: K, value: OCRParameters[K]) => void;
   disabled?: boolean;
 }
 
