@@ -498,13 +498,9 @@
       "title": "Show Javascript",
       "desc": "Searches and displays any JS injected into a PDF"
     },
-    "autoRedact": {
-      "title": "Auto Redact",
-      "desc": "Auto Redacts(Blacks out) text in a PDF based on input text"
-    },
     "redact": {
-      "title": "Manual Redaction",
-      "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
+      "title": "Redact",
+      "desc": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
     "overlay-pdfs": {
       "title": "Overlay PDFs",
@@ -1583,50 +1579,60 @@
     "downloadJS": "Download Javascript",
     "submit": "Show"
   },
-  "autoRedact": {
-    "tags": "Redact,Hide,black out,black,marker,hidden",
-    "title": "Auto Redact",
-    "header": "Auto Redact",
-    "colorLabel": "Colour",
-    "textsToRedactLabel": "Text to Redact (line-separated)",
-    "textsToRedactPlaceholder": "e.g. \\nConfidential \\nTop-Secret",
-    "useRegexLabel": "Use Regex",
-    "wholeWordSearchLabel": "Whole Word Search",
-    "customPaddingLabel": "Custom Extra Padding",
-    "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
-    "submitButton": "Submit"
-  },
   "redact": {
-    "tags": "Redact,Hide,black out,black,marker,hidden,manual",
-    "title": "Manual Redaction",
-    "header": "Manual Redaction",
+    "tags": "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact",
+    "title": "Redact",
     "submit": "Redact",
-    "textBasedRedaction": "Text based Redaction",
-    "pageBasedRedaction": "Page-based Redaction",
-    "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
-    "pageRedactionNumbers": {
-      "title": "Pages",
-      "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
+    "error": {
+      "failed": "An error occurred while redacting the PDF."
     },
-    "redactionColor": {
-      "title": "Redaction Color"
+    "modeSelector": {
+      "title": "Redaction Mode",
+      "automatic": "Automatic",
+      "automaticDesc": "Redact text based on search terms",
+      "manual": "Manual",
+      "manualDesc": "Click and drag to redact specific areas",
+      "manualComingSoon": "Manual redaction coming soon"
     },
-    "export": "Export",
-    "upload": "Upload",
-    "boxRedaction": "Box draw redaction",
-    "zoom": "Zoom",
-    "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out",
-    "nextPage": "Next Page",
-    "previousPage": "Previous Page",
-    "toggleSidebar": "Toggle Sidebar",
-    "showThumbnails": "Show Thumbnails",
-    "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
-    "showAttatchments": "Show Attachments",
-    "showLayers": "Show Layers (double-click to reset all layers to the default state)",
-    "colourPicker": "Colour Picker",
-    "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "auto": {
+      "header": "Auto Redact",
+      "colorLabel": "Colour",
+      "textsToRedactLabel": "Text to Redact (line-separated)",
+      "textsToRedactPlaceholder": "e.g. \nConfidential \nTop-Secret",
+      "useRegexLabel": "Use Regex",
+      "wholeWordSearchLabel": "Whole Word Search",
+      "customPaddingLabel": "Custom Extra Padding",
+      "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)"
+    },
+    "manual": {
+      "header": "Manual Redaction",
+      "textBasedRedaction": "Text based Redaction",
+      "pageBasedRedaction": "Page-based Redaction",
+      "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
+      "pageRedactionNumbers": {
+        "title": "Pages",
+        "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
+      },
+      "redactionColor": {
+        "title": "Redaction Color"
+      },
+      "export": "Export",
+      "upload": "Upload",
+      "boxRedaction": "Box draw redaction",
+      "zoom": "Zoom",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "nextPage": "Next Page",
+      "previousPage": "Previous Page",
+      "toggleSidebar": "Toggle Sidebar",
+      "showThumbnails": "Show Thumbnails",
+      "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
+      "showAttatchments": "Show Attachments",
+      "showLayers": "Show Layers (double-click to reset all layers to the default state)",
+      "colourPicker": "Colour Picker",
+      "findCurrentOutlineItem": "Find current outline item",
+      "applyChanges": "Apply Changes"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Table Extraction,extract,convert"
