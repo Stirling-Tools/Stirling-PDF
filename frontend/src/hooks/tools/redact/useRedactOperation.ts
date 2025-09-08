@@ -9,7 +9,8 @@ export const buildRedactFormData = (parameters: RedactParameters, file: File): F
   formData.append("fileInput", file);
 
   if (parameters.mode === 'automatic') {
-    formData.append("listOfText", parameters.listOfText);
+    // Convert array to newline-separated string as expected by backend
+    formData.append("listOfText", parameters.wordsToRedact.join('\n'));
     formData.append("useRegex", parameters.useRegex.toString());
     formData.append("wholeWordSearch", parameters.wholeWordSearch.toString());
     formData.append("redactColor", parameters.redactColor.replace('#', ''));

@@ -1596,13 +1596,18 @@
     },
     "auto": {
       "header": "Auto Redact",
+      "settings": "Redaction Settings",
       "colorLabel": "Colour",
-      "textsToRedactLabel": "Text to Redact (line-separated)",
-      "textsToRedactPlaceholder": "e.g. \nConfidential \nTop-Secret",
+      "wordsToRedact": {
+        "title": "Words to Redact",
+        "placeholder": "Enter a word",
+        "addAnother": "Add Another",
+        "examples": "Examples: Confidential, Top-Secret"
+      },
       "useRegexLabel": "Use Regex",
       "wholeWordSearchLabel": "Whole Word Search",
       "customPaddingLabel": "Custom Extra Padding",
-      "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)"
+      "convertPDFToImageLabel": "Convert PDF to PDF-Image"
     },
     "manual": {
       "header": "Manual Redaction",
