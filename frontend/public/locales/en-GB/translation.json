@@ -1597,7 +1597,7 @@
     "auto": {
       "header": "Auto Redact",
       "settings": "Redaction Settings",
-      "colorLabel": "Colour",
+      "colorLabel": "Box Colour",
       "wordsToRedact": {
         "title": "Words to Redact",
         "placeholder": "Enter a word",

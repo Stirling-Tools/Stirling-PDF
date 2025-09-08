@@ -33,27 +33,28 @@ const AutomaticRedactSettings = ({ parameters, onParameterChange, disabled = fal
 
         {/* Box Color */}
         <Stack gap="sm">
-          <Text size="sm">{t('redact.auto.colorLabel', 'Colour')}</Text>
-          <Group gap="sm">
-            <ColorInput
-              value={parameters.redactColor}
-              onChange={(value) => onParameterChange('redactColor', value)}
-              disabled={disabled}
-              size="sm"
-              style={{ width: '80px' }}
-            />
-            <NumberInput
-              value={parameters.customPadding}
-              onChange={(value) => onParameterChange('customPadding', typeof value === 'number' ? value : 0.1)}
-              min={0}
-              max={10}
-              step={0.1}
-              disabled={disabled}
-              size="sm"
-              style={{ width: '80px' }}
-              placeholder="0.1"
-            />
-          </Group>
+          <Text size="sm">{t('redact.auto.colorLabel', 'Box Colour')}</Text>
+          <ColorInput
+            value={parameters.redactColor}
+            onChange={(value) => onParameterChange('redactColor', value)}
+            disabled={disabled}
+            size="sm"
+          />
+        </Stack>
+
+        {/* Box Padding */}
+        <Stack gap="sm">
+          <Text size="sm">{t('redact.auto.paddingLabel', 'Box Padding')}</Text>
+          <NumberInput
+            value={parameters.customPadding}
+            onChange={(value) => onParameterChange('customPadding', typeof value === 'number' ? value : 0.1)}
+            min={0}
+            max={10}
+            step={0.1}
+            disabled={disabled}
+            size="sm"
+            placeholder="0.1"
+          />
         </Stack>
 
         {/* Use Regex */}

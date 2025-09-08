@@ -58,14 +58,13 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
       ))}
 
       {/* Add new word input */}
-      <Group gap="sm">
+      <Stack gap="sm">
         <TextInput
           placeholder={t('redact.auto.wordsToRedact.placeholder', 'Enter a word')}
           value={currentWord}
           onChange={(e) => setCurrentWord(e.target.value)}
           onKeyDown={handleKeyPress}
           disabled={disabled}
-          style={{ flex: 1 }}
           size="sm"
         />
         <Button
@@ -73,10 +72,11 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
           variant="light"
           onClick={addWord}
           disabled={disabled || !currentWord.trim()}
+          style={{ alignSelf: 'flex-start' }}
         >
           + {t('redact.auto.wordsToRedact.addAnother', 'Add Another')}
         </Button>
-      </Group>
+      </Stack>
 
       {/* Examples */}
       {wordsToRedact.length === 0 && (
