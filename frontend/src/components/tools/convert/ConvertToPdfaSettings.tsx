@@ -7,16 +7,16 @@ import { StirlingFile } from '../../../types/fileContext';
 
 interface ConvertToPdfaSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: (key: keyof ConvertParameters, value: any) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
   selectedFiles: StirlingFile[];
   disabled?: boolean;
 }
 
-const ConvertToPdfaSettings = ({ 
-  parameters, 
+const ConvertToPdfaSettings = ({
+  parameters,
   onParameterChange,
   selectedFiles,
-  disabled = false 
+  disabled = false
 }: ConvertToPdfaSettingsProps) => {
   const { t } = useTranslation();
   const { hasDigitalSignatures, isChecking } = usePdfSignatureDetection(selectedFiles);
@@ -29,7 +29,7 @@ const ConvertToPdfaSettings = ({
   return (
     <Stack gap="sm" data-testid="pdfa-settings">
       <Text size="sm" fw={500}>{t("convert.pdfaOptions", "PDF/A Options")}:</Text>
-      
+
       {hasDigitalSignatures && (
         <Alert color="yellow">
           <Text size="sm">
@@ -37,14 +37,14 @@ const ConvertToPdfaSettings = ({
           </Text>
         </Alert>
       )}
-      
+
       <Stack gap="xs">
         <Text size="xs" fw={500}>{t("convert.outputFormat", "Output Format")}:</Text>
         <Select
           value={parameters.pdfaOptions.outputFormat}
-          onChange={(value) => onParameterChange('pdfaOptions', { 
-            ...parameters.pdfaOptions, 
-            outputFormat: value || 'pdfa-1' 
+          onChange={(value) => onParameterChange('pdfaOptions', {
+            ...parameters.pdfaOptions,
+            outputFormat: value || 'pdfa-1'
           })}
           data={pdfaFormatOptions}
           disabled={disabled || isChecking}
