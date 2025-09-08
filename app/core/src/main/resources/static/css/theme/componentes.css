@@ -674,15 +674,15 @@ fieldset:disabled .btn {
   width: 22px;
   height: 22px;
   outline: none;
-  transform: scale(1.65);
-  -ms-transform: scale(1.65);
+  transform: translateX(8px) scale(1.65);
+  -ms-transform: translateX(8px) scale(1.65);
   transition: opacity .3s;
 }
 
 .form-check > input:first-child:hover {
   opacity: 1;
-  transform: scale(1.65);
-  -ms-transform: scale(1.65);
+  transform: translateX(8px) scale(1.65);
+  -ms-transform: translateX(8px) scale(1.65);
 }
 
 .form-check > input:first-child:disabled {
