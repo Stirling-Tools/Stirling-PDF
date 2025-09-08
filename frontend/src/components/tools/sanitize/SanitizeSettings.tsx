@@ -4,7 +4,7 @@ import { SanitizeParameters, defaultParameters } from "../../../hooks/tools/sani
 
 interface SanitizeSettingsProps {
   parameters: SanitizeParameters;
-  onParameterChange: (key: keyof SanitizeParameters, value: boolean) => void;
+  onParameterChange: <K extends keyof SanitizeParameters>(key: K, value: SanitizeParameters[K]) => void;
   disabled?: boolean;
 }
 
