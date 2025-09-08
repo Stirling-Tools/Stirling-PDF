@@ -27,7 +27,7 @@ const RedactAdvancedSettings = ({ parameters, onParameterChange, disabled = fals
 
       {/* Box Padding */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>{t('redact.auto.paddingLabel', 'Box Padding')}</Text>
+        <Text size="sm" fw={500}>{t('redact.auto.customPaddingLabel', 'Custom Extra Padding')}</Text>
         <NumberInput
           value={parameters.customPadding}
           onChange={(value) => onParameterChange('customPadding', typeof value === 'number' ? value : 0.1)}

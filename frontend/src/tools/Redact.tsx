@@ -47,7 +47,7 @@ const Redact = (props: BaseToolProps) => {
     const steps = [
       // Method selection step (always present)
       {
-        title: t("redact.steps.method", "Method"),
+        title: t("redact.modeSelector.title", "Redaction Method"),
         isCollapsed: getActualCollapsedState(methodCollapsed),
         onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setMethodCollapsed(!methodCollapsed),
         tooltip: modeTips,
@@ -65,7 +65,7 @@ const Redact = (props: BaseToolProps) => {
     if (base.params.parameters.mode === 'automatic') {
       steps.push(
         {
-          title: t("redact.steps.words", "Words to Redact"),
+          title: t("redact.auto.settings.title", "Redaction Settings"),
           isCollapsed: getActualCollapsedState(wordsCollapsed),
           onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setWordsCollapsed(!wordsCollapsed),
           tooltip: wordsTips,
@@ -76,7 +76,7 @@ const Redact = (props: BaseToolProps) => {
           />,
         },
         {
-          title: t("redact.steps.advanced", "Advanced Settings"),
+          title: t("redact.auto.settings.advancedTitle", "Advanced Settings"),
           isCollapsed: getActualCollapsedState(advancedCollapsed),
           onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setAdvancedCollapsed(!advancedCollapsed),
           tooltip: advancedTips,

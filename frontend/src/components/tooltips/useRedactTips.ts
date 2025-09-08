@@ -62,7 +62,7 @@ export const useRedactAdvancedTips = (): TooltipContent => {
         title: t("redact.tooltip.advanced.regex.title", "Use Regex"),
         description: t("redact.tooltip.advanced.regex.text", "Enable regular expressions for advanced pattern matching. Useful for finding phone numbers, emails, or complex patterns."),
         bullets: [
-          t("redact.tooltip.advanced.regex.bullet1", "Example: \\d{3}-\\d{3}-\\d{4} for phone numbers"),
+          t("redact.tooltip.advanced.regex.bullet1", "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format"),
           t("redact.tooltip.advanced.regex.bullet2", "Use with caution - test thoroughly")
         ]
       },

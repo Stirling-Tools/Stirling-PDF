@@ -14,7 +14,7 @@ export default function RedactModeSelector({ mode, onModeChange, disabled }: Red
   return (
     <Stack gap="sm">
       <Text size="sm" fw={600}>
-        {t('redact.modeSelector.title', 'Redaction Mode')}
+        {t('redact.modeSelector.mode', 'Mode')}
       </Text>
 
       <div style={{ display: 'flex', gap: '4px' }}>
