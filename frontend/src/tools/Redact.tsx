@@ -1,14 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import RedactModeStep from "../components/tools/redact/RedactModeStep";
-import RedactWordsStep from "../components/tools/redact/RedactWordsStep";
-import RedactAdvancedStep from "../components/tools/redact/RedactAdvancedStep";
+import RedactModeSelector from "../components/tools/redact/RedactModeSelector";
 import { useRedactParameters } from "../hooks/tools/redact/useRedactParameters";
 import { useRedactOperation } from "../hooks/tools/redact/useRedactOperation";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useRedactModeTips, useRedactWordsTips, useRedactAdvancedTips } from "../components/tooltips/useRedactTips";
+import RedactAdvancedSettings from "../components/tools/redact/RedactAdvancedSettings";
+import WordsToRedactInput from "../components/tools/redact/WordsToRedactInput";
 
 const Redact = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -39,7 +39,59 @@ const Redact = (props: BaseToolProps) => {
 
   // Compute actual collapsed state based on results and user state
   const getActualCollapsedState = (userCollapsed: boolean) => {
-    return base.hasResults ? true : userCollapsed; // Force collapse when results are shown
+    return (!base.hasFiles || base.hasResults) ? true : userCollapsed; // Force collapse when results are shown
+  };
+
+  // Build conditional steps based on redaction mode
+  const buildSteps = () => {
+    const steps = [
+      // Method selection step (always present)
+      {
+        title: t("redact.steps.method", "Method"),
+        isCollapsed: getActualCollapsedState(methodCollapsed),
+        onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setMethodCollapsed(!methodCollapsed),
+        tooltip: modeTips,
+        content: (
+          <RedactModeSelector
+            mode={base.params.parameters.mode}
+            onModeChange={(mode) => base.params.updateParameter('mode', mode)}
+            disabled={base.endpointLoading}
+          />
+        ),
+      }
+    ];
+
+    // Add mode-specific steps
+    if (base.params.parameters.mode === 'automatic') {
+      steps.push(
+        {
+          title: t("redact.steps.words", "Words to Redact"),
+          isCollapsed: getActualCollapsedState(wordsCollapsed),
+          onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setWordsCollapsed(!wordsCollapsed),
+          tooltip: wordsTips,
+          content: <WordsToRedactInput
+            wordsToRedact={base.params.parameters.wordsToRedact}
+            onWordsChange={(words) => base.params.updateParameter('wordsToRedact', words)}
+            disabled={base.endpointLoading}
+          />,
+        },
+        {
+          title: t("redact.steps.advanced", "Advanced Settings"),
+          isCollapsed: getActualCollapsedState(advancedCollapsed),
+          onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setAdvancedCollapsed(!advancedCollapsed),
+          tooltip: advancedTips,
+          content: <RedactAdvancedSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />,
+        },
+      );
+    } else if (base.params.parameters.mode === 'manual') {
+      // Manual mode steps would go here when implemented
+    }
+
+    return steps;
   };
 
   return createToolFlow({
@@ -47,47 +99,7 @@ const Redact = (props: BaseToolProps) => {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
     },
-    steps: [
-      {
-        title: t("redact.steps.method", "Method"),
-        isCollapsed: getActualCollapsedState(methodCollapsed),
-        onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setMethodCollapsed(!methodCollapsed),
-        tooltip: modeTips,
-        content: (
-          <RedactModeStep
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />
-        ),
-      },
-      {
-        title: t("redact.steps.words", "Words to Redact"),
-        isCollapsed: getActualCollapsedState(wordsCollapsed),
-        onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setWordsCollapsed(!wordsCollapsed),
-        tooltip: wordsTips,
-        content: (
-          <RedactWordsStep
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />
-        ),
-      },
-      {
-        title: t("redact.steps.advanced", "Advanced Settings"),
-        isCollapsed: getActualCollapsedState(advancedCollapsed),
-        onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setAdvancedCollapsed(!advancedCollapsed),
-        tooltip: advancedTips,
-        content: (
-          <RedactAdvancedStep
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />
-        ),
-      },
-    ],
+    steps: buildSteps(),
     executeButton: {
       text: t("redact.submit", "Redact"),
       isVisible: !base.hasResults,

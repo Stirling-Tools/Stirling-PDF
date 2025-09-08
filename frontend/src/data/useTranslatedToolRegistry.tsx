@@ -45,7 +45,7 @@ import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
-import RedactSettings from "../components/tools/redact/RedactSettings";
+import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
 import Redact from "../tools/Redact";
 import { ToolId } from "../types/toolId";
 
@@ -711,7 +711,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["auto-redact"],
         operationConfig: redactOperationConfig,
-        settingsComponent: RedactSettings,
+        settingsComponent: RedactSingleStepSettings,
       },
     };
 
