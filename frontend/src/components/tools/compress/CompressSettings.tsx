@@ -5,7 +5,7 @@ import { CompressParameters } from "../../../hooks/tools/compress/useCompressPar
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
-  onParameterChange: (key: keyof CompressParameters, value: any) => void;
+  onParameterChange: <K extends keyof CompressParameters>(key: K, value: CompressParameters[K]) => void;
   disabled?: boolean;
 }
 
