@@ -1906,6 +1906,11 @@
     "title": "Compress",
     "desc": "Compress PDFs to reduce their file size.",
     "header": "Compress PDF",
+    "method": {
+      "title": "Compression Method",
+      "quality": "Quality",
+      "filesize": "File Size"
+    },
     "credit": "This service uses qpdf for PDF Compress/Optimisation.",
     "grayscale": {
       "label": "Apply Grayscale for Compression"

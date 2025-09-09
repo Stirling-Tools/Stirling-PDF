@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Button, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import { RedactMode } from '../../../hooks/tools/redact/useRedactParameters';
+import ButtonSelector from '../../shared/ButtonSelector';
 
 interface RedactModeSelectorProps {
   mode: RedactMode;
@@ -11,36 +12,30 @@ interface RedactModeSelectorProps {
 export default function RedactModeSelector({ mode, onModeChange, disabled }: RedactModeSelectorProps) {
   const { t } = useTranslation();
 
+  const options = [
+    {
+      value: 'automatic' as const,
+      label: t('redact.modeSelector.automatic', 'Automatic')
+    },
+    {
+      value: 'manual' as const,
+      label: t('redact.modeSelector.manual', 'Manual'),
+      disabled: true // Keep manual mode disabled until implemented
+    }
+  ];
+
   return (
     <Stack gap="sm">
       <Text size="sm" fw={600}>
         {t('redact.modeSelector.mode', 'Mode')}
       </Text>
 
-      <div style={{ display: 'flex', gap: '4px' }}>
-        <Button
-          variant={mode === 'automatic' ? 'filled' : 'outline'}
-          color={mode === 'automatic' ? 'blue' : 'var(--text-muted)'}
-          onClick={() => onModeChange('automatic')}
-          disabled={disabled}
-          style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-        >
-          <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-            {t('redact.modeSelector.automatic', 'Automatic')}
-          </div>
-        </Button>
-        <Button
-          variant={mode === 'manual' ? 'filled' : 'outline'}
-          color={mode === 'manual' ? 'blue' : 'var(--text-muted)'}
-          onClick={() => onModeChange('manual')}
-          disabled={disabled || true} // Keep manual disabled until implemented
-          style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-        >
-          <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-            {t('redact.modeSelector.manual', 'Manual')}
-          </div>
-        </Button>
-      </div>
+      <ButtonSelector
+        value={mode}
+        onChange={onModeChange}
+        options={options}
+        disabled={disabled}
+      />
     </Stack>
   );
 }

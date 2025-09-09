@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Button, Stack, Text, NumberInput, Select, Divider } from "@mantine/core";
+import { Stack, Text, NumberInput, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "../../../hooks/tools/compress/useCompressParameters";
+import ButtonSelector from "../../shared/ButtonSelector";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
@@ -19,31 +20,16 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
       <Divider ml='-md'></Divider>
       {/* Compression Method */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>Compression Method</Text>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <Button
-            variant={parameters.compressionMethod === 'quality' ? 'filled' : 'outline'}
-            color={parameters.compressionMethod === 'quality' ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('compressionMethod', 'quality')}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              Quality
-            </div>
-          </Button>
-          <Button
-            variant={parameters.compressionMethod === 'filesize' ? 'filled' : 'outline'}
-            color={parameters.compressionMethod === 'filesize' ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('compressionMethod', 'filesize')}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              File Size
-            </div>
-          </Button>
-        </div>
+        <Text size="sm" fw={500}>{t('compress.method.title', 'Compression Method')}</Text>
+        <ButtonSelector
+          value={parameters.compressionMethod}
+          onChange={(value) => onParameterChange('compressionMethod', value)}
+          options={[
+            { value: 'quality', label: t('compress.method.quality', 'Quality') },
+            { value: 'filesize', label: t('compress.method.filesize', 'File Size') },
+          ]}
+          disabled={disabled}
+        />
       </Stack>
 
       {/* Quality Adjustment */}
