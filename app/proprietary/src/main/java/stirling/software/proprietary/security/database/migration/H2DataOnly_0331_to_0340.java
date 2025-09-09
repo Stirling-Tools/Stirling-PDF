@@ -125,7 +125,6 @@ public class H2DataOnly_0331_to_0340 implements MigrationStep {
                     databaseService.createLinkedTable(memUrlEsc, "USER_SETTINGS");
 
             try (Connection memConn = DriverManager.getConnection(memUrl, "sa", "")) {
-                // Altes Backup in die Memory-DB laden
                 try (PreparedStatement ps = memConn.prepareStatement("RUNSCRIPT FROM ?")) {
                     ps.setString(1, latestExport.toAbsolutePath().toString());
                     ps.execute();
@@ -152,7 +151,6 @@ public class H2DataOnly_0331_to_0340 implements MigrationStep {
                                     VALUES('Internal')
                                 """);
 
-                        // Linked Tables erstellen
                         st.execute(createLinkedTableUsers);
                         st.execute(createLinkedTableAuthorities);
                         st.execute(createLinkedTablePersistentLogins);
@@ -256,7 +254,6 @@ public class H2DataOnly_0331_to_0340 implements MigrationStep {
                         newConn.rollback();
                         throw ex;
                     } finally {
-                        // Cleanup: Linked Tables und RI wieder aktivieren – auch bei Fehlern
                         try (Statement st2 = newConn.createStatement()) {
                             st2.execute(databaseService.dropLinkedTable("USERS"));
                             st2.execute(databaseService.dropLinkedTable("AUTHORITIES"));
@@ -288,6 +285,7 @@ public class H2DataOnly_0331_to_0340 implements MigrationStep {
             }
         } catch (Exception e) {
             log.error("Data-only import failed: {}", e.getMessage(), e);
+            throw e;
         }
     }
 }

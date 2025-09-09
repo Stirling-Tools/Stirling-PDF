@@ -441,8 +441,8 @@ public class DatabaseService implements DatabaseServiceInterface {
             log.info("Not an H2 database, no migration necessary.");
             return;
         }
-        DatabaseVersion v = databaseVersion.findLastByOrderByIdDesc().orElse(new DatabaseVersion());
-        if (v.getVersion() == null) {
+        DatabaseVersion v = databaseVersion.findLastByOrderByIdDesc().orElse(null);
+        if (v != null && v.getVersion() == null) {
             try {
                 MigrationStep h2Migration_0331_0340 = new H2DataOnly_0331_to_0340(this, dataSource);
                 h2Migration_0331_0340.run();
