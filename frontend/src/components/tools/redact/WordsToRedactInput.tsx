@@ -38,11 +38,10 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
 
       {/* Current words */}
       {wordsToRedact.map((word, index) => (
-        <Group key={index} justify="space-between" style={{
-          padding: '8px 12px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '4px',
-          border: '1px solid #e9ecef'
+        <Group key={index} justify="space-between" p="sm" style={{
+          borderRadius: 'var(--mantine-radius-sm)',
+          border: `1px solid var(--mantine-color-gray-3)`,
+          backgroundColor: 'var(--mantine-color-gray-0)'
         }}>
           <Text size="sm">{word}</Text>
           <ActionIcon
