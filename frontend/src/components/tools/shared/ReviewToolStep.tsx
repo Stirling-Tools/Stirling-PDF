@@ -1,27 +1,48 @@
-import React, { useEffect, useRef } from 'react';
-import { Button, Stack, Text } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import DownloadIcon from '@mui/icons-material/Download';
-import ErrorNotification from './ErrorNotification';
-import ResultsPreview from './ResultsPreview';
-import { SuggestedToolsSection } from './SuggestedToolsSection';
-import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
+import React, { useEffect, useRef } from "react";
+import { Button, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import DownloadIcon from "@mui/icons-material/Download";
+import UndoIcon from "@mui/icons-material/Undo";
+import ErrorNotification from "./ErrorNotification";
+import ResultsPreview from "./ResultsPreview";
+import { SuggestedToolsSection } from "./SuggestedToolsSection";
+import { ToolOperationHook } from "../../../hooks/tools/shared/useToolOperation";
+import { Tooltip } from "../../shared/Tooltip";
 
 export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
   operation: ToolOperationHook<TParams>;
   title?: string;
   onFileClick?: (file: File) => void;
+  onUndo: () => void;
 }
 
-function ReviewStepContent<TParams = unknown>({ operation, onFileClick }: { operation: ToolOperationHook<TParams>; onFileClick?: (file: File) => void }) {
+function ReviewStepContent<TParams = unknown>({
+  operation,
+  onFileClick,
+  onUndo,
+}: {
+  operation: ToolOperationHook<TParams>;
+  onFileClick?: (file: File) => void;
+  onUndo: () => void;
+}) {
   const { t } = useTranslation();
   const stepRef = useRef<HTMLDivElement>(null);
 
-  const previewFiles = operation.files?.map((file, index) => ({
-    file,
-    thumbnail: operation.thumbnails[index]
-  })) || [];
+  const handleUndo = async () => {
+    try {
+      onUndo();
+    } catch (error) {
+      // Error is already handled by useToolOperation, just reset loading state
+      console.error("Undo operation failed:", error);
+    }
+  };
+
+  const previewFiles =
+    operation.files?.map((file, index) => ({
+      file,
+      thumbnail: operation.thumbnails[index],
+    })) || [];
 
   // Auto-scroll to bottom when content appears
   useEffect(() => {
@@ -31,7 +52,7 @@ function ReviewStepContent<TParams = unknown>({ operation, onFileClick }: { oper
         setTimeout(() => {
           scrollableContainer.scrollTo({
             top: scrollableContainer.scrollHeight,
-            behavior: 'smooth'
+            behavior: "smooth",
           });
         }, 100); // Small delay to ensure content is rendered
       }
@@ -40,10 +61,7 @@ function ReviewStepContent<TParams = unknown>({ operation, onFileClick }: { oper
 
   return (
     <Stack gap="sm" ref={stepRef}>
-      <ErrorNotification
-        error={operation.errorMessage}
-        onClose={operation.clearError}
-      />
+      <ErrorNotification error={operation.errorMessage} onClose={operation.clearError} />
 
       {previewFiles.length > 0 && (
         <ResultsPreview
@@ -53,7 +71,18 @@ function ReviewStepContent<TParams = unknown>({ operation, onFileClick }: { oper
         />
       )}
 
-       {operation.downloadUrl && (
+      <Tooltip content={t("undoOperationTooltip", "Click to undo the last operation and restore the original files")}>
+        <Button
+          leftSection={<UndoIcon />}
+          variant="outline"
+          color="var(--mantine-color-gray-6)"
+          onClick={handleUndo}
+          fullWidth
+        >
+          {t("undo", "Undo")}
+        </Button>
+      </Tooltip>
+      {operation.downloadUrl && (
         <Button
           component="a"
           href={operation.downloadUrl}
@@ -78,14 +107,13 @@ export function createReviewToolStep<TParams = unknown>(
 ): React.ReactElement {
   const { t } = useTranslation();
 
-  return createStep(t("review", "Review"), {
-    isVisible: props.isVisible,
-    _excludeFromCount: true,
-    _noPadding: true
-  }, (
-    <ReviewStepContent 
-      operation={props.operation} 
-      onFileClick={props.onFileClick}
-    />
-  ));
+  return createStep(
+    t("review", "Review"),
+    {
+      isVisible: props.isVisible,
+      _excludeFromCount: true,
+      _noPadding: true,
+    },
+    <ReviewStepContent operation={props.operation} onFileClick={props.onFileClick} onUndo={props.onUndo} />
+  );
 }

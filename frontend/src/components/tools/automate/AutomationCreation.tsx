@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -11,7 +11,7 @@ import {
   Modal
 } from '@mantine/core';
 import CheckIcon from '@mui/icons-material/Check';
-import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
+import { ToolRegistry } from '../../../data/toolsTaxonomy';
 import ToolConfigurationModal from './ToolConfigurationModal';
 import ToolList from './ToolList';
 import IconSelector from './IconSelector';
@@ -24,7 +24,7 @@ interface AutomationCreationProps {
   existingAutomation?: AutomationConfig;
   onBack: () => void;
   onComplete: (automation: AutomationConfig) => void;
-  toolRegistry: Record<string, ToolRegistryEntry>;
+  toolRegistry: ToolRegistry;
 }
 
 export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry }: AutomationCreationProps) {
@@ -38,10 +38,8 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     automationIcon,
     setAutomationIcon,
     selectedTools,
-    addTool,
     removeTool,
     updateTool,
-    hasUnsavedChanges,
     canSaveAutomation,
     getToolName,
     getToolDefaultParameters
@@ -82,14 +80,6 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       parameters: {}
     };
     updateTool(selectedTools.length, newTool);
-  };
-
-  const handleBackClick = () => {
-    if (hasUnsavedChanges()) {
-      setUnsavedWarningOpen(true);
-    } else {
-      onBack();
-    }
   };
 
   const handleConfirmBack = () => {

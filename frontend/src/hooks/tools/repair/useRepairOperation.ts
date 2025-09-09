@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RepairParameters, defaultParameters } from './useRepairParameters';
 
 // Static function that can be used by both the hook and automation executor
-export const buildRepairFormData = (parameters: RepairParameters, file: File): FormData => {
+export const buildRepairFormData = (_parameters: RepairParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   return formData;
@@ -12,11 +12,11 @@ export const buildRepairFormData = (parameters: RepairParameters, file: File): F
 
 // Static configuration object
 export const repairOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildRepairFormData,
   operationType: 'repair',
   endpoint: '/api/v1/misc/repair',
-  buildFormData: buildRepairFormData,
   filePrefix: 'repaired_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 

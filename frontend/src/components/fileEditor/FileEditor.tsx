@@ -1,41 +1,28 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   Text, Center, Box, Notification, LoadingOverlay, Stack, Group, Portal
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { useTranslation } from 'react-i18next';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
+import { useFileSelection, useFileState, useFileManagement } from '../../contexts/FileContext';
 import { useNavigationActions } from '../../contexts/NavigationContext';
-import { FileOperation } from '../../types/fileContext';
-import { fileStorage } from '../../services/fileStorage';
-import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
-import styles from './FileEditor.module.css';
 import FileEditorThumbnail from './FileEditorThumbnail';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
-
+import { FileId, StirlingFile } from '../../types/fileContext';
 
 interface FileEditorProps {
-  onOpenPageEditor?: (file: File) => void;
-  onMergeFiles?: (files: File[]) => void;
+  onOpenPageEditor?: () => void;
+  onMergeFiles?: (files: StirlingFile[]) => void;
   toolMode?: boolean;
-  showUpload?: boolean;
-  showBulkActions?: boolean;
   supportedExtensions?: string[];
 }
 
 const FileEditor = ({
-  onOpenPageEditor,
-  onMergeFiles,
   toolMode = false,
-  showUpload = true,
-  showBulkActions = true,
   supportedExtensions = ["pdf"]
 }: FileEditorProps) => {
-  const { t } = useTranslation();
 
   // Utility function to check if a file extension is supported
   const isFileSupported = useCallback((fileName: string): boolean => {
@@ -46,17 +33,14 @@ const FileEditor = ({
   // Use optimized FileContext hooks
   const { state, selectors } = useFileState();
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
-  
+
   // Extract needed values from state (memoized to prevent infinite loops)
-  const activeFiles = useMemo(() => selectors.getFiles(), [selectors.getFilesSignature()]);
-  const activeFileRecords = useMemo(() => selectors.getFileRecords(), [selectors.getFilesSignature()]);
+  const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [selectors.getFilesSignature()]);
   const selectedFileIds = state.ui.selectedFileIds;
-  const isProcessing = state.ui.isProcessing;
-  
-  // Get the real context actions
-  const { actions } = useFileActions();
+
+  // Get navigation actions
   const { actions: navActions } = useNavigationActions();
-  
+
   // Get file selection context
   const { setSelectedFiles } = useFileSelection();
 
@@ -86,19 +70,19 @@ const FileEditor = ({
   });
   // Get selected file IDs from context (defensive programming)
   const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
-  
+
   // Create refs for frequently changing values to stabilize callbacks
-  const contextSelectedIdsRef = useRef<string[]>([]);
+  const contextSelectedIdsRef = useRef<FileId[]>([]);
   contextSelectedIdsRef.current = contextSelectedIds;
 
-  // Use activeFileRecords directly - no conversion needed
+  // Use activeStirlingFileStubs directly - no conversion needed
   const localSelectedIds = contextSelectedIds;
 
-  // Helper to convert FileRecord to FileThumbnail format
+  // Helper to convert StirlingFileStub to FileThumbnail format
   const recordToFileItem = useCallback((record: any) => {
     const file = selectors.getFile(record.id);
     if (!file) return null;
-    
+
     return {
       id: record.id,
       name: file.name,
@@ -160,29 +144,9 @@ const FileEditor = ({
               if (extractionResult.success) {
                 allExtractedFiles.push(...extractionResult.extractedFiles);
 
-                // Record ZIP extraction operation
-                const operationId = `zip-extract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                const operation: FileOperation = {
-                id: operationId,
-                type: 'convert',
-                timestamp: Date.now(),
-                fileIds: extractionResult.extractedFiles.map(f => f.name),
-                status: 'pending',
-                metadata: {
-                  originalFileName: file.name,
-                  outputFileNames: extractionResult.extractedFiles.map(f => f.name),
-                  fileSize: file.size,
-                  parameters: {
-                    extractionType: 'zip',
-                    extractedCount: extractionResult.extractedCount,
-                    totalFiles: extractionResult.totalFiles
-                  }
+                if (extractionResult.errors.length > 0) {
+                  errors.push(...extractionResult.errors);
                 }
-              };
-              
-              if (extractionResult.errors.length > 0) {
-                errors.push(...extractionResult.errors);
-              }
               } else {
                 errors.push(`Failed to extract ZIP file "${file.name}": ${extractionResult.errors.join(', ')}`);
               }
@@ -212,25 +176,6 @@ const FileEditor = ({
 
       // Process all extracted files
       if (allExtractedFiles.length > 0) {
-        // Record upload operations for PDF files
-        for (const file of allExtractedFiles) {
-          const operationId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const operation: FileOperation = {
-            id: operationId,
-            type: 'upload',
-            timestamp: Date.now(),
-            fileIds: [file.name],
-            status: 'pending',
-            metadata: {
-              originalFileName: file.name,
-              fileSize: file.size,
-              parameters: {
-                uploadMethod: 'drag-drop'
-              }
-            }
-          };
-        }
-
         // Add files to context (they will be processed automatically)
         await addFiles(allExtractedFiles);
         setStatus(`Added ${allExtractedFiles.length} files`);
@@ -239,7 +184,7 @@ const FileEditor = ({
       const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
       setError(errorMessage);
       console.error('File processing error:', err);
-      
+
       // Reset extraction progress on error
       setZipExtractionProgress({
         isExtracting: false,
@@ -251,33 +196,16 @@ const FileEditor = ({
     }
   }, [addFiles]);
 
-  const selectAll = useCallback(() => {
-    setSelectedFiles(activeFileRecords.map(r => r.id)); // Use FileRecord IDs directly
-  }, [activeFileRecords, setSelectedFiles]);
-
-  const deselectAll = useCallback(() => setSelectedFiles([]), [setSelectedFiles]);
-
-  const closeAllFiles = useCallback(() => {
-    if (activeFileRecords.length === 0) return;
-
-    // Remove all files from context but keep in storage
-    const allFileIds = activeFileRecords.map(record => record.id);
-    removeFiles(allFileIds, false); // false = keep in storage
-    
-    // Clear selections
-    setSelectedFiles([]);
-  }, [activeFileRecords, removeFiles, setSelectedFiles]);
-
-  const toggleFile = useCallback((fileId: string) => {
+  const toggleFile = useCallback((fileId: FileId) => {
     const currentSelectedIds = contextSelectedIdsRef.current;
-    
-    const targetRecord = activeFileRecords.find(r => r.id === fileId);
+
+    const targetRecord = activeStirlingFileStubs.find(r => r.id === fileId);
     if (!targetRecord) return;
 
     const contextFileId = fileId; // No need to create a new ID
     const isSelected = currentSelectedIds.includes(contextFileId);
 
-    let newSelection: string[];
+    let newSelection: FileId[];
 
     if (isSelected) {
       // Remove file from selection
@@ -286,7 +214,7 @@ const FileEditor = ({
       // Add file to selection
       // In tool mode, typically allow multiple files unless specified otherwise
       const maxAllowed = toolMode ? 10 : Infinity; // Default max for tools
-      
+
       if (maxAllowed === 1) {
         newSelection = [contextFileId];
       } else {
@@ -301,43 +229,34 @@ const FileEditor = ({
 
     // Update context (this automatically updates tool selection since they use the same action)
     setSelectedFiles(newSelection);
-  }, [setSelectedFiles, toolMode, setStatus, activeFileRecords]);
+  }, [setSelectedFiles, toolMode, setStatus, activeStirlingFileStubs]);
 
-  const toggleSelectionMode = useCallback(() => {
-    setSelectionMode(prev => {
-      const newMode = !prev;
-      if (!newMode) {
-        setSelectedFiles([]);
-      }
-      return newMode;
-    });
-  }, [setSelectedFiles]);
 
   // File reordering handler for drag and drop
-  const handleReorderFiles = useCallback((sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => {
-    const currentIds = activeFileRecords.map(r => r.id);
-    
+  const handleReorderFiles = useCallback((sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => {
+    const currentIds = activeStirlingFileStubs.map(r => r.id);
+
     // Find indices
     const sourceIndex = currentIds.findIndex(id => id === sourceFileId);
     const targetIndex = currentIds.findIndex(id => id === targetFileId);
-    
+
     if (sourceIndex === -1 || targetIndex === -1) {
       console.warn('Could not find source or target file for reordering');
       return;
     }
 
     // Handle multi-file selection reordering
-    const filesToMove = selectedFileIds.length > 1 
+    const filesToMove = selectedFileIds.length > 1
       ? selectedFileIds.filter(id => currentIds.includes(id))
       : [sourceFileId];
 
     // Create new order
     const newOrder = [...currentIds];
-    
+
     // Remove files to move from their current positions (in reverse order to maintain indices)
     const sourceIndices = filesToMove.map(id => newOrder.findIndex(nId => nId === id))
       .sort((a, b) => b - a); // Sort descending
-      
+
     sourceIndices.forEach(index => {
       newOrder.splice(index, 1);
     });
@@ -367,73 +286,36 @@ const FileEditor = ({
     // Update status
     const moveCount = filesToMove.length;
     setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
-  }, [activeFileRecords, reorderFiles, setStatus]);
+  }, [activeStirlingFileStubs, reorderFiles, setStatus]);
 
 
 
   // File operations using context
-  const handleDeleteFile = useCallback((fileId: string) => {
-    const record = activeFileRecords.find(r => r.id === fileId);
+  const handleDeleteFile = useCallback((fileId: FileId) => {
+    const record = activeStirlingFileStubs.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
 
     if (record && file) {
-      // Record close operation
-      const fileName = file.name;
-      const contextFileId = record.id;
-      const operationId = `close-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const operation: FileOperation = {
-        id: operationId,
-        type: 'remove',
-        timestamp: Date.now(),
-        fileIds: [fileName],
-        status: 'pending',
-        metadata: {
-          originalFileName: fileName,
-          fileSize: record.size,
-          parameters: {
-            action: 'close',
-            reason: 'user_request'
-          }
-        }
-      };
-            
       // Remove file from context but keep in storage (close, don't delete)
+      const contextFileId = record.id;
       removeFiles([contextFileId], false);
 
       // Remove from context selections
       const currentSelected = selectedFileIds.filter(id => id !== contextFileId);
       setSelectedFiles(currentSelected);
     }
-  }, [activeFileRecords, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
+  }, [activeStirlingFileStubs, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
 
-  const handleViewFile = useCallback((fileId: string) => {
-    const record = activeFileRecords.find(r => r.id === fileId);
+  const handleViewFile = useCallback((fileId: FileId) => {
+    const record = activeStirlingFileStubs.find(r => r.id === fileId);
     if (record) {
       // Set the file as selected in context and switch to viewer for preview
       setSelectedFiles([fileId]);
-      navActions.setMode('viewer');
+      navActions.setWorkbench('viewer');
     }
-  }, [activeFileRecords, setSelectedFiles, navActions.setMode]);
+  }, [activeStirlingFileStubs, setSelectedFiles, navActions.setWorkbench]);
 
-  const handleMergeFromHere = useCallback((fileId: string) => {
-    const startIndex = activeFileRecords.findIndex(r => r.id === fileId);
-    if (startIndex === -1) return;
-
-    const recordsToMerge = activeFileRecords.slice(startIndex);
-    const filesToMerge = recordsToMerge.map(r => selectors.getFile(r.id)).filter(Boolean) as File[];
-    if (onMergeFiles) {
-      onMergeFiles(filesToMerge);
-    }
-  }, [activeFileRecords, selectors, onMergeFiles]);
-
-  const handleSplitFile = useCallback((fileId: string) => {
-    const file = selectors.getFile(fileId);
-    if (file && onOpenPageEditor) {
-      onOpenPageEditor(file);
-    }
-  }, [selectors, onOpenPageEditor]);
-
-  const handleLoadFromStorage = useCallback(async (selectedFiles: any[]) => {
+  const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
 
     try {
@@ -453,7 +335,6 @@ const FileEditor = ({
       multiple={true}
       maxSize={2 * 1024 * 1024 * 1024}
       style={{
-        height: '100vh',
         border: 'none',
         borderRadius: 0,
         backgroundColor: 'transparent'
@@ -461,13 +342,13 @@ const FileEditor = ({
       activateOnClick={false}
       activateOnDrag={true}
     >
-      <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
+      <Box pos="relative" style={{ overflow: 'auto' }}>
         <LoadingOverlay visible={false} />
 
         <Box p="md" pt="xl">
 
 
-        {activeFileRecords.length === 0 && !zipExtractionProgress.isExtracting ? (
+        {activeStirlingFileStubs.length === 0 && !zipExtractionProgress.isExtracting ? (
           <Center h="60vh">
             <Stack align="center" gap="md">
               <Text size="lg" c="dimmed">📁</Text>
@@ -475,7 +356,7 @@ const FileEditor = ({
               <Text size="sm" c="dimmed">Upload PDF files, ZIP archives, or load from storage to get started</Text>
             </Stack>
           </Center>
-        ) : activeFileRecords.length === 0 && zipExtractionProgress.isExtracting ? (
+        ) : activeStirlingFileStubs.length === 0 && zipExtractionProgress.isExtracting ? (
           <Box>
             <SkeletonLoader type="controls" />
 
@@ -513,25 +394,25 @@ const FileEditor = ({
             <SkeletonLoader type="fileGrid" count={6} />
           </Box>
         ) : (
-          <div 
-            style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-              gap: '1.5rem', 
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              rowGap: '1.5rem',
               padding: '1rem',
               pointerEvents: 'auto'
             }}
           >
-            {activeFileRecords.map((record, index) => {
+            {activeStirlingFileStubs.map((record, index) => {
               const fileItem = recordToFileItem(record);
               if (!fileItem) return null;
-              
+
               return (
                 <FileEditorThumbnail
                   key={record.id}
                   file={fileItem}
                   index={index}
-                  totalFiles={activeFileRecords.length}
+                  totalFiles={activeStirlingFileStubs.length}
                   selectedFiles={localSelectedIds}
                   selectionMode={selectionMode}
                   onToggleFile={toggleFile}
@@ -562,7 +443,7 @@ const FileEditor = ({
             color="blue"
             mt="md"
             onClose={() => setStatus(null)}
-            style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 10001 }}
+            style={{ position: 'fixed', bottom: 40, right: 80, zIndex: 10001 }}
           >
             {status}
           </Notification>

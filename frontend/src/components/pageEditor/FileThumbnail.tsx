@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { Text, ActionIcon, CheckboxIndicator } from '@mantine/core';
+import { ActionIcon, CheckboxIndicator } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
@@ -11,9 +11,10 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 
 import styles from './PageEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
+import { FileId } from '../../types/file';
 
 interface FileItem {
-  id: string;
+  id: FileId;
   name: string;
   pageCount: number;
   thumbnail: string | null;
@@ -27,12 +28,12 @@ interface FileThumbnailProps {
   totalFiles: number;
   selectedFiles: string[];
   selectionMode: boolean;
-  onToggleFile: (fileId: string) => void;
-  onDeleteFile: (fileId: string) => void;
-  onViewFile: (fileId: string) => void;
+  onToggleFile: (fileId: FileId) => void;
+  onDeleteFile: (fileId: FileId) => void;
+  onViewFile: (fileId: FileId) => void;
   onSetStatus: (status: string) => void;
-  onReorderFiles?: (sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => void;
-  onDownloadFile?: (fileId: string) => void;
+  onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
+  onDownloadFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
 }
@@ -43,7 +44,6 @@ const FileThumbnail = ({
   selectedFiles,
   onToggleFile,
   onDeleteFile,
-  onViewFile,
   onSetStatus,
   onReorderFiles,
   onDownloadFile,
@@ -60,8 +60,8 @@ const FileThumbnail = ({
 
   // Resolve the actual File object for pin/unpin operations
   const actualFile = useMemo(() => {
-    return activeFiles.find((f: File) => f.name === file.name && f.size === file.size);
-  }, [activeFiles, file.name, file.size]);
+    return activeFiles.find(f => f.fileId === file.id);
+  }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
   const downloadSelectedFile = useCallback(() => {
@@ -91,40 +91,6 @@ const FileThumbnail = ({
 
   // ---- Selection ----
   const isSelected = selectedFiles.includes(file.id);
-
-  // ---- Meta formatting ----
-  const prettySize = useMemo(() => {
-    const bytes = file.size ?? 0;
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-  }, [file.size]);
-
-  const extUpper = useMemo(() => {
-    const m = /\.([a-z0-9]+)$/i.exec(file.name ?? '');
-    return (m?.[1] || '').toUpperCase();
-  }, [file.name]);
-
-  const pageLabel = useMemo(
-    () =>
-      file.pageCount > 0
-        ? `${file.pageCount} ${file.pageCount === 1 ? 'Page' : 'Pages'}`
-        : '',
-    [file.pageCount]
-  );
-
-  const dateLabel = useMemo(() => {
-    const d =
-      file.modifiedAt != null ? new Date(file.modifiedAt) : new Date(); // fallback
-    if (Number.isNaN(d.getTime())) return '';
-    return new Intl.DateTimeFormat(undefined, {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric',
-    }).format(d);
-  }, [file.modifiedAt]);
 
   // ---- Drag & drop wiring ----
   const fileElementRef = useCallback((element: HTMLDivElement | null) => {
@@ -161,8 +127,8 @@ const FileThumbnail = ({
       onDrop: ({ source }) => {
         const sourceData = source.data;
         if (sourceData.type === 'file' && onReorderFiles) {
-          const sourceFileId = sourceData.fileId as string;
-          const selectedFileIds = sourceData.selectedFiles as string[];
+          const sourceFileId = sourceData.fileId as FileId;
+          const selectedFileIds = sourceData.selectedFiles as FileId[];
           onReorderFiles(sourceFileId, file.id, selectedFileIds);
         }
       }

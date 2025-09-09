@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { UnlockPdfFormsParameters, defaultParameters } from './useUnlockPdfFormsParameters';
 
 // Static function that can be used by both the hook and automation executor
-export const buildUnlockPdfFormsFormData = (parameters: UnlockPdfFormsParameters, file: File): FormData => {
+export const buildUnlockPdfFormsFormData = (_parameters: UnlockPdfFormsParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   return formData;
@@ -12,11 +12,11 @@ export const buildUnlockPdfFormsFormData = (parameters: UnlockPdfFormsParameters
 
 // Static configuration object
 export const unlockPdfFormsOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildUnlockPdfFormsFormData,
   operationType: 'unlock-pdf-forms',
   endpoint: '/api/v1/misc/unlock-pdf-forms',
-  buildFormData: buildUnlockPdfFormsFormData,
   filePrefix: 'unlocked_forms_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 

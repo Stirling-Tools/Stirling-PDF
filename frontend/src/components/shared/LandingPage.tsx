@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Text, Button, Checkbox, Group, useMantineColorScheme } from '@mantine/core';
+import { Container, Button, Group, useMantineColorScheme } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import LocalIcon from './LocalIcon';
 import { useTranslation } from 'react-i18next';
@@ -36,13 +36,13 @@ const LandingPage = () => {
   };
 
   return (
-    <Container size="70rem" p={0} h="102%" className="flex items-center justify-center" style={{ position: 'relative' }}>
+    <Container size="70rem" p={0} h="100%" className="flex items-center justify-center" style={{ position: 'relative' }}>
       {/* White PDF Page Background */}
       <Dropzone
         onDrop={handleFileDrop}
         accept={["application/pdf", "application/zip", "application/x-zip-compressed"]}
         multiple={true}
-        className="w-4/5 flex items-center justify-center h-[95vh]"
+        className="w-4/5 flex items-center justify-center h-[95%]"
         style={{
           position: 'absolute',
           left: '50%',
@@ -189,7 +189,7 @@ const LandingPage = () => {
             className="text-[var(--accent-interactive)]"
             style={{ fontSize: '.8rem' }}
           >
-            {t('fileUpload.dropFilesHere', 'Drop files here or click to upload')}
+            {t('fileUpload.dropFilesHere', 'Drop files here or click the upload button')}
           </span>
         </div>
       </Dropzone>

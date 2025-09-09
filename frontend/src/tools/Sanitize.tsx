@@ -1,90 +1,54 @@
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileSelection } from "../contexts/FileContext";
-
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
-
 import { useSanitizeParameters } from "../hooks/tools/sanitize/useSanitizeParameters";
 import { useSanitizeOperation } from "../hooks/tools/sanitize/useSanitizeOperation";
+import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "../types/tool";
 
-const Sanitize = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
+const Sanitize = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const { selectedFiles } = useFileSelection();
-
-  const sanitizeParams = useSanitizeParameters();
-  const sanitizeOperation = useSanitizeOperation();
-
-  // Endpoint validation
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(sanitizeParams.getEndpointName());
-
-  useEffect(() => {
-    sanitizeOperation.resetResults();
-    onPreviewFile?.(null);
-  }, [sanitizeParams.parameters]);
-
-  const handleSanitize = async () => {
-    try {
-      await sanitizeOperation.executeOperation(sanitizeParams.parameters, selectedFiles);
-      if (sanitizeOperation.files && onComplete) {
-        onComplete(sanitizeOperation.files);
-      }
-    } catch (error) {
-      if (onError) {
-        onError(error instanceof Error ? error.message : t("sanitize.error.generic", "Sanitization failed"));
-      }
-    }
-  };
-
-  const handleSettingsReset = () => {
-    sanitizeOperation.resetResults();
-    onPreviewFile?.(null);
-  };
-
-  const handleThumbnailClick = (file: File) => {
-    onPreviewFile?.(file);
-    sessionStorage.setItem("previousMode", "sanitize");
-  };
-
-  const hasFiles = selectedFiles.length > 0;
-  const hasResults = sanitizeOperation.files.length > 0;
-  const settingsCollapsed = !hasFiles || hasResults;
+  const base = useBaseTool(
+    'sanitize',
+    useSanitizeParameters,
+    useSanitizeOperation,
+    props
+  );
 
   return createToolFlow({
     files: {
-      selectedFiles,
-      isCollapsed: hasResults,
+      selectedFiles: base.selectedFiles,
+      isCollapsed: base.hasResults,
       placeholder: t("sanitize.files.placeholder", "Select a PDF file in the main view to get started"),
     },
     steps: [
       {
         title: t("sanitize.steps.settings", "Settings"),
-        isCollapsed: settingsCollapsed,
-        onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
+        isCollapsed: base.settingsCollapsed,
+        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
         content: (
           <SanitizeSettings
-            parameters={sanitizeParams.parameters}
-            onParameterChange={sanitizeParams.updateParameter}
-            disabled={endpointLoading}
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
           />
         ),
       },
     ],
     executeButton: {
       text: t("sanitize.submit", "Sanitize PDF"),
-      isVisible: !hasResults,
+      isVisible: !base.hasResults,
       loadingText: t("loading"),
-      onClick: handleSanitize,
-      disabled: !sanitizeParams.validateParameters() || !hasFiles || !endpointEnabled,
+      onClick: base.handleExecute,
+      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
     },
     review: {
-      isVisible: hasResults,
-      operation: sanitizeOperation,
+      isVisible: base.hasResults,
+      operation: base.operation,
       title: t("sanitize.sanitizationResults", "Sanitization Results"),
-      onFileClick: handleThumbnailClick,
+      onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };

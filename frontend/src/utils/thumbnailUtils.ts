@@ -346,12 +346,12 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
   // Handle PDF files
   if (file.type.startsWith('application/pdf')) {
     const scale = calculateScaleFromFileSize(file.size);
-    
+
     // Only read first 2MB for thumbnail generation to save memory
     const chunkSize = 2 * 1024 * 1024; // 2MB
     const chunk = file.slice(0, Math.min(chunkSize, file.size));
     const arrayBuffer = await chunk.arrayBuffer();
-    
+
     try {
       return await generatePDFThumbnail(arrayBuffer, file, scale);
     } catch (error) {
@@ -361,7 +361,7 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
           // Try with full file instead of chunk
           const fullArrayBuffer = await file.arrayBuffer();
           return await generatePDFThumbnail(fullArrayBuffer, file, scale);
-        } catch (fullFileError) {
+        } catch {
           console.warn(`Full file PDF processing also failed for ${file.name} - using placeholder`);
           return generatePlaceholderThumbnail(file);
         }
@@ -392,11 +392,11 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
   }
 
   const scale = calculateScaleFromFileSize(file.size);
-  
+
   try {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
-    
+
     const pageCount = pdf.numPages;
     const page = await pdf.getPage(1);
     const viewport = page.getViewport({ scale });
@@ -412,7 +412,7 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
 
     await page.render({ canvasContext: context, viewport }).promise;
     const thumbnail = canvas.toDataURL();
-    
+
     pdfWorkerManager.destroyDocument(pdf);
     return { thumbnail, pageCount };
 
@@ -422,7 +422,7 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
       const thumbnail = generateEncryptedPDFThumbnail(file);
       return { thumbnail, pageCount: 1 };
     }
-    
+
     const thumbnail = generatePlaceholderThumbnail(file);
     return { thumbnail, pageCount: 1 };
   }

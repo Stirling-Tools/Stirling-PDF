@@ -2,21 +2,8 @@ import { useState, useEffect } from "react";
 import { FileMetadata } from "../types/file";
 import { useIndexedDB } from "../contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "../utils/thumbnailUtils";
+import { FileId } from "../types/fileContext";
 
-/**
- * Calculate optimal scale for thumbnail generation
- * Ensures high quality while preventing oversized renders
- */
-function calculateThumbnailScale(pageViewport: { width: number; height: number }): number {
-  const maxWidth = 400;  // Max thumbnail width
-  const maxHeight = 600; // Max thumbnail height
-
-  const scaleX = maxWidth / pageViewport.width;
-  const scaleY = maxHeight / pageViewport.height;
-
-  // Don't upscale, only downscale if needed
-  return Math.min(scaleX, scaleY, 1.0);
-}
 
 /**
  * Hook for IndexedDB-aware thumbnail loading
@@ -53,7 +40,7 @@ export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
 
           // Try to load file from IndexedDB using new context
           if (file.id && indexedDB) {
-            const loadedFile = await indexedDB.loadFile(file.id);
+            const loadedFile = await indexedDB.loadFile(file.id as FileId);
             if (!loadedFile) {
               throw new Error('File not found in IndexedDB');
             }
@@ -66,11 +53,11 @@ export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
           const thumbnail = await generateThumbnailForFile(fileObject);
           if (!cancelled) {
             setThumb(thumbnail);
-            
+
             // Save thumbnail to IndexedDB for persistence
             if (file.id && indexedDB && thumbnail) {
               try {
-                await indexedDB.updateThumbnail(file.id, thumbnail);
+                await indexedDB.updateThumbnail(file.id as FileId, thumbnail);
               } catch (error) {
                 console.warn('Failed to save thumbnail to IndexedDB:', error);
               }

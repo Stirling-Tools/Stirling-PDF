@@ -1,14 +1,7 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import {
-  Button, Text, Center, Box,
-  Notification, TextInput, LoadingOverlay, Modal, Alert,
-  Stack, Group, Portal
-} from "@mantine/core";
-import { useTranslation } from "react-i18next";
-import { useFileState, useFileActions, useCurrentFile, useFileSelection } from "../../contexts/FileContext";
-import { ModeType } from "../../contexts/NavigationContext";
-import { PDFDocument, PDFPage, PageEditorFunctions } from "../../types/pageEditor";
-import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
+import { useFileState, useFileActions } from "../../contexts/FileContext";
+import { PDFDocument, PageEditorFunctions } from "../../types/pageEditor";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
 // Thumbnail generation is now handled by individual PageThumbnail components
@@ -17,18 +10,14 @@ import PageThumbnail from './PageThumbnail';
 import DragDropGrid from './DragDropGrid';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
+import { FileId } from "../../types/file";
 
 import {
-  DOMCommand,
-  RotatePageCommand,
   DeletePagesCommand,
   ReorderPagesCommand,
   SplitCommand,
   BulkRotateCommand,
-  BulkSplitCommand,
-  SplitAllCommand,
   PageBreakCommand,
-  BulkPageBreakCommand,
   UndoManager
 } from './commands/pageCommands';
 import { GRID_CONSTANTS } from './constants';
@@ -49,41 +38,30 @@ const PageEditor = ({
 
   // Prefer IDs + selectors to avoid array identity churn
   const activeFileIds = state.files.ids;
-  const primaryFileId = activeFileIds[0] ?? null;
-  const selectedFiles = selectors.getSelectedFiles();
-
-  // Stable signature for effects (prevents loops)
-  const filesSignature = selectors.getFilesSignature();
 
   // UI state
   const globalProcessing = state.ui.isProcessing;
-  const processingProgress = state.ui.processingProgress;
-  const hasUnsavedChanges = state.ui.hasUnsavedChanges;
 
   // Edit state management
   const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(null);
-  const [hasUnsavedDraft, setHasUnsavedDraft] = useState(false);
-  const [showResumeModal, setShowResumeModal] = useState(false);
-  const [foundDraft, setFoundDraft] = useState<any>(null);
-  const autoSaveTimer = useRef<number | null>(null);
 
   // DOM-first undo manager (replaces the old React state undo system)
   const undoManagerRef = useRef(new UndoManager());
 
   // Document state management
-  const { document: mergedPdfDocument, isVeryLargeDocument, isLoading: documentLoading } = usePageDocument();
+  const { document: mergedPdfDocument } = usePageDocument();
 
 
   // UI state management
   const {
     selectionMode, selectedPageIds, movingPage, isAnimating, splitPositions, exportLoading,
-    setSelectionMode, setSelectedPageIds, setMovingPage, setIsAnimating, setSplitPositions, setExportLoading,
+    setSelectionMode, setSelectedPageIds, setMovingPage, setSplitPositions, setExportLoading,
     togglePage, toggleSelectAll, animateReorder
   } = usePageEditorState();
 
   // Grid container ref for positioning split indicators
   const gridContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // State to trigger re-renders when container size changes
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
 
@@ -128,7 +106,7 @@ const PageEditor = ({
 
   // Interface functions for parent component
   const displayDocument = editedDocument || mergedPdfDocument;
-  
+
   // Utility functions to convert between page IDs and page numbers
   const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
     if (!displayDocument) return [];
@@ -137,7 +115,7 @@ const PageEditor = ({
       return page?.pageNumber || 0;
     }).filter(num => num > 0);
   }, [displayDocument]);
-  
+
   const getPageIdsFromNumbers = useCallback((pageNumbers: number[]): string[] => {
     if (!displayDocument) return [];
     return pageNumbers.map(num => {
@@ -145,12 +123,6 @@ const PageEditor = ({
       return page?.id || '';
     }).filter(id => id !== '');
   }, [displayDocument]);
-  
-  // Convert selectedPageIds to numbers for components that still need numbers
-  const selectedPageNumbers = useMemo(() => 
-    getPageNumbersFromIds(selectedPageIds), 
-    [selectedPageIds, getPageNumbersFromIds]
-  );
 
   // Select all pages by default when document initially loads
   const hasInitializedSelection = useRef(false);
@@ -173,7 +145,8 @@ const PageEditor = ({
   const createRotateCommand = useCallback((pageIds: string[], rotation: number) => ({
     execute: () => {
       const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
-      undoManagerRef.current.executeCommand(bulkRotateCommand);
+
+    undoManagerRef.current.executeCommand(bulkRotateCommand);
     }
   }), []);
 
@@ -182,7 +155,8 @@ const PageEditor = ({
       if (!displayDocument) return;
 
       const pagesToDelete = pageIds.map(pageId => {
-        const page = displayDocument.pages.find(p => p.id === pageId);
+
+    const page = displayDocument.pages.find(p => p.id === pageId);
         return page?.pageNumber || 0;
       }).filter(num => num > 0);
 
@@ -213,7 +187,7 @@ const PageEditor = ({
       );
       undoManagerRef.current.executeCommand(splitCommand);
     }
-  }), [splitPositions]);
+}), [splitPositions]);
 
   // Command executor for PageThumbnail
   const executeCommand = useCallback((command: any) => {
@@ -234,7 +208,7 @@ const PageEditor = ({
   const handleRotate = useCallback((direction: 'left' | 'right') => {
     if (!displayDocument || selectedPageIds.length === 0) return;
     const rotation = direction === 'left' ? -90 : 90;
-    
+
     handleRotatePages(selectedPageIds, rotation);
   }, [displayDocument, selectedPageIds, handleRotatePages]);
 
@@ -296,14 +270,14 @@ const PageEditor = ({
     // Smart toggle logic: follow the majority, default to adding splits if equal
     const existingSplitsCount = selectedPositions.filter(pos => splitPositions.has(pos)).length;
     const noSplitsCount = selectedPositions.length - existingSplitsCount;
-    
+
     // Remove splits only if majority already have splits
     // If equal (50/50), default to adding splits
     const shouldRemoveSplits = existingSplitsCount > noSplitsCount;
-    
+
 
     const newSplitPositions = new Set(splitPositions);
-    
+
     if (shouldRemoveSplits) {
       // Remove splits from all selected positions
       selectedPositions.forEach(pos => newSplitPositions.delete(pos));
@@ -316,8 +290,8 @@ const PageEditor = ({
     const smartSplitCommand = {
       execute: () => setSplitPositions(newSplitPositions),
       undo: () => setSplitPositions(splitPositions),
-      description: shouldRemoveSplits 
-        ? `Remove ${selectedPositions.length} split(s)` 
+      description: shouldRemoveSplits
+        ? `Remove ${selectedPositions.length} split(s)`
         : `Add ${selectedPositions.length - existingSplitsCount} split(s)`
     };
 
@@ -343,13 +317,13 @@ const PageEditor = ({
     // Smart toggle logic: follow the majority, default to adding splits if equal
     const existingSplitsCount = selectedPositions.filter(pos => splitPositions.has(pos)).length;
     const noSplitsCount = selectedPositions.length - existingSplitsCount;
-    
+
     // Remove splits only if majority already have splits
     // If equal (50/50), default to adding splits
     const shouldRemoveSplits = existingSplitsCount > noSplitsCount;
-    
+
     const newSplitPositions = new Set(splitPositions);
-    
+
     if (shouldRemoveSplits) {
       // Remove splits from all selected positions
       selectedPositions.forEach(pos => newSplitPositions.delete(pos));
@@ -362,8 +336,8 @@ const PageEditor = ({
     const smartSplitCommand = {
       execute: () => setSplitPositions(newSplitPositions),
       undo: () => setSplitPositions(splitPositions),
-      description: shouldRemoveSplits 
-        ? `Remove ${selectedPositions.length} split(s)` 
+      description: shouldRemoveSplits
+        ? `Remove ${selectedPositions.length} split(s)`
         : `Add ${selectedPositions.length - existingSplitsCount} split(s)`
     };
 
@@ -404,7 +378,7 @@ const PageEditor = ({
     try {
       const targetPage = displayDocument.pages.find(p => p.pageNumber === insertAfterPage);
       if (!targetPage) return;
-      
+
       await actions.addFiles(files, { insertAfterPageId: targetPage.id });
     } catch (error) {
       console.error('Failed to insert files:', error);
@@ -443,8 +417,8 @@ const PageEditor = ({
   }, [displayDocument, getPageNumbersFromIds]);
 
   // Helper function to collect source files for multi-file export
-  const getSourceFiles = useCallback((): Map<string, File> | null => {
-    const sourceFiles = new Map<string, File>();
+  const getSourceFiles = useCallback((): Map<FileId, File> | null => {
+    const sourceFiles = new Map<FileId, File>();
 
     // Always include original files
     activeFileIds.forEach(fileId => {
@@ -457,7 +431,7 @@ const PageEditor = ({
     // Use multi-file export if we have multiple original files
     const hasInsertedFiles = false;
     const hasMultipleOriginalFiles = activeFileIds.length > 1;
-    
+
     if (!hasInsertedFiles && !hasMultipleOriginalFiles) {
       return null; // Use single-file export method
     }
@@ -499,7 +473,7 @@ const PageEditor = ({
 
       // Step 2: Use the already selected page IDs
       // Filter to only include IDs that exist in the document with DOM state
-      const validSelectedPageIds = selectedPageIds.filter(pageId => 
+      const validSelectedPageIds = selectedPageIds.filter(pageId =>
         documentWithDOMState.pages.some(p => p.id === pageId)
       );
 
@@ -551,11 +525,11 @@ const PageEditor = ({
         const sourceFiles = getSourceFiles();
         const baseExportFilename = getExportFilename();
         const baseName = baseExportFilename.replace(/\.pdf$/i, '');
-        
+
         for (let i = 0; i < processedDocuments.length; i++) {
           const doc = processedDocuments[i];
           const partFilename = `${baseName}_part_${i + 1}.pdf`;
-          
+
           const result = sourceFiles
             ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], { filename: partFilename })
             : await pdfExportService.exportPDF(doc, [], { filename: partFilename });
@@ -622,6 +596,7 @@ const PageEditor = ({
 
   const closePdf = useCallback(() => {
     actions.clearAllFiles();
+
     undoManagerRef.current.clear();
     setSelectedPageIds([]);
     setSelectionMode(false);
@@ -632,7 +607,7 @@ const PageEditor = ({
     if (!displayDocument) return;
 
     // For now, trigger the actual export directly
-    // In the original, this would show a preview modal first
+   // In the original, this would show a preview modal first
     if (selectedOnly) {
       onExportSelected();
     } else {
@@ -680,11 +655,11 @@ const PageEditor = ({
   const displayedPages = displayDocument?.pages || [];
 
   return (
-    <Box pos="relative" h="100vh" pt={40} style={{ overflow: 'auto' }} data-scrolling-container="true">
+    <Box pos="relative" h='100%' pt={40} style={{ overflow: 'auto' }} data-scrolling-container="true">
       <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
 
       {!mergedPdfDocument && !globalProcessing && activeFileIds.length === 0 && (
-        <Center h="100vh">
+        <Center h='100%'>
           <Stack align="center" gap="md">
             <Text size="lg" c="dimmed">📄</Text>
             <Text c="dimmed">No PDF files loaded</Text>
@@ -723,23 +698,23 @@ const PageEditor = ({
               const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx;
               const ITEM_HEIGHT = parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx;
               const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx;
-              
+
               return Array.from(splitPositions).map((position) => {
-              
+
               // Calculate items per row using DragDropGrid's logic
               const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
               const itemWithGap = ITEM_WIDTH + ITEM_GAP;
               const itemsPerRow = Math.max(1, Math.floor(availableWidth / itemWithGap));
-              
+
               // Calculate position within the grid (same as DragDropGrid)
               const row = Math.floor(position / itemsPerRow);
               const col = position % itemsPerRow;
-              
+
               // Position split line between pages (after the current page)
               // Calculate grid centering offset (same as DragDropGrid)
               const gridWidth = itemsPerRow * ITEM_WIDTH + (itemsPerRow - 1) * ITEM_GAP;
               const gridOffset = Math.max(0, (containerWidth - gridWidth) / 2);
-              
+
               const leftPosition = gridOffset + col * itemWithGap + ITEM_WIDTH + (ITEM_GAP / 2);
               const topPosition = row * ITEM_HEIGHT + (ITEM_HEIGHT * 0.05); // Center vertically (5% offset since page is 90% height)
 

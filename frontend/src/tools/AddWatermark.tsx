@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileSelection } from "../contexts/FileContext";
-import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -25,7 +24,6 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { actions } = useNavigationActions();
   const { selectedFiles } = useFileSelection();
 
   const [collapsedType, setCollapsedType] = useState(false);
@@ -76,6 +74,11 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
 
   const handleSettingsReset = () => {
     watermarkOperation.resetResults();
+    onPreviewFile?.(null);
+  };
+
+  const handleUndo = async () => {
+    await watermarkOperation.undoOperation();
     onPreviewFile?.(null);
   };
 
@@ -203,6 +206,7 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
       operation: watermarkOperation,
       title: t("watermark.results.title", "Watermark Results"),
       onFileClick: handleThumbnailClick,
+      onUndo: handleUndo,
     },
     forceStepNumbers: true,
   });

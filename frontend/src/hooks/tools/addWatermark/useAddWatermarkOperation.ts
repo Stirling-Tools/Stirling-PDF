@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { AddWatermarkParameters, defaultParameters } from './useAddWatermarkParameters';
 
@@ -35,11 +35,11 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
 
 // Static configuration object
 export const addWatermarkOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildAddWatermarkFormData,
   operationType: 'watermark',
   endpoint: '/api/v1/security/add-watermark',
-  buildFormData: buildAddWatermarkFormData,
   filePrefix: 'watermarked_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 

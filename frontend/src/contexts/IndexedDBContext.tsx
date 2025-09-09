@@ -6,8 +6,8 @@
 import React, { createContext, useContext, useCallback, useRef } from 'react';
 
 const DEBUG = process.env.NODE_ENV === 'development';
-import { fileStorage, StoredFile } from '../services/fileStorage';
-import { FileId } from '../types/fileContext';
+import { fileStorage } from '../services/fileStorage';
+import { FileId } from '../types/file';
 import { FileMetadata } from '../types/file';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 
@@ -17,12 +17,12 @@ interface IndexedDBContextValue {
   loadFile: (fileId: FileId) => Promise<File | null>;
   loadMetadata: (fileId: FileId) => Promise<FileMetadata | null>;
   deleteFile: (fileId: FileId) => Promise<void>;
-  
+
   // Batch operations
   loadAllMetadata: () => Promise<FileMetadata[]>;
   deleteMultiple: (fileIds: FileId[]) => Promise<void>;
   clearAll: () => Promise<void>;
-  
+
   // Utilities
   getStorageStats: () => Promise<{ used: number; available: number; fileCount: number }>;
   updateThumbnail: (fileId: FileId, thumbnail: string) => Promise<boolean>;
@@ -59,14 +59,14 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const saveFile = useCallback(async (file: File, fileId: FileId, existingThumbnail?: string): Promise<FileMetadata> => {
     // Use existing thumbnail or generate new one if none provided
     const thumbnail = existingThumbnail || await generateThumbnailForFile(file);
-    
+
     // Store in IndexedDB
-    const storedFile = await fileStorage.storeFile(file, fileId, thumbnail);
-    
+    await fileStorage.storeFile(file, fileId, thumbnail);
+
     // Cache the file object for immediate reuse
     fileCache.current.set(fileId, { file, lastAccessed: Date.now() });
     evictLRUEntries();
-    
+
     // Return metadata
     return {
       id: fileId,
@@ -121,7 +121,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     // Load metadata from IndexedDB (efficient - no data field)
     const metadata = await fileStorage.getAllFileMetadata();
     const fileMetadata = metadata.find(m => m.id === fileId);
-    
+
     if (!fileMetadata) return null;
 
     return {
@@ -137,14 +137,14 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const deleteFile = useCallback(async (fileId: FileId): Promise<void> => {
     // Remove from cache
     fileCache.current.delete(fileId);
-    
+
     // Remove from IndexedDB
     await fileStorage.deleteFile(fileId);
   }, []);
 
   const loadAllMetadata = useCallback(async (): Promise<FileMetadata[]> => {
     const metadata = await fileStorage.getAllFileMetadata();
-    
+
     return metadata.map(m => ({
       id: m.id,
       name: m.name,
@@ -158,7 +158,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const deleteMultiple = useCallback(async (fileIds: FileId[]): Promise<void> => {
     // Remove from cache
     fileIds.forEach(id => fileCache.current.delete(id));
-    
+
     // Remove from IndexedDB in parallel
     await Promise.all(fileIds.map(id => fileStorage.deleteFile(id)));
   }, []);
@@ -166,7 +166,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const clearAll = useCallback(async (): Promise<void> => {
     // Clear cache
     fileCache.current.clear();
-    
+
     // Clear IndexedDB
     await fileStorage.clearAll();
   }, []);

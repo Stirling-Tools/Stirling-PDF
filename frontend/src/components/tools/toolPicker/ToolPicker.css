@@ -1,8 +1,6 @@
 .tool-picker-scrollable {
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  scrollbar-width: thin;
-  scrollbar-color: var(--mantine-color-gray-4) transparent;
 }
 
 .tool-picker-scrollable::-webkit-scrollbar {

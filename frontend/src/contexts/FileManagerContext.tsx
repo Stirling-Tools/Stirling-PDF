@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { FileMetadata } from '../types/file';
-import { StoredFile, fileStorage } from '../services/fileStorage';
+import { fileStorage } from '../services/fileStorage';
 import { downloadFiles } from '../utils/downloadUtils';
+import { FileId } from '../types/file';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
   // State
   activeSource: 'recent' | 'local' | 'drive';
-  selectedFileIds: string[];
+  selectedFileIds: FileId[];
   searchTerm: string;
   selectedFiles: FileMetadata[];
   filteredFiles: FileMetadata[];
@@ -64,7 +65,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   refreshRecentFiles,
 }) => {
   const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
-  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+  const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,10 +75,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
   // Computed values (with null safety)
   const selectedFilesSet = new Set(selectedFileIds);
-  
-  const selectedFiles = selectedFileIds.length === 0 ? [] : 
+
+  const selectedFiles = selectedFileIds.length === 0 ? [] :
     (recentFiles || []).filter(file => selectedFilesSet.has(file.id));
-  
+
   const filteredFiles = !searchTerm ? recentFiles || [] :
     (recentFiles || []).filter(file =>
       file.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -99,15 +100,15 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const handleFileSelect = useCallback((file: FileMetadata, currentIndex: number, shiftKey?: boolean) => {
     const fileId = file.id;
     if (!fileId) return;
-    
+
     if (shiftKey && lastClickedIndex !== null) {
       // Range selection with shift-click
       const startIndex = Math.min(lastClickedIndex, currentIndex);
       const endIndex = Math.max(lastClickedIndex, currentIndex);
-      
+
       setSelectedFileIds(prev => {
         const selectedSet = new Set(prev);
-        
+
         // Add all files in the range to selection
         for (let i = startIndex; i <= endIndex; i++) {
           const rangeFileId = filteredFiles[i]?.id;
@@ -115,23 +116,23 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             selectedSet.add(rangeFileId);
           }
         }
-        
+
         return Array.from(selectedSet);
       });
     } else {
       // Normal click behavior - optimized with Set for O(1) lookup
       setSelectedFileIds(prev => {
         const selectedSet = new Set(prev);
-        
+
         if (selectedSet.has(fileId)) {
           selectedSet.delete(fileId);
         } else {
           selectedSet.add(fileId);
         }
-        
+
         return Array.from(selectedSet);
       });
-      
+
       // Update last clicked index for future range selections
       setLastClickedIndex(currentIndex);
     }
@@ -196,7 +197,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
     try {
       // Get files to delete based on current filtered view
-      const filesToDelete = filteredFiles.filter(file => 
+      const filesToDelete = filteredFiles.filter(file =>
         selectedFileIds.includes(file.id)
       );
 
@@ -221,7 +222,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
     try {
       // Get selected files
-      const selectedFilesToDownload = filteredFiles.filter(file => 
+      const selectedFilesToDownload = filteredFiles.filter(file =>
         selectedFileIds.includes(file.id)
       );
 

@@ -11,9 +11,10 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
+import { FileId } from '../../types/file';
 
 interface FileItem {
-  id: string;
+  id: FileId;
   name: string;
   pageCount: number;
   thumbnail: string | null;
@@ -25,14 +26,14 @@ interface FileEditorThumbnailProps {
   file: FileItem;
   index: number;
   totalFiles: number;
-  selectedFiles: string[];
+  selectedFiles: FileId[];
   selectionMode: boolean;
-  onToggleFile: (fileId: string) => void;
-  onDeleteFile: (fileId: string) => void;
-  onViewFile: (fileId: string) => void;
+  onToggleFile: (fileId: FileId) => void;
+  onDeleteFile: (fileId: FileId) => void;
+  onViewFile: (fileId: FileId) => void;
   onSetStatus: (status: string) => void;
-  onReorderFiles?: (sourceFileId: string, targetFileId: string, selectedFileIds: string[]) => void;
-  onDownloadFile?: (fileId: string) => void;
+  onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
+  onDownloadFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
 }
@@ -43,7 +44,6 @@ const FileEditorThumbnail = ({
   selectedFiles,
   onToggleFile,
   onDeleteFile,
-  onViewFile,
   onSetStatus,
   onReorderFiles,
   onDownloadFile,
@@ -60,8 +60,8 @@ const FileEditorThumbnail = ({
 
   // Resolve the actual File object for pin/unpin operations
   const actualFile = useMemo(() => {
-    return activeFiles.find((f: File) => f.name === file.name && f.size === file.size);
-  }, [activeFiles, file.name, file.size]);
+    return activeFiles.find(f => f.fileId === file.id);
+  }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
   const downloadSelectedFile = useCallback(() => {
@@ -161,8 +161,8 @@ const FileEditorThumbnail = ({
       onDrop: ({ source }) => {
         const sourceData = source.data;
         if (sourceData.type === 'file' && onReorderFiles) {
-          const sourceFileId = sourceData.fileId as string;
-          const selectedFileIds = sourceData.selectedFiles as string[];
+          const sourceFileId = sourceData.fileId as FileId;
+          const selectedFileIds = sourceData.selectedFiles as FileId[];
           onReorderFiles(sourceFileId, file.id, selectedFileIds);
         }
       }
@@ -332,7 +332,7 @@ const FileEditorThumbnail = ({
       )}
 
       {/* Title + meta line */}
-      <div 
+      <div
       style={{
         padding: '0.5rem',
         textAlign: 'center',

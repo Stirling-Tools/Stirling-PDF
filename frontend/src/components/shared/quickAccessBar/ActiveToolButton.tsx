@@ -1,10 +1,10 @@
 /**
  * ActiveToolButton - Shows the currently selected tool at the top of the Quick Access Bar
- * 
+ *
  * When a user selects a tool from the All Tools list, this component displays the tool's
  * icon and name at the top of the navigation bar. It provides a quick way to see which
  * tool is currently active and offers a back button to return to the All Tools list.
- * 
+ *
  * Features:
  * - Shows tool icon and name when a tool is selected
  * - Hover to reveal back arrow for returning to All Tools
@@ -16,6 +16,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActionIcon } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
+import { useSidebarNavigation } from '../../../hooks/useSidebarNavigation';
+import { handleUnlessSpecialClick } from '../../../utils/clickHandlers';
 import FitText from '../FitText';
 import { Tooltip } from '../Tooltip';
 
@@ -26,8 +28,9 @@ interface ActiveToolButtonProps {
 
 const NAV_IDS = ['read', 'sign', 'automate'];
 
-const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setActiveButton }) => {
+const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
+  const { getHomeNavigation } = useSidebarNavigation();
 
   // Determine if the indicator should be visible (do not require selectedTool to be resolved yet)
   const indicatorShouldShow = Boolean(
@@ -38,7 +41,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
   const [indicatorTool, setIndicatorTool] = useState<typeof selectedTool | null>(null);
   const [indicatorVisible, setIndicatorVisible] = useState<boolean>(false);
   const [replayAnim, setReplayAnim] = useState<boolean>(false);
-  const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [isBackHover, setIsBackHover] = useState<boolean>(false);
   const prevKeyRef = useRef<string | null>(null);
   const collapseTimeoutRef = useRef<number | null>(null);
@@ -71,11 +73,9 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
     replayRafRef.current = requestAnimationFrame(() => {
       setReplayAnim(true);
     });
-    setIsAnimating(true);
     prevKeyRef.current = (selectedToolKey as string) || null;
     animTimeoutRef.current = window.setTimeout(() => {
       setReplayAnim(false);
-      setIsAnimating(false);
       animTimeoutRef.current = null;
     }, 500);
   }
@@ -84,10 +84,8 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
     clearTimers();
     setIndicatorTool(selectedTool);
     setIndicatorVisible(true);
-    setIsAnimating(true);
     prevKeyRef.current = (selectedToolKey as string) || null;
     animTimeoutRef.current = window.setTimeout(() => {
-      setIsAnimating(false);
       animTimeoutRef.current = null;
     }, 500);
   }
@@ -95,11 +93,9 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
   const triggerCollapse = () => {
     clearTimers();
     setIndicatorVisible(false);
-    setIsAnimating(true);
     collapseTimeoutRef.current = window.setTimeout(() => {
       setIndicatorTool(null);
       prevKeyRef.current = null;
-      setIsAnimating(false);
       collapseTimeoutRef.current = null;
     }, 500); // match CSS transition duration
   }
@@ -142,21 +138,26 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ activeButton, setAc
             <div className="flex flex-col items-center gap-1">
               <Tooltip content={isBackHover ? 'Back to all tools' : indicatorTool.name} position="right" arrow maxWidth={140}>
                 <ActionIcon
+                  component="a"
+                  href={getHomeNavigation().href}
+                  onClick={(e: React.MouseEvent) => {
+                    handleUnlessSpecialClick(e, () => {
+                      setActiveButton('tools');
+                      handleBackToTools();
+                    });
+                  }}
                   size={'xl'}
                   variant="subtle"
                   onMouseEnter={() => setIsBackHover(true)}
                   onMouseLeave={() => setIsBackHover(false)}
-                  onClick={() => {
-                    setActiveButton('tools');
-                    handleBackToTools();
-                  }}
                   aria-label={isBackHover ? 'Back to all tools' : indicatorTool.name}
                   style={{
                     backgroundColor: isBackHover ? 'var(--color-gray-300)' : 'var(--icon-tools-bg)',
                     color: isBackHover ? '#fff' : 'var(--icon-tools-color)',
                     border: 'none',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    textDecoration: 'none'
                   }}
                 >
                   <span className="iconContainer">

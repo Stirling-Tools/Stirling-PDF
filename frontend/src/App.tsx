@@ -10,8 +10,12 @@ import HomePage from "./pages/HomePage";
 
 // Import global styles
 import "./styles/tailwind.css";
+import "./styles/cookieconsent.css";
 import "./index.css";
 import { RightRailProvider } from "./contexts/RightRailContext";
+
+// Import file ID debugging helpers (development only)
+import "./utils/fileIdSafety";
 
 // Loading component for i18next suspense
 const LoadingFallback = () => (
@@ -40,7 +44,7 @@ export default function App() {
                 <ToolWorkflowProvider>
                   <SidebarProvider>
                     <RightRailProvider>
-                    <HomePage />
+                      <HomePage />
                     </RightRailProvider>
                   </SidebarProvider>
                 </ToolWorkflowProvider>

@@ -75,7 +75,7 @@ export const mantineTheme = createTheme({
       },
       variants: {
         // Custom button variant for PDF tools
-        pdfTool: (theme: any) => ({
+        pdfTool: (_theme: any) => ({
           root: {
             backgroundColor: 'var(--bg-surface)',
             border: '1px solid var(--border-default)',
@@ -108,7 +108,7 @@ export const mantineTheme = createTheme({
       },
     },
     Textarea: {
-      styles: (theme: any) => ({
+      styles: (_theme: any) => ({
         input: {
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
@@ -126,7 +126,7 @@ export const mantineTheme = createTheme({
     },
 
     TextInput: {
-      styles: (theme: any) => ({
+      styles: (_theme: any) => ({
         input: {
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
@@ -144,7 +144,7 @@ export const mantineTheme = createTheme({
     },
 
      PasswordInput: {
-      styles: (theme: any) => ({
+      styles: (_theme: any) => ({
         input: {
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
@@ -318,7 +318,7 @@ export const mantineTheme = createTheme({
         },
         control: {
           color: 'var(--text-secondary)',
-          '[data-active]': {
+          '[dataActive]': {
             backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
             boxShadow: 'var(--shadow-sm)',

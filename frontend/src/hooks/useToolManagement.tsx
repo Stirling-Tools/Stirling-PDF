@@ -1,41 +1,33 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
 import MergeIcon from "@mui/icons-material/Merge";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
+import { FileId } from '../types/file';
 
 interface ToolManagementResult {
   selectedTool: ToolRegistryEntry | null;
-  toolSelectedFileIds: string[];
+  toolSelectedFileIds: FileId[];
   toolRegistry: Record<string, ToolRegistryEntry>;
-  setToolSelectedFileIds: (fileIds: string[]) => void;
+  setToolSelectedFileIds: (fileIds: FileId[]) => void;
   getSelectedTool: (toolKey: string | null) => ToolRegistryEntry | null;
 }
 
 export const useToolManagement = (): ToolManagementResult => {
   const { t } = useTranslation();
 
-  const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
+  const [toolSelectedFileIds, setToolSelectedFileIds] = useState<FileId[]>([]);
 
   // Build endpoints list from registry entries with fallback to legacy mapping
   const baseRegistry = useFlatToolRegistry();
-  const registryDerivedEndpoints = useMemo(() => {
-    const endpointsByTool: Record<string, string[]> = {};
-    Object.entries(baseRegistry).forEach(([key, entry]) => {
-      if (entry.endpoints && entry.endpoints.length > 0) {
-        endpointsByTool[key] = entry.endpoints;
-      }
-    });
-    return endpointsByTool;
-  }, [baseRegistry]);
 
   const allEndpoints = useMemo(() => getAllEndpoints(baseRegistry), [baseRegistry]);
   const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
     if (endpointsLoading) return true;
-    const endpoints = baseRegistry[toolKey]?.endpoints || [];
+    const endpoints = baseRegistry[toolKey as keyof typeof baseRegistry]?.endpoints || [];
     return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 

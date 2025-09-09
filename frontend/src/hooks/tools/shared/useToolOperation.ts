@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from '../../../contexts/FileContext';
@@ -6,11 +6,17 @@ import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { createOperation } from '../../../utils/toolOperationTracker';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
+
+export enum ToolType {
+  singleFile,
+  multiFile,
+  custom,
+}
 
 /**
  * Configuration for tool operations defining processing behavior and API integration.
@@ -20,44 +26,22 @@ export type { ProcessingProgress, ResponseHandler };
  * 2. Multi-file tools: multiFileEndpoint: true, single API call with all files
  * 3. Complex tools: customProcessor handles all processing logic
  */
-export interface ToolOperationConfig<TParams = void> {
+interface BaseToolOperationConfig<TParams> {
   /** Operation identifier for tracking and logging */
   operationType: string;
-
-  /**
-   * API endpoint for the operation. Can be static string or function for dynamic routing.
-   * Not used when customProcessor is provided.
-   */
-  endpoint: string | ((params: TParams) => string);
-
-  /**
-   * Builds FormData for API request. Signature determines processing approach:
-   * - (params, file: File) => FormData: Single-file processing
-   * - (params, files: File[]) => FormData: Multi-file processing
-   * Not used when customProcessor is provided.
-   */
-  buildFormData: ((params: TParams, file: File) => FormData) | ((params: TParams, files: File[]) => FormData); /* FIX ME */
 
   /** Prefix added to processed filenames (e.g., 'compressed_', 'split_') */
   filePrefix: string;
 
   /**
-   * Whether this tool uses backends that accept MultipartFile[] arrays.
-   * - true: Single API call with all files (backend uses MultipartFile[])
-   * - false/undefined: Individual API calls per file (backend uses single MultipartFile)
-   * Ignored when customProcessor is provided.
+   * Whether to preserve the filename provided by the backend in response headers.
+   * When true, ignores filePrefix and uses the filename from Content-Disposition header.
+   * Useful for tools like auto-rename where the backend determines the final filename.
    */
-  multiFileEndpoint?: boolean;
+  preserveBackendFilename?: boolean;
 
   /** How to handle API responses (e.g., ZIP extraction, single file response) */
   responseHandler?: ResponseHandler;
-
-  /**
-   * Custom processing logic that completely bypasses standard file processing.
-   * When provided, tool handles all API calls, response processing, and file creation.
-   * Use for tools with complex routing logic or non-standard processing requirements.
-   */
-  customProcessor?: (params: TParams, files: File[]) => Promise<File[]>;
 
   /** Extract user-friendly error messages from API errors */
   getErrorMessage?: (error: any) => string;
@@ -65,6 +49,49 @@ export interface ToolOperationConfig<TParams = void> {
   /** Default parameter values for automation */
   defaultParameters?: TParams;
 }
+
+export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+  /** This tool processes one file at a time. */
+  toolType: ToolType.singleFile;
+
+  /** Builds FormData for API request. */
+  buildFormData: ((params: TParams, file: File) => FormData);
+
+  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
+  endpoint: string | ((params: TParams) => string);
+
+  customProcessor?: undefined;
+}
+
+export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+  /** This tool processes multiple files at once. */
+  toolType: ToolType.multiFile;
+
+  /** Builds FormData for API request. */
+  buildFormData: ((params: TParams, files: File[]) => FormData);
+
+  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
+  endpoint: string | ((params: TParams) => string);
+
+  customProcessor?: undefined;
+}
+
+export interface CustomToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+  /** This tool has custom behaviour. */
+  toolType: ToolType.custom;
+
+  buildFormData?: undefined;
+  endpoint?: undefined;
+
+  /**
+   * Custom processing logic that completely bypasses standard file processing.
+   * This tool handles all API calls, response processing, and file creation.
+   * Use for tools with complex routing logic or non-standard processing requirements.
+   */
+  customProcessor: (params: TParams, files: File[]) => Promise<File[]>;
+}
+
+export type ToolOperationConfig<TParams = void> = SingleFileToolOperationConfig<TParams> | MultiFileToolOperationConfig<TParams> | CustomToolOperationConfig<TParams>;
 
 /**
  * Complete tool operation interface with execution capability
@@ -82,10 +109,11 @@ export interface ToolOperationHook<TParams = void> {
   progress: ProcessingProgress | null;
 
   // Actions
-  executeOperation: (params: TParams, selectedFiles: File[]) => Promise<void>;
+  executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
   resetResults: () => void;
   clearError: () => void;
   cancelOperation: () => void;
+  undoOperation: () => Promise<void>;
 }
 
 // Re-export for backwards compatibility
@@ -103,20 +131,27 @@ export { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
  * @param config - Tool operation configuration
  * @returns Hook interface with state and execution methods
  */
-export const useToolOperation = <TParams = void>(
+export const useToolOperation = <TParams>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, findFileId } = useFileContext();
+  const { addFiles, consumeFiles, undoConsumeFiles, selectors } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
   const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles } = useToolResources();
 
+  // Track last operation for undo functionality
+  const lastOperationRef = useRef<{
+    inputFiles: File[];
+    inputStirlingFileStubs: StirlingFileStub[];
+    outputFileIds: FileId[];
+  } | null>(null);
+
   const executeOperation = useCallback(async (
     params: TParams,
-    selectedFiles: File[]
+    selectedFiles: StirlingFile[]
   ): Promise<void> => {
     // Validation
     if (selectedFiles.length === 0) {
@@ -130,9 +165,6 @@ export const useToolOperation = <TParams = void>(
       return;
     }
 
-    // Setup operation tracking
-    const { operation, operationId, fileId } = createOperation(config.operationType, params, selectedFiles);
-    recordOperation(fileId, operation);
 
     // Reset state
     actions.setLoading(true);
@@ -143,15 +175,33 @@ export const useToolOperation = <TParams = void>(
     try {
       let processedFiles: File[];
 
-      if (config.customProcessor) {
-        actions.setStatus('Processing files...');
-        processedFiles = await config.customProcessor(params, validFiles);
-      } else {
-        // Use explicit multiFileEndpoint flag to determine processing approach
-        if (config.multiFileEndpoint) {
+      // Convert StirlingFile to regular File objects for API processing
+      const validRegularFiles = extractFiles(validFiles);
+
+      switch (config.toolType) {
+        case ToolType.singleFile: {
+          // Individual file processing - separate API call per file
+          const apiCallsConfig: ApiCallsConfig<TParams> = {
+            endpoint: config.endpoint,
+            buildFormData: config.buildFormData,
+            filePrefix: config.filePrefix,
+            responseHandler: config.responseHandler,
+            preserveBackendFilename: config.preserveBackendFilename
+          };
+          processedFiles = await processFiles(
+            params,
+            validRegularFiles,
+            apiCallsConfig,
+            actions.setProgress,
+            actions.setStatus
+          );
+          break;
+        }
+
+        case ToolType.multiFile: {
           // Multi-file processing - single API call with all files
           actions.setStatus('Processing files...');
-          const formData = (config.buildFormData as (params: TParams, files: File[]) => FormData)(params, validFiles);
+          const formData = config.buildFormData(params, validRegularFiles);
           const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
 
           const response = await axios.post(endpoint, formData, { responseType: 'blob' });
@@ -159,11 +209,11 @@ export const useToolOperation = <TParams = void>(
           // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
           if (config.responseHandler) {
             // Use custom responseHandler for multi-file (handles ZIP extraction)
-            processedFiles = await config.responseHandler(response.data, validFiles);
-          } else if (response.data.type === 'application/pdf' || 
-                     (response.headers && response.headers['content-type'] === 'application/pdf')) {
+            processedFiles = await config.responseHandler(response.data, validRegularFiles);
+          } else if (response.data.type === 'application/pdf' ||
+                    (response.headers && response.headers['content-type'] === 'application/pdf')) {
             // Single PDF response (e.g. split with merge option) - use original filename
-            const originalFileName = validFiles[0]?.name || 'document.pdf';
+            const originalFileName = validRegularFiles[0]?.name || 'document.pdf';
             const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
             processedFiles = [singleFile];
           } else {
@@ -175,22 +225,13 @@ export const useToolOperation = <TParams = void>(
               processedFiles = await extractAllZipFiles(response.data);
             }
           }
-        } else {
-          // Individual file processing - separate API call per file
-          const apiCallsConfig: ApiCallsConfig<TParams> = {
-            endpoint: config.endpoint,
-            buildFormData: config.buildFormData as (params: TParams, file: File) => FormData,
-            filePrefix: config.filePrefix,
-            responseHandler: config.responseHandler
-          };
-          processedFiles = await processFiles(
-            params,
-            validFiles,
-            apiCallsConfig,
-            actions.setProgress,
-            actions.setStatus
-          );
+          break;
         }
+
+        case ToolType.custom:
+          actions.setStatus('Processing files...');
+          processedFiles = await config.customProcessor(params, validRegularFiles);
+          break;
       }
 
       if (processedFiles.length > 0) {
@@ -208,22 +249,41 @@ export const useToolOperation = <TParams = void>(
         actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
 
         // Replace input files with processed files (consumeFiles handles pinning)
-        const inputFileIds = validFiles.map(file => findFileId(file)).filter(Boolean) as string[];
-        await consumeFiles(inputFileIds, processedFiles);
+        const inputFileIds: FileId[] = [];
+        const inputStirlingFileStubs: StirlingFileStub[] = [];
 
-        markOperationApplied(fileId, operationId);
+        // Build parallel arrays of IDs and records for undo tracking
+        for (const file of validFiles) {
+          const fileId = file.fileId;
+          const record = selectors.getStirlingFileStub(fileId);
+          if (record) {
+            inputFileIds.push(fileId);
+            inputStirlingFileStubs.push(record);
+          } else {
+            console.warn(`No file stub found for file: ${file.name}`);
+          }
+        }
+
+        const outputFileIds = await consumeFiles(inputFileIds, processedFiles);
+
+        // Store operation data for undo (only store what we need to avoid memory bloat)
+        lastOperationRef.current = {
+          inputFiles: extractFiles(validFiles), // Convert to File objects for undo
+          inputStirlingFileStubs: inputStirlingFileStubs.map(record => ({ ...record })), // Deep copy to avoid reference issues
+          outputFileIds
+        };
+
       }
 
     } catch (error: any) {
       const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
       actions.setError(errorMessage);
       actions.setStatus('');
-      markOperationFailed(fileId, operationId, errorMessage);
     } finally {
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, recordOperation, markOperationApplied, markOperationFailed, addFiles, consumeFiles, findFileId, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
+  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();
@@ -235,7 +295,65 @@ export const useToolOperation = <TParams = void>(
   const resetResults = useCallback(() => {
     cleanupBlobUrls();
     actions.resetResults();
+    // Clear undo data when results are reset to prevent memory leaks
+    lastOperationRef.current = null;
   }, [cleanupBlobUrls, actions]);
+
+  // Cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      lastOperationRef.current = null;
+    };
+  }, []);
+
+  const undoOperation = useCallback(async () => {
+    if (!lastOperationRef.current) {
+      actions.setError(t('noOperationToUndo', 'No operation to undo'));
+      return;
+    }
+
+    const { inputFiles, inputStirlingFileStubs, outputFileIds } = lastOperationRef.current;
+
+    // Validate that we have data to undo
+    if (inputFiles.length === 0 || inputStirlingFileStubs.length === 0) {
+      actions.setError(t('invalidUndoData', 'Cannot undo: invalid operation data'));
+      return;
+    }
+
+    if (outputFileIds.length === 0) {
+      actions.setError(t('noFilesToUndo', 'Cannot undo: no files were processed in the last operation'));
+      return;
+    }
+
+    try {
+      // Undo the consume operation
+      await undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds);
+
+
+      // Clear results and operation tracking
+      resetResults();
+      lastOperationRef.current = null;
+
+      // Show success message
+      actions.setStatus(t('undoSuccess', 'Operation undone successfully'));
+
+    } catch (error: any) {
+      let errorMessage = extractErrorMessage(error);
+
+      // Provide more specific error messages based on error type
+      if (error.message?.includes('Mismatch between input files')) {
+        errorMessage = t('undoDataMismatch', 'Cannot undo: operation data is corrupted');
+      } else if (error.message?.includes('IndexedDB')) {
+        errorMessage = t('undoStorageError', 'Undo completed but some files could not be saved to storage');
+      } else if (error.name === 'QuotaExceededError') {
+        errorMessage = t('undoQuotaError', 'Cannot undo: insufficient storage space');
+      }
+
+      actions.setError(`${t('undoFailed', 'Failed to undo operation')}: ${errorMessage}`);
+
+      // Don't clear the operation data if undo failed - user might want to try again
+    }
+  }, [undoConsumeFiles, resetResults, actions, t]);
 
   return {
     // State
@@ -253,6 +371,7 @@ export const useToolOperation = <TParams = void>(
     executeOperation,
     resetResults,
     clearError: actions.clearError,
-    cancelOperation
+    cancelOperation,
+    undoOperation
   };
 };

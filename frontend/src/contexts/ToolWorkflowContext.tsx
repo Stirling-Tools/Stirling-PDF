@@ -6,9 +6,11 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
-import { ToolRegistryEntry } from '../data/toolsTaxonomy';
-import { useToolWorkflowUrlSync } from '../hooks/useUrlSync';
+import { ToolRegistryEntry, ToolRegistry } from '../data/toolsTaxonomy';
 import { useNavigationActions, useNavigationState } from './NavigationContext';
+import { ToolId, isValidToolId } from '../types/toolId';
+import { useNavigationUrlSync } from '../hooks/useUrlSync';
+import { getDefaultWorkbench } from '../types/workbench';
 
 // State interface
 interface ToolWorkflowState {
@@ -83,10 +85,11 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setSearchQuery: (query: string) => void;
 
   // Tool Actions
-  selectTool: (toolId: string) => void;
+  selectTool: (toolId: ToolId | null) => void;
   clearToolSelection: () => void;
 
   // Tool Reset Actions
+  toolResetFunctions: Record<string, () => void>;
   registerToolReset: (toolId: string, resetFunction: () => void) => void;
   resetTool: (toolId: string) => void;
 
@@ -124,7 +127,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   } = useToolManagement();
 
   // Get selected tool from navigation context
-  const selectedTool = getSelectedTool(navigationState.selectedToolKey);
+  const selectedTool = getSelectedTool(navigationState.selectedTool);
 
   // UI Action creators
   const setSidebarsVisible = useCallback((visible: boolean) => {
@@ -136,13 +139,17 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, []);
 
   const setReaderMode = useCallback((mode: boolean) => {
+    if (mode) {
+      actions.setWorkbench('viewer');
+      actions.setSelectedTool('read');
+    }
     dispatch({ type: 'SET_READER_MODE', payload: mode });
-  }, []);
+  }, [actions]);
 
   const setPreviewFile = useCallback((file: File | null) => {
     dispatch({ type: 'SET_PREVIEW_FILE', payload: file });
     if (file) {
-      actions.setMode('viewer');
+      actions.setWorkbench('viewer');
     }
   }, [actions]);
 
@@ -172,7 +179,17 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: string) => {
-    actions.handleToolSelect(toolId);
+    // Set the selected tool and determine the appropriate workbench
+    const validToolId = isValidToolId(toolId) ? toolId : null;
+    actions.setSelectedTool(validToolId);
+
+    // Get the tool from registry to determine workbench
+    const tool = getSelectedTool(toolId);
+    if (tool && tool.workbench) {
+      actions.setWorkbench(tool.workbench);
+    } else {
+      actions.setWorkbench(getDefaultWorkbench());
+    }
 
     // Clear search query when selecting a tool
     setSearchQuery('');
@@ -189,13 +206,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setLeftPanelView('toolContent');
       setReaderMode(false); // Disable read mode when selecting tools
     }
-  }, [actions, setLeftPanelView, setReaderMode, setSearchQuery]);
+  }, [actions, getSelectedTool, setLeftPanelView, setReaderMode, setSearchQuery]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
     setReaderMode(false);
-    actions.clearToolSelection();
-  }, [setLeftPanelView, setReaderMode, actions]);
+    actions.setSelectedTool(null);
+  }, [setLeftPanelView, setReaderMode, actions.setSelectedTool]);
 
   const handleReaderToggle = useCallback(() => {
     setReaderMode(true);
@@ -214,14 +231,20 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     [state.sidebarsVisible, state.readerMode]
   );
 
-  // Enable URL synchronization for tool selection
-  useToolWorkflowUrlSync(navigationState.selectedToolKey, actions.selectTool, actions.clearToolSelection, true);
+  // URL sync for proper tool navigation
+  useNavigationUrlSync(
+    navigationState.selectedTool,
+    handleToolSelect,
+    handleBackToTools,
+    toolRegistry as ToolRegistry,
+    true
+  );
 
   // Properly memoized context value
   const contextValue = useMemo((): ToolWorkflowContextValue => ({
     // State
     ...state,
-    selectedToolKey: navigationState.selectedToolKey,
+    selectedToolKey: navigationState.selectedTool,
     selectedTool,
     toolRegistry,
 
@@ -232,10 +255,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
-    selectTool: actions.selectTool,
-    clearToolSelection: actions.clearToolSelection,
+    selectTool: actions.setSelectedTool,
+    clearToolSelection: () => actions.setSelectedTool(null),
 
     // Tool Reset Actions
+    toolResetFunctions,
     registerToolReset,
     resetTool,
 
@@ -249,7 +273,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     isPanelVisible,
   }), [
     state,
-    navigationState.selectedToolKey,
+    navigationState.selectedTool,
     selectedTool,
     toolRegistry,
     setSidebarsVisible,
@@ -258,8 +282,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
-    actions.selectTool,
-    actions.clearToolSelection,
+    actions.setSelectedTool,
     registerToolReset,
     resetTool,
     handleToolSelect,

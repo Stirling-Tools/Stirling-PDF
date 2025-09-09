@@ -2,9 +2,8 @@ import { useCallback } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters, defaultParameters } from './useConvertParameters';
-import { detectFileExtension } from '../../../utils/fileUtils';
 import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
-import { useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
+import { useToolOperation, ToolType } from '../shared/useToolOperation';
 import { getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
 
 // Static function that can be used by both the hook and automation executor
@@ -79,6 +78,11 @@ export const createFileFromResponse = (
   targetExtension: string
 ): File => {
   const originalName = originalFileName.split('.')[0];
+
+  if (targetExtension == 'pdfa') {
+    targetExtension = 'pdf';
+  }
+
   const fallbackFilename = `${originalName}_converted.${targetExtension}`;
 
   return createFileFromApiResponse(responseData, headers, fallbackFilename);
@@ -129,11 +133,10 @@ export const convertProcessor = async (
 
 // Static configuration object
 export const convertOperationConfig = {
+  toolType: ToolType.custom,
+  customProcessor: convertProcessor, // Can't use callback version here
   operationType: 'convert',
-  endpoint: '', // Not used with customProcessor but required
-  buildFormData: buildConvertFormData, // Not used with customProcessor but required
   filePrefix: 'converted_',
-  customProcessor: convertProcessor,
   defaultParameters,
 } as const;
 
@@ -158,6 +161,6 @@ export const useConvertOperation = () => {
         return error.message;
       }
       return t("convert.errorConversion", "An error occurred while converting the file.");
-    }
+    },
   });
 };

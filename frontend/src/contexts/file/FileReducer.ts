@@ -2,11 +2,10 @@
  * FileContext reducer - Pure state management for file operations
  */
 
-import {
+import { FileId } from '../../types/file';import {
   FileContextState,
   FileContextAction,
-  FileId,
-  FileRecord
+  StirlingFileStub
 } from '../../types/fileContext';
 
 // Initial state
@@ -25,15 +24,56 @@ export const initialFileContextState: FileContextState = {
   }
 };
 
+// Helper function for consume/undo operations
+function processFileSwap(
+  state: FileContextState,
+  filesToRemove: FileId[],
+  filesToAdd: StirlingFileStub[]
+): FileContextState {
+  // Only remove unpinned files
+  const unpinnedRemoveIds = filesToRemove.filter(id => !state.pinnedFiles.has(id));
+  const remainingIds = state.files.ids.filter(id => !unpinnedRemoveIds.includes(id));
+
+  // Remove unpinned files from state
+  const newById = { ...state.files.byId };
+  unpinnedRemoveIds.forEach(id => {
+    delete newById[id];
+  });
+
+  // Add new files
+  const addedIds: FileId[] = [];
+  filesToAdd.forEach(record => {
+    if (!newById[record.id]) {
+      addedIds.push(record.id);
+      newById[record.id] = record;
+    }
+  });
+
+  // Clear selections that reference removed files
+  const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !unpinnedRemoveIds.includes(id));
+
+  return {
+    ...state,
+    files: {
+      ids: [...addedIds, ...remainingIds],
+      byId: newById
+    },
+    ui: {
+      ...state.ui,
+      selectedFileIds: validSelectedFileIds
+    }
+  };
+}
+
 // Pure reducer function
 export function fileContextReducer(state: FileContextState, action: FileContextAction): FileContextState {
   switch (action.type) {
     case 'ADD_FILES': {
-      const { fileRecords } = action.payload;
+      const { stirlingFileStubs } = action.payload;
       const newIds: FileId[] = [];
-      const newById: Record<FileId, FileRecord> = { ...state.files.byId };
+      const newById: Record<FileId, StirlingFileStub> = { ...state.files.byId };
 
-      fileRecords.forEach(record => {
+      stirlingFileStubs.forEach(record => {
         // Only add if not already present (dedupe by stable ID)
         if (!newById[record.id]) {
           newIds.push(record.id);
@@ -104,9 +144,8 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
 
       // Validate that all IDs exist in current state
       const validIds = orderedFileIds.filter(id => state.files.byId[id]);
-      // Reorder selected files by passed order
+// Reorder selected files by passed order
       const selectedFileIds = orderedFileIds.filter(id => state.ui.selectedFileIds.includes(id));
-
       return {
         ...state,
         files: {
@@ -198,41 +237,16 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
     }
 
     case 'CONSUME_FILES': {
-      const { inputFileIds, outputFileRecords } = action.payload;
+      const { inputFileIds, outputStirlingFileStubs } = action.payload;
 
-      // Only remove unpinned input files
-      const unpinnedInputIds = inputFileIds.filter(id => !state.pinnedFiles.has(id));
-      const remainingIds = state.files.ids.filter(id => !unpinnedInputIds.includes(id));
+      return processFileSwap(state, inputFileIds, outputStirlingFileStubs);
+    }
 
-      // Remove unpinned files from state
-      const newById = { ...state.files.byId };
-      unpinnedInputIds.forEach(id => {
-        delete newById[id];
-      });
 
-      // Add output files
-      const outputIds: FileId[] = [];
-      outputFileRecords.forEach(record => {
-        if (!newById[record.id]) {
-          outputIds.push(record.id);
-          newById[record.id] = record;
-        }
-      });
+      case 'UNDO_CONSUME_FILES': {
+      const { inputStirlingFileStubs, outputFileIds } = action.payload;
 
-      // Clear selections that reference removed files
-      const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !unpinnedInputIds.includes(id));
-
-      return {
-        ...state,
-        files: {
-          ids: [...remainingIds, ...outputIds],
-          byId: newById
-        },
-        ui: {
-          ...state.ui,
-          selectedFileIds: validSelectedFileIds
-        }
-      };
+      return processFileSwap(state, outputFileIds, inputStirlingFileStubs);
     }
 
     case 'RESET_CONTEXT': {

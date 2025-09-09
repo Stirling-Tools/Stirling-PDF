@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileSelection } from "../contexts/FileContext";
-import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 
-import { useAddPasswordParameters, defaultParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
+import { useAddPasswordParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
 import { useAddPasswordOperation } from "../hooks/tools/addPassword/useAddPasswordOperation";
 import { useAddPasswordTips } from "../components/tooltips/useAddPasswordTips";
 import { useAddPasswordPermissionsTips } from "../components/tooltips/useAddPasswordPermissionsTips";
@@ -17,7 +16,6 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { actions } = useNavigationActions();
   const { selectedFiles } = useFileSelection();
 
   const [collapsedPermissions, setCollapsedPermissions] = useState(true);
@@ -57,6 +55,11 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleSettingsReset = () => {
     addPasswordOperation.resetResults();
+    onPreviewFile?.(null);
+  };
+
+  const handleUndo = async () => {
+    await addPasswordOperation.undoOperation();
     onPreviewFile?.(null);
   };
 
@@ -110,6 +113,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       operation: addPasswordOperation,
       title: t("addPassword.results.title", "Encrypted PDFs"),
       onFileClick: handleThumbnailClick,
+      onUndo: handleUndo,
     },
   });
 };

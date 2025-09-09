@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
@@ -38,17 +37,20 @@ export default function HomePage() {
   // Note: File selection limits are now handled directly by individual tools
 
   return (
-    <Group
-      align="flex-start"
-      gap={0}
-      className="min-h-screen w-screen overflow-hidden flex-nowrap flex"
-    >
-      <QuickAccessBar
-        ref={quickAccessRef} />
-      <ToolPanel />
-      <Workbench />
-      <RightRail />
-      <FileManager selectedTool={selectedTool as any /* FIX ME */} />
-    </Group>
+    <div className="h-screen overflow-hidden">
+      <Group
+        align="flex-start"
+        gap={0}
+        h="100%"
+        className="flex-nowrap flex"
+      >
+        <QuickAccessBar
+          ref={quickAccessRef} />
+        <ToolPanel />
+        <Workbench />
+        <RightRail />
+        <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+      </Group>
+    </div>
   );
 }

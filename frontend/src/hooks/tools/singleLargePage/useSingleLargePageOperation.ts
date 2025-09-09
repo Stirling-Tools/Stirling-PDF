@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SingleLargePageParameters, defaultParameters } from './useSingleLargePageParameters';
 
 // Static function that can be used by both the hook and automation executor
-export const buildSingleLargePageFormData = (parameters: SingleLargePageParameters, file: File): FormData => {
+export const buildSingleLargePageFormData = (_parameters: SingleLargePageParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   return formData;
@@ -12,11 +12,11 @@ export const buildSingleLargePageFormData = (parameters: SingleLargePageParamete
 
 // Static configuration object
 export const singleLargePageOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildSingleLargePageFormData,
   operationType: 'single-large-page',
   endpoint: '/api/v1/general/pdf-to-single-page',
-  buildFormData: buildSingleLargePageFormData,
   filePrefix: 'single_page_', // Will be overridden in hook with translation
-  multiFileEndpoint: false,
   defaultParameters,
 } as const;
 

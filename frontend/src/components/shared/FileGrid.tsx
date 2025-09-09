@@ -1,19 +1,20 @@
-import React, { useState } from "react";
-import { Box, Flex, Group, Text, Button, TextInput, Select, Badge } from "@mantine/core";
+import { useState } from "react";
+import { Box, Flex, Group, Text, Button, TextInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
 import FileCard from "./FileCard";
-import { FileRecord } from "../../types/fileContext";
+import { StirlingFileStub } from "../../types/fileContext";
+import { FileId } from "../../types/file";
 
 interface FileGridProps {
-  files: Array<{ file: File; record?: FileRecord }>;
+  files: Array<{ file: File; record?: StirlingFileStub }>;
   onRemove?: (index: number) => void;
-  onDoubleClick?: (item: { file: File; record?: FileRecord }) => void;
-  onView?: (item: { file: File; record?: FileRecord }) => void;
-  onEdit?: (item: { file: File; record?: FileRecord }) => void;
-  onSelect?: (fileId: string) => void;
-  selectedFiles?: string[];
+  onDoubleClick?: (item: { file: File; record?: StirlingFileStub }) => void;
+  onView?: (item: { file: File; record?: StirlingFileStub }) => void;
+  onEdit?: (item: { file: File; record?: StirlingFileStub }) => void;
+  onSelect?: (fileId: FileId) => void;
+  selectedFiles?: FileId[];
   showSearch?: boolean;
   showSort?: boolean;
   maxDisplay?: number; // If set, shows only this many files with "Show All" option
@@ -119,12 +120,20 @@ const FileGrid = ({
         direction="row"
         wrap="wrap"
         gap="md"
-        h="30rem" 
+        h="30rem"
         style={{ overflowY: "auto", width: "100%" }}
       >
-        {displayFiles.map((item, idx) => {
-          const fileId = item.record?.id || item.file.name;
-          const originalIdx = files.findIndex(f => (f.record?.id || f.file.name) === fileId);
+        {displayFiles
+          .filter(item => {
+            if (!item.record?.id) {
+              console.error('FileGrid: File missing StirlingFileStub with proper ID:', item.file.name);
+              return false;
+            }
+            return true;
+          })
+          .map((item, idx) => {
+          const fileId = item.record!.id; // Safe to assert after filter
+          const originalIdx = files.findIndex(f => f.record?.id === fileId);
           const supported = isFileSupported ? isFileSupported(item.file.name) : true;
           return (
             <FileCard

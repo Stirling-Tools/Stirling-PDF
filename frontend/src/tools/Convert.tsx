@@ -1,8 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileState, useFileSelection } from "../contexts/FileContext";
-import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -15,7 +14,6 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectors } = useFileState();
-  const { actions } = useNavigationActions();
   const activeFiles = selectors.getFiles();
   const { selectedFiles } = useFileSelection();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -93,6 +91,11 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   };
 
+  const handleUndo = async () => {
+    await convertOperation.undoOperation();
+    onPreviewFile?.(null);
+  };
+
   return createToolFlow({
     files: {
       selectedFiles,
@@ -128,6 +131,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       operation: convertOperation,
       title: t("convert.conversionResults", "Conversion Results"),
       onFileClick: handleThumbnailClick,
+      onUndo: handleUndo,
       testId: "conversion-results",
     },
   });

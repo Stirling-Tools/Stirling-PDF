@@ -1,16 +1,16 @@
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SplitParameters, defaultParameters } from './useSplitParameters';
 import { SPLIT_MODES } from '../../../constants/splitConstants';
+import { useToolResources } from '../shared/useToolResources';
 
 // Static functions that can be used by both the hook and automation executor
-export const buildSplitFormData = (parameters: SplitParameters, selectedFiles: File[]): FormData => {
+export const buildSplitFormData = (parameters: SplitParameters, file: File): FormData => {
   const formData = new FormData();
 
-  selectedFiles.forEach(file => {
-    formData.append("fileInput", file);
-  });
+  formData.append("fileInput", file);
 
   switch (parameters.mode) {
     case SPLIT_MODES.BY_PAGES:
@@ -57,19 +57,30 @@ export const getSplitEndpoint = (parameters: SplitParameters): string => {
 
 // Static configuration object
 export const splitOperationConfig = {
+  toolType: ToolType.singleFile,
+  buildFormData: buildSplitFormData,
   operationType: 'splitPdf',
   endpoint: getSplitEndpoint,
-  buildFormData: buildSplitFormData,
   filePrefix: 'split_',
-  multiFileEndpoint: true, // Single API call with all files
   defaultParameters,
 } as const;
 
 export const useSplitOperation = () => {
   const { t } = useTranslation();
+  const { extractZipFiles } = useToolResources();
 
-  return useToolOperation<SplitParameters>({
+  // Custom response handler that extracts ZIP files
+  // Can't add to exported config because it requires access to the zip code so must be part of the hook
+  const responseHandler = useCallback(async (blob: Blob, _originalFiles: File[]): Promise<File[]> => {
+    // Split operations return ZIP files with multiple PDF pages
+    return await extractZipFiles(blob);
+  }, [extractZipFiles]);
+
+  const splitConfig: ToolOperationConfig<SplitParameters> = {
     ...splitOperationConfig,
+    responseHandler,
     getErrorMessage: createStandardErrorHandler(t('split.error.failed', 'An error occurred while splitting the PDF.'))
-  });
+  };
+
+  return useToolOperation(splitConfig);
 };

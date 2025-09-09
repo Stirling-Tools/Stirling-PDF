@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
-import { useNavigationActions, useNavigationState } from '../contexts/NavigationContext';
+import { useNavigationState } from '../contexts/NavigationContext';
+import { useToolNavigation } from './useToolNavigation';
+import { useToolManagement } from './useToolManagement';
+import { ToolId } from '../types/toolId';
 
 // Material UI Icons
 import CompressIcon from '@mui/icons-material/Compress';
@@ -9,13 +12,14 @@ import CropIcon from '@mui/icons-material/Crop';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 
 export interface SuggestedTool {
-  id: string /* FIX ME: Should be ToolId */;
+  id: ToolId;
   title: string;
   icon: React.ComponentType<any>;
-  navigate: () => void;
+  href: string;
+  onClick: (e: React.MouseEvent) => void;
 }
 
-const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
+const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'href' | 'onClick'>[] = [
   {
     id: 'compress',
     title: 'Compress',
@@ -32,7 +36,7 @@ const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
     icon: CleaningServicesIcon
   },
   {
-    id: 'splitPdf',
+    id: 'split',
     title: 'Split',
     icon: CropIcon
   },
@@ -44,17 +48,31 @@ const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'navigate'>[] = [
 ];
 
 export function useSuggestedTools(): SuggestedTool[] {
-  const { actions } = useNavigationActions();
-  const { selectedToolKey } = useNavigationState();
+  const { selectedTool } = useNavigationState();
+  const { getToolNavigation } = useToolNavigation();
+  const { getSelectedTool } = useToolManagement();
 
   return useMemo(() => {
     // Filter out the current tool
-    const filteredTools = ALL_SUGGESTED_TOOLS.filter(tool => tool.id !== selectedToolKey);
+    const filteredTools = ALL_SUGGESTED_TOOLS.filter(tool => tool.id !== selectedTool);
 
-    // Add navigation function to each tool
-    return filteredTools.map(tool => ({
-      ...tool,
-      navigate: () => actions.handleToolSelect(tool.id)
-    }));
-  }, [selectedToolKey, actions]);
+    // Add navigation props to each tool
+    return filteredTools.map(tool => {
+      const toolRegistryEntry = getSelectedTool(tool.id);
+      if (!toolRegistryEntry) {
+        // Fallback for tools not in registry
+        return {
+          ...tool,
+          href: `/${tool.id}`,
+          onClick: (e: React.MouseEvent) => { e.preventDefault(); }
+        };
+      }
+      
+      const navProps = getToolNavigation(tool.id, toolRegistryEntry);
+      return {
+        ...tool,
+        ...navProps
+      };
+    });
+  }, [selectedTool, getToolNavigation, getSelectedTool]);
 }

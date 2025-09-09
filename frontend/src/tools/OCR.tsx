@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileSelection } from "../contexts/FileContext";
-import { useNavigationActions } from "../contexts/NavigationContext";
 
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 
@@ -74,6 +73,11 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   };
 
+  const handleUndo = async () => {
+    await ocrOperation.undoOperation();
+    onPreviewFile?.(null);
+  };
+
   const settingsCollapsed = expandedStep !== "settings";
 
   return createToolFlow({
@@ -132,6 +136,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       operation: ocrOperation,
       title: t("ocr.results.title", "OCR Results"),
       onFileClick: handleThumbnailClick,
+      onUndo: handleUndo,
     },
   });
 };

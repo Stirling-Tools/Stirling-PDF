@@ -41,6 +41,9 @@
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "download": "Download",
+  "undoOperationTooltip": "Click to undo the last operation and restore the original files",
+  "undo": "Undo",
+  "moreOptions": "More Options",
   "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
   "fileSelected": "Selected: {{filename}}",
@@ -50,6 +53,7 @@
     "title": "Files",
     "placeholder": "Select a PDF file in the main view to get started",
     "upload": "Upload",
+    "uploadFiles": "Upload Files",
     "addFiles": "Add files",
     "selectFromWorkbench": "Select files from the workbench or "
   },
@@ -1311,7 +1315,48 @@
     "title": "Flatten",
     "header": "Flatten PDF",
     "flattenOnlyForms": "Flatten only forms",
-    "submit": "Flatten"
+    "submit": "Flatten",
+    "filenamePrefix": "flattened",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "steps": {
+      "settings": "Settings"
+    },
+    "options": {
+      "stepTitle": "Flatten Options",
+      "title": "Flatten Options",
+      "flattenOnlyForms": "Flatten only forms",
+      "flattenOnlyForms.desc": "Only flatten form fields, leaving other interactive elements intact",
+      "note": "Flattening removes interactive elements from the PDF, making them non-editable."
+    },
+    "results": {
+      "title": "Flatten Results"
+    },
+    "error": {
+      "failed": "An error occurred while flattening the PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "About Flattening PDFs"
+      },
+      "description": {
+        "title": "What does flattening do?",
+        "text": "Flattening makes your PDF non-editable by turning fillable forms and buttons into regular text and images. The PDF will look exactly the same, but no one can change or fill in the forms anymore. Perfect for sharing completed forms, creating final documents for records, or ensuring the PDF looks the same everywhere.",
+        "bullet1": "Text boxes become regular text (can't be edited)",
+        "bullet2": "Checkboxes and buttons become pictures",
+        "bullet3": "Great for final versions you don't want changed",
+        "bullet4": "Ensures consistent appearance across all devices"
+      },
+      "formsOnly": {
+        "title": "What does 'Flatten only forms' mean?",
+        "text": "This option only removes the ability to fill in forms, but keeps other features working like clicking links, viewing bookmarks, and reading comments.",
+        "bullet1": "Forms become non-editable",
+        "bullet2": "Links still work when clicked",
+        "bullet3": "Comments and notes remain visible",
+        "bullet4": "Bookmarks still help you navigate"
+      }
+    }
   },
   "repair": {
     "tags": "fix,restore,correction,recover",
@@ -1434,7 +1479,29 @@
     "tags": "auto-detect,header-based,organize,relabel",
     "title": "Auto Rename",
     "header": "Auto Rename PDF",
-    "submit": "Auto Rename"
+    "description": "Automatically finds the title from your PDF content and uses it as the filename.",
+    "submit": "Auto Rename",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred whilst auto-renaming the PDF."
+    },
+    "results": {
+      "title": "Auto-Rename Results"
+    },
+    "tooltip": {
+      "header": {
+        "title": "How Auto-Rename Works"
+      },
+      "howItWorks": {
+        "title": "Smart Renaming",
+        "text": "Automatically finds the title from your PDF content and uses it as the filename.",
+        "bullet1": "Looks for text that appears to be a title or heading",
+        "bullet2": "Creates a clean, valid filename from the detected title",
+        "bullet3": "Keeps the original name if no suitable title is found"
+      }
+    }
   },
   "adjust-contrast": {
     "tags": "color-correction,tune,modify,enhance,colour-correction"
@@ -2078,7 +2145,7 @@
     "loading": "Loading...",
     "or": "or",
     "dropFileHere": "Drop file here or click to upload",
-    "dropFilesHere": "Drop files here or click to upload",
+    "dropFilesHere": "Drop files here or click the upload button",
     "pdfFilesOnly": "PDF files only",
     "supportedFileTypes": "Supported file types",
     "upload": "Upload",

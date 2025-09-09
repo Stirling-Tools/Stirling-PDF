@@ -1,9 +1,7 @@
 import React from 'react';
-import { Stack, Text, Divider, Card, Group } from '@mantine/core';
+import { Stack, Text, Divider, Card, Group, Anchor } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSuggestedTools } from '../../../hooks/useSuggestedTools';
-
-export interface SuggestedToolsSectionProps {}
 
 export function SuggestedToolsSection(): React.ReactElement {
   const { t } = useTranslation();
@@ -21,20 +19,25 @@ export function SuggestedToolsSection(): React.ReactElement {
         {suggestedTools.map((tool) => {
           const IconComponent = tool.icon;
           return (
-            <Card
+            <Anchor
               key={tool.id}
-              p="sm"
-              withBorder
-              style={{ cursor: 'pointer' }}
-              onClick={tool.navigate}
+              href={tool.href}
+              onClick={tool.onClick}
+              style={{ textDecoration: 'none', color: 'inherit' }}
             >
-              <Group gap="xs">
-                <IconComponent fontSize="small" />
-                <Text size="sm" fw={500}>
-                  {tool.title}
-                </Text>
-              </Group>
-            </Card>
+              <Card
+                p="sm"
+                withBorder
+                style={{ cursor: 'pointer' }}
+              >
+                <Group gap="xs">
+                  <IconComponent fontSize="small" />
+                  <Text size="sm" fw={500}>
+                    {tool.title}
+                  </Text>
+                </Group>
+              </Card>
+            </Anchor>
           );
         })}
       </Stack>
