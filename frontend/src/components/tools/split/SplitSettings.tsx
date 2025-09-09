@@ -1,11 +1,11 @@
 import { Stack, TextInput, Select, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { isSplitMode, SPLIT_MODES, SPLIT_TYPES } from '../../../constants/splitConstants';
+import { isSplitMode, isSplitType, SPLIT_MODES, SPLIT_TYPES } from '../../../constants/splitConstants';
 import { SplitParameters } from '../../../hooks/tools/split/useSplitParameters';
 
 export interface SplitSettingsProps {
   parameters: SplitParameters;
-  onParameterChange: (parameter: keyof SplitParameters, value: string | boolean) => void;
+  onParameterChange: <K extends keyof SplitParameters>(key: K, value: SplitParameters[K]) => void;
   disabled?: boolean;
 }
 
@@ -62,7 +62,7 @@ const SplitSettings = ({
       <Select
         label={t("split-by-size-or-count.type.label", "Split Type")}
         value={parameters.splitType}
-        onChange={(v) => v && onParameterChange('splitType', v)}
+        onChange={(v) => isSplitType(v) && onParameterChange('splitType', v)}
         disabled={disabled}
         data={[
           { value: SPLIT_TYPES.SIZE, label: t("split-by-size-or-count.type.size", "By Size") },
