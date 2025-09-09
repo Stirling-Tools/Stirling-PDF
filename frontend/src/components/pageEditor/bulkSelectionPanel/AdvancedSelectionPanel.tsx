@@ -97,7 +97,7 @@ const AdvancedSelectionPanel = ({
                 <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">Range</Text>
                 {rangeError && (<Text size="xs" c="var(--text-brand-accent)" mb="xs">{rangeError}</Text>)}
                 <div className={classes.inputGroup}>
-                  <Group gap="sm" align="flex-end" wrap="nowrap" mb="xs">
+                  <Group gap="sm" align="flex-end" wrap="nowrap">
                     <div style={{ flex: 1 }}>
                       <NumberInput
                         size="sm"
@@ -134,24 +134,24 @@ const AdvancedSelectionPanel = ({
                         error={Boolean(rangeError)}
                       />
                     </div>
+                    <Button 
+                      size="sm" 
+                      className={classes.applyButton}
+                      onClick={() => {
+                        if (
+                          rangeStart === '' || rangeEnd === '' ||
+                          typeof rangeStart !== 'number' || typeof rangeEnd !== 'number'
+                        ) return;
+                        const expr = rangeExpression(rangeStart, rangeEnd, maxPages);
+                        if (expr) applyExpression(expr);
+                        setRangeStart('');
+                        setRangeEnd('');
+                      }} 
+                      disabled={Boolean(rangeError) || rangeStart === '' || rangeEnd === ''}
+                    >
+                      Apply
+                    </Button>
                   </Group>
-                  <Button 
-                    size="sm" 
-                    className={classes.applyButton}
-                    onClick={() => {
-                      if (
-                        rangeStart === '' || rangeEnd === '' ||
-                        typeof rangeStart !== 'number' || typeof rangeEnd !== 'number'
-                      ) return;
-                      const expr = rangeExpression(rangeStart, rangeEnd, maxPages);
-                      if (expr) applyExpression(expr);
-                      setRangeStart('');
-                      setRangeEnd('');
-                    }} 
-                    disabled={Boolean(rangeError) || rangeStart === '' || rangeEnd === ''}
-                  >
-                    Apply
-                  </Button>
                 </div>
               </div>
               

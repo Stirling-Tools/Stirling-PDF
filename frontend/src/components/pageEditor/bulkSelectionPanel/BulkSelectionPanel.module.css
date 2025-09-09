@@ -202,29 +202,17 @@
 
 .advancedCard {
   background-color: var(--bulk-card-bg);
-  border: 0.0625rem solid var(--bulk-card-border);
+  border: none;
   border-radius: 0.75rem;
-  padding: 0.75rem;
+  padding: 0.25rem;
   margin-bottom: 0.5rem;
   width: 100%;
   box-sizing: border-box;
-  transition: all 0.2s ease;
   color: var(--text-primary);
-}
-
-.advancedCard:hover {
-  border-color: var(--bulk-card-hover-border);
-  box-shadow: var(--shadow-sm);
 }
 
 :global([data-mantine-color-scheme='dark']) .advancedCard {
   background-color: var(--bulk-card-bg);
-  border-color: var(--bulk-card-border);
-}
-
-:global([data-mantine-color-scheme='dark']) .advancedCard:hover {
-  border-color: var(--bulk-card-hover-border);
-  box-shadow: var(--shadow-sm);
 }
 
 .inputGroup {
