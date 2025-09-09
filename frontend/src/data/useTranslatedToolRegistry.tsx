@@ -680,8 +680,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["merge-pdfs"],
         operationConfig: mergeOperationConfig,
         settingsComponent: MergeSettings
-    },
-    "multi-tool": {
+      },
+      "multi-tool": {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,

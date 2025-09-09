@@ -2,7 +2,8 @@
  * FileContext reducer - Pure state management for file operations
  */
 
-import { FileId } from '../../types/file';import {
+import { FileId } from '../../types/file';
+import {
   FileContextState,
   FileContextAction,
   StirlingFileStub
@@ -144,7 +145,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
 
       // Validate that all IDs exist in current state
       const validIds = orderedFileIds.filter(id => state.files.byId[id]);
-// Reorder selected files by passed order
+      // Reorder selected files by passed order
       const selectedFileIds = orderedFileIds.filter(id => state.ui.selectedFileIds.includes(id));
       return {
         ...state,
@@ -243,7 +244,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
     }
 
 
-      case 'UNDO_CONSUME_FILES': {
+    case 'UNDO_CONSUME_FILES': {
       const { inputStirlingFileStubs, outputFileIds } = action.payload;
 
       return processFileSwap(state, outputFileIds, inputStirlingFileStubs);
