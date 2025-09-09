@@ -40,7 +40,7 @@ export const useRedactWordsTips = (): TooltipContent => {
       },
       {
         title: t("redact.tooltip.words.examples.title", "Common Examples"),
-        description: t("redact.tooltip.words.examples.text", "Typical words to redact include: 'Confidential', 'SSN:', phone numbers, email addresses, or specific names.")
+        description: t("redact.tooltip.words.examples.text", "Typical words to redact include: bank details, email addresses, or specific names.")
       }
     ]
   };
@@ -55,8 +55,8 @@ export const useRedactAdvancedTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("redact.tooltip.advanced.color.title", "Box Color & Padding"),
-        description: t("redact.tooltip.advanced.color.text", "Customize the appearance of redaction boxes. Black is standard, but you can choose any color. Padding adds extra space around the found text."),
+        title: t("redact.tooltip.advanced.color.title", "Box Colour & Padding"),
+        description: t("redact.tooltip.advanced.color.text", "Customise the appearance of redaction boxes. Black is standard, but you can choose any colour. Padding adds extra space around the found text."),
       },
       {
         title: t("redact.tooltip.advanced.regex.title", "Use Regex"),

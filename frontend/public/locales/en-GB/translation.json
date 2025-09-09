@@ -1620,7 +1620,7 @@
         },
         "automatic": {
           "title": "Automatic Redaction",
-          "text": "Automatically finds and redacts specified text throughout the document. Perfect for removing consistent sensitive information like names, SSNs, or confidential markers."
+          "text": "Automatically finds and redacts specified text throughout the document. Perfect for removing consistent sensitive information like names, addresses, or confidential markers."
         },
         "manual": {
           "title": "Manual Redaction",
@@ -1640,7 +1640,7 @@
         "bullet3": "Click × to remove words",
         "examples": {
           "title": "Common Examples",
-          "text": "Typical words to redact include: 'Confidential', 'SSN:', phone numbers, email addresses, or specific names."
+          "text": "Typical words to redact include: bank details, email addresses, or specific names."
         }
       },
       "advanced": {
@@ -1648,8 +1648,8 @@
           "title": "Advanced Redaction Settings"
         },
         "color": {
-          "title": "Box Color & Padding",
-          "text": "Customize the appearance of redaction boxes. Black is standard, but you can choose any color. Padding adds extra space around the found text."
+          "title": "Box Colour & Padding",
+          "text": "Customise the appearance of redaction boxes. Black is standard, but you can choose any colour. Padding adds extra space around the found text."
         },
         "regex": {
           "title": "Use Regex",
@@ -1669,7 +1669,7 @@
     },
     "manual": {
       "header": "Manual Redaction",
-      "textBasedRedaction": "Text based Redaction",
+      "textBasedRedaction": "Text-based Redaction",
       "pageBasedRedaction": "Page-based Redaction",
       "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
       "pageRedactionNumbers": {
@@ -1677,7 +1677,7 @@
         "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
       },
       "redactionColor": {
-        "title": "Redaction Color"
+        "title": "Redaction Colour"
       },
       "export": "Export",
       "upload": "Upload",
@@ -1690,7 +1690,7 @@
       "toggleSidebar": "Toggle Sidebar",
       "showThumbnails": "Show Thumbnails",
       "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
-      "showAttatchments": "Show Attachments",
+      "showAttachments": "Show Attachments",
       "showLayers": "Show Layers (double-click to reset all layers to the default state)",
       "colourPicker": "Colour Picker",
       "findCurrentOutlineItem": "Find current outline item",
