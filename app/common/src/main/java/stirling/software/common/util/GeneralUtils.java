@@ -573,6 +573,18 @@ public class GeneralUtils {
         }
     }
 
+    /**
+     * Compares two version strings to determine if the currentVersion is higher than the
+     * compareVersion.
+     *
+     * <p>Version strings should be in the format "major.minor.patch" (e.g., "1.2.3"). Handles
+     * different lengths by treating missing components as zeros (e.g., "1.2" is equivalent to
+     * "1.2.0"). If either version string is null, the method returns false.
+     *
+     * @param currentVersion the current version string
+     * @param compareVersion the version string to compare against
+     * @return true if the currentVersion is higher than the compareVersion, false otherwise
+     */
     public static boolean isVersionHigher(String currentVersion, String compareVersion) {
         if (currentVersion == null || compareVersion == null) {
             return false;
@@ -600,5 +612,35 @@ public class GeneralUtils {
 
         // If all components so far are equal, the longer version is considered higher
         return current.length > compare.length;
+    }
+
+    /**
+     * Compares two version strings to determine if they are equal.
+     *
+     * @param currentVersion the current version string
+     * @param compareVersion the version string to compare against
+     * @return true if the versions are equal, false otherwise
+     */
+    public static boolean isVersionEqual(String currentVersion, String compareVersion) {
+        if (currentVersion == null || compareVersion == null) {
+            return false;
+        }
+        return currentVersion.equals(compareVersion);
+    }
+
+    /**
+     * Compares two version strings to determine if the currentVersion is lower than the
+     * compareVersion.
+     *
+     * @param currentVersion the current version string
+     * @param compareVersion the version string to compare against
+     * @return true if the currentVersion is lower than the compareVersion, false otherwise
+     */
+    public static boolean isVersionLower(String currentVersion, String compareVersion) {
+        if (currentVersion == null || compareVersion == null) {
+            return false;
+        }
+        return !isVersionHigher(currentVersion, compareVersion)
+                && !isVersionEqual(currentVersion, compareVersion);
     }
 }

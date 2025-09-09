@@ -16,8 +16,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.model.Team;
-import stirling.software.proprietary.security.database.repository.DatabaseVersionRepository;
-import stirling.software.proprietary.security.model.DatabaseVersion;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.TeamService;
@@ -33,42 +31,10 @@ public class InitialSecuritySetup {
     private final ApplicationProperties applicationProperties;
     private final DatabaseServiceInterface databaseService;
 
-    private final DatabaseVersionRepository databaseVersion;
-
     @PostConstruct
     public void init() {
 
-        String version =
-                Optional.ofNullable(applicationProperties.getAutomaticallyGenerated())
-                        .map(ApplicationProperties.AutomaticallyGenerated::getAppVersion)
-                        .filter(v -> !v.isBlank())
-                        .orElseGet(
-                                () -> {
-                                    String v = getClass().getPackage().getImplementationVersion();
-                                    return v != null ? v : "0.33.1";
-                                });
-
-        boolean existsVersion = databaseVersion.existsByVersion(version);
-
-        DatabaseVersion v = databaseVersion.findLastByOrderByIdDesc().orElse(new DatabaseVersion());
-        if (v.getVersion() == null) {
-            try {
-                databaseService.upgradeFrom_0_33_1_to_0_34_0();
-                log.info("Upgraded database from 0.33.1 to 0.34.0");
-            } catch (Exception e) {
-                log.error("Failed to upgrade database from 0.33.1 to 0.34.0", e);
-                return;
-            }
-            try {
-                databaseService.upgradeFrom_0_34_0_to_1_4_0();
-                log.info("Upgraded database from 0.34.0 to 1.4.0");
-            } catch (Exception e) {
-                log.error("Failed to upgrade database from 0.34.0 to 1.4.0", e);
-                return;
-            }
-        }
-
-        log.info("Current DB version: {} existsVersion: {}", v.getVersion(), existsVersion);
+        databaseService.migrateDatabase();
         try {
             if (!userService.hasUsers()) {
                 if (databaseService.hasBackup()) {
@@ -83,11 +49,6 @@ public class InitialSecuritySetup {
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
-        }
-
-        if (v.getVersion() == null || !existsVersion) {
-            v.setVersion(version);
-            databaseVersion.save(v);
         }
     }
 
