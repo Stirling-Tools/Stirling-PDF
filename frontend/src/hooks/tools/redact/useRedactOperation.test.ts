@@ -2,7 +2,6 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { buildRedactFormData, redactOperationConfig, useRedactOperation } from './useRedactOperation';
 import { defaultParameters, RedactParameters } from './useRedactParameters';
-import { ToolOperationHook } from '../shared/useToolOperation';
 
 // Mock the useToolOperation hook
 vi.mock('../shared/useToolOperation', async () => {
