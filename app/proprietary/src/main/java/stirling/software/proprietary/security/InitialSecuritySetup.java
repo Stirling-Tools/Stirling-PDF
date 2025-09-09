@@ -48,7 +48,7 @@ public class InitialSecuritySetup {
                                     return v != null ? v : "0.33.1";
                                 });
 
-        boolean isLastVersion = databaseVersion.existsByVersionAndLastInserted(version, true);
+        boolean existsVersion = databaseVersion.existsByVersion(version);
 
         DatabaseVersion v = databaseVersion.findLastByOrderByIdDesc().orElse(new DatabaseVersion());
         if (v.getVersion() == null) {
@@ -68,7 +68,7 @@ public class InitialSecuritySetup {
             }
         }
 
-        log.info("Current DB version: {} isLastVersion: {}", v.getVersion(), isLastVersion);
+        log.info("Current DB version: {} existsVersion: {}", v.getVersion(), existsVersion);
         try {
             if (!userService.hasUsers()) {
                 if (databaseService.hasBackup()) {
@@ -85,7 +85,7 @@ public class InitialSecuritySetup {
             System.exit(1);
         }
 
-        if (v.getVersion() == null || !isLastVersion) {
+        if (v.getVersion() == null || !existsVersion) {
             v.setVersion(version);
             databaseVersion.save(v);
         }
