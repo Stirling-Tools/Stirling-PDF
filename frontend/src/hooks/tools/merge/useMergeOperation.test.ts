@@ -4,9 +4,13 @@ import { useMergeOperation } from './useMergeOperation';
 import type { MergeParameters } from './useMergeParameters';
 
 // Mock the useToolOperation hook
-vi.mock('../shared/useToolOperation', () => ({
-  useToolOperation: vi.fn()
-}));
+vi.mock('../shared/useToolOperation', async () => {
+  const actual = await vi.importActual('../shared/useToolOperation');
+  return {
+    ...actual,
+    useToolOperation: vi.fn()
+  };
+});
 
 // Mock the translation hook
 const mockT = vi.fn((key: string) => `translated-${key}`);

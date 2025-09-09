@@ -7,7 +7,6 @@ export interface FilesToolStepProps {
   selectedFiles: StirlingFile[];
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
-  placeholder?: string;
   minFiles?: number;
 }
 
@@ -24,7 +23,6 @@ export function createFilesToolStep(
   }, (
     <FileStatusIndicator
       selectedFiles={props.selectedFiles}
-      placeholder={props.placeholder || t("files.placeholder", "Select a PDF file in the main view to get started")}
       minFiles={props.minFiles}
     />
   ));

@@ -10,7 +10,6 @@ import { StirlingFile } from "../../../types/fileContext";
 
 export interface FileStatusIndicatorProps {
   selectedFiles?: StirlingFile[];
-  placeholder?: string;
   minFiles?: number;
 }
 
@@ -57,12 +56,20 @@ const { t } = useTranslation();
     return null;
   }
 
+  const getPlaceholder = () => {
+    if (minFiles === undefined || minFiles === 1) {
+      return t("files.selectFromWorkbench", "Select files from the workbench or ");
+    } else {
+      return t("files.selectMultipleFromWorkbench", "Select at least {{count}} files from the workbench or ", { count: minFiles });
+    }
+  };
+
   // Check if there are no files in the workbench
   if (stirlingFileStubs.length === 0) {
     // If no recent files, show upload button
     if (!hasRecentFiles) {
       return (
-<Text size="sm" c="dimmed">
+        <Text size="sm" c="dimmed">
           <Anchor
             size="sm"
             onClick={handleNativeUpload}
@@ -96,7 +103,7 @@ const { t } = useTranslation();
     if (!hasRecentFiles) {
       return (
         <Text size="sm" c="dimmed">
-          {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
+          {getPlaceholder() + " "}
           <Anchor
             size="sm"
             onClick={handleNativeUpload}
@@ -111,7 +118,7 @@ const { t } = useTranslation();
       // If there are recent files, show add files option
       return (
         <Text size="sm" c="dimmed">
-          {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
+          {getPlaceholder() + " "}
           <Anchor
             size="sm"
             onClick={() => openFilesModal()}
@@ -127,7 +134,7 @@ const { t } = useTranslation();
 
   return (
    <Text size="sm" c="dimmed" style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
-        ✓ {selectedFiles.length === 1 ? t("fileSelected", "Selected: {{filename}}", { filename: selectedFiles[0]?.name }) : t("filesSelected", "{{count}} files selected", { count: selectedFiles.length })}
+      ✓ {selectedFiles.length === 1 ? t("fileSelected", "Selected: {{filename}}", { filename: selectedFiles[0]?.name }) : t("filesSelected", "{{count}} files selected", { count: selectedFiles.length })}
     </Text>
   );
 };

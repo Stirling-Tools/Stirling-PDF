@@ -22,7 +22,6 @@ const Flatten = (props: BaseToolProps) => {
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
-      placeholder: t("flatten.files.placeholder", "Select a PDF file in the main view to get started"),
     },
     steps: [
       {

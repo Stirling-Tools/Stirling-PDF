@@ -19,7 +19,6 @@ const UnlockPdfForms = (props: BaseToolProps) => {
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasFiles || base.hasResults,
-      placeholder: t("unlockPDFForms.files.placeholder", "Select a PDF file in the main view to get started"),
     },
     steps: [],
     executeButton: {
