@@ -1605,7 +1605,7 @@
       "wordsToRedact": {
         "title": "Words to Redact",
         "placeholder": "Enter a word",
-        "addAnother": "Add Another",
+        "add": "Add",
         "examples": "Examples: Confidential, Top-Secret"
       },
       "useRegexLabel": "Use Regex",
