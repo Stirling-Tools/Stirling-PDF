@@ -4,6 +4,7 @@ import eslint from '@eslint/js';
 import globals from "globals";
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+import importPlugin from 'eslint-plugin-import';
 
 const srcGlobs = [
   'src/**/*.{js,mjs,jsx,ts,tsx}',
@@ -63,6 +64,14 @@ export default defineConfig(
       globals: {
         ...globals.node,
       }
+    }
+  },
+  {
+    extends: [
+      importPlugin.flatConfigs.typescript, // Use TypeScript mode for import plugin so type imports are resolved properly
+    ],
+    rules: {
+      "import/no-cycle": "error", // Detect import cycles
     }
   },
 );
