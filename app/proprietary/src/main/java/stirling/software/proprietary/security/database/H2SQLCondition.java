@@ -4,6 +4,9 @@ import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class H2SQLCondition implements Condition {
 
     @Override
@@ -12,11 +15,11 @@ public class H2SQLCondition implements Condition {
         boolean enableCustomDatabase =
                 env.getProperty("system.datasource.enableCustomDatabase", Boolean.class, false);
 
-        if (enableCustomDatabase) {
-            return false;
+        if (!enableCustomDatabase) {
+            log.info("Custom database is not enabled; enabling H2-specific beans.");
+            return true;
         }
-
-        String dataSourceType = env.getProperty("system.datasource.type", String.class, "");
-        return "h2".equalsIgnoreCase(dataSourceType);
+        log.info("Custom database is enabled; skipping H2-specific beans.");
+        return false;
     }
 }

@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.FileInfo;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.database.H2SQLCondition;
-import stirling.software.proprietary.security.service.DatabaseService;
+import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 
 @Slf4j
 @Controller
@@ -31,7 +31,7 @@ import stirling.software.proprietary.security.service.DatabaseService;
 @RequiredArgsConstructor
 public class DatabaseControllerEnterprise {
 
-    private final DatabaseService databaseService;
+    private final DatabaseServiceInterface databaseService;
 
     @Operation(
             summary = "Delete the last database backup file",
