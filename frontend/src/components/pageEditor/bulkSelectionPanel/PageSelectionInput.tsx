@@ -1,4 +1,4 @@
-import { Group, TextInput, Button, Text, Flex, Switch } from '@mantine/core';
+import { TextInput, Button, Text, Flex, Switch } from '@mantine/core';
 import LocalIcon from '../../shared/LocalIcon';
 import { Tooltip } from '../../shared/Tooltip';
 import { usePageSelectionTips } from '../../tooltips/usePageSelectionTips';
