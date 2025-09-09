@@ -20,12 +20,12 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
+import { MultiFileToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
 
 describe('useMergeOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation<MergeParameters>);
 
-  const getToolConfig = () => mockUseToolOperation.mock.calls[0][0];
+  const getToolConfig = () => mockUseToolOperation.mock.calls[0][0] as MultiFileToolOperationConfig<MergeParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -41,6 +41,9 @@ describe('useMergeOperation', () => {
     resetResults: vi.fn(),
     clearError: vi.fn(),
     cancelOperation: vi.fn(),
+    undoOperation: function (): Promise<void> {
+      throw new Error('Function not implemented.');
+    }
   };
 
   beforeEach(() => {
@@ -61,7 +64,7 @@ describe('useMergeOperation', () => {
       generateTableOfContents: false
     };
 
-    const formData = config.buildFormData(parameters, mockFiles as any /* FIX ME */);
+    const formData = config.buildFormData(parameters, mockFiles);
 
     // Verify files are appended
     expect(formData.getAll('fileInput')).toHaveLength(2);
@@ -115,7 +118,7 @@ describe('useMergeOperation', () => {
       removeDigitalSignature: false,
       generateTableOfContents: false
     };
-    const formData1 = config.buildFormData(params1, mockFiles as any /* FIX ME */);
+    const formData1 = config.buildFormData(params1, mockFiles);
     expect(formData1.get('removeCertSign')).toBe('false');
     expect(formData1.get('generateToc')).toBe('false');
 
@@ -124,7 +127,7 @@ describe('useMergeOperation', () => {
       removeDigitalSignature: true,
       generateTableOfContents: true
     };
-    const formData2 = config.buildFormData(params2, mockFiles as any /* FIX ME */);
+    const formData2 = config.buildFormData(params2, mockFiles);
     expect(formData2.get('removeCertSign')).toBe('true');
     expect(formData2.get('generateToc')).toBe('true');
   });

@@ -52,6 +52,11 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   };
 
+  const handleUndo = async () => {
+    await mergeOperation.undoOperation();
+    onPreviewFile?.(null);
+  };
+
   // TODO: Move to more general place so other tools can use it
   const sortFiles = useCallback((sortType: 'filename' | 'dateModified', ascending: boolean = true) => {
     // Sort the FileIds based on their corresponding File properties
@@ -102,6 +107,18 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         title: "Settings",
         isCollapsed: settingsCollapsed,
         onCollapsedClick: settingsCollapsed ? handleSettingsReset : undefined,
+        tooltip: {
+          tips: [
+            {
+              title: t('merge.removeDigitalSignature.tooltip.title', 'Remove Digital Signature'),
+              description: t('merge.removeDigitalSignature.tooltip.description', 'Digital signatures will be invalidated when merging files. Check this to remove them from the final merged PDF.')
+            },
+            {
+              title: t('merge.generateTableOfContents.tooltip.title', 'Generate Table of Contents'),
+              description: t('merge.generateTableOfContents.tooltip.description', 'Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers.')
+            }
+          ]
+        },
         content: (
           <MergeSettings
             parameters={mergeParams.parameters}
@@ -123,6 +140,7 @@ const Merge = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       operation: mergeOperation,
       title: t("merge.title", "Merge Results"),
       onFileClick: handleThumbnailClick,
+      onUndo: handleUndo,
     },
   });
 };

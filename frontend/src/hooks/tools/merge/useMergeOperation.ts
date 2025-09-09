@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ResponseHandler, ToolOperationConfig } from '../shared/useToolOperation';
+import { useToolOperation, ResponseHandler, ToolOperationConfig, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { MergeParameters } from './useMergeParameters';
 
@@ -23,11 +23,11 @@ const mergeResponseHandler: ResponseHandler = (blob: Blob, originalFiles: File[]
 
 // Operation configuration for automation
 export const mergeOperationConfig: ToolOperationConfig<MergeParameters> = {
+  toolType: ToolType.multiFile,
+  buildFormData,
   operationType: 'merge',
   endpoint: '/api/v1/general/merge-pdfs',
-  buildFormData,
   filePrefix: 'merged_',
-  multiFileEndpoint: true,
   responseHandler: mergeResponseHandler,
 };
 

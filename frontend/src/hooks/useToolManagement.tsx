@@ -2,7 +2,6 @@ import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
-import MergeIcon from "@mui/icons-material/Merge";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { FileId } from '../types/file';
 
