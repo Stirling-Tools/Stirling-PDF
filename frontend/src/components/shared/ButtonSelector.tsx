@@ -1,4 +1,4 @@
-import { Button } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
 
 export interface ButtonOption<T> {
   value: T;
@@ -10,6 +10,7 @@ interface ButtonSelectorProps<T> {
   value: T | undefined;
   onChange: (value: T) => void;
   options: ButtonOption<T>[];
+  label?: string;
   disabled?: boolean;
   fullWidth?: boolean;
 }
@@ -18,29 +19,40 @@ const ButtonSelector = <T extends string>({
   value,
   onChange,
   options,
+  label = undefined,
   disabled = false,
   fullWidth = true,
 }: ButtonSelectorProps<T>) => {
   return (
-    <div style={{ display: 'flex', gap: '4px' }}>
-      {options.map((option) => (
-        <Button
-          key={option.value}
-          variant={value === option.value ? 'filled' : 'outline'}
-          color={value === option.value ? 'var(--color-primary-500)' : 'var(--text-muted)'}
-          onClick={() => onChange(option.value)}
-          disabled={disabled || option.disabled}
-          style={{
-            flex: fullWidth ? 1 : undefined,
-            height: 'auto',
-            minHeight: '2.5rem',
-            fontSize: 'var(--mantine-font-size-sm)'
-          }}
-        >
-          {option.label}
-        </Button>
-      ))}
-    </div>
+    <Stack gap='var(--mantine-spacing-sm)'>
+      {/* Label (if it exists) */}
+      {label && <Text style={{
+        fontSize: "var(--mantine-font-size-sm)",
+        lineHeight: "var(--mantine-line-height-sm)",
+        fontWeight: "var(--font-weight-medium)",
+      }}>{label}</Text>}
+
+      {/* Buttons */}
+      <Group gap='4px'>
+        {options.map((option) => (
+          <Button
+            key={option.value}
+            variant={value === option.value ? 'filled' : 'outline'}
+            color={value === option.value ? 'var(--color-primary-500)' : 'var(--text-muted)'}
+            onClick={() => onChange(option.value)}
+            disabled={disabled || option.disabled}
+            style={{
+              flex: fullWidth ? 1 : undefined,
+              height: 'auto',
+              minHeight: '2.5rem',
+              fontSize: 'var(--mantine-font-size-sm)'
+            }}
+          >
+            {option.label}
+          </Button>
+        ))}
+      </Group>
+    </Stack>
   );
 };
 

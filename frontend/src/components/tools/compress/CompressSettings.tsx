@@ -19,18 +19,16 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
 
       <Divider ml='-md'></Divider>
       {/* Compression Method */}
-      <Stack gap="sm">
-        <Text size="sm" fw={500}>{t('compress.method.title', 'Compression Method')}</Text>
-        <ButtonSelector
-          value={parameters.compressionMethod}
-          onChange={(value) => onParameterChange('compressionMethod', value)}
-          options={[
-            { value: 'quality', label: t('compress.method.quality', 'Quality') },
-            { value: 'filesize', label: t('compress.method.filesize', 'File Size') },
-          ]}
-          disabled={disabled}
-        />
-      </Stack>
+      <ButtonSelector
+        label={t('compress.method.title', 'Compression Method')}
+        value={parameters.compressionMethod}
+        onChange={(value) => onParameterChange('compressionMethod', value)}
+        options={[
+          { value: 'quality', label: t('compress.method.quality', 'Quality') },
+          { value: 'filesize', label: t('compress.method.filesize', 'File Size') },
+        ]}
+        disabled={disabled}
+      />
 
       {/* Quality Adjustment */}
       {parameters.compressionMethod === 'quality' && (

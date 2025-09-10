@@ -27,10 +27,12 @@ describe('ButtonSelector', () => {
           value="option1"
           onChange={mockOnChange}
           options={options}
+          label="Test Label"
         />
       </TestWrapper>
     );
 
+    expect(screen.getByText('Test Label')).toBeInTheDocument();
     expect(screen.getByText('Option 1')).toBeInTheDocument();
     expect(screen.getByText('Option 2')).toBeInTheDocument();
   });
@@ -47,6 +49,7 @@ describe('ButtonSelector', () => {
           value="option1"
           onChange={mockOnChange}
           options={options}
+          label="Selection Label"
         />
       </TestWrapper>
     );
@@ -57,6 +60,7 @@ describe('ButtonSelector', () => {
     // Check data-variant attribute for filled/outline
     expect(selectedButton).toHaveAttribute('data-variant', 'filled');
     expect(unselectedButton).toHaveAttribute('data-variant', 'outline');
+    expect(screen.getByText('Selection Label')).toBeInTheDocument();
   });
 
   test('should call onChange when button is clicked', () => {
@@ -175,11 +179,38 @@ describe('ButtonSelector', () => {
           onChange={mockOnChange}
           options={options}
           fullWidth={false}
+          label="Layout Label"
         />
       </TestWrapper>
     );
 
     const button = screen.getByRole('button', { name: 'Option 1' });
     expect(button).not.toHaveStyle({ flex: '1' });
+    expect(screen.getByText('Layout Label')).toBeInTheDocument();
+  });
+
+  test('should not render label element when not provided', () => {
+    const options = [
+      { value: 'option1', label: 'Option 1' },
+      { value: 'option2', label: 'Option 2' },
+    ];
+
+    const { container } = render(
+      <TestWrapper>
+        <ButtonSelector
+          value="option1"
+          onChange={mockOnChange}
+          options={options}
+        />
+      </TestWrapper>
+    );
+
+    // Should render buttons
+    expect(screen.getByText('Option 1')).toBeInTheDocument();
+    expect(screen.getByText('Option 2')).toBeInTheDocument();
+    
+    // Stack should only contain the Group (buttons), no Text element for label
+    const stackElement = container.querySelector('[class*="mantine-Stack-root"]');
+    expect(stackElement?.children).toHaveLength(1); // Only the Group, no label Text
   });
 });
