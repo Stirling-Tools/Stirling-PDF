@@ -81,7 +81,7 @@ function FileContextInner({
 
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
-    const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
+    const addedFilesWithIds = await addFiles({ files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
     if (options?.selectFiles && addedFilesWithIds.length > 0) {
@@ -123,12 +123,6 @@ function FileContextInner({
 
     return addedFilesWithIds.map(({ file, id }) => createStirlingFile(file, id));
   }, [indexedDB, enablePersistence]);
-
-  const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<StirlingFile[]> => {
-    const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch, lifecycleManager);
-    return result.map(({ file, id }) => createStirlingFile(file, id));
-  }, []);
-
 
   const addStirlingFileStubsAction = useCallback(async (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
     // StirlingFileStubs preserve all metadata - perfect for FileManager use case!
@@ -173,7 +167,6 @@ function FileContextInner({
   const actions = useMemo<FileContextActions>(() => ({
     ...baseActions,
     addFiles: addRawFiles,
-    addProcessedFiles,
     addStirlingFileStubs: addStirlingFileStubsAction,
     removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
       // Remove from memory and cleanup resources
@@ -229,7 +222,6 @@ function FileContextInner({
   }), [
     baseActions,
     addRawFiles,
-    addProcessedFiles,
     addStirlingFileStubsAction,
     lifecycleManager,
     setHasUnsavedChanges,

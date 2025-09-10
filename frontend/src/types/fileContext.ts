@@ -294,7 +294,6 @@ export type FileContextAction =
 export interface FileContextActions {
   // File management - lightweight actions only
   addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
-  addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<StirlingFile[]>;
   addStirlingFileStubs: (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateStirlingFileStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;

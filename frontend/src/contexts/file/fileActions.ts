@@ -146,10 +146,9 @@ export interface AddedFile {
 }
 
 /**
- * Unified file addition helper - replaces addFiles/addProcessedFiles/addStoredFiles
+ * Unified file addition helper - replaces addFiles
  */
 export async function addFiles(
-  kind: AddFileKind,
   options: AddFileOptions,
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
@@ -165,10 +164,7 @@ export async function addFiles(
 
   // Build quickKey lookup from existing files for deduplication
   const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
-  if (DEBUG) console.log(`📄 addFiles(${kind}): Existing quickKeys for deduplication:`, Array.from(existingQuickKeys));
 
-  switch (kind) {
-    case 'raw': {
       const { files = [] } = options;
       if (DEBUG) console.log(`📄 addFiles(raw): Adding ${files.length} files with immediate thumbnail generation`);
 
@@ -239,57 +235,10 @@ export async function addFiles(
         stirlingFileStubs.push(record);
         addedFiles.push({ file, id: fileId, thumbnail });
         }
-      break;
-    }
-
-    case 'processed': {
-      const { filesWithThumbnails = [] } = options;
-      if (DEBUG) console.log(`📄 addFiles(processed): Adding ${filesWithThumbnails.length} processed files with pre-existing thumbnails`);
-
-      for (const { file, thumbnail, pageCount = 1 } of filesWithThumbnails) {
-        const quickKey = createQuickKey(file);
-
-        if (existingQuickKeys.has(quickKey)) {
-          if (DEBUG) console.log(`📄 Skipping duplicate processed file: ${file.name}`);
-          continue;
-        }
-
-        const fileId = createFileId();
-        filesRef.current.set(fileId, file);
-
-        const record = toStirlingFileStub(file, fileId, thumbnail);
-        if (thumbnail) {
-          // Track blob URLs for cleanup (images return blob URLs that need revocation)
-          if (thumbnail.startsWith('blob:')) {
-            lifecycleManager.trackBlobUrl(thumbnail);
-          }
-        }
-
-        // Store insertion position if provided
-        if (options.insertAfterPageId !== undefined) {
-          record.insertAfterPageId = options.insertAfterPageId;
-        }
-
-        // Create processedFile with provided metadata
-        if (pageCount > 0) {
-          record.processedFile = createProcessedFile(pageCount, thumbnail);
-          if (DEBUG) console.log(`📄 addFiles(processed): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
-        }
-
-        // History metadata is now managed in IndexedDB, not in PDF metadata
-
-        existingQuickKeys.add(quickKey);
-        stirlingFileStubs.push(record);
-        addedFiles.push({ file, id: fileId, thumbnail });
-      }
-      break;
-    }
-  }
 
   // Dispatch ADD_FILES action if we have new files
   if (stirlingFileStubs.length > 0) {
     dispatch({ type: 'ADD_FILES', payload: { stirlingFileStubs } });
-    if (DEBUG) console.log(`📄 addFiles(${kind}): Successfully added ${stirlingFileStubs.length} files`);
   }
 
   return addedFiles;
@@ -547,11 +496,11 @@ export async function addStirlingFileStubs(
 
       // Check if processedFile data needs regeneration for proper Page Editor support
       if (stirlingFile.type.startsWith('application/pdf')) {
-        const needsProcessing = !record.processedFile || 
-                                !record.processedFile.pages || 
+        const needsProcessing = !record.processedFile ||
+                                !record.processedFile.pages ||
                                 record.processedFile.pages.length === 0 ||
                                 record.processedFile.totalPages !== record.processedFile.pages.length;
-        
+
         if (needsProcessing) {
           if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerating processedFile for ${record.name}`);
           try {
