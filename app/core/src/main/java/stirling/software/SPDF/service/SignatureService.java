@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
@@ -66,10 +67,11 @@ public class SignatureService {
 
     private List<SignatureFile> getSignaturesFromFolder(Path folder, String category)
             throws IOException {
-        return Files.list(folder)
-                .filter(path -> isImageFile(path))
-                .map(path -> new SignatureFile(path.getFileName().toString(), category))
-                .toList();
+        try (Stream<Path> stream = Files.list(folder)) {
+            return stream.filter(this::isImageFile)
+                    .map(path -> new SignatureFile(path.getFileName().toString(), category))
+                    .toList();
+        }
     }
 
     public byte[] getSignatureBytes(String username, String fileName) throws IOException {
