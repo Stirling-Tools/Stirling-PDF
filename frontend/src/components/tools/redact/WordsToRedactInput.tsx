@@ -50,18 +50,20 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
-            }}>
-              {word}
-            </Text>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="red"
-              onClick={() => removeWord(index)}
-              disabled={disabled}
-            >
-              ×
-            </ActionIcon>
+            }}
+            title={word}
+          >
+            {word}
+          </Text>
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            color="red"
+            onClick={() => removeWord(index)}
+            disabled={disabled}
+          >
+            ×
+          </ActionIcon>
         </Group>
       ))}
 
