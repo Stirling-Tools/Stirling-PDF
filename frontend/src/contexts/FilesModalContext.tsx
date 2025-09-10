@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo } from
 import { useFileHandler } from '../hooks/useFileHandler';
 import { useFileActions } from './FileContext';
 import { StirlingFileStub } from '../types/fileContext';
+import { fileStorage } from '../services/fileStorage';
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;
@@ -47,23 +48,34 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     closeFilesModal();
   }, [addFiles, closeFilesModal, insertAfterPage, customHandler]);
 
-  const handleRecentFileSelect = useCallback((stirlingFileStubs: StirlingFileStub[]) => {
+  const handleRecentFileSelect = useCallback(async (stirlingFileStubs: StirlingFileStub[]) => {
     if (customHandler) {
-      // For custom handlers, we need to load the actual files first
-      // This is a bit complex - for now, let's not support custom handlers with stubs
-      console.warn('Custom handlers not yet supported for StirlingFileStub selection');
-      closeFilesModal();
-      return;
-    }
-
-    // Use the new addStirlingFileStubs action to preserve metadata
-    if (actions.addStirlingFileStubs) {
-      actions.addStirlingFileStubs(stirlingFileStubs, { selectFiles: true });
+      // Load the actual files from storage for custom handler
+      try {
+        const loadedFiles: File[] = [];
+        for (const stub of stirlingFileStubs) {
+          const stirlingFile = await fileStorage.getStirlingFile(stub.id);
+          if (stirlingFile) {
+            loadedFiles.push(stirlingFile);
+          }
+        }
+        
+        if (loadedFiles.length > 0) {
+          customHandler(loadedFiles, insertAfterPage);
+        }
+      } catch (error) {
+        console.error('Failed to load files for custom handler:', error);
+      }
     } else {
-      console.error('addStirlingFileStubs action not available');
+      // Normal case - use addStirlingFileStubs to preserve metadata
+      if (actions.addStirlingFileStubs) {
+        actions.addStirlingFileStubs(stirlingFileStubs, { selectFiles: true });
+      } else {
+        console.error('addStirlingFileStubs action not available');
+      }
     }
     closeFilesModal();
-  }, [actions.addStirlingFileStubs, closeFilesModal, customHandler]);
+  }, [actions.addStirlingFileStubs, closeFilesModal, customHandler, insertAfterPage]);
 
   const setModalCloseCallback = useCallback((callback: () => void) => {
     setOnModalClose(() => callback);

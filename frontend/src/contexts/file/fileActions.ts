@@ -545,6 +545,31 @@ export async function addStirlingFileStubs(
         record.insertAfterPageId = options.insertAfterPageId;
       }
 
+      // Check if processedFile data needs regeneration for proper Page Editor support
+      if (stirlingFile.type.startsWith('application/pdf')) {
+        const needsProcessing = !record.processedFile || 
+                                !record.processedFile.pages || 
+                                record.processedFile.pages.length === 0 ||
+                                record.processedFile.totalPages !== record.processedFile.pages.length;
+        
+        if (needsProcessing) {
+          if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerating processedFile for ${record.name}`);
+          try {
+            // Generate basic processedFile structure with page count
+            const result = await generateThumbnailWithMetadata(stirlingFile);
+            record.processedFile = createProcessedFile(result.pageCount, result.thumbnail);
+            record.thumbnailUrl = result.thumbnail; // Update thumbnail if needed
+            if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerated processedFile for ${record.name} with ${result.pageCount} pages`);
+          } catch (error) {
+            if (DEBUG) console.warn(`📄 addStirlingFileStubs: Failed to regenerate processedFile for ${record.name}:`, error);
+            // Ensure we have at least basic structure
+            if (!record.processedFile) {
+              record.processedFile = createProcessedFile(1); // Fallback to 1 page
+            }
+          }
+        }
+      }
+
       existingQuickKeys.add(stub.quickKey || '');
       validStubs.push(record);
       loadedFiles.push(stirlingFile);
