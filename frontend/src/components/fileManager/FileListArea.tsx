@@ -4,6 +4,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import HistoryIcon from '@mui/icons-material/History';
 import { useTranslation } from 'react-i18next';
 import FileListItem from './FileListItem';
+import FileHistoryGroup from './FileHistoryGroup';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
 
 interface FileListAreaProps {
@@ -22,6 +23,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     selectedFilesSet,
     fileGroups,
     expandedFileIds,
+    loadedHistoryFiles,
     onFileSelect,
     onFileRemove,
     onFileDoubleClick,
@@ -53,24 +55,34 @@ const FileListArea: React.FC<FileListAreaProps> = ({
             </Center>
           ) : (
             filteredFiles.map((file, index) => {
-              // Determine if this is a history file based on whether it's in the recent files or loaded as history
-              const isLeafFile = recentFiles.some(rf => rf.id === file.id);
-              const isHistoryFile = !isLeafFile; // If not in recent files, it's a loaded history file
-              const isLatestVersion = isLeafFile; // Only leaf files (from recent files) are latest versions
+              // All files in filteredFiles are now leaf files only
+              const historyFiles = loadedHistoryFiles.get(file.id) || [];
+              const isExpanded = expandedFileIds.has(file.id);
 
               return (
-                <FileListItem
-                  key={file.id}
-                  file={file}
-                  isSelected={selectedFilesSet.has(file.id)}
-                  isSupported={isFileSupported(file.name)}
-                  onSelect={(shiftKey) => onFileSelect(file, index, shiftKey)}
-                  onRemove={() => onFileRemove(index)}
-                  onDownload={() => onDownloadSingle(file)}
-                  onDoubleClick={() => onFileDoubleClick(file)}
-                  isHistoryFile={isHistoryFile}
-                  isLatestVersion={isLatestVersion}
-                />
+                <React.Fragment key={file.id}>
+                  <FileListItem
+                    file={file}
+                    isSelected={selectedFilesSet.has(file.id)}
+                    isSupported={isFileSupported(file.name)}
+                    onSelect={(shiftKey) => onFileSelect(file, index, shiftKey)}
+                    onRemove={() => onFileRemove(index)}
+                    onDownload={() => onDownloadSingle(file)}
+                    onDoubleClick={() => onFileDoubleClick(file)}
+                    isHistoryFile={false} // All files here are leaf files
+                    isLatestVersion={true} // All files here are the latest versions
+                  />
+                  
+                  <FileHistoryGroup
+                    leafFile={file}
+                    historyFiles={historyFiles}
+                    isExpanded={isExpanded}
+                    onDownloadSingle={onDownloadSingle}
+                    onFileDoubleClick={onFileDoubleClick}
+                    onFileRemove={onFileRemove}
+                    isFileSupported={isFileSupported}
+                  />
+                </React.Fragment>
               );
             })
           )}

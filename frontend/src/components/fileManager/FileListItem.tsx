@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import AddIcon from '@mui/icons-material/Add';
 import HistoryIcon from '@mui/icons-material/History';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
 import { StirlingFileStub } from '../../types/fileContext';
@@ -54,8 +55,10 @@ const FileListItem: React.FC<FileListItemProps> = ({
       <Box
         p="sm"
         style={{
-          cursor: 'pointer',
-          backgroundColor: isSelected ? 'var(--mantine-color-gray-1)' : (shouldShowHovered ? 'var(--mantine-color-gray-1)' : 'var(--bg-file-list)'),
+          cursor: isHistoryFile ? 'default' : 'pointer',
+          backgroundColor:  isSelected
+              ? 'var(--mantine-color-gray-1)'
+              : (shouldShowHovered ? 'var(--mantine-color-gray-1)' : 'var(--bg-file-list)'),
           opacity: isSupported ? 1 : 0.5,
           transition: 'background-color 0.15s ease',
           userSelect: 'none',
@@ -65,32 +68,34 @@ const FileListItem: React.FC<FileListItemProps> = ({
           paddingLeft: isHistoryFile ? '2rem' : '0.75rem', // Indent history files
           borderLeft: isHistoryFile ? '3px solid var(--mantine-color-blue-4)' : 'none' // Visual indicator for history
         }}
-        onClick={(e) => onSelect(e.shiftKey)}
+        onClick={isHistoryFile ? undefined : (e) => onSelect(e.shiftKey)}
         onDoubleClick={onDoubleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <Group gap="sm">
-          <Box>
-            {/* Checkbox for all files */}
-            <Checkbox
-              checked={isSelected}
-              onChange={() => {}} // Handled by parent onClick
-              size="sm"
-              pl="sm"
-              pr="xs"
-              styles={{
-                input: {
-                  cursor: 'pointer'
-                }
-              }}
-            />
-          </Box>
+          {!isHistoryFile && (
+            <Box>
+              {/* Checkbox for regular files only */}
+              <Checkbox
+                checked={isSelected}
+                onChange={() => {}} // Handled by parent onClick
+                size="sm"
+                pl="sm"
+                pr="xs"
+                styles={{
+                  input: {
+                    cursor: 'pointer'
+                  }
+                }}
+              />
+            </Box>
+          )}
 
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Group gap="xs" align="center">
               <Text size="sm" fw={500} truncate style={{ flex: 1 }}>{file.name}</Text>
-              <Badge size="xs" variant="light" color={currentVersion > 1 ? "blue" : "gray"}>
+              <Badge size="xs" variant="light" color={"blue"}>
                 v{currentVersion}
               </Badge>
 
@@ -172,17 +177,17 @@ const FileListItem: React.FC<FileListItemProps> = ({
                 </>
               )}
 
-              {/* Add to Recents option for history files */}
+              {/* Restore option for history files */}
               {isHistoryFile && (
                 <>
                   <Menu.Item
-                    leftSection={<AddIcon style={{ fontSize: 16 }} />}
+                    leftSection={<RestoreIcon style={{ fontSize: 16 }} />}
                     onClick={(e) => {
                       e.stopPropagation();
                       onAddToRecents(file);
                     }}
                   >
-                    {t('fileManager.addToRecents', 'Add to Recents')}
+                    {t('fileManager.restore', 'Restore')}
                   </Menu.Item>
                   <Menu.Divider />
                 </>

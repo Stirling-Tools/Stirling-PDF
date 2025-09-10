@@ -17,6 +17,7 @@ interface FileManagerContextValue {
   selectedFilesSet: Set<string>;
   expandedFileIds: Set<string>;
   fileGroups: Map<string, StirlingFileStub[]>;
+  loadedHistoryFiles: Map<FileId, StirlingFileStub[]>;
 
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
@@ -103,24 +104,9 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const displayFiles = useMemo(() => {
     if (!recentFiles || recentFiles.length === 0) return [];
 
-    const expandedFiles = [];
-
-    // Since we now only load leaf files, iterate through recent files directly
-    for (const leafFile of recentFiles) {
-      // Add the leaf file (main file shown in list)
-      expandedFiles.push(leafFile);
-
-      // If expanded, add the loaded history files
-      if (expandedFileIds.has(leafFile.id)) {
-        const historyFiles = loadedHistoryFiles.get(leafFile.id) || [];
-        // Sort history files by version number (oldest first)
-        const sortedHistory = historyFiles.sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
-        expandedFiles.push(...sortedHistory);
-      }
-    }
-
-    return expandedFiles;
-  }, [recentFiles, expandedFileIds, loadedHistoryFiles]);
+    // Only return leaf files - history files will be handled by separate components
+    return recentFiles;
+  }, [recentFiles]);
 
   const selectedFiles = selectedFileIds.length === 0 ? [] :
     displayFiles.filter(file => selectedFilesSet.has(file.id));
@@ -533,6 +519,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     selectedFilesSet,
     expandedFileIds,
     fileGroups,
+    loadedHistoryFiles,
 
     // Handlers
     onSourceChange: handleSourceChange,
@@ -564,6 +551,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     fileInputRef,
     expandedFileIds,
     fileGroups,
+    loadedHistoryFiles,
     handleSourceChange,
     handleLocalFileClick,
     handleFileSelect,
