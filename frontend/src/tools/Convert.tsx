@@ -100,7 +100,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     files: {
       selectedFiles,
       isCollapsed: hasResults,
-      placeholder: t("convert.selectFilesPlaceholder", "Select files in the main view to get started"),
     },
     steps: [
       {

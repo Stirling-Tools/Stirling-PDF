@@ -136,13 +136,13 @@ export function useAllFiles(): { files: StirlingFile[]; records: StirlingFileStu
 /**
  * Hook for selected files (optimized for selection-based UI)
  */
-export function useSelectedFiles(): { files: StirlingFile[]; records: StirlingFileStub[]; fileIds: FileId[] } {
+export function useSelectedFiles(): { selectedFiles: StirlingFile[]; selectedRecords: StirlingFileStub[]; selectedFileIds: FileId[] } {
   const { state, selectors } = useFileState();
 
   return useMemo(() => ({
-    files: selectors.getSelectedFiles(),
-    records: selectors.getSelectedStirlingFileStubs(),
-    fileIds: state.ui.selectedFileIds
+    selectedFiles: selectors.getSelectedFiles(),
+    selectedRecords: selectors.getSelectedStirlingFileStubs(),
+    selectedFileIds: state.ui.selectedFileIds
   }), [state.ui.selectedFileIds, selectors]);
 }
 
@@ -169,7 +169,6 @@ export function useFileContext() {
     recordOperation: (_fileId: FileId, _operation: any) => {}, // Operation tracking not implemented
     markOperationApplied: (_fileId: FileId, _operationId: string) => {}, // Operation tracking not implemented
     markOperationFailed: (_fileId: FileId, _operationId: string, _error: string) => {}, // Operation tracking not implemented
-
     // File ID lookup
     findFileId: (file: File) => {
       return state.files.ids.find(id => {

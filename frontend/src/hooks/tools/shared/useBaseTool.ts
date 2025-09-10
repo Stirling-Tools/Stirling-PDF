@@ -38,7 +38,9 @@ export function useBaseTool<TParams>(
   useParams: () => BaseParametersHook<TParams>,
   useOperation: () => ToolOperationHook<TParams>,
   props: BaseToolProps,
+  options?: { minFiles?: number }
 ): BaseToolReturn<TParams> {
+  const minFiles = options?.minFiles ?? 1;
   const { onPreviewFile, onComplete, onError } = props;
 
   // File selection
@@ -96,7 +98,7 @@ export function useBaseTool<TParams>(
   }, [operation, onPreviewFile]);
 
   // Standard computed state
-  const hasFiles = selectedFiles.length > 0;
+  const hasFiles = selectedFiles.length >= minFiles;
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
 
