@@ -43,16 +43,25 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
           border: `1px solid var(--mantine-color-gray-3)`,
           backgroundColor: 'var(--mantine-color-gray-0)'
         }}>
-          <Text size="sm">{word}</Text>
-          <ActionIcon
+          <Text
             size="sm"
-            variant="subtle"
-            color="red"
-            onClick={() => removeWord(index)}
-            disabled={disabled}
-          >
-            ×
-          </ActionIcon>
+            style={{
+              maxWidth: '80%',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
+              {word}
+            </Text>
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="red"
+              onClick={() => removeWord(index)}
+              disabled={disabled}
+            >
+              ×
+            </ActionIcon>
         </Group>
       ))}
 
