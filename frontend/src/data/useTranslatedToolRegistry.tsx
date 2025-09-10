@@ -12,6 +12,7 @@ import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
 import Repair from "../tools/Repair";
+import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
@@ -33,6 +34,7 @@ import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCerti
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
 import { manageSignaturesOperationConfig } from "../hooks/tools/manageSignatures/useManageSignaturesOperation";
 import { bookletImpositionOperationConfig } from "../hooks/tools/bookletImposition/useBookletImpositionOperation";
+import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
 import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
@@ -492,7 +494,10 @@ export function useFlatToolRegistry(): ToolRegistry {
       "auto-rename-pdf-file": {
         icon: <LocalIcon icon="match-word-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.auto-rename.title", "Auto Rename PDF File"),
-        component: null,
+        component: AutoRename,
+        maxFiles: -1,
+        endpoints: ["remove-certificate-sign"],
+        operationConfig: autoRenameOperationConfig,
         description: t("home.auto-rename.desc", "Automatically rename PDF files based on their content"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION,

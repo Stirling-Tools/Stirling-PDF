@@ -16,7 +16,7 @@ interface AdvancedOption {
 interface AdvancedOCRSettingsProps {
   advancedOptions: string[];
   ocrRenderType?: string;
-  onParameterChange: (key: keyof OCRParameters, value: any) => void;
+  onParameterChange: <K extends keyof OCRParameters>(key: K, value: OCRParameters[K]) => void;
   disabled?: boolean;
 }
 
@@ -40,7 +40,7 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
   // Handle individual checkbox changes
   const handleCheckboxChange = (optionValue: string, checked: boolean) => {
     const option = advancedOptionsData.find(opt => opt.value === optionValue);
-    
+
     if (option?.isSpecial) {
       // Handle special options (like compatibility mode) differently
       if (optionValue === 'compatibilityMode') {
@@ -69,7 +69,7 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
         <Text size="sm" fw={500} mb="md">
           {t('ocr.settings.advancedOptions.label', 'Processing Options')}
         </Text>
-        
+
         <Stack gap="sm">
           {advancedOptionsData.map((option) => (
             <Checkbox
@@ -87,4 +87,4 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
   );
 };
 
-export default AdvancedOCRSettings; 
+export default AdvancedOCRSettings;
