@@ -39,22 +39,9 @@ class FileStorageService {
   }
 
   /**
-   * Store a StirlingFile with its metadata
+   * Store a StirlingFile with its metadata from StirlingFileStub
    */
-  async storeStirlingFile(
-    stirlingFile: StirlingFile,
-    thumbnail?: string,
-    isLeaf: boolean = true,
-    historyData?: {
-      versionNumber: number;
-      originalFileId: string;
-      parentFileId: FileId | undefined;
-      toolHistory: Array<{
-        toolName: string;
-        timestamp: number;
-      }>;
-    }
-  ): Promise<void> {
+  async storeStirlingFile(stirlingFile: StirlingFile, stub: StirlingFileStub): Promise<void> {
     const db = await this.getDatabase();
     const arrayBuffer = await stirlingFile.arrayBuffer();
 
@@ -67,14 +54,14 @@ class FileStorageService {
       size: stirlingFile.size,
       lastModified: stirlingFile.lastModified,
       data: arrayBuffer,
-      thumbnail,
-      isLeaf,
+      thumbnail: stub.thumbnailUrl,
+      isLeaf: stub.isLeaf ?? true,
 
-      // History data - use provided data or defaults for original files
-      versionNumber: historyData?.versionNumber ?? 1,
-      originalFileId: historyData?.originalFileId ?? stirlingFile.fileId,
-      parentFileId: historyData?.parentFileId ?? undefined,
-      toolHistory: historyData?.toolHistory ?? []
+      // History data from stub
+      versionNumber: stub.versionNumber ?? 1,
+      originalFileId: stub.originalFileId ?? stirlingFile.fileId,
+      parentFileId: stub.parentFileId ?? undefined,
+      toolHistory: stub.toolHistory ?? []
     };
 
     return new Promise((resolve, reject) => {

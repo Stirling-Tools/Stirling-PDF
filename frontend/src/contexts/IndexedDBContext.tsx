@@ -64,7 +64,24 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
     // Store in IndexedDB (no history data - that's handled by direct fileStorage calls now)
     const stirlingFile = createStirlingFile(file, fileId);
-    await fileStorage.storeStirlingFile(stirlingFile, thumbnail, true);
+    
+    // Create minimal stub for storage
+    const stub: StirlingFileStub = {
+      id: fileId,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      quickKey: `${file.name}|${file.size}|${file.lastModified}`,
+      thumbnailUrl: thumbnail,
+      isLeaf: true,
+      createdAt: Date.now(),
+      versionNumber: 1,
+      originalFileId: fileId,
+      toolHistory: []
+    };
+    
+    await fileStorage.storeStirlingFile(stirlingFile, stub);
     const storedFile = await fileStorage.getStirlingFileStub(fileId);
 
     // Cache the file object for immediate reuse

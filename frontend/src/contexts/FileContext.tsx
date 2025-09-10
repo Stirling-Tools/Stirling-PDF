@@ -22,13 +22,12 @@ import {
   FileId,
   StirlingFileStub,
   StirlingFile,
-  createStirlingFile
 } from '../types/fileContext';
 
 // Import modular components
 import { fileContextReducer, initialFileContextState } from './file/FileReducer';
 import { createFileSelectors } from './file/fileSelectors';
-import { AddedFile, addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createFileActions } from './file/fileActions';
+import { addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
@@ -73,56 +72,23 @@ function FileContextInner({
     dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
   }, []);
 
-  const selectFiles = (addedFilesWithIds: AddedFile[]) => {
+  const selectFiles = (stirlingFiles: StirlingFile[]) => {
     const currentSelection = stateRef.current.ui.selectedFileIds;
-    const newFileIds = addedFilesWithIds.map(({ id }) => id);
+    const newFileIds = stirlingFiles.map(stirlingFile => stirlingFile.fileId);
     dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
   }
 
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
-    const addedFilesWithIds = await addFiles({ files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
+    const stirlingFiles = await addFiles({ files, ...options }, stateRef, filesRef, dispatch, lifecycleManager, enablePersistence);
 
     // Auto-select the newly added files if requested
-    if (options?.selectFiles && addedFilesWithIds.length > 0) {
-      selectFiles(addedFilesWithIds);
+    if (options?.selectFiles && stirlingFiles.length > 0) {
+      selectFiles(stirlingFiles);
     }
 
-    // Persist to IndexedDB if enabled and update StirlingFileStub with version info
-    if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
-      await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
-        try {
-          const metadata = await indexedDB.saveFile(file, id, thumbnail);
-
-          // Update StirlingFileStub with version information from IndexedDB
-          if (metadata.versionNumber || metadata.originalFileId) {
-            dispatch({
-              type: 'UPDATE_FILE_RECORD',
-              payload: {
-                id,
-                updates: {
-                  versionNumber: metadata.versionNumber,
-                  originalFileId: metadata.originalFileId,
-                  parentFileId: metadata.parentFileId,
-                  toolHistory: metadata.toolHistory
-                }
-              }
-            });
-
-            if (DEBUG) console.log(`📄 FileContext: Updated raw file ${file.name} with IndexedDB history data:`, {
-              versionNumber: metadata.versionNumber,
-              originalFileId: metadata.originalFileId,
-              toolChainLength: metadata.toolHistory?.length || 0
-            });
-          }
-        } catch (error) {
-          console.error('Failed to persist file to IndexedDB:', file.name, error);
-        }
-      }));
-    }
-
-    return addedFilesWithIds.map(({ file, id }) => createStirlingFile(file, id));
-  }, [indexedDB, enablePersistence]);
+    return stirlingFiles;
+  }, [enablePersistence]);
 
   const addStirlingFileStubsAction = useCallback(async (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
     // StirlingFileStubs preserve all metadata - perfect for FileManager use case!
@@ -130,12 +96,7 @@ function FileContextInner({
 
     // Auto-select the newly added files if requested
     if (options?.selectFiles && result.length > 0) {
-      // Convert StirlingFile[] to AddedFile[] format for selectFiles
-      const addedFilesWithIds = result.map(stirlingFile => ({
-        file: stirlingFile,
-        id: stirlingFile.fileId
-      }));
-      selectFiles(addedFilesWithIds);
+      selectFiles(result);
     }
 
     return result;
