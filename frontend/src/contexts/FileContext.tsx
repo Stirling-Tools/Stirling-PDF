@@ -28,11 +28,10 @@ import {
 // Import modular components
 import { fileContextReducer, initialFileContextState } from './file/FileReducer';
 import { createFileSelectors } from './file/fileSelectors';
-import { AddedFile, addFiles, consumeFiles, undoConsumeFiles, createFileActions } from './file/fileActions';
+import { AddedFile, addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
-import { StoredFile, StoredFileMetadata } from '../services/fileStorage';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -94,7 +93,7 @@ function FileContextInner({
       await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
         try {
           const metadata = await indexedDB.saveFile(file, id, thumbnail);
-          
+
           // Update StirlingFileStub with version information from IndexedDB
           if (metadata.versionNumber || metadata.originalFileId) {
             dispatch({
@@ -109,7 +108,7 @@ function FileContextInner({
                 }
               }
             });
-            
+
             if (DEBUG) console.log(`📄 FileContext: Updated raw file ${file.name} with IndexedDB history data:`, {
               versionNumber: metadata.versionNumber,
               originalFileId: metadata.originalFileId,
@@ -130,28 +129,22 @@ function FileContextInner({
     return result.map(({ file, id }) => createStirlingFile(file, id));
   }, []);
 
-  const addStoredFiles = useCallback(async (storedFiles: StoredFile[], options?: { selectFiles?: boolean }): Promise<StirlingFile[]> => {
-    // Convert StoredFile[] to the format expected by addFiles
-    const filesWithMetadata = storedFiles.map(storedFile => ({
-      file: new File([storedFile.data], storedFile.name, {
-        type: storedFile.type,
-        lastModified: storedFile.lastModified
-      }),
-      originalId: storedFile.id,
-      metadata: {
-        ...storedFile,
-        data: undefined // Remove data field for metadata
-      } as StoredFileMetadata
-    }));
 
-    const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
+  const addStirlingFileStubsAction = useCallback(async (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
+    // StirlingFileStubs preserve all metadata - perfect for FileManager use case!
+    const result = await addStirlingFileStubs(stirlingFileStubs, options, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
     if (options?.selectFiles && result.length > 0) {
-      selectFiles(result);
+      // Convert StirlingFile[] to AddedFile[] format for selectFiles
+      const addedFilesWithIds = result.map(stirlingFile => ({
+        file: stirlingFile,
+        id: stirlingFile.fileId
+      }));
+      selectFiles(addedFilesWithIds);
     }
 
-    return result.map(({ file, id }) => createStirlingFile(file, id));
+    return result;
   }, []);
 
 
@@ -159,9 +152,9 @@ function FileContextInner({
   const baseActions = useMemo(() => createFileActions(dispatch), []);
 
   // Helper functions for pinned files
-  const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<FileId[]> => {
-    return consumeFiles(inputFileIds, outputFiles, filesRef, dispatch, indexedDB);
-  }, [indexedDB]);
+  const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputStirlingFiles: StirlingFile[], outputStirlingFileStubs: StirlingFileStub[]): Promise<FileId[]> => {
+    return consumeFiles(inputFileIds, outputStirlingFiles, outputStirlingFileStubs, filesRef, dispatch);
+  }, []);
 
   const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]): Promise<void> => {
     return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, filesRef, dispatch, indexedDB);
@@ -181,7 +174,7 @@ function FileContextInner({
     ...baseActions,
     addFiles: addRawFiles,
     addProcessedFiles,
-    addStoredFiles,
+    addStirlingFileStubs: addStirlingFileStubsAction,
     removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
       // Remove from memory and cleanup resources
       lifecycleManager.removeFiles(fileIds, stateRef);
@@ -237,7 +230,7 @@ function FileContextInner({
     baseActions,
     addRawFiles,
     addProcessedFiles,
-    addStoredFiles,
+    addStirlingFileStubsAction,
     lifecycleManager,
     setHasUnsavedChanges,
     consumeFilesWrapper,

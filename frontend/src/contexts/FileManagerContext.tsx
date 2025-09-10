@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { StoredFileMetadata, StoredFile } from '../services/fileStorage';
 import { fileStorage } from '../services/fileStorage';
+import { StirlingFileStub } from '../types/fileContext';
 import { downloadFiles } from '../utils/downloadUtils';
 import { FileId } from '../types/file';
 import { groupFilesByOriginal } from '../utils/fileHistoryUtils';
@@ -11,32 +11,32 @@ interface FileManagerContextValue {
   activeSource: 'recent' | 'local' | 'drive';
   selectedFileIds: FileId[];
   searchTerm: string;
-  selectedFiles: StoredFileMetadata[];
-  filteredFiles: StoredFileMetadata[];
+  selectedFiles: StirlingFileStub[];
+  filteredFiles: StirlingFileStub[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   selectedFilesSet: Set<string>;
   expandedFileIds: Set<string>;
-  fileGroups: Map<string, StoredFileMetadata[]>;
+  fileGroups: Map<string, StirlingFileStub[]>;
 
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
   onLocalFileClick: () => void;
-  onFileSelect: (file: StoredFileMetadata, index: number, shiftKey?: boolean) => void;
+  onFileSelect: (file: StirlingFileStub, index: number, shiftKey?: boolean) => void;
   onFileRemove: (index: number) => void;
-  onFileDoubleClick: (file: StoredFileMetadata) => void;
+  onFileDoubleClick: (file: StirlingFileStub) => void;
   onOpenFiles: () => void;
   onSearchChange: (value: string) => void;
   onFileInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectAll: () => void;
   onDeleteSelected: () => void;
   onDownloadSelected: () => void;
-  onDownloadSingle: (file: StoredFileMetadata) => void;
+  onDownloadSingle: (file: StirlingFileStub) => void;
   onToggleExpansion: (fileId: string) => void;
-  onAddToRecents: (file: StoredFileMetadata) => void;
+  onAddToRecents: (file: StirlingFileStub) => void;
   onNewFilesSelect: (files: File[]) => void;
 
   // External props
-  recentFiles: StoredFileMetadata[];
+  recentFiles: StirlingFileStub[];
   isFileSupported: (fileName: string) => boolean;
   modalHeight: string;
 }
@@ -47,10 +47,9 @@ const FileManagerContext = createContext<FileManagerContextValue | null>(null);
 // Provider component props
 interface FileManagerProviderProps {
   children: React.ReactNode;
-  recentFiles: StoredFileMetadata[];
-  onFilesSelected: (files: StoredFileMetadata[]) => void; // For selecting stored files
+  recentFiles: StirlingFileStub[];
+  onRecentFilesSelected: (files: StirlingFileStub[]) => void; // For selecting stored files
   onNewFilesSelect: (files: File[]) => void; // For uploading new local files
-  onStoredFilesSelect: (storedFiles: StoredFile[]) => void; // For adding stored files directly
   onClose: () => void;
   isFileSupported: (fileName: string) => boolean;
   isOpen: boolean;
@@ -62,9 +61,8 @@ interface FileManagerProviderProps {
 export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   children,
   recentFiles,
-  onFilesSelected,
+  onRecentFilesSelected,
   onNewFilesSelect,
-  onStoredFilesSelect: onStoredFilesSelect,
   onClose,
   isFileSupported,
   isOpen,
@@ -77,7 +75,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [expandedFileIds, setExpandedFileIds] = useState<Set<string>>(new Set());
-  const [loadedHistoryFiles, setLoadedHistoryFiles] = useState<Map<FileId, StoredFileMetadata[]>>(new Map()); // Cache for loaded history
+  const [loadedHistoryFiles, setLoadedHistoryFiles] = useState<Map<FileId, StirlingFileStub[]>>(new Map()); // Cache for loaded history
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track blob URLs for cleanup
@@ -91,7 +89,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const fileGroups = useMemo(() => {
     if (!recentFiles || recentFiles.length === 0) return new Map();
 
-    // Convert StoredFileMetadata to FileRecord-like objects for grouping utility
+    // Convert StirlingFileStub to FileRecord-like objects for grouping utility
     const recordsForGrouping = recentFiles.map(file => ({
       ...file,
       originalFileId: file.originalFileId,
@@ -145,7 +143,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileSelect = useCallback((file: StoredFileMetadata, currentIndex: number, shiftKey?: boolean) => {
+  const handleFileSelect = useCallback((file: StirlingFileStub, currentIndex: number, shiftKey?: boolean) => {
     const fileId = file.id;
     if (!fileId) return;
 
@@ -189,9 +187,9 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   // Helper function to safely determine which files can be deleted
   const getSafeFilesToDelete = useCallback((
     leafFileIds: string[],
-    allStoredMetadata: Omit<import('../services/fileStorage').StoredFile, 'data'>[]
+    allStoredStubs: StirlingFileStub[]
   ): string[] => {
-    const fileMap = new Map(allStoredMetadata.map(f => [f.id as string, f]));
+    const fileMap = new Map(allStoredStubs.map(f => [f.id as string, f]));
     const filesToDelete = new Set<string>();
     const filesToPreserve = new Set<string>();
 
@@ -208,7 +206,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         const originalFileId = currentFile.originalFileId || currentFile.id;
 
         // Find all files in this history chain
-        const chainFiles = allStoredMetadata.filter(file =>
+        const chainFiles = allStoredStubs.filter((file: StirlingFileStub) =>
           (file.originalFileId || file.id) === originalFileId
         );
 
@@ -218,13 +216,13 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
 
     // Now identify files that must be preserved because they're referenced by OTHER lineages
-    for (const file of allStoredMetadata) {
+    for (const file of allStoredStubs) {
       const fileOriginalId = file.originalFileId || file.id;
 
       // If this file is a leaf node (not being deleted) and its lineage overlaps with files we want to delete
       if (file.isLeaf !== false && !leafFileIds.includes(file.id)) {
         // Find all files in this preserved lineage
-        const preservedChainFiles = allStoredMetadata.filter(chainFile =>
+        const preservedChainFiles = allStoredStubs.filter((chainFile: StirlingFileStub) =>
           (chainFile.originalFileId || chainFile.id) === fileOriginalId
         );
 
@@ -251,10 +249,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       const deletedFileId = fileToRemove.id;
 
       // Get all stored files to analyze lineages
-      const allStoredMetadata = await fileStorage.getAllFileMetadata();
+      const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
 
       // Get safe files to delete (respecting shared lineages)
-      const filesToDelete = getSafeFilesToDelete([deletedFileId as string], allStoredMetadata);
+      const filesToDelete = getSafeFilesToDelete([deletedFileId as string], allStoredStubs);
 
       console.log(`Safely deleting files for ${fileToRemove.name}:`, filesToDelete);
 
@@ -289,33 +287,33 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       // Delete safe files from IndexedDB
       try {
         for (const fileId of filesToDelete) {
-          await fileStorage.deleteFile(fileId as FileId);
+          await fileStorage.deleteStirlingFile(fileId as FileId);
         }
       } catch (error) {
         console.error('Failed to delete files from chain:', error);
       }
 
       // Call the parent's deletion logic for the main file only
-      await onFileRemove(index);
+      onFileRemove(index);
 
       // Refresh to ensure consistent state
       await refreshRecentFiles();
     }
   }, [filteredFiles, onFileRemove, refreshRecentFiles, getSafeFilesToDelete]);
 
-  const handleFileDoubleClick = useCallback((file: StoredFileMetadata) => {
+  const handleFileDoubleClick = useCallback((file: StirlingFileStub) => {
     if (isFileSupported(file.name)) {
-      onFilesSelected([file]);
+      onRecentFilesSelected([file]);
       onClose();
     }
-  }, [isFileSupported, onFilesSelected, onClose]);
+  }, [isFileSupported, onRecentFilesSelected, onClose]);
 
   const handleOpenFiles = useCallback(() => {
     if (selectedFiles.length > 0) {
-      onFilesSelected(selectedFiles);
+      onRecentFilesSelected(selectedFiles);
       onClose();
     }
-  }, [selectedFiles, onFilesSelected, onClose]);
+  }, [selectedFiles, onRecentFilesSelected, onClose]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -354,10 +352,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
     try {
       // Get all stored files to analyze lineages
-      const allStoredMetadata = await fileStorage.getAllFileMetadata();
+      const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
 
       // Get safe files to delete (respecting shared lineages)
-      const filesToDelete = getSafeFilesToDelete(selectedFileIds, allStoredMetadata);
+      const filesToDelete = getSafeFilesToDelete(selectedFileIds, allStoredStubs);
 
       console.log(`Bulk safely deleting files and their history chains:`, filesToDelete);
 
@@ -391,7 +389,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
       // Delete safe files from IndexedDB
       for (const fileId of filesToDelete) {
-        await fileStorage.deleteFile(fileId as FileId);
+        await fileStorage.deleteStirlingFile(fileId as FileId);
       }
 
       // Refresh the file list to get updated data
@@ -420,7 +418,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [selectedFileIds, filteredFiles]);
 
-  const handleDownloadSingle = useCallback(async (file: StoredFileMetadata) => {
+  const handleDownloadSingle = useCallback(async (file: StirlingFileStub) => {
     try {
       await downloadFiles([file]);
     } catch (error) {
@@ -448,21 +446,21 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       if (currentFileMetadata && (currentFileMetadata.versionNumber || 1) > 1) {
         try {
           // Get all stored file metadata for chain traversal
-          const allStoredMetadata = await fileStorage.getAllFileMetadata();
-          const fileMap = new Map(allStoredMetadata.map(f => [f.id, f]));
+          const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
+          const fileMap = new Map(allStoredStubs.map(f => [f.id, f]));
 
           // Get the current file's IndexedDB data
-          const currentStoredFile = fileMap.get(fileId as FileId);
-          if (!currentStoredFile) {
+          const currentStoredStub = fileMap.get(fileId as FileId);
+          if (!currentStoredStub) {
             console.warn(`No stored file found for ${fileId}`);
             return;
           }
 
           // Build complete history chain using IndexedDB metadata
-          const historyFiles: StoredFileMetadata[] = [];
+          const historyFiles: StirlingFileStub[] = [];
 
           // Find the original file
-          const originalFileId = currentStoredFile.originalFileId || currentStoredFile.id;
+          const originalFileId = currentStoredStub.originalFileId || currentStoredStub.id;
 
           // Collect all files in this history chain
           const chainFiles = Array.from(fileMap.values()).filter(file =>
@@ -472,25 +470,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
           // Sort by version number (oldest first for history display)
           chainFiles.sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
 
-          // Convert stored files to StoredFileMetadata format with proper history info
-          for (const storedFile of chainFiles) {
-              // Load the actual file to extract PDF metadata if available
-              const historyMetadata: StoredFileMetadata = {
-                id: storedFile.id,
-                name: storedFile.name,
-                type: storedFile.type,
-                size: storedFile.size,
-                lastModified: storedFile.lastModified,
-                thumbnail: storedFile.thumbnail,
-                versionNumber: storedFile.versionNumber,
-                isLeaf: storedFile.isLeaf,
-                // Use IndexedDB data directly - it's more reliable than re-parsing PDF
-                originalFileId: storedFile.originalFileId,
-                parentFileId: storedFile.parentFileId,
-                toolHistory: storedFile.toolHistory
-              };
-              historyFiles.push(historyMetadata);
-          }
+          // StirlingFileStubs already have all the data we need - no conversion required!
+          historyFiles.push(...chainFiles);
 
           // Cache the loaded history files
           setLoadedHistoryFiles(prev => new Map(prev.set(fileId as FileId, historyFiles)));
@@ -508,24 +489,17 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [expandedFileIds, recentFiles]);
 
-  const handleAddToRecents = useCallback(async (file: StoredFileMetadata) => {
+  const handleAddToRecents = useCallback(async (file: StirlingFileStub) => {
     try {
-      console.log('Adding to recents:', file.name, 'version:', file.versionNumber);
+      // Mark the file as a leaf node so it appears in recent files
+      await fileStorage.markFileAsLeaf(file.id);
 
-      // Load file from storage and use addStoredFiles pattern
-      const storedFile = await fileStorage.getFile(file.id);
-      if (!storedFile) {
-        throw new Error(`File not found in storage: ${file.name}`);
-      }
-
-      // Use direct StoredFile approach - much more efficient
-      onStoredFilesSelect([storedFile]);
-
-      console.log('Successfully added to recents:', file.name, 'v' + file.versionNumber);
+      // Refresh the recent files list to show updated state
+      await refreshRecentFiles();
     } catch (error) {
       console.error('Failed to add to recents:', error);
     }
-  }, [onStoredFilesSelect]);
+  }, [refreshRecentFiles]);
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {

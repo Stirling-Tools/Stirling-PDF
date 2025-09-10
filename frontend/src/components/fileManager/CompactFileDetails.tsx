@@ -5,12 +5,12 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useTranslation } from 'react-i18next';
 import { getFileSize } from '../../utils/fileUtils';
-import { StoredFileMetadata } from '../../services/fileStorage';
+import { StirlingFileStub } from '../../types/fileContext';
 
 interface CompactFileDetailsProps {
-  currentFile: StoredFileMetadata | null;
+  currentFile: StirlingFileStub | null;
   thumbnail: string | null;
-  selectedFiles: StoredFileMetadata[];
+  selectedFiles: StirlingFileStub[];
   currentFileIndex: number;
   numberOfFiles: number;
   isAnimating: boolean;

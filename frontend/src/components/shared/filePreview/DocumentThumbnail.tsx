@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Center, Image } from '@mantine/core';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { StoredFileMetadata } from '../../../services/fileStorage';
+import { StirlingFileStub } from '../../../types/fileContext';
 
 export interface DocumentThumbnailProps {
-  file: File | StoredFileMetadata | null;
+  file: File | StirlingFileStub | null;
   thumbnail?: string | null;
   style?: React.CSSProperties;
   onClick?: () => void;

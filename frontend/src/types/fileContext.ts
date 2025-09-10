@@ -4,7 +4,6 @@
 
 import { PageOperation } from './pageEditor';
 import { FileId, BaseFileMetadata } from './file';
-import { StoredFileMetadata, StoredFile } from '../services/fileStorage';
 
 // Re-export FileId for convenience
 export type { FileId };
@@ -159,7 +158,9 @@ export function isFileObject(obj: any): obj is File | StirlingFile {
 
 export function toStirlingFileStub(
   file: File,
-  id?: FileId
+  id?: FileId,
+  thumbnail?: string
+
 ): StirlingFileStub {
   const fileId = id || createFileId();
   return {
@@ -170,7 +171,8 @@ export function toStirlingFileStub(
     lastModified: file.lastModified,
     quickKey: createQuickKey(file),
     createdAt: Date.now(),
-    isLeaf: true // New files are leaf nodes by default
+    isLeaf: true, // New files are leaf nodes by default
+    thumbnailUrl: thumbnail
   };
 }
 
@@ -293,7 +295,7 @@ export interface FileContextActions {
   // File management - lightweight actions only
   addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
   addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<StirlingFile[]>;
-  addStoredFiles: (storedFiles: StoredFile[], options?: { selectFiles?: boolean }) => Promise<StirlingFile[]>;
+  addStirlingFileStubs: (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateStirlingFileStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
@@ -305,7 +307,7 @@ export interface FileContextActions {
   unpinFile: (file: StirlingFile) => void;
 
   // File consumption (replace unpinned files with outputs)
-  consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileId[]>;
+  consumeFiles: (inputFileIds: FileId[], outputStirlingFiles: StirlingFile[], outputStirlingFileStubs: StirlingFileStub[]) => Promise<FileId[]>;
   undoConsumeFiles: (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]) => Promise<void>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;

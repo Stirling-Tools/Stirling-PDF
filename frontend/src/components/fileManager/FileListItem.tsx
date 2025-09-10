@@ -7,12 +7,12 @@ import AddIcon from '@mui/icons-material/Add';
 import HistoryIcon from '@mui/icons-material/History';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
-import { StoredFileMetadata } from '../../services/fileStorage';
+import { StirlingFileStub } from '../../types/fileContext';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
 import ToolChain from '../shared/ToolChain';
 
 interface FileListItemProps {
-  file: StoredFileMetadata;
+  file: StirlingFileStub;
   isSelected: boolean;
   isSupported: boolean;
   onSelect: (shiftKey?: boolean) => void;

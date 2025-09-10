@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Modal } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { StoredFileMetadata, fileStorage } from '../services/fileStorage';
+import { StirlingFileStub } from '../types/fileContext';
 import { useFileManager } from '../hooks/useFileManager';
 import { useFilesModalContext } from '../contexts/FilesModalContext';
 import { Tool } from '../types/tool';
@@ -15,8 +15,8 @@ interface FileManagerProps {
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
-  const { isFilesModalOpen, closeFilesModal, onFilesSelect, onStoredFilesSelect } = useFilesModalContext();
-  const [recentFiles, setRecentFiles] = useState<StoredFileMetadata[]>([]);
+  const { isFilesModalOpen, closeFilesModal, onFileUpload, onRecentFileSelect } = useFilesModalContext();
+  const [recentFiles, setRecentFiles] = useState<StirlingFileStub[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -34,36 +34,26 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
     setRecentFiles(files);
   }, [loadRecentFiles]);
 
-  const handleFilesSelected = useCallback(async (files: StoredFileMetadata[]) => {
+  const handleRecentFilesSelected = useCallback(async (files: StirlingFileStub[]) => {
     try {
-      // Use stored files flow that preserves original IDs
-      // Load full StoredFile objects for selected files
-      const storedFiles = await Promise.all(
-        files.map(async (metadata) => {
-          const storedFile = await fileStorage.getFile(metadata.id);
-          if (!storedFile) {
-            throw new Error(`File not found in storage: ${metadata.name}`);
-          }
-          return storedFile;
-        })
-      );
-      onStoredFilesSelect(storedFiles);
+      // Use StirlingFileStubs directly - preserves all metadata!
+      onRecentFileSelect(files);
     } catch (error) {
       console.error('Failed to process selected files:', error);
     }
-  }, [onStoredFilesSelect]);
+  }, [onRecentFileSelect]);
 
   const handleNewFileUpload = useCallback(async (files: File[]) => {
     if (files.length > 0) {
       try {
         // Files will get IDs assigned through onFilesSelect -> FileContext addFiles
-        onFilesSelect(files);
+        onFileUpload(files);
         await refreshRecentFiles();
       } catch (error) {
         console.error('Failed to process dropped files:', error);
       }
     }
-  }, [onFilesSelect, refreshRecentFiles]);
+  }, [onFileUpload, refreshRecentFiles]);
 
   const handleRemoveFileByIndex = useCallback(async (index: number) => {
     await handleRemoveFile(index, recentFiles, setRecentFiles);
@@ -149,9 +139,8 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
         >
           <FileManagerProvider
             recentFiles={recentFiles}
-            onFilesSelected={handleFilesSelected}
+            onRecentFilesSelected={handleRecentFilesSelected}
             onNewFilesSelect={handleNewFileUpload}
-            onStoredFilesSelect={onStoredFilesSelect}
             onClose={closeFilesModal}
             isFileSupported={isFileSupported}
             isOpen={isFilesModalOpen}

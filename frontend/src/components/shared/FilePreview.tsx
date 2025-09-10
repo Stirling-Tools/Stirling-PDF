@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Center } from '@mantine/core';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import { StoredFileMetadata } from '../../services/fileStorage';
+import { StirlingFileStub } from '../../types/fileContext';
 import DocumentThumbnail from './filePreview/DocumentThumbnail';
 import DocumentStack from './filePreview/DocumentStack';
 import HoverOverlay from './filePreview/HoverOverlay';
@@ -9,7 +9,7 @@ import NavigationArrows from './filePreview/NavigationArrows';
 
 export interface FilePreviewProps {
   // Core file data
-  file: File | StoredFileMetadata | null;
+  file: File | StirlingFileStub | null;
   thumbnail?: string | null;
   
   // Optional features
@@ -22,7 +22,7 @@ export interface FilePreviewProps {
   isAnimating?: boolean;
   
   // Event handlers
-  onFileClick?: (file: File | StoredFileMetadata | null) => void;
+  onFileClick?: (file: File | StirlingFileStub | null) => void;
   onPrevious?: () => void;
   onNext?: () => void;
 }

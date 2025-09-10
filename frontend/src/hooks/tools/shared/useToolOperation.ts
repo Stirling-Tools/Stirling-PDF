@@ -6,8 +6,9 @@ import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { StirlingFile, extractFiles, FileId, StirlingFileStub } from '../../../types/fileContext';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile, toStirlingFileStub } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
+import { createChildStub } from '../../../contexts/file/fileActions';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -258,46 +259,25 @@ export const useToolOperation = <TParams>(
           }
         }
 
-        // Prepare output files with history data before saving
-        const processedFilesWithHistory = processedFiles.map(file => {
-          // Find the corresponding input file for history chain
-          const inputStub = inputStirlingFileStubs.find(stub => 
-            inputFileIds.includes(stub.id)
-          ) || inputStirlingFileStubs[0]; // Fallback to first input if not found
+        // Create new tool operation
+        const newToolOperation = {
+          toolName: config.operationType,
+          timestamp: Date.now()
+        };
+        console.log("tool complete inputs ")
+        const outputStirlingFileStubs = processedFiles.length != inputStirlingFileStubs.length
+          ? processedFiles.map((file, index) => toStirlingFileStub(file, undefined, thumbnails[index]))
+           : processedFiles.map((resultingFile, index) =>
+           createChildStub(inputStirlingFileStubs[index], newToolOperation, resultingFile, thumbnails[index])
+        );
 
-          // Create new tool operation
-          const newToolOperation = {
-            toolName: config.operationType,
-            timestamp: Date.now()
-          };
-
-          // Build complete tool chain
-          const existingToolChain = inputStub?.toolHistory || [];
-          const toolHistory = [...existingToolChain, newToolOperation];
-
-          // Calculate version number
-          const versionNumber = inputStub?.versionNumber ? inputStub.versionNumber + 1 : 1;
-
-          // Attach history data to file
-          (file as any).__historyData = {
-            versionNumber,
-            originalFileId: inputStub?.originalFileId || inputStub?.id,
-            parentFileId: inputStub?.id || null,
-            toolHistory
-          };
-
-          console.log('🏛️ FILE HISTORY - Prepared file with history:', {
-            fileName: file.name,
-            versionNumber,
-            originalFileId: inputStub?.originalFileId || inputStub?.id,
-            parentFileId: inputStub?.id,
-            toolChainLength: toolHistory.length
-          });
-
-          return file;
+        // Create StirlingFile objects from processed files and child stubs
+        const outputStirlingFiles = processedFiles.map((file, index) => {
+          const childStub = outputStirlingFileStubs[index];
+          return createStirlingFile(file, childStub.id);
         });
 
-        const outputFileIds = await consumeFiles(inputFileIds, processedFilesWithHistory);
+        const outputFileIds = await consumeFiles(inputFileIds, outputStirlingFiles, outputStirlingFileStubs);
 
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {

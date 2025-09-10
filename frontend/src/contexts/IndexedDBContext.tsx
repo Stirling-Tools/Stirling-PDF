@@ -4,23 +4,23 @@
  */
 
 import React, { createContext, useContext, useCallback, useRef } from 'react';
-
-const DEBUG = process.env.NODE_ENV === 'development';
 import { fileStorage } from '../services/fileStorage';
 import { FileId } from '../types/file';
-import { StoredFileMetadata } from '../services/fileStorage';
+import { StirlingFileStub, createStirlingFile } from '../types/fileContext';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+
+const DEBUG = process.env.NODE_ENV === 'development';
 
 interface IndexedDBContextValue {
   // Core CRUD operations
-  saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<StoredFileMetadata>;
+  saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<StirlingFileStub>;
   loadFile: (fileId: FileId) => Promise<File | null>;
-  loadMetadata: (fileId: FileId) => Promise<StoredFileMetadata | null>;
+  loadMetadata: (fileId: FileId) => Promise<StirlingFileStub | null>;
   deleteFile: (fileId: FileId) => Promise<void>;
 
   // Batch operations
-  loadAllMetadata: () => Promise<StoredFileMetadata[]>;
-  loadLeafMetadata: () => Promise<StoredFileMetadata[]>; // Only leaf files for recent files list
+  loadAllMetadata: () => Promise<StirlingFileStub[]>;
+  loadLeafMetadata: () => Promise<StirlingFileStub[]>; // Only leaf files for recent files list
   deleteMultiple: (fileIds: FileId[]) => Promise<void>;
   clearAll: () => Promise<void>;
 
@@ -58,51 +58,25 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     if (DEBUG) console.log(`🗂️ Evicted ${toRemove.length} LRU cache entries`);
   }, []);
 
-  const saveFile = useCallback(async (file: File, fileId: FileId, existingThumbnail?: string): Promise<StoredFileMetadata> => {
+  const saveFile = useCallback(async (file: File, fileId: FileId, existingThumbnail?: string): Promise<StirlingFileStub> => {
     // Use existing thumbnail or generate new one if none provided
     const thumbnail = existingThumbnail || await generateThumbnailForFile(file);
 
-    // Extract history data if attached to the file by tool operations
-    const historyData = (file as any).__historyData as {
-      versionNumber: number;
-      originalFileId: string;
-      parentFileId: FileId | undefined;
-      toolHistory: Array<{ toolName: string; timestamp: number; }>;
-    } | undefined;
-    
-    if (historyData) {
-      console.log('🏛️ INDEXEDDB CONTEXT - Found history data on file:', {
-        fileName: file.name,
-        versionNumber: historyData.versionNumber,
-        originalFileId: historyData.originalFileId,
-        parentFileId: historyData.parentFileId,
-        toolChainLength: historyData.toolHistory.length
-      });
-    }
-
-    // Store in IndexedDB with history data
-    const storedFile = await fileStorage.storeFile(file, fileId, thumbnail, true, historyData);
+    // Store in IndexedDB (no history data - that's handled by direct fileStorage calls now)
+    const stirlingFile = createStirlingFile(file, fileId);
+    await fileStorage.storeStirlingFile(stirlingFile, thumbnail, true);
+    const storedFile = await fileStorage.getStirlingFileStub(fileId);
 
     // Cache the file object for immediate reuse
     fileCache.current.set(fileId, { file, lastAccessed: Date.now() });
     evictLRUEntries();
 
-    // Return metadata with history information from the stored file
-    const metadata: StoredFileMetadata = {
-      id: fileId,
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      lastModified: file.lastModified,
-      thumbnail,
-      isLeaf: true,
-      versionNumber: storedFile.versionNumber,
-      originalFileId: storedFile.originalFileId,
-      parentFileId: storedFile.parentFileId || undefined,
-      toolHistory: storedFile.toolHistory
-    };
+    // Return StirlingFileStub from the stored file (no conversion needed)
+    if (!storedFile) {
+      throw new Error(`Failed to retrieve stored file after saving: ${file.name}`);
+    }
 
-    return metadata;
+    return storedFile;
   }, []);
 
   const loadFile = useCallback(async (fileId: FileId): Promise<File | null> => {
@@ -115,14 +89,11 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     }
 
     // Load from IndexedDB
-    const storedFile = await fileStorage.getFile(fileId);
+    const storedFile = await fileStorage.getStirlingFile(fileId);
     if (!storedFile) return null;
 
-    // Reconstruct File object
-    const file = new File([storedFile.data], storedFile.name, {
-      type: storedFile.type,
-      lastModified: storedFile.lastModified
-    });
+    // StirlingFile is already a File object, no reconstruction needed
+    const file = storedFile;
 
     // Cache for future use with LRU eviction
     fileCache.current.set(fileId, { file, lastAccessed: Date.now() });
@@ -131,34 +102,9 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     return file;
   }, [evictLRUEntries]);
 
-  const loadMetadata = useCallback(async (fileId: FileId): Promise<StoredFileMetadata | null> => {
-    // Try to get from cache first (no IndexedDB hit)
-    const cached = fileCache.current.get(fileId);
-    if (cached) {
-      const file = cached.file;
-      return {
-        id: fileId,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        lastModified: file.lastModified
-      };
-    }
-
-    // Load metadata from IndexedDB (efficient - no data field)
-    const metadata = await fileStorage.getAllFileMetadata();
-    const fileMetadata = metadata.find(m => m.id === fileId);
-
-    if (!fileMetadata) return null;
-
-    return {
-      id: fileMetadata.id,
-      name: fileMetadata.name,
-      type: fileMetadata.type,
-      size: fileMetadata.size,
-      lastModified: fileMetadata.lastModified,
-      thumbnail: fileMetadata.thumbnail
-    };
+  const loadMetadata = useCallback(async (fileId: FileId): Promise<StirlingFileStub | null> => {
+    // Load stub directly from storage service
+    return await fileStorage.getStirlingFileStub(fileId);
   }, []);
 
   const deleteFile = useCallback(async (fileId: FileId): Promise<void> => {
@@ -166,142 +112,22 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     fileCache.current.delete(fileId);
 
     // Remove from IndexedDB
-    await fileStorage.deleteFile(fileId);
+    await fileStorage.deleteStirlingFile(fileId);
   }, []);
 
-  const loadLeafMetadata = useCallback(async (): Promise<StoredFileMetadata[]> => {
-    const metadata = await fileStorage.getLeafFileMetadata(); // Only get leaf files
+  const loadLeafMetadata = useCallback(async (): Promise<StirlingFileStub[]> => {
+    const metadata = await fileStorage.getLeafStirlingFileStubs(); // Only get leaf files
 
-    // Separate PDF and non-PDF files for different processing
-    const pdfFiles = metadata.filter(m => m.type.includes('pdf'));
-    const nonPdfFiles = metadata.filter(m => !m.type.includes('pdf'));
+    // All files are already StirlingFileStub objects, no processing needed
+    return metadata;
 
-    // Process non-PDF files immediately (no history extraction needed)
-    const nonPdfMetadata: StoredFileMetadata[] = nonPdfFiles.map(m => ({
-      id: m.id,
-      name: m.name,
-      type: m.type,
-      size: m.size,
-      lastModified: m.lastModified,
-      thumbnail: m.thumbnail,
-      isLeaf: m.isLeaf
-    }));
-
-    // Process PDF files with controlled concurrency to avoid memory issues
-    const BATCH_SIZE = 5; // Process 5 PDFs at a time to avoid overwhelming memory
-    const pdfMetadata: StoredFileMetadata[] = [];
-
-    for (let i = 0; i < pdfFiles.length; i += BATCH_SIZE) {
-      const batch = pdfFiles.slice(i, i + BATCH_SIZE);
-
-      const batchResults = await Promise.all(batch.map(async (m) => {
-        try {
-          // For PDF files, use history data from IndexedDB instead of extracting from PDF
-          const storedFile = await fileStorage.getFile(m.id);
-          if (storedFile) {
-            return {
-              id: m.id,
-              name: m.name,
-              type: m.type,
-              size: m.size,
-              lastModified: m.lastModified,
-              thumbnail: m.thumbnail,
-              isLeaf: m.isLeaf,
-              versionNumber: storedFile.versionNumber,
-              historyInfo: {
-                originalFileId: storedFile.originalFileId,
-                parentFileId: storedFile.parentFileId || undefined,
-                versionNumber: storedFile.versionNumber,
-                toolChain: storedFile.toolHistory
-              }
-            };
-          }
-        } catch (error) {
-          if (DEBUG) console.warn('🗂️ Failed to load stored file data for leaf file:', m.name, error);
-        }
-
-        // Fallback to basic metadata without history
-        return {
-          id: m.id,
-          name: m.name,
-          type: m.type,
-          size: m.size,
-          lastModified: m.lastModified,
-          thumbnail: m.thumbnail,
-          isLeaf: m.isLeaf
-        };
-      }));
-
-      pdfMetadata.push(...batchResults);
-    }
-
-    return [...nonPdfMetadata, ...pdfMetadata];
   }, []);
 
-  const loadAllMetadata = useCallback(async (): Promise<StoredFileMetadata[]> => {
-    const metadata = await fileStorage.getAllFileMetadata();
+  const loadAllMetadata = useCallback(async (): Promise<StirlingFileStub[]> => {
+    const metadata = await fileStorage.getAllStirlingFileStubs();
 
-    // Separate PDF and non-PDF files for different processing
-    const pdfFiles = metadata.filter(m => m.type.includes('pdf'));
-    const nonPdfFiles = metadata.filter(m => !m.type.includes('pdf'));
-
-    // Process non-PDF files immediately (no history extraction needed)
-    const nonPdfMetadata: StoredFileMetadata[] = nonPdfFiles.map(m => ({
-      id: m.id,
-      name: m.name,
-      type: m.type,
-      size: m.size,
-      lastModified: m.lastModified,
-      thumbnail: m.thumbnail
-    }));
-
-    // Process PDF files with controlled concurrency to avoid memory issues
-    const BATCH_SIZE = 5; // Process 5 PDFs at a time to avoid overwhelming memory
-    const pdfMetadata: StoredFileMetadata[] = [];
-
-    for (let i = 0; i < pdfFiles.length; i += BATCH_SIZE) {
-      const batch = pdfFiles.slice(i, i + BATCH_SIZE);
-
-      const batchResults = await Promise.all(batch.map(async (m) => {
-        try {
-          // For PDF files, use history data from IndexedDB instead of extracting from PDF
-          const storedFile = await fileStorage.getFile(m.id);
-          if (storedFile) {
-            return {
-              id: m.id,
-              name: m.name,
-              type: m.type,
-              size: m.size,
-              lastModified: m.lastModified,
-              thumbnail: m.thumbnail,
-              versionNumber: storedFile.versionNumber,
-              historyInfo: {
-                originalFileId: storedFile.originalFileId,
-                parentFileId: storedFile.parentFileId || undefined,
-                versionNumber: storedFile.versionNumber,
-                toolChain: storedFile.toolHistory
-              }
-            };
-          }
-        } catch (error) {
-          if (DEBUG) console.warn('🗂️ Failed to load stored file data for metadata:', m.name, error);
-        }
-
-        // Fallback to basic metadata if history loading fails
-        return {
-          id: m.id,
-          name: m.name,
-          type: m.type,
-          size: m.size,
-          lastModified: m.lastModified,
-          thumbnail: m.thumbnail
-        };
-      }));
-
-      pdfMetadata.push(...batchResults);
-    }
-
-    return [...nonPdfMetadata, ...pdfMetadata];
+    // All files are already StirlingFileStub objects, no processing needed
+    return metadata;
   }, []);
 
   const deleteMultiple = useCallback(async (fileIds: FileId[]): Promise<void> => {
@@ -309,7 +135,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     fileIds.forEach(id => fileCache.current.delete(id));
 
     // Remove from IndexedDB in parallel
-    await Promise.all(fileIds.map(id => fileStorage.deleteFile(id)));
+    await Promise.all(fileIds.map(id => fileStorage.deleteStirlingFile(id)));
   }, []);
 
   const clearAll = useCallback(async (): Promise<void> => {

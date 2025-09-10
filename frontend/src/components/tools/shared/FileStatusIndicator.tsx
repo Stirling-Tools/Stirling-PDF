@@ -17,7 +17,7 @@ const FileStatusIndicator = ({
   selectedFiles = [],
 }: FileStatusIndicatorProps) => {
   const { t } = useTranslation();
-  const { openFilesModal, onFilesSelect } = useFilesModalContext();
+  const { openFilesModal, onFileUpload } = useFilesModalContext();
   const { files: stirlingFileStubs } = useAllFiles();
   const { loadRecentFiles } = useFileManager();
   const [hasRecentFiles, setHasRecentFiles] = useState<boolean | null>(null);
@@ -44,7 +44,7 @@ const FileStatusIndicator = ({
     input.onchange = (event) => {
       const files = Array.from((event.target as HTMLInputElement).files || []);
       if (files.length > 0) {
-        onFilesSelect(files);
+        onFileUpload(files);
       }
     };
     input.click();
