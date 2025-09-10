@@ -201,13 +201,16 @@ class IndexedDBManager {
 export const DATABASE_CONFIGS = {
   FILES: {
     name: 'stirling-pdf-files',
-    version: 2,
+    version: 3,
     stores: [{
       name: 'files',
       keyPath: 'id',
       indexes: [
         { name: 'name', keyPath: 'name', unique: false },
-        { name: 'lastModified', keyPath: 'lastModified', unique: false }
+        { name: 'lastModified', keyPath: 'lastModified', unique: false },
+        { name: 'originalFileId', keyPath: 'originalFileId', unique: false },
+        { name: 'parentFileId', keyPath: 'parentFileId', unique: false },
+        { name: 'versionNumber', keyPath: 'versionNumber', unique: false }
       ]
     }]
   } as DatabaseConfig,
@@ -219,7 +222,8 @@ export const DATABASE_CONFIGS = {
       name: 'drafts',
       keyPath: 'id'
     }]
-  } as DatabaseConfig
+  } as DatabaseConfig,
+
 } as const;
 
 export const indexedDBManager = IndexedDBManager.getInstance();

@@ -3,7 +3,8 @@
  */
 
 import { PageOperation } from './pageEditor';
-import { FileId, FileMetadata } from './file';
+import { FileId, BaseFileMetadata } from './file';
+import { StoredFileMetadata, StoredFile } from '../services/fileStorage';
 
 // Re-export FileId for convenience
 export type { FileId };
@@ -51,30 +52,20 @@ export interface ProcessedFileMetadata {
  * separately in refs for memory efficiency. Supports multi-tool workflows
  * where files persist across tool operations.
  */
-export interface StirlingFileStub {
-  id: FileId;                    // UUID primary key for collision-free operations
-  name: string;                  // Display name for UI
-  size: number;                  // File size for progress indicators
-  type: string;                  // MIME type for format validation
-  lastModified: number;          // Original timestamp for deduplication
+/**
+ * StirlingFileStub - Runtime UI metadata for files in the active workbench session
+ *
+ * Contains UI display data and processing state. Actual File objects stored
+ * separately in refs for memory efficiency. Supports multi-tool workflows
+ * where files persist across tool operations.
+ */
+export interface StirlingFileStub extends BaseFileMetadata {
   quickKey?: string;             // Fast deduplication key: name|size|lastModified
   thumbnailUrl?: string;         // Generated thumbnail blob URL for visual display
   blobUrl?: string;             // File access blob URL for downloads/processing
-  createdAt?: number;           // When added to workbench for sorting
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string;   // Page ID after which this file should be inserted
   isPinned?: boolean;           // Protected from tool consumption (replace/remove)
-  isLeaf?: boolean; // True if this file is a leaf node (hasn't been processed yet)
-
-  // File history tracking (from PDF metadata)
-  originalFileId?: string; // Root file ID for grouping versions
-  versionNumber?: number; // Version number in chain
-  parentFileId?: FileId; // Immediate parent file ID
-  toolHistory?: Array<{
-    toolName: string;
-    timestamp: number;
-    parameters?: Record<string, any>;
-  }>;
   // Note: File object stored in provider ref, not in state
 }
 
@@ -117,6 +108,11 @@ export function isStirlingFile(file: File): file is StirlingFile {
 
 // Create a StirlingFile from a regular File object
 export function createStirlingFile(file: File, id?: FileId): StirlingFile {
+  // Check if file is already a StirlingFile to avoid property redefinition
+  if (isStirlingFile(file)) {
+    return file; // Already has fileId and quickKey properties
+  }
+
   const fileId = id || createFileId();
   const quickKey = createQuickKey(file);
 
@@ -220,7 +216,6 @@ export interface FileOperation {
   metadata?: {
     originalFileName?: string;
     outputFileNames?: string[];
-    parameters?: Record<string, any>;
     fileSize?: number;
     pageCount?: number;
     error?: string;
@@ -298,7 +293,7 @@ export interface FileContextActions {
   // File management - lightweight actions only
   addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
   addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<StirlingFile[]>;
-  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>, options?: { selectFiles?: boolean }) => Promise<StirlingFile[]>;
+  addStoredFiles: (storedFiles: StoredFile[], options?: { selectFiles?: boolean }) => Promise<StirlingFile[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateStirlingFileStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;

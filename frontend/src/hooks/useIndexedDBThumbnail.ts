@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileMetadata } from "../types/file";
+import { StoredFileMetadata } from "../services/fileStorage";
 import { useIndexedDB } from "../contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "../utils/thumbnailUtils";
 import { FileId } from "../types/fileContext";
@@ -9,7 +9,7 @@ import { FileId } from "../types/fileContext";
  * Hook for IndexedDB-aware thumbnail loading
  * Handles thumbnail generation for files not in IndexedDB
  */
-export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
+export function useIndexedDBThumbnail(file: StoredFileMetadata | undefined | null): {
   thumbnail: string | null;
   isGenerating: boolean
 } {

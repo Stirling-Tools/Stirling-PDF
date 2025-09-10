@@ -2,11 +2,11 @@ import React from 'react';
 import { Stack, Card, Box, Text, Badge, Group, Divider, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { detectFileExtension, getFileSize } from '../../utils/fileUtils';
-import { FileMetadata } from '../../types/file';
+import { StoredFileMetadata } from '../../services/fileStorage';
 import ToolChain from '../shared/ToolChain';
 
 interface FileInfoCardProps {
-  currentFile: FileMetadata | null;
+  currentFile: StoredFileMetadata | null;
   modalHeight: string;
 }
 
@@ -114,19 +114,19 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
             <Text size="sm" c="dimmed">{t('fileManager.fileVersion', 'Version')}</Text>
             {currentFile &&
               <Badge size="sm" variant="light" color={currentFile?.versionNumber ? 'blue' : 'gray'}>
-                v{currentFile ? (currentFile.versionNumber || 0) : ''}
+                v{currentFile ? (currentFile.versionNumber || 1) : ''}
               </Badge>}
 
           </Group>
 
           {/* Tool Chain Display */}
-          {currentFile?.historyInfo?.toolChain && currentFile.historyInfo.toolChain.length > 0 && (
+          {currentFile?.toolHistory && currentFile.toolHistory.length > 0 && (
             <>
               <Divider />
               <Box py="xs">
                 <Text size="xs" c="dimmed" mb="xs">{t('fileManager.toolChain', 'Tools Applied')}</Text>
                 <ToolChain
-                  toolChain={currentFile.historyInfo.toolChain}
+                  toolChain={currentFile.toolHistory}
                   displayStyle="badges"
                   size="xs"
                   maxWidth={'180px'}

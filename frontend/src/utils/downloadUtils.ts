@@ -1,4 +1,4 @@
-import { FileMetadata } from '../types/file';
+import { StoredFileMetadata } from '../services/fileStorage';
 import { fileStorage } from '../services/fileStorage';
 import { zipFileService } from '../services/zipFileService';
 
@@ -26,7 +26,7 @@ export function downloadBlob(blob: Blob, filename: string): void {
  * @param file - The file object with storage information
  * @throws Error if file cannot be retrieved from storage
  */
-export async function downloadFileFromStorage(file: FileMetadata): Promise<void> {
+export async function downloadFileFromStorage(file: StoredFileMetadata): Promise<void> {
   const lookupKey = file.id;
   const storedFile = await fileStorage.getFile(lookupKey);
   
@@ -42,7 +42,7 @@ export async function downloadFileFromStorage(file: FileMetadata): Promise<void>
  * Downloads multiple files as individual downloads
  * @param files - Array of files to download
  */
-export async function downloadMultipleFiles(files: FileMetadata[]): Promise<void> {
+export async function downloadMultipleFiles(files: StoredFileMetadata[]): Promise<void> {
   for (const file of files) {
     await downloadFileFromStorage(file);
   }
@@ -53,7 +53,7 @@ export async function downloadMultipleFiles(files: FileMetadata[]): Promise<void
  * @param files - Array of files to include in ZIP
  * @param zipFilename - Optional custom ZIP filename (defaults to timestamped name)
  */
-export async function downloadFilesAsZip(files: FileMetadata[], zipFilename?: string): Promise<void> {
+export async function downloadFilesAsZip(files: StoredFileMetadata[], zipFilename?: string): Promise<void> {
   if (files.length === 0) {
     throw new Error('No files provided for ZIP download');
   }
@@ -94,7 +94,7 @@ export async function downloadFilesAsZip(files: FileMetadata[], zipFilename?: st
  * @param options - Download options
  */
 export async function downloadFiles(
-  files: FileMetadata[], 
+  files: StoredFileMetadata[], 
   options: {
     forceZip?: boolean;
     zipFilename?: string;

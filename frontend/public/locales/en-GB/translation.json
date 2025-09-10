@@ -2151,6 +2151,7 @@
     "loadingHistory": "Loading History...",
     "lastModified": "Last Modified",
     "toolChain": "Tools Applied",
+    "addToRecents": "Add to Recents",
     "searchFiles": "Search files...",
     "recent": "Recent",
     "localFiles": "Local Files",

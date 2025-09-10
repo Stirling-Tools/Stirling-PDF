@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Modal } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { FileMetadata } from '../types/file';
+import { StoredFileMetadata, fileStorage } from '../services/fileStorage';
 import { useFileManager } from '../hooks/useFileManager';
 import { useFilesModalContext } from '../contexts/FilesModalContext';
 import { Tool } from '../types/tool';
@@ -16,11 +16,11 @@ interface FileManagerProps {
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const { isFilesModalOpen, closeFilesModal, onFilesSelect, onStoredFilesSelect } = useFilesModalContext();
-  const [recentFiles, setRecentFiles] = useState<FileMetadata[]>([]);
+  const [recentFiles, setRecentFiles] = useState<StoredFileMetadata[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { loadRecentFiles, handleRemoveFile, convertToFile } = useFileManager();
+  const { loadRecentFiles, handleRemoveFile } = useFileManager();
 
   // File management handlers
   const isFileSupported = useCallback((fileName: string) => {
@@ -34,21 +34,24 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
     setRecentFiles(files);
   }, [loadRecentFiles]);
 
-  const handleFilesSelected = useCallback(async (files: FileMetadata[]) => {
+  const handleFilesSelected = useCallback(async (files: StoredFileMetadata[]) => {
     try {
       // Use stored files flow that preserves original IDs
-      const filesWithMetadata = await Promise.all(
-        files.map(async (metadata) => ({
-          file: await convertToFile(metadata),
-          originalId: metadata.id,
-          metadata
-        }))
+      // Load full StoredFile objects for selected files
+      const storedFiles = await Promise.all(
+        files.map(async (metadata) => {
+          const storedFile = await fileStorage.getFile(metadata.id);
+          if (!storedFile) {
+            throw new Error(`File not found in storage: ${metadata.name}`);
+          }
+          return storedFile;
+        })
       );
-      onStoredFilesSelect(filesWithMetadata);
+      onStoredFilesSelect(storedFiles);
     } catch (error) {
       console.error('Failed to process selected files:', error);
     }
-  }, [convertToFile, onStoredFilesSelect]);
+  }, [onStoredFilesSelect]);
 
   const handleNewFileUpload = useCallback(async (files: File[]) => {
     if (files.length > 0) {
@@ -85,7 +88,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   // Cleanup any blob URLs when component unmounts
   useEffect(() => {
     return () => {
-      // FileMetadata doesn't have blob URLs, so no cleanup needed
+      // StoredFileMetadata doesn't have blob URLs, so no cleanup needed
       // Blob URLs are managed by FileContext and tool operations
       console.log('FileManager unmounting - FileContext handles blob URL cleanup');
     };
@@ -148,6 +151,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             recentFiles={recentFiles}
             onFilesSelected={handleFilesSelected}
             onNewFilesSelect={handleNewFileUpload}
+            onStoredFilesSelect={onStoredFilesSelect}
             onClose={closeFilesModal}
             isFileSupported={isFileSupported}
             isOpen={isFilesModalOpen}

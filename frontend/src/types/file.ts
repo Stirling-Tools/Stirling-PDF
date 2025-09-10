@@ -8,11 +8,11 @@ export type FileId = string & { readonly [tag]: 'FileId' };
 
 /**
  * Tool operation metadata for history tracking
+ * Note: Parameters removed for security - sensitive data like passwords should not be stored in history
  */
 export interface ToolOperation {
   toolName: string;
   timestamp: number;
-  parameters?: Record<string, any>;
 }
 
 /**
@@ -21,31 +21,32 @@ export interface ToolOperation {
  */
 export interface FileHistoryInfo {
   originalFileId: string;
-  parentFileId?: string;
+  parentFileId?: FileId;
   versionNumber: number;
   toolChain: ToolOperation[];
 }
 
 /**
- * File metadata for efficient operations without loading full file data
- * Used by IndexedDBContext and FileContext for lazy file loading
+ * Base file metadata shared between storage and runtime layers
+ * Contains all common file properties and history tracking
  */
-export interface FileMetadata {
+export interface BaseFileMetadata {
   id: FileId;
   name: string;
   type: string;
   size: number;
   lastModified: number;
-  thumbnail?: string;
-  isLeaf?: boolean; // True if this file is a leaf node (hasn't been processed yet)
-
-  // File history tracking (extracted from PDF metadata)
-  historyInfo?: FileHistoryInfo;
-
-  // Quick access version information
+  createdAt?: number; // When file was added to system
+  
+  // File history tracking
+  isLeaf?: boolean; // True if this file hasn't been processed yet
   originalFileId?: string; // Root file ID for grouping versions
   versionNumber?: number; // Version number in chain
   parentFileId?: FileId; // Immediate parent file ID
+  toolHistory?: Array<{
+    toolName: string;
+    timestamp: number;
+  }>; // Tool chain for history tracking
 
   // Standard PDF document metadata
   pdfMetadata?: {
@@ -58,6 +59,10 @@ export interface FileMetadata {
     modificationDate?: Date;
   };
 }
+
+// FileMetadata has been replaced with StoredFileMetadata from '../services/fileStorage'
+// This ensures clear type relationships and eliminates duplication
+
 
 export interface StorageConfig {
   useIndexedDB: boolean;

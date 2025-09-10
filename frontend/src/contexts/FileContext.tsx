@@ -32,6 +32,7 @@ import { AddedFile, addFiles, consumeFiles, undoConsumeFiles, createFileActions 
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
+import { StoredFile, StoredFileMetadata } from '../services/fileStorage';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -88,11 +89,33 @@ function FileContextInner({
       selectFiles(addedFilesWithIds);
     }
 
-    // Persist to IndexedDB if enabled
+    // Persist to IndexedDB if enabled and update StirlingFileStub with version info
     if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
       await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
         try {
-          await indexedDB.saveFile(file, id, thumbnail);
+          const metadata = await indexedDB.saveFile(file, id, thumbnail);
+          
+          // Update StirlingFileStub with version information from IndexedDB
+          if (metadata.versionNumber || metadata.originalFileId) {
+            dispatch({
+              type: 'UPDATE_FILE_RECORD',
+              payload: {
+                id,
+                updates: {
+                  versionNumber: metadata.versionNumber,
+                  originalFileId: metadata.originalFileId,
+                  parentFileId: metadata.parentFileId,
+                  toolHistory: metadata.toolHistory
+                }
+              }
+            });
+            
+            if (DEBUG) console.log(`📄 FileContext: Updated raw file ${file.name} with IndexedDB history data:`, {
+              versionNumber: metadata.versionNumber,
+              originalFileId: metadata.originalFileId,
+              toolChainLength: metadata.toolHistory?.length || 0
+            });
+          }
         } catch (error) {
           console.error('Failed to persist file to IndexedDB:', file.name, error);
         }
@@ -107,7 +130,20 @@ function FileContextInner({
     return result.map(({ file, id }) => createStirlingFile(file, id));
   }, []);
 
-  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<StirlingFile[]> => {
+  const addStoredFiles = useCallback(async (storedFiles: StoredFile[], options?: { selectFiles?: boolean }): Promise<StirlingFile[]> => {
+    // Convert StoredFile[] to the format expected by addFiles
+    const filesWithMetadata = storedFiles.map(storedFile => ({
+      file: new File([storedFile.data], storedFile.name, {
+        type: storedFile.type,
+        lastModified: storedFile.lastModified
+      }),
+      originalId: storedFile.id,
+      metadata: {
+        ...storedFile,
+        data: undefined // Remove data field for metadata
+      } as StoredFileMetadata
+    }));
+
     const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
@@ -117,6 +153,7 @@ function FileContextInner({
 
     return result.map(({ file, id }) => createStirlingFile(file, id));
   }, []);
+
 
   // Action creators
   const baseActions = useMemo(() => createFileActions(dispatch), []);

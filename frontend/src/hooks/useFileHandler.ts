@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useFileState, useFileActions } from '../contexts/FileContext';
-import { FileMetadata } from '../types/file';
+import { StoredFileMetadata, StoredFile } from '../services/fileStorage';
 import { FileId } from '../types/file';
 
 export const useFileHandler = () => {
@@ -18,17 +18,17 @@ export const useFileHandler = () => {
   }, [actions.addFiles]);
 
   // Add stored files preserving their original IDs to prevent session duplicates
-  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => {
+  const addStoredFiles = useCallback(async (storedFiles: StoredFile[]) => {
     // Filter out files that already exist with the same ID (exact match)
-    const newFiles = filesWithMetadata.filter(({ originalId }) => {
-      return state.files.byId[originalId] === undefined;
+    const newFiles = storedFiles.filter(({ id }) => {
+      return state.files.byId[id] === undefined;
     });
 
     if (newFiles.length > 0) {
       await actions.addStoredFiles(newFiles, { selectFiles: true });
     }
 
-    console.log(`📁 Added ${newFiles.length} stored files (${filesWithMetadata.length - newFiles.length} skipped as duplicates)`);
+    console.log(`📁 Added ${newFiles.length} stored files (${storedFiles.length - newFiles.length} skipped as duplicates)`);
   }, [state.files.byId, actions.addStoredFiles]);
 
   return {

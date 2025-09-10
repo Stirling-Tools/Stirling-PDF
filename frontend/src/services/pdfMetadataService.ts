@@ -7,18 +7,17 @@
  */
 
 import { PDFDocument } from 'pdf-lib';
-import { FileId } from '../types/file';
 import { ContentCache, type CacheConfig } from '../utils/ContentCache';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
 /**
  * Tool operation metadata for history tracking
+ * Note: Parameters removed for security - sensitive data like passwords should not be stored
  */
 export interface ToolOperation {
   toolName: string;
   timestamp: number;
-  parameters?: Record<string, any>;
 }
 
 /**
@@ -182,7 +181,7 @@ export class PDFMetadataService {
                 latestVersionNumber = parsed.stirlingHistory.versionNumber;
                 historyJson = json;
               }
-            } catch (error) {
+            } catch {
               // Silent fallback for corrupted history
             }
           }

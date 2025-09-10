@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useIndexedDB } from '../contexts/IndexedDBContext';
-import { FileMetadata } from '../types/file';
+import { StoredFileMetadata, StoredFile, fileStorage } from '../services/fileStorage';
 import { FileId } from '../types/fileContext';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
   const indexedDB = useIndexedDB();
 
-  const convertToFile = useCallback(async (fileMetadata: FileMetadata): Promise<File> => {
+  const convertToFile = useCallback(async (fileMetadata: StoredFileMetadata): Promise<File> => {
     if (!indexedDB) {
       throw new Error('IndexedDB context not available');
     }
@@ -22,7 +22,7 @@ export const useFileManager = () => {
     throw new Error(`File not found in storage: ${fileMetadata.name} (ID: ${fileMetadata.id})`);
   }, [indexedDB]);
 
-  const loadRecentFiles = useCallback(async (): Promise<FileMetadata[]> => {
+  const loadRecentFiles = useCallback(async (): Promise<StoredFileMetadata[]> => {
     setLoading(true);
     try {
       if (!indexedDB) {
@@ -45,7 +45,7 @@ export const useFileManager = () => {
     }
   }, [indexedDB]);
 
-  const handleRemoveFile = useCallback(async (index: number, files: FileMetadata[], setFiles: (files: FileMetadata[]) => void) => {
+  const handleRemoveFile = useCallback(async (index: number, files: StoredFileMetadata[], setFiles: (files: StoredFileMetadata[]) => void) => {
     const file = files[index];
     if (!file.id) {
       throw new Error('File ID is required for removal');
@@ -105,23 +105,24 @@ export const useFileManager = () => {
       setSelectedFiles([]);
     };
 
-    const selectMultipleFiles = async (files: FileMetadata[], onStoredFilesSelect: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => void) => {
+    const selectMultipleFiles = async (files: StoredFileMetadata[], onStoredFilesSelect: (storedFiles: StoredFile[]) => void) => {
       if (selectedFiles.length === 0) return;
 
       try {
-        // Filter by UUID and convert to File objects
+        // Filter by UUID and load full StoredFile objects directly
         const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id));
-
-        // Use stored files flow that preserves IDs
-        const filesWithMetadata = await Promise.all(
-          selectedFileObjects.map(async (metadata) => ({
-            file: await convertToFile(metadata),
-            originalId: metadata.id,
-            metadata
-          }))
+        
+        const storedFiles = await Promise.all(
+          selectedFileObjects.map(async (metadata) => {
+            const storedFile = await fileStorage.getFile(metadata.id);
+            if (!storedFile) {
+              throw new Error(`File not found in storage: ${metadata.name}`);
+            }
+            return storedFile;
+          })
         );
-        onStoredFilesSelect(filesWithMetadata);
-
+        
+        onStoredFilesSelect(storedFiles);
         clearSelection();
       } catch (error) {
         console.error('Failed to load selected files:', error);

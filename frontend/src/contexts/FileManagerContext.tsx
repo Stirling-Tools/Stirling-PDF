@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { FileMetadata } from '../types/file';
+import { StoredFileMetadata, StoredFile } from '../services/fileStorage';
 import { fileStorage } from '../services/fileStorage';
 import { downloadFiles } from '../utils/downloadUtils';
 import { FileId } from '../types/file';
-import { getLatestVersions, groupFilesByOriginal, getVersionHistory, createFileMetadataWithHistory } from '../utils/fileHistoryUtils';
-import { useMultiFileHistory } from '../hooks/useFileHistory';
+import { groupFilesByOriginal } from '../utils/fileHistoryUtils';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
@@ -12,36 +11,32 @@ interface FileManagerContextValue {
   activeSource: 'recent' | 'local' | 'drive';
   selectedFileIds: FileId[];
   searchTerm: string;
-  selectedFiles: FileMetadata[];
-  filteredFiles: FileMetadata[];
+  selectedFiles: StoredFileMetadata[];
+  filteredFiles: StoredFileMetadata[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   selectedFilesSet: Set<string>;
   expandedFileIds: Set<string>;
-  fileGroups: Map<string, FileMetadata[]>;
-
-  // History loading state
-  isLoadingHistory: (fileId: FileId) => boolean;
-  getHistoryError: (fileId: FileId) => string | null;
+  fileGroups: Map<string, StoredFileMetadata[]>;
 
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
   onLocalFileClick: () => void;
-  onFileSelect: (file: FileMetadata, index: number, shiftKey?: boolean) => void;
+  onFileSelect: (file: StoredFileMetadata, index: number, shiftKey?: boolean) => void;
   onFileRemove: (index: number) => void;
-  onFileDoubleClick: (file: FileMetadata) => void;
+  onFileDoubleClick: (file: StoredFileMetadata) => void;
   onOpenFiles: () => void;
   onSearchChange: (value: string) => void;
   onFileInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectAll: () => void;
   onDeleteSelected: () => void;
   onDownloadSelected: () => void;
-  onDownloadSingle: (file: FileMetadata) => void;
+  onDownloadSingle: (file: StoredFileMetadata) => void;
   onToggleExpansion: (fileId: string) => void;
-  onAddToRecents: (file: FileMetadata) => void;
+  onAddToRecents: (file: StoredFileMetadata) => void;
   onNewFilesSelect: (files: File[]) => void;
 
   // External props
-  recentFiles: FileMetadata[];
+  recentFiles: StoredFileMetadata[];
   isFileSupported: (fileName: string) => boolean;
   modalHeight: string;
 }
@@ -52,9 +47,10 @@ const FileManagerContext = createContext<FileManagerContextValue | null>(null);
 // Provider component props
 interface FileManagerProviderProps {
   children: React.ReactNode;
-  recentFiles: FileMetadata[];
-  onFilesSelected: (files: FileMetadata[]) => void; // For selecting stored files
+  recentFiles: StoredFileMetadata[];
+  onFilesSelected: (files: StoredFileMetadata[]) => void; // For selecting stored files
   onNewFilesSelect: (files: File[]) => void; // For uploading new local files
+  onStoredFilesSelect: (storedFiles: StoredFile[]) => void; // For adding stored files directly
   onClose: () => void;
   isFileSupported: (fileName: string) => boolean;
   isOpen: boolean;
@@ -68,6 +64,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   recentFiles,
   onFilesSelected,
   onNewFilesSelect,
+  onStoredFilesSelect: onStoredFilesSelect,
   onClose,
   isFileSupported,
   isOpen,
@@ -80,19 +77,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [expandedFileIds, setExpandedFileIds] = useState<Set<string>>(new Set());
-  const [loadedHistoryFiles, setLoadedHistoryFiles] = useState<Map<FileId, FileMetadata[]>>(new Map()); // Cache for loaded history
+  const [loadedHistoryFiles, setLoadedHistoryFiles] = useState<Map<FileId, StoredFileMetadata[]>>(new Map()); // Cache for loaded history
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
 
-  // History loading hook
-  const {
-    loadFileHistory,
-    getHistory,
-    isLoadingHistory,
-    getError: getHistoryError
-  } = useMultiFileHistory();
 
   // Computed values (with null safety)
   const selectedFilesSet = new Set(selectedFileIds);
@@ -100,37 +90,37 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   // Group files by original file ID for version management
   const fileGroups = useMemo(() => {
     if (!recentFiles || recentFiles.length === 0) return new Map();
-    
-    // Convert FileMetadata to FileRecord-like objects for grouping utility
+
+    // Convert StoredFileMetadata to FileRecord-like objects for grouping utility
     const recordsForGrouping = recentFiles.map(file => ({
       ...file,
       originalFileId: file.originalFileId,
-      versionNumber: file.versionNumber || 0
+      versionNumber: file.versionNumber || 1
     }));
-    
+
     return groupFilesByOriginal(recordsForGrouping);
   }, [recentFiles]);
 
-  // Get files to display with expansion logic  
+  // Get files to display with expansion logic
   const displayFiles = useMemo(() => {
     if (!recentFiles || recentFiles.length === 0) return [];
-    
+
     const expandedFiles = [];
-    
+
     // Since we now only load leaf files, iterate through recent files directly
     for (const leafFile of recentFiles) {
       // Add the leaf file (main file shown in list)
       expandedFiles.push(leafFile);
-      
+
       // If expanded, add the loaded history files
       if (expandedFileIds.has(leafFile.id)) {
         const historyFiles = loadedHistoryFiles.get(leafFile.id) || [];
         // Sort history files by version number (oldest first)
-        const sortedHistory = historyFiles.sort((a, b) => (a.versionNumber || 0) - (b.versionNumber || 0));
+        const sortedHistory = historyFiles.sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
         expandedFiles.push(...sortedHistory);
       }
     }
-    
+
     return expandedFiles;
   }, [recentFiles, expandedFileIds, loadedHistoryFiles]);
 
@@ -155,7 +145,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileSelect = useCallback((file: FileMetadata, currentIndex: number, shiftKey?: boolean) => {
+  const handleFileSelect = useCallback((file: StoredFileMetadata, currentIndex: number, shiftKey?: boolean) => {
     const fileId = file.id;
     if (!fileId) return;
 
@@ -196,49 +186,124 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [filteredFiles, lastClickedIndex]);
 
+  // Helper function to safely determine which files can be deleted
+  const getSafeFilesToDelete = useCallback((
+    leafFileIds: string[],
+    allStoredMetadata: Omit<import('../services/fileStorage').StoredFile, 'data'>[]
+  ): string[] => {
+    const fileMap = new Map(allStoredMetadata.map(f => [f.id as string, f]));
+    const filesToDelete = new Set<string>();
+    const filesToPreserve = new Set<string>();
+
+    // First, identify all files in the lineages of the leaf files being deleted
+    for (const leafFileId of leafFileIds) {
+      const currentFile = fileMap.get(leafFileId);
+      if (!currentFile) continue;
+
+      // Always include the leaf file itself for deletion
+      filesToDelete.add(leafFileId);
+
+      // If this is a processed file with history, trace back through its lineage
+      if (currentFile.versionNumber && currentFile.versionNumber > 1) {
+        const originalFileId = currentFile.originalFileId || currentFile.id;
+
+        // Find all files in this history chain
+        const chainFiles = allStoredMetadata.filter(file =>
+          (file.originalFileId || file.id) === originalFileId
+        );
+
+        // Add all files in this lineage as candidates for deletion
+        chainFiles.forEach(file => filesToDelete.add(file.id));
+      }
+    }
+
+    // Now identify files that must be preserved because they're referenced by OTHER lineages
+    for (const file of allStoredMetadata) {
+      const fileOriginalId = file.originalFileId || file.id;
+
+      // If this file is a leaf node (not being deleted) and its lineage overlaps with files we want to delete
+      if (file.isLeaf !== false && !leafFileIds.includes(file.id)) {
+        // Find all files in this preserved lineage
+        const preservedChainFiles = allStoredMetadata.filter(chainFile =>
+          (chainFile.originalFileId || chainFile.id) === fileOriginalId
+        );
+
+        // Mark all files in this preserved lineage as must-preserve
+        preservedChainFiles.forEach(chainFile => filesToPreserve.add(chainFile.id));
+      }
+    }
+
+    // Final list: files to delete minus files that must be preserved
+    const safeToDelete = Array.from(filesToDelete).filter(fileId => !filesToPreserve.has(fileId));
+
+    console.log('Deletion analysis:', {
+      candidatesForDeletion: Array.from(filesToDelete),
+      mustPreserve: Array.from(filesToPreserve),
+      safeToDelete
+    });
+
+    return safeToDelete;
+  }, []);
+
   const handleFileRemove = useCallback(async (index: number) => {
     const fileToRemove = filteredFiles[index];
     if (fileToRemove) {
       const deletedFileId = fileToRemove.id;
-      
+
+      // Get all stored files to analyze lineages
+      const allStoredMetadata = await fileStorage.getAllFileMetadata();
+
+      // Get safe files to delete (respecting shared lineages)
+      const filesToDelete = getSafeFilesToDelete([deletedFileId as string], allStoredMetadata);
+
+      console.log(`Safely deleting files for ${fileToRemove.name}:`, filesToDelete);
+
       // Clear from selection immediately
-      setSelectedFileIds(prev => prev.filter(id => id !== deletedFileId));
-      
+      setSelectedFileIds(prev => prev.filter(id => !filesToDelete.includes(id)));
+
       // Clear from expanded state to prevent ghost entries
       setExpandedFileIds(prev => {
         const newExpanded = new Set(prev);
-        newExpanded.delete(deletedFileId);
+        filesToDelete.forEach(id => newExpanded.delete(id));
         return newExpanded;
       });
-      
-      // Clear from history cache - need to remove this file from any cached history
+
+      // Clear from history cache - remove all files in the chain
       setLoadedHistoryFiles(prev => {
         const newCache = new Map(prev);
-        
-        // If the deleted file was a main file with cached history, remove its cache
-        newCache.delete(deletedFileId);
-        
-        // Also remove the deleted file from any other file's history cache
+
+        // Remove cache entries for all deleted files
+        filesToDelete.forEach(id => newCache.delete(id as FileId));
+
+        // Also remove deleted files from any other file's history cache
         for (const [mainFileId, historyFiles] of newCache.entries()) {
-          const filteredHistory = historyFiles.filter(histFile => histFile.id !== deletedFileId);
+          const filteredHistory = historyFiles.filter(histFile => !filesToDelete.includes(histFile.id as string));
           if (filteredHistory.length !== historyFiles.length) {
-            // The deleted file was in this history, update the cache
             newCache.set(mainFileId, filteredHistory);
           }
         }
-        
+
         return newCache;
       });
 
-      // Call the parent's deletion logic
+      // Delete safe files from IndexedDB
+      try {
+        for (const fileId of filesToDelete) {
+          await fileStorage.deleteFile(fileId as FileId);
+        }
+      } catch (error) {
+        console.error('Failed to delete files from chain:', error);
+      }
+
+      // Call the parent's deletion logic for the main file only
       await onFileRemove(index);
-      
+
       // Refresh to ensure consistent state
       await refreshRecentFiles();
     }
-  }, [filteredFiles, onFileRemove, refreshRecentFiles]);
+  }, [filteredFiles, onFileRemove, refreshRecentFiles, getSafeFilesToDelete]);
 
-  const handleFileDoubleClick = useCallback((file: FileMetadata) => {
+  const handleFileDoubleClick = useCallback((file: StoredFileMetadata) => {
     if (isFileSupported(file.name)) {
       onFilesSelected([file]);
       onClose();
@@ -288,59 +353,45 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (selectedFileIds.length === 0) return;
 
     try {
-      // Use the same logic as individual file deletion for consistency
-      // Delete each selected file individually using the same cache update logic
-      const allFilesToDelete = filteredFiles.filter(file =>
-        selectedFileIds.includes(file.id)
-      );
-      
-      // Deduplicate by file ID since shared files can appear multiple times in the display
-      const uniqueFilesToDelete = allFilesToDelete.reduce((unique: typeof allFilesToDelete, file) => {
-        if (!unique.some(f => f.id === file.id)) {
-          unique.push(file);
-        }
-        return unique;
-      }, []);
-      
-      const filesToDelete = uniqueFilesToDelete;
-      const deletedFileIds = new Set(filesToDelete.map(f => f.id));
+      // Get all stored files to analyze lineages
+      const allStoredMetadata = await fileStorage.getAllFileMetadata();
+
+      // Get safe files to delete (respecting shared lineages)
+      const filesToDelete = getSafeFilesToDelete(selectedFileIds, allStoredMetadata);
+
+      console.log(`Bulk safely deleting files and their history chains:`, filesToDelete);
 
       // Update history cache synchronously
       setLoadedHistoryFiles(prev => {
         const newCache = new Map(prev);
-        
-        for (const fileToDelete of filesToDelete) {
-          // If the deleted file was a main file with cached history, remove its cache
-          newCache.delete(fileToDelete.id);
-          
-          // Also remove the deleted file from any other file's history cache
-          for (const [mainFileId, historyFiles] of newCache.entries()) {
-            const filteredHistory = historyFiles.filter(histFile => histFile.id !== fileToDelete.id);
-            if (filteredHistory.length !== historyFiles.length) {
-              // The deleted file was in this history, update the cache
-              newCache.set(mainFileId, filteredHistory);
-            }
+
+        // Remove cache entries for all deleted files
+        filesToDelete.forEach(id => newCache.delete(id as FileId));
+
+        // Also remove deleted files from any other file's history cache
+        for (const [mainFileId, historyFiles] of newCache.entries()) {
+          const filteredHistory = historyFiles.filter(histFile => !filesToDelete.includes(histFile.id as string));
+          if (filteredHistory.length !== historyFiles.length) {
+            newCache.set(mainFileId, filteredHistory);
           }
         }
-        
+
         return newCache;
       });
 
       // Also clear any expanded state for deleted files to prevent ghost entries
       setExpandedFileIds(prev => {
         const newExpanded = new Set(prev);
-        for (const deletedId of deletedFileIds) {
-          newExpanded.delete(deletedId);
-        }
+        filesToDelete.forEach(id => newExpanded.delete(id));
         return newExpanded;
       });
 
       // Clear selection immediately to prevent ghost selections
-      setSelectedFileIds(prev => prev.filter(id => !deletedFileIds.has(id)));
+      setSelectedFileIds(prev => prev.filter(id => !filesToDelete.includes(id)));
 
-      // Delete files from IndexedDB
-      for (const file of filesToDelete) {
-        await fileStorage.deleteFile(file.id);
+      // Delete safe files from IndexedDB
+      for (const fileId of filesToDelete) {
+        await fileStorage.deleteFile(fileId as FileId);
       }
 
       // Refresh the file list to get updated data
@@ -348,7 +399,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     } catch (error) {
       console.error('Failed to delete selected files:', error);
     }
-  }, [selectedFileIds, filteredFiles, refreshRecentFiles]);
+  }, [selectedFileIds, filteredFiles, refreshRecentFiles, getSafeFilesToDelete]);
 
 
   const handleDownloadSelected = useCallback(async () => {
@@ -369,7 +420,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [selectedFileIds, filteredFiles]);
 
-  const handleDownloadSingle = useCallback(async (file: FileMetadata) => {
+  const handleDownloadSingle = useCallback(async (file: StoredFileMetadata) => {
     try {
       await downloadFiles([file]);
     } catch (error) {
@@ -379,7 +430,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
   const handleToggleExpansion = useCallback(async (fileId: string) => {
     const isCurrentlyExpanded = expandedFileIds.has(fileId);
-    
+
     // Update expansion state
     setExpandedFileIds(prev => {
       const newSet = new Set(prev);
@@ -394,107 +445,55 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     // Load complete history chain if expanding
     if (!isCurrentlyExpanded) {
       const currentFileMetadata = recentFiles.find(f => f.id === fileId);
-      if (currentFileMetadata && (currentFileMetadata.versionNumber || 0) > 0) {
+      if (currentFileMetadata && (currentFileMetadata.versionNumber || 1) > 1) {
         try {
-          // Load the current file to get its full history
-          const storedFile = await fileStorage.getFile(fileId as FileId);
-          if (storedFile) {
-            const file = new File([storedFile.data], storedFile.name, {
-              type: storedFile.type,
-              lastModified: storedFile.lastModified
-            });
-            
-            // Get the complete history metadata (this will give us original/parent IDs)
-            const historyData = await loadFileHistory(file, fileId as FileId);
-            
-            if (historyData?.originalFileId) {
-              // Load complete history chain by traversing parent relationships
-              const historyFiles: FileMetadata[] = [];
-              
-              // Get all stored files for chain traversal
-              const allStoredMetadata = await fileStorage.getAllFileMetadata();
-              const fileMap = new Map(allStoredMetadata.map(f => [f.id, f]));
-              
-              // Build complete chain by following parent relationships backwards
-              const visitedIds = new Set([fileId]); // Don't include the current file
-              const toProcess = [historyData]; // Start with current file's history data
-              
-              while (toProcess.length > 0) {
-                const currentHistoryData = toProcess.shift()!;
-                
-                // Add original file if we haven't seen it
-                if (currentHistoryData.originalFileId && !visitedIds.has(currentHistoryData.originalFileId)) {
-                  visitedIds.add(currentHistoryData.originalFileId);
-                  const originalMeta = fileMap.get(currentHistoryData.originalFileId as FileId);
-                  if (originalMeta) {
-                    try {
-                      const origStoredFile = await fileStorage.getFile(originalMeta.id);
-                      if (origStoredFile) {
-                        const origFile = new File([origStoredFile.data], origStoredFile.name, {
-                          type: origStoredFile.type,
-                          lastModified: origStoredFile.lastModified
-                        });
-                        const origMetadata = await createFileMetadataWithHistory(origFile, originalMeta.id, originalMeta.thumbnail);
-                        historyFiles.push(origMetadata);
-                      }
-                    } catch (error) {
-                      console.warn(`Failed to load original file ${originalMeta.id}:`, error);
-                    }
-                  }
-                }
-                
-                // Add parent file if we haven't seen it
-                if (currentHistoryData.parentFileId && !visitedIds.has(currentHistoryData.parentFileId)) {
-                  visitedIds.add(currentHistoryData.parentFileId);
-                  const parentMeta = fileMap.get(currentHistoryData.parentFileId);
-                  if (parentMeta) {
-                    try {
-                      const parentStoredFile = await fileStorage.getFile(parentMeta.id);
-                      if (parentStoredFile) {
-                        const parentFile = new File([parentStoredFile.data], parentStoredFile.name, {
-                          type: parentStoredFile.type,
-                          lastModified: parentStoredFile.lastModified
-                        });
-                        const parentMetadata = await createFileMetadataWithHistory(parentFile, parentMeta.id, parentMeta.thumbnail);
-                        historyFiles.push(parentMetadata);
-                        
-                        // Load parent's history to continue the chain
-                        const parentHistoryData = await loadFileHistory(parentFile, parentMeta.id);
-                        if (parentHistoryData) {
-                          toProcess.push(parentHistoryData);
-                        }
-                      }
-                    } catch (error) {
-                      console.warn(`Failed to load parent file ${parentMeta.id}:`, error);
-                    }
-                  }
-                }
-              }
-              
-              // Also find any files that have the current file as their original (siblings/alternatives)
-              for (const [metaId, meta] of fileMap) {
-                if (!visitedIds.has(metaId) && (meta as any).originalFileId === historyData.originalFileId) {
-                  visitedIds.add(metaId);
-                  try {
-                    const siblingStoredFile = await fileStorage.getFile(meta.id);
-                    if (siblingStoredFile) {
-                      const siblingFile = new File([siblingStoredFile.data], siblingStoredFile.name, {
-                        type: siblingStoredFile.type,
-                        lastModified: siblingStoredFile.lastModified
-                      });
-                      const siblingMetadata = await createFileMetadataWithHistory(siblingFile, meta.id, meta.thumbnail);
-                      historyFiles.push(siblingMetadata);
-                    }
-                  } catch (error) {
-                    console.warn(`Failed to load sibling file ${meta.id}:`, error);
-                  }
-                }
-              }
-              
-              // Cache the loaded history files
-              setLoadedHistoryFiles(prev => new Map(prev.set(fileId as FileId, historyFiles)));
-            }
+          // Get all stored file metadata for chain traversal
+          const allStoredMetadata = await fileStorage.getAllFileMetadata();
+          const fileMap = new Map(allStoredMetadata.map(f => [f.id, f]));
+
+          // Get the current file's IndexedDB data
+          const currentStoredFile = fileMap.get(fileId as FileId);
+          if (!currentStoredFile) {
+            console.warn(`No stored file found for ${fileId}`);
+            return;
           }
+
+          // Build complete history chain using IndexedDB metadata
+          const historyFiles: StoredFileMetadata[] = [];
+
+          // Find the original file
+          const originalFileId = currentStoredFile.originalFileId || currentStoredFile.id;
+
+          // Collect all files in this history chain
+          const chainFiles = Array.from(fileMap.values()).filter(file =>
+            (file.originalFileId || file.id) === originalFileId && file.id !== fileId
+          );
+
+          // Sort by version number (oldest first for history display)
+          chainFiles.sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
+
+          // Convert stored files to StoredFileMetadata format with proper history info
+          for (const storedFile of chainFiles) {
+              // Load the actual file to extract PDF metadata if available
+              const historyMetadata: StoredFileMetadata = {
+                id: storedFile.id,
+                name: storedFile.name,
+                type: storedFile.type,
+                size: storedFile.size,
+                lastModified: storedFile.lastModified,
+                thumbnail: storedFile.thumbnail,
+                versionNumber: storedFile.versionNumber,
+                isLeaf: storedFile.isLeaf,
+                // Use IndexedDB data directly - it's more reliable than re-parsing PDF
+                originalFileId: storedFile.originalFileId,
+                parentFileId: storedFile.parentFileId,
+                toolHistory: storedFile.toolHistory
+              };
+              historyFiles.push(historyMetadata);
+          }
+
+          // Cache the loaded history files
+          setLoadedHistoryFiles(prev => new Map(prev.set(fileId as FileId, historyFiles)));
         } catch (error) {
           console.warn(`Failed to load history chain for file ${fileId}:`, error);
         }
@@ -507,30 +506,26 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         return newMap;
       });
     }
-  }, [expandedFileIds, recentFiles, loadFileHistory]);
+  }, [expandedFileIds, recentFiles]);
 
-  const handleAddToRecents = useCallback(async (file: FileMetadata) => {
+  const handleAddToRecents = useCallback(async (file: StoredFileMetadata) => {
     try {
-      console.log('Promoting to recents:', file.name, 'version:', file.versionNumber);
-      
-      // Load the file from storage and create a copy with new ID and timestamp
+      console.log('Adding to recents:', file.name, 'version:', file.versionNumber);
+
+      // Load file from storage and use addStoredFiles pattern
       const storedFile = await fileStorage.getFile(file.id);
-      if (storedFile) {
-        // Create new file with current timestamp to appear at top
-        const promotedFile = new File([storedFile.data], file.name, {
-          type: file.type,
-          lastModified: Date.now() // Current timestamp makes it appear at top
-        });
-        
-        // Add as new file through the normal flow (creates new ID)
-        onNewFilesSelect([promotedFile]);
-        
-        console.log('Successfully promoted to recents:', file.name, 'v' + file.versionNumber);
+      if (!storedFile) {
+        throw new Error(`File not found in storage: ${file.name}`);
       }
+
+      // Use direct StoredFile approach - much more efficient
+      onStoredFilesSelect([storedFile]);
+
+      console.log('Successfully added to recents:', file.name, 'v' + file.versionNumber);
     } catch (error) {
-      console.error('Failed to promote to recents:', error);
+      console.error('Failed to add to recents:', error);
     }
-  }, [onNewFilesSelect]);
+  }, [onStoredFilesSelect]);
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
@@ -565,10 +560,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     expandedFileIds,
     fileGroups,
 
-    // History loading state
-    isLoadingHistory,
-    getHistoryError,
-
     // Handlers
     onSourceChange: handleSourceChange,
     onLocalFileClick: handleLocalFileClick,
@@ -599,8 +590,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     fileInputRef,
     expandedFileIds,
     fileGroups,
-    isLoadingHistory,
-    getHistoryError,
     handleSourceChange,
     handleLocalFileClick,
     handleFileSelect,

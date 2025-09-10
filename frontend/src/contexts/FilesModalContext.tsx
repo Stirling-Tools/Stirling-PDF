@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useFileHandler } from '../hooks/useFileHandler';
-import { FileMetadata } from '../types/file';
+import { StoredFileMetadata, StoredFile } from '../services/fileStorage';
 import { FileId } from '../types/file';
 
 interface FilesModalContextType {
@@ -9,7 +9,7 @@ interface FilesModalContextType {
   closeFilesModal: () => void;
   onFileSelect: (file: File) => void;
   onFilesSelect: (files: File[]) => void;
-  onStoredFilesSelect: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => void;
+  onStoredFilesSelect: (storedFiles: StoredFile[]) => void;
   onModalClose?: () => void;
   setOnModalClose: (callback: () => void) => void;
 }
@@ -58,14 +58,14 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     closeFilesModal();
   }, [addMultipleFiles, closeFilesModal, insertAfterPage, customHandler]);
 
-  const handleStoredFilesSelect = useCallback((filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => {
+  const handleStoredFilesSelect = useCallback((storedFiles: StoredFile[]) => {
     if (customHandler) {
       // Use custom handler for special cases (like page insertion)
-      const files = filesWithMetadata.map(item => item.file);
+      const files = storedFiles.map(storedFile => new File([storedFile.data], storedFile.name, { type: storedFile.type, lastModified: storedFile.lastModified }));
       customHandler(files, insertAfterPage);
     } else {
       // Use normal file handling
-      addStoredFiles(filesWithMetadata);
+      addStoredFiles(storedFiles);
     }
     closeFilesModal();
   }, [addStoredFiles, closeFilesModal, insertAfterPage, customHandler]);

@@ -8,7 +8,6 @@ import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { StirlingFile, extractFiles, FileId, StirlingFileStub } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
-import { prepareStirlingFilesWithHistory, verifyToolMetadataPreservation } from '../../../utils/fileHistoryUtils';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -129,7 +128,7 @@ export const useToolOperation = <TParams>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { addFiles, consumeFiles, undoConsumeFiles, selectors, findFileId } = useFileContext();
+  const { addFiles, consumeFiles, undoConsumeFiles, selectors } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -166,24 +165,13 @@ export const useToolOperation = <TParams>(
     cleanupBlobUrls();
 
     // Prepare files with history metadata injection (for PDFs)
-    actions.setStatus('Preparing files...');
-    const getFileStubById = (fileId: FileId) => {
-      return selectors.getStirlingFileStub(fileId);
-    };
-
-    const filesWithHistory = await prepareStirlingFilesWithHistory(
-      validFiles,
-      getFileStubById,
-      config.operationType,
-      params as Record<string, any>
-    );
+    actions.setStatus('Processing files...');
 
     try {
       let processedFiles: File[];
 
-      // Convert StirlingFiles with history to regular Files for API processing
-      // The history is already injected into the File data, we just need to extract the File objects
-      const filesForAPI = extractFiles(filesWithHistory);
+      // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
+      const filesForAPI = extractFiles(validFiles);
 
       switch (config.toolType) {
         case ToolType.singleFile: {
@@ -242,8 +230,6 @@ export const useToolOperation = <TParams>(
       if (processedFiles.length > 0) {
         actions.setFiles(processedFiles);
 
-        // Verify metadata preservation for backend quality tracking
-        await verifyToolMetadataPreservation(validFiles, processedFiles, config.operationType);
 
         // Generate thumbnails and download URL concurrently
         actions.setGeneratingThumbnails(true);
@@ -272,7 +258,46 @@ export const useToolOperation = <TParams>(
           }
         }
 
-        const outputFileIds = await consumeFiles(inputFileIds, processedFiles);
+        // Prepare output files with history data before saving
+        const processedFilesWithHistory = processedFiles.map(file => {
+          // Find the corresponding input file for history chain
+          const inputStub = inputStirlingFileStubs.find(stub => 
+            inputFileIds.includes(stub.id)
+          ) || inputStirlingFileStubs[0]; // Fallback to first input if not found
+
+          // Create new tool operation
+          const newToolOperation = {
+            toolName: config.operationType,
+            timestamp: Date.now()
+          };
+
+          // Build complete tool chain
+          const existingToolChain = inputStub?.toolHistory || [];
+          const toolHistory = [...existingToolChain, newToolOperation];
+
+          // Calculate version number
+          const versionNumber = inputStub?.versionNumber ? inputStub.versionNumber + 1 : 1;
+
+          // Attach history data to file
+          (file as any).__historyData = {
+            versionNumber,
+            originalFileId: inputStub?.originalFileId || inputStub?.id,
+            parentFileId: inputStub?.id || null,
+            toolHistory
+          };
+
+          console.log('🏛️ FILE HISTORY - Prepared file with history:', {
+            fileName: file.name,
+            versionNumber,
+            originalFileId: inputStub?.originalFileId || inputStub?.id,
+            parentFileId: inputStub?.id,
+            toolChainLength: toolHistory.length
+          });
+
+          return file;
+        });
+
+        const outputFileIds = await consumeFiles(inputFileIds, processedFilesWithHistory);
 
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {

@@ -5,12 +5,12 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useTranslation } from 'react-i18next';
 import { getFileSize } from '../../utils/fileUtils';
-import { FileMetadata } from '../../types/file';
+import { StoredFileMetadata } from '../../services/fileStorage';
 
 interface CompactFileDetailsProps {
-  currentFile: FileMetadata | null;
+  currentFile: StoredFileMetadata | null;
   thumbnail: string | null;
-  selectedFiles: FileMetadata[];
+  selectedFiles: StoredFileMetadata[];
   currentFileIndex: number;
   numberOfFiles: number;
   isAnimating: boolean;
@@ -72,7 +72,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
           <Text size="xs" c="dimmed">
             {currentFile ? getFileSize(currentFile) : ''}
             {selectedFiles.length > 1 && ` • ${selectedFiles.length} files`}
-            {currentFile && ` • v${currentFile.versionNumber || 0}`}
+            {currentFile && ` • v${currentFile.versionNumber || 1}`}
           </Text>
           {hasMultipleFiles && (
             <Text size="xs" c="blue">
@@ -80,9 +80,9 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
             </Text>
           )}
           {/* Compact tool chain for mobile */}
-          {currentFile?.historyInfo?.toolChain && currentFile.historyInfo.toolChain.length > 0 && (
+          {currentFile?.toolHistory && currentFile.toolHistory.length > 0 && (
             <Text size="xs" c="dimmed">
-              {currentFile.historyInfo.toolChain.map(tool => tool.toolName).join(' → ')}
+              {currentFile.toolHistory.map((tool: any) => tool.toolName).join(' → ')}
             </Text>
           )}
         </Box>

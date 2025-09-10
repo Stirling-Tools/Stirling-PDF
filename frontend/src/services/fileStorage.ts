@@ -4,20 +4,20 @@
  * Now uses centralized IndexedDB manager
  */
 
-import { FileId } from '../types/file';
+import { FileId, BaseFileMetadata } from '../types/file';
 import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
 
-export interface StoredFile {
-  id: FileId;
-  name: string;
-  type: string;
-  size: number;
-  lastModified: number;
+export interface StoredFile extends BaseFileMetadata {
   data: ArrayBuffer;
   thumbnail?: string;
   url?: string; // For compatibility with existing components
-  isLeaf?: boolean; // True if this file is a leaf node (hasn't been processed yet)
 }
+
+/**
+ * Lightweight metadata version of StoredFile (without ArrayBuffer data)
+ * Used for efficient file browsing in FileManager without loading file data
+ */
+export type StoredFileMetadata = Omit<StoredFile, 'data'>;
 
 export interface StorageStats {
   used: number;
@@ -40,7 +40,21 @@ class FileStorageService {
   /**
    * Store a file in IndexedDB with external UUID
    */
-  async storeFile(file: File, fileId: FileId, thumbnail?: string, isLeaf: boolean = true): Promise<StoredFile> {
+  async storeFile(
+    file: File,
+    fileId: FileId,
+    thumbnail?: string,
+    isLeaf: boolean = true,
+    historyData?: {
+      versionNumber: number;
+      originalFileId: string;
+      parentFileId: FileId | undefined;
+      toolHistory: Array<{
+        toolName: string;
+        timestamp: number;
+      }>;
+    }
+  ): Promise<StoredFile> {
     const db = await this.getDatabase();
 
     const arrayBuffer = await file.arrayBuffer();
@@ -53,7 +67,13 @@ class FileStorageService {
       lastModified: file.lastModified,
       data: arrayBuffer,
       thumbnail,
-      isLeaf
+      isLeaf,
+
+      // History data - use provided data or defaults for original files
+      versionNumber: historyData?.versionNumber ?? 1,
+      originalFileId: historyData?.originalFileId ?? fileId,
+      parentFileId: historyData?.parentFileId ?? undefined,
+      toolHistory: historyData?.toolHistory ?? []
     };
 
     return new Promise((resolve, reject) => {
@@ -131,14 +151,14 @@ class FileStorageService {
   /**
    * Get metadata of all stored files (without loading data into memory)
    */
-  async getAllFileMetadata(): Promise<Omit<StoredFile, 'data'>[]> {
+  async getAllFileMetadata(): Promise<StoredFileMetadata[]> {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const request = store.openCursor();
-      const files: Omit<StoredFile, 'data'>[] = [];
+      const files: StoredFileMetadata[] = [];
 
       request.onerror = () => reject(request.error);
       request.onsuccess = (event) => {
@@ -153,7 +173,11 @@ class FileStorageService {
               type: storedFile.type,
               size: storedFile.size,
               lastModified: storedFile.lastModified,
-              thumbnail: storedFile.thumbnail
+              thumbnail: storedFile.thumbnail,
+              versionNumber: storedFile.versionNumber || 1,
+              originalFileId: storedFile.originalFileId || storedFile.id,
+              parentFileId: storedFile.parentFileId || undefined,
+              toolHistory: storedFile.toolHistory || []
             });
           }
           cursor.continue();
@@ -270,14 +294,14 @@ class FileStorageService {
   /**
    * Get metadata of only leaf files (without loading data into memory)
    */
-  async getLeafFileMetadata(): Promise<Omit<StoredFile, 'data'>[]> {
+  async getLeafFileMetadata(): Promise<StoredFileMetadata[]> {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const request = store.openCursor();
-      const files: Omit<StoredFile, 'data'>[] = [];
+      const files: StoredFileMetadata[] = [];
 
       request.onerror = () => reject(request.error);
       request.onsuccess = (event) => {
@@ -293,12 +317,15 @@ class FileStorageService {
               size: storedFile.size,
               lastModified: storedFile.lastModified,
               thumbnail: storedFile.thumbnail,
-              isLeaf: storedFile.isLeaf
+              isLeaf: storedFile.isLeaf,
+              versionNumber: storedFile.versionNumber || 1,
+              originalFileId: storedFile.originalFileId || storedFile.id,
+              parentFileId: storedFile.parentFileId || undefined,
+              toolHistory: storedFile.toolHistory || []
             });
           }
           cursor.continue();
         } else {
-          console.log('📄 LEAF FLAG DEBUG - Found leaf files:', files.map(f => ({ id: f.id, name: f.name, isLeaf: f.isLeaf })));
           resolve(files);
         }
       };
@@ -534,21 +561,6 @@ class FileStorageService {
     return file;
   }
 
-  /**
-   * Convert StoredFile to the format expected by FileContext.addStoredFiles()
-   * This is the recommended way to load stored files into FileContext
-   */
-  createFileWithMetadata(storedFile: StoredFile): { file: File; originalId: FileId; metadata: { thumbnail?: string } } {
-    const file = this.createFileFromStored(storedFile);
-
-    return {
-      file,
-      originalId: storedFile.id,
-      metadata: {
-        thumbnail: storedFile.thumbnail
-      }
-    };
-  }
 
   /**
    * Create blob URL for stored file

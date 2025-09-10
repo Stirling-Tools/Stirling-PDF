@@ -6,7 +6,7 @@
 import { useState, useCallback } from 'react';
 import { FileId } from '../types/file';
 import { StirlingFileStub } from '../types/fileContext';
-import { loadFileHistoryOnDemand } from '../utils/fileHistoryUtils';
+// loadFileHistoryOnDemand removed - history now comes from IndexedDB directly
 
 interface FileHistoryState {
   originalFileId?: string;
@@ -33,16 +33,17 @@ export function useFileHistory(): UseFileHistoryResult {
   const [error, setError] = useState<string | null>(null);
 
   const loadHistory = useCallback(async (
-    file: File,
-    fileId: FileId,
-    updateFileStub?: (id: FileId, updates: Partial<StirlingFileStub>) => void
+    _file: File,
+    _fileId: FileId,
+    _updateFileStub?: (id: FileId, updates: Partial<StirlingFileStub>) => void
   ) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const history = await loadFileHistoryOnDemand(file, fileId, updateFileStub);
-      setHistoryData(history);
+      // History is now loaded from IndexedDB, not PDF metadata
+      // This function is deprecated
+      throw new Error('loadFileHistoryOnDemand is deprecated - use IndexedDB history directly');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load file history';
       setError(errorMessage);
@@ -76,9 +77,9 @@ export function useMultiFileHistory() {
   const [errors, setErrors] = useState<Map<FileId, string>>(new Map());
 
   const loadFileHistory = useCallback(async (
-    file: File,
+    _file: File,
     fileId: FileId,
-    updateFileStub?: (id: FileId, updates: Partial<StirlingFileStub>) => void
+    _updateFileStub?: (id: FileId, updates: Partial<StirlingFileStub>) => void
   ) => {
     // Don't reload if already loaded or currently loading
     if (historyCache.has(fileId) || loadingFiles.has(fileId)) {
@@ -93,13 +94,9 @@ export function useMultiFileHistory() {
     });
 
     try {
-      const history = await loadFileHistoryOnDemand(file, fileId, updateFileStub);
-
-      if (history) {
-        setHistoryCache(prev => new Map(prev).set(fileId, history));
-      }
-
-      return history;
+      // History is now loaded from IndexedDB, not PDF metadata
+      // This function is deprecated
+      throw new Error('loadFileHistoryOnDemand is deprecated - use IndexedDB history directly');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load file history';
       setErrors(prev => new Map(prev).set(fileId, errorMessage));

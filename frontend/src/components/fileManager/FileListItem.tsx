@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge, Button, Loader } from '@mantine/core';
+import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge, Loader } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -7,12 +7,12 @@ import AddIcon from '@mui/icons-material/Add';
 import HistoryIcon from '@mui/icons-material/History';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
-import { FileMetadata } from '../../types/file';
+import { StoredFileMetadata } from '../../services/fileStorage';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
 import ToolChain from '../shared/ToolChain';
 
 interface FileListItemProps {
-  file: FileMetadata;
+  file: StoredFileMetadata;
   isSelected: boolean;
   isSupported: boolean;
   onSelect: (shiftKey?: boolean) => void;
@@ -38,21 +38,16 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const { fileGroups, expandedFileIds, onToggleExpansion, onAddToRecents, isLoadingHistory, getHistoryError } = useFileManagerContext();
+  const {expandedFileIds, onToggleExpansion, onAddToRecents } = useFileManagerContext();
 
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
 
   // Get version information for this file
   const leafFileId = isLatestVersion ? file.id : (file.originalFileId || file.id);
-  const lineagePath = fileGroups.get(leafFileId) || [];
-  const hasVersionHistory = (file.versionNumber || 0) > 0; // Show history for any processed file (v1+)
-  const currentVersion = file.versionNumber || 0; // Display original files as v0
+  const hasVersionHistory = (file.versionNumber || 1) > 1; // Show history for any processed file (v2+)
+  const currentVersion = file.versionNumber || 1; // Display original files as v1
   const isExpanded = expandedFileIds.has(leafFileId);
-  
-  // Get loading state for this file's history
-  const isLoadingFileHistory = isLoadingHistory(file.id);
-  const historyError = getHistoryError(file.id);
 
   return (
     <>
@@ -95,24 +90,20 @@ const FileListItem: React.FC<FileListItemProps> = ({
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Group gap="xs" align="center">
               <Text size="sm" fw={500} truncate style={{ flex: 1 }}>{file.name}</Text>
-              {isLoadingFileHistory && <Loader size={14} />}
-                <Badge size="xs" variant="light" color={currentVersion > 0 ? "blue" : "gray"}>
-                  v{currentVersion}
-                </Badge>
+              <Badge size="xs" variant="light" color={currentVersion > 1 ? "blue" : "gray"}>
+                v{currentVersion}
+              </Badge>
 
             </Group>
             <Group gap="xs" align="center">
               <Text size="xs" c="dimmed">
                 {getFileSize(file)} • {getFileDate(file)}
-                {hasVersionHistory && (
-                  <Text span c="dimmed"> • has history</Text>
-                )}
               </Text>
 
               {/* Tool chain for processed files */}
-              {file.historyInfo?.toolChain && file.historyInfo.toolChain.length > 0 && (
+              {file.toolHistory && file.toolHistory.length > 0 && (
                 <ToolChain
-                  toolChain={file.historyInfo.toolChain}
+                  toolChain={file.toolHistory}
                   maxWidth={'150px'}
                   displayStyle="text"
                   size="xs"
@@ -163,29 +154,20 @@ const FileListItem: React.FC<FileListItemProps> = ({
                 <>
                   <Menu.Item
                     leftSection={
-                      isLoadingFileHistory ? 
-                        <Loader size={16} /> : 
                         <HistoryIcon style={{ fontSize: 16 }} />
                     }
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleExpansion(leafFileId);
                     }}
-                    disabled={isLoadingFileHistory}
                   >
-                    {isLoadingFileHistory ? 
-                      t('fileManager.loadingHistory', 'Loading History...') :
+                    {
                       (isExpanded ?
                         t('fileManager.hideHistory', 'Hide History') :
                         t('fileManager.showHistory', 'Show History')
                       )
                     }
                   </Menu.Item>
-                  {historyError && (
-                    <Menu.Item disabled c="red" style={{ fontSize: '12px' }}>
-                      {t('fileManager.historyError', 'Error loading history')}
-                    </Menu.Item>
-                  )}
                   <Menu.Divider />
                 </>
               )}

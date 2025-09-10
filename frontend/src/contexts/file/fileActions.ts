@@ -10,11 +10,11 @@ import {
   createFileId,
   createQuickKey
 } from '../../types/fileContext';
-import { FileId, FileMetadata } from '../../types/file';
+import { FileId } from '../../types/file';
+import { StoredFileMetadata } from '../../services/fileStorage';
 import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
 import { FileLifecycleManager } from './lifecycle';
 import { buildQuickKeySet } from './fileSelectors';
-import { extractBasicFileMetadata } from '../../utils/fileHistoryUtils';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -82,7 +82,7 @@ interface AddFileOptions {
   filesWithThumbnails?: Array<{ file: File; thumbnail?: string; pageCount?: number }>;
 
   // For 'stored' files
-  filesWithMetadata?: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>;
+  filesWithMetadata?: Array<{ file: File; originalId: FileId; metadata: StoredFileMetadata }>;
 
   // Insertion position
   insertAfterPageId?: string;
@@ -183,24 +183,7 @@ export async function addFiles(
           if (DEBUG) console.log(`📄 addFiles(raw): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
 
-        // Extract basic metadata (version number and tool chain) for display
-        extractBasicFileMetadata(file, record).then(updatedRecord => {
-          if (updatedRecord !== record && (updatedRecord.versionNumber || updatedRecord.toolHistory)) {
-            // Basic metadata found, dispatch update to trigger re-render
-            dispatch({
-              type: 'UPDATE_FILE_RECORD',
-              payload: {
-                id: fileId,
-                updates: {
-                  versionNumber: updatedRecord.versionNumber,
-                  toolHistory: updatedRecord.toolHistory
-                }
-              }
-            });
-          }
-        }).catch(error => {
-          if (DEBUG) console.warn(`📄 Failed to extract basic metadata for ${file.name}:`, error);
-        });
+        // History metadata is now managed in IndexedDB, not in PDF metadata
 
         existingQuickKeys.add(quickKey);
         stirlingFileStubs.push(record);
@@ -244,24 +227,7 @@ export async function addFiles(
           if (DEBUG) console.log(`📄 addFiles(processed): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
 
-        // Extract basic metadata (version number and tool chain) for display
-        extractBasicFileMetadata(file, record).then(updatedRecord => {
-          if (updatedRecord !== record && (updatedRecord.versionNumber || updatedRecord.toolHistory)) {
-            // Basic metadata found, dispatch update to trigger re-render
-            dispatch({
-              type: 'UPDATE_FILE_RECORD',
-              payload: {
-                id: fileId,
-                updates: {
-                  versionNumber: updatedRecord.versionNumber,
-                  toolHistory: updatedRecord.toolHistory
-                }
-              }
-            });
-          }
-        }).catch(error => {
-          if (DEBUG) console.warn(`📄 Failed to extract basic metadata for ${file.name}:`, error);
-        });
+        // History metadata is now managed in IndexedDB, not in PDF metadata
 
         existingQuickKeys.add(quickKey);
         stirlingFileStubs.push(record);
@@ -338,24 +304,20 @@ export async function addFiles(
           if (DEBUG) console.log(`📄 addFiles(stored): Created processedFile metadata for ${file.name} with ${pageCount} pages`);
         }
 
-        // Extract basic metadata (version number and tool chain) for display
-        extractBasicFileMetadata(file, record).then(updatedRecord => {
-          if (updatedRecord !== record && (updatedRecord.versionNumber || updatedRecord.toolHistory)) {
-            // Basic metadata found, dispatch update to trigger re-render
-            dispatch({
-              type: 'UPDATE_FILE_RECORD',
-              payload: {
-                id: fileId,
-                updates: {
-                  versionNumber: updatedRecord.versionNumber,
-                  toolHistory: updatedRecord.toolHistory
-                }
-              }
-            });
-          }
-        }).catch(error => {
-          if (DEBUG) console.warn(`📄 Failed to extract basic metadata for ${file.name}:`, error);
-        });
+        // Use history data from IndexedDB instead of extracting from PDF metadata
+        if (metadata.versionNumber || metadata.toolHistory) {
+          record.versionNumber = metadata.versionNumber;
+          record.originalFileId = metadata.originalFileId;
+          record.parentFileId = metadata.parentFileId;
+          record.toolHistory = metadata.toolHistory;
+          
+          if (DEBUG) console.log(`📄 addFiles(stored): Applied IndexedDB history data to ${file.name}:`, {
+            versionNumber: record.versionNumber,
+            originalFileId: record.originalFileId,
+            parentFileId: record.parentFileId,
+            toolHistoryLength: record.toolHistory?.length || 0
+          });
+        }
 
         existingQuickKeys.add(quickKey);
         stirlingFileStubs.push(record);
@@ -413,43 +375,13 @@ async function processFilesIntoRecords(
         record.processedFile = createProcessedFile(pageCount, thumbnail);
       }
 
-      // Extract basic metadata synchronously during consumeFiles for immediate display
-      if (file.type.includes('pdf')) {
-        try {
-          const updatedRecord = await extractBasicFileMetadata(file, record);
-
-          if (updatedRecord !== record && (updatedRecord.versionNumber || updatedRecord.toolHistory)) {
-            // Update the record directly with basic metadata
-            Object.assign(record, {
-              versionNumber: updatedRecord.versionNumber,
-              toolHistory: updatedRecord.toolHistory
-            });
-          }
-        } catch (error) {
-          if (DEBUG) console.warn(`📄 Failed to extract basic metadata for ${file.name}:`, error);
-        }
-      }
+      // History metadata is now managed in IndexedDB, not in PDF metadata
 
       return { record, file, fileId, thumbnail };
     })
   );
 }
 
-/**
- * Helper function to persist files to IndexedDB
- */
-async function persistFilesToIndexedDB(
-  stirlingFileStubs: Array<{ file: File; fileId: FileId; thumbnail?: string }>,
-  indexedDB: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any> }
-): Promise<void> {
-  await Promise.all(stirlingFileStubs.map(async ({ file, fileId, thumbnail }) => {
-    try {
-      await indexedDB.saveFile(file, fileId, thumbnail);
-    } catch (error) {
-      console.error('Failed to persist file to IndexedDB:', file.name, error);
-    }
-  }));
-}
 
 /**
  * Consume files helper - replace unpinned input files with output files
@@ -480,11 +412,31 @@ export async function consumeFiles(
       })
     );
 
-    // Save output files to IndexedDB
-    await persistFilesToIndexedDB(outputStirlingFileStubs, indexedDB);
+    // Save output files to IndexedDB and update the StirlingFileStub records with version info
+    await Promise.all(outputStirlingFileStubs.map(async ({ file, fileId, record }) => {
+      try {
+        const metadata = await indexedDB.saveFile(file, fileId, record.thumbnailUrl);
+        
+        // Update the record directly with version information from IndexedDB
+        if (metadata.versionNumber || metadata.historyInfo) {
+          record.versionNumber = metadata.versionNumber;
+          record.originalFileId = metadata.historyInfo?.originalFileId;
+          record.parentFileId = metadata.historyInfo?.parentFileId;
+          record.toolHistory = metadata.historyInfo?.toolChain;
+          
+          if (DEBUG) console.log(`📄 Updated output record for ${file.name} with IndexedDB history data:`, {
+            versionNumber: metadata.versionNumber,
+            originalFileId: metadata.historyInfo?.originalFileId,
+            toolChainLength: metadata.historyInfo?.toolChain?.length || 0
+          });
+        }
+      } catch (error) {
+        console.error('Failed to persist output file to IndexedDB:', file.name, error);
+      }
+    }));
   }
 
-  // Dispatch the consume action
+  // Dispatch the consume action with updated records
   dispatch({
     type: 'CONSUME_FILES',
     payload: {

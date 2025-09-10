@@ -69,7 +69,7 @@ const FileEditorThumbnail = ({
   const fileRecord = selectors.getStirlingFileStub(file.id);
   const toolHistory = fileRecord?.toolHistory || [];
   const hasToolHistory = toolHistory.length > 0;
-  const versionNumber = fileRecord?.versionNumber || 0;
+  const versionNumber = fileRecord?.versionNumber || 1;
 
 
   const downloadSelectedFile = useCallback(() => {
