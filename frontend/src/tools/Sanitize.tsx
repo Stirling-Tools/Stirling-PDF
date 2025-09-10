@@ -20,7 +20,6 @@ const Sanitize = (props: BaseToolProps) => {
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
-      placeholder: t("sanitize.files.placeholder", "Select a PDF file in the main view to get started"),
     },
     steps: [
       {

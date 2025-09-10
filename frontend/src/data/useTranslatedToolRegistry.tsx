@@ -11,6 +11,7 @@ import ChangePermissions from "../tools/ChangePermissions";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
+import Merge from '../tools/Merge';
 import Repair from "../tools/Repair";
 import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
@@ -30,6 +31,7 @@ import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
+import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
 import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
 import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
 import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
@@ -48,6 +50,7 @@ import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
 import Redact from "../tools/Redact";
 import { ToolId } from "../types/toolId";
+import MergeSettings from '../components/tools/merge/MergeSettings';
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -672,12 +675,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       mergePdfs: {
         icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.merge.title", "Merge"),
-        component: null,
-
+        component: Merge,
         description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        endpoints: ["merge-pdfs"],
+        operationConfig: mergeOperationConfig,
+        settingsComponent: MergeSettings
       },
       "multi-tool": {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
