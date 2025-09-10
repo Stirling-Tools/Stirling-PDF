@@ -442,14 +442,19 @@ public class DatabaseService implements DatabaseServiceInterface {
             return;
         }
         DatabaseVersion v = databaseVersion.findLastByOrderByIdDesc().orElse(null);
-        if (v != null && v.getVersion() == null) {
-            try {
-                MigrationStep h2Migration_0331_0340 = new H2DataOnly_0331_to_0340(this, dataSource);
-                h2Migration_0331_0340.run();
-            } catch (Exception e) {
-                log.error("Database migration failed: {}", e.getMessage(), e);
-                return;
+        if (v != null) {
+            if (v.getVersion() == null) {
+                try {
+                    MigrationStep h2Migration_0331_0340 =
+                            new H2DataOnly_0331_to_0340(this, dataSource);
+                    h2Migration_0331_0340.run();
+                } catch (Exception e) {
+                    log.error("Database migration failed: {}", e.getMessage(), e);
+                    return;
+                }
             }
+        } else {
+            v = new DatabaseVersion();
         }
         v.setVersion(appVersion);
         databaseVersion.save(v);
