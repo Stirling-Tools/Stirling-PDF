@@ -498,13 +498,9 @@
       "title": "Show Javascript",
       "desc": "Searches and displays any JS injected into a PDF"
     },
-    "autoRedact": {
-      "title": "Auto Redact",
-      "desc": "Auto Redacts(Blacks out) text in a PDF based on input text"
-    },
     "redact": {
-      "title": "Manual Redaction",
-      "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
+      "title": "Redact",
+      "desc": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
     "overlay-pdfs": {
       "title": "Overlay PDFs",
@@ -1601,50 +1597,123 @@
     "downloadJS": "Download Javascript",
     "submit": "Show"
   },
-  "autoRedact": {
-    "tags": "Redact,Hide,black out,black,marker,hidden",
-    "title": "Auto Redact",
-    "header": "Auto Redact",
-    "colorLabel": "Colour",
-    "textsToRedactLabel": "Text to Redact (line-separated)",
-    "textsToRedactPlaceholder": "e.g. \\nConfidential \\nTop-Secret",
-    "useRegexLabel": "Use Regex",
-    "wholeWordSearchLabel": "Whole Word Search",
-    "customPaddingLabel": "Custom Extra Padding",
-    "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
-    "submitButton": "Submit"
-  },
   "redact": {
-    "tags": "Redact,Hide,black out,black,marker,hidden,manual",
-    "title": "Manual Redaction",
-    "header": "Manual Redaction",
+    "tags": "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact",
+    "title": "Redact",
     "submit": "Redact",
-    "textBasedRedaction": "Text based Redaction",
-    "pageBasedRedaction": "Page-based Redaction",
-    "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
-    "pageRedactionNumbers": {
-      "title": "Pages",
-      "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
+    "error": {
+      "failed": "An error occurred while redacting the PDF."
     },
-    "redactionColor": {
-      "title": "Redaction Color"
+    "modeSelector": {
+      "title": "Redaction Method",
+      "mode": "Mode",
+      "automatic": "Automatic",
+      "automaticDesc": "Redact text based on search terms",
+      "manual": "Manual",
+      "manualDesc": "Click and drag to redact specific areas",
+      "manualComingSoon": "Manual redaction coming soon"
     },
-    "export": "Export",
-    "upload": "Upload",
-    "boxRedaction": "Box draw redaction",
-    "zoom": "Zoom",
-    "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out",
-    "nextPage": "Next Page",
-    "previousPage": "Previous Page",
-    "toggleSidebar": "Toggle Sidebar",
-    "showThumbnails": "Show Thumbnails",
-    "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
-    "showAttatchments": "Show Attachments",
-    "showLayers": "Show Layers (double-click to reset all layers to the default state)",
-    "colourPicker": "Colour Picker",
-    "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "auto": {
+      "header": "Auto Redact",
+      "settings": {
+        "title": "Redaction Settings",
+        "advancedTitle": "Advanced"
+      },
+      "colorLabel": "Box Colour",
+      "wordsToRedact": {
+        "title": "Words to Redact",
+        "placeholder": "Enter a word",
+        "add": "Add",
+        "examples": "Examples: Confidential, Top-Secret"
+      },
+      "useRegexLabel": "Use Regex",
+      "wholeWordSearchLabel": "Whole Word Search",
+      "customPaddingLabel": "Custom Extra Padding",
+      "convertPDFToImageLabel": "Convert PDF to PDF-Image"
+    },
+    "tooltip": {
+      "mode": {
+        "header": {
+          "title": "Redaction Method"
+        },
+        "automatic": {
+          "title": "Automatic Redaction",
+          "text": "Automatically finds and redacts specified text throughout the document. Perfect for removing consistent sensitive information like names, addresses, or confidential markers."
+        },
+        "manual": {
+          "title": "Manual Redaction",
+          "text": "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)"
+        }
+      },
+      "words": {
+        "header": {
+          "title": "Words to Redact"
+        },
+        "description": {
+          "title": "Text Matching",
+          "text": "Enter words or phrases to find and redact in your document. Each word will be searched for separately."
+        },
+        "bullet1": "Add one word at a time",
+        "bullet2": "Press Enter or click 'Add Another' to add",
+        "bullet3": "Click × to remove words",
+        "examples": {
+          "title": "Common Examples",
+          "text": "Typical words to redact include: bank details, email addresses, or specific names."
+        }
+      },
+      "advanced": {
+        "header": {
+          "title": "Advanced Redaction Settings"
+        },
+        "color": {
+          "title": "Box Colour & Padding",
+          "text": "Customise the appearance of redaction boxes. Black is standard, but you can choose any colour. Padding adds extra space around the found text."
+        },
+        "regex": {
+          "title": "Use Regex",
+          "text": "Enable regular expressions for advanced pattern matching. Useful for finding phone numbers, emails, or complex patterns.",
+          "bullet1": "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format",
+          "bullet2": "Use with caution - test thoroughly"
+        },
+        "wholeWord": {
+          "title": "Whole Word Search",
+          "text": "Only match complete words, not partial matches. 'John' won't match 'Johnson' when enabled."
+        },
+        "convert": {
+          "title": "Convert to PDF-Image",
+          "text": "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable."
+        }
+      }
+    },
+    "manual": {
+      "header": "Manual Redaction",
+      "textBasedRedaction": "Text-based Redaction",
+      "pageBasedRedaction": "Page-based Redaction",
+      "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
+      "pageRedactionNumbers": {
+        "title": "Pages",
+        "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
+      },
+      "redactionColor": {
+        "title": "Redaction Colour"
+      },
+      "export": "Export",
+      "upload": "Upload",
+      "boxRedaction": "Box draw redaction",
+      "zoom": "Zoom",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "nextPage": "Next Page",
+      "previousPage": "Previous Page",
+      "toggleSidebar": "Toggle Sidebar",
+      "showThumbnails": "Show Thumbnails",
+      "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
+      "showAttachments": "Show Attachments",
+      "showLayers": "Show Layers (double-click to reset all layers to the default state)",
+      "colourPicker": "Colour Picker",
+      "findCurrentOutlineItem": "Find current outline item",
+      "applyChanges": "Apply Changes"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Table Extraction,extract,convert"
@@ -1855,6 +1924,11 @@
     "title": "Compress",
     "desc": "Compress PDFs to reduce their file size.",
     "header": "Compress PDF",
+    "method": {
+      "title": "Compression Method",
+      "quality": "Quality",
+      "filesize": "File Size"
+    },
     "credit": "This service uses qpdf for PDF Compress/Optimisation.",
     "grayscale": {
       "label": "Apply Grayscale for Compression"
