@@ -53,7 +53,7 @@ const renderTooltipTitle = (
           <Text fw={400} size="sm">
             {title}
           </Text>
-          <LocalIcon icon="gpp-maybe-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />
+          <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />
         </Flex>
       </Tooltip>
     );

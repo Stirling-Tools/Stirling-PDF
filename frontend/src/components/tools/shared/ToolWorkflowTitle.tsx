@@ -22,7 +22,7 @@ export function ToolWorkflowTitle({ title, tooltip, description }: ToolWorkflowT
       <Text fw={500} size="lg" p="xs">
         {title}
       </Text>
-      {tooltip && <LocalIcon icon="gpp-maybe-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />}
+      {tooltip && <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />}
     </Flex>
   );
 
