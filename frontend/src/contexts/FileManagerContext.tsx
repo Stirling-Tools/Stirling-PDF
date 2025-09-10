@@ -32,7 +32,7 @@ interface FileManagerContextValue {
   onDeleteSelected: () => void;
   onDownloadSelected: () => void;
   onDownloadSingle: (file: StirlingFileStub) => void;
-  onToggleExpansion: (fileId: string) => void;
+  onToggleExpansion: (fileId: FileId) => void;
   onAddToRecents: (file: StirlingFileStub) => void;
   onNewFilesSelect: (files: File[]) => void;
 
@@ -412,7 +412,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, []);
 
-  const handleToggleExpansion = useCallback(async (fileId: string) => {
+  const handleToggleExpansion = useCallback(async (fileId: FileId) => {
     const isCurrentlyExpanded = expandedFileIds.has(fileId);
 
     // Update expansion state
@@ -446,12 +446,26 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
           const historyFiles: StirlingFileStub[] = [];
 
           // Find the original file
-          const originalFileId = currentStoredStub.originalFileId || currentStoredStub.id;
 
-          // Collect all files in this history chain
-          const chainFiles = Array.from(fileMap.values()).filter(file =>
-            (file.originalFileId || file.id) === originalFileId && file.id !== fileId
-          );
+          // Collect only files in this specific branch (ancestors of current file)
+          const chainFiles: StirlingFileStub[] = [];
+          const allFiles = Array.from(fileMap.values());
+
+          // Build a map for fast parent lookups
+          const fileIdMap = new Map<FileId, StirlingFileStub>();
+          allFiles.forEach(f => fileIdMap.set(f.id, f));
+
+          // Trace back from current file through parent chain
+          let currentFile = fileIdMap.get(fileId);
+          while (currentFile?.parentFileId) {
+            const parentFile = fileIdMap.get(currentFile.parentFileId);
+            if (parentFile) {
+              chainFiles.push(parentFile);
+              currentFile = parentFile;
+            } else {
+              break; // Parent not found, stop tracing
+            }
+          }
 
           // Sort by version number (oldest first for history display)
           chainFiles.sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
