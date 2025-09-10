@@ -27,19 +27,17 @@ const ButtonSelector = <T extends string>({
         <Button
           key={option.value}
           variant={value === option.value ? 'filled' : 'outline'}
-          color={value === option.value ? 'blue' : 'var(--text-muted)'}
+          color={value === option.value ? 'var(--color-primary-500)' : 'var(--text-muted)'}
           onClick={() => onChange(option.value)}
           disabled={disabled || option.disabled}
           style={{
             flex: fullWidth ? 1 : undefined,
             height: 'auto',
-            minHeight: '40px',
-            fontSize: '11px'
+            minHeight: '2.5rem',
+            fontSize: 'var(--mantine-font-size-sm)'
           }}
         >
-          <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-            {option.label}
-          </div>
+          {option.label}
         </Button>
       ))}
     </div>
