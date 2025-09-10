@@ -21,7 +21,6 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     recentFiles,
     filteredFiles,
     selectedFilesSet,
-    fileGroups,
     expandedFileIds,
     loadedHistoryFiles,
     onFileSelect,
@@ -72,7 +71,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
                     isHistoryFile={false} // All files here are leaf files
                     isLatestVersion={true} // All files here are the latest versions
                   />
-                  
+
                   <FileHistoryGroup
                     leafFile={file}
                     historyFiles={historyFiles}

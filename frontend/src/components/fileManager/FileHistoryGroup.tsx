@@ -28,7 +28,7 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
   // Sort history files by version number (oldest first, excluding the current leaf file)
   const sortedHistory = historyFiles
     .filter(file => file.id !== leafFile.id) // Exclude the leaf file itself
-    .sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
+    .sort((a, b) => (b.versionNumber || 1) - (a.versionNumber || 1));
 
   if (!isExpanded || sortedHistory.length === 0) {
     return null;
