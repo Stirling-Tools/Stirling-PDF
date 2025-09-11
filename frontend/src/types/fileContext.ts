@@ -159,8 +159,8 @@ export function isFileObject(obj: any): obj is File | StirlingFile {
 export function createNewStirlingFileStub(
   file: File,
   id?: FileId,
-  thumbnail?: string
-
+  thumbnail?: string,
+  processedFileMetadata?: ProcessedFileMetadata
 ): StirlingFileStub {
   const fileId = id || createFileId();
   return {
@@ -173,7 +173,8 @@ export function createNewStirlingFileStub(
     createdAt: Date.now(),
     isLeaf: true, // New files are leaf nodes by default
     versionNumber: 1, // New files start at version 1
-    thumbnailUrl: thumbnail
+    thumbnailUrl: thumbnail,
+    processedFile: processedFileMetadata
   };
 }
 

@@ -10,6 +10,7 @@ import {
   createFileId,
   createQuickKey,
   createStirlingFile,
+  ProcessedFileMetadata,
 } from '../../types/fileContext';
 import { FileId } from '../../types/file';
 import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
@@ -71,18 +72,42 @@ export function createProcessedFile(pageCount: number, thumbnail?: string) {
 }
 
 /**
+ * Generate fresh ProcessedFileMetadata for a file
+ * Used when tools process files to ensure metadata matches actual file content
+ */
+export async function generateProcessedFileMetadata(file: File): Promise<ProcessedFileMetadata | undefined> {
+  // Only generate metadata for PDF files
+  if (!file.type.startsWith('application/pdf')) {
+    return undefined;
+  }
+
+  try {
+    const result = await generateThumbnailWithMetadata(file);
+      return createProcessedFile(result.pageCount, result.thumbnail);
+  } catch (error) {
+    if (DEBUG) console.warn(`📄 Failed to generate processedFileMetadata for ${file.name}:`, error);
+  }
+
+  return undefined;
+}
+
+/**
  * Create a child StirlingFileStub from a parent stub with proper history management.
  * Used when a tool processes an existing file to create a new version with incremented history.
  *
  * @param parentStub - The parent StirlingFileStub to create a child from
  * @param operation - Tool operation information (toolName, timestamp)
+ * @param resultingFile - The processed File object
+ * @param thumbnail - Optional thumbnail for the child
+ * @param processedFileMetadata - Optional fresh metadata for the processed file
  * @returns New child StirlingFileStub with proper version history
  */
 export function createChildStub(
   parentStub: StirlingFileStub,
   operation: { toolName: string; timestamp: number },
   resultingFile: File,
-  thumbnail?: string
+  thumbnail?: string,
+  processedFileMetadata?: ProcessedFileMetadata
 ): StirlingFileStub {
   const newFileId = createFileId();
 
@@ -96,10 +121,12 @@ export function createChildStub(
   // Determine original file ID (root of the version chain)
   const originalFileId = parentStub.originalFileId || parentStub.id;
 
-// Update the child stub's name to match the processed file
+  // Copy parent metadata but exclude processedFile to prevent stale data
+  const { processedFile: _processedFile, ...parentMetadata } = parentStub;
+
   return {
-    // Copy all parent metadata
-    ...parentStub,
+    // Copy parent metadata (excluding processedFile)
+    ...parentMetadata,
 
     // Update identity and version info
     id: newFileId,
@@ -113,10 +140,10 @@ export function createChildStub(
     size: resultingFile.size,
     type: resultingFile.type,
     lastModified: resultingFile.lastModified,
-    thumbnailUrl: thumbnail
+    thumbnailUrl: thumbnail,
 
-    // Preserve thumbnails and processing metadata from parent
-    // These will be updated if the child has new thumbnails, but fallback to parent
+    // Set fresh processedFile metadata (no inheritance from parent)
+    processedFile: processedFileMetadata
   };
 }
 
@@ -170,36 +197,29 @@ export async function addFiles(
     const fileId = createFileId();
     filesRef.current.set(fileId, file);
 
-    // Generate thumbnail and page count immediately
-    let thumbnail: string | undefined;
-    let pageCount: number = 1;
+    // Generate processedFile metadata using centralized function
+    const processedFileMetadata = await generateProcessedFileMetadata(file);
 
-    // Route based on file type - PDFs through full metadata pipeline, non-PDFs through simple path
-    if (file.type.startsWith('application/pdf')) {
-      try {
-        if (DEBUG) console.log(`📄 Generating PDF metadata for ${file.name}`);
-        const result = await generateThumbnailWithMetadata(file);
-        thumbnail = result.thumbnail;
-        pageCount = result.pageCount;
-        if (DEBUG) console.log(`📄 Generated PDF metadata for ${file.name}: ${pageCount} pages, thumbnail: SUCCESS`);
-      } catch (error) {
-        if (DEBUG) console.warn(`📄 Failed to generate PDF metadata for ${file.name}:`, error);
-      }
-    } else {
-      // Non-PDF files: simple thumbnail generation, no page count
+    // Extract thumbnail for non-PDF files or use from processedFile for PDFs
+    let thumbnail: string | undefined;
+    if (processedFileMetadata) {
+      // PDF file - use thumbnail from processedFile metadata
+      thumbnail = processedFileMetadata.thumbnailUrl;
+      if (DEBUG) console.log(`📄 Generated PDF metadata for ${file.name}: ${processedFileMetadata.totalPages} pages, thumbnail: SUCCESS`);
+    } else if (!file.type.startsWith('application/pdf')) {
+      // Non-PDF files: simple thumbnail generation, no processedFile metadata
       try {
         if (DEBUG) console.log(`📄 Generating simple thumbnail for non-PDF file ${file.name}`);
         const { generateThumbnailForFile } = await import('../../utils/thumbnailUtils');
         thumbnail = await generateThumbnailForFile(file);
-        pageCount = 0; // Non-PDFs have no page count
         if (DEBUG) console.log(`📄 Generated simple thumbnail for ${file.name}: no page count, thumbnail: SUCCESS`);
       } catch (error) {
         if (DEBUG) console.warn(`📄 Failed to generate simple thumbnail for ${file.name}:`, error);
       }
     }
 
-    // Create new filestub with immediate thumbnail and page metadata
-    const fileStub = createNewStirlingFileStub(file, fileId, thumbnail);
+    // Create new filestub with processedFile metadata
+    const fileStub = createNewStirlingFileStub(file, fileId, thumbnail, processedFileMetadata);
     if (thumbnail) {
       // Track blob URLs for cleanup (images return blob URLs that need revocation)
       if (thumbnail.startsWith('blob:')) {
@@ -210,12 +230,6 @@ export async function addFiles(
     // Store insertion position if provided
     if (options.insertAfterPageId !== undefined) {
       fileStub.insertAfterPageId = options.insertAfterPageId;
-    }
-
-    // Create initial processedFile metadata with page count
-    if (pageCount > 0) {
-      fileStub.processedFile = createProcessedFile(pageCount, thumbnail);
-      if (DEBUG) console.log(`📄 addFiles(raw): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
     }
 
     existingQuickKeys.add(quickKey);
@@ -289,16 +303,18 @@ export async function consumeFiles(
   }
 
   // Mark input files as processed in storage (no longer leaf nodes)
-  await Promise.all(
-    inputFileIds.map(async (fileId) => {
-      try {
-        await fileStorage.markFileAsProcessed(fileId);
-        if (DEBUG) console.log(`📄 Marked file ${fileId} as processed (no longer leaf)`);
-      } catch (error) {
-        if (DEBUG) console.warn(`📄 Failed to mark file ${fileId} as processed:`, error);
-      }
-    })
-  );
+  if(!outputStirlingFileStubs.reduce((areAllV1, stub) => areAllV1 && (stub.versionNumber == 1), true)) {
+    await Promise.all(
+      inputFileIds.map(async (fileId) => {
+        try {
+          await fileStorage.markFileAsProcessed(fileId);
+          if (DEBUG) console.log(`📄 Marked file ${fileId} as processed (no longer leaf)`);
+        } catch (error) {
+          if (DEBUG) console.warn(`📄 Failed to mark file ${fileId} as processed:`, error);
+        }
+      })
+    );
+  }
 
   // Save output files directly to fileStorage with complete metadata
   for (let i = 0; i < outputStirlingFiles.length; i++) {
@@ -500,15 +516,16 @@ export async function addStirlingFileStubs(
 
         if (needsProcessing) {
           if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerating processedFile for ${record.name}`);
-          try {
-            // Generate basic processedFile structure with page count
-            const result = await generateThumbnailWithMetadata(stirlingFile);
-            record.processedFile = createProcessedFile(result.pageCount, result.thumbnail);
-            record.thumbnailUrl = result.thumbnail; // Update thumbnail if needed
-            if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerated processedFile for ${record.name} with ${result.pageCount} pages`);
-          } catch (error) {
-            if (DEBUG) console.warn(`📄 addStirlingFileStubs: Failed to regenerate processedFile for ${record.name}:`, error);
-            // Ensure we have at least basic structure
+
+          // Use centralized metadata generation function
+          const processedFileMetadata = await generateProcessedFileMetadata(stirlingFile);
+          if (processedFileMetadata) {
+            record.processedFile = processedFileMetadata;
+            record.thumbnailUrl = processedFileMetadata.thumbnailUrl; // Update thumbnail if needed
+            if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerated processedFile for ${record.name} with ${processedFileMetadata.totalPages} pages`);
+          } else {
+            // Fallback for files that couldn't be processed
+            if (DEBUG) console.warn(`📄 addStirlingFileStubs: Failed to regenerate processedFile for ${record.name}`);
             if (!record.processedFile) {
               record.processedFile = createProcessedFile(1); // Fallback to 1 page
             }

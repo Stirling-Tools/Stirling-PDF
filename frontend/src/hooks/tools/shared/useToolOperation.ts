@@ -8,7 +8,7 @@ import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
-import { createChildStub } from '../../../contexts/file/fileActions';
+import { createChildStub, generateProcessedFileMetadata } from '../../../contexts/file/fileActions';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -272,12 +272,27 @@ export const useToolOperation = <TParams>(
           toolName: config.operationType,
           timestamp: Date.now()
         };
-        console.log("tool complete inputs ")
-        const outputStirlingFileStubs = processedFiles.length != inputStirlingFileStubs.length
-          ? processedFiles.map((file, index) => createNewStirlingFileStub(file, undefined, thumbnails[index]))
-           : processedFiles.map((resultingFile, index) =>
-           createChildStub(inputStirlingFileStubs[index], newToolOperation, resultingFile, thumbnails[index])
+
+        // Generate fresh processedFileMetadata for all processed files to ensure accuracy
+        actions.setStatus('Generating metadata for processed files...');
+        const processedFileMetadataArray = await Promise.all(
+          processedFiles.map(file => generateProcessedFileMetadata(file))
         );
+        const shouldBranchHistory = processedFiles.length != inputStirlingFileStubs.length;
+        // Create output stubs with fresh metadata (no inheritance of stale processedFile data)
+        const outputStirlingFileStubs = shouldBranchHistory
+          ? processedFiles.map((file, index) =>
+              createNewStirlingFileStub(file, undefined, thumbnails[index], processedFileMetadataArray[index])
+            )
+          : processedFiles.map((resultingFile, index) =>
+              createChildStub(
+                inputStirlingFileStubs[index],
+                newToolOperation,
+                resultingFile,
+                thumbnails[index],
+                processedFileMetadataArray[index]
+              )
+            );
 
         // Create StirlingFile objects from processed files and child stubs
         const outputStirlingFiles = processedFiles.map((file, index) => {
