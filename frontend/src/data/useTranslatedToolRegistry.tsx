@@ -11,6 +11,7 @@ import ChangePermissions from "../tools/ChangePermissions";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
+import AddStamp from "../tools/AddStamp";
 import Merge from '../tools/Merge';
 import Repair from "../tools/Repair";
 import AutoRename from "../tools/AutoRename";
@@ -25,6 +26,7 @@ import { removePasswordOperationConfig } from "../hooks/tools/removePassword/use
 import { sanitizeOperationConfig } from "../hooks/tools/sanitize/useSanitizeOperation";
 import { repairOperationConfig } from "../hooks/tools/repair/useRepairOperation";
 import { addWatermarkOperationConfig } from "../hooks/tools/addWatermark/useAddWatermarkOperation";
+import { addStampOperationConfig } from "../components/tools/addStamp/useAddStampOperation";
 import { unlockPdfFormsOperationConfig } from "../hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
 import { singleLargePageOperationConfig } from "../hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
@@ -189,10 +191,13 @@ export function useFlatToolRegistry(): ToolRegistry {
       "add-stamp": {
         icon: <LocalIcon icon="approval-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.AddStampRequest.title", "Add Stamp to PDF"),
-        component: null,
+        component: AddStamp,
         description: t("home.AddStampRequest.desc", "Add text or add image stamps at set locations"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
+        maxFiles: -1,
+        endpoints: ["add-stamp"],
+        operationConfig: addStampOperationConfig,
       },
       sanitize: {
         icon: <LocalIcon icon="cleaning-services-outline-rounded" width="1.5rem" height="1.5rem" />,

@@ -178,6 +178,9 @@
   --checkbox-border: #2F83BF;
   --checkbox-checked-bg: #3FAFFF;
   --checkbox-tick: #FFFFFF;
+
+  --information-text-bg: #eaeaea;
+  --information-text-color: #5e5e5e;
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -321,7 +324,9 @@
   /* Tool panel search bar background colors (dark mode) */
   --tool-panel-search-bg: #1F2329;
   --tool-panel-search-border-bottom: #4B525A;
-
+  
+  --information-text-bg: #292e34;
+  --information-text-color: #ececec;
 }
 
 /* Dropzone drop state styling */
