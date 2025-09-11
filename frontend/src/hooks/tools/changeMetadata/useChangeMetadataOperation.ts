@@ -26,13 +26,13 @@ export const buildChangeMetadataFormData = (parameters: ChangeMetadataParameters
   // Delete all metadata flag
   formData.append("deleteAll", parameters.deleteAll.toString());
 
-  // Custom metadata - need to match backend's customKey/customValue pattern
+  // Custom metadata - backend expects them as values to 'allRequestParams[customKeyX/customValueX]'
   let keyNumber = 0;
   parameters.customMetadata.forEach((entry) => {
     if (entry.key.trim() && entry.value.trim()) {
       keyNumber += 1;
-      formData.append(`customKey${keyNumber}`, entry.key.trim());
-      formData.append(`customValue${keyNumber}`, entry.value.trim());
+      formData.append(`allRequestParams[customKey${keyNumber}]`, entry.key.trim());
+      formData.append(`allRequestParams[customValue${keyNumber}]`, entry.value.trim());
     }
   });
 
