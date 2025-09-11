@@ -8,23 +8,17 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { StirlingFileStub } from '../../types/fileContext';
 
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
 import { FileId } from '../../types/file';
 import ToolChain from '../shared/ToolChain';
 
-interface FileItem {
-  id: FileId;
-  name: string;
-  pageCount: number;
-  thumbnail: string | null;
-  size: number;
-  modifiedAt?: number | string | Date;
-}
+
 
 interface FileEditorThumbnailProps {
-  file: FileItem;
+  file: StirlingFileStub;
   index: number;
   totalFiles: number;
   selectedFiles: FileId[];
@@ -65,11 +59,12 @@ const FileEditorThumbnail = ({
   }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
-  // Get file record to access tool history
-  const fileRecord = selectors.getStirlingFileStub(file.id);
-  const toolHistory = fileRecord?.toolHistory || [];
+  const pageCount = file.processedFile?.totalPages || 0;
+  // Get file stub to access tool history
+  const fileStub = selectors.getStirlingFileStub(file.id);
+  const toolHistory = fileStub?.toolHistory || [];
   const hasToolHistory = toolHistory.length > 0;
-  const versionNumber = fileRecord?.versionNumber || 1;
+  const versionNumber = fileStub?.versionNumber || 1;
 
 
   const downloadSelectedFile = useCallback(() => {
@@ -117,22 +112,21 @@ const FileEditorThumbnail = ({
 
   const pageLabel = useMemo(
     () =>
-      file.pageCount > 0
-        ? `${file.pageCount} ${file.pageCount === 1 ? 'Page' : 'Pages'}`
+      pageCount > 0
+        ? `${pageCount} ${pageCount === 1 ? 'Page' : 'Pages'}`
         : '',
-    [file.pageCount]
+    [pageCount]
   );
 
   const dateLabel = useMemo(() => {
-    const d =
-      file.modifiedAt != null ? new Date(file.modifiedAt) : new Date(); // fallback
+    const d = new Date(file.lastModified);
     if (Number.isNaN(d.getTime())) return '';
     return new Intl.DateTimeFormat(undefined, {
       month: 'short',
       day: '2-digit',
       year: 'numeric',
     }).format(d);
-  }, [file.modifiedAt]);
+  }, [file.lastModified]);
 
   // ---- Drag & drop wiring ----
   const fileElementRef = useCallback((element: HTMLDivElement | null) => {
@@ -369,9 +363,9 @@ const FileEditorThumbnail = ({
       {/* Preview area */}
       <div className={`${styles.previewBox} mx-6 mb-4 relative flex-1`}>
         <div className={styles.previewPaper}>
-          {file.thumbnail && (
+          {file.thumbnailUrl && (
             <img
-              src={file.thumbnail}
+              src={file.thumbnailUrl}
               alt={file.name}
               draggable={false}
               loading="lazy"

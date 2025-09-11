@@ -78,23 +78,6 @@ const FileEditor = ({
   // Use activeStirlingFileStubs directly - no conversion needed
   const localSelectedIds = contextSelectedIds;
 
-  // Helper to convert StirlingFileStub to FileThumbnail format
-  const recordToFileItem = useCallback((record: any) => {
-    const file = selectors.getFile(record.id);
-    if (!file) return null;
-
-    return {
-      id: record.id,
-      name: file.name,
-      pageCount: record.processedFile?.totalPages || 1,
-      thumbnail: record.thumbnailUrl || '',
-      size: file.size,
-      modifiedAt: file.lastModified,
-      file: file
-    };
-  }, [selectors]);
-
-
   // Process uploaded files using context
   const handleFileUpload = useCallback(async (uploadedFiles: File[]) => {
     setError(null);
@@ -405,13 +388,10 @@ const FileEditor = ({
             }}
           >
             {activeStirlingFileStubs.map((record, index) => {
-              const fileItem = recordToFileItem(record);
-              if (!fileItem) return null;
-
               return (
                 <FileEditorThumbnail
                   key={record.id}
-                  file={fileItem}
+                  file={record}
                   index={index}
                   totalFiles={activeStirlingFileStubs.length}
                   selectedFiles={localSelectedIds}
@@ -422,7 +402,7 @@ const FileEditor = ({
                   onSetStatus={setStatus}
                   onReorderFiles={handleReorderFiles}
                   toolMode={toolMode}
-                  isSupported={isFileSupported(fileItem.name)}
+                  isSupported={isFileSupported(record.name)}
                 />
               );
             })}
