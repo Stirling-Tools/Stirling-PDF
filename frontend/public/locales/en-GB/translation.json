@@ -1080,7 +1080,6 @@
   },
   "changeMetadata": {
     "tags": "Title,author,date,creation,time,publisher,producer,stats",
-    "title": "Change Metadata",
     "header": "Change Metadata",
     "selectText": {
       "1": "Please edit the variables you wish to change",
@@ -1089,15 +1088,103 @@
       "4": "Other Metadata:",
       "5": "Add Custom Metadata Entry"
     },
-    "author": "Author:",
-    "creationDate": "Creation Date (yyyy/MM/dd HH:mm:ss):",
-    "creator": "Creator:",
-    "keywords": "Keywords:",
-    "modDate": "Modification Date (yyyy/MM/dd HH:mm:ss):",
-    "producer": "Producer:",
-    "subject": "Subject:",
-    "trapped": "Trapped:",
-    "submit": "Change"
+    "submit": "Change",
+    "filenamePrefix": "metadata",
+    "settings": {
+      "title": "Metadata Settings"
+    },
+    "standardFields": {
+      "title": "Standard Metadata"
+    },
+    "deleteAll": {
+      "label": "Delete all metadata",
+      "description": "Remove all metadata from the PDF document"
+    },
+    "title": {
+      "label": "Title",
+      "placeholder": "Document title"
+    },
+    "author": {
+      "label": "Author",
+      "placeholder": "Document author"
+    },
+    "subject": {
+      "label": "Subject",
+      "placeholder": "Document subject"
+    },
+    "keywords": {
+      "label": "Keywords",
+      "placeholder": "Document keywords"
+    },
+    "creator": {
+      "label": "Creator",
+      "placeholder": "Document creator"
+    },
+    "producer": {
+      "label": "Producer",
+      "placeholder": "Document producer"
+    },
+    "dates": {
+      "title": "Document Dates",
+      "format": "Format: yyyy/MM/dd HH:mm:ss"
+    },
+    "creationDate": {
+      "label": "Creation Date"
+    },
+    "modificationDate": {
+      "label": "Modification Date"
+    },
+    "trapped": {
+      "label": "Trapped Status",
+      "description": "Indicates whether the document has been trapped for high-quality printing",
+      "unknown": "Unknown",
+      "true": "True",
+      "false": "False"
+    },
+    "customFields": {
+      "title": "Custom Metadata",
+      "description": "Add custom metadata fields to the document",
+      "add": "Add Field",
+      "key": "Key",
+      "keyPlaceholder": "Custom key",
+      "value": "Value",
+      "valuePlaceholder": "Custom value",
+      "remove": "Remove"
+    },
+    "results": {
+      "title": "Updated PDFs"
+    },
+    "error": {
+      "failed": "An error occurred while changing the PDF metadata."
+    },
+    "tooltip": {
+      "header": {
+        "title": "PDF Metadata Overview"
+      },
+      "standardFields": {
+        "title": "Standard Fields",
+        "text": "Common PDF metadata fields that describe the document.",
+        "bullet1": "Title: Document name or heading",
+        "bullet2": "Author: Person who created the document",
+        "bullet3": "Subject: Brief description of content",
+        "bullet4": "Keywords: Search terms for the document",
+        "bullet5": "Creator/Producer: Software used to create the PDF"
+      },
+      "dates": {
+        "title": "Date Fields",
+        "text": "When the document was created and modified.",
+        "bullet1": "Creation Date: When original document was made",
+        "bullet2": "Modification Date: When last changed",
+        "bullet3": "Format: yyyy/MM/dd HH:mm:ss (e.g., 2025/01/17 14:30:00)"
+      },
+      "options": {
+        "title": "Additional Options",
+        "text": "Custom fields and privacy controls.",
+        "bullet1": "Custom Metadata: Add your own key-value pairs",
+        "bullet2": "Trapped Status: High-quality printing setting",
+        "bullet3": "Delete All: Remove all metadata for privacy"
+      }
+    }
   },
   "fileToPDF": {
     "tags": "transformation,format,document,picture,slide,text,conversion,office,docs,word,excel,powerpoint",
