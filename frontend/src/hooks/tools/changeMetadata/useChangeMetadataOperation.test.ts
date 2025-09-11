@@ -98,12 +98,12 @@ describe('buildChangeMetadataFormData', () => {
 
     const formData = buildChangeMetadataFormData(params, mockFile);
 
-    expect(formData.get('customKey1')).toBe('Department');
-    expect(formData.get('customValue1')).toBe('Engineering');
-    expect(formData.get('customKey2')).toBe('Project');
-    expect(formData.get('customValue2')).toBe('Test Project');
-    expect(formData.get('customKey3')).toBe('Status');
-    expect(formData.get('customValue3')).toBe('Draft');
+    expect(formData.get('allRequestParams[customKey1]')).toBe('Department');
+    expect(formData.get('allRequestParams[customValue1]')).toBe('Engineering');
+    expect(formData.get('allRequestParams[customKey2]')).toBe('Project');
+    expect(formData.get('allRequestParams[customValue2]')).toBe('Test Project');
+    expect(formData.get('allRequestParams[customKey3]')).toBe('Status');
+    expect(formData.get('allRequestParams[customValue3]')).toBe('Draft');
   });
 
   test('should skip custom metadata with empty keys or values', () => {
@@ -120,12 +120,12 @@ describe('buildChangeMetadataFormData', () => {
 
     const formData = buildChangeMetadataFormData(params, mockFile);
 
-    expect(formData.get('customKey1')).toBe('Department');
-    expect(formData.get('customValue1')).toBe('Engineering');
-    expect(formData.get('customKey2')).toBe('Valid');
-    expect(formData.get('customValue2')).toBe('Valid Value');
-    expect(formData.get('customKey3')).toBeNull();
-    expect(formData.get('customKey4')).toBeNull();
+    expect(formData.get('allRequestParams[customKey1]')).toBe('Department');
+    expect(formData.get('allRequestParams[customValue1]')).toBe('Engineering');
+    expect(formData.get('allRequestParams[customKey2]')).toBe('Valid');
+    expect(formData.get('allRequestParams[customValue2]')).toBe('Valid Value');
+    expect(formData.get('allRequestParams[customKey3]')).toBeNull();
+    expect(formData.get('allRequestParams[customKey4]')).toBeNull();
   });
 
   test('should trim whitespace from custom metadata', () => {
@@ -138,7 +138,7 @@ describe('buildChangeMetadataFormData', () => {
 
     const formData = buildChangeMetadataFormData(params, mockFile);
 
-    expect(formData.get('customKey1')).toBe('Department');
-    expect(formData.get('customValue1')).toBe('Engineering');
+    expect(formData.get('allRequestParams[customKey1]')).toBe('Department');
+    expect(formData.get('allRequestParams[customValue1]')).toBe('Engineering');
   });
 });
