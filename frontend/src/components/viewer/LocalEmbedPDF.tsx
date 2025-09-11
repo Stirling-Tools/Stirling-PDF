@@ -9,9 +9,11 @@ import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
 import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/react';
 import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom/react';
-import { InteractionManagerPluginPackage } from '@embedpdf/plugin-interaction-manager/react';
+import { InteractionManagerPluginPackage, PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react';
+import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { ZoomControlsExporter } from './ZoomControlsExporter';
 import { ScrollControlsExporter } from './ScrollControlsExporter';
+import { SelectionControlsExporter } from './SelectionControlsExporter';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -59,8 +61,11 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
       }),
       createPluginRegistration(RenderPluginPackage),
       
-      // Register interaction manager (required for zoom features)
+      // Register interaction manager (required for zoom and selection features)
       createPluginRegistration(InteractionManagerPluginPackage),
+      
+      // Register selection plugin (depends on InteractionManager)
+      createPluginRegistration(SelectionPluginPackage),
       
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
@@ -136,6 +141,7 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
       <EmbedPDF engine={engine} plugins={plugins}>
         <ZoomControlsExporter />
         <ScrollControlsExporter />
+        <SelectionControlsExporter />
         <Viewport
           style={{
             backgroundColor: actualColorScheme === 'dark' ? '#1a1b1e' : '#f1f3f5',
@@ -145,10 +151,11 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
           }}
         >
           <Scroller
-            renderPage={({ width, height, pageIndex, scale }: { width: number; height: number; pageIndex: number; scale: number }) => (
-              <div style={{ width, height }}>
+            renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
+              <PagePointerProvider width={width} height={height} pageIndex={pageIndex} scale={scale} rotation={rotation}>
                 <RenderLayer pageIndex={pageIndex} scale={scale} />
-              </div>
+                <SelectionLayer pageIndex={pageIndex} scale={scale} />
+              </PagePointerProvider>
             )}
           />
         </Viewport>
