@@ -219,11 +219,42 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
 
     // Final list: files to delete minus files that must be preserved
-    const safeToDelete = Array.from(filesToDelete).filter(fileId => !filesToPreserve.has(fileId));
+    let safeToDelete = Array.from(filesToDelete).filter(fileId => !filesToPreserve.has(fileId));
+
+    // Check for orphaned non-leaf files after main deletion
+    const remainingFiles = allStoredStubs.filter(file => !safeToDelete.includes(file.id as string));
+    const orphanedNonLeafFiles: string[] = [];
+
+    for (const file of remainingFiles) {
+      // Only check non-leaf files (files that have been processed and have children)
+      if (file.isLeaf === false) {
+        const fileOriginalId = file.originalFileId || file.id;
+        
+        // Check if this non-leaf file has any living descendants
+        const hasLivingDescendants = remainingFiles.some(otherFile => {
+          // Check if otherFile is a descendant of this file
+          const otherOriginalId = otherFile.originalFileId || otherFile.id;
+          return (
+            // Direct parent relationship
+            otherFile.parentFileId === file.id ||
+            // Same lineage but different from this file
+            (otherOriginalId === fileOriginalId && otherFile.id !== file.id)
+          );
+        });
+
+        if (!hasLivingDescendants) {
+          orphanedNonLeafFiles.push(file.id as string);
+        }
+      }
+    }
+
+    // Add orphaned non-leaf files to deletion list
+    safeToDelete = [...safeToDelete, ...orphanedNonLeafFiles];
 
     console.log('Deletion analysis:', {
       candidatesForDeletion: Array.from(filesToDelete),
       mustPreserve: Array.from(filesToPreserve),
+      orphanedNonLeafFiles,
       safeToDelete
     });
 
