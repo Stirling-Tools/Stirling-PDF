@@ -1,12 +1,28 @@
 import { useTranslation } from 'react-i18next';
 import { TooltipContent } from '../../types/tips';
 
-export const useChangeMetadataTips = (): TooltipContent => {
+export const useDeleteAllTips = (): TooltipContent => {
   const { t } = useTranslation();
 
   return {
     header: {
-      title: t("changeMetadata.tooltip.header.title", "PDF Metadata Overview")
+      title: t("changeMetadata.tooltip.deleteAll.title", "Delete All Metadata")
+    },
+    tips: [
+      {
+        title: t("changeMetadata.tooltip.deleteAll.title", "Delete All Metadata"),
+        description: t("changeMetadata.tooltip.deleteAll.text", "Complete metadata removal for privacy and clean documents."),
+      }
+    ]
+  };
+};
+
+export const useStandardMetadataTips = (): TooltipContent => {
+  const { t } = useTranslation();
+
+  return {
+    header: {
+      title: t("changeMetadata.tooltip.standardFields.title", "Standard Fields")
     },
     tips: [
       {
@@ -19,7 +35,19 @@ export const useChangeMetadataTips = (): TooltipContent => {
           t("changeMetadata.tooltip.standardFields.bullet4", "Keywords: Search terms for the document"),
           t("changeMetadata.tooltip.standardFields.bullet5", "Creator/Producer: Software used to create the PDF")
         ]
-      },
+      }
+    ]
+  };
+};
+
+export const useDocumentDatesTips = (): TooltipContent => {
+  const { t } = useTranslation();
+
+  return {
+    header: {
+      title: t("changeMetadata.tooltip.dates.title", "Date Fields")
+    },
+    tips: [
       {
         title: t("changeMetadata.tooltip.dates.title", "Date Fields"),
         description: t("changeMetadata.tooltip.dates.text", "When the document was created and modified."),
@@ -28,14 +56,47 @@ export const useChangeMetadataTips = (): TooltipContent => {
           t("changeMetadata.tooltip.dates.bullet2", "Modification Date: When last changed"),
           t("changeMetadata.tooltip.dates.bullet3", "Format: yyyy/MM/dd HH:mm:ss (e.g., 2025/01/17 14:30:00)")
         ]
-      },
+      }
+    ]
+  };
+};
+
+export const useCustomMetadataTips = (): TooltipContent => {
+  const { t } = useTranslation();
+
+  return {
+    header: {
+      title: t("changeMetadata.tooltip.customFields.title", "Custom Metadata")
+    },
+    tips: [
       {
-        title: t("changeMetadata.tooltip.options.title", "Additional Options"),
-        description: t("changeMetadata.tooltip.options.text", "Custom fields and privacy controls."),
+        title: t("changeMetadata.tooltip.customFields.title", "Custom Metadata"),
+        description: t("changeMetadata.tooltip.customFields.text", "Add your own custom key-value metadata pairs."),
         bullets: [
-          t("changeMetadata.tooltip.options.bullet1", "Custom Metadata: Add your own key-value pairs"),
-          t("changeMetadata.tooltip.options.bullet2", "Trapped Status: High-quality printing setting"),
-          t("changeMetadata.tooltip.options.bullet3", "Delete All: Remove all metadata for privacy")
+          t("changeMetadata.tooltip.customFields.bullet1", "Add any custom fields relevant to your document"),
+          t("changeMetadata.tooltip.customFields.bullet2", "Examples: Department, Project, Version, Status"),
+          t("changeMetadata.tooltip.customFields.bullet3", "Both key and value are required for each entry")
+        ]
+      }
+    ]
+  };
+};
+
+export const useAdvancedOptionsTips = (): TooltipContent => {
+  const { t } = useTranslation();
+
+  return {
+    header: {
+      title: t("changeMetadata.tooltip.advanced.title", "Advanced Options")
+    },
+    tips: [
+      {
+        title: t("changeMetadata.tooltip.advanced.trapped.title", "Trapped Status"),
+        description: t("changeMetadata.tooltip.advanced.trapped.description", "Indicates if document is prepared for high-quality printing."),
+        bullets: [
+          t("changeMetadata.tooltip.advanced.trapped.bullet1", "True: Document has been trapped for printing"),
+          t("changeMetadata.tooltip.advanced.trapped.bullet2", "False: Document has not been trapped"),
+          t("changeMetadata.tooltip.advanced.trapped.bullet3", "Unknown: Trapped status is not specified")
         ]
       }
     ]

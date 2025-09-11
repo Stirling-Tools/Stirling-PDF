@@ -53,7 +53,7 @@ import RedactSingleStepSettings from "../components/tools/redact/RedactSingleSte
 import Redact from "../tools/Redact";
 import { ToolId } from "../types/toolId";
 import MergeSettings from '../components/tools/merge/MergeSettings';
-import ChangeMetadataSettings from "../components/tools/changeMetadata/ChangeMetadataSettings";
+import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -299,7 +299,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["update-metadata"],
         operationConfig: changeMetadataOperationConfig,
-        settingsComponent: ChangeMetadataSettings,
+        settingsComponent: ChangeMetadataSingleStep,
       },
       // Page Formatting
 

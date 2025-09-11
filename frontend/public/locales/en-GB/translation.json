@@ -1143,6 +1143,9 @@
       "true": "True",
       "false": "False"
     },
+    "advanced": {
+      "title": "Advanced Options"
+    },
     "customFields": {
       "title": "Custom Metadata",
       "description": "Add custom metadata fields to the document",
@@ -1185,6 +1188,27 @@
         "bullet1": "Custom Metadata: Add your own key-value pairs",
         "bullet2": "Trapped Status: High-quality printing setting",
         "bullet3": "Delete All: Remove all metadata for privacy"
+      },
+      "deleteAll": {
+        "title": "Delete All Metadata",
+        "text": "Complete metadata removal for privacy and clean documents."
+      },
+      "customFields": {
+        "title": "Custom Metadata",
+        "text": "Add your own custom key-value metadata pairs.",
+        "bullet1": "Add any custom fields relevant to your document",
+        "bullet2": "Examples: Department, Project, Version, Status",
+        "bullet3": "Both key and value are required for each entry"
+      },
+      "advanced": {
+        "title": "Advanced Options",
+        "trapped": {
+          "title": "Trapped Status",
+          "description": "Indicates if document is prepared for high-quality printing.",
+          "bullet1": "True: Document has been trapped for printing",
+          "bullet2": "False: Document has not been trapped",
+          "bullet3": "Unknown: Trapped status is not specified"
+        }
       }
     }
   },
