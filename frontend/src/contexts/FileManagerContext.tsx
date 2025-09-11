@@ -230,63 +230,79 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     return safeToDelete;
   }, []);
 
+  // Shared internal delete logic
+  const performFileDelete = useCallback(async (fileToRemove: StirlingFileStub, fileIndex: number) => {
+    const deletedFileId = fileToRemove.id;
+
+    // Get all stored files to analyze lineages
+    const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
+
+    // Get safe files to delete (respecting shared lineages)
+    const filesToDelete = getSafeFilesToDelete([deletedFileId as string], allStoredStubs);
+
+    console.log(`Safely deleting files for ${fileToRemove.name}:`, filesToDelete);
+
+    // Clear from selection immediately
+    setSelectedFileIds(prev => prev.filter(id => !filesToDelete.includes(id)));
+
+    // Clear from expanded state to prevent ghost entries
+    setExpandedFileIds(prev => {
+      const newExpanded = new Set(prev);
+      filesToDelete.forEach(id => newExpanded.delete(id));
+      return newExpanded;
+    });
+
+    // Clear from history cache - remove all files in the chain
+    setLoadedHistoryFiles(prev => {
+      const newCache = new Map(prev);
+
+      // Remove cache entries for all deleted files
+      filesToDelete.forEach(id => newCache.delete(id as FileId));
+
+      // Also remove deleted files from any other file's history cache
+      for (const [mainFileId, historyFiles] of newCache.entries()) {
+        const filteredHistory = historyFiles.filter(histFile => !filesToDelete.includes(histFile.id as string));
+        if (filteredHistory.length !== historyFiles.length) {
+          newCache.set(mainFileId, filteredHistory);
+        }
+      }
+
+      return newCache;
+    });
+
+    // Delete safe files from IndexedDB
+    try {
+      for (const fileId of filesToDelete) {
+        await fileStorage.deleteStirlingFile(fileId as FileId);
+      }
+    } catch (error) {
+      console.error('Failed to delete files from chain:', error);
+    }
+
+    // Call the parent's deletion logic for the main file only
+    onFileRemove(fileIndex);
+
+    // Refresh to ensure consistent state
+    await refreshRecentFiles();
+  }, [getSafeFilesToDelete, setSelectedFileIds, setExpandedFileIds, setLoadedHistoryFiles, onFileRemove, refreshRecentFiles]);
+
   const handleFileRemove = useCallback(async (index: number) => {
     const fileToRemove = filteredFiles[index];
     if (fileToRemove) {
-      const deletedFileId = fileToRemove.id;
-
-      // Get all stored files to analyze lineages
-      const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
-
-      // Get safe files to delete (respecting shared lineages)
-      const filesToDelete = getSafeFilesToDelete([deletedFileId as string], allStoredStubs);
-
-      console.log(`Safely deleting files for ${fileToRemove.name}:`, filesToDelete);
-
-      // Clear from selection immediately
-      setSelectedFileIds(prev => prev.filter(id => !filesToDelete.includes(id)));
-
-      // Clear from expanded state to prevent ghost entries
-      setExpandedFileIds(prev => {
-        const newExpanded = new Set(prev);
-        filesToDelete.forEach(id => newExpanded.delete(id));
-        return newExpanded;
-      });
-
-      // Clear from history cache - remove all files in the chain
-      setLoadedHistoryFiles(prev => {
-        const newCache = new Map(prev);
-
-        // Remove cache entries for all deleted files
-        filesToDelete.forEach(id => newCache.delete(id as FileId));
-
-        // Also remove deleted files from any other file's history cache
-        for (const [mainFileId, historyFiles] of newCache.entries()) {
-          const filteredHistory = historyFiles.filter(histFile => !filesToDelete.includes(histFile.id as string));
-          if (filteredHistory.length !== historyFiles.length) {
-            newCache.set(mainFileId, filteredHistory);
-          }
-        }
-
-        return newCache;
-      });
-
-      // Delete safe files from IndexedDB
-      try {
-        for (const fileId of filesToDelete) {
-          await fileStorage.deleteStirlingFile(fileId as FileId);
-        }
-      } catch (error) {
-        console.error('Failed to delete files from chain:', error);
-      }
-
-      // Call the parent's deletion logic for the main file only
-      onFileRemove(index);
-
-      // Refresh to ensure consistent state
-      await refreshRecentFiles();
+      await performFileDelete(fileToRemove, index);
     }
-  }, [filteredFiles, onFileRemove, refreshRecentFiles, getSafeFilesToDelete]);
+  }, [filteredFiles, performFileDelete]);
+
+  // Handle deletion by fileId (more robust than index-based)
+  const handleFileRemoveById = useCallback(async (fileId: FileId) => {
+    // Find the file and its index in filteredFiles
+    const fileIndex = filteredFiles.findIndex(file => file.id === fileId);
+    const fileToRemove = filteredFiles[fileIndex];
+    
+    if (fileToRemove && fileIndex !== -1) {
+      await performFileDelete(fileToRemove, fileIndex);
+    }
+  }, [filteredFiles, performFileDelete]);
 
   // Handle deletion of specific history files (not index-based)
   const handleHistoryFileRemove = useCallback(async (fileToRemove: StirlingFileStub) => {
@@ -378,53 +394,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (selectedFileIds.length === 0) return;
 
     try {
-      // Get all stored files to analyze lineages
-      const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
-
-      // Get safe files to delete (respecting shared lineages)
-      const filesToDelete = getSafeFilesToDelete(selectedFileIds, allStoredStubs);
-
-      console.log(`Bulk safely deleting files and their history chains:`, filesToDelete);
-
-      // Update history cache synchronously
-      setLoadedHistoryFiles(prev => {
-        const newCache = new Map(prev);
-
-        // Remove cache entries for all deleted files
-        filesToDelete.forEach(id => newCache.delete(id as FileId));
-
-        // Also remove deleted files from any other file's history cache
-        for (const [mainFileId, historyFiles] of newCache.entries()) {
-          const filteredHistory = historyFiles.filter(histFile => !filesToDelete.includes(histFile.id as string));
-          if (filteredHistory.length !== historyFiles.length) {
-            newCache.set(mainFileId, filteredHistory);
-          }
-        }
-
-        return newCache;
-      });
-
-      // Also clear any expanded state for deleted files to prevent ghost entries
-      setExpandedFileIds(prev => {
-        const newExpanded = new Set(prev);
-        filesToDelete.forEach(id => newExpanded.delete(id));
-        return newExpanded;
-      });
-
-      // Clear selection immediately to prevent ghost selections
-      setSelectedFileIds(prev => prev.filter(id => !filesToDelete.includes(id)));
-
-      // Delete safe files from IndexedDB
-      for (const fileId of filesToDelete) {
-        await fileStorage.deleteStirlingFile(fileId as FileId);
+      // Delete each selected file using the proven single delete logic
+      for (const fileId of selectedFileIds) {
+        await handleFileRemoveById(fileId);
       }
-
-      // Refresh the file list to get updated data
-      await refreshRecentFiles();
     } catch (error) {
       console.error('Failed to delete selected files:', error);
     }
-  }, [selectedFileIds, filteredFiles, refreshRecentFiles, getSafeFilesToDelete]);
+  }, [selectedFileIds, handleFileRemoveById]);
 
 
   const handleDownloadSelected = useCallback(async () => {
@@ -612,6 +589,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleLocalFileClick,
     handleFileSelect,
     handleFileRemove,
+    handleFileRemoveById,
+    performFileDelete,
     handleFileDoubleClick,
     handleOpenFiles,
     handleSearchChange,
