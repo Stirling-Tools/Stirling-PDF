@@ -113,7 +113,7 @@ describe('useChangePermissionsOperation', () => {
   test.each([
     { property: 'toolType' as const, expectedValue: ToolType.singleFile },
     { property: 'endpoint' as const, expectedValue: '/api/v1/security/add-password' },
-    { property: 'filePrefix' as const, expectedValue: 'permissions_' },
+    { property: 'filePrefix' as const, expectedValue: undefined },
     { property: 'operationType' as const, expectedValue: 'change-permissions' }
   ])('should configure $property correctly', ({ property, expectedValue }) => {
     renderHook(() => useChangePermissionsOperation());
