@@ -7,6 +7,7 @@ import { useRightRail } from '../../contexts/RightRailContext';
 import { useFileState, useFileSelection, useFileManagement } from '../../contexts/FileContext';
 import { useNavigationState } from '../../contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
+import { usePanState } from '../../hooks/usePanState';
 
 import LanguageSelector from '../shared/LanguageSelector';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
@@ -15,6 +16,7 @@ import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
 
 export default function RightRail() {
   const { t } = useTranslation();
+  const isPanning = usePanState();
   const { toggleTheme } = useRainbowThemeContext();
   const { buttons, actions } = useRightRail();
   const topButtons = useMemo(() => buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true)), [buttons]);
@@ -265,10 +267,11 @@ export default function RightRail() {
             {/* Pan Mode */}
             <Tooltip content={t('rightRail.panMode', 'Pan Mode')} position="left" offset={12} arrow>
               <ActionIcon
-                variant="subtle"
+                variant={isPanning ? "filled" : "subtle"}
+                color={isPanning ? "blue" : undefined}
                 radius="md"
                 className="right-rail-icon"
-                onClick={() => (window as any).embedPdfControls?.pan()}
+                onClick={() => (window as any).embedPdfPan?.togglePan()}
                 disabled={currentView !== 'viewer'}
               >
                 <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />

@@ -10,6 +10,7 @@
     "@embedpdf/engines": "^1.1.1",
     "@embedpdf/plugin-interaction-manager": "^1.1.1",
     "@embedpdf/plugin-loader": "^1.1.1",
+    "@embedpdf/plugin-pan": "^1.1.1",
     "@embedpdf/plugin-render": "^1.1.1",
     "@embedpdf/plugin-scroll": "^1.1.1",
     "@embedpdf/plugin-selection": "^1.1.1",

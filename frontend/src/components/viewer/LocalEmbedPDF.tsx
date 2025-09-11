@@ -9,12 +9,14 @@ import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
 import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/react';
 import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom/react';
-import { InteractionManagerPluginPackage, PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react';
+import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/react';
 import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react';
+import { PanPluginPackage } from '@embedpdf/plugin-pan/react';
 import { ZoomControlsExporter } from './ZoomControlsExporter';
 import { ScrollControlsExporter } from './ScrollControlsExporter';
 import { SelectionControlsExporter } from './SelectionControlsExporter';
+import { PanControlsExporter } from './PanControlsExporter';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -67,6 +69,11 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
       
       // Register selection plugin (depends on InteractionManager)
       createPluginRegistration(SelectionPluginPackage),
+      
+      // Register pan plugin (depends on Viewport, InteractionManager)
+      createPluginRegistration(PanPluginPackage, {
+        defaultMode: 'mobile', // Try mobile mode which might be more permissive
+      }),
       
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
@@ -158,36 +165,55 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         <ZoomControlsExporter />
         <ScrollControlsExporter />
         <SelectionControlsExporter />
-        <Viewport
-          style={{
-            backgroundColor: actualColorScheme === 'dark' ? '#1a1b1e' : '#f1f3f5',
-            height: '100%',
-            width: '100%',
-            maxHeight: '100%',
-            maxWidth: '100%',
-            overflow: 'auto',
-            position: 'relative',
-            flex: 1,
-            minHeight: 0,
-            minWidth: 0,
-            contain: 'strict',
-          }}
-        >
+        <PanControlsExporter />
+        <GlobalPointerProvider>
+          <Viewport
+            style={{
+              backgroundColor: actualColorScheme === 'dark' ? '#1a1b1e' : '#f1f3f5',
+              height: '100%',
+              width: '100%',
+              maxHeight: '100%',
+              maxWidth: '100%',
+              overflow: 'auto',
+              position: 'relative',
+              flex: 1,
+              minHeight: 0,
+              minWidth: 0,
+              contain: 'strict',
+            }}
+          >
           <Scroller
             renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
-              <PagePointerProvider {...{ width, height, pageIndex, scale, rotation: rotation || 0 }}>
-                {/* 1. Low-resolution base layer for immediate feedback */}
-                <RenderLayer pageIndex={pageIndex} scale={0.5} />
-                
-                {/* 2. High-resolution tile layer on top */}
-                <TilingLayer pageIndex={pageIndex} scale={scale} />
-                
-                {/* 3. Selection layer for text interaction */}
-                <SelectionLayer pageIndex={pageIndex} scale={scale} />
+              <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
+                <div 
+                  style={{ 
+                    width, 
+                    height, 
+                    position: 'relative',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none'
+                  }}
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
+                  onDrop={(e) => e.preventDefault()}
+                  onDragOver={(e) => e.preventDefault()}
+                >
+                  {/* 1. Low-resolution base layer for immediate feedback */}
+                  <RenderLayer pageIndex={pageIndex} scale={0.5} />
+                  
+                  {/* 2. High-resolution tile layer on top */}
+                  <TilingLayer pageIndex={pageIndex} scale={scale} />
+                  
+                  {/* 3. Selection layer for text interaction */}
+                  <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                </div>
               </PagePointerProvider>
             )}
           />
-        </Viewport>
+          </Viewport>
+        </GlobalPointerProvider>
       </EmbedPDF>
     </div>
   );
