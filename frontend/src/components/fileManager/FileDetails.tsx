@@ -73,9 +73,9 @@ const FileDetails: React.FC<FileDetailsProps> = ({
   }
 
   return (
-    <Stack gap="md" h={`calc(${modalHeight} - 2rem)`}>
+    <Stack gap="lg" h={`calc(${modalHeight} - 2rem)`}>
       {/* Section 1: Thumbnail Preview */}
-      <Box style={{ width: '100%', height: `calc(${modalHeight} * 0.42 - 1rem)`, textAlign: 'center', padding: 'xs' }}>
+      <Box style={{ width: '100%', height: `calc(${modalHeight} * 0.5 - 2rem)`, textAlign: 'center', padding: 'xs' }}>
         <FilePreview
           file={currentFile}
           thumbnail={getCurrentThumbnail()}
