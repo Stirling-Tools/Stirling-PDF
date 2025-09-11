@@ -135,7 +135,7 @@ export class DecryptFile {
             `${window.stirlingPDF.tryRepairMessage}`
           );
         } else {
-            console.log('Suppressing corrupted PDF warning banner on repair page');
+          console.log('Suppressing corrupted PDF warning banner on repair page');
         }
         throw new Error('PDF file is corrupted.');
       }
