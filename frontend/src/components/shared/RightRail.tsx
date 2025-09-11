@@ -7,6 +7,7 @@ import { useRightRail } from '../../contexts/RightRailContext';
 import { useFileState, useFileSelection, useFileManagement } from '../../contexts/FileContext';
 import { useNavigationState } from '../../contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
+
 import LanguageSelector from '../shared/LanguageSelector';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { Tooltip } from '../shared/Tooltip';
@@ -203,6 +204,105 @@ export default function RightRail() {
             <Divider className="right-rail-divider" />
           </>
         )}
+
+        {/* Group: PDF Viewer Controls - visible only in viewer mode */}
+        <div
+          className={`right-rail-slot ${currentView === 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
+          aria-hidden={currentView !== 'viewer'}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            {/* Search */}
+            <Tooltip content={t('rightRail.search', 'Search PDF')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => (window as any).embedPdfControls?.search()}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Zoom Out */}
+            <Tooltip content={t('rightRail.zoomOut', 'Zoom Out')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => (window as any).embedPdfZoom?.zoomOut()}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="zoom-out" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Zoom In */}
+            <Tooltip content={t('rightRail.zoomIn', 'Zoom In')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => (window as any).embedPdfZoom?.zoomIn()}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="zoom-in" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+            {/* Area Zoom */}
+            <Tooltip content={t('rightRail.areaZoom', 'Area Zoom')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => (window as any).embedPdfZoom?.toggleMarqueeZoom()}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="crop-free" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Pan Mode */}
+            <Tooltip content={t('rightRail.panMode', 'Pan Mode')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => (window as any).embedPdfControls?.pan()}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Select Mode */}
+            <Tooltip content={t('rightRail.selectMode', 'Select Mode')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => (window as any).embedPdfControls?.pointer()}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="mouse-pointer" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Sidebar Toggle */}
+            <Tooltip content={t('rightRail.toggleSidebar', 'Toggle Sidebar')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => (window as any).embedPdfControls?.sidebar()}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+          </div>
+          <Divider className="right-rail-divider" />
+        </div>
 
         {/* Group: Selection controls + Close, animate as one unit when entering/leaving viewer */}
         <div
