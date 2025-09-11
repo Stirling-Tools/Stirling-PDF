@@ -8,14 +8,8 @@ import { useFileManagerContext } from "../../contexts/FileManagerContext";
 
 const FileActions: React.FC = () => {
   const { t } = useTranslation();
-  const {
-    recentFiles,
-    selectedFileIds,
-    filteredFiles,
-    onSelectAll,
-    onDeleteSelected,
-    onDownloadSelected
-  } = useFileManagerContext();
+  const { recentFiles, selectedFileIds, filteredFiles, onSelectAll, onDeleteSelected, onDownloadSelected } =
+    useFileManagerContext();
 
   const handleSelectAll = () => {
     onSelectAll();
