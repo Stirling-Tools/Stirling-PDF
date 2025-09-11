@@ -25,6 +25,8 @@ const EmbedPdfViewer = ({
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
+  const viewerRef = React.useRef<HTMLDivElement>(null);
+  const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
   // Get current file from FileContext
   const { selectors } = useFileState();
@@ -56,15 +58,49 @@ const EmbedPdfViewer = ({
     }
   }, [previewFile, fileWithUrl]);
 
+  // Handle scroll wheel zoom
+  React.useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const zoomAPI = (window as any).embedPdfZoom;
+        if (zoomAPI) {
+          if (event.deltaY < 0) {
+            // Scroll up - zoom in
+            zoomAPI.zoomIn();
+          } else {
+            // Scroll down - zoom out
+            zoomAPI.zoomOut();
+          }
+        }
+      }
+    };
+
+    const viewerElement = viewerRef.current;
+    if (viewerElement) {
+      viewerElement.addEventListener('wheel', handleWheel, { passive: false });
+      return () => {
+        viewerElement.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, []);
+
   return (
-    <Box style={{ 
-      position: 'relative', 
-      height: '100%', 
-      display: 'flex', 
-      flexDirection: 'column',
-      overflow: 'hidden',
-      contain: 'layout style paint'
-    }}>
+    <Box 
+      ref={viewerRef}
+      onMouseEnter={() => setIsViewerHovered(true)}
+      onMouseLeave={() => setIsViewerHovered(false)}
+      style={{ 
+        position: 'relative', 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        overflow: 'hidden',
+        contain: 'layout style paint'
+      }}>
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon
