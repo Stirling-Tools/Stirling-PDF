@@ -1,5 +1,6 @@
 import { buildChangeMetadataFormData } from './useChangeMetadataOperation';
-import { ChangeMetadataParameters, TrappedStatus } from './useChangeMetadataParameters';
+import { ChangeMetadataParameters } from './useChangeMetadataParameters';
+import { TrappedStatus } from '../../../types/metadata';
 import { describe, expect, test } from 'vitest';
 
 describe('buildChangeMetadataFormData', () => {

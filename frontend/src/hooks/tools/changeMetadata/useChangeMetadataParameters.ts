@@ -1,17 +1,6 @@
 import { BaseParameters } from '../../../types/parameters';
+import { TrappedStatus, CustomMetadataEntry } from '../../../types/metadata';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
-
-export enum TrappedStatus {
-  TRUE = 'True',
-  FALSE = 'False',
-  UNKNOWN = 'Unknown'
-}
-
-export interface CustomMetadataEntry {
-  key: string;
-  value: string;
-  id: string; // Format: "custom1", "custom2", etc.
-}
 
 export interface ChangeMetadataParameters extends BaseParameters {
   // Standard PDF metadata fields
@@ -86,7 +75,7 @@ const validateParameters = (params: ChangeMetadataParameters): boolean => {
 };
 
 export type ChangeMetadataParametersHook = BaseParametersHook<ChangeMetadataParameters> & {
-  addCustomMetadata: () => void;
+  addCustomMetadata: (key?: string, value?: string) => void;
   removeCustomMetadata: (id: string) => void;
   updateCustomMetadata: (id: string, key: string, value: string) => void;
 };
@@ -98,10 +87,10 @@ export const useChangeMetadataParameters = (): ChangeMetadataParametersHook => {
     validateFn: validateParameters,
   });
 
-  const addCustomMetadata = () => {
+  const addCustomMetadata = (key: string = '', value: string = '') => {
     const newEntry: CustomMetadataEntry = {
-      key: '',
-      value: '',
+      key,
+      value,
       id: `custom${customMetadataIdCounter++}`,
     };
 

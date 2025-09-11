@@ -1,12 +1,16 @@
 import { Stack, TextInput, Select, Checkbox, Button, Group, Divider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ChangeMetadataParameters, TrappedStatus } from "../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { useEffect, useState } from "react";
+import { ChangeMetadataParameters } from "../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { TrappedStatus } from "../../../types/metadata";
+import { PDFMetadataService } from "../../../services/pdfMetadataService";
+import { useSelectedFiles } from "../../../contexts/file/fileHooks";
 
 interface ChangeMetadataSettingsProps {
   parameters: ChangeMetadataParameters;
   onParameterChange: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void;
   disabled?: boolean;
-  addCustomMetadata: () => void;
+  addCustomMetadata: (key?: string, value?: string) => void;
   removeCustomMetadata: (id: string) => void;
   updateCustomMetadata: (id: string, key: string, value: string) => void;
 }
@@ -24,8 +28,57 @@ const ChangeMetadataSettings = ({
   updateCustomMetadata
 }: ChangeMetadataSettingsProps) => {
   const { t } = useTranslation();
+  const { selectedFiles } = useSelectedFiles();
+  const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
+  const [hasExtractedMetadata, setHasExtractedMetadata] = useState(false);
+
   const isDeleteAllEnabled = parameters.deleteAll;
-  const fieldsDisabled = disabled || isDeleteAllEnabled;
+  const fieldsDisabled = disabled || isDeleteAllEnabled || isExtractingMetadata;
+
+  // Extract metadata from first file when files change
+  useEffect(() => {
+    const extractMetadata = async () => {
+      if (selectedFiles.length === 0 || hasExtractedMetadata) {
+        return;
+      }
+
+      const firstFile = selectedFiles[0];
+      if (!firstFile) {
+        return;
+      }
+
+      setIsExtractingMetadata(true);
+      try {
+        const result = await PDFMetadataService.extractMetadata(firstFile);
+
+        if (result.success) {
+          const metadata = result.metadata;
+
+          // Pre-populate all fields with extracted metadata
+          onParameterChange('title', metadata.title);
+          onParameterChange('author', metadata.author);
+          onParameterChange('subject', metadata.subject);
+          onParameterChange('keywords', metadata.keywords);
+          onParameterChange('creator', metadata.creator);
+          onParameterChange('producer', metadata.producer);
+          onParameterChange('creationDate', metadata.creationDate);
+          onParameterChange('modificationDate', metadata.modificationDate);
+          onParameterChange('trapped', metadata.trapped);
+
+          // Set custom metadata entries directly to avoid state update timing issues
+          onParameterChange('customMetadata', metadata.customMetadata);
+
+          setHasExtractedMetadata(true);
+        }
+      } catch (error) {
+        console.warn('Failed to extract metadata:', error);
+      } finally {
+        setIsExtractingMetadata(false);
+      }
+    };
+
+    extractMetadata();
+  }, [selectedFiles, hasExtractedMetadata, onParameterChange, addCustomMetadata, updateCustomMetadata, removeCustomMetadata, parameters.customMetadata]);
 
   return (
     <Stack gap="md">
@@ -149,7 +202,7 @@ const ChangeMetadataSettings = ({
             <Button
               size="xs"
               variant="light"
-              onClick={addCustomMetadata}
+              onClick={() => addCustomMetadata()}
               disabled={fieldsDisabled}
             >
               {t('changeMetadata.customFields.add', 'Add Field')}
