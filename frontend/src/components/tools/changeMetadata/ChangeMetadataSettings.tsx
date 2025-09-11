@@ -15,9 +15,6 @@ interface ChangeMetadataSettingsProps {
   updateCustomMetadata: (id: string, key: string, value: string) => void;
 }
 
-// Global date/time fixed at module load time
-const currentDateTime = new Date();
-const formattedDateTime = `${currentDateTime.getFullYear()}/${String(currentDateTime.getMonth() + 1).padStart(2, '0')}/${String(currentDateTime.getDate()).padStart(2, '0')} ${String(currentDateTime.getHours()).padStart(2, '0')}:${String(currentDateTime.getMinutes()).padStart(2, '0')}:${String(currentDateTime.getSeconds()).padStart(2, '0')}`;
 
 const ChangeMetadataSettings = ({
   parameters,
@@ -159,7 +156,7 @@ const ChangeMetadataSettings = ({
 
         <TextInput
           label={t('changeMetadata.creationDate.label', 'Creation Date')}
-          placeholder={formattedDateTime}
+          placeholder={t('changeMetadata.creationDate.placeholder', 'e.g. 2025/01/17 14:30:00')}
           value={parameters.creationDate}
           onChange={(e) => onParameterChange('creationDate', e.target.value)}
           disabled={fieldsDisabled}
@@ -167,7 +164,7 @@ const ChangeMetadataSettings = ({
 
         <TextInput
           label={t('changeMetadata.modificationDate.label', 'Modification Date')}
-          placeholder={formattedDateTime}
+          placeholder={t('changeMetadata.modificationDate.placeholder', 'e.g. 2025/01/17 14:30:00')}
           value={parameters.modificationDate}
           onChange={(e) => onParameterChange('modificationDate', e.target.value)}
           disabled={fieldsDisabled}

@@ -1129,10 +1129,12 @@
       "format": "Format: yyyy/MM/dd HH:mm:ss"
     },
     "creationDate": {
-      "label": "Creation Date"
+      "label": "Creation Date",
+      "placeholder": "e.g. 2025/01/17 14:30:00"
     },
     "modificationDate": {
-      "label": "Modification Date"
+      "label": "Modification Date",
+      "placeholder": "e.g. 2025/01/17 14:30:00"
     },
     "trapped": {
       "label": "Trapped Status",
