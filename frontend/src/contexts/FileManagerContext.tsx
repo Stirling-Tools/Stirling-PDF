@@ -24,6 +24,7 @@ interface FileManagerContextValue {
   onLocalFileClick: () => void;
   onFileSelect: (file: StirlingFileStub, index: number, shiftKey?: boolean) => void;
   onFileRemove: (index: number) => void;
+  onHistoryFileRemove: (file: StirlingFileStub) => void;
   onFileDoubleClick: (file: StirlingFileStub) => void;
   onOpenFiles: () => void;
   onSearchChange: (value: string) => void;
@@ -172,7 +173,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
   // Helper function to safely determine which files can be deleted
   const getSafeFilesToDelete = useCallback((
-    leafFileIds: string[],
+    fileIds: string[],
     allStoredStubs: StirlingFileStub[]
   ): string[] => {
     const fileMap = new Map(allStoredStubs.map(f => [f.id as string, f]));
@@ -180,7 +181,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     const filesToPreserve = new Set<string>();
 
     // First, identify all files in the lineages of the leaf files being deleted
-    for (const leafFileId of leafFileIds) {
+    for (const leafFileId of fileIds) {
       const currentFile = fileMap.get(leafFileId);
       if (!currentFile) continue;
 
@@ -206,7 +207,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       const fileOriginalId = file.originalFileId || file.id;
 
       // If this file is a leaf node (not being deleted) and its lineage overlaps with files we want to delete
-      if (file.isLeaf !== false && !leafFileIds.includes(file.id)) {
+      if (file.isLeaf !== false && !fileIds.includes(file.id)) {
         // Find all files in this preserved lineage
         const preservedChainFiles = allStoredStubs.filter((chainFile: StirlingFileStub) =>
           (chainFile.originalFileId || chainFile.id) === fileOriginalId
@@ -285,6 +286,46 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       // Refresh to ensure consistent state
       await refreshRecentFiles();
     }
+  }, [filteredFiles, onFileRemove, refreshRecentFiles, getSafeFilesToDelete]);
+
+  // Handle deletion of specific history files (not index-based)
+  const handleHistoryFileRemove = useCallback(async (fileToRemove: StirlingFileStub) => {
+    const deletedFileId = fileToRemove.id;
+
+    // Clear from expanded state to prevent ghost entries
+    setExpandedFileIds(prev => {
+      const newExpanded = new Set(prev);
+      newExpanded.delete(deletedFileId);
+      return newExpanded;
+    });
+
+    // Clear from history cache - remove all files in the chain
+    setLoadedHistoryFiles(prev => {
+      const newCache = new Map(prev);
+
+      // Remove cache entries for all deleted files
+      newCache.delete(deletedFileId);
+
+      // Also remove deleted files from any other file's history cache
+      for (const [mainFileId, historyFiles] of newCache.entries()) {
+        const filteredHistory = historyFiles.filter(histFile => deletedFileId != histFile.id);
+        if (filteredHistory.length !== historyFiles.length) {
+          newCache.set(mainFileId, filteredHistory);
+        }
+      }
+
+      return newCache;
+    });
+
+    // Delete safe files from IndexedDB
+    try {
+        await fileStorage.deleteStirlingFile(deletedFileId);
+    } catch (error) {
+      console.error('Failed to delete files from chain:', error);
+    }
+
+    // Refresh to ensure consistent state
+    await refreshRecentFiles();
   }, [filteredFiles, onFileRemove, refreshRecentFiles, getSafeFilesToDelete]);
 
   const handleFileDoubleClick = useCallback((file: StirlingFileStub) => {
@@ -540,6 +581,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onLocalFileClick: handleLocalFileClick,
     onFileSelect: handleFileSelect,
     onFileRemove: handleFileRemove,
+    onHistoryFileRemove: handleHistoryFileRemove,
     onFileDoubleClick: handleFileDoubleClick,
     onOpenFiles: handleOpenFiles,
     onSearchChange: handleSearchChange,

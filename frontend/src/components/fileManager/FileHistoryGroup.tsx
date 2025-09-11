@@ -10,7 +10,7 @@ interface FileHistoryGroupProps {
   isExpanded: boolean;
   onDownloadSingle: (file: StirlingFileStub) => void;
   onFileDoubleClick: (file: StirlingFileStub) => void;
-  onFileRemove: (index: number) => void;
+  onHistoryFileRemove: (file: StirlingFileStub) => void;
   isFileSupported: (fileName: string) => boolean;
 }
 
@@ -20,7 +20,7 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
   isExpanded,
   onDownloadSingle,
   onFileDoubleClick,
-  onFileRemove,
+  onHistoryFileRemove,
   isFileSupported,
 }) => {
   const { t } = useTranslation();
@@ -44,14 +44,14 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
         </Group>
 
         <Box ml="md">
-          {sortedHistory.map((historyFile, index) => (
+          {sortedHistory.map((historyFile, _index) => (
             <FileListItem
               key={`history-${historyFile.id}-${historyFile.versionNumber || 1}`}
               file={historyFile}
               isSelected={false} // History files are not selectable
               isSupported={isFileSupported(historyFile.name)}
               onSelect={() => {}} // No selection for history files
-              onRemove={() => onFileRemove(index)} // Pass through remove handler
+              onRemove={() => onHistoryFileRemove(historyFile)} // Remove specific history file
               onDownload={() => onDownloadSingle(historyFile)}
               onDoubleClick={() => onFileDoubleClick(historyFile)}
               isHistoryFile={true} // This enables "Add to Recents" in menu

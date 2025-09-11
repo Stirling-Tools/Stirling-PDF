@@ -25,6 +25,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     loadedHistoryFiles,
     onFileSelect,
     onFileRemove,
+    onHistoryFileRemove,
     onFileDoubleClick,
     onDownloadSingle,
     isFileSupported,
@@ -78,7 +79,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
                     isExpanded={isExpanded}
                     onDownloadSingle={onDownloadSingle}
                     onFileDoubleClick={onFileDoubleClick}
-                    onFileRemove={onFileRemove}
+                    onHistoryFileRemove={onHistoryFileRemove}
                     isFileSupported={isFileSupported}
                   />
                 </React.Fragment>
