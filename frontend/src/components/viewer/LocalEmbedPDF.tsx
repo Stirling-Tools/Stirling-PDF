@@ -11,6 +11,7 @@ import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/react'
 import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom/react';
 import { InteractionManagerPluginPackage, PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react';
 import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
+import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react';
 import { ZoomControlsExporter } from './ZoomControlsExporter';
 import { ScrollControlsExporter } from './ScrollControlsExporter';
 import { SelectionControlsExporter } from './SelectionControlsExporter';
@@ -71,7 +72,14 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
       createPluginRegistration(ZoomPluginPackage, {
         defaultZoomLevel: ZoomMode.FitPage,
         minZoom: 0.2,
-        maxZoom: 5.0,
+        maxZoom: 3.0,
+      }),
+      
+      // Register tiling plugin (depends on Render, Scroll, Viewport)
+      createPluginRegistration(TilingPluginPackage, {
+        tileSize: 768,
+        overlapPx: 5,
+        extraRings: 1,
       }),
     ];
   }, [pdfUrl]);
@@ -137,7 +145,15 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
 
   // Wrap your UI with the <EmbedPDF> provider
   return (
-    <div style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
+    <div style={{ 
+      height: '100%', 
+      width: '100%', 
+      position: 'relative', 
+      overflow: 'hidden',
+      flex: 1,
+      minHeight: 0,
+      minWidth: 0
+    }}>
       <EmbedPDF engine={engine} plugins={plugins}>
         <ZoomControlsExporter />
         <ScrollControlsExporter />
@@ -147,13 +163,26 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
             backgroundColor: actualColorScheme === 'dark' ? '#1a1b1e' : '#f1f3f5',
             height: '100%',
             width: '100%',
+            maxHeight: '100%',
+            maxWidth: '100%',
             overflow: 'auto',
+            position: 'relative',
+            flex: 1,
+            minHeight: 0,
+            minWidth: 0,
+            contain: 'strict',
           }}
         >
           <Scroller
             renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
-              <PagePointerProvider width={width} height={height} pageIndex={pageIndex} scale={scale} rotation={rotation}>
-                <RenderLayer pageIndex={pageIndex} scale={scale} />
+              <PagePointerProvider {...{ width, height, pageIndex, scale, rotation: rotation || 0 }}>
+                {/* 1. Low-resolution base layer for immediate feedback */}
+                <RenderLayer pageIndex={pageIndex} scale={0.5} />
+                
+                {/* 2. High-resolution tile layer on top */}
+                <TilingLayer pageIndex={pageIndex} scale={scale} />
+                
+                {/* 3. Selection layer for text interaction */}
                 <SelectionLayer pageIndex={pageIndex} scale={scale} />
               </PagePointerProvider>
             )}

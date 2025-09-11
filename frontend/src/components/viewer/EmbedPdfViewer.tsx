@@ -57,7 +57,14 @@ const EmbedPdfViewer = ({
   }, [previewFile, fileWithUrl]);
 
   return (
-    <Box style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box style={{ 
+      position: 'relative', 
+      height: '100%', 
+      display: 'flex', 
+      flexDirection: 'column',
+      overflow: 'hidden',
+      contain: 'layout style paint'
+    }}>
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon
@@ -87,7 +94,15 @@ const EmbedPdfViewer = ({
           )}
 
           {/* EmbedPDF Viewer with Toolbar Overlay */}
-          <Box style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
+          <Box style={{ 
+            position: 'relative', 
+            flex: 1, 
+            overflow: 'hidden',
+            minHeight: 0,
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
             <LocalEmbedPDF
               file={effectiveFile.file}
               url={effectiveFile.url}
