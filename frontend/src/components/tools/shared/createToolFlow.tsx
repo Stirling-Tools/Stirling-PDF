@@ -9,7 +9,7 @@ import { StirlingFile } from '../../../types/fileContext';
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
   isCollapsed?: boolean;
-  placeholder?: string;
+  minFiles?: number;
   onCollapsedClick?: () => void;
   isVisible?: boolean;
 }
@@ -76,7 +76,7 @@ export function createToolFlow(config: ToolFlowConfig) {
         {config.files.isVisible !== false && steps.createFilesStep({
           selectedFiles: config.files.selectedFiles,
           isCollapsed: config.files.isCollapsed,
-          placeholder: config.files.placeholder,
+          minFiles: config.files.minFiles,
           onCollapsedClick: config.files.onCollapsedClick
         })}
 

@@ -11,7 +11,9 @@ import ChangePermissions from "../tools/ChangePermissions";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
+import Merge from '../tools/Merge';
 import Repair from "../tools/Repair";
+import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
@@ -29,7 +31,10 @@ import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
+import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
+import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
 import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
+import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -42,7 +47,10 @@ import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
+import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
+import Redact from "../tools/Redact";
 import { ToolId } from "../types/toolId";
+import MergeSettings from '../components/tools/merge/MergeSettings';
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -472,7 +480,10 @@ export function useFlatToolRegistry(): ToolRegistry {
       "auto-rename-pdf-file": {
         icon: <LocalIcon icon="match-word-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.auto-rename.title", "Auto Rename PDF File"),
-        component: null,
+        component: AutoRename,
+        maxFiles: -1,
+        endpoints: ["remove-certificate-sign"],
+        operationConfig: autoRenameOperationConfig,
         description: t("home.auto-rename.desc", "Automatically rename PDF files based on their content"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION,
@@ -664,12 +675,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       mergePdfs: {
         icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.merge.title", "Merge"),
-        component: null,
-
+        component: Merge,
         description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        endpoints: ["merge-pdfs"],
+        operationConfig: mergeOperationConfig,
+        settingsComponent: MergeSettings
       },
       "multi-tool": {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
@@ -696,10 +709,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       redact: {
         icon: <LocalIcon icon="visibility-off-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.redact.title", "Redact"),
-        component: null,
+        component: Redact,
         description: t("home.redact.desc", "Permanently remove sensitive information from PDF documents"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: -1,
+        endpoints: ["auto-redact"],
+        operationConfig: redactOperationConfig,
+        settingsComponent: RedactSingleStepSettings,
       },
     };
 
