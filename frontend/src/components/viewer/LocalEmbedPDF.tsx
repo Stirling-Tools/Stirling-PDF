@@ -13,10 +13,12 @@ import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProv
 import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react';
 import { PanPluginPackage } from '@embedpdf/plugin-pan/react';
+import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { ZoomControlsExporter } from './ZoomControlsExporter';
 import { ScrollControlsExporter } from './ScrollControlsExporter';
 import { SelectionControlsExporter } from './SelectionControlsExporter';
 import { PanControlsExporter } from './PanControlsExporter';
+import { SpreadControlsExporter } from './SpreadControlsExporter';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -87,6 +89,11 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         tileSize: 768,
         overlapPx: 5,
         extraRings: 1,
+      }),
+      
+      // Register spread plugin for dual page layout
+      createPluginRegistration(SpreadPluginPackage, {
+        defaultSpreadMode: SpreadMode.None, // Start with single page view
       }),
     ];
   }, [pdfUrl]);
@@ -166,6 +173,7 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         <ScrollControlsExporter />
         <SelectionControlsExporter />
         <PanControlsExporter />
+        <SpreadControlsExporter />
         <GlobalPointerProvider>
           <Viewport
             style={{

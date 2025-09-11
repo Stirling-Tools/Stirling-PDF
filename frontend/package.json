@@ -14,6 +14,7 @@
     "@embedpdf/plugin-render": "^1.1.1",
     "@embedpdf/plugin-scroll": "^1.1.1",
     "@embedpdf/plugin-selection": "^1.1.1",
+    "@embedpdf/plugin-spread": "^1.1.1",
     "@embedpdf/plugin-tiling": "^1.1.1",
     "@embedpdf/plugin-viewport": "^1.1.1",
     "@embedpdf/plugin-zoom": "^1.1.1",

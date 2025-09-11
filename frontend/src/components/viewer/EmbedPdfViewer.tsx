@@ -132,8 +132,7 @@ const EmbedPdfViewer = ({
                   }}
                   dualPage={false}
                   onDualPageToggle={() => {
-                    // Placeholder - will implement dual page toggle later
-                    console.log('Toggle dual page view');
+                    (window as any).embedPdfSpread?.toggleSpreadMode();
                   }}
                   currentZoom={100}
                 />
