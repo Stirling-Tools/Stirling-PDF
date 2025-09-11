@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge, Loader } from '@mantine/core';
+import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
-import AddIcon from '@mui/icons-material/Add';
 import HistoryIcon from '@mui/icons-material/History';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
-import { StirlingFileStub } from '../../types/fileContext';
+import { FileId, StirlingFileStub } from '../../types/fileContext';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
 import ToolChain from '../shared/ToolChain';
 
@@ -45,7 +44,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const shouldShowHovered = isHovered || isMenuOpen;
 
   // Get version information for this file
-  const leafFileId = isLatestVersion ? file.id : (file.originalFileId || file.id);
+  const leafFileId = (isLatestVersion ? file.id : (file.originalFileId || file.id)) as FileId;
   const hasVersionHistory = (file.versionNumber || 1) > 1; // Show history for any processed file (v2+)
   const currentVersion = file.versionNumber || 1; // Display original files as v1
   const isExpanded = expandedFileIds.has(leafFileId);
