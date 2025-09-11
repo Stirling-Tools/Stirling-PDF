@@ -37,11 +37,11 @@ export interface BaseFileMetadata {
   size: number;
   lastModified: number;
   createdAt?: number; // When file was added to system
-  
+
   // File history tracking
   isLeaf?: boolean; // True if this file hasn't been processed yet
   originalFileId?: string; // Root file ID for grouping versions
-  versionNumber?: number; // Version number in chain
+  versionNumber: number; // Version number in chain
   parentFileId?: FileId; // Immediate parent file ID
   toolHistory?: Array<{
     toolName: string;

@@ -25,8 +25,7 @@ interface FileCardProps {
 const FileCard = ({ file, record, onRemove, onDoubleClick, onView, onEdit, isSelected, onSelect, isSupported = true }: FileCardProps) => {
   const { t } = useTranslation();
   // Use record thumbnail if available, otherwise fall back to IndexedDB lookup
-  const fileMetadata = record ? { id: record.id, name: record.name, type: record.type, size: record.size, lastModified: record.lastModified } : null;
-  const { thumbnail: indexedDBThumb, isGenerating } = useIndexedDBThumbnail(fileMetadata);
+  const { thumbnail: indexedDBThumb, isGenerating } = useIndexedDBThumbnail(record);
   const thumb = record?.thumbnailUrl || indexedDBThumb;
   const [isHovered, setIsHovered] = useState(false);
 

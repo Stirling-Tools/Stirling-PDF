@@ -157,7 +157,7 @@ export function isFileObject(obj: any): obj is File | StirlingFile {
 
 
 
-export function toStirlingFileStub(
+export function createNewStirlingFileStub(
   file: File,
   id?: FileId,
   thumbnail?: string
@@ -173,6 +173,7 @@ export function toStirlingFileStub(
     quickKey: createQuickKey(file),
     createdAt: Date.now(),
     isLeaf: true, // New files are leaf nodes by default
+    versionNumber: 1, // New files start at version 1
     thumbnailUrl: thumbnail
   };
 }

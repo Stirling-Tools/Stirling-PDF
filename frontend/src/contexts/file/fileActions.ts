@@ -6,7 +6,7 @@ import {
   StirlingFileStub,
   FileContextAction,
   FileContextState,
-  toStirlingFileStub,
+  createNewStirlingFileStub,
   createFileId,
   createQuickKey,
   createStirlingFile,
@@ -198,8 +198,8 @@ export async function addFiles(
       }
     }
 
-    // Create record with immediate thumbnail and page metadata
-    const record = toStirlingFileStub(file, fileId, thumbnail);
+    // Create new filestub with immediate thumbnail and page metadata
+    const fileStub = createNewStirlingFileStub(file, fileId, thumbnail);
     if (thumbnail) {
       // Track blob URLs for cleanup (images return blob URLs that need revocation)
       if (thumbnail.startsWith('blob:')) {
@@ -209,17 +209,17 @@ export async function addFiles(
 
     // Store insertion position if provided
     if (options.insertAfterPageId !== undefined) {
-      record.insertAfterPageId = options.insertAfterPageId;
+      fileStub.insertAfterPageId = options.insertAfterPageId;
     }
 
     // Create initial processedFile metadata with page count
     if (pageCount > 0) {
-      record.processedFile = createProcessedFile(pageCount, thumbnail);
+      fileStub.processedFile = createProcessedFile(pageCount, thumbnail);
       if (DEBUG) console.log(`📄 addFiles(raw): Created initial processedFile metadata for ${file.name} with ${pageCount} pages`);
     }
 
     existingQuickKeys.add(quickKey);
-    stirlingFileStubs.push(record);
+    stirlingFileStubs.push(fileStub);
 
     // Create StirlingFile directly
     const stirlingFile = createStirlingFile(file, fileId);

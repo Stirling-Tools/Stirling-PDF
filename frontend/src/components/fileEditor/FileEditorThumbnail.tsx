@@ -45,7 +45,7 @@ const FileEditorThumbnail = ({
   isSupported = true,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
-  const { pinFile, unpinFile, isFilePinned, activeFiles, selectors } = useFileContext();
+  const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
 
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
@@ -60,12 +60,6 @@ const FileEditorThumbnail = ({
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
   const pageCount = file.processedFile?.totalPages || 0;
-  // Get file stub to access tool history
-  const fileStub = selectors.getStirlingFileStub(file.id);
-  const toolHistory = fileStub?.toolHistory || [];
-  const hasToolHistory = toolHistory.length > 0;
-  const versionNumber = fileStub?.versionNumber || 1;
-
 
   const downloadSelectedFile = useCallback(() => {
     // Prefer parent-provided handler if available
@@ -353,7 +347,7 @@ const FileEditorThumbnail = ({
           title={`${extUpper || 'FILE'} • ${prettySize}`}
         >
           {/* e.g.,  v2 - Jan 29, 2025 - PDF file - 3 Pages */}
-          {hasToolHistory ? ` v${versionNumber} - ` : ''}
+          {`v${file.versionNumber} - `}
           {dateLabel}
           {extUpper ? ` - ${extUpper} file` : ''}
           {pageLabel ? ` - ${pageLabel}` : ''}
@@ -404,7 +398,7 @@ const FileEditorThumbnail = ({
         </span>
 
         {/* Tool chain display at bottom */}
-        {hasToolHistory && (
+        {file.toolHistory && (
           <div style={{
             position: 'absolute',
             bottom: '4px',
@@ -417,7 +411,7 @@ const FileEditorThumbnail = ({
             whiteSpace: 'nowrap'
           }}>
             <ToolChain
-              toolChain={toolHistory}
+              toolChain={file.toolHistory}
               displayStyle="text"
               size="xs"
               maxWidth={'100%'}

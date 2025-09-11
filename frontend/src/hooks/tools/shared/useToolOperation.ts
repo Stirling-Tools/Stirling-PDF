@@ -6,7 +6,7 @@ import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile, toStirlingFileStub } from '../../../types/fileContext';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { createChildStub } from '../../../contexts/file/fileActions';
 
@@ -274,7 +274,7 @@ export const useToolOperation = <TParams>(
         };
         console.log("tool complete inputs ")
         const outputStirlingFileStubs = processedFiles.length != inputStirlingFileStubs.length
-          ? processedFiles.map((file, index) => toStirlingFileStub(file, undefined, thumbnails[index]))
+          ? processedFiles.map((file, index) => createNewStirlingFileStub(file, undefined, thumbnails[index]))
            : processedFiles.map((resultingFile, index) =>
            createChildStub(inputStirlingFileStubs[index], newToolOperation, resultingFile, thumbnails[index])
         );
