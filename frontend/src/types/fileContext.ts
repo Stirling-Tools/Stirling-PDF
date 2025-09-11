@@ -40,7 +40,6 @@ export interface ProcessedFilePage {
 export interface ProcessedFileMetadata {
   pages: ProcessedFilePage[];
   totalPages?: number;
-  thumbnailUrl?: string;
   lastProcessed?: number;
   [key: string]: any;
 }
