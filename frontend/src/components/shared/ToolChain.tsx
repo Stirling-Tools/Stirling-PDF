@@ -135,7 +135,7 @@ const ToolChain: React.FC<ToolChainProps> = ({
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        maxWidth: `${maxWidth}px`,
+        maxWidth: `${maxWidth}`,
         cursor: isTruncated ? 'help' : 'default'
       }}
     >

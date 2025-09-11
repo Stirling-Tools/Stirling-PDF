@@ -17,7 +17,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
   const { t } = useTranslation();
 
   return (
-    <Card withBorder p={0} h={`calc(${modalHeight} * 0.38 - 1rem)`} style={{ flex: 1, overflow: 'hidden' }}>
+    <Card withBorder p={0} h={`calc(${modalHeight} * 0.32 - 1rem)`} style={{ flex: 1, overflow: 'hidden' }}>
       <Box bg="gray.4" p="sm" style={{ borderTopLeftRadius: 'var(--mantine-radius-md)', borderTopRightRadius: 'var(--mantine-radius-md)' }}>
         <Text size="sm" fw={500} ta="center" c="white">
           {t('fileManager.details', 'File Details')}
@@ -129,7 +129,6 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
                   toolChain={currentFile.toolHistory}
                   displayStyle="badges"
                   size="xs"
-                  maxWidth={'180px'}
                 />
               </Box>
             </>
