@@ -8,7 +8,6 @@ import { useFileState } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 import { LocalEmbedPDF } from './LocalEmbedPDF';
 import { PdfViewerToolbar } from './PdfViewerToolbar';
-import { SearchInterface } from './SearchInterface';
 import { ThumbnailSidebar } from './ThumbnailSidebar';
 
 export interface EmbedPdfViewerProps {
@@ -29,7 +28,6 @@ const EmbedPdfViewer = ({
   const { colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
-  const [isSearchVisible, setIsSearchVisible] = React.useState(false);
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = React.useState(false);
 
   // Get current file from FileContext
@@ -122,16 +120,11 @@ const EmbedPdfViewer = ({
 
   // Expose toggle functions globally for right rail buttons
   React.useEffect(() => {
-    (window as any).togglePdfSearch = () => {
-      setIsSearchVisible(prev => !prev);
-    };
-    
     (window as any).toggleThumbnailSidebar = () => {
       setIsThumbnailSidebarVisible(prev => !prev);
     };
     
     return () => {
-      delete (window as any).togglePdfSearch;
       delete (window as any).toggleThumbnailSidebar;
     };
   }, []);
@@ -227,11 +220,6 @@ const EmbedPdfViewer = ({
         </div>
       )}
 
-      {/* Search Interface Overlay */}
-      <SearchInterface 
-        visible={isSearchVisible} 
-        onClose={() => setIsSearchVisible(false)} 
-      />
 
       {/* Thumbnail Sidebar */}
       <ThumbnailSidebar

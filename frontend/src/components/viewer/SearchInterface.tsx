@@ -11,6 +11,7 @@ interface SearchInterfaceProps {
 export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [jumpToValue, setJumpToValue] = useState('');
   const [resultInfo, setResultInfo] = useState<{
     currentIndex: number;
     totalResults: number;
@@ -54,7 +55,11 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   }, [visible]);
 
   const handleSearch = async (query: string) => {
-    if (!query.trim()) return;
+    if (!query.trim()) {
+      // If query is empty, clear the search
+      handleClearSearch();
+      return;
+    }
 
     const searchAPI = (window as any).embedPdfSearch;
     if (searchAPI) {
@@ -95,9 +100,41 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     const searchAPI = (window as any).embedPdfSearch;
     if (searchAPI) {
       searchAPI.clearSearch();
+      // Also try to explicitly clear highlights if available
+      if (searchAPI.searchAPI && searchAPI.searchAPI.clearHighlights) {
+        searchAPI.searchAPI.clearHighlights();
+      }
     }
     setSearchQuery('');
     setResultInfo(null);
+  };
+
+  // Sync search query with API state on mount
+  useEffect(() => {
+    const searchAPI = (window as any).embedPdfSearch;
+    if (searchAPI && searchAPI.state && searchAPI.state.query) {
+      setSearchQuery(searchAPI.state.query);
+    }
+  }, []);
+
+  const handleJumpToResult = (index: number) => {
+    const searchAPI = (window as any).embedPdfSearch;
+    if (searchAPI && resultInfo && index >= 1 && index <= resultInfo.totalResults) {
+      searchAPI.goToResult(index);
+    }
+  };
+
+  const handleJumpToSubmit = () => {
+    const index = parseInt(jumpToValue);
+    if (index && resultInfo && index >= 1 && index <= resultInfo.totalResults) {
+      handleJumpToResult(index);
+    }
+  };
+
+  const handleJumpToKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleJumpToSubmit();
+    }
   };
 
   const handleClose = () => {
@@ -105,37 +142,18 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     onClose();
   };
 
-  if (!visible) return null;
 
   return (
     <Box
       style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        zIndex: 1000,
-        backgroundColor: 'var(--mantine-color-body)',
-        border: '1px solid var(--mantine-color-gray-3)',
-        borderRadius: '8px',
-        padding: '16px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        minWidth: '320px',
-        maxWidth: '400px'
+        padding: '0px'
       }}
     >
-      {/* Header with close button */}
-      <Group justify="space-between" mb="md">
+      {/* Header */}
+      <Group mb="md">
         <Text size="sm" fw={600}>
           {t('search.title', 'Search PDF')}
         </Text>
-        <ActionIcon
-          variant="subtle"
-          size="sm"
-          onClick={handleClose}
-          aria-label="Close search"
-        >
-          <LocalIcon icon="close" width="1rem" height="1rem" />
-        </ActionIcon>
       </Group>
 
       {/* Search input */}
@@ -143,7 +161,14 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
         <TextInput
           placeholder={t('search.placeholder', 'Enter search term...')}
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.currentTarget.value)}
+          onChange={(e) => {
+            const newValue = e.currentTarget.value;
+            setSearchQuery(newValue);
+            // If user clears the input, clear the search highlights
+            if (!newValue.trim()) {
+              handleClearSearch();
+            }
+          }}
           onKeyDown={handleKeyDown}
           style={{ flex: 1 }}
           rightSection={
@@ -162,15 +187,29 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
       {/* Results info and navigation */}
       {resultInfo && (
         <Group justify="space-between" align="center">
-          <Text size="sm" c="dimmed">
-            {resultInfo.totalResults === 0 
-              ? t('search.noResults', 'No results found')
-              : t('search.resultCount', '{{current}} of {{total}}', {
-                  current: resultInfo.currentIndex,
-                  total: resultInfo.totalResults
-                })
-            }
-          </Text>
+          {resultInfo.totalResults === 0 ? (
+            <Text size="sm" c="dimmed">
+              {t('search.noResults', 'No results found')}
+            </Text>
+          ) : (
+            <Group gap="xs" align="center">
+              <TextInput
+                size="xs"
+                value={jumpToValue}
+                onChange={(e) => setJumpToValue(e.currentTarget.value)}
+                onKeyDown={handleJumpToKeyDown}
+                onBlur={handleJumpToSubmit}
+                placeholder={resultInfo.currentIndex.toString()}
+                style={{ width: '50px' }}
+                type="number"
+                min="1"
+                max={resultInfo.totalResults}
+              />
+              <Text size="sm" c="dimmed">
+                of {resultInfo.totalResults}
+              </Text>
+            </Group>
+          )}
           
           {resultInfo.totalResults > 0 && (
             <Group gap="xs">

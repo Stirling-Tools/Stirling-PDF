@@ -12,6 +12,7 @@ import LanguageSelector from '../shared/LanguageSelector';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { Tooltip } from '../shared/Tooltip';
 import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
+import { SearchInterface } from '../viewer/SearchInterface';
 
 export default function RightRail() {
   const { t } = useTranslation();
@@ -214,15 +215,29 @@ export default function RightRail() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             {/* Search */}
             <Tooltip content={t('rightRail.search', 'Search PDF')} position="left" offset={12} arrow>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => (window as any).togglePdfSearch?.()}
-                disabled={currentView !== 'viewer'}
-              >
-                <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
+              <Popover position="left" withArrow shadow="md" offset={8}>
+                <Popover.Target>
+                  <div style={{ display: 'inline-flex' }}>
+                    <ActionIcon
+                      variant="subtle"
+                      radius="md"
+                      className="right-rail-icon"
+                      disabled={currentView !== 'viewer'}
+                      aria-label={typeof t === 'function' ? t('rightRail.search', 'Search PDF') : 'Search PDF'}
+                    >
+                      <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
+                    </ActionIcon>
+                  </div>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <div style={{ minWidth: 320 }}>
+                    <SearchInterface 
+                      visible={true} 
+                      onClose={() => {}} 
+                    />
+                  </div>
+                </Popover.Dropdown>
+              </Popover>
             </Tooltip>
 
 
