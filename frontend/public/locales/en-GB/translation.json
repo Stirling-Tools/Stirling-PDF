@@ -719,10 +719,10 @@
       },
       "byPages": {
         "title": "Split by Pages",
-        "text": "Extract specific pages or ranges from your PDF. Use commas to separate individual pages and hyphens for ranges.",
-        "bullet1": "Single pages: 1,3,5",
-        "bullet2": "Page ranges: 1-5,10-15",
-        "bullet3": "Mixed: 1,3-7,12,15-20"
+        "text": "Split your PDF at specific page numbers. Using 'n' splits after page n. Using 'n-m' splits before page n and after page m.",
+        "bullet1": "Single split points: 3,7 (splits after pages 3 and 7)",
+        "bullet2": "Range split points: 3-8 (splits before page 3 and after page 8)",
+        "bullet3": "Mixed: 2,5-10,15 (splits after page 2, before page 5, after page 10, and after page 15)"
       },
       "bySections": {
         "title": "Split by Grid Sections",
