@@ -21,11 +21,10 @@ export function PanControlsExporter() {
           pan.disablePan();
         },
         togglePan: () => {
-          console.log('EmbedPDF: Toggling pan mode, current isPanning:', isPanning);
           pan.togglePan();
         },
         makePanDefault: () => pan.makePanDefault(),
-        isPanning: isPanning,
+        get isPanning() { return isPanning; }, // Use getter to always return current value
         // Subscribe to pan state changes for reactive UI
         onPanStateChange: (callback: (isPanning: boolean) => void) => {
           setPanStateListeners(prev => [...prev, callback]);
@@ -36,11 +35,6 @@ export function PanControlsExporter() {
         },
       };
       
-      console.log('EmbedPDF pan controls exported to window.embedPdfPan', {
-        isPanning,
-        panAPI: pan,
-        availableMethods: Object.keys(pan)
-      });
     } else {
       console.warn('EmbedPDF pan API not available yet');
     }

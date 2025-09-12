@@ -35,6 +35,7 @@ export function PdfViewerToolbar({
   const [dynamicZoom, setDynamicZoom] = useState(currentZoom);
   const [dynamicPage, setDynamicPage] = useState(currentPage);
   const [dynamicTotalPages, setDynamicTotalPages] = useState(totalPages);
+  const [isPanning, setIsPanning] = useState(false);
 
   // Update zoom and scroll state from EmbedPDF APIs
   useEffect(() => {
@@ -52,6 +53,12 @@ export function PdfViewerToolbar({
         setDynamicPage(currentPageNum);
         setDynamicTotalPages(totalPagesNum);
         setPageInput(currentPageNum);
+      }
+      
+      // Update pan mode state
+      if ((window as any).embedPdfPan) {
+        const panState = (window as any).embedPdfPan.isPanning || false;
+        setIsPanning(panState);
       }
     };
 
