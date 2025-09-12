@@ -43,7 +43,7 @@ const DocumentDatesStep = ({
         label={t('changeMetadata.creationDate.label', 'Creation Date')}
         placeholder={t('changeMetadata.creationDate.placeholder', 'e.g. 2025/01/17 14:30:00')}
         value={parseDate(parameters.creationDate)}
-        onChange={(date) => onParameterChange('creationDate', formatDate(date))}
+        onChange={(date) => onParameterChange('creationDate', formatDate(parseDate(date)))}
         disabled={disabled}
         clearable
       />
@@ -52,7 +52,7 @@ const DocumentDatesStep = ({
         label={t('changeMetadata.modificationDate.label', 'Modification Date')}
         placeholder={t('changeMetadata.modificationDate.placeholder', 'e.g. 2025/01/17 14:30:00')}
         value={parseDate(parameters.modificationDate)}
-        onChange={(date) => onParameterChange('modificationDate', formatDate(date))}
+        onChange={(date) => onParameterChange('modificationDate', formatDate(parseDate(date)))}
         disabled={disabled}
         clearable
       />
