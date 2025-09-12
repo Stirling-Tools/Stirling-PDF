@@ -4,7 +4,7 @@ import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
 /**
  * Component that runs inside EmbedPDF context and exports spread controls globally
  */
-export function SpreadControlsExporter() {
+export function SpreadAPIBridge() {
   const { provides: spread, spreadMode } = useSpread();
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function SpreadControlsExporter() {
         isDualPage: spreadMode !== SpreadMode.None,
         SpreadMode: SpreadMode, // Export enum for reference
       };
-      
+
       console.log('EmbedPDF spread controls exported to window.embedPdfSpread', {
         currentSpreadMode: spreadMode,
         isDualPage: spreadMode !== SpreadMode.None,
@@ -38,5 +38,5 @@ export function SpreadControlsExporter() {
     }
   }, [spread, spreadMode]);
 
-  return null; // This component doesn't render anything
+  return null;
 }

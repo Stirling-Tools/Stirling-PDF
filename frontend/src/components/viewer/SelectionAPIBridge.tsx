@@ -4,7 +4,7 @@ import { useSelectionCapability, SelectionRangeX } from '@embedpdf/plugin-select
 /**
  * Component that runs inside EmbedPDF context and exports selection controls globally
  */
-export function SelectionControlsExporter() {
+export function SelectionAPIBridge() {
   const { provides: selection } = useSelectionCapability();
   const [hasSelection, setHasSelection] = useState(false);
 
@@ -47,5 +47,5 @@ export function SelectionControlsExporter() {
     }
   }, [selection, hasSelection]);
 
-  return null; // This component doesn't render anything
+  return null;
 }

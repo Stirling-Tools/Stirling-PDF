@@ -4,11 +4,11 @@ import { useThumbnailCapability } from '@embedpdf/plugin-thumbnail/react';
 /**
  * Component that runs inside EmbedPDF context and exports thumbnail controls globally
  */
-export function ThumbnailControlsExporter() {
+export function ThumbnailAPIBridge() {
   const { provides: thumbnail } = useThumbnailCapability();
 
   useEffect(() => {
-    console.log('📄 ThumbnailControlsExporter useEffect:', { thumbnail: !!thumbnail });
+    console.log('📄 ThumbnailAPIBridge useEffect:', { thumbnail: !!thumbnail });
     if (thumbnail) {
       console.log('📄 Exporting thumbnail controls to window:', {
         availableMethods: Object.keys(thumbnail),
@@ -22,5 +22,5 @@ export function ThumbnailControlsExporter() {
     }
   }, [thumbnail]);
 
-  return null; // This component doesn't render anything
+  return null;
 }

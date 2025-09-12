@@ -17,13 +17,13 @@ import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { CustomSearchLayer } from './CustomSearchLayer';
-import { ZoomControlsExporter } from './ZoomControlsExporter';
-import { ScrollControlsExporter } from './ScrollControlsExporter';
-import { SelectionControlsExporter } from './SelectionControlsExporter';
-import { PanControlsExporter } from './PanControlsExporter';
-import { SpreadControlsExporter } from './SpreadControlsExporter';
-import { SearchControlsExporter } from './SearchControlsExporter';
-import { ThumbnailControlsExporter } from './ThumbnailControlsExporter';
+import { ZoomAPIBridge } from './ZoomAPIBridge';
+import { ScrollAPIBridge } from './ScrollAPIBridge';
+import { SelectionAPIBridge } from './SelectionAPIBridge';
+import { PanAPIBridge } from './PanAPIBridge';
+import { SpreadAPIBridge } from './SpreadAPIBridge';
+import { SearchAPIBridge } from './SearchAPIBridge';
+import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -180,13 +180,13 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
       minWidth: 0
     }}>
       <EmbedPDF engine={engine} plugins={plugins}>
-        <ZoomControlsExporter />
-        <ScrollControlsExporter />
-        <SelectionControlsExporter />
-        <PanControlsExporter />
-        <SpreadControlsExporter />
-        <SearchControlsExporter />
-        <ThumbnailControlsExporter />
+        <ZoomAPIBridge />
+        <ScrollAPIBridge />
+        <SelectionAPIBridge />
+        <PanAPIBridge />
+        <SpreadAPIBridge />
+        <SearchAPIBridge />
+        <ThumbnailAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{

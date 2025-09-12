@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import { useSearch } from '@embedpdf/plugin-search/react';
 
 /**
- * Component that runs inside EmbedPDF context and exports search controls globally
+ * Component that runs inside EmbedPDF context and bridges search controls to global window
  */
-export function SearchControlsExporter() {
+export function SearchAPIBridge() {
   const { provides: search, state } = useSearch();
 
   useEffect(() => {
@@ -44,9 +44,9 @@ export function SearchControlsExporter() {
         searchAPI: search,
         availableMethods: search ? Object.keys(search) : [],
       };
-      
+
     }
   }, [search, state]);
 
-  return null; // This component doesn't render anything
+  return null;
 }

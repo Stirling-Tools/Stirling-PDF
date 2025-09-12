@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { usePan } from '@embedpdf/plugin-pan/react';
 
 /**
- * Component that runs inside EmbedPDF context and exports pan controls globally
+ * Component that runs inside EmbedPDF context and bridges pan controls to global window
  */
-export function PanControlsExporter() {
+export function PanAPIBridge() {
   const { provides: pan, isPanning } = usePan();
   const [panStateListeners, setPanStateListeners] = useState<Array<(isPanning: boolean) => void>>([]);
 
@@ -34,7 +34,7 @@ export function PanControlsExporter() {
           };
         },
       };
-      
+
     } else {
       console.warn('EmbedPDF pan API not available yet');
     }
@@ -45,5 +45,5 @@ export function PanControlsExporter() {
     panStateListeners.forEach(callback => callback(isPanning));
   }, [isPanning, panStateListeners]);
 
-  return null; // This component doesn't render anything
+  return null;
 }

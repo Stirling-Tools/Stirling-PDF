@@ -4,7 +4,7 @@ import { useScroll } from '@embedpdf/plugin-scroll/react';
 /**
  * Component that runs inside EmbedPDF context and exports scroll controls globally
  */
-export function ScrollControlsExporter() {
+export function ScrollAPIBridge() {
   const { provides: scroll, state: scrollState } = useScroll();
 
   useEffect(() => {
@@ -19,9 +19,9 @@ export function ScrollControlsExporter() {
         currentPage: scrollState.currentPage,
         totalPages: scrollState.totalPages,
       };
-      
+
     }
   }, [scroll, scrollState]);
 
-  return null; // This component doesn't render anything
+  return null;
 }

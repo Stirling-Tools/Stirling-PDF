@@ -4,7 +4,7 @@ import { useZoom } from '@embedpdf/plugin-zoom/react';
 /**
  * Component that runs inside EmbedPDF context and exports zoom controls globally
  */
-export function ZoomControlsExporter() {
+export function ZoomAPIBridge() {
   const { provides: zoom, state: zoomState } = useZoom();
 
   useEffect(() => {
@@ -18,9 +18,9 @@ export function ZoomControlsExporter() {
         currentZoom: zoomState?.currentZoomLevel || 1,
         zoomPercent: Math.round((zoomState?.currentZoomLevel || 1) * 100),
       };
-      
+
     }
   }, [zoom, zoomState]);
 
-  return null; // This component doesn't render anything
+  return null;
 }
