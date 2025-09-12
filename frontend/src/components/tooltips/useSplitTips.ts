@@ -10,7 +10,7 @@ export const useSplitTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("split.tooltip.byPages.title", "Split by Pages"),
+        title: t("split.tooltip.byPages.title", "Split at Page Numbers"),
         description: t("split.tooltip.byPages.text", "Extract specific pages or ranges from your PDF. Use commas to separate individual pages and hyphens for ranges."),
         bullets: [
           t("split.tooltip.byPages.bullet1", "Single pages: 1,3,5"),

@@ -123,7 +123,7 @@ const SplitSettings = ({
         onChange={(v) => isSplitMethod(v) && onParameterChange('method', v)}
         disabled={disabled}
         data={[
-          { value: SPLIT_METHODS.BY_PAGES, label: t("split.methods.byPages", "Split by Pages") },
+          { value: SPLIT_METHODS.BY_PAGES, label: t("split.methods.byPages", "Split at Pages Numbers") },
           { value: SPLIT_METHODS.BY_SECTIONS, label: t("split.methods.bySections", "Split by Sections") },
           { value: SPLIT_METHODS.BY_SIZE, label: t("split.methods.bySize", "Split by Size") },
           { value: SPLIT_METHODS.BY_PAGE_COUNT, label: t("split.methods.byPageCount", "Split by Page Count") },
