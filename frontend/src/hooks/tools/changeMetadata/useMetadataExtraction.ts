@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { PDFMetadataService } from "../../../services/pdfMetadataService";
+import { extractPDFMetadata } from "../../../services/pdfMetadataService";
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
 import { ChangeMetadataParameters } from "./useChangeMetadataParameters";
 
@@ -34,31 +34,30 @@ export const useMetadataExtraction = (params: MetadataExtractionParams) => {
       }
 
       setIsExtractingMetadata(true);
-      try {
-        const result = await PDFMetadataService.extractMetadata(firstFile);
 
-        if (result.success) {
-          const metadata = result.metadata;
+      const result = await extractPDFMetadata(firstFile);
 
-          // Pre-populate all fields with extracted metadata
-          params.updateParameter('title', metadata.title);
-          params.updateParameter('author', metadata.author);
-          params.updateParameter('subject', metadata.subject);
-          params.updateParameter('keywords', metadata.keywords);
-          params.updateParameter('creator', metadata.creator);
-          params.updateParameter('producer', metadata.producer);
-          params.updateParameter('creationDate', metadata.creationDate);
-          params.updateParameter('modificationDate', metadata.modificationDate);
-          params.updateParameter('trapped', metadata.trapped);
-          params.updateParameter('customMetadata', metadata.customMetadata);
+      if (result.success) {
+        const metadata = result.metadata;
 
-          setHasExtractedMetadata(true);
-        }
-      } catch (error) {
-        console.warn('Failed to extract metadata:', error);
-      } finally {
-        setIsExtractingMetadata(false);
+        // Pre-populate all fields with extracted metadata
+        params.updateParameter('title', metadata.title);
+        params.updateParameter('author', metadata.author);
+        params.updateParameter('subject', metadata.subject);
+        params.updateParameter('keywords', metadata.keywords);
+        params.updateParameter('creator', metadata.creator);
+        params.updateParameter('producer', metadata.producer);
+        params.updateParameter('creationDate', metadata.creationDate);
+        params.updateParameter('modificationDate', metadata.modificationDate);
+        params.updateParameter('trapped', metadata.trapped);
+        params.updateParameter('customMetadata', metadata.customMetadata);
+
+        setHasExtractedMetadata(true);
+      } else {
+        console.warn('Failed to extract metadata:', result.error);
       }
+
+      setIsExtractingMetadata(false);
     };
 
     extractMetadata();

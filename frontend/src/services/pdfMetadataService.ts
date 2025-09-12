@@ -105,71 +105,72 @@ function extractCustomMetadata(info: Record<string, unknown>): CustomMetadataEnt
 }
 
 /**
- * Service to extract metadata from PDF files using PDF.js
+ * Safely cleanup PDF document with error handling
  */
-export class PDFMetadataService {
-  /**
-   * Extract all metadata from a PDF file
-   * Returns a result object with success/error state
-   */
-  static async extractMetadata(file: File): Promise<MetadataExtractionResponse> {
-    // Use existing PDF validation
-    const isValidPDF = await FileAnalyzer.isValidPDF(file);
-    if (!isValidPDF) {
-      return {
-        success: false,
-        error: 'File is not a valid PDF'
-      };
-    }
-
-    let pdfDoc: any = null;
-
+function cleanupPdfDocument(pdfDoc: any): void {
+  if (pdfDoc) {
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
-        disableAutoFetch: true,
-        disableStream: true
-      });
-
-      const metadata = await pdfDoc.getMetadata();
-      const info = metadata.info || {};
-
-      // Safely extract metadata with proper type checking
-      const extractedMetadata: ExtractedPDFMetadata = {
-        title: typeof info.Title === 'string' ? info.Title : '',
-        author: typeof info.Author === 'string' ? info.Author : '',
-        subject: typeof info.Subject === 'string' ? info.Subject : '',
-        keywords: typeof info.Keywords === 'string' ? info.Keywords : '',
-        creator: typeof info.Creator === 'string' ? info.Creator : '',
-        producer: typeof info.Producer === 'string' ? info.Producer : '',
-        creationDate: formatPDFDate(info.CreationDate),
-        modificationDate: formatPDFDate(info.ModDate),
-        trapped: convertTrappedStatus(info.Trapped),
-        customMetadata: extractCustomMetadata(info)
-      };
-
-      return {
-        success: true,
-        metadata: extractedMetadata
-      };
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-      return {
-        success: false,
-        error: `Failed to extract PDF metadata: ${errorMessage}`
-      };
-
-    } finally {
-      // Ensure cleanup even if extraction fails
-      if (pdfDoc) {
-        try {
-          pdfWorkerManager.destroyDocument(pdfDoc);
-        } catch (cleanupError) {
-          console.warn('Failed to cleanup PDF document:', cleanupError);
-        }
-      }
+      pdfWorkerManager.destroyDocument(pdfDoc);
+    } catch (cleanupError) {
+      console.warn('Failed to cleanup PDF document:', cleanupError);
     }
   }
+}
+
+/**
+ * Extract all metadata from a PDF file
+ * Returns a result object with success/error state
+ */
+export async function extractPDFMetadata(file: File): Promise<MetadataExtractionResponse> {
+  // Use existing PDF validation
+  const isValidPDF = await FileAnalyzer.isValidPDF(file);
+  if (!isValidPDF) {
+    return {
+      success: false,
+      error: 'File is not a valid PDF'
+    };
+  }
+
+  let pdfDoc: any = null;
+  let arrayBuffer: ArrayBuffer;
+  let metadata: any;
+
+  try {
+    arrayBuffer = await file.arrayBuffer();
+    pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
+      disableAutoFetch: true,
+      disableStream: true
+    });
+    metadata = await pdfDoc.getMetadata();
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    cleanupPdfDocument(pdfDoc);
+    return {
+      success: false,
+      error: `Failed to read PDF: ${errorMessage}`
+    };
+  }
+
+  const info = metadata.info || {};
+
+  // Safely extract metadata with proper type checking
+  const extractedMetadata: ExtractedPDFMetadata = {
+    title: typeof info.Title === 'string' ? info.Title : '',
+    author: typeof info.Author === 'string' ? info.Author : '',
+    subject: typeof info.Subject === 'string' ? info.Subject : '',
+    keywords: typeof info.Keywords === 'string' ? info.Keywords : '',
+    creator: typeof info.Creator === 'string' ? info.Creator : '',
+    producer: typeof info.Producer === 'string' ? info.Producer : '',
+    creationDate: formatPDFDate(info.CreationDate),
+    modificationDate: formatPDFDate(info.ModDate),
+    trapped: convertTrappedStatus(info.Trapped),
+    customMetadata: extractCustomMetadata(info)
+  };
+
+  cleanupPdfDocument(pdfDoc);
+
+  return {
+    success: true,
+    metadata: extractedMetadata
+  };
 }
