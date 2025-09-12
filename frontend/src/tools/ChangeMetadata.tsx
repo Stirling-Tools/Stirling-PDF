@@ -63,12 +63,55 @@ const ChangeMetadata = (props: BaseToolProps) => {
     setOpenStep(openStep === stepName ? MetadataStep.NONE : stepName);
   };
 
-  return createToolFlow({
-    files: {
-      selectedFiles: base.selectedFiles,
-      isCollapsed: base.hasResults,
-    },
-    steps: [
+  // Create step objects
+  const createStandardMetadataStep = () => ({
+    title: t("changeMetadata.standardFields.title", "Standard Metadata"),
+    isCollapsed: getActualCollapsedState(MetadataStep.STANDARD_METADATA),
+    onCollapsedClick: () => handleStepToggle(MetadataStep.STANDARD_METADATA),
+    tooltip: standardMetadataTips,
+    content: (
+      <StandardMetadataStep
+        parameters={base.params.parameters}
+        onParameterChange={base.params.updateParameter}
+        disabled={base.endpointLoading || isExtractingMetadata}
+      />
+    ),
+  });
+
+  const createDocumentDatesStep = () => ({
+    title: t("changeMetadata.dates.title", "Document Dates"),
+    isCollapsed: getActualCollapsedState(MetadataStep.DOCUMENT_DATES),
+    onCollapsedClick: () => handleStepToggle(MetadataStep.DOCUMENT_DATES),
+    tooltip: documentDatesTips,
+    content: (
+      <DocumentDatesStep
+        parameters={base.params.parameters}
+        onParameterChange={base.params.updateParameter}
+        disabled={base.endpointLoading || isExtractingMetadata}
+      />
+    ),
+  });
+
+  const createAdvancedOptionsStep = () => ({
+    title: t("changeMetadata.advanced.title", "Advanced Options"),
+    isCollapsed: getActualCollapsedState(MetadataStep.ADVANCED_OPTIONS),
+    onCollapsedClick: () => handleStepToggle(MetadataStep.ADVANCED_OPTIONS),
+    tooltip: advancedOptionsTips,
+    content: (
+      <AdvancedOptionsStep
+        parameters={base.params.parameters}
+        onParameterChange={base.params.updateParameter}
+        disabled={base.endpointLoading || isExtractingMetadata}
+        addCustomMetadata={base.params.addCustomMetadata}
+        removeCustomMetadata={base.params.removeCustomMetadata}
+        updateCustomMetadata={base.params.updateCustomMetadata}
+      />
+    ),
+  });
+
+  // Build steps array based on deleteAll state
+  const buildSteps = () => {
+    const steps = [
       {
         title: t("changeMetadata.deleteAll.label", "Delete All Metadata"),
         isCollapsed: getActualCollapsedState(MetadataStep.DELETE_ALL),
@@ -82,49 +125,25 @@ const ChangeMetadata = (props: BaseToolProps) => {
           />
         ),
       },
-      {
-        title: t("changeMetadata.standardFields.title", "Standard Metadata"),
-        isCollapsed: getActualCollapsedState(MetadataStep.STANDARD_METADATA),
-        onCollapsedClick: () => handleStepToggle(MetadataStep.STANDARD_METADATA),
-        tooltip: standardMetadataTips,
-        content: (
-          <StandardMetadataStep
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading || base.params.parameters.deleteAll || isExtractingMetadata}
-          />
-        ),
-      },
-      {
-        title: t("changeMetadata.dates.title", "Document Dates"),
-        isCollapsed: getActualCollapsedState(MetadataStep.DOCUMENT_DATES),
-        onCollapsedClick: () => handleStepToggle(MetadataStep.DOCUMENT_DATES),
-        tooltip: documentDatesTips,
-        content: (
-          <DocumentDatesStep
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading || base.params.parameters.deleteAll || isExtractingMetadata}
-          />
-        ),
-      },
-      {
-        title: t("changeMetadata.advanced.title", "Advanced Options"),
-        isCollapsed: getActualCollapsedState(MetadataStep.ADVANCED_OPTIONS),
-        onCollapsedClick: () => handleStepToggle(MetadataStep.ADVANCED_OPTIONS),
-        tooltip: advancedOptionsTips,
-        content: (
-          <AdvancedOptionsStep
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading || isExtractingMetadata}
-            addCustomMetadata={base.params.addCustomMetadata}
-            removeCustomMetadata={base.params.removeCustomMetadata}
-            updateCustomMetadata={base.params.updateCustomMetadata}
-          />
-        ),
-      },
-    ],
+    ];
+
+    if (!base.params.parameters.deleteAll) {
+      steps.push(
+        createStandardMetadataStep(),
+        createDocumentDatesStep(),
+        createAdvancedOptionsStep()
+      );
+    }
+
+    return steps;
+  };
+
+  return createToolFlow({
+    files: {
+      selectedFiles: base.selectedFiles,
+      isCollapsed: base.hasResults,
+    },
+    steps: buildSteps(),
     executeButton: {
       text: t("changeMetadata.submit", "Update Metadata"),
       isVisible: !base.hasResults,
