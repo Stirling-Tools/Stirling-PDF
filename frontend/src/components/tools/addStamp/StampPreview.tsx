@@ -187,7 +187,6 @@ export default function StampPreview({ parameters, onParameterChange, file, show
 
     if (drag.type === 'resize') {
       // Height is our canonical size (fontSize)
-      const widthPts = pageSize?.widthPts ?? 595.28;
       const heightPts = pageSize?.heightPts ?? 841.89;
       const scaleY = containerSize.height / heightPts;
       const newHeightPx = Math.max(1, drag.initHeight + (y - drag.startY));

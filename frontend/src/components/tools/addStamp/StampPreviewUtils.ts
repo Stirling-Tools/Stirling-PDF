@@ -56,7 +56,7 @@ export function computeStampPreviewStyle(
   pageSize: PageSizePts,
   containerSize: ContainerSize,
   showQuickGrid: boolean | undefined,
-  hoverTile: number | null,
+  _hoverTile: number | null,
   hasPageThumbnail: boolean
 ): StampPreviewStyle {
   const pageWidthPx = containerSize.width;
