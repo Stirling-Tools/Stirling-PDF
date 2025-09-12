@@ -691,6 +691,28 @@
       "label": "Choose split method",
       "placeholder": "Select how to split the PDF"
     },
+    "methods": {
+      "byPages": "Split by Pages",
+      "bySections": "Split by Sections",
+      "bySize": "Split by File Size",
+      "byPageCount": "Split by Page Count",
+      "byDocCount": "Split by Document Count",
+      "byChapters": "Split by Chapters"
+    },
+    "value": {
+      "fileSize": {
+        "label": "File Size",
+        "placeholder": "e.g. 10MB, 500KB"
+      },
+      "pageCount": {
+        "label": "Pages per File",
+        "placeholder": "e.g. 5, 10"
+      },
+      "docCount": {
+        "label": "Number of Files",
+        "placeholder": "e.g. 3, 5"
+      }
+    },
     "tooltip": {
       "header": {
         "title": "Split Methods Overview"

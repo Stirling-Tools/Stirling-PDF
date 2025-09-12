@@ -57,15 +57,37 @@ const SplitSettings = ({
     </Stack>
   );
 
-  const renderSplitValueForm = () => (
-    <TextInput
-      label={t("split-by-size-or-count.value.label", "Split Value")}
-      placeholder={t("split-by-size-or-count.value.placeholder", "e.g. 10MB or 5 pages")}
-      value={parameters.splitValue}
-      onChange={(e) => onParameterChange('splitValue', e.target.value)}
-      disabled={disabled}
-    />
-  );
+  const renderSplitValueForm = () => {
+    let label, placeholder;
+    
+    switch (parameters.method) {
+      case SPLIT_METHODS.BY_SIZE:
+        label = t("split.value.fileSize.label", "File Size");
+        placeholder = t("split.value.fileSize.placeholder", "e.g. 10MB, 500KB");
+        break;
+      case SPLIT_METHODS.BY_PAGE_COUNT:
+        label = t("split.value.pageCount.label", "Pages per File");
+        placeholder = t("split.value.pageCount.placeholder", "e.g. 5, 10");
+        break;
+      case SPLIT_METHODS.BY_DOC_COUNT:
+        label = t("split.value.docCount.label", "Number of Files");
+        placeholder = t("split.value.docCount.placeholder", "e.g. 3, 5");
+        break;
+      default:
+        label = t("split-by-size-or-count.value.label", "Split Value");
+        placeholder = t("split-by-size-or-count.value.placeholder", "e.g. 10MB or 5 pages");
+    }
+
+    return (
+      <TextInput
+        label={label}
+        placeholder={placeholder}
+        value={parameters.splitValue}
+        onChange={(e) => onParameterChange('splitValue', e.target.value)}
+        disabled={disabled}
+      />
+    );
+  };
 
   const renderByChaptersForm = () => (
     <Stack gap="sm">
@@ -101,12 +123,12 @@ const SplitSettings = ({
         onChange={(v) => isSplitMethod(v) && onParameterChange('method', v)}
         disabled={disabled}
         data={[
-          { value: SPLIT_METHODS.BY_PAGES, label: t("split.header", "Split by Pages") + " (e.g. 1,3,5-10)" },
-          { value: SPLIT_METHODS.BY_SECTIONS, label: t("split-by-sections.title", "Split by Grid Sections") },
-          { value: SPLIT_METHODS.BY_SIZE, label: t("split-by-size-or-count.type.size", "By Size") },
-          { value: SPLIT_METHODS.BY_PAGE_COUNT, label: t("split-by-size-or-count.type.pageCount", "By Page Count") },
-          { value: SPLIT_METHODS.BY_DOC_COUNT, label: t("split-by-size-or-count.type.docCount", "By Document Count") },
-          { value: SPLIT_METHODS.BY_CHAPTERS, label: t("splitByChapters.title", "Split by Chapters") },
+          { value: SPLIT_METHODS.BY_PAGES, label: t("split.methods.byPages", "Split by Pages") },
+          { value: SPLIT_METHODS.BY_SECTIONS, label: t("split.methods.bySections", "Split by Sections") },
+          { value: SPLIT_METHODS.BY_SIZE, label: t("split.methods.bySize", "Split by Size") },
+          { value: SPLIT_METHODS.BY_PAGE_COUNT, label: t("split.methods.byPageCount", "Split by Page Count") },
+          { value: SPLIT_METHODS.BY_DOC_COUNT, label: t("split.methods.byDocCount", "Split by Document Count") },
+          { value: SPLIT_METHODS.BY_CHAPTERS, label: t("split.methods.byChapters", "Split by Chapters") },
         ]}
       />
 
