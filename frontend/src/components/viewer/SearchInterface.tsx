@@ -27,25 +27,11 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
       if (searchAPI) {
         const state = searchAPI.state;
         
-        console.log('🔍 SearchInterface: Checking search state:', {
-          state,
-          hasState: !!state,
-          query: state?.query,
-          active: state?.active,
-          loading: state?.loading
-        });
-
         if (state && state.query && state.active) {
           // Try to get result info from the global search data
           // The CustomSearchLayer stores results, let's try to access them
           const searchResults = (window as any).currentSearchResults;
           const activeIndex = (window as any).currentActiveIndex || 1;
-          
-          console.log('🔍 SearchInterface: Search results data:', {
-            searchResults,
-            activeIndex,
-            totalResults: searchResults ? searchResults.length : 0
-          });
 
           setResultInfo({
             currentIndex: activeIndex,
@@ -74,8 +60,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     if (searchAPI) {
       setIsSearching(true);
       try {
-        const results = await searchAPI.search(query.trim());
-        console.log('Search completed:', results);
+        await searchAPI.search(query.trim());
       } catch (error) {
         console.error('Search failed:', error);
       } finally {
@@ -95,16 +80,14 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const handleNext = () => {
     const searchAPI = (window as any).embedPdfSearch;
     if (searchAPI) {
-      const newIndex = searchAPI.nextResult();
-      console.log('Next result:', newIndex);
+      searchAPI.nextResult();
     }
   };
 
   const handlePrevious = () => {
     const searchAPI = (window as any).embedPdfSearch;
     if (searchAPI) {
-      const newIndex = searchAPI.previousResult();
-      console.log('Previous result:', newIndex);
+      searchAPI.previousResult();
     }
   };
 

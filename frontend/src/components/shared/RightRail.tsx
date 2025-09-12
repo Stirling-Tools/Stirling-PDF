@@ -260,7 +260,7 @@ export default function RightRail() {
                 variant="subtle"
                 radius="md"
                 className="right-rail-icon"
-                onClick={() => (window as any).embedPdfControls?.sidebar()}
+                onClick={() => (window as any).toggleThumbnailSidebar?.()}
                 disabled={currentView !== 'viewer'}
               >
                 <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />

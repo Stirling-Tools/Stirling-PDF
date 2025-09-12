@@ -37,43 +37,25 @@ export function CustomSearchLayer({
   // Subscribe to search result state changes
   useEffect(() => {
     if (!searchProvides) {
-      console.log('🔍 CustomSearchLayer: No search provides available for page', pageIndex);
       return;
     }
-
-    console.log('🔍 CustomSearchLayer: Setting up search result subscription for page', pageIndex);
-    console.log('🔍 CustomSearchLayer: Available search methods:', Object.keys(searchProvides));
     
     const unsubscribe = searchProvides.onSearchResultStateChange?.((state: SearchResultState) => {
-      console.log('🔍 CustomSearchLayer: Search result state changed for page', pageIndex, ':', {
-        state,
-        resultsCount: state?.results?.length || 0,
-        activeIndex: state?.activeResultIndex,
-        results: state?.results
-      });
-      
       // Expose search results globally for SearchInterface
       if (state?.results) {
         (window as any).currentSearchResults = state.results;
         (window as any).currentActiveIndex = (state.activeResultIndex || 0) + 1; // Convert to 1-based index
-        console.log('🔍 CustomSearchLayer: Exposed global search data:', {
-          totalResults: state.results.length,
-          activeIndex: (state.activeResultIndex || 0) + 1
-        });
 
         // Auto-scroll to active result if we have one
         if (state.activeResultIndex !== undefined && state.activeResultIndex >= 0) {
           const activeResult = state.results[state.activeResultIndex];
-          if (activeResult) {
-            console.log('🔍 CustomSearchLayer: Auto-scrolling to active result on page', activeResult.pageIndex);
-            
+          if (activeResult) {            
             // Use the scroll API to navigate to the page containing the active result
             const scrollAPI = (window as any).embedPdfScroll;
             if (scrollAPI && scrollAPI.scrollToPage) {
               // Convert 0-based page index to 1-based page number
               const pageNumber = activeResult.pageIndex + 1;
               scrollAPI.scrollToPage(pageNumber);
-              console.log('🔍 CustomSearchLayer: Scrolled to page', pageNumber);
             }
           }
         }
@@ -85,9 +67,6 @@ export function CustomSearchLayer({
       setSearchResultState(state);
     });
 
-    if (!unsubscribe) {
-      console.warn('🔍 CustomSearchLayer: No onSearchResultStateChange method available');
-    }
 
     return unsubscribe;
   }, [searchProvides, pageIndex]);
@@ -95,7 +74,6 @@ export function CustomSearchLayer({
   // Filter results for current page while preserving original indices
   const pageResults = useMemo(() => {
     if (!searchResultState?.results) {
-      console.log(`🔍 CustomSearchLayer: No search results for page ${pageIndex} (no results array)`);
       return [];
     }
 
@@ -103,13 +81,6 @@ export function CustomSearchLayer({
       .map((result, originalIndex) => ({ result, originalIndex }))
       .filter(({ result }) => result.pageIndex === pageIndex);
     
-    console.log(`🔍 CustomSearchLayer: Page ${pageIndex} filtering:`, {
-      totalResults: searchResultState.results.length,
-      pageResults: filtered.length,
-      allPageIndices: searchResultState.results.map(r => r.pageIndex),
-      currentPage: pageIndex,
-      filtered
-    });
     return filtered;
   }, [searchResultState, pageIndex]);
 

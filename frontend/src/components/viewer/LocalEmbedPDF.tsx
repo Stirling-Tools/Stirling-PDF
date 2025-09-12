@@ -15,6 +15,7 @@ import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react'
 import { PanPluginPackage } from '@embedpdf/plugin-pan/react';
 import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
+import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { CustomSearchLayer } from './CustomSearchLayer';
 import { ZoomControlsExporter } from './ZoomControlsExporter';
 import { ScrollControlsExporter } from './ScrollControlsExporter';
@@ -22,6 +23,7 @@ import { SelectionControlsExporter } from './SelectionControlsExporter';
 import { PanControlsExporter } from './PanControlsExporter';
 import { SpreadControlsExporter } from './SpreadControlsExporter';
 import { SearchControlsExporter } from './SearchControlsExporter';
+import { ThumbnailControlsExporter } from './ThumbnailControlsExporter';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -101,6 +103,9 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
       
       // Register search plugin for text search
       createPluginRegistration(SearchPluginPackage),
+      
+      // Register thumbnail plugin for page thumbnails
+      createPluginRegistration(ThumbnailPluginPackage),
     ];
   }, [pdfUrl]);
 
@@ -181,6 +186,7 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         <PanControlsExporter />
         <SpreadControlsExporter />
         <SearchControlsExporter />
+        <ThumbnailControlsExporter />
         <GlobalPointerProvider>
           <Viewport
             style={{

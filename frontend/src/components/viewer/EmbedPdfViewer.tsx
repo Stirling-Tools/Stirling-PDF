@@ -9,6 +9,7 @@ import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 import { LocalEmbedPDF } from './LocalEmbedPDF';
 import { PdfViewerToolbar } from './PdfViewerToolbar';
 import { SearchInterface } from './SearchInterface';
+import { ThumbnailSidebar } from './ThumbnailSidebar';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -29,6 +30,7 @@ const EmbedPdfViewer = ({
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
   const [isSearchVisible, setIsSearchVisible] = React.useState(false);
+  const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = React.useState(false);
 
   // Get current file from FileContext
   const { selectors } = useFileState();
@@ -118,14 +120,19 @@ const EmbedPdfViewer = ({
     };
   }, [isViewerHovered]);
 
-  // Expose search toggle function globally for right rail button
+  // Expose toggle functions globally for right rail buttons
   React.useEffect(() => {
     (window as any).togglePdfSearch = () => {
       setIsSearchVisible(prev => !prev);
     };
     
+    (window as any).toggleThumbnailSidebar = () => {
+      setIsThumbnailSidebarVisible(prev => !prev);
+    };
+    
     return () => {
       delete (window as any).togglePdfSearch;
+      delete (window as any).toggleThumbnailSidebar;
     };
   }, []);
 
@@ -170,59 +177,67 @@ const EmbedPdfViewer = ({
             </Box>
           )}
 
-          {/* EmbedPDF Viewer with Toolbar Overlay */}
+          {/* EmbedPDF Viewer */}
           <Box style={{ 
             position: 'relative', 
             flex: 1, 
             overflow: 'hidden',
             minHeight: 0,
-            minWidth: 0,
-            display: 'flex',
-            flexDirection: 'column'
+            minWidth: 0
           }}>
             <LocalEmbedPDF
               file={effectiveFile.file}
               url={effectiveFile.url}
               colorScheme={colorScheme}
             />
-            
-            {/* Bottom Toolbar Overlay */}
-            <div
-              style={{
-                position: "sticky",
-                bottom: 0,
-                zIndex: 50,
-                display: "flex",
-                justifyContent: "center",
-                pointerEvents: "none",
-                background: "transparent",
-                marginTop: "auto",
-              }}
-            >
-              <div style={{ pointerEvents: "auto" }}>
-                <PdfViewerToolbar
-                  currentPage={1}
-                  totalPages={1}
-                  onPageChange={(page) => {
-                    // Placeholder - will implement page navigation later
-                    console.log('Navigate to page:', page);
-                  }}
-                  dualPage={false}
-                  onDualPageToggle={() => {
-                    (window as any).embedPdfSpread?.toggleSpreadMode();
-                  }}
-                  currentZoom={100}
-                />
-              </div>
-            </div>
           </Box>
         </>
+      )}
+
+      {/* Bottom Toolbar Overlay */}
+      {effectiveFile && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 50,
+            display: "flex",
+            justifyContent: "center",
+            pointerEvents: "none",
+            background: "transparent",
+          }}
+        >
+          <div style={{ pointerEvents: "auto" }}>
+            <PdfViewerToolbar
+              currentPage={1}
+              totalPages={1}
+              onPageChange={(page) => {
+                // Placeholder - will implement page navigation later
+                console.log('Navigate to page:', page);
+              }}
+              dualPage={false}
+              onDualPageToggle={() => {
+                (window as any).embedPdfSpread?.toggleSpreadMode();
+              }}
+              currentZoom={100}
+            />
+          </div>
+        </div>
       )}
 
       {/* Search Interface Overlay */}
       <SearchInterface 
         visible={isSearchVisible} 
         onClose={() => setIsSearchVisible(false)} 
+      />
+
+      {/* Thumbnail Sidebar */}
+      <ThumbnailSidebar
+        visible={isThumbnailSidebarVisible}
+        onToggle={() => setIsThumbnailSidebarVisible(prev => !prev)}
+        colorScheme={colorScheme}
       />
     </Box>
   );
