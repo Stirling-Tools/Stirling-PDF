@@ -1,6 +1,6 @@
 import { Stack, TextInput, Select, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { isSplitMode, isSplitType, SPLIT_MODES, SPLIT_TYPES } from '../../../constants/splitConstants';
+import { isSplitMethod, SPLIT_METHODS, METHOD_TO_SPLIT_TYPE, SPLIT_TYPES } from '../../../constants/splitConstants';
 import { SplitParameters } from '../../../hooks/tools/split/useSplitParameters';
 
 export interface SplitSettingsProps {
@@ -57,27 +57,14 @@ const SplitSettings = ({
     </Stack>
   );
 
-  const renderBySizeOrCountForm = () => (
-    <Stack gap="sm">
-      <Select
-        label={t("split-by-size-or-count.type.label", "Split Type")}
-        value={parameters.splitType}
-        onChange={(v) => isSplitType(v) && onParameterChange('splitType', v)}
-        disabled={disabled}
-        data={[
-          { value: SPLIT_TYPES.SIZE, label: t("split-by-size-or-count.type.size", "By Size") },
-          { value: SPLIT_TYPES.PAGES, label: t("split-by-size-or-count.type.pageCount", "By Page Count") },
-          { value: SPLIT_TYPES.DOCS, label: t("split-by-size-or-count.type.docCount", "By Document Count") },
-        ]}
-      />
-      <TextInput
-        label={t("split-by-size-or-count.value.label", "Split Value")}
-        placeholder={t("split-by-size-or-count.value.placeholder", "e.g. 10MB or 5 pages")}
-        value={parameters.splitValue}
-        onChange={(e) => onParameterChange('splitValue', e.target.value)}
-        disabled={disabled}
-      />
-    </Stack>
+  const renderSplitValueForm = () => (
+    <TextInput
+      label={t("split-by-size-or-count.value.label", "Split Value")}
+      placeholder={t("split-by-size-or-count.value.placeholder", "e.g. 10MB or 5 pages")}
+      value={parameters.splitValue}
+      onChange={(e) => onParameterChange('splitValue', e.target.value)}
+      disabled={disabled}
+    />
   );
 
   const renderByChaptersForm = () => (
@@ -106,26 +93,30 @@ const SplitSettings = ({
 
   return (
     <Stack gap="md">
-      {/* Mode Selector */}
+      {/* Method Selector */}
       <Select
-        label="Choose split method"
-        placeholder="Select how to split the PDF"
-        value={parameters.mode}
-        onChange={(v) => isSplitMode(v) && onParameterChange('mode', v)}
+        label={t("split.method.label", "Choose split method")}
+        placeholder={t("split.method.placeholder", "Select how to split the PDF")}
+        value={parameters.method}
+        onChange={(v) => isSplitMethod(v) && onParameterChange('method', v)}
         disabled={disabled}
         data={[
-          { value: SPLIT_MODES.BY_PAGES, label: t("split.header", "Split by Pages") + " (e.g. 1,3,5-10)" },
-          { value: SPLIT_MODES.BY_SECTIONS, label: t("split-by-sections.title", "Split by Grid Sections") },
-          { value: SPLIT_MODES.BY_SIZE_OR_COUNT, label: t("split-by-size-or-count.title", "Split by Size or Count") },
-          { value: SPLIT_MODES.BY_CHAPTERS, label: t("splitByChapters.title", "Split by Chapters") },
+          { value: SPLIT_METHODS.BY_PAGES, label: t("split.header", "Split by Pages") + " (e.g. 1,3,5-10)" },
+          { value: SPLIT_METHODS.BY_SECTIONS, label: t("split-by-sections.title", "Split by Grid Sections") },
+          { value: SPLIT_METHODS.BY_SIZE, label: t("split-by-size-or-count.type.size", "By Size") },
+          { value: SPLIT_METHODS.BY_PAGE_COUNT, label: t("split-by-size-or-count.type.pageCount", "By Page Count") },
+          { value: SPLIT_METHODS.BY_DOC_COUNT, label: t("split-by-size-or-count.type.docCount", "By Document Count") },
+          { value: SPLIT_METHODS.BY_CHAPTERS, label: t("splitByChapters.title", "Split by Chapters") },
         ]}
       />
 
       {/* Parameter Form */}
-      {parameters.mode === SPLIT_MODES.BY_PAGES && renderByPagesForm()}
-      {parameters.mode === SPLIT_MODES.BY_SECTIONS && renderBySectionsForm()}
-      {parameters.mode === SPLIT_MODES.BY_SIZE_OR_COUNT && renderBySizeOrCountForm()}
-      {parameters.mode === SPLIT_MODES.BY_CHAPTERS && renderByChaptersForm()}
+      {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
+      {parameters.method === SPLIT_METHODS.BY_SECTIONS && renderBySectionsForm()}
+      {(parameters.method === SPLIT_METHODS.BY_SIZE || 
+        parameters.method === SPLIT_METHODS.BY_PAGE_COUNT || 
+        parameters.method === SPLIT_METHODS.BY_DOC_COUNT) && renderSplitValueForm()}
+      {parameters.method === SPLIT_METHODS.BY_CHAPTERS && renderByChaptersForm()}
     </Stack>
   );
 }

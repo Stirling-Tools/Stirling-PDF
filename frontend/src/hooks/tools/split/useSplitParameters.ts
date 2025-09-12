@@ -1,14 +1,13 @@
-import { SPLIT_MODES, SPLIT_TYPES, ENDPOINTS, type SplitMode, SplitType } from '../../../constants/splitConstants';
+import { SPLIT_METHODS, SPLIT_MODES, SPLIT_TYPES, ENDPOINTS, METHOD_TO_SPLIT_TYPE, type SplitMethod, SplitMode, SplitType } from '../../../constants/splitConstants';
 import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
 export interface SplitParameters extends BaseParameters {
-  mode: SplitMode | '';
+  method: SplitMethod | '';
   pages: string;
   hDiv: string;
   vDiv: string;
   merge: boolean;
-  splitType: SplitType | '';
   splitValue: string;
   bookmarkLevel: string;
   includeMetadata: boolean;
@@ -18,12 +17,11 @@ export interface SplitParameters extends BaseParameters {
 export type SplitParametersHook = BaseParametersHook<SplitParameters>;
 
 export const defaultParameters: SplitParameters = {
-  mode: '',
+  method: '',
   pages: '',
   hDiv: '2',
   vDiv: '2',
   merge: false,
-  splitType: SPLIT_TYPES.SIZE,
   splitValue: '',
   bookmarkLevel: '1',
   includeMetadata: false,
@@ -34,20 +32,22 @@ export const useSplitParameters = (): SplitParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: (params) => {
-      if (!params.mode) return ENDPOINTS[SPLIT_MODES.BY_PAGES];
-      return ENDPOINTS[params.mode as SplitMode];
+      if (!params.method) return ENDPOINTS[SPLIT_METHODS.BY_PAGES];
+      return ENDPOINTS[params.method as SplitMethod];
     },
     validateFn: (params) => {
-      if (!params.mode) return false;
+      if (!params.method) return false;
 
-      switch (params.mode) {
-        case SPLIT_MODES.BY_PAGES:
+      switch (params.method) {
+        case SPLIT_METHODS.BY_PAGES:
           return params.pages.trim() !== "";
-        case SPLIT_MODES.BY_SECTIONS:
+        case SPLIT_METHODS.BY_SECTIONS:
           return params.hDiv !== "" && params.vDiv !== "";
-        case SPLIT_MODES.BY_SIZE_OR_COUNT:
+        case SPLIT_METHODS.BY_SIZE:
+        case SPLIT_METHODS.BY_PAGE_COUNT:
+        case SPLIT_METHODS.BY_DOC_COUNT:
           return params.splitValue.trim() !== "";
-        case SPLIT_MODES.BY_CHAPTERS:
+        case SPLIT_METHODS.BY_CHAPTERS:
           return params.bookmarkLevel !== "";
         default:
           return false;
