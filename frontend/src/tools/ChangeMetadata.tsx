@@ -17,6 +17,14 @@ import {
   useAdvancedOptionsTips
 } from "../components/tooltips/useChangeMetadataTips";
 
+enum MetadataStep {
+  NONE = 'none',
+  DELETE_ALL = 'deleteAll',
+  STANDARD_METADATA = 'standardMetadata',
+  DOCUMENT_DATES = 'documentDates',
+  ADVANCED_OPTIONS = 'advancedOptions'
+}
+
 const ChangeMetadata = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
@@ -26,11 +34,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
   const documentDatesTips = useDocumentDatesTips();
   const advancedOptionsTips = useAdvancedOptionsTips();
 
-  // Individual step collapse states
-  const [deleteAllCollapsed, setDeleteAllCollapsed] = useState(false);
-  const [standardMetadataCollapsed, setStandardMetadataCollapsed] = useState(false);
-  const [documentDatesCollapsed, setDocumentDatesCollapsed] = useState(true);
-  const [advancedOptionsCollapsed, setAdvancedOptionsCollapsed] = useState(true);
+  // Individual step collapse states - only one can be open at a time
+  const [openStep, setOpenStep] = useState<MetadataStep>(MetadataStep.DELETE_ALL);
 
   const base = useBaseTool(
     'changeMetadata',
@@ -42,9 +47,20 @@ const ChangeMetadata = (props: BaseToolProps) => {
   // Extract metadata from uploaded files
   const { isExtractingMetadata } = useMetadataExtraction(base.params);
 
-  // Compute actual collapsed state based on results and user state
-  const getActualCollapsedState = (userCollapsed: boolean) => {
-    return (!base.hasFiles || base.hasResults) ? true : userCollapsed; // Force collapse when results are shown
+  // Compute actual collapsed state based on results and accordion behavior
+  const getActualCollapsedState = (stepName: MetadataStep) => {
+    return (!base.hasFiles || base.hasResults) ? true : openStep !== stepName;
+  };
+
+  // Handle step toggle for accordion behavior
+  const handleStepToggle = (stepName: MetadataStep) => {
+    if (base.hasResults) {
+      if (base.settingsCollapsed) {
+        base.handleSettingsReset();
+      }
+      return;
+    }
+    setOpenStep(openStep === stepName ? MetadataStep.NONE : stepName);
   };
 
   return createToolFlow({
@@ -55,10 +71,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
     steps: [
       {
         title: t("changeMetadata.deleteAll.label", "Delete All Metadata"),
-        isCollapsed: getActualCollapsedState(deleteAllCollapsed),
-        onCollapsedClick: base.hasResults
-          ? (base.settingsCollapsed ? base.handleSettingsReset : undefined)
-          : () => setDeleteAllCollapsed(!deleteAllCollapsed),
+        isCollapsed: getActualCollapsedState(MetadataStep.DELETE_ALL),
+        onCollapsedClick: () => handleStepToggle(MetadataStep.DELETE_ALL),
         tooltip: deleteAllTips,
         content: (
           <DeleteAllStep
@@ -70,10 +84,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
       },
       {
         title: t("changeMetadata.standardFields.title", "Standard Metadata"),
-        isCollapsed: getActualCollapsedState(standardMetadataCollapsed),
-        onCollapsedClick: base.hasResults
-          ? (base.settingsCollapsed ? base.handleSettingsReset : undefined)
-          : () => setStandardMetadataCollapsed(!standardMetadataCollapsed),
+        isCollapsed: getActualCollapsedState(MetadataStep.STANDARD_METADATA),
+        onCollapsedClick: () => handleStepToggle(MetadataStep.STANDARD_METADATA),
         tooltip: standardMetadataTips,
         content: (
           <StandardMetadataStep
@@ -85,10 +97,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
       },
       {
         title: t("changeMetadata.dates.title", "Document Dates"),
-        isCollapsed: getActualCollapsedState(documentDatesCollapsed),
-        onCollapsedClick: base.hasResults
-          ? (base.settingsCollapsed ? base.handleSettingsReset : undefined)
-          : () => setDocumentDatesCollapsed(!documentDatesCollapsed),
+        isCollapsed: getActualCollapsedState(MetadataStep.DOCUMENT_DATES),
+        onCollapsedClick: () => handleStepToggle(MetadataStep.DOCUMENT_DATES),
         tooltip: documentDatesTips,
         content: (
           <DocumentDatesStep
@@ -100,10 +110,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
       },
       {
         title: t("changeMetadata.advanced.title", "Advanced Options"),
-        isCollapsed: getActualCollapsedState(advancedOptionsCollapsed),
-        onCollapsedClick: base.hasResults
-          ? (base.settingsCollapsed ? base.handleSettingsReset : undefined)
-          : () => setAdvancedOptionsCollapsed(!advancedOptionsCollapsed),
+        isCollapsed: getActualCollapsedState(MetadataStep.ADVANCED_OPTIONS),
+        onCollapsedClick: () => handleStepToggle(MetadataStep.ADVANCED_OPTIONS),
         tooltip: advancedOptionsTips,
         content: (
           <AdvancedOptionsStep
