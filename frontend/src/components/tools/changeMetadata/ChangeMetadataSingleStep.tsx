@@ -26,17 +26,10 @@ const ChangeMetadataSingleStep = ({
 }: ChangeMetadataSingleStepProps) => {
   const { t } = useTranslation();
 
-  // Create a params object that matches the hook interface
-  const paramsHook = {
-    parameters,
-    updateParameter: onParameterChange,
-    addCustomMetadata,
-    removeCustomMetadata,
-    updateCustomMetadata,
-  };
-
   // Extract metadata from uploaded files
-  const { isExtractingMetadata } = useMetadataExtraction(paramsHook);
+  const { isExtractingMetadata } = useMetadataExtraction({
+    updateParameter: onParameterChange,
+  });
 
   const isDeleteAllEnabled = parameters.deleteAll;
   const fieldsDisabled = disabled || isDeleteAllEnabled || isExtractingMetadata;

@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { PDFMetadataService } from "../../../services/pdfMetadataService";
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
-import { ChangeMetadataParametersHook } from "./useChangeMetadataParameters";
+import { ChangeMetadataParameters } from "./useChangeMetadataParameters";
 
-export const useMetadataExtraction = (params: ChangeMetadataParametersHook) => {
+interface MetadataExtractionParams {
+  updateParameter: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void;
+}
+
+export const useMetadataExtraction = (params: MetadataExtractionParams) => {
   const { selectedFiles } = useSelectedFiles();
   const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
   const [hasExtractedMetadata, setHasExtractedMetadata] = useState(false);
