@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Text, NumberInput, Group, Flex } from '@mantine/core';
+import { Flex } from '@mantine/core';
 import classes from './BulkSelectionPanel.module.css';
 import {
   appendExpression,
@@ -9,6 +9,8 @@ import {
   everyNthExpression,
   rangeExpression,
 } from './BulkSelection';
+import SelectPages from './SelectPages';
+import OperatorsSection from './OperatorsSection';
 
 interface AdvancedSelectionPanelProps {
   csvInput: string;
@@ -25,16 +27,32 @@ const AdvancedSelectionPanel = ({
   maxPages,
   advancedOpened,
 }: AdvancedSelectionPanelProps) => {
-  // Visibility now controlled by parent
-  const [firstNValue, setFirstNValue] = useState<number | ''>('');
-  const [lastNValue, setLastNValue] = useState<number | ''>('');
-  const [everyNthValue, setEveryNthValue] = useState<number | ''>('');
-  const [rangeStart, setRangeStart] = useState<number | ''>('');
   const [rangeEnd, setRangeEnd] = useState<number | ''>('');
-  const [firstNError, setFirstNError] = useState<string | null>(null);
-  const [lastNError, setLastNError] = useState<string | null>(null);
-  const [rangeError, setRangeError] = useState<string | null>(null);
 
+  const handleRangeEndChange = (val: string | number) => {
+    const next = typeof val === 'number' ? val : '';
+    setRangeEnd(next);
+  };
+
+  // Named validation functions
+  const validatePositiveNumber = (value: number): string | null => {
+    return value <= 0 ? 'Enter a positive number' : null;
+  };
+
+  const validateRangeStart = (start: number): string | null => {
+    if (start <= 0) return 'Values must be positive';
+    if (typeof rangeEnd === 'number' && start > rangeEnd) {
+      return 'From must be less than or equal to To';
+    }
+    return null;
+  };
+
+  const validateRangeEnd = (end: number): string | null => {
+    if (end <= 0) return 'Values must be positive';
+    return null;
+  };
+
+  // Named callback functions
   const applyExpression = (expr: string) => {
     const nextInput = appendExpression(csvInput, expr);
     setCsvInput(nextInput);
@@ -46,6 +64,28 @@ const AdvancedSelectionPanel = ({
     setCsvInput(next);
   };
 
+  const handleFirstNApply = (value: number) => {
+    const expr = firstNExpression(value, maxPages);
+    if (expr) applyExpression(expr);
+  };
+
+  const handleLastNApply = (value: number) => {
+    const expr = lastNExpression(value, maxPages);
+    if (expr) applyExpression(expr);
+  };
+
+  const handleEveryNthApply = (value: number) => {
+    const expr = everyNthExpression(value);
+    if (expr) applyExpression(expr);
+  };
+
+  const handleRangeApply = (start: number) => {
+    if (typeof rangeEnd !== 'number') return;
+    const expr = rangeExpression(start, rangeEnd, maxPages);
+    if (expr) applyExpression(expr);
+    setRangeEnd('');
+  };
+
   return (
     <>
       {/* Advanced section */}
@@ -54,211 +94,47 @@ const AdvancedSelectionPanel = ({
           <div className={classes.advancedContent}>
             {/* Cards row */}
             <Flex direction="row" mb="xs" wrap="wrap">
-              {/* First N Pages - Card Style */}
-              <div className={classes.advancedCard}>
-                <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">First N Pages</Text>
-                {firstNError && (<Text size="xs" c="var(--text-brand-accent)" mb="xs">{firstNError}</Text>)}
-                <div className={classes.inputGroup}>
-                  <Group gap="sm" align="flex-end" wrap="nowrap">
-                    <NumberInput
-                      size="sm"
-                      value={firstNValue}
-                      onChange={(val) => {
-                        const next = typeof val === 'number' ? val : '';
-                        setFirstNValue(next);
-                        if (next === '') setFirstNError(null);
-                        else if (typeof next === 'number' && next <= 0) setFirstNError('Enter a positive number');
-                        else setFirstNError(null);
-                      }}
-                      min={1}
-                      placeholder="Number of pages"
-                      className={classes.fullWidthInput}
-                      error={Boolean(firstNError)}
-                    />
-                    <Button 
-                      size="sm" 
-                      className={classes.applyButton}
-                      onClick={() => {
-                        if (!firstNValue || typeof firstNValue !== 'number') return;
-                        const expr = firstNExpression(firstNValue, maxPages);
-                        if (expr) applyExpression(expr);
-                        setFirstNValue('');
-                      }} 
-                      disabled={Boolean(firstNError) || firstNValue === ''}
-                    >
-                      Apply
-                    </Button>
-                  </Group>
-                </div>
-              </div>
+              <SelectPages
+                title="First N Pages"
+                placeholder="Number of pages"
+                onApply={handleFirstNApply}
+                maxPages={maxPages}
+                validationFn={validatePositiveNumber}
+              />
               
-              {/* Range - Card Style */}
-              <div className={classes.advancedCard}>
-                <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">Range</Text>
-                {rangeError && (<Text size="xs" c="var(--text-brand-accent)" mb="xs">{rangeError}</Text>)}
-                <div className={classes.inputGroup}>
-                  <Group gap="sm" align="flex-end" wrap="nowrap">
-                    <div style={{ flex: 1 }}>
-                      <NumberInput
-                        size="sm"
-                        value={rangeStart}
-                        onChange={(val) => {
-                          const next = typeof val === 'number' ? val : '';
-                          setRangeStart(next);
-                          const s = typeof next === 'number' ? next : null;
-                          const e = typeof rangeEnd === 'number' ? rangeEnd : null;
-                          if (s !== null && s <= 0) setRangeError('Values must be positive');
-                          else if (s !== null && e !== null && s > e) setRangeError('From must be less than or equal to To');
-                          else setRangeError(null);
-                        }}
-                        min={1}
-                        placeholder="From"
-                        error={Boolean(rangeError)}
-                      />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <NumberInput
-                        size="sm"
-                        value={rangeEnd}
-                        onChange={(val) => {
-                          const next = typeof val === 'number' ? val : '';
-                          setRangeEnd(next);
-                          const e = typeof next === 'number' ? next : null;
-                          const s = typeof rangeStart === 'number' ? rangeStart : null;
-                          if (e !== null && e <= 0) setRangeError('Values must be positive');
-                          else if (s !== null && e !== null && s > e) setRangeError('From must be less than or equal to To');
-                          else setRangeError(null);
-                        }}
-                        min={1}
-                        placeholder="To"
-                        error={Boolean(rangeError)}
-                      />
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className={classes.applyButton}
-                      onClick={() => {
-                        if (
-                          rangeStart === '' || rangeEnd === '' ||
-                          typeof rangeStart !== 'number' || typeof rangeEnd !== 'number'
-                        ) return;
-                        const expr = rangeExpression(rangeStart, rangeEnd, maxPages);
-                        if (expr) applyExpression(expr);
-                        setRangeStart('');
-                        setRangeEnd('');
-                      }} 
-                      disabled={Boolean(rangeError) || rangeStart === '' || rangeEnd === ''}
-                    >
-                      Apply
-                    </Button>
-                  </Group>
-                </div>
-              </div>
+              <SelectPages
+                title="Range"
+                placeholder="From"
+                onApply={handleRangeApply}
+                maxPages={maxPages}
+                validationFn={validateRangeStart}
+                isRange={true}
+                rangeEndValue={rangeEnd}
+                onRangeEndChange={handleRangeEndChange}
+                rangeEndPlaceholder="To"
+              />
               
-              {/* Last N Pages - Card Style */}
-              <div className={classes.advancedCard}>
-                <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">Last N Pages</Text>
-                {lastNError && (<Text size="xs" c="var(--text-brand-accent)" mb="xs">{lastNError}</Text>)}
-                <div className={classes.inputGroup}>
-                  <Group gap="sm" align="flex-end" wrap="nowrap">
-                    <NumberInput
-                      size="sm"
-                      value={lastNValue}
-                      onChange={(val) => {
-                        const next = typeof val === 'number' ? val : '';
-                        setLastNValue(next);
-                        if (next === '') setLastNError(null);
-                        else if (typeof next === 'number' && next <= 0) setLastNError('Enter a positive number');
-                        else setLastNError(null);
-                      }}
-                      min={1}
-                      placeholder="Number of pages"
-                      className={classes.fullWidthInput}
-                      error={Boolean(lastNError)}
-                    />
-                    <Button 
-                      size="sm" 
-                      className={classes.applyButton}
-                      onClick={() => {
-                        if (!lastNValue || typeof lastNValue !== 'number') return;
-                        const expr = lastNExpression(lastNValue, maxPages);
-                        if (expr) applyExpression(expr);
-                        setLastNValue('');
-                      }} 
-                      disabled={Boolean(lastNError) || lastNValue === ''}
-                    >
-                      Apply
-                    </Button>
-                  </Group>
-                </div>
-              </div>
+              <SelectPages
+                title="Last N Pages"
+                placeholder="Number of pages"
+                onApply={handleLastNApply}
+                maxPages={maxPages}
+                validationFn={validatePositiveNumber}
+              />
               
-              {/* Every Nth Page - Card Style */}
-              <div className={classes.advancedCard}>
-                <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">Every Nth Page</Text>
-                <div className={classes.inputGroup}>
-                  <Group gap="sm" align="flex-end" wrap="nowrap">
-                    <NumberInput 
-                      size="sm" 
-                      value={everyNthValue} 
-                      onChange={(val) => setEveryNthValue(typeof val === 'number' ? val : '')} 
-                      min={1} 
-                      placeholder="Step size" 
-                      className={classes.fullWidthInput}
-                    />
-                    <Button 
-                      size="sm" 
-                      className={classes.applyButton}
-                      onClick={() => {
-                        if (!everyNthValue || typeof everyNthValue !== 'number') return;
-                        const expr = everyNthExpression(everyNthValue);
-                        if (expr) applyExpression(expr);
-                        setEveryNthValue('');
-                      }} 
-                      disabled={!everyNthValue}
-                    >
-                      Apply
-                    </Button>
-                  </Group>
-                </div>
-              </div>
+              <SelectPages
+                title="Every Nth Page"
+                placeholder="Step size"
+                onApply={handleEveryNthApply}
+                maxPages={maxPages}
+              />
             </Flex>
+            
             {/* Operators row at bottom */}
-            <div>
-              <Text size="xs" c="var(--text-muted)" fw={500} mb="xs">Add Operators:</Text>
-              <Group gap="sm" wrap="nowrap">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className={classes.operatorChip} 
-                  onClick={() => insertOperator('and')}
-                  disabled={!csvInput.trim()}
-                  title="Combine selections (both conditions must be true)"
-                >
-                  <Text size="xs" fw={500}>and</Text>
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className={classes.operatorChip} 
-                  onClick={() => insertOperator('or')}
-                  disabled={!csvInput.trim()}
-                  title="Add to selection (either condition can be true)"
-                >
-                  <Text size="xs" fw={500}>or</Text>
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className={classes.operatorChip} 
-                  onClick={() => insertOperator('not')}
-                  disabled={!csvInput.trim()}
-                  title="Exclude from selection"
-                >
-                  <Text size="xs" fw={500}>not</Text>
-                </Button>
-              </Group>
-            </div>
+            <OperatorsSection
+              csvInput={csvInput}
+              onInsertOperator={insertOperator}
+            />
           </div>
         </div>
       )}
