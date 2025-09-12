@@ -17,7 +17,6 @@ export const flattenOperationConfig = {
   buildFormData: buildFlattenFormData,
   operationType: 'flatten',
   endpoint: '/api/v1/misc/flatten',
-  filePrefix: 'flattened_', // Will be overridden in hook with translation
   multiFileEndpoint: false,
   defaultParameters,
 } as const;
@@ -27,7 +26,6 @@ export const useFlattenOperation = () => {
 
   return useToolOperation<FlattenParameters>({
     ...flattenOperationConfig,
-    filePrefix: t('flatten.filenamePrefix', 'flattened') + '_',
     getErrorMessage: createStandardErrorHandler(t('flatten.error.failed', 'An error occurred while flattening the PDF.'))
   });
 };

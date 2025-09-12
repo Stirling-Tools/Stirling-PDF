@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useCallback, useRef } from 'react';
 import { fileStorage } from '../services/fileStorage';
 import { FileId } from '../types/file';
-import { StirlingFileStub, createStirlingFile } from '../types/fileContext';
+import { StirlingFileStub, createStirlingFile, createQuickKey } from '../types/fileContext';
 import { generateThumbnailForFile } from '../utils/thumbnailUtils';
 
 const DEBUG = process.env.NODE_ENV === 'development';
@@ -64,7 +64,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
     // Store in IndexedDB (no history data - that's handled by direct fileStorage calls now)
     const stirlingFile = createStirlingFile(file, fileId);
-    
+
     // Create minimal stub for storage
     const stub: StirlingFileStub = {
       id: fileId,
@@ -72,7 +72,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       size: file.size,
       type: file.type,
       lastModified: file.lastModified,
-      quickKey: `${file.name}|${file.size}|${file.lastModified}`,
+      quickKey: createQuickKey(file),
       thumbnailUrl: thumbnail,
       isLeaf: true,
       createdAt: Date.now(),
@@ -80,7 +80,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       originalFileId: fileId,
       toolHistory: []
     };
-    
+
     await fileStorage.storeStirlingFile(stirlingFile, stub);
     const storedFile = await fileStorage.getStirlingFileStub(fileId);
 

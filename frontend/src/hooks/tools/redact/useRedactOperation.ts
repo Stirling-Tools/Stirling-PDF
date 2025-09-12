@@ -37,7 +37,6 @@ export const redactOperationConfig = {
       throw new Error('Manual redaction not yet implemented');
     }
   },
-  filePrefix: 'redacted_',
   defaultParameters,
 } as const;
 

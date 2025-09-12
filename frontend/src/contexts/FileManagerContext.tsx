@@ -14,9 +14,9 @@ interface FileManagerContextValue {
   selectedFiles: StirlingFileStub[];
   filteredFiles: StirlingFileStub[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  selectedFilesSet: Set<string>;
-  expandedFileIds: Set<string>;
-  fileGroups: Map<string, StirlingFileStub[]>;
+  selectedFilesSet: Set<FileId>;
+  expandedFileIds: Set<FileId>;
+  fileGroups: Map<FileId, StirlingFileStub[]>;
   loadedHistoryFiles: Map<FileId, StirlingFileStub[]>;
 
   // Handlers
@@ -76,7 +76,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
-  const [expandedFileIds, setExpandedFileIds] = useState<Set<string>>(new Set());
+  const [expandedFileIds, setExpandedFileIds] = useState<Set<FileId>>(new Set());
   const [loadedHistoryFiles, setLoadedHistoryFiles] = useState<Map<FileId, StirlingFileStub[]>>(new Map()); // Cache for loaded history
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -173,12 +173,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
   // Helper function to safely determine which files can be deleted
   const getSafeFilesToDelete = useCallback((
-    fileIds: string[],
+    fileIds: FileId[],
     allStoredStubs: StirlingFileStub[]
-  ): string[] => {
-    const fileMap = new Map(allStoredStubs.map(f => [f.id as string, f]));
-    const filesToDelete = new Set<string>();
-    const filesToPreserve = new Set<string>();
+  ): FileId[] => {
+    const fileMap = new Map(allStoredStubs.map(f => [f.id, f]));
+    const filesToDelete = new Set<FileId>();
+    const filesToPreserve = new Set<FileId>();
 
     // First, identify all files in the lineages of the leaf files being deleted
     for (const leafFileId of fileIds) {
@@ -222,14 +222,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     let safeToDelete = Array.from(filesToDelete).filter(fileId => !filesToPreserve.has(fileId));
 
     // Check for orphaned non-leaf files after main deletion
-    const remainingFiles = allStoredStubs.filter(file => !safeToDelete.includes(file.id as string));
-    const orphanedNonLeafFiles: string[] = [];
+    const remainingFiles = allStoredStubs.filter(file => !safeToDelete.includes(file.id));
+    const orphanedNonLeafFiles: FileId[] = [];
 
     for (const file of remainingFiles) {
       // Only check non-leaf files (files that have been processed and have children)
       if (file.isLeaf === false) {
         const fileOriginalId = file.originalFileId || file.id;
-        
+
         // Check if this non-leaf file has any living descendants
         const hasLivingDescendants = remainingFiles.some(otherFile => {
           // Check if otherFile is a descendant of this file
@@ -243,20 +243,13 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         });
 
         if (!hasLivingDescendants) {
-          orphanedNonLeafFiles.push(file.id as string);
+          orphanedNonLeafFiles.push(file.id);
         }
       }
     }
 
     // Add orphaned non-leaf files to deletion list
     safeToDelete = [...safeToDelete, ...orphanedNonLeafFiles];
-
-    console.log('Deletion analysis:', {
-      candidatesForDeletion: Array.from(filesToDelete),
-      mustPreserve: Array.from(filesToPreserve),
-      orphanedNonLeafFiles,
-      safeToDelete
-    });
 
     return safeToDelete;
   }, []);
@@ -269,9 +262,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
 
     // Get safe files to delete (respecting shared lineages)
-    const filesToDelete = getSafeFilesToDelete([deletedFileId as string], allStoredStubs);
-
-    console.log(`Safely deleting files for ${fileToRemove.name}:`, filesToDelete);
+    const filesToDelete = getSafeFilesToDelete([deletedFileId], allStoredStubs);
 
     // Clear from selection immediately
     setSelectedFileIds(prev => prev.filter(id => !filesToDelete.includes(id)));
@@ -292,7 +283,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
       // Also remove deleted files from any other file's history cache
       for (const [mainFileId, historyFiles] of newCache.entries()) {
-        const filteredHistory = historyFiles.filter(histFile => !filesToDelete.includes(histFile.id as string));
+        const filteredHistory = historyFiles.filter(histFile => !filesToDelete.includes(histFile.id));
         if (filteredHistory.length !== historyFiles.length) {
           newCache.set(mainFileId, filteredHistory);
         }
@@ -329,7 +320,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     // Find the file and its index in filteredFiles
     const fileIndex = filteredFiles.findIndex(file => file.id === fileId);
     const fileToRemove = filteredFiles[fileIndex];
-    
+
     if (fileToRemove && fileIndex !== -1) {
       await performFileDelete(fileToRemove, fileIndex);
     }

@@ -97,7 +97,6 @@ describe('useRemovePasswordOperation', () => {
   test.each([
     { property: 'toolType' as const, expectedValue: ToolType.singleFile },
     { property: 'endpoint' as const, expectedValue: '/api/v1/security/remove-password' },
-    { property: 'filePrefix' as const, expectedValue: undefined },
     { property: 'operationType' as const, expectedValue: 'removePassword' }
   ])('should configure $property correctly', ({ property, expectedValue }) => {
     renderHook(() => useRemovePasswordOperation());
