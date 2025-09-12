@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileSelection } from "../contexts/FileContext";
 import { useNavigationActions } from "../contexts/NavigationContext";
@@ -161,25 +161,10 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     content
   });
 
-  // Dynamic file placeholder based on supported types
-  const filesPlaceholder = useMemo(() => {
-    if (currentStep === AUTOMATION_STEPS.RUN && stepData.automation?.operations?.length) {
-      const firstOperation = stepData.automation.operations[0];
-      const toolConfig = toolRegistry[firstOperation.operation as keyof typeof toolRegistry];
-
-      // Check if the tool has supportedFormats that include non-PDF formats
-      if (toolConfig?.supportedFormats && toolConfig.supportedFormats.length > 1) {
-        return t('automate.files.placeholder.multiFormat', 'Select files to process (supports various formats)');
-      }
-    }
-    return t('automate.files.placeholder', 'Select PDF files to process with this automation');
-  }, [currentStep, stepData.automation, toolRegistry, t]);
-
   // Always create files step to avoid conditional hook calls
   const filesStep = createFilesToolStep(createStep, {
     selectedFiles,
     isCollapsed: hasResults,
-    placeholder: filesPlaceholder
   });
 
   const automationSteps = [
