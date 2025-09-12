@@ -13,6 +13,7 @@
     "@embedpdf/plugin-pan": "^1.1.1",
     "@embedpdf/plugin-render": "^1.1.1",
     "@embedpdf/plugin-scroll": "^1.1.1",
+    "@embedpdf/plugin-search": "^1.1.1",
     "@embedpdf/plugin-selection": "^1.1.1",
     "@embedpdf/plugin-spread": "^1.1.1",
     "@embedpdf/plugin-tiling": "^1.1.1",

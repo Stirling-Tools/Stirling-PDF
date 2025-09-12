@@ -8,6 +8,7 @@ import { useFileState } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 import { LocalEmbedPDF } from './LocalEmbedPDF';
 import { PdfViewerToolbar } from './PdfViewerToolbar';
+import { SearchInterface } from './SearchInterface';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -27,6 +28,7 @@ const EmbedPdfViewer = ({
   const { colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+  const [isSearchVisible, setIsSearchVisible] = React.useState(false);
 
   // Get current file from FileContext
   const { selectors } = useFileState();
@@ -86,6 +88,45 @@ const EmbedPdfViewer = ({
         viewerElement.removeEventListener('wheel', handleWheel);
       };
     }
+  }, []);
+
+  // Handle keyboard zoom shortcuts
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isViewerHovered) return;
+
+      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
+      if (event.ctrlKey || event.metaKey) {
+        const zoomAPI = (window as any).embedPdfZoom;
+        if (zoomAPI) {
+          if (event.key === '=' || event.key === '+') {
+            // Ctrl+= or Ctrl++ for zoom in
+            event.preventDefault();
+            zoomAPI.zoomIn();
+          } else if (event.key === '-' || event.key === '_') {
+            // Ctrl+- for zoom out
+            event.preventDefault();
+            zoomAPI.zoomOut();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isViewerHovered]);
+
+  // Expose search toggle function globally for right rail button
+  React.useEffect(() => {
+    (window as any).togglePdfSearch = () => {
+      setIsSearchVisible(prev => !prev);
+    };
+    
+    return () => {
+      delete (window as any).togglePdfSearch;
+    };
   }, []);
 
   return (
@@ -177,6 +218,12 @@ const EmbedPdfViewer = ({
           </Box>
         </>
       )}
+
+      {/* Search Interface Overlay */}
+      <SearchInterface 
+        visible={isSearchVisible} 
+        onClose={() => setIsSearchVisible(false)} 
+      />
     </Box>
   );
 };

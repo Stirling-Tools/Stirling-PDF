@@ -219,50 +219,13 @@ export default function RightRail() {
                 variant="subtle"
                 radius="md"
                 className="right-rail-icon"
-                onClick={() => (window as any).embedPdfControls?.search()}
+                onClick={() => (window as any).togglePdfSearch?.()}
                 disabled={currentView !== 'viewer'}
               >
                 <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
               </ActionIcon>
             </Tooltip>
 
-            {/* Zoom Out */}
-            <Tooltip content={t('rightRail.zoomOut', 'Zoom Out')} position="left" offset={12} arrow>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => (window as any).embedPdfZoom?.zoomOut()}
-                disabled={currentView !== 'viewer'}
-              >
-                <LocalIcon icon="zoom-out" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </Tooltip>
-
-            {/* Zoom In */}
-            <Tooltip content={t('rightRail.zoomIn', 'Zoom In')} position="left" offset={12} arrow>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => (window as any).embedPdfZoom?.zoomIn()}
-                disabled={currentView !== 'viewer'}
-              >
-                <LocalIcon icon="zoom-in" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </Tooltip>
-            {/* Area Zoom */}
-            <Tooltip content={t('rightRail.areaZoom', 'Area Zoom')} position="left" offset={12} arrow>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => (window as any).embedPdfZoom?.toggleMarqueeZoom()}
-                disabled={currentView !== 'viewer'}
-              >
-                <LocalIcon icon="crop-free" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </Tooltip>
 
             {/* Pan Mode */}
             <Tooltip content={t('rightRail.panMode', 'Pan Mode')} position="left" offset={12} arrow>

@@ -14,11 +14,14 @@ import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selecti
 import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react';
 import { PanPluginPackage } from '@embedpdf/plugin-pan/react';
 import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
+import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
+import { CustomSearchLayer } from './CustomSearchLayer';
 import { ZoomControlsExporter } from './ZoomControlsExporter';
 import { ScrollControlsExporter } from './ScrollControlsExporter';
 import { SelectionControlsExporter } from './SelectionControlsExporter';
 import { PanControlsExporter } from './PanControlsExporter';
 import { SpreadControlsExporter } from './SpreadControlsExporter';
+import { SearchControlsExporter } from './SearchControlsExporter';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -79,7 +82,7 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
       
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
-        defaultZoomLevel: ZoomMode.FitPage,
+        defaultZoomLevel: 1.0, // Start at exactly 100% zoom
         minZoom: 0.2,
         maxZoom: 3.0,
       }),
@@ -95,6 +98,9 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
       createPluginRegistration(SpreadPluginPackage, {
         defaultSpreadMode: SpreadMode.None, // Start with single page view
       }),
+      
+      // Register search plugin for text search
+      createPluginRegistration(SearchPluginPackage),
     ];
   }, [pdfUrl]);
 
@@ -174,6 +180,7 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         <SelectionControlsExporter />
         <PanControlsExporter />
         <SpreadControlsExporter />
+        <SearchControlsExporter />
         <GlobalPointerProvider>
           <Viewport
             style={{
@@ -214,7 +221,10 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
                   {/* 2. High-resolution tile layer on top */}
                   <TilingLayer pageIndex={pageIndex} scale={scale} />
                   
-                  {/* 3. Selection layer for text interaction */}
+                  {/* 3. Search highlight layer */}
+                  <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
+                  
+                  {/* 4. Selection layer for text interaction */}
                   <SelectionLayer pageIndex={pageIndex} scale={scale} />
                 </div>
               </PagePointerProvider>
