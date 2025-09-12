@@ -1,6 +1,7 @@
 import { pdfWorkerManager } from './pdfWorkerManager';
 import { FileAnalyzer } from './fileAnalyzer';
 import { TrappedStatus, CustomMetadataEntry, ExtractedPDFMetadata } from '../types/metadata';
+import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 
 export interface MetadataExtractionResult {
   success: true;
@@ -18,8 +19,8 @@ export type MetadataExtractionResponse = MetadataExtractionResult | MetadataExtr
  * Utility to format PDF date strings to required format (yyyy/MM/dd HH:mm:ss)
  * Handles PDF date format: "D:YYYYMMDDHHmmSSOHH'mm'" or standard date strings
  */
-function formatPDFDate(dateString: unknown): string {
-  if (!dateString || typeof dateString !== 'string') {
+function formatPDFDate(dateString: string): string {
+  if (!dateString) {
     return '';
   }
 
@@ -80,14 +81,14 @@ function convertTrappedStatus(trapped: unknown): TrappedStatus {
  * Extract custom metadata fields from PDF.js info object
  * Custom metadata is nested under the "Custom" key
  */
-function extractCustomMetadata(info: Record<string, unknown>): CustomMetadataEntry[] {
+function extractCustomMetadata(custom: unknown): CustomMetadataEntry[] {
   const customMetadata: CustomMetadataEntry[] = [];
   let customIdCounter = 1;
 
 
   // Check if there's a Custom object containing the custom metadata
-  if (info.Custom && typeof info.Custom === 'object' && info.Custom !== null) {
-    const customObj = info.Custom as Record<string, unknown>;
+  if (typeof custom === 'object' && custom !== null) {
+    const customObj = custom as Record<string, unknown>;
 
     Object.entries(customObj).forEach(([key, value]) => {
       if (value != null && value !== '') {
@@ -107,13 +108,21 @@ function extractCustomMetadata(info: Record<string, unknown>): CustomMetadataEnt
 /**
  * Safely cleanup PDF document with error handling
  */
-function cleanupPdfDocument(pdfDoc: any): void {
+function cleanupPdfDocument(pdfDoc: PDFDocumentProxy | null): void {
   if (pdfDoc) {
     try {
       pdfWorkerManager.destroyDocument(pdfDoc);
     } catch (cleanupError) {
       console.warn('Failed to cleanup PDF document:', cleanupError);
     }
+  }
+}
+
+function getStringMetadata(info: Record<string, unknown>, key: string): string {
+  if (typeof info[key] === 'string') {
+    return info[key];
+  } else {
+    return '';
   }
 }
 
@@ -131,9 +140,9 @@ export async function extractPDFMetadata(file: File): Promise<MetadataExtraction
     };
   }
 
-  let pdfDoc: any = null;
+  let pdfDoc: PDFDocumentProxy | null = null;
   let arrayBuffer: ArrayBuffer;
-  let metadata: any;
+  let metadata;
 
   try {
     arrayBuffer = await file.arrayBuffer();
@@ -151,20 +160,20 @@ export async function extractPDFMetadata(file: File): Promise<MetadataExtraction
     };
   }
 
-  const info = metadata.info || {};
+  const info = metadata.info as Record<string, unknown>;
 
   // Safely extract metadata with proper type checking
   const extractedMetadata: ExtractedPDFMetadata = {
-    title: typeof info.Title === 'string' ? info.Title : '',
-    author: typeof info.Author === 'string' ? info.Author : '',
-    subject: typeof info.Subject === 'string' ? info.Subject : '',
-    keywords: typeof info.Keywords === 'string' ? info.Keywords : '',
-    creator: typeof info.Creator === 'string' ? info.Creator : '',
-    producer: typeof info.Producer === 'string' ? info.Producer : '',
-    creationDate: formatPDFDate(info.CreationDate),
-    modificationDate: formatPDFDate(info.ModDate),
+    title: getStringMetadata(info, 'Title'),
+    author: getStringMetadata(info, 'Author'),
+    subject: getStringMetadata(info, 'Subject'),
+    keywords: getStringMetadata(info, 'Keywords'),
+    creator: getStringMetadata(info, 'Creator'),
+    producer: getStringMetadata(info, 'Producer'),
+    creationDate: formatPDFDate(getStringMetadata(info, 'CreationDate')),
+    modificationDate: formatPDFDate(getStringMetadata(info, 'ModDate')),
     trapped: convertTrappedStatus(info.Trapped),
-    customMetadata: extractCustomMetadata(info)
+    customMetadata: extractCustomMetadata(info.Custom),
   };
 
   cleanupPdfDocument(pdfDoc);
