@@ -759,7 +759,32 @@
     "title": "Rotate PDF",
     "header": "Rotate PDF",
     "selectAngle": "Select rotation angle (in multiples of 90 degrees):",
-    "submit": "Rotate"
+    "submit": "Rotate",
+    "error": {
+      "failed": "An error occurred while rotating the PDF.",
+      "invalidAngle": "Rotation angle must be a multiple of 90 degrees"
+    },
+    "preview": {
+      "title": "Rotation Preview"
+    },
+    "rotateLeft": "Rotate Anticlockwise",
+    "rotateRight": "Rotate Clockwise",
+    "noRotation": "No rotation",
+    "currentAngle": "Current rotation: {{angle}}°",
+    "controlsHelp": "Each click rotates by 90 degrees",
+    "tooltip": {
+      "header": {
+        "title": "Rotate Settings Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Rotate your PDF pages clockwise or anticlockwise in 90-degree increments. All pages in the PDF will be rotated. The preview shows how your document will look after rotation."
+      },
+      "controls": {
+        "title": "Controls",
+        "text": "Use the rotation buttons to adjust orientation. Left button rotates anticlockwise, right button rotates clockwise. Each click rotates by 90 degrees."
+      }
+    }
   },
   "convert": {
     "title": "Convert",

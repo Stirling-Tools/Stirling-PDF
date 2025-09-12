@@ -18,6 +18,7 @@ import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
 import Flatten from "../tools/Flatten";
+import Rotate from "../tools/Rotate";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -35,6 +36,7 @@ import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
 import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
 import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
 import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
+import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -48,6 +50,7 @@ import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
+import RotateSettings from "../components/tools/rotate/RotateSettings";
 import Redact from "../tools/Redact";
 import AdjustPageScale from "../tools/AdjustPageScale";
 import { ToolId } from "../types/toolId";
@@ -310,10 +313,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       rotate: {
         icon: <LocalIcon icon="rotate-right-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.rotate.title", "Rotate"),
-        component: null,
+        component: Rotate,
         description: t("home.rotate.desc", "Easily rotate your PDFs."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["rotate-pdf"],
+        operationConfig: rotateOperationConfig,
+        settingsComponent: RotateSettings,
       },
       split: {
         icon: <LocalIcon icon="content-cut-rounded" width="1.5rem" height="1.5rem" />,
