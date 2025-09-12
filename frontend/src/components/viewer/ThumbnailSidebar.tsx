@@ -111,7 +111,7 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
             right: 0,
             top: 0,
             bottom: 0,
-            width: '240px',
+            width: '15rem',
             backgroundColor: actualColorScheme === 'dark' ? '#1a1b1e' : '#f8f9fa',
             borderLeft: `1px solid ${actualColorScheme === 'dark' ? '#373A40' : '#e9ecef'}`,
             zIndex: 998,
@@ -174,8 +174,8 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
                       />
                     ) : thumbnails[pageIndex] === 'error' ? (
                       <div style={{
-                        width: '180px',
-                        height: '240px',
+                        width: '11.5rem',
+                        height: '15rem',
                         backgroundColor: actualColorScheme === 'dark' ? '#2d1b1b' : '#ffebee',
                         border: `1px solid ${actualColorScheme === 'dark' ? '#5d3737' : '#ffcdd2'}`,
                         borderRadius: '4px',
@@ -189,8 +189,8 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
                       </div>
                     ) : (
                       <div style={{
-                        width: '180px',
-                        height: '240px',
+                        width: '11.5rem',
+                        height: '15rem',
                         backgroundColor: actualColorScheme === 'dark' ? '#25262b' : '#f8f9fa',
                         border: `1px solid ${actualColorScheme === 'dark' ? '#373A40' : '#e9ecef'}`,
                         borderRadius: '4px',

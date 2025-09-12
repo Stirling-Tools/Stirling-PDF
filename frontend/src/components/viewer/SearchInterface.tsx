@@ -120,7 +120,8 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const handleJumpToResult = (index: number) => {
     const searchAPI = (window as any).embedPdfSearch;
     if (searchAPI && resultInfo && index >= 1 && index <= resultInfo.totalResults) {
-      searchAPI.goToResult(index);
+      // Convert 1-based user input to 0-based API index
+      searchAPI.goToResult(index - 1);
     }
   };
 
@@ -200,7 +201,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
                 onKeyDown={handleJumpToKeyDown}
                 onBlur={handleJumpToSubmit}
                 placeholder={resultInfo.currentIndex.toString()}
-                style={{ width: '50px' }}
+                style={{ width: '3rem' }}
                 type="number"
                 min="1"
                 max={resultInfo.totalResults}

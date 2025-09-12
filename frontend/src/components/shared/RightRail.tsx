@@ -230,7 +230,7 @@ export default function RightRail() {
                   </div>
                 </Popover.Target>
                 <Popover.Dropdown>
-                  <div style={{ minWidth: 320 }}>
+                  <div style={{ minWidth: '20rem' }}>
                     <SearchInterface 
                       visible={true} 
                       onClose={() => {}} 
@@ -343,7 +343,7 @@ export default function RightRail() {
                       </div>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <div style={{ minWidth: 280 }}>
+                    <div style={{ minWidth: '17.5rem' }}>
                       <BulkSelectionPanel
                         csvInput={csvInput}
                         setCsvInput={setCsvInput}

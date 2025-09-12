@@ -140,7 +140,7 @@ export function PdfViewerToolbar({
           borderBottomRightRadius: 0,
           boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
           pointerEvents: "auto",
-          minWidth: 420,
+          minWidth: '26.5rem',
         }}
       >
         {/* First Page Button */}
@@ -152,7 +152,7 @@ export function PdfViewerToolbar({
           radius="xl"
           onClick={handleFirstPage}
           disabled={dynamicPage === 1}
-          style={{ minWidth: 36 }}
+          style={{ minWidth: '2.5rem' }}
           title={t("viewer.firstPage", "First Page")}
         >
           <FirstPageIcon fontSize="small" />
@@ -167,7 +167,7 @@ export function PdfViewerToolbar({
           radius="xl"
           onClick={handlePreviousPage}
           disabled={dynamicPage === 1}
-          style={{ minWidth: 36 }}
+          style={{ minWidth: '2.5rem' }}
           title={t("viewer.previousPage", "Previous Page")}
         >
           <ArrowBackIosIcon fontSize="small" />
@@ -204,7 +204,7 @@ export function PdfViewerToolbar({
           radius="xl"
           onClick={handleNextPage}
           disabled={dynamicPage === dynamicTotalPages}
-          style={{ minWidth: 36 }}
+          style={{ minWidth: '2.5rem' }}
           title={t("viewer.nextPage", "Next Page")}
         >
           <ArrowForwardIosIcon fontSize="small" />
@@ -219,7 +219,7 @@ export function PdfViewerToolbar({
           radius="xl"
           onClick={handleLastPage}
           disabled={dynamicPage === dynamicTotalPages}
-          style={{ minWidth: 36 }}
+          style={{ minWidth: '2.5rem' }}
           title={t("viewer.lastPage", "Last Page")}
         >
           <LastPageIcon fontSize="small" />
@@ -232,7 +232,7 @@ export function PdfViewerToolbar({
           size="md"
           radius="xl"
           onClick={onDualPageToggle}
-          style={{ minWidth: 36 }}
+          style={{ minWidth: '2.5rem' }}
           title={dualPage ? t("viewer.singlePageView", "Single Page View") : t("viewer.dualPageView", "Dual Page View")}
         >
           {dualPage ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
@@ -246,12 +246,12 @@ export function PdfViewerToolbar({
             size="md"
             radius="xl"
             onClick={handleZoomOut}
-            style={{ minWidth: 32, padding: 0 }}
+            style={{ minWidth: '2rem', padding: 0 }}
             title={t("viewer.zoomOut", "Zoom out")}
           >
             −
           </Button>
-          <span style={{ minWidth: 40, textAlign: "center" }}>
+          <span style={{ minWidth: '2.5rem', textAlign: "center" }}>
             {dynamicZoom}%
           </span>
           <Button
@@ -260,7 +260,7 @@ export function PdfViewerToolbar({
             size="md"
             radius="xl"
             onClick={handleZoomIn}
-            style={{ minWidth: 32, padding: 0 }}
+            style={{ minWidth: '2rem', padding: 0 }}
             title={t("viewer.zoomIn", "Zoom in")}
           >
             +
