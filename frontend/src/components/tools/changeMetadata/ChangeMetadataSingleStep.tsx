@@ -5,7 +5,6 @@ import { useMetadataExtraction } from "../../../hooks/tools/changeMetadata/useMe
 import DeleteAllStep from "./steps/DeleteAllStep";
 import StandardMetadataStep from "./steps/StandardMetadataStep";
 import DocumentDatesStep from "./steps/DocumentDatesStep";
-import CustomMetadataStep from "./steps/CustomMetadataStep";
 import AdvancedOptionsStep from "./steps/AdvancedOptionsStep";
 
 interface ChangeMetadataSingleStepProps {
@@ -86,23 +85,6 @@ const ChangeMetadataSingleStep = ({
 
       <Divider />
 
-      {/* Custom Metadata */}
-      <Stack gap="md">
-        <Text size="sm" fw={500}>
-          {t('changeMetadata.customFields.title', 'Custom Metadata')}
-        </Text>
-        <CustomMetadataStep
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={fieldsDisabled}
-          addCustomMetadata={addCustomMetadata}
-          removeCustomMetadata={removeCustomMetadata}
-          updateCustomMetadata={updateCustomMetadata}
-        />
-      </Stack>
-
-      <Divider />
-
       {/* Advanced Options */}
       <Stack gap="md">
         <Text size="sm" fw={500}>
@@ -112,6 +94,9 @@ const ChangeMetadataSingleStep = ({
           parameters={parameters}
           onParameterChange={onParameterChange}
           disabled={fieldsDisabled}
+          addCustomMetadata={addCustomMetadata}
+          removeCustomMetadata={removeCustomMetadata}
+          updateCustomMetadata={updateCustomMetadata}
         />
       </Stack>
     </Stack>

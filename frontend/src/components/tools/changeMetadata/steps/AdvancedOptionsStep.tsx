@@ -1,38 +1,60 @@
-import { Select } from "@mantine/core";
+import { Stack, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ChangeMetadataParameters } from "../../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { TrappedStatus } from "../../../../types/metadata";
+import CustomMetadataStep from "./CustomMetadataStep";
 
 interface AdvancedOptionsStepProps {
   parameters: ChangeMetadataParameters;
   onParameterChange: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void;
   disabled?: boolean;
+  addCustomMetadata: (key?: string, value?: string) => void;
+  removeCustomMetadata: (id: string) => void;
+  updateCustomMetadata: (id: string, key: string, value: string) => void;
 }
 
 const AdvancedOptionsStep = ({
   parameters,
   onParameterChange,
-  disabled = false
+  disabled = false,
+  addCustomMetadata,
+  removeCustomMetadata,
+  updateCustomMetadata
 }: AdvancedOptionsStepProps) => {
   const { t } = useTranslation();
 
   return (
-    <Select
-      label={t('changeMetadata.trapped.label', 'Trapped Status')}
-      description={t('changeMetadata.trapped.description', 'Indicates whether the document has been trapped for high-quality printing')}
-      value={parameters.trapped}
-      onChange={(value) => {
-        if (value) {
-          onParameterChange('trapped', value as TrappedStatus);
-        }
-      }}
-      disabled={disabled || parameters.deleteAll}
-      data={[
-        { value: TrappedStatus.UNKNOWN, label: t('changeMetadata.trapped.unknown', 'Unknown') },
-        { value: TrappedStatus.TRUE, label: t('changeMetadata.trapped.true', 'True') },
-        { value: TrappedStatus.FALSE, label: t('changeMetadata.trapped.false', 'False') }
-      ]}
-    />
+    <Stack gap="md">
+      {/* Trapped Status */}
+      <Select
+        label={t('changeMetadata.trapped.label', 'Trapped Status')}
+        description={t('changeMetadata.trapped.description', 'Indicates whether the document has been trapped for high-quality printing')}
+        value={parameters.trapped}
+        onChange={(value) => {
+          if (value) {
+            onParameterChange('trapped', value as TrappedStatus);
+          }
+        }}
+        disabled={disabled || parameters.deleteAll}
+        data={[
+          { value: TrappedStatus.UNKNOWN, label: t('changeMetadata.trapped.unknown', 'Unknown') },
+          { value: TrappedStatus.TRUE, label: t('changeMetadata.trapped.true', 'True') },
+          { value: TrappedStatus.FALSE, label: t('changeMetadata.trapped.false', 'False') }
+        ]}
+      />
+
+      <Divider />
+
+      {/* Custom Metadata */}
+      <CustomMetadataStep
+        parameters={parameters}
+        onParameterChange={onParameterChange}
+        disabled={disabled}
+        addCustomMetadata={addCustomMetadata}
+        removeCustomMetadata={removeCustomMetadata}
+        updateCustomMetadata={updateCustomMetadata}
+      />
+    </Stack>
   );
 };
 

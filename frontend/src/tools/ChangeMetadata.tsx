@@ -1,39 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import DeleteAllStep from "../components/tools/changeMetadata/steps/DeleteAllStep";
 import StandardMetadataStep from "../components/tools/changeMetadata/steps/StandardMetadataStep";
 import DocumentDatesStep from "../components/tools/changeMetadata/steps/DocumentDatesStep";
-import CustomMetadataStep from "../components/tools/changeMetadata/steps/CustomMetadataStep";
 import AdvancedOptionsStep from "../components/tools/changeMetadata/steps/AdvancedOptionsStep";
 import { useChangeMetadataParameters } from "../hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { useChangeMetadataOperation } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { useMetadataExtraction } from "../hooks/tools/changeMetadata/useMetadataExtraction";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "../types/tool";
-import { 
+import {
   useDeleteAllTips,
   useStandardMetadataTips,
   useDocumentDatesTips,
-  useCustomMetadataTips,
   useAdvancedOptionsTips
 } from "../components/tooltips/useChangeMetadataTips";
 
 const ChangeMetadata = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  
+
   // Individual tooltips for each step
   const deleteAllTips = useDeleteAllTips();
   const standardMetadataTips = useStandardMetadataTips();
   const documentDatesTips = useDocumentDatesTips();
-  const customMetadataTips = useCustomMetadataTips();
   const advancedOptionsTips = useAdvancedOptionsTips();
 
   // Individual step collapse states
   const [deleteAllCollapsed, setDeleteAllCollapsed] = useState(false);
   const [standardMetadataCollapsed, setStandardMetadataCollapsed] = useState(false);
   const [documentDatesCollapsed, setDocumentDatesCollapsed] = useState(true);
-  const [customMetadataCollapsed, setCustomMetadataCollapsed] = useState(true);
   const [advancedOptionsCollapsed, setAdvancedOptionsCollapsed] = useState(true);
 
   const base = useBaseTool(
@@ -103,24 +99,6 @@ const ChangeMetadata = (props: BaseToolProps) => {
         ),
       },
       {
-        title: t("changeMetadata.customFields.title", "Custom Metadata"),
-        isCollapsed: getActualCollapsedState(customMetadataCollapsed),
-        onCollapsedClick: base.hasResults
-          ? (base.settingsCollapsed ? base.handleSettingsReset : undefined)
-          : () => setCustomMetadataCollapsed(!customMetadataCollapsed),
-        tooltip: customMetadataTips,
-        content: (
-          <CustomMetadataStep
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading || base.params.parameters.deleteAll || isExtractingMetadata}
-            addCustomMetadata={base.params.addCustomMetadata}
-            removeCustomMetadata={base.params.removeCustomMetadata}
-            updateCustomMetadata={base.params.updateCustomMetadata}
-          />
-        ),
-      },
-      {
         title: t("changeMetadata.advanced.title", "Advanced Options"),
         isCollapsed: getActualCollapsedState(advancedOptionsCollapsed),
         onCollapsedClick: base.hasResults
@@ -132,6 +110,9 @@ const ChangeMetadata = (props: BaseToolProps) => {
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading || isExtractingMetadata}
+            addCustomMetadata={base.params.addCustomMetadata}
+            removeCustomMetadata={base.params.removeCustomMetadata}
+            updateCustomMetadata={base.params.updateCustomMetadata}
           />
         ),
       },
