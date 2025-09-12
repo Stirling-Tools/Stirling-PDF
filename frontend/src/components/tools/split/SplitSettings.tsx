@@ -1,6 +1,6 @@
 import { Stack, TextInput, Select, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { isSplitMethod, SPLIT_METHODS, METHOD_TO_SPLIT_TYPE, SPLIT_TYPES } from '../../../constants/splitConstants';
+import { isSplitMethod, SPLIT_METHODS } from '../../../constants/splitConstants';
 import { SplitParameters } from '../../../hooks/tools/split/useSplitParameters';
 
 export interface SplitSettingsProps {
@@ -59,7 +59,7 @@ const SplitSettings = ({
 
   const renderSplitValueForm = () => {
     let label, placeholder;
-    
+
     switch (parameters.method) {
       case SPLIT_METHODS.BY_SIZE:
         label = t("split.value.fileSize.label", "File Size");
@@ -135,8 +135,8 @@ const SplitSettings = ({
       {/* Parameter Form */}
       {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
       {parameters.method === SPLIT_METHODS.BY_SECTIONS && renderBySectionsForm()}
-      {(parameters.method === SPLIT_METHODS.BY_SIZE || 
-        parameters.method === SPLIT_METHODS.BY_PAGE_COUNT || 
+      {(parameters.method === SPLIT_METHODS.BY_SIZE ||
+        parameters.method === SPLIT_METHODS.BY_PAGE_COUNT ||
         parameters.method === SPLIT_METHODS.BY_DOC_COUNT) && renderSplitValueForm()}
       {parameters.method === SPLIT_METHODS.BY_CHAPTERS && renderByChaptersForm()}
     </Stack>

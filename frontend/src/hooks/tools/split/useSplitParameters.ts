@@ -1,4 +1,4 @@
-import { SPLIT_METHODS, SPLIT_MODES, SPLIT_TYPES, ENDPOINTS, METHOD_TO_SPLIT_TYPE, type SplitMethod, SplitMode, SplitType } from '../../../constants/splitConstants';
+import { SPLIT_METHODS, ENDPOINTS, type SplitMethod } from '../../../constants/splitConstants';
 import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 

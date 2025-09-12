@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SplitParameters, defaultParameters } from './useSplitParameters';
-import { SPLIT_METHODS, METHOD_TO_SPLIT_TYPE } from '../../../constants/splitConstants';
+import { SPLIT_METHODS } from '../../../constants/splitConstants';
 import { useToolResources } from '../shared/useToolResources';
 
 // Static functions that can be used by both the hook and automation executor
