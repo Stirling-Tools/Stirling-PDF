@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PDFMetadataService } from "../../../services/pdfMetadataService";
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
 import { ChangeMetadataParametersHook } from "./useChangeMetadataParameters";
@@ -7,16 +7,25 @@ export const useMetadataExtraction = (params: ChangeMetadataParametersHook) => {
   const { selectedFiles } = useSelectedFiles();
   const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
   const [hasExtractedMetadata, setHasExtractedMetadata] = useState(false);
+  const previousFileCountRef = useRef(0);
+
+  // Reset extraction state only when files are cleared (length goes to 0)
+  useEffect(() => {
+    if (previousFileCountRef.current > 0 && selectedFiles.length === 0) {
+      setHasExtractedMetadata(false);
+    }
+    previousFileCountRef.current = selectedFiles.length;
+  }, [selectedFiles]);
 
   // Extract metadata from first file when files change
   useEffect(() => {
     const extractMetadata = async () => {
-      if (selectedFiles.length === 0 || hasExtractedMetadata) {
+      if (selectedFiles.length === 0) {
         return;
       }
-
       const firstFile = selectedFiles[0];
-      if (!firstFile) {
+
+      if (hasExtractedMetadata) {
         return;
       }
 
@@ -37,8 +46,6 @@ export const useMetadataExtraction = (params: ChangeMetadataParametersHook) => {
           params.updateParameter('creationDate', metadata.creationDate);
           params.updateParameter('modificationDate', metadata.modificationDate);
           params.updateParameter('trapped', metadata.trapped);
-
-          // Set custom metadata entries directly to avoid state update timing issues
           params.updateParameter('customMetadata', metadata.customMetadata);
 
           setHasExtractedMetadata(true);
