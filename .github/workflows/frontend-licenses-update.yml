@@ -82,7 +82,7 @@ jobs:
         working-directory: frontend
         run: |
           mkdir -p src/assets
-          npx --yes license-checker@25.0.1 --production --json > src/assets/3rdPartyLicenses.json
+          npx --yes license-report --only=prod --output=json > src/assets/3rdPartyLicenses.json
 
       - name: Postprocess with project script (BASE version)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true

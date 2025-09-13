@@ -47,7 +47,7 @@ try {
     } else {
       const licenseReport = execSync(
           // 'npx --yes license-checker@25.0.1 --production --json',
-          'npx --yes license-report --config license-report-config.json --only=prod,dev,opt,peer --output=json',
+          'npx --yes license-report --only=prod --output=json',
           {
               encoding: 'utf8',
               cwd: path.dirname(PACKAGE_JSON),
