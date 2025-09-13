@@ -46,7 +46,8 @@ try {
       licenseData = JSON.parse(readFileSync(INPUT_FILE, 'utf8'));
     } else {
       const licenseReport = execSync(
-          'npx --yes license-checker@25.0.1 --production --json',
+          // 'npx --yes license-checker@25.0.1 --production --json',
+          'npx --yes license-report --config license-report-config.json --only=prod,dev,opt,peer --output=json',
           {
               encoding: 'utf8',
               cwd: path.dirname(PACKAGE_JSON),
@@ -62,29 +63,14 @@ try {
       }
     }
 
-    if (!licenseData || typeof licenseData !== 'object') {
+    if (!Array.isArray(licenseData)) {
         console.error('❌ Invalid license data structure');
         process.exit(1);
     }
 
     // Convert license-checker format to array
-    const licenseArray = Object.entries(licenseData).map(([key, value]) => {
-        let name, version;
-
-        // Handle scoped packages like @mantine/core@1.0.0
-        if (key.startsWith('@')) {
-            const parts = key.split('@');
-            name = `@${parts[1]}`;
-            version = parts[2];
-        } else {
-            // Handle regular packages like react@18.0.0
-            const lastAtIndex = key.lastIndexOf('@');
-            name = key.substring(0, lastAtIndex);
-            version = key.substring(lastAtIndex + 1);
-        }
-
-        // Normalize license types for edge cases
-        let licenseType = value.licenses;
+    const licenseArray = licenseData.map(dep => {
+        let licenseType = dep.licenseType;
 
         // Handle missing or null licenses
         if (!licenseType || licenseType === null || licenseType === undefined) {
@@ -106,13 +92,17 @@ try {
             licenseType = 'Unknown';
         }
 
+        if ( "posthog-js" === dep.name && licenseType.startsWith("SEE LICENSE IN LICENSE")) {
+            licenseType = "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE";
+        }
+
         return {
-            name: name,
-            version: version || value.version || 'unknown',
+            name: dep.name,
+            version: dep.installedVersion || dep.definedVersion || dep.remoteVersion || 'unknown',
             licenseType: licenseType,
-            repository: value.repository,
-            url: value.url,
-            link: value.licenseUrl
+            repository: dep.link,
+            url: dep.link,
+            link: dep.link
         };
     });
 
@@ -292,7 +282,8 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
         'MIT', 'MIT*', 'Apache-2.0', 'Apache License 2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'BSD',
         'ISC', 'CC0-1.0', 'Public Domain', 'Unlicense', '0BSD', 'BlueOak-1.0.0',
         'Zlib', 'Artistic-2.0', 'Python-2.0', 'Ruby', 'MPL-2.0', 'CC-BY-4.0',
-        'SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE'
+        'SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE',
+        'SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE'
     ]);
 
     // Helper function to normalize license names for comparison
