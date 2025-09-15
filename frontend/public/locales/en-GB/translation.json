@@ -2447,5 +2447,15 @@
       "processImages": "Process Images",
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
+  },
+  "viewer": {
+    "firstPage": "First Page",
+    "lastPage": "Last Page",
+    "previousPage": "Previous Page",
+    "nextPage": "Next Page",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "singlePageView": "Single Page View",
+    "dualPageView": "Dual Page View"
   }
 }
