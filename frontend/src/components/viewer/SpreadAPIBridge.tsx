@@ -33,8 +33,6 @@ export function SpreadAPIBridge() {
         spreadAPI: spread,
         availableMethods: Object.keys(spread)
       });
-    } else {
-      console.warn('EmbedPDF spread API not available yet');
     }
   }, [spread, spreadMode]);
 

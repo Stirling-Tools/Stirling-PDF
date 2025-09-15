@@ -35,8 +35,6 @@ export function PanAPIBridge() {
         },
       };
 
-    } else {
-      console.warn('EmbedPDF pan API not available yet');
     }
   }, [pan, isPanning]);
 

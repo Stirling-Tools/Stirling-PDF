@@ -1,7 +1,6 @@
 import React from 'react';
-import { Box, Center, Text, ActionIcon, Tabs } from '@mantine/core';
+import { Box, Center, Text, ActionIcon } from '@mantine/core';
 import { useMantineTheme, useMantineColorScheme } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/Close';
 
 import { useFileState } from "../../contexts/FileContext";
@@ -20,12 +19,11 @@ export interface EmbedPdfViewerProps {
 }
 
 const EmbedPdfViewerContent = ({
-  sidebarsVisible,
-  setSidebarsVisible,
+  sidebarsVisible: _sidebarsVisible,
+  setSidebarsVisible: _setSidebarsVisible,
   onClose,
   previewFile,
 }: EmbedPdfViewerProps) => {
-  const { t } = useTranslation();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
