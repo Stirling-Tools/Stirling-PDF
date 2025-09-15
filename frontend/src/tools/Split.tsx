@@ -4,10 +4,12 @@ import SplitSettings from "../components/tools/split/SplitSettings";
 import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
 import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
+import { useSplitTips } from "../components/tooltips/useSplitTips";
 import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const Split = (props: BaseToolProps) => {
   const { t } = useTranslation();
+  const splitTips = useSplitTips();
 
   const base = useBaseTool(
     'split',
@@ -26,6 +28,7 @@ const Split = (props: BaseToolProps) => {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
+        tooltip: splitTips,
         content: (
           <SplitSettings
             parameters={base.params.parameters}
