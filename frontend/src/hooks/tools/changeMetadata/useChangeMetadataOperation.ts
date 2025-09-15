@@ -3,6 +3,18 @@ import { useToolOperation, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { ChangeMetadataParameters, defaultParameters } from './useChangeMetadataParameters';
 
+// Helper function to format Date object to string
+const formatDateForBackend = (date: Date | null): string => {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+};
+
 // Static function that can be used by both the hook and automation executor
 export const buildChangeMetadataFormData = (parameters: ChangeMetadataParameters, file: File): FormData => {
   const formData = new FormData();
@@ -16,9 +28,9 @@ export const buildChangeMetadataFormData = (parameters: ChangeMetadataParameters
   formData.append("creator", parameters.creator || "");
   formData.append("producer", parameters.producer || "");
 
-  // Date fields
-  formData.append("creationDate", parameters.creationDate || "");
-  formData.append("modificationDate", parameters.modificationDate || "");
+  // Date fields - convert Date objects to strings
+  formData.append("creationDate", formatDateForBackend(parameters.creationDate));
+  formData.append("modificationDate", formatDateForBackend(parameters.modificationDate));
 
   // Trapped status
   formData.append("trapped", parameters.trapped || "");

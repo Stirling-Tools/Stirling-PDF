@@ -54,7 +54,6 @@ export const useDocumentDatesTips = (): TooltipContent => {
         bullets: [
           t("changeMetadata.tooltip.dates.bullet1", "Creation Date: When original document was made"),
           t("changeMetadata.tooltip.dates.bullet2", "Modification Date: When last changed"),
-          t("changeMetadata.tooltip.dates.bullet3", "Format: yyyy/MM/dd HH:mm:ss (e.g., 2025/01/17 14:30:00)")
         ]
       }
     ]

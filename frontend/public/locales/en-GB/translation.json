@@ -1081,13 +1081,6 @@
   "changeMetadata": {
     "tags": "Title,author,date,creation,time,publisher,producer,stats",
     "header": "Change Metadata",
-    "selectText": {
-      "1": "Please edit the variables you wish to change",
-      "2": "Delete all metadata",
-      "3": "Show Custom Metadata:",
-      "4": "Other Metadata:",
-      "5": "Add Custom Metadata Entry"
-    },
     "submit": "Change",
     "filenamePrefix": "metadata",
     "settings": {
@@ -1125,16 +1118,15 @@
       "placeholder": "Document producer"
     },
     "dates": {
-      "title": "Document Dates",
-      "format": "Format: yyyy/MM/dd HH:mm:ss"
+      "title": "Document Dates"
     },
     "creationDate": {
       "label": "Creation Date",
-      "placeholder": "e.g. 2025/01/17 14:30:00"
+      "placeholder": "Creation date"
     },
     "modificationDate": {
       "label": "Modification Date",
-      "placeholder": "e.g. 2025/01/17 14:30:00"
+      "placeholder": "Modification date"
     },
     "trapped": {
       "label": "Trapped Status",
@@ -1179,8 +1171,7 @@
         "title": "Date Fields",
         "text": "When the document was created and modified.",
         "bullet1": "Creation Date: When original document was made",
-        "bullet2": "Modification Date: When last changed",
-        "bullet3": "Format: yyyy/MM/dd HH:mm:ss (e.g., 2025/01/17 14:30:00)"
+        "bullet2": "Modification Date: When last changed"
       },
       "options": {
         "title": "Additional Options",

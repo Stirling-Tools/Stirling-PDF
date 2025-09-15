@@ -11,9 +11,9 @@ export interface ChangeMetadataParameters extends BaseParameters {
   creator: string;
   producer: string;
 
-  // Date fields (format: yyyy/MM/dd HH:mm:ss)
-  creationDate: string;
-  modificationDate: string;
+  // Date fields
+  creationDate: Date | null;
+  modificationDate: Date | null;
 
   // Trapped status
   trapped: TrappedStatus;
@@ -32,8 +32,8 @@ export const defaultParameters: ChangeMetadataParameters = {
   keywords: '',
   creator: '',
   producer: '',
-  creationDate: '',
-  modificationDate: '',
+  creationDate: null,
+  modificationDate: null,
   trapped: TrappedStatus.UNKNOWN,
   customMetadata: [],
   deleteAll: false,
@@ -57,8 +57,8 @@ const validateParameters = (params: ChangeMetadataParameters): boolean => {
     || params.keywords.trim()
     || params.creator.trim()
     || params.producer.trim()
-    || params.creationDate.trim()
-    || params.modificationDate.trim()
+    || params.creationDate
+    || params.modificationDate
     || params.trapped !== TrappedStatus.UNKNOWN
   );
 
@@ -66,12 +66,7 @@ const validateParameters = (params: ChangeMetadataParameters): boolean => {
     entry => entry.key.trim() && entry.value.trim()
   );
 
-  // Date validation if provided
-  const datePattern = /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$/;
-  const isValidCreationDate = !params.creationDate.trim() || datePattern.test(params.creationDate);
-  const isValidModificationDate = !params.modificationDate.trim() || datePattern.test(params.modificationDate);
-
-  return (hasStandardMetadata || hasCustomMetadata) && isValidCreationDate && isValidModificationDate;
+  return hasStandardMetadata || hasCustomMetadata;
 };
 
 export type ChangeMetadataParametersHook = BaseParametersHook<ChangeMetadataParameters> & {

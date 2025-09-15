@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useChangeMetadataParameters } from './useChangeMetadataParameters';
+import { defaultParameters, useChangeMetadataParameters } from './useChangeMetadataParameters';
 import { TrappedStatus } from '../../../types/metadata';
 import { describe, expect, test } from 'vitest';
 
@@ -7,19 +7,7 @@ describe('useChangeMetadataParameters', () => {
   test('should initialize with default parameters', () => {
     const { result } = renderHook(() => useChangeMetadataParameters());
 
-    expect(result.current.parameters).toEqual({
-      title: '',
-      author: '',
-      subject: '',
-      keywords: '',
-      creator: '',
-      producer: '',
-      creationDate: '',
-      modificationDate: '',
-      trapped: TrappedStatus.UNKNOWN,
-      customMetadata: [],
-      deleteAll: false,
-    });
+    expect(result.current.parameters).toStrictEqual(defaultParameters);
   });
 
   describe('parameter updates', () => {
@@ -30,8 +18,8 @@ describe('useChangeMetadataParameters', () => {
       { paramName: 'keywords', value: 'test, metadata' },
       { paramName: 'creator', value: 'Test Creator' },
       { paramName: 'producer', value: 'Test Producer' },
-      { paramName: 'creationDate', value: '2025/01/17 14:30:00' },
-      { paramName: 'modificationDate', value: '2025/01/17 15:30:00' },
+      { paramName: 'creationDate', value: new Date('2025/01/17 14:30:00') },
+      { paramName: 'modificationDate', value: new Date('2025/01/17 15:30:00') },
       { paramName: 'trapped', value: TrappedStatus.TRUE },
       { paramName: 'deleteAll', value: true },
     ] as const)('should update $paramName parameter', ({ paramName, value }) => {
@@ -54,8 +42,8 @@ describe('useChangeMetadataParameters', () => {
       { description: 'has keywords', updates: { keywords: 'test' }, expected: true },
       { description: 'has creator', updates: { creator: 'Test Creator' }, expected: true },
       { description: 'has producer', updates: { producer: 'Test Producer' }, expected: true },
-      { description: 'has creation date', updates: { creationDate: '2025/01/17 14:30:00' }, expected: true },
-      { description: 'has modification date', updates: { modificationDate: '2025/01/17 14:30:00' }, expected: true },
+      { description: 'has creation date', updates: { creationDate: new Date('2025/01/17 14:30:00') }, expected: true },
+      { description: 'has modification date', updates: { modificationDate: new Date('2025/01/17 14:30:00') }, expected: true },
       { description: 'has trapped status', updates: { trapped: TrappedStatus.TRUE }, expected: true },
       { description: 'no meaningful content', updates: {}, expected: false },
       { description: 'whitespace only', updates: { title: '   ', author: '   ' }, expected: false },
@@ -72,11 +60,9 @@ describe('useChangeMetadataParameters', () => {
     });
 
     test.each([
-      { description: 'invalid creation date', updates: { title: 'Test', creationDate: 'invalid-date' }, expected: false },
-      { description: 'invalid modification date', updates: { title: 'Test', modificationDate: 'not-a-date' }, expected: false },
-      { description: 'valid creation date', updates: { title: 'Test', creationDate: '2025/01/17 14:30:00' }, expected: true },
-      { description: 'valid modification date', updates: { title: 'Test', modificationDate: '2025/01/17 14:30:00' }, expected: true },
-      { description: 'empty dates are valid', updates: { title: 'Test', creationDate: '', modificationDate: '' }, expected: true },
+      { description: 'valid creation date', updates: { title: 'Test', creationDate: new Date('2025/01/17 14:30:00') }, expected: true },
+      { description: 'valid modification date', updates: { title: 'Test', modificationDate: new Date('2025/01/17 14:30:00') }, expected: true },
+      { description: 'empty dates are valid', updates: { title: 'Test', creationDate: null, modificationDate: null }, expected: true },
     ])('should validate dates correctly with $description', ({ updates, expected }) => {
       const { result } = renderHook(() => useChangeMetadataParameters());
 

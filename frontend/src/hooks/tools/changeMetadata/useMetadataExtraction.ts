@@ -47,8 +47,8 @@ export const useMetadataExtraction = (params: MetadataExtractionParams) => {
         params.updateParameter('keywords', metadata.keywords);
         params.updateParameter('creator', metadata.creator);
         params.updateParameter('producer', metadata.producer);
-        params.updateParameter('creationDate', metadata.creationDate);
-        params.updateParameter('modificationDate', metadata.modificationDate);
+        params.updateParameter('creationDate', metadata.creationDate ? new Date(metadata.creationDate) : null);
+        params.updateParameter('modificationDate', metadata.modificationDate ? new Date(metadata.modificationDate) : null);
         params.updateParameter('trapped', metadata.trapped);
         params.updateParameter('customMetadata', metadata.customMetadata);
 
