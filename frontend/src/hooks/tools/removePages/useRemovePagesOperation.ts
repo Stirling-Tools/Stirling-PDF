@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RemovePagesParameters, defaultParameters } from './useRemovePagesParameters';
+import { useToolResources } from '../shared/useToolResources';
 
 export const buildRemovePagesFormData = (parameters: RemovePagesParameters, file: File): FormData => {
   const formData = new FormData();
@@ -22,6 +23,7 @@ export const removePagesOperationConfig = {
 
 export const useRemovePagesOperation = () => {
   const { t } = useTranslation();
+  const { extractZipFiles } = useToolResources();
 
   const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
     // Try to detect zip vs pdf
@@ -36,7 +38,6 @@ export const useRemovePagesOperation = () => {
 
     // ZIP: extract PDFs inside
     if (head.startsWith('PK')) {
-      const { extractZipFiles } = await import('../shared/useToolResources');
       const files = await extractZipFiles(blob);
       if (files.length > 0) return files;
     }
@@ -52,7 +53,7 @@ export const useRemovePagesOperation = () => {
       throw new Error(`Remove pages service error: ${title}`);
     }
     throw new Error('Unexpected response format from remove pages service');
-  }, []);
+  }, [extractZipFiles]);
 
   return useToolOperation<RemovePagesParameters>({
     ...removePagesOperationConfig,
