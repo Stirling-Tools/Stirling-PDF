@@ -10,7 +10,7 @@ export const buildRemoveBlanksFormData = (parameters: RemoveBlanksParameters, fi
   formData.append('fileInput', file);
   formData.append('threshold', String(parameters.threshold));
   formData.append('whitePercent', String(parameters.whitePercent));
-  formData.append('includeBlankPages', String(parameters.includeBlankPages));
+  // Note: includeBlankPages is not sent to backend as it always returns both files in a ZIP
   return formData;
 };
 
@@ -28,23 +28,11 @@ export const useRemoveBlanksOperation = () => {
   const { extractZipFiles } = useToolResources();
 
   const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
-    // Try to detect zip vs pdf
-    const headBuf = await blob.slice(0, 4).arrayBuffer();
-    const head = new TextDecoder().decode(new Uint8Array(headBuf));
+    // Backend always returns a ZIP file containing the processed PDFs
+    const files = await extractZipFiles(blob);
+    if (files.length > 0) return files;
 
-    // ZIP: extract PDFs inside (nonBlankPages, blankPages, etc.)
-    if (head.startsWith('PK')) {
-      const files = await extractZipFiles(blob);
-      if (files.length > 0) return files;
-    }
-
-    // PDF fallback: return as single file
-    if (head.startsWith('%PDF')) {
-      const base = originalFiles[0]?.name?.replace(/\.[^.]+$/, '') || 'document';
-      return [new File([blob], `noblank_${base}.pdf`, { type: 'application/pdf' })];
-    }
-
-    // Unknown blob type
+    // Fallback error handling
     const textBuf = await blob.slice(0, 1024).arrayBuffer();
     const text = new TextDecoder().decode(new Uint8Array(textBuf));
     if (/error|exception|html/i.test(text)) {
