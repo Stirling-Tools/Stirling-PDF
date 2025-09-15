@@ -1013,11 +1013,46 @@
     "tags": "cleanup,streamline,non-content,organize",
     "title": "Remove Blanks",
     "header": "Remove Blank Pages",
-    "threshold": "Pixel Whiteness Threshold:",
-    "thresholdDesc": "Threshold for determining how white a white pixel must be to be classed as 'White'. 0 = Black, 255 pure white.",
-    "whitePercent": "White Percent (%):",
-    "whitePercentDesc": "Percent of page that must be 'white' pixels to be removed",
-    "submit": "Remove Blanks"
+    "settings": {
+      "title": "Settings"
+    },
+    "threshold": {
+      "label": "Pixel Whiteness Threshold"
+    },
+    "whitePercent": {
+      "label": "White Percentage Threshold",
+      "unit": "%"
+    },
+    "includeBlankPages": {
+      "label": "Include detected blank pages"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Remove Blank Pages Settings"
+      },
+      "threshold": {
+        "title": "Pixel Whiteness Threshold",
+        "text": "Controls how white a pixel must be to be considered 'white'. This helps determine what counts as a blank area on the page.",
+        "bullet1": "0 = Pure black (most restrictive)",
+        "bullet2": "128 = Medium gray",
+        "bullet3": "255 = Pure white (least restrictive)"
+      },
+      "whitePercent": {
+        "title": "White Percentage Threshold",
+        "text": "Sets the minimum percentage of white pixels required for a page to be considered blank and removed.",
+        "bullet1": "Lower values (e.g., 80%) = More pages removed",
+        "bullet2": "Higher values (e.g., 95%) = Only very blank pages removed",
+        "bullet3": "Use higher values for documents with light backgrounds"
+      },
+      "includeBlankPages": {
+        "title": "Include Detected Blank Pages",
+        "text": "When enabled, creates a separate PDF containing all the blank pages that were detected and removed from the original document.",
+        "bullet1": "Useful for reviewing what was removed",
+        "bullet2": "Helps verify the detection accuracy",
+        "bullet3": "Can be disabled to reduce output file size"
+      }
+    },
+    "submit": "Remove blank pages"
   },
   "removeAnnotations": {
     "tags": "comments,highlight,notes,markup,remove",

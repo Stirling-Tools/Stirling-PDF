@@ -6,9 +6,11 @@ import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { useRemoveBlanksParameters } from "../hooks/tools/removeBlanks/useRemoveBlanksParameters";
 import { useRemoveBlanksOperation } from "../hooks/tools/removeBlanks/useRemoveBlanksOperation";
 import RemoveBlanksSettings from "../components/tools/removeBlanks/RemoveBlanksSettings";
+import { useRemoveBlanksTips } from "../components/tooltips/useRemoveBlanksTips";
 
 const RemoveBlanks = (props: BaseToolProps) => {
   const { t } = useTranslation();
+  const tooltipContent = useRemoveBlanksTips();
 
   const base = useBaseTool(
     'remove-blanks',
@@ -18,12 +20,12 @@ const RemoveBlanks = (props: BaseToolProps) => {
   );
 
   // Step expansion state management
-  const [expandedStep, setExpandedStep] = useState<"files" | "advanced" | null>("files");
+  const [expandedStep, setExpandedStep] = useState<"files" | "settings" | null>("files");
 
-  // Auto-expand advanced when files are selected
+  // Auto-expand settings when files are selected
   useEffect(() => {
     if (base.selectedFiles.length > 0 && expandedStep === "files") {
-      setExpandedStep("advanced");
+      setExpandedStep("settings");
     }
   }, [base.selectedFiles.length, expandedStep]);
 
@@ -42,12 +44,12 @@ const RemoveBlanks = (props: BaseToolProps) => {
     />
   );
 
-  const handleAdvancedClick = () => {
+  const handleSettingsClick = () => {
     if (base.hasResults) {
       base.handleSettingsReset();
     } else {
       if (!base.hasFiles) return; 
-      setExpandedStep(expandedStep === "advanced" ? null : "advanced");
+      setExpandedStep(expandedStep === "settings" ? null : "settings");
     }
   };
 
@@ -58,10 +60,11 @@ const RemoveBlanks = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t("removeBlanks.advanced.title", "Advanced"),
-        isCollapsed: expandedStep !== "advanced",
-        onCollapsedClick: handleAdvancedClick,
+        title: t("removeBlanks.settings.title", "Settings"),
+        isCollapsed: expandedStep !== "settings",
+        onCollapsedClick: handleSettingsClick,
         content: settingsContent,
+        tooltip: tooltipContent,
       },
     ],
     executeButton: {
