@@ -169,6 +169,7 @@ export function createNewStirlingFileStub(
     size: file.size,
     type: file.type,
     lastModified: file.lastModified,
+    originalFileId: fileId,
     quickKey: createQuickKey(file),
     createdAt: Date.now(),
     isLeaf: true, // New files are leaf nodes by default
