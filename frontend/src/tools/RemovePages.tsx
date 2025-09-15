@@ -6,9 +6,11 @@ import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { useRemovePagesParameters } from "../hooks/tools/removePages/useRemovePagesParameters";
 import { useRemovePagesOperation } from "../hooks/tools/removePages/useRemovePagesOperation";
 import RemovePagesSettings from "../components/tools/removePages/RemovePagesSettings";
+import { useRemovePagesTips } from "../components/tooltips/useRemovePagesTips";
 
 const RemovePages = (props: BaseToolProps) => {
   const { t } = useTranslation();
+  const tooltipContent = useRemovePagesTips();
 
   const base = useBaseTool(
     'remove-pages',
@@ -37,6 +39,7 @@ const RemovePages = (props: BaseToolProps) => {
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
         content: settingsContent,
+        tooltip: tooltipContent,
       },
     ],
     executeButton: {

@@ -1,4 +1,4 @@
-import { Stack, Text, TextInput } from "@mantine/core";
+import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemovePagesParameters } from "../../../hooks/tools/removePages/useRemovePagesParameters";
 
@@ -19,19 +19,14 @@ const RemovePagesSettings = ({ parameters, onParameterChange, disabled = false }
 
   return (
     <Stack gap="md">
-      <Stack gap="xs">
-        <TextInput
-          label={t('removePages.pageNumbers.label', 'Pages to Remove')}
-          value={parameters.pageNumbers}
-          onChange={(event) => handlePageNumbersChange(event.currentTarget.value)}
-          placeholder={t('removePages.pageNumbers.placeholder', 'e.g., 1,3,5-8,10')}
-          disabled={disabled}
-          required
-        />
-        <Text size="xs" c="dimmed">
-          {t('removePages.pageNumbers.desc', 'Enter page numbers or ranges separated by commas. Examples: 1,3,5 or 1-5,10-15')}
-        </Text>
-      </Stack>
+      <TextInput
+        label={t('removePages.pageNumbers.label', 'Pages to Remove')}
+        value={parameters.pageNumbers}
+        onChange={(event) => handlePageNumbersChange(event.currentTarget.value)}
+        placeholder={t('removePages.pageNumbers.placeholder', 'e.g., 1,3,5-8,10')}
+        disabled={disabled}
+        required
+      />
     </Stack>
   );
 };
