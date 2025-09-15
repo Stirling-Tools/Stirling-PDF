@@ -1,6 +1,6 @@
 import { Stack, Divider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ChangeMetadataParameters } from "../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { ChangeMetadataParameters, createCustomMetadataFunctions } from "../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { useMetadataExtraction } from "../../../hooks/tools/changeMetadata/useMetadataExtraction";
 import DeleteAllStep from "./steps/DeleteAllStep";
 import StandardMetadataStep from "./steps/StandardMetadataStep";
@@ -11,20 +11,20 @@ interface ChangeMetadataSingleStepProps {
   parameters: ChangeMetadataParameters;
   onParameterChange: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void;
   disabled?: boolean;
-  addCustomMetadata: (key?: string, value?: string) => void;
-  removeCustomMetadata: (id: string) => void;
-  updateCustomMetadata: (id: string, key: string, value: string) => void;
 }
 
 const ChangeMetadataSingleStep = ({
   parameters,
   onParameterChange,
-  disabled = false,
-  addCustomMetadata,
-  removeCustomMetadata,
-  updateCustomMetadata
+  disabled = false
 }: ChangeMetadataSingleStepProps) => {
   const { t } = useTranslation();
+
+  // Get custom metadata functions using the utility
+  const { addCustomMetadata, removeCustomMetadata, updateCustomMetadata } = createCustomMetadataFunctions(
+    parameters,
+    onParameterChange
+  );
 
   // Extract metadata from uploaded files
   const { isExtractingMetadata } = useMetadataExtraction({

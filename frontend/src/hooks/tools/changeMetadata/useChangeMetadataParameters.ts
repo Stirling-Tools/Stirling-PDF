@@ -42,6 +42,45 @@ export const defaultParameters: ChangeMetadataParameters = {
 // Global counter for custom metadata IDs
 let customMetadataIdCounter = 1;
 
+// Utility functions that can work with external parameters
+export const createCustomMetadataFunctions = (
+  parameters: ChangeMetadataParameters,
+  onParameterChange: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void
+) => {
+  const addCustomMetadata = (key: string = '', value: string = '') => {
+    const newEntry: CustomMetadataEntry = {
+      key,
+      value,
+      id: `custom${customMetadataIdCounter++}`,
+    };
+
+    onParameterChange('customMetadata', [
+      ...parameters.customMetadata,
+      newEntry,
+    ]);
+  };
+
+  const removeCustomMetadata = (id: string) => {
+    onParameterChange('customMetadata',
+      parameters.customMetadata.filter(entry => entry.id !== id)
+    );
+  };
+
+  const updateCustomMetadata = (id: string, key: string, value: string) => {
+    onParameterChange('customMetadata',
+      parameters.customMetadata.map(entry =>
+        entry.id === id ? { ...entry, key, value } : entry
+      )
+    );
+  };
+
+  return {
+    addCustomMetadata,
+    removeCustomMetadata,
+    updateCustomMetadata
+  };
+};
+
 // Validation function
 const validateParameters = (params: ChangeMetadataParameters): boolean => {
   // If deleteAll is true, no other validation needed
@@ -82,32 +121,11 @@ export const useChangeMetadataParameters = (): ChangeMetadataParametersHook => {
     validateFn: validateParameters,
   });
 
-  const addCustomMetadata = (key: string = '', value: string = '') => {
-    const newEntry: CustomMetadataEntry = {
-      key,
-      value,
-      id: `custom${customMetadataIdCounter++}`,
-    };
-
-    base.updateParameter('customMetadata', [
-      ...base.parameters.customMetadata,
-      newEntry,
-    ]);
-  };
-
-  const removeCustomMetadata = (id: string) => {
-    base.updateParameter('customMetadata',
-      base.parameters.customMetadata.filter(entry => entry.id !== id)
-    );
-  };
-
-  const updateCustomMetadata = (id: string, key: string, value: string) => {
-    base.updateParameter('customMetadata',
-      base.parameters.customMetadata.map(entry =>
-        entry.id === id ? { ...entry, key, value } : entry
-      )
-    );
-  };
+  // Use the utility functions with the hook's parameters and updateParameter
+  const { addCustomMetadata, removeCustomMetadata, updateCustomMetadata } = createCustomMetadataFunctions(
+    base.parameters,
+    base.updateParameter,
+  );
 
   return {
     ...base,
