@@ -8,6 +8,7 @@ import ConvertPanel from "../tools/Convert";
 import Sanitize from "../tools/Sanitize";
 import AddPassword from "../tools/AddPassword";
 import ChangePermissions from "../tools/ChangePermissions";
+import RemoveBlanks from "../tools/RemoveBlanks";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
@@ -416,10 +417,12 @@ export function useFlatToolRegistry(): ToolRegistry {
       "remove-blank-pages": {
         icon: <LocalIcon icon="scan-delete-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeBlanks.title", "Remove Blank Pages"),
-        component: null,
+        component: RemoveBlanks,
         description: t("home.removeBlanks.desc", "Remove blank pages from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        maxFiles: 1,
+        endpoints: ["remove-blanks"],
       },
       "remove-annotations": {
         icon: <LocalIcon icon="thread-unread-rounded" width="1.5rem" height="1.5rem" />,
