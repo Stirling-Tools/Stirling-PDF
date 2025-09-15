@@ -26,7 +26,7 @@ import { StirlingFile } from "../../../types/fileContext";
 
 interface ConvertSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: (key: keyof ConvertParameters, value: any) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
   getAvailableToExtensions: (fromExtension: string) => Array<{value: string, label: string, group: string}>;
   selectedFiles: StirlingFile[];
   disabled?: boolean;
