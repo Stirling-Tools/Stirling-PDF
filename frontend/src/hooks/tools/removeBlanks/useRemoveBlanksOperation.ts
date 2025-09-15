@@ -27,7 +27,7 @@ export const useRemoveBlanksOperation = () => {
   const { t } = useTranslation();
   const { extractZipFiles } = useToolResources();
 
-  const responseHandler = useCallback(async (blob: Blob, _originalFiles: File[]): Promise<File[]> => {
+  const responseHandler = useCallback(async (blob: Blob): Promise<File[]> => {
     // Backend always returns a ZIP file containing the processed PDFs
     const files = await extractZipFiles(blob);
     if (files.length > 0) return files;
