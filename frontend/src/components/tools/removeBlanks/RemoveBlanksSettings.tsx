@@ -13,7 +13,7 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
   const { t } = useTranslation();
 
   return (
-    <Stack gap="md">
+    <Stack gap="lg" mt="md">
       <Stack gap="xs">
         <NumberInputWithUnit
           label={t('removeBlanks.threshold.label', 'Pixel Whiteness Threshold')}
@@ -24,9 +24,6 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
           max={255}
           disabled={disabled}
         />
-        <Text size="xs" c="dimmed">
-          {t('removeBlanks.threshold.desc', "Threshold for determining how white a white pixel must be to be classed as 'White'. 0 = Black, 255 pure white.")}
-        </Text>
       </Stack>
 
       <Stack gap="xs">
@@ -39,9 +36,6 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
           max={100}
           disabled={disabled}
         />
-        <Text size="xs" c="dimmed">
-          {t('removeBlanks.whitePercent.desc', "Percent of page that must be 'white' pixels to be removed")}
-        </Text>
       </Stack>
 
       <Stack gap="xs">
@@ -52,9 +46,6 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
           label={
             <div>
               <Text size="sm">{t('removeBlanks.includeBlankPages.label', 'Include detected blank pages')}</Text>
-              <Text size="xs" c="dimmed">
-                {t('removeBlanks.includeBlankPages.desc', 'Include the detected blank pages as a separate PDF in the output')}
-              </Text>
             </div>
           }
         />
