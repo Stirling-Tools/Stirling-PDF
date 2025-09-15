@@ -38,7 +38,7 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
     <Collapse in={isExpanded}>
       <Box ml="md" mt="xs" mb="sm">
         <Group align="center" mb="sm">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+          <Text size="xs" fw={600} c="dimmed">
             {t('fileManager.fileHistory', 'File History')} ({sortedHistory.length})
           </Text>
         </Group>
