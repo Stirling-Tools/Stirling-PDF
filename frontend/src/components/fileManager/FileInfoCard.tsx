@@ -53,55 +53,6 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
           </Group>
           <Divider />
 
-          {/* Standard PDF Metadata */}
-          {currentFile?.pdfMetadata?.title && (
-            <>
-              <Group justify="space-between" py="xs">
-                <Text size="sm" c="dimmed">{t('fileManager.title', 'Title')}</Text>
-                <Text size="sm" fw={500} style={{ maxWidth: '60%', textAlign: 'right' }} truncate>
-                  {currentFile.pdfMetadata.title}
-                </Text>
-              </Group>
-              <Divider />
-            </>
-          )}
-
-          {currentFile?.pdfMetadata?.author && (
-            <>
-              <Group justify="space-between" py="xs">
-                <Text size="sm" c="dimmed">{t('fileManager.author', 'Author')}</Text>
-                <Text size="sm" fw={500} style={{ maxWidth: '60%', textAlign: 'right' }} truncate>
-                  {currentFile.pdfMetadata.author}
-                </Text>
-              </Group>
-              <Divider />
-            </>
-          )}
-
-          {currentFile?.pdfMetadata?.subject && (
-            <>
-              <Group justify="space-between" py="xs">
-                <Text size="sm" c="dimmed">{t('fileManager.subject', 'Subject')}</Text>
-                <Text size="sm" fw={500} style={{ maxWidth: '60%', textAlign: 'right' }} truncate>
-                  {currentFile.pdfMetadata.subject}
-                </Text>
-              </Group>
-              <Divider />
-            </>
-          )}
-
-          {currentFile?.pdfMetadata?.creationDate && (
-            <>
-              <Group justify="space-between" py="xs">
-                <Text size="sm" c="dimmed">{t('fileManager.created', 'Created')}</Text>
-                <Text size="sm" fw={500}>
-                  {new Date(currentFile.pdfMetadata.creationDate).toLocaleDateString()}
-                </Text>
-              </Group>
-              <Divider />
-            </>
-          )}
-
           <Group justify="space-between" py="xs">
             <Text size="sm" c="dimmed">{t('fileManager.lastModified', 'Last Modified')}</Text>
             <Text size="sm" fw={500}>

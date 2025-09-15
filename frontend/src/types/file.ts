@@ -37,14 +37,4 @@ export interface BaseFileMetadata {
     timestamp: number;
   }>; // Tool chain for history tracking
 
-  // Standard PDF document metadata
-  pdfMetadata?: {
-    title?: string;
-    author?: string;
-    subject?: string;
-    creator?: string;
-    producer?: string;
-    creationDate?: Date;
-    modificationDate?: Date;
-  };
 }
