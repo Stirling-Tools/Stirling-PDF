@@ -7,6 +7,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
+import '../../types/embedPdf';
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -41,23 +42,23 @@ export function PdfViewerToolbar({
   useEffect(() => {
     const updateState = () => {
       // Update zoom
-      if ((window as any).embedPdfZoom) {
-        const zoomPercent = (window as any).embedPdfZoom.zoomPercent || currentZoom;
+      if (window.embedPdfZoom) {
+        const zoomPercent = window.embedPdfZoom.zoomPercent || currentZoom;
         setDynamicZoom(zoomPercent);
       }
       
       // Update scroll/page state
-      if ((window as any).embedPdfScroll) {
-        const currentPageNum = (window as any).embedPdfScroll.currentPage || currentPage;
-        const totalPagesNum = (window as any).embedPdfScroll.totalPages || totalPages;
+      if (window.embedPdfScroll) {
+        const currentPageNum = window.embedPdfScroll.currentPage || currentPage;
+        const totalPagesNum = window.embedPdfScroll.totalPages || totalPages;
         setDynamicPage(currentPageNum);
         setDynamicTotalPages(totalPagesNum);
         setPageInput(currentPageNum);
       }
       
       // Update pan mode state
-      if ((window as any).embedPdfPan) {
-        const panState = (window as any).embedPdfPan.isPanning || false;
+      if (window.embedPdfPan) {
+        const panState = window.embedPdfPan.isPanning || false;
         setIsPanning(panState);
       }
     };
@@ -72,20 +73,20 @@ export function PdfViewerToolbar({
   }, [currentZoom, currentPage, totalPages]);
 
   const handleZoomOut = () => {
-    if ((window as any).embedPdfZoom) {
-      (window as any).embedPdfZoom.zoomOut();
+    if (window.embedPdfZoom) {
+      window.embedPdfZoom.zoomOut();
     }
   };
 
   const handleZoomIn = () => {
-    if ((window as any).embedPdfZoom) {
-      (window as any).embedPdfZoom.zoomIn();
+    if (window.embedPdfZoom) {
+      window.embedPdfZoom.zoomIn();
     }
   };
 
   const handlePageNavigation = (page: number) => {
-    if ((window as any).embedPdfScroll) {
-      (window as any).embedPdfScroll.scrollToPage(page);
+    if (window.embedPdfScroll) {
+      window.embedPdfScroll.scrollToPage(page);
     } else if (onPageChange) {
       onPageChange(page);
     }
@@ -93,32 +94,32 @@ export function PdfViewerToolbar({
   };
 
   const handleFirstPage = () => {
-    if ((window as any).embedPdfScroll) {
-      (window as any).embedPdfScroll.scrollToFirstPage();
+    if (window.embedPdfScroll) {
+      window.embedPdfScroll.scrollToFirstPage();
     } else {
       handlePageNavigation(1);
     }
   };
 
   const handlePreviousPage = () => {
-    if ((window as any).embedPdfScroll) {
-      (window as any).embedPdfScroll.scrollToPreviousPage();
+    if (window.embedPdfScroll) {
+      window.embedPdfScroll.scrollToPreviousPage();
     } else {
       handlePageNavigation(Math.max(1, dynamicPage - 1));
     }
   };
 
   const handleNextPage = () => {
-    if ((window as any).embedPdfScroll) {
-      (window as any).embedPdfScroll.scrollToNextPage();
+    if (window.embedPdfScroll) {
+      window.embedPdfScroll.scrollToNextPage();
     } else {
       handlePageNavigation(Math.min(dynamicTotalPages, dynamicPage + 1));
     }
   };
 
   const handleLastPage = () => {
-    if ((window as any).embedPdfScroll) {
-      (window as any).embedPdfScroll.scrollToLastPage();
+    if (window.embedPdfScroll) {
+      window.embedPdfScroll.scrollToLastPage();
     } else {
       handlePageNavigation(dynamicTotalPages);
     }

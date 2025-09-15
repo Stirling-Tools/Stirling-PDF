@@ -6,9 +6,11 @@ import CloseIcon from '@mui/icons-material/Close';
 
 import { useFileState } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
+import { ViewerProvider, useViewer } from "../../contexts/ViewerContext";
 import { LocalEmbedPDF } from './LocalEmbedPDF';
 import { PdfViewerToolbar } from './PdfViewerToolbar';
 import { ThumbnailSidebar } from './ThumbnailSidebar';
+import '../../types/embedPdf';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -17,7 +19,7 @@ export interface EmbedPdfViewerProps {
   previewFile?: File | null;
 }
 
-const EmbedPdfViewer = ({
+const EmbedPdfViewerContent = ({
   sidebarsVisible,
   setSidebarsVisible,
   onClose,
@@ -28,7 +30,7 @@ const EmbedPdfViewer = ({
   const { colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
-  const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = React.useState(false);
+  const { isThumbnailSidebarVisible, toggleThumbnailSidebar } = useViewer();
 
   // Get current file from FileContext
   const { selectors } = useFileState();
@@ -68,7 +70,7 @@ const EmbedPdfViewer = ({
         event.preventDefault();
         event.stopPropagation();
 
-        const zoomAPI = (window as any).embedPdfZoom;
+        const zoomAPI = window.embedPdfZoom;
         if (zoomAPI) {
           if (event.deltaY < 0) {
             // Scroll up - zoom in
@@ -97,7 +99,7 @@ const EmbedPdfViewer = ({
 
       // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
       if (event.ctrlKey || event.metaKey) {
-        const zoomAPI = (window as any).embedPdfZoom;
+        const zoomAPI = window.embedPdfZoom;
         if (zoomAPI) {
           if (event.key === '=' || event.key === '+') {
             // Ctrl+= or Ctrl++ for zoom in
@@ -120,14 +122,12 @@ const EmbedPdfViewer = ({
 
   // Expose toggle functions globally for right rail buttons
   React.useEffect(() => {
-    (window as any).toggleThumbnailSidebar = () => {
-      setIsThumbnailSidebarVisible(prev => !prev);
-    };
+    window.toggleThumbnailSidebar = toggleThumbnailSidebar;
     
     return () => {
-      delete (window as any).toggleThumbnailSidebar;
+      delete window.toggleThumbnailSidebar;
     };
-  }, []);
+  }, [toggleThumbnailSidebar]);
 
   return (
     <Box 
@@ -212,7 +212,7 @@ const EmbedPdfViewer = ({
               }}
               dualPage={false}
               onDualPageToggle={() => {
-                (window as any).embedPdfSpread?.toggleSpreadMode();
+                window.embedPdfSpread?.toggleSpreadMode();
               }}
               currentZoom={100}
             />
@@ -224,10 +224,18 @@ const EmbedPdfViewer = ({
       {/* Thumbnail Sidebar */}
       <ThumbnailSidebar
         visible={isThumbnailSidebarVisible}
-        onToggle={() => setIsThumbnailSidebarVisible(prev => !prev)}
+        onToggle={toggleThumbnailSidebar}
         colorScheme={colorScheme}
       />
     </Box>
+  );
+};
+
+const EmbedPdfViewer = (props: EmbedPdfViewerProps) => {
+  return (
+    <ViewerProvider>
+      <EmbedPdfViewerContent {...props} />
+    </ViewerProvider>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, ScrollArea, ActionIcon, Tooltip } from '@mantine/core';
 import { LocalIcon } from '../shared/LocalIcon';
+import '../../types/embedPdf';
 
 interface ThumbnailSidebarProps {
   visible: boolean;
@@ -18,7 +19,7 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
 
   // Get total pages from scroll API
   useEffect(() => {
-    const scrollAPI = (window as any).embedPdfScroll;
+    const scrollAPI = window.embedPdfScroll;
     if (scrollAPI && scrollAPI.totalPages) {
       setTotalPages(scrollAPI.totalPages);
     }
@@ -28,7 +29,7 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
   useEffect(() => {
     if (!visible || totalPages === 0) return;
 
-    const thumbnailAPI = (window as any).embedPdfThumbnail?.thumbnailAPI;
+    const thumbnailAPI = window.embedPdfThumbnail?.thumbnailAPI;
     console.log('📄 ThumbnailSidebar useEffect triggered:', {
       visible,
       thumbnailAPI: !!thumbnailAPI,
@@ -88,14 +89,14 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
         }
       });
     };
-  }, [visible, totalPages, thumbnails]);
+  }, [visible, totalPages]);
 
   const handlePageClick = (pageIndex: number) => {
     const pageNumber = pageIndex + 1; // Convert to 1-based
     setSelectedPage(pageNumber);
     
     // Use scroll API to navigate to page
-    const scrollAPI = (window as any).embedPdfScroll;
+    const scrollAPI = window.embedPdfScroll;
     if (scrollAPI && scrollAPI.scrollToPage) {
       scrollAPI.scrollToPage(pageNumber);
     }
