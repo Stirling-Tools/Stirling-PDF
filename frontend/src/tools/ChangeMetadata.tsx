@@ -65,7 +65,7 @@ const ChangeMetadata = (props: BaseToolProps) => {
 
   // Create step objects
   const createStandardMetadataStep = () => ({
-    title: t("changeMetadata.standardFields.title", "Standard Metadata"),
+    title: t("changeMetadata.standardFields.title", "Standard Fields"),
     isCollapsed: getActualCollapsedState(MetadataStep.STANDARD_METADATA),
     onCollapsedClick: () => handleStepToggle(MetadataStep.STANDARD_METADATA),
     tooltip: standardMetadataTips,
@@ -79,7 +79,7 @@ const ChangeMetadata = (props: BaseToolProps) => {
   });
 
   const createDocumentDatesStep = () => ({
-    title: t("changeMetadata.dates.title", "Document Dates"),
+    title: t("changeMetadata.dates.title", "Date Fields"),
     isCollapsed: getActualCollapsedState(MetadataStep.DOCUMENT_DATES),
     onCollapsedClick: () => handleStepToggle(MetadataStep.DOCUMENT_DATES),
     tooltip: documentDatesTips,
@@ -113,7 +113,7 @@ const ChangeMetadata = (props: BaseToolProps) => {
   const buildSteps = () => {
     const steps = [
       {
-        title: t("changeMetadata.deleteAll.label", "Delete All Metadata"),
+        title: t("changeMetadata.deleteAll.label", "Remove Existing Metadata"),
         isCollapsed: getActualCollapsedState(MetadataStep.DELETE_ALL),
         onCollapsedClick: () => handleStepToggle(MetadataStep.DELETE_ALL),
         tooltip: deleteAllTips,

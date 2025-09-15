@@ -6,12 +6,11 @@ export const useDeleteAllTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("changeMetadata.tooltip.deleteAll.title", "Delete All Metadata")
+      title: t("changeMetadata.tooltip.deleteAll.title", "Remove Existing Metadata")
     },
     tips: [
       {
-        title: t("changeMetadata.tooltip.deleteAll.title", "Delete All Metadata"),
-        description: t("changeMetadata.tooltip.deleteAll.text", "Complete metadata removal for privacy and clean documents."),
+        description: t("changeMetadata.tooltip.deleteAll.text", "Complete metadata deletion to ensure privacy."),
       }
     ]
   };
@@ -26,7 +25,6 @@ export const useStandardMetadataTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("changeMetadata.tooltip.standardFields.title", "Standard Fields"),
         description: t("changeMetadata.tooltip.standardFields.text", "Common PDF metadata fields that describe the document."),
         bullets: [
           t("changeMetadata.tooltip.standardFields.bullet1", "Title: Document name or heading"),
@@ -49,7 +47,6 @@ export const useDocumentDatesTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("changeMetadata.tooltip.dates.title", "Date Fields"),
         description: t("changeMetadata.tooltip.dates.text", "When the document was created and modified."),
         bullets: [
           t("changeMetadata.tooltip.dates.bullet1", "Creation Date: When original document was made"),
@@ -69,7 +66,6 @@ export const useCustomMetadataTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("changeMetadata.tooltip.customFields.title", "Custom Metadata"),
         description: t("changeMetadata.tooltip.customFields.text", "Add your own custom key-value metadata pairs."),
         bullets: [
           t("changeMetadata.tooltip.customFields.bullet1", "Add any custom fields relevant to your document"),

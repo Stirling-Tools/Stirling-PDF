@@ -1087,11 +1087,11 @@
       "title": "Metadata Settings"
     },
     "standardFields": {
-      "title": "Standard Metadata"
+      "title": "Standard Fields"
     },
     "deleteAll": {
-      "label": "Delete all metadata",
-      "description": "Remove all metadata from the PDF document"
+      "label": "Remove Existing Metadata",
+      "checkbox": "Delete all metadata"
     },
     "title": {
       "label": "Title",
@@ -1118,7 +1118,7 @@
       "placeholder": "Document producer"
     },
     "dates": {
-      "title": "Document Dates"
+      "title": "Date Fields"
     },
     "creationDate": {
       "label": "Creation Date",
@@ -1130,7 +1130,6 @@
     },
     "trapped": {
       "label": "Trapped Status",
-      "description": "Indicates whether the document has been trapped for high-quality printing",
       "unknown": "Unknown",
       "true": "True",
       "false": "False"
@@ -1181,8 +1180,8 @@
         "bullet3": "Delete All: Remove all metadata for privacy"
       },
       "deleteAll": {
-        "title": "Delete All Metadata",
-        "text": "Complete metadata removal for privacy and clean documents."
+        "title": "Remove Existing Metadata",
+        "text": "Complete metadata deletion to ensure privacy."
       },
       "customFields": {
         "title": "Custom Metadata",

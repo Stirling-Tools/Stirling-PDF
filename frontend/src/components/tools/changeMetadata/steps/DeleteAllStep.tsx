@@ -17,8 +17,7 @@ const DeleteAllStep = ({
 
   return (
     <Checkbox
-      label={t('changeMetadata.deleteAll.label', 'Delete all metadata')}
-      description={t('changeMetadata.deleteAll.description', 'Remove all metadata from the PDF document')}
+      label={t('changeMetadata.deleteAll.checkbox', 'Delete all metadata')}
       checked={parameters.deleteAll}
       onChange={(e) => onParameterChange('deleteAll', e.target.checked)}
       disabled={disabled}

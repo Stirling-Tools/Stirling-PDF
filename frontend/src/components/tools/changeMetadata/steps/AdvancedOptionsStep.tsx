@@ -28,7 +28,6 @@ const AdvancedOptionsStep = ({
       {/* Trapped Status */}
       <Select
         label={t('changeMetadata.trapped.label', 'Trapped Status')}
-        description={t('changeMetadata.trapped.description', 'Indicates whether the document has been trapped for high-quality printing')}
         value={parameters.trapped}
         onChange={(value) => {
           if (value) {
