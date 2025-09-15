@@ -386,6 +386,13 @@
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
         {
+            "moduleName": "@posthog/core",
+            "moduleUrl": "https://github.com/PostHog/posthog-js",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
             "moduleName": "@tailwindcss/node",
             "moduleUrl": "https://github.com/tailwindlabs/tailwindcss",
             "moduleVersion": "4.1.8",
@@ -743,6 +750,13 @@
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
         {
+            "moduleName": "core-js",
+            "moduleUrl": "https://github.com/zloirock/core-js",
+            "moduleVersion": "3.45.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
             "moduleName": "core-util-is",
             "moduleUrl": "https://github.com/isaacs/core-util-is",
             "moduleVersion": "1.0.3",
@@ -921,6 +935,13 @@
             "moduleName": "escape-string-regexp",
             "moduleUrl": "https://github.com/sindresorhus/escape-string-regexp",
             "moduleVersion": "4.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "fflate",
+            "moduleUrl": "https://github.com/101arrowz/fflate",
+            "moduleVersion": "0.4.8",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
@@ -1534,6 +1555,20 @@
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
         {
+            "moduleName": "posthog-js",
+            "moduleUrl": "https://github.com/PostHog/posthog-js",
+            "moduleVersion": "1.261.0",
+            "moduleLicense": "MIT*",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "preact",
+            "moduleUrl": "https://github.com/preactjs/preact",
+            "moduleVersion": "10.27.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
             "moduleName": "pretty-format",
             "moduleUrl": "https://github.com/facebook/jest",
             "moduleVersion": "27.5.1",
@@ -1928,7 +1963,7 @@
         {
             "moduleName": "typescript",
             "moduleUrl": "https://github.com/microsoft/TypeScript",
-            "moduleVersion": "5.8.3",
+            "moduleVersion": "5.9.2",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1992,6 +2027,13 @@
             "moduleName": "web-vitals",
             "moduleUrl": "https://github.com/GoogleChrome/web-vitals",
             "moduleVersion": "2.1.4",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "web-vitals",
+            "moduleUrl": "https://github.com/GoogleChrome/web-vitals",
+            "moduleVersion": "4.2.4",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
