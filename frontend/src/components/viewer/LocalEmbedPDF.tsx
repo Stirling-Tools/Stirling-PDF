@@ -87,7 +87,7 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
-        defaultZoomLevel: 1.0, // Start at exactly 100% zoom
+        defaultZoomLevel: 1.4, // Start at 140% zoom for better readability
         minZoom: 0.2,
         maxZoom: 3.0,
       }),
