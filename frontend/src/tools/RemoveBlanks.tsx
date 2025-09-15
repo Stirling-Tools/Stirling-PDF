@@ -46,7 +46,7 @@ const RemoveBlanks = (props: BaseToolProps) => {
     if (base.hasResults) {
       base.handleSettingsReset();
     } else {
-      if (!base.hasFiles) return; // Only allow if files are selected
+      if (!base.hasFiles) return; 
       setExpandedStep(expandedStep === "advanced" ? null : "advanced");
     }
   };
