@@ -12,6 +12,7 @@ export interface SplitParameters extends BaseParameters {
   bookmarkLevel: string;
   includeMetadata: boolean;
   allowDuplicates: boolean;
+  duplexMode: boolean;
 }
 
 export type SplitParametersHook = BaseParametersHook<SplitParameters>;
@@ -26,6 +27,7 @@ export const defaultParameters: SplitParameters = {
   bookmarkLevel: '1',
   includeMetadata: false,
   allowDuplicates: false,
+  duplexMode: false,
 };
 
 export const useSplitParameters = (): SplitParametersHook => {
@@ -49,6 +51,8 @@ export const useSplitParameters = (): SplitParametersHook => {
           return params.splitValue.trim() !== "";
         case SPLIT_METHODS.BY_CHAPTERS:
           return params.bookmarkLevel !== "";
+        case SPLIT_METHODS.BY_PAGE_DIVIDER:
+          return true; // No required parameters
         default:
           return false;
       }

@@ -53,6 +53,17 @@ export const useSplitTips = (): TooltipContent => {
           t("split.tooltip.byChapters.bullet2", "Include Metadata: Preserve document properties"),
           t("split.tooltip.byChapters.bullet3", "Allow Duplicates: Handle repeated bookmark names")
         ]
+      },
+      {
+        title: t("split.tooltip.byPageDivider.title", "Split by Page Divider"),
+        description: t("split.tooltip.byPageDivider.text", "Automatically split scanned documents using physical divider sheets with QR codes. Perfect for processing multiple documents scanned together."),
+        bullets: [
+          t("split.tooltip.byPageDivider.bullet1", "Print divider sheets from the download link"),
+          t("split.tooltip.byPageDivider.bullet2", "Insert divider sheets between your documents"),
+          t("split.tooltip.byPageDivider.bullet3", "Scan all documents together as one PDF"),
+          t("split.tooltip.byPageDivider.bullet4", "Upload - divider pages are automatically detected and removed"),
+          t("split.tooltip.byPageDivider.bullet5", "Enable Duplex Mode if scanning both sides of divider sheets")
+        ]
       }
     ]
   };

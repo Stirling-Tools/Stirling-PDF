@@ -4,7 +4,8 @@ export const SPLIT_METHODS = {
   BY_SIZE: 'bySize',
   BY_PAGE_COUNT: 'byPageCount',
   BY_DOC_COUNT: 'byDocCount',
-  BY_CHAPTERS: 'byChapters'
+  BY_CHAPTERS: 'byChapters',
+  BY_PAGE_DIVIDER: 'byPageDivider'
 } as const;
 
 
@@ -14,7 +15,8 @@ export const ENDPOINTS = {
   [SPLIT_METHODS.BY_SIZE]: 'split-by-size-or-count',
   [SPLIT_METHODS.BY_PAGE_COUNT]: 'split-by-size-or-count',
   [SPLIT_METHODS.BY_DOC_COUNT]: 'split-by-size-or-count',
-  [SPLIT_METHODS.BY_CHAPTERS]: 'split-pdf-by-chapters'
+  [SPLIT_METHODS.BY_CHAPTERS]: 'split-pdf-by-chapters',
+  [SPLIT_METHODS.BY_PAGE_DIVIDER]: 'auto-split-pdf'
 } as const;
 
 export type SplitMethod = typeof SPLIT_METHODS[keyof typeof SPLIT_METHODS];

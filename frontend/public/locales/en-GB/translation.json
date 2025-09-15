@@ -697,7 +697,8 @@
       "bySize": "Split by File Size",
       "byPageCount": "Split by Page Count",
       "byDocCount": "Split by Document Count",
-      "byChapters": "Split by Chapters"
+      "byChapters": "Split by Chapters",
+      "byPageDivider": "Split by Page Divider"
     },
     "value": {
       "fileSize": {
