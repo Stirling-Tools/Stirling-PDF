@@ -278,19 +278,6 @@ export default function RightRail() {
               </ActionIcon>
             </Tooltip>
 
-            {/* Select Mode */}
-            <Tooltip content={t('rightRail.selectMode', 'Select Mode')} position="left" offset={12} arrow>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => window.embedPdfControls?.pointer()}
-                disabled={currentView !== 'viewer'}
-              >
-                <LocalIcon icon="mouse-pointer" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </Tooltip>
-
             {/* Rotate Left */}
             <Tooltip content={t('rightRail.rotateLeft', 'Rotate Left')} position="left" offset={12} arrow>
               <ActionIcon
