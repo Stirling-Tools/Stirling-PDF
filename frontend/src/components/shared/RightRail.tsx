@@ -7,6 +7,7 @@ import { useRightRail } from '../../contexts/RightRailContext';
 import { useFileState, useFileSelection, useFileManagement } from '../../contexts/FileContext';
 import { useNavigationState } from '../../contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
+import '../../types/embedPdf';
 
 import LanguageSelector from '../shared/LanguageSelector';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
@@ -17,6 +18,7 @@ import { SearchInterface } from '../viewer/SearchInterface';
 export default function RightRail() {
   const { t } = useTranslation();
   const [isPanning, setIsPanning] = useState(false);
+  const [currentRotation, setCurrentRotation] = useState(0);
   const { toggleTheme } = useRainbowThemeContext();
   const { buttons, actions } = useRightRail();
   const topButtons = useMemo(() => buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true)), [buttons]);
@@ -29,6 +31,24 @@ export default function RightRail() {
 
   // Navigation view
   const { workbench: currentView } = useNavigationState();
+
+  // Sync rotation state with EmbedPDF API
+  useEffect(() => {
+    if (currentView === 'viewer' && window.embedPdfRotate) {
+      const updateRotation = () => {
+        const rotation = window.embedPdfRotate?.getRotation() || 0;
+        setCurrentRotation(rotation * 90); // Convert enum to degrees
+      };
+      
+      // Update rotation immediately
+      updateRotation();
+      
+      // Set up periodic updates to keep state in sync
+      const interval = setInterval(updateRotation, 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [currentView]);
 
   // File state and selection
   const { state, selectors } = useFileState();
@@ -249,7 +269,7 @@ export default function RightRail() {
                 radius="md"
                 className="right-rail-icon"
                 onClick={() => {
-                  (window as any).embedPdfPan?.togglePan();
+                  window.embedPdfPan?.togglePan();
                   setIsPanning(!isPanning);
                 }}
                 disabled={currentView !== 'viewer'}
@@ -264,10 +284,40 @@ export default function RightRail() {
                 variant="subtle"
                 radius="md"
                 className="right-rail-icon"
-                onClick={() => (window as any).embedPdfControls?.pointer()}
+                onClick={() => window.embedPdfControls?.pointer()}
                 disabled={currentView !== 'viewer'}
               >
                 <LocalIcon icon="mouse-pointer" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Rotate Left */}
+            <Tooltip content={t('rightRail.rotateLeft', 'Rotate Left')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => {
+                  window.embedPdfRotate?.rotateBackward();
+                }}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="rotate-left" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Rotate Right */}
+            <Tooltip content={t('rightRail.rotateRight', 'Rotate Right')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => {
+                  window.embedPdfRotate?.rotateForward();
+                }}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="rotate-right" width="1.5rem" height="1.5rem" />
               </ActionIcon>
             </Tooltip>
 
@@ -277,7 +327,7 @@ export default function RightRail() {
                 variant="subtle"
                 radius="md"
                 className="right-rail-icon"
-                onClick={() => (window as any).toggleThumbnailSidebar?.()}
+                onClick={() => window.toggleThumbnailSidebar?.()}
                 disabled={currentView !== 'viewer'}
               >
                 <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />

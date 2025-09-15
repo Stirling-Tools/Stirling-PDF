@@ -17,10 +17,22 @@ export interface EmbedPdfScrollAPI {
 
 export interface EmbedPdfPanAPI {
   isPanning: boolean;
+  togglePan: () => void;
 }
 
 export interface EmbedPdfSpreadAPI {
   toggleSpreadMode: () => void;
+}
+
+export interface EmbedPdfRotateAPI {
+  rotateForward: () => void;
+  rotateBackward: () => void;
+  setRotation: (rotation: number) => void;
+  getRotation: () => number;
+}
+
+export interface EmbedPdfControlsAPI {
+  pointer: () => void;
 }
 
 export interface EmbedPdfThumbnailAPI {
@@ -37,6 +49,8 @@ declare global {
     embedPdfScroll?: EmbedPdfScrollAPI;
     embedPdfPan?: EmbedPdfPanAPI;
     embedPdfSpread?: EmbedPdfSpreadAPI;
+    embedPdfRotate?: EmbedPdfRotateAPI;
+    embedPdfControls?: EmbedPdfControlsAPI;
     embedPdfThumbnail?: EmbedPdfThumbnailAPI;
     toggleThumbnailSidebar?: () => void;
   }

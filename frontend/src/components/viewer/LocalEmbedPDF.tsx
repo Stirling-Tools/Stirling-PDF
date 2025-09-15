@@ -16,6 +16,8 @@ import { PanPluginPackage } from '@embedpdf/plugin-pan/react';
 import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
+import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
+import { Rotation } from '@embedpdf/models';
 import { CustomSearchLayer } from './CustomSearchLayer';
 import { ZoomAPIBridge } from './ZoomAPIBridge';
 import { ScrollAPIBridge } from './ScrollAPIBridge';
@@ -24,6 +26,7 @@ import { PanAPIBridge } from './PanAPIBridge';
 import { SpreadAPIBridge } from './SpreadAPIBridge';
 import { SearchAPIBridge } from './SearchAPIBridge';
 import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
+import { RotateAPIBridge } from './RotateAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -106,6 +109,11 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
       
       // Register thumbnail plugin for page thumbnails
       createPluginRegistration(ThumbnailPluginPackage),
+      
+      // Register rotate plugin
+      createPluginRegistration(RotatePluginPackage, {
+        defaultRotation: Rotation.Degree0, // Start with no rotation
+      }),
     ];
   }, [pdfUrl]);
 
@@ -187,6 +195,7 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         <SpreadAPIBridge />
         <SearchAPIBridge />
         <ThumbnailAPIBridge />
+        <RotateAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{
@@ -205,35 +214,37 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
           >
           <Scroller
             renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
-              <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
-                <div 
-                  style={{ 
-                    width, 
-                    height, 
-                    position: 'relative',
-                    userSelect: 'none',
-                    WebkitUserSelect: 'none',
-                    MozUserSelect: 'none',
-                    msUserSelect: 'none'
-                  }}
-                  draggable={false}
-                  onDragStart={(e) => e.preventDefault()}
-                  onDrop={(e) => e.preventDefault()}
-                  onDragOver={(e) => e.preventDefault()}
-                >
-                  {/* 1. Low-resolution base layer for immediate feedback */}
-                  <RenderLayer pageIndex={pageIndex} scale={0.5} />
-                  
-                  {/* 2. High-resolution tile layer on top */}
-                  <TilingLayer pageIndex={pageIndex} scale={scale} />
-                  
-                  {/* 3. Search highlight layer */}
-                  <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
-                  
-                  {/* 4. Selection layer for text interaction */}
-                  <SelectionLayer pageIndex={pageIndex} scale={scale} />
-                </div>
-              </PagePointerProvider>
+              <Rotate pageSize={{ width, height }}>
+                <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
+                  <div 
+                    style={{ 
+                      width, 
+                      height, 
+                      position: 'relative',
+                      userSelect: 'none',
+                      WebkitUserSelect: 'none',
+                      MozUserSelect: 'none',
+                      msUserSelect: 'none'
+                    }}
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    onDrop={(e) => e.preventDefault()}
+                    onDragOver={(e) => e.preventDefault()}
+                  >
+                    {/* 1. Low-resolution base layer for immediate feedback */}
+                    <RenderLayer pageIndex={pageIndex} scale={0.5} />
+                    
+                    {/* 2. High-resolution tile layer on top */}
+                    <TilingLayer pageIndex={pageIndex} scale={scale} />
+                    
+                    {/* 3. Search highlight layer */}
+                    <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
+                    
+                    {/* 4. Selection layer for text interaction */}
+                    <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                  </div>
+                </PagePointerProvider>
+              </Rotate>
             )}
           />
           </Viewport>
