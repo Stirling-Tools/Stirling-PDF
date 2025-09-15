@@ -88,7 +88,7 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
         }
       });
     };
-  }, [visible, totalPages, thumbnails]);
+  }, [visible, totalPages]);
 
   const handlePageClick = (pageIndex: number) => {
     const pageNumber = pageIndex + 1; // Convert to 1-based
