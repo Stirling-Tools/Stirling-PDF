@@ -8,7 +8,7 @@ import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react
 import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll/react';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
 import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/react';
-import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom/react';
+import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/react';
 import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/react';
 import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react';
@@ -36,7 +36,7 @@ interface LocalEmbedPDFProps {
 
 export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  
+
   // Convert color scheme (handle 'auto' mode by defaulting to 'light')
   const actualColorScheme = colorScheme === 'auto' ? 'light' : colorScheme;
 
@@ -54,7 +54,7 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
   // Create plugins configuration
   const plugins = useMemo(() => {
     if (!pdfUrl) return [];
-    
+
     return [
       createPluginRegistration(LoaderPluginPackage, {
         loadingOptions: {
@@ -73,43 +73,43 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         initialPage: 0,
       }),
       createPluginRegistration(RenderPluginPackage),
-      
+
       // Register interaction manager (required for zoom and selection features)
       createPluginRegistration(InteractionManagerPluginPackage),
-      
+
       // Register selection plugin (depends on InteractionManager)
       createPluginRegistration(SelectionPluginPackage),
-      
+
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
         defaultMode: 'mobile', // Try mobile mode which might be more permissive
       }),
-      
+
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
         defaultZoomLevel: 1.0, // Start at exactly 100% zoom
         minZoom: 0.2,
         maxZoom: 3.0,
       }),
-      
+
       // Register tiling plugin (depends on Render, Scroll, Viewport)
       createPluginRegistration(TilingPluginPackage, {
         tileSize: 768,
         overlapPx: 5,
         extraRings: 1,
       }),
-      
+
       // Register spread plugin for dual page layout
       createPluginRegistration(SpreadPluginPackage, {
         defaultSpreadMode: SpreadMode.None, // Start with single page view
       }),
-      
+
       // Register search plugin for text search
       createPluginRegistration(SearchPluginPackage),
-      
+
       // Register thumbnail plugin for page thumbnails
       createPluginRegistration(ThumbnailPluginPackage),
-      
+
       // Register rotate plugin
       createPluginRegistration(RotatePluginPackage, {
         defaultRotation: Rotation.Degree0, // Start with no rotation
@@ -178,10 +178,10 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
 
   // Wrap your UI with the <EmbedPDF> provider
   return (
-    <div style={{ 
-      height: '100%', 
-      width: '100%', 
-      position: 'relative', 
+    <div style={{
+      height: '100%',
+      width: '100%',
+      position: 'relative',
       overflow: 'hidden',
       flex: 1,
       minHeight: 0,
@@ -216,10 +216,10 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
             renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
               <Rotate pageSize={{ width, height }}>
                 <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
-                  <div 
-                    style={{ 
-                      width, 
-                      height, 
+                  <div
+                    style={{
+                      width,
+                      height,
                       position: 'relative',
                       userSelect: 'none',
                       WebkitUserSelect: 'none',
@@ -233,13 +233,13 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
                   >
                     {/* 1. Low-resolution base layer for immediate feedback */}
                     <RenderLayer pageIndex={pageIndex} scale={0.5} />
-                    
+
                     {/* 2. High-resolution tile layer on top */}
                     <TilingLayer pageIndex={pageIndex} scale={scale} />
-                    
+
                     {/* 3. Search highlight layer */}
                     <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
-                    
+
                     {/* 4. Selection layer for text interaction */}
                     <SelectionLayer pageIndex={pageIndex} scale={scale} />
                   </div>
