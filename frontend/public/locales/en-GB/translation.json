@@ -1571,13 +1571,50 @@
     "submit": "Submit"
   },
   "scalePages": {
-    "tags": "resize,modify,dimension,adapt",
     "title": "Adjust page-scale",
     "header": "Adjust page-scale",
     "pageSize": "Size of a page of the document.",
     "keepPageSize": "Original Size",
     "scaleFactor": "Zoom level (crop) of a page.",
     "submit": "Submit"
+  },
+  "adjustPageScale": {
+    "tags": "resize,modify,dimension,adapt",
+    "title": "Adjust Page Scale",
+    "header": "Adjust Page Scale",
+    "scaleFactor": {
+      "label": "Scale Factor"
+    },
+    "pageSize": {
+      "label": "Target Page Size",
+      "keep": "Keep Original Size",
+      "letter": "Letter",
+      "legal": "Legal"
+    },
+    "submit": "Adjust Page Scale",
+    "error": {
+      "failed": "An error occurred while adjusting the page scale."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Page Scale Settings Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Adjust the size of PDF content and change the page dimensions."
+      },
+      "scaleFactor": {
+        "title": "Scale Factor",
+        "text": "Controls how large or small the content appears on the page. Content is scaled and centred - if scaled content is larger than the page size, it may be cropped.",
+        "bullet1": "1.0 = Original size",
+        "bullet2": "0.5 = Half size (50% smaller)",
+        "bullet3": "2.0 = Double size (200% larger, may crop)"
+      },
+      "pageSize": {
+        "title": "Target Page Size",
+        "text": "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, whilst other options resize to standard paper sizes."
+      }
+    }
   },
   "add-page-numbers": {
     "tags": "paginate,label,organize,index"

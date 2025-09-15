@@ -51,8 +51,11 @@ import ChangePermissionsSettings from "../components/tools/changePermissions/Cha
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
 import Redact from "../tools/Redact";
+import AdjustPageScale from "../tools/AdjustPageScale";
 import { ToolId } from "../types/toolId";
 import MergeSettings from '../components/tools/merge/MergeSettings';
+import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
+import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
@@ -344,11 +347,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       "adjust-page-size-scale": {
         icon: <LocalIcon icon="crop-free-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.scalePages.title", "Adjust page size/scale"),
-        component: null,
-
+        component: AdjustPageScale,
         description: t("home.scalePages.desc", "Change the size/scale of a page and/or its contents."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["scale-pages"],
+        operationConfig: adjustPageScaleOperationConfig,
+        settingsComponent: AdjustPageScaleSettings,
       },
       addPageNumbers: {
         icon: <LocalIcon icon="123-rounded" width="1.5rem" height="1.5rem" />,
