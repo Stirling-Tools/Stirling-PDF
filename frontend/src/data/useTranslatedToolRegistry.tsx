@@ -9,6 +9,7 @@ import Sanitize from "../tools/Sanitize";
 import AddPassword from "../tools/AddPassword";
 import ChangePermissions from "../tools/ChangePermissions";
 import RemoveBlanks from "../tools/RemoveBlanks";
+import RemovePages from "../tools/RemovePages";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
@@ -415,10 +416,12 @@ export function useFlatToolRegistry(): ToolRegistry {
       removePages: {
         icon: <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removePages.title", "Remove Pages"),
-        component: null,
+        component: RemovePages,
         description: t("home.removePages.desc", "Remove specific pages from a PDF document"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        maxFiles: 1,
+        endpoints: ["remove-pages"],
       },
       "remove-blank-pages": {
         icon: <LocalIcon icon="scan-delete-rounded" width="1.5rem" height="1.5rem" />,
