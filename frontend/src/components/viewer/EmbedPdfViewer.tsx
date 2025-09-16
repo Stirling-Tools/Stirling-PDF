@@ -62,20 +62,26 @@ const EmbedPdfViewerContent = ({
 
   // Handle scroll wheel zoom
   React.useEffect(() => {
+    let accumulator = 0;
+
     const handleWheel = (event: WheelEvent) => {
       // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
       if (event.ctrlKey || event.metaKey) {
         event.preventDefault();
         event.stopPropagation();
 
+        // Convert smooth scrolling gestures into discrete notches
+        accumulator += event.deltaY;
+        const threshold = 10;
+
         const zoomAPI = window.embedPdfZoom;
         if (zoomAPI) {
-          if (event.deltaY < 0) {
-            // Scroll up - zoom in
+          if (accumulator <= -threshold) {
             zoomAPI.zoomIn();
-          } else {
-            // Scroll down - zoom out
+            accumulator = 0;
+          } else if (accumulator >= threshold) {
             zoomAPI.zoomOut();
+            accumulator = 0;
           }
         }
       }
@@ -121,21 +127,21 @@ const EmbedPdfViewerContent = ({
   // Expose toggle functions globally for right rail buttons
   React.useEffect(() => {
     window.toggleThumbnailSidebar = toggleThumbnailSidebar;
-    
+
     return () => {
       delete window.toggleThumbnailSidebar;
     };
   }, [toggleThumbnailSidebar]);
 
   return (
-    <Box 
+    <Box
       ref={viewerRef}
       onMouseEnter={() => setIsViewerHovered(true)}
       onMouseLeave={() => setIsViewerHovered(false)}
-      style={{ 
-        position: 'relative', 
-        height: '100%', 
-        display: 'flex', 
+      style={{
+        position: 'relative',
+        height: '100%',
+        display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         contain: 'layout style paint'
@@ -169,9 +175,9 @@ const EmbedPdfViewerContent = ({
           )}
 
           {/* EmbedPDF Viewer */}
-          <Box style={{ 
-            position: 'relative', 
-            flex: 1, 
+          <Box style={{
+            position: 'relative',
+            flex: 1,
             overflow: 'hidden',
             minHeight: 0,
             minWidth: 0
