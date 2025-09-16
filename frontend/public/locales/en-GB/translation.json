@@ -683,7 +683,116 @@
       "8": "Document #6: Page 10"
     },
     "splitPages": "Enter pages to split on:",
-    "submit": "Split"
+    "submit": "Split",
+    "steps": {
+      "chooseMethod": "Choose Method",
+      "settings": "Settings"
+    },
+    "settings": {
+      "selectMethodFirst": "Please select a split method first"
+    },
+    "error": {
+      "failed": "An error occurred while splitting the PDF."
+    },
+    "method": {
+      "label": "Choose split method",
+      "placeholder": "Select how to split the PDF"
+    },
+    "methods": {
+      "prefix": {
+        "splitAt": "Split at",
+        "splitBy": "Split by"
+      },
+      "byPages": {
+        "name": "Page Numbers",
+        "desc": "Extract specific pages (1,3,5-10)",
+        "tooltip": "Enter page numbers separated by commas or ranges with hyphens"
+      },
+      "bySections": {
+        "name": "Sections",
+        "desc": "Divide pages into grid sections",
+        "tooltip": "Split each page into horizontal and vertical sections"
+      },
+      "bySize": {
+        "name": "File Size",
+        "desc": "Limit maximum file size",
+        "tooltip": "Specify maximum file size (e.g. 10MB, 500KB)"
+      },
+      "byPageCount": {
+        "name": "Page Count",
+        "desc": "Fixed pages per file",
+        "tooltip": "Enter the number of pages for each split file"
+      },
+      "byDocCount": {
+        "name": "Document Count",
+        "desc": "Create specific number of files",
+        "tooltip": "Enter how many files you want to create"
+      },
+      "byChapters": {
+        "name": "Chapters",
+        "desc": "Split at bookmark boundaries",
+        "tooltip": "Uses PDF bookmarks to determine split points"
+      },
+      "byPageDivider": {
+        "name": "Page Divider",
+        "desc": "Auto-split with divider sheets",
+        "tooltip": "Use QR code divider sheets between documents when scanning"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "File Size",
+        "placeholder": "e.g. 10MB, 500KB"
+      },
+      "pageCount": {
+        "label": "Pages per File",
+        "placeholder": "e.g. 5, 10"
+      },
+      "docCount": {
+        "label": "Number of Files",
+        "placeholder": "e.g. 3, 5"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Split Methods Overview"
+      },
+      "byPages": {
+        "title": "Split at Page Numbers",
+        "text": "Split your PDF at specific page numbers. Using 'n' splits after page n. Using 'n-m' splits before page n and after page m.",
+        "bullet1": "Single split points: 3,7 (splits after pages 3 and 7)",
+        "bullet2": "Range split points: 3-8 (splits before page 3 and after page 8)",
+        "bullet3": "Mixed: 2,5-10,15 (splits after page 2, before page 5, after page 10, and after page 15)"
+      },
+      "bySections": {
+        "title": "Split by Grid Sections",
+        "text": "Divide each page into a grid of sections. Useful for splitting documents with multiple columns or extracting specific areas.",
+        "bullet1": "Horizontal: Number of rows to create",
+        "bullet2": "Vertical: Number of columns to create",
+        "bullet3": "Merge: Combine all sections into one PDF"
+      },
+      "bySize": {
+        "title": "Split by File Size",
+        "text": "Create multiple PDFs that don't exceed a specified file size. Ideal for file size limitations or email attachments.",
+        "bullet1": "Use MB for larger files (e.g., 10MB)",
+        "bullet2": "Use KB for smaller files (e.g., 500KB)",
+        "bullet3": "System will split at page boundaries"
+      },
+      "byCount": {
+        "title": "Split by Count",
+        "text": "Create multiple PDFs with a specific number of pages or documents each.",
+        "bullet1": "Page Count: Fixed number of pages per file",
+        "bullet2": "Document Count: Fixed number of output files",
+        "bullet3": "Useful for batch processing workflows"
+      },
+      "byChapters": {
+        "title": "Split by Chapters",
+        "text": "Use PDF bookmarks to automatically split at chapter boundaries. Requires PDFs with bookmark structure.",
+        "bullet1": "Bookmark Level: Which level to split on (1=top level)",
+        "bullet2": "Include Metadata: Preserve document properties",
+        "bullet3": "Allow Duplicates: Handle repeated bookmark names"
+      }
+    }
   },
   "rotate": {
     "tags": "server side",
@@ -2297,6 +2406,13 @@
     "storageLow": "Storage is running low. Consider removing old files.",
     "supportMessage": "Powered by browser database storage for unlimited capacity",
     "noFileSelected": "No files selected",
+    "showHistory": "Show History",
+    "hideHistory": "Hide History",
+    "fileHistory": "File History",
+    "loadingHistory": "Loading History...",
+    "lastModified": "Last Modified",
+    "toolChain": "Tools Applied",
+    "restore": "Restore",
     "searchFiles": "Search files...",
     "recent": "Recent",
     "localFiles": "Local Files",

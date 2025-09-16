@@ -139,7 +139,7 @@ const FileGrid = ({
             <FileCard
               key={fileId + idx}
               file={item.file}
-              record={item.record}
+              fileStub={item.record}
               onRemove={onRemove ? () => onRemove(originalIdx) : () => {}}
               onDoubleClick={onDoubleClick && supported ? () => onDoubleClick(item) : undefined}
               onView={onView && supported ? () => onView(item) : undefined}
