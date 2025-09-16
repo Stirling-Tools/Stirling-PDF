@@ -5,7 +5,6 @@ import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import { RotateParametersHook } from "../../../hooks/tools/rotate/useRotateParameters";
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
-import { useThumbnailGeneration } from "../../../hooks/useThumbnailGeneration";
 import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
 
 interface RotateSettingsProps {
@@ -15,39 +14,19 @@ interface RotateSettingsProps {
 
 const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useSelectedFiles();
-  const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
+  const { selectedFileStubs } = useSelectedFiles();
 
   // Get the first selected file for preview
-  const selectedFile = useMemo(() => {
-    return selectedFiles.length > 0 ? selectedFiles[0] : null;
-  }, [selectedFiles]);
+  const selectedStub = useMemo(() => {
+    return selectedFileStubs.length > 0 ? selectedFileStubs[0] : null;
+  }, [selectedFileStubs]);
 
   // Get thumbnail for the selected file
   const [thumbnail, setThumbnail] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!selectedFile) {
-      setThumbnail(null);
-      return;
-    }
-
-    const pageId = `${selectedFile.fileId}-1`;
-
-    // Try to get cached thumbnail first
-    const cached = getThumbnailFromCache(pageId);
-    if (cached) {
-      setThumbnail(cached);
-      return;
-    }
-
-    // Request thumbnail if not cached
-    requestThumbnail(pageId, selectedFile, 1).then((result) => {
-      setThumbnail(result);
-    }).catch(() => {
-      setThumbnail(null);
-    });
-  }, [selectedFile, getThumbnailFromCache, requestThumbnail]);
+    setThumbnail(selectedStub?.thumbnailUrl || null);
+  }, [selectedStub]);
 
   // Calculate current angle display
   const currentAngle = parameters.parameters.angle;
@@ -86,7 +65,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
               }}
             >
               <DocumentThumbnail
-                file={selectedFile}
+                file={selectedStub}
                 thumbnail={thumbnail}
               />
             </Box>

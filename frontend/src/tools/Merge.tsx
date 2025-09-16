@@ -16,7 +16,7 @@ const Merge = (props: BaseToolProps) => {
 
   // File selection hooks for custom sorting
   const { fileIds } = useAllFiles();
-  const { selectedRecords } = useSelectedFiles();
+  const { selectedFileStubs } = useSelectedFiles();
   const { reorderFiles } = useFileManagement();
 
   const base = useBaseTool(
@@ -29,23 +29,23 @@ const Merge = (props: BaseToolProps) => {
 
   // Custom file sorting logic for merge tool
   const sortFiles = useCallback((sortType: 'filename' | 'dateModified', ascending: boolean = true) => {
-    const sortedRecords = [...selectedRecords].sort((recordA, recordB) => {
+    const sortedStubs = [...selectedFileStubs].sort((stubA, stubB) => {
       let comparison = 0;
       switch (sortType) {
         case 'filename':
-          comparison = recordA.name.localeCompare(recordB.name);
+          comparison = stubA.name.localeCompare(stubB.name);
           break;
         case 'dateModified':
-          comparison = recordA.lastModified - recordB.lastModified;
+          comparison = stubA.lastModified - stubB.lastModified;
           break;
       }
       return ascending ? comparison : -comparison;
     });
 
-    const selectedIds = sortedRecords.map(record => record.id);
+    const selectedIds = sortedStubs.map(record => record.id);
     const deselectedIds = fileIds.filter(id => !selectedIds.includes(id));
     reorderFiles([...selectedIds, ...deselectedIds]);
-  }, [selectedRecords, fileIds, reorderFiles]);
+  }, [selectedFileStubs, fileIds, reorderFiles]);
 
   return createToolFlow({
     files: {
