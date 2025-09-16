@@ -10,7 +10,6 @@ export const useRotateTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("rotate.tooltip.description.title", "Description"),
         description: t("rotate.tooltip.description.text", "Rotate your PDF pages clockwise or anticlockwise in 90-degree increments. All pages in the PDF will be rotated. The preview shows how your document will look after rotation.")
       },
       {
