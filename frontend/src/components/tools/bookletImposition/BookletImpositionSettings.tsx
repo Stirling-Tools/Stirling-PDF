@@ -1,6 +1,8 @@
 import React from "react";
-import { Button, Stack, Text, Divider } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { Stack, Text, Divider } from "@mantine/core";
 import { BookletImpositionParameters } from "../../../hooks/tools/bookletImposition/useBookletImpositionParameters";
+import ButtonSelector from "../../shared/ButtonSelector";
 
 interface BookletImpositionSettingsProps {
   parameters: BookletImpositionParameters;
@@ -9,6 +11,7 @@ interface BookletImpositionSettingsProps {
 }
 
 const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = false }: BookletImpositionSettingsProps) => {
+  const { t } = useTranslation();
 
   return (
     <Stack gap="md">
@@ -16,35 +19,20 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
       
       {/* Booklet Type */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>Booklet Type</Text>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <Button
-            variant={parameters.bookletType === 'BOOKLET' ? 'filled' : 'outline'}
-            color={parameters.bookletType === 'BOOKLET' ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('bookletType', 'BOOKLET')}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              Standard<br />Booklet
-            </div>
-          </Button>
-          <Button
-            variant={parameters.bookletType === 'SIDE_STITCH_BOOKLET' ? 'filled' : 'outline'}
-            color={parameters.bookletType === 'SIDE_STITCH_BOOKLET' ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('bookletType', 'SIDE_STITCH_BOOKLET')}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              Side-Stitch<br />Booklet
-            </div>
-          </Button>
-        </div>
+        <ButtonSelector
+          label={t('bookletImposition.bookletType.label', 'Booklet Type')}
+          value={parameters.bookletType}
+          onChange={(value) => onParameterChange('bookletType', value)}
+          options={[
+            { value: 'BOOKLET', label: t('bookletImposition.bookletType.standard', 'Standard Booklet') },
+            { value: 'SIDE_STITCH_BOOKLET', label: t('bookletImposition.bookletType.sideStitch', 'Side-Stitch Booklet') }
+          ]}
+          disabled={disabled}
+        />
         <Text size="xs" c="dimmed">
-          {parameters.bookletType === 'BOOKLET' 
-            ? "Standard booklet for saddle-stitched binding (fold in half)"
-            : "Side-stitched booklet for binding along the edge"}
+          {parameters.bookletType === 'BOOKLET'
+            ? t('bookletImposition.bookletType.standardDesc', 'Standard booklet for saddle-stitched binding (fold in half)')
+            : t('bookletImposition.bookletType.sideStitchDesc', 'Side-stitched booklet for binding along the edge')}
         </Text>
       </Stack>
 
@@ -52,35 +40,20 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
 
       {/* Pages Per Sheet */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>Pages Per Sheet</Text>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <Button
-            variant={parameters.pagesPerSheet === 2 ? 'filled' : 'outline'}
-            color={parameters.pagesPerSheet === 2 ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('pagesPerSheet', 2)}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              2 Pages<br />Per Sheet
-            </div>
-          </Button>
-          <Button
-            variant={parameters.pagesPerSheet === 4 ? 'filled' : 'outline'}
-            color={parameters.pagesPerSheet === 4 ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('pagesPerSheet', 4)}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              4 Pages<br />Per Sheet
-            </div>
-          </Button>
-        </div>
+        <ButtonSelector
+          label={t('bookletImposition.pagesPerSheet.label', 'Pages Per Sheet')}
+          value={parameters.pagesPerSheet}
+          onChange={(value) => onParameterChange('pagesPerSheet', value)}
+          options={[
+            { value: 2, label: t('bookletImposition.pagesPerSheet.two', '2 Pages') },
+            { value: 4, label: t('bookletImposition.pagesPerSheet.four', '4 Pages') }
+          ]}
+          disabled={disabled}
+        />
         <Text size="xs" c="dimmed">
-          {parameters.pagesPerSheet === 2 
-            ? "Two pages side by side on each sheet (most common)"
-            : "Four pages arranged in a 2x2 grid on each sheet"}
+          {parameters.pagesPerSheet === 2
+            ? t('bookletImposition.pagesPerSheet.twoDesc', 'Two pages side by side on each sheet (most common)')
+            : t('bookletImposition.pagesPerSheet.fourDesc', 'Four pages arranged in a 2x2 grid on each sheet')}
         </Text>
       </Stack>
 
@@ -88,35 +61,20 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
 
       {/* Page Orientation */}
       <Stack gap="sm">
-        <Text size="sm" fw={500}>Page Orientation</Text>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <Button
-            variant={parameters.pageOrientation === 'LANDSCAPE' ? 'filled' : 'outline'}
-            color={parameters.pageOrientation === 'LANDSCAPE' ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('pageOrientation', 'LANDSCAPE')}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              Landscape<br />(Recommended)
-            </div>
-          </Button>
-          <Button
-            variant={parameters.pageOrientation === 'PORTRAIT' ? 'filled' : 'outline'}
-            color={parameters.pageOrientation === 'PORTRAIT' ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('pageOrientation', 'PORTRAIT')}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              Portrait
-            </div>
-          </Button>
-        </div>
+        <ButtonSelector
+          label={t('bookletImposition.pageOrientation.label', 'Page Orientation')}
+          value={parameters.pageOrientation}
+          onChange={(value) => onParameterChange('pageOrientation', value)}
+          options={[
+            { value: 'LANDSCAPE', label: t('bookletImposition.pageOrientation.landscape', 'Landscape') },
+            { value: 'PORTRAIT', label: t('bookletImposition.pageOrientation.portrait', 'Portrait') }
+          ]}
+          disabled={disabled}
+        />
         <Text size="xs" c="dimmed">
-          {parameters.pageOrientation === 'LANDSCAPE' 
-            ? "A4 landscape → A5 portrait when folded (standard booklet size)"
-            : "A4 portrait → A6 when folded (smaller booklet)"}
+          {parameters.pageOrientation === 'LANDSCAPE'
+            ? t('bookletImposition.pageOrientation.landscapeDesc', 'A4 landscape → A5 portrait when folded (recommended, standard booklet size)')
+            : t('bookletImposition.pageOrientation.portraitDesc', 'A4 portrait → A6 when folded (smaller booklet)')}
         </Text>
       </Stack>
 
@@ -125,8 +83,8 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
       {/* Add Border Option */}
       <Stack gap="sm">
         <label
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          title="Adds borders around each page section to help with cutting and alignment"
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--mantine-spacing-xs)' }}
+          title={t('bookletImposition.addBorder.tooltip', 'Adds borders around each page section to help with cutting and alignment')}
         >
           <input
             type="checkbox"
@@ -134,10 +92,10 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
             onChange={(e) => onParameterChange('addBorder', e.target.checked)}
             disabled={disabled}
           />
-          <Text size="sm">Add borders around pages</Text>
+          <Text size="sm">{t('bookletImposition.addBorder.label', 'Add borders around pages')}</Text>
         </label>
-        <Text size="xs" c="dimmed" style={{ marginLeft: '24px' }}>
-          Helpful for cutting and alignment when printing
+        <Text size="xs" c="dimmed" style={{ marginLeft: 'var(--mantine-spacing-lg)' }}>
+          {t('bookletImposition.addBorder.description', 'Helpful for cutting and alignment when printing')}
         </Text>
       </Stack>
     </Stack>

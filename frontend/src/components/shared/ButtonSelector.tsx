@@ -45,7 +45,10 @@ const ButtonSelector = <T extends string>({
               flex: fullWidth ? 1 : undefined,
               height: 'auto',
               minHeight: '2.5rem',
-              fontSize: 'var(--mantine-font-size-sm)'
+              fontSize: 'var(--mantine-font-size-sm)',
+              lineHeight: '1.4',
+              paddingTop: '0.5rem',
+              paddingBottom: '0.5rem'
             }}
           >
             {option.label}
