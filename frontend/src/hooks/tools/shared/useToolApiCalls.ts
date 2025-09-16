@@ -6,7 +6,7 @@ import type { ProcessingProgress } from './useToolState';
 export interface ApiCallsConfig<TParams = void> {
   endpoint: string | ((params: TParams) => string);
   buildFormData: (params: TParams, file: File) => FormData;
-  filePrefix: string;
+  filePrefix?: string;
   responseHandler?: ResponseHandler;
   preserveBackendFilename?: boolean;
 }

@@ -28,7 +28,6 @@ export const compressOperationConfig = {
   buildFormData: buildCompressFormData,
   operationType: 'compress',
   endpoint: '/api/v1/misc/compress-pdf',
-  filePrefix: 'compressed_',
   defaultParameters,
 } as const;
 
