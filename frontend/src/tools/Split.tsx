@@ -29,10 +29,6 @@ const Split = (props: BaseToolProps) => {
     return tooltipContent?.tips || [];
   };
 
-  // Typed parameter updaters
-  const clearMethod = () => base.params.updateParameter('method', '' as const);
-  const setMethod = (method: SplitMethod) => base.params.updateParameter('method', method);
-
   // Get the method name for the settings step title
   const getSettingsTitle = () => {
     if (!base.params.parameters.method) return t("split.steps.settings", "Settings");
