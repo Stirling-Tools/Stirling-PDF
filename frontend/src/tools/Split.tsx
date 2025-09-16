@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import SplitMethodSelector from "../components/tools/split/SplitMethodSelector";
+import CardSelector from "../components/shared/CardSelector";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
 import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
@@ -8,6 +8,7 @@ import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { useSplitMethodTips } from "../components/tooltips/useSplitMethodTips";
 import { useSplitSettingsTips } from "../components/tooltips/useSplitSettingsTips";
 import { BaseToolProps, ToolComponent } from "../types/tool";
+import { type SplitMethod, METHOD_OPTIONS, type MethodOption } from "../constants/splitConstants";
 
 const Split = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -22,43 +23,26 @@ const Split = (props: BaseToolProps) => {
   const methodTips = useSplitMethodTips();
   const settingsTips = useSplitSettingsTips(base.params.parameters.method);
 
+  // Get tooltip content for a specific method
+  const getMethodTooltip = (option: MethodOption) => {
+    const tooltipContent = useSplitSettingsTips(option.value);
+    return tooltipContent?.tips || [];
+  };
+
+  // Typed parameter updaters
+  const clearMethod = () => base.params.updateParameter('method', '' as const);
+  const setMethod = (method: SplitMethod) => base.params.updateParameter('method', method);
+
   // Get the method name for the settings step title
   const getSettingsTitle = () => {
     if (!base.params.parameters.method) return t("split.steps.settings", "Settings");
 
-    const methodTitleMap = {
-      'byPages': {
-        prefix: t("split.methods.prefix.splitAt", "Split at"),
-        name: t("split.methods.byPages.name", "Page Numbers")
-      },
-      'bySections': {
-        prefix: t("split.methods.prefix.splitBy", "Split by"),
-        name: t("split.methods.bySections.name", "Sections")
-      },
-      'bySize': {
-        prefix: t("split.methods.prefix.splitBy", "Split by"),
-        name: t("split.methods.bySize.name", "File Size")
-      },
-      'byPageCount': {
-        prefix: t("split.methods.prefix.splitBy", "Split by"),
-        name: t("split.methods.byPageCount.name", "Page Count")
-      },
-      'byDocCount': {
-        prefix: t("split.methods.prefix.splitBy", "Split by"),
-        name: t("split.methods.byDocCount.name", "Document Count")
-      },
-      'byChapters': {
-        prefix: t("split.methods.prefix.splitBy", "Split by"),
-        name: t("split.methods.byChapters.name", "Chapters")
-      },
-      'byPageDivider': {
-        prefix: t("split.methods.prefix.splitBy", "Split by"),
-        name: t("split.methods.byPageDivider.name", "Page Divider")
-      },
-    };
+    const methodOption = METHOD_OPTIONS.find(option => option.value === base.params.parameters.method);
+    if (!methodOption) return t("split.steps.settings", "Settings");
 
-    const method = methodTitleMap[base.params.parameters.method as keyof typeof methodTitleMap];
-    return method ? `${method.prefix} ${method.name}` : t("split.steps.settings", "Settings");
+    const prefix = t(methodOption.prefixKey, "Split by");
+    const name = t(methodOption.nameKey, "Method Name");
+    return `${prefix} ${name}`;
   };
 
   return createToolFlow({
@@ -70,15 +54,15 @@ const Split = (props: BaseToolProps) => {
       {
         title: t("split.steps.chooseMethod", "Choose Method"),
         isCollapsed: !!base.params.parameters.method, // Collapse when method is selected
-        onCollapsedClick: () => {
-          // Clear the selected method to expand the method selection step
-          base.params.updateParameter('method', '');
-        },
+        onCollapsedClick: () => base.params.updateParameter('method', '')
+        ,
         tooltip: methodTips,
         content: (
-          <SplitMethodSelector
-            onMethodSelect={(method) => base.params.updateParameter('method', method)}
+          <CardSelector<SplitMethod, MethodOption>
+            options={METHOD_OPTIONS}
+            onSelect={(method) => base.params.updateParameter('method', method)}
             disabled={base.endpointLoading}
+            getTooltipContent={getMethodTooltip}
           />
         ),
       },

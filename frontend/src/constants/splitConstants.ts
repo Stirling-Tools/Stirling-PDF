@@ -24,52 +24,51 @@ export const isSplitMethod = (value: string | null): value is SplitMethod => {
   return Object.values(SPLIT_METHODS).includes(value as SplitMethod);
 }
 
-export interface MethodOption {
-  method: SplitMethod;
-  prefixKey: string;
-  nameKey: string;
+import { CardOption } from '../components/shared/CardSelector';
+
+export interface MethodOption extends CardOption<SplitMethod> {
   tooltipKey: string;
 }
 
 export const METHOD_OPTIONS: MethodOption[] = [
   {
-    method: SPLIT_METHODS.BY_PAGES,
+    value: SPLIT_METHODS.BY_PAGES,
     prefixKey: "split.methods.prefix.splitAt",
     nameKey: "split.methods.byPages.name",
     tooltipKey: "split.methods.byPages.tooltip"
   },
   {
-    method: SPLIT_METHODS.BY_CHAPTERS,
+    value: SPLIT_METHODS.BY_CHAPTERS,
     prefixKey: "split.methods.prefix.splitBy",
     nameKey: "split.methods.byChapters.name",
     tooltipKey: "split.methods.byChapters.tooltip"
   },
   {
-    method: SPLIT_METHODS.BY_SECTIONS,
+    value: SPLIT_METHODS.BY_SECTIONS,
     prefixKey: "split.methods.prefix.splitBy",
     nameKey: "split.methods.bySections.name",
     tooltipKey: "split.methods.bySections.tooltip"
   },
   {
-    method: SPLIT_METHODS.BY_SIZE,
+    value: SPLIT_METHODS.BY_SIZE,
     prefixKey: "split.methods.prefix.splitBy",
     nameKey: "split.methods.bySize.name",
     tooltipKey: "split.methods.bySize.tooltip"
   },
   {
-    method: SPLIT_METHODS.BY_PAGE_COUNT,
+    value: SPLIT_METHODS.BY_PAGE_COUNT,
     prefixKey: "split.methods.prefix.splitBy",
     nameKey: "split.methods.byPageCount.name",
     tooltipKey: "split.methods.byPageCount.tooltip"
   },
   {
-    method: SPLIT_METHODS.BY_DOC_COUNT,
+    value: SPLIT_METHODS.BY_DOC_COUNT,
     prefixKey: "split.methods.prefix.splitBy",
     nameKey: "split.methods.byDocCount.name",
     tooltipKey: "split.methods.byDocCount.tooltip"
   },
   {
-    method: SPLIT_METHODS.BY_PAGE_DIVIDER,
+    value: SPLIT_METHODS.BY_PAGE_DIVIDER,
     prefixKey: "split.methods.prefix.splitBy",
     nameKey: "split.methods.byPageDivider.name",
     tooltipKey: "split.methods.byPageDivider.tooltip"

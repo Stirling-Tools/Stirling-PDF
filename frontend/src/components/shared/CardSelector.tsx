@@ -1,39 +1,50 @@
-import { Stack, Card, Text, Flex  } from '@mantine/core';
-import { Tooltip } from '../../shared/Tooltip';
+import { Stack, Card, Text, Flex } from '@mantine/core';
+import { Tooltip } from './Tooltip';
 import { useTranslation } from 'react-i18next';
-import { type SplitMethod, METHOD_OPTIONS } from '../../../constants/splitConstants';
-import { useSplitSettingsTips } from '../../tooltips/useSplitSettingsTips';
 
-export interface SplitMethodSelectorProps {
-  onMethodSelect: (method: SplitMethod) => void;
-  disabled?: boolean;
+export interface CardOption<T = string> {
+  value: T;
+  prefixKey: string;
+  nameKey: string;
+  tooltipKey?: string;
+  tooltipContent?: any[];
 }
 
-const SplitMethodSelector = ({
-  onMethodSelect,
-  disabled = false
-}: SplitMethodSelectorProps) => {
+export interface CardSelectorProps<T, K extends CardOption<T>> {
+  options: K[];
+  onSelect: (value: T) => void;
+  disabled?: boolean;
+  getTooltipContent?: (option: K) => any[];
+}
+
+const CardSelector = <T, K extends CardOption<T>>({
+  options,
+  onSelect,
+  disabled = false,
+  getTooltipContent
+}: CardSelectorProps<T, K>) => {
   const { t } = useTranslation();
 
-  // Get tooltip content for a specific method
-  const getMethodTooltip = (method: SplitMethod) => {
-    const tooltipContent = useSplitSettingsTips(method);
-    return tooltipContent?.tips || [];
+  const handleOptionClick = (value: T) => {
+    if (!disabled) {
+      onSelect(value);
+    }
   };
 
-  const handleMethodClick = (method: SplitMethod) => {
-    if (!disabled) {
-      onMethodSelect(method);
+  const getTooltips = (option: K) => {
+    if (getTooltipContent) {
+      return getTooltipContent(option);
     }
+    return [];
   };
 
   return (
     <Stack gap="sm">
-      {METHOD_OPTIONS.map((option) => (
+      {options.map((option) => (
         <Tooltip
-          key={option.method}
+          key={option.value as string}
           sidebarTooltip
-          tips={getMethodTooltip(option.method)}
+          tips={getTooltips(option)}
         >
           <Card
             radius="md"
@@ -62,11 +73,11 @@ const SplitMethodSelector = ({
                 e.currentTarget.style.boxShadow = 'none';
               }
             }}
-            onClick={() => handleMethodClick(option.method)}
+            onClick={() => handleOptionClick(option.value)}
           >
-            <Flex align={'center'} w="100%" >
-              <Text size="sm" c="dimmed" ta="center" fw={350} >
-                {t(option.prefixKey, "Split by")}
+            <Flex align={'center'} pl="sm" w="100%">
+              <Text size="sm" c="dimmed" ta="center" fw={350}>
+                {t(option.prefixKey, "Prefix")}
               </Text>
               <Text
                 fw={600}
@@ -74,8 +85,8 @@ const SplitMethodSelector = ({
                 c={undefined}
                 ta="center"
                 style={{ marginLeft: '0.25rem' }}
-                >
-                  {t(option.nameKey, "Method Name")}
+              >
+                {t(option.nameKey, "Option Name")}
               </Text>
             </Flex>
           </Card>
@@ -85,4 +96,4 @@ const SplitMethodSelector = ({
   );
 };
 
-export default SplitMethodSelector;
+export default CardSelector;
