@@ -54,7 +54,6 @@ const ManageSignatures = (props: BaseToolProps) => {
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
-      placeholder: t("certSign.files.placeholder", "Select PDF files to sign with certificates"),
     },
     steps: [
       {

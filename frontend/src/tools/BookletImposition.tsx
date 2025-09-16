@@ -20,7 +20,6 @@ const BookletImposition = (props: BaseToolProps) => {
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
-      placeholder: t("bookletImposition.files.placeholder", "Select PDF files to create booklet impositions from"),
     },
     steps: [
       {
