@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.service.ServerCertificateService;
+import stirling.software.common.service.ServerCertificateServiceInterface;
 
 @RestController
 @RequestMapping("/api/v1/admin/server-certificate")
@@ -26,16 +26,16 @@ import stirling.software.common.service.ServerCertificateService;
 @PreAuthorize("hasRole('ADMIN')")
 public class ServerCertificateController {
 
-    private final ServerCertificateService serverCertificateService;
+    private final ServerCertificateServiceInterface serverCertificateService;
 
     @GetMapping("/info")
     @Operation(
             summary = "Get server certificate information",
             description = "Returns information about the current server certificate")
-    public ResponseEntity<ServerCertificateService.ServerCertificateInfo>
+    public ResponseEntity<ServerCertificateServiceInterface.ServerCertificateInfo>
             getServerCertificateInfo() {
         try {
-            ServerCertificateService.ServerCertificateInfo info =
+            ServerCertificateServiceInterface.ServerCertificateInfo info =
                     serverCertificateService.getServerCertificateInfo();
             return ResponseEntity.ok(info);
         } catch (Exception e) {
@@ -109,27 +109,27 @@ public class ServerCertificateController {
         }
     }
 
-    @GetMapping("/public-key")
+    @GetMapping("/certificate")
     @Operation(
-            summary = "Download server certificate public key",
+            summary = "Download server certificate",
             description =
-                    "Download the public key of the server certificate for validation purposes")
-    public ResponseEntity<byte[]> getServerCertificatePublicKey() {
+                    "Download the server certificate in DER format for validation purposes")
+    public ResponseEntity<byte[]> getServerCertificate() {
         try {
             if (!serverCertificateService.hasServerCertificate()) {
                 return ResponseEntity.notFound().build();
             }
 
-            byte[] publicKey = serverCertificateService.getServerCertificatePublicKey();
+            byte[] certificate = serverCertificateService.getServerCertificatePublicKey();
 
             return ResponseEntity.ok()
                     .header(
                             HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"server-cert.crt\"")
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(publicKey);
+                            "attachment; filename=\"server-cert.cer\"")
+                    .contentType(MediaType.valueOf("application/pkix-cert"))
+                    .body(certificate);
         } catch (Exception e) {
-            log.error("Failed to get server certificate public key", e);
+            log.error("Failed to get server certificate", e);
             return ResponseEntity.internalServerError().build();
         }
     }

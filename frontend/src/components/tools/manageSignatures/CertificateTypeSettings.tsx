@@ -1,5 +1,6 @@
 import { Stack, Button } from "@mantine/core";
 import { ManageSignaturesParameters } from "../../../hooks/tools/manageSignatures/useManageSignaturesParameters";
+import { useAppConfig } from "../../../hooks/useAppConfig";
 
 interface CertificateTypeSettingsProps {
   parameters: ManageSignaturesParameters;
@@ -8,6 +9,13 @@ interface CertificateTypeSettingsProps {
 }
 
 const CertificateTypeSettings = ({ parameters, onParameterChange, disabled = false }: CertificateTypeSettingsProps) => {
+  const { config } = useAppConfig();
+  const isServerCertificateEnabled = config?.serverCertificateEnabled ?? false;
+
+  // Reset to MANUAL if AUTO is selected but feature is disabled
+  if (parameters.signMode === 'AUTO' && !isServerCertificateEnabled) {
+    onParameterChange('signMode', 'MANUAL');
+  }
 
   return (
     <Stack gap="md">
@@ -29,21 +37,23 @@ const CertificateTypeSettings = ({ parameters, onParameterChange, disabled = fal
             Manual
           </div>
         </Button>
-        <Button
-          variant={parameters.signMode === 'AUTO' ? 'filled' : 'outline'}
-          color={parameters.signMode === 'AUTO' ? 'green' : 'var(--text-muted)'}
-          onClick={() => {
-            onParameterChange('signMode', 'AUTO');
-            // Clear cert type and files when switching to auto
-            onParameterChange('certType', '');
-          }}
-          disabled={disabled}
-          style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-        >
-          <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-            Auto
-          </div>
-        </Button>
+        {isServerCertificateEnabled && (
+          <Button
+            variant={parameters.signMode === 'AUTO' ? 'filled' : 'outline'}
+            color={parameters.signMode === 'AUTO' ? 'green' : 'var(--text-muted)'}
+            onClick={() => {
+              onParameterChange('signMode', 'AUTO');
+              // Clear cert type and files when switching to auto
+              onParameterChange('certType', '');
+            }}
+            disabled={disabled}
+            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
+          >
+            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
+              Auto (server)
+            </div>
+          </Button>
+        )}
       </div>
     </Stack>
   );
