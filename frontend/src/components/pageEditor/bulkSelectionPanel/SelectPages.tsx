@@ -18,7 +18,6 @@ const SelectPages = ({
   title,
   placeholder,
   onApply,
-  maxPages,
   validationFn,
   isRange = false,
   rangeEndValue,
