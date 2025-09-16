@@ -2,10 +2,11 @@ import React from 'react';
 import { Stack, Card, Box, Text, Badge, Group, Divider, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { detectFileExtension, getFileSize } from '../../utils/fileUtils';
-import { FileMetadata } from '../../types/file';
+import { StirlingFileStub } from '../../types/fileContext';
+import ToolChain from '../shared/ToolChain';
 
 interface FileInfoCardProps {
-  currentFile: FileMetadata | null;
+  currentFile: StirlingFileStub | null;
   modalHeight: string;
 }
 
@@ -53,11 +54,36 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
           <Divider />
 
           <Group justify="space-between" py="xs">
-            <Text size="sm" c="dimmed">{t('fileManager.fileVersion', 'Version')}</Text>
+            <Text size="sm" c="dimmed">{t('fileManager.lastModified', 'Last Modified')}</Text>
             <Text size="sm" fw={500}>
-              {currentFile ? '1.0' : ''}
+              {currentFile ? new Date(currentFile.lastModified).toLocaleDateString() : ''}
             </Text>
           </Group>
+          <Divider />
+
+          <Group justify="space-between" py="xs">
+            <Text size="sm" c="dimmed">{t('fileManager.fileVersion', 'Version')}</Text>
+            {currentFile &&
+              <Badge size="sm" variant="light" color={currentFile?.versionNumber ? 'blue' : 'gray'}>
+                v{currentFile ? (currentFile.versionNumber || 1) : ''}
+              </Badge>}
+
+          </Group>
+
+          {/* Tool Chain Display */}
+          {currentFile?.toolHistory && currentFile.toolHistory.length > 0 && (
+            <>
+              <Divider />
+              <Box py="xs">
+                <Text size="xs" c="dimmed" mb="xs">{t('fileManager.toolChain', 'Tools Applied')}</Text>
+                <ToolChain
+                  toolChain={currentFile.toolHistory}
+                  displayStyle="badges"
+                  size="xs"
+                />
+              </Box>
+            </>
+          )}
         </Stack>
       </ScrollArea>
     </Card>

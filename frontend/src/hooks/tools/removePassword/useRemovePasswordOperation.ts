@@ -17,7 +17,6 @@ export const removePasswordOperationConfig = {
   buildFormData: buildRemovePasswordFormData,
   operationType: 'removePassword',
   endpoint: '/api/v1/security/remove-password',
-  filePrefix: 'decrypted_', // Will be overridden in hook with translation
   defaultParameters,
 } as const;
 
@@ -26,7 +25,6 @@ export const useRemovePasswordOperation = () => {
 
   return useToolOperation<RemovePasswordParameters>({
     ...removePasswordOperationConfig,
-    filePrefix: t('removePassword.filenamePrefix', 'decrypted') + '_',
     getErrorMessage: createStandardErrorHandler(t('removePassword.error.failed', 'An error occurred while removing the password from the PDF.'))
   });
 };

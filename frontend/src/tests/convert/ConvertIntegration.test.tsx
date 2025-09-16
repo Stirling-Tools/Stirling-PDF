@@ -141,7 +141,7 @@ describe('Convert Tool Integration Tests', () => {
 
       // Verify hook state updates
       expect(result.current.downloadUrl).toBeTruthy();
-      expect(result.current.downloadFilename).toBe('test_converted.png');
+      expect(result.current.downloadFilename).toBe('test.png');
       expect(result.current.isLoading).toBe(false);
       expect(result.current.errorMessage).toBe(null);
     });
@@ -363,7 +363,7 @@ describe('Convert Tool Integration Tests', () => {
 
       // Verify hook state updates correctly
       expect(result.current.downloadUrl).toBeTruthy();
-      expect(result.current.downloadFilename).toBe('test_converted.csv');
+      expect(result.current.downloadFilename).toBe('test.csv');
       expect(result.current.isLoading).toBe(false);
       expect(result.current.errorMessage).toBe(null);
     });

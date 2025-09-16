@@ -6,7 +6,7 @@ import { FileOperation } from '../types/fileContext';
  */
 export const createOperation = <TParams = void>(
   operationType: string,
-  params: TParams,
+  _params: TParams,
   selectedFiles: File[]
 ): { operation: FileOperation; operationId: string; fileId: FileId } => {
   const operationId = `${operationType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -20,7 +20,6 @@ export const createOperation = <TParams = void>(
     status: 'pending',
     metadata: {
       originalFileName: selectedFiles[0]?.name,
-      parameters: params,
       fileSize: selectedFiles.reduce((sum, f) => sum + f.size, 0)
     }
   } as any /* FIX ME*/;

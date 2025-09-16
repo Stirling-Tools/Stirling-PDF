@@ -42,6 +42,5 @@ export function useAutomateOperation() {
     toolType: ToolType.custom,
     operationType: 'automate',
     customProcessor,
-    filePrefix: '' // No prefix needed since automation handles naming internally
   });
 }

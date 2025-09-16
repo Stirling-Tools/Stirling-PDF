@@ -22,13 +22,12 @@ import {
   FileId,
   StirlingFileStub,
   StirlingFile,
-  createStirlingFile
 } from '../types/fileContext';
 
 // Import modular components
 import { fileContextReducer, initialFileContextState } from './file/FileReducer';
 import { createFileSelectors } from './file/fileSelectors';
-import { AddedFile, addFiles, consumeFiles, undoConsumeFiles, createFileActions } from './file/fileActions';
+import { addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createFileActions } from './file/fileActions';
 import { FileLifecycleManager } from './file/lifecycle';
 import { FileStateContext, FileActionsContext } from './file/contexts';
 import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
@@ -73,58 +72,44 @@ function FileContextInner({
     dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
   }, []);
 
-  const selectFiles = (addedFilesWithIds: AddedFile[]) => {
+  const selectFiles = (stirlingFiles: StirlingFile[]) => {
     const currentSelection = stateRef.current.ui.selectedFileIds;
-    const newFileIds = addedFilesWithIds.map(({ id }) => id);
+    const newFileIds = stirlingFiles.map(stirlingFile => stirlingFile.fileId);
     dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
   }
 
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
-    const addedFilesWithIds = await addFiles('raw', { files, ...options }, stateRef, filesRef, dispatch, lifecycleManager);
+    const stirlingFiles = await addFiles({ files, ...options }, stateRef, filesRef, dispatch, lifecycleManager, enablePersistence);
 
     // Auto-select the newly added files if requested
-    if (options?.selectFiles && addedFilesWithIds.length > 0) {
-      selectFiles(addedFilesWithIds);
+    if (options?.selectFiles && stirlingFiles.length > 0) {
+      selectFiles(stirlingFiles);
     }
 
-    // Persist to IndexedDB if enabled
-    if (indexedDB && enablePersistence && addedFilesWithIds.length > 0) {
-      await Promise.all(addedFilesWithIds.map(async ({ file, id, thumbnail }) => {
-        try {
-          await indexedDB.saveFile(file, id, thumbnail);
-        } catch (error) {
-          console.error('Failed to persist file to IndexedDB:', file.name, error);
-        }
-      }));
-    }
+    return stirlingFiles;
+  }, [enablePersistence]);
 
-    return addedFilesWithIds.map(({ file, id }) => createStirlingFile(file, id));
-  }, [indexedDB, enablePersistence]);
-
-  const addProcessedFiles = useCallback(async (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>): Promise<StirlingFile[]> => {
-    const result = await addFiles('processed', { filesWithThumbnails }, stateRef, filesRef, dispatch, lifecycleManager);
-    return result.map(({ file, id }) => createStirlingFile(file, id));
-  }, []);
-
-  const addStoredFiles = useCallback(async (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: any }>, options?: { selectFiles?: boolean }): Promise<StirlingFile[]> => {
-    const result = await addFiles('stored', { filesWithMetadata }, stateRef, filesRef, dispatch, lifecycleManager);
+  const addStirlingFileStubsAction = useCallback(async (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
+    // StirlingFileStubs preserve all metadata - perfect for FileManager use case!
+    const result = await addStirlingFileStubs(stirlingFileStubs, options, stateRef, filesRef, dispatch, lifecycleManager);
 
     // Auto-select the newly added files if requested
     if (options?.selectFiles && result.length > 0) {
       selectFiles(result);
     }
 
-    return result.map(({ file, id }) => createStirlingFile(file, id));
+    return result;
   }, []);
+
 
   // Action creators
   const baseActions = useMemo(() => createFileActions(dispatch), []);
 
   // Helper functions for pinned files
-  const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputFiles: File[]): Promise<FileId[]> => {
-    return consumeFiles(inputFileIds, outputFiles, filesRef, dispatch, indexedDB);
-  }, [indexedDB]);
+  const consumeFilesWrapper = useCallback(async (inputFileIds: FileId[], outputStirlingFiles: StirlingFile[], outputStirlingFileStubs: StirlingFileStub[]): Promise<FileId[]> => {
+    return consumeFiles(inputFileIds, outputStirlingFiles, outputStirlingFileStubs, filesRef, dispatch);
+  }, []);
 
   const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]): Promise<void> => {
     return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, filesRef, dispatch, indexedDB);
@@ -143,8 +128,7 @@ function FileContextInner({
   const actions = useMemo<FileContextActions>(() => ({
     ...baseActions,
     addFiles: addRawFiles,
-    addProcessedFiles,
-    addStoredFiles,
+    addStirlingFileStubs: addStirlingFileStubsAction,
     removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
       // Remove from memory and cleanup resources
       lifecycleManager.removeFiles(fileIds, stateRef);
@@ -199,8 +183,7 @@ function FileContextInner({
   }), [
     baseActions,
     addRawFiles,
-    addProcessedFiles,
-    addStoredFiles,
+    addStirlingFileStubsAction,
     lifecycleManager,
     setHasUnsavedChanges,
     consumeFilesWrapper,

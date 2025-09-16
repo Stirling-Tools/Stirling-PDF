@@ -83,7 +83,7 @@ export const createFileFromResponse = (
     targetExtension = 'pdf';
   }
 
-  const fallbackFilename = `${originalName}_converted.${targetExtension}`;
+  const fallbackFilename = `${originalName}.${targetExtension}`;
 
   return createFileFromApiResponse(responseData, headers, fallbackFilename);
 };
@@ -136,7 +136,6 @@ export const convertOperationConfig = {
   toolType: ToolType.custom,
   customProcessor: convertProcessor, // Can't use callback version here
   operationType: 'convert',
-  filePrefix: 'converted_',
   defaultParameters,
 } as const;
 

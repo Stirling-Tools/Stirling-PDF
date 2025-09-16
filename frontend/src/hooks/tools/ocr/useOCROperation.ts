@@ -88,8 +88,8 @@ export const ocrResponseHandler = async (blob: Blob, originalFiles: File[], extr
     throw new Error(`Response is not a valid PDF. Header: "${head}"`);
   }
 
-  const base = stripExt(originalFiles[0].name);
-  return [new File([blob], `ocr_${base}.pdf`, { type: 'application/pdf' })];
+  const originalName = originalFiles[0].name;
+  return [new File([blob], originalName, { type: 'application/pdf' })];
 };
 
 // Static configuration object (without t function dependencies)
@@ -98,7 +98,6 @@ export const ocrOperationConfig = {
   buildFormData: buildOCRFormData,
   operationType: 'ocr',
   endpoint: '/api/v1/misc/ocr-pdf',
-  filePrefix: 'ocr_',
   defaultParameters,
 } as const;
 

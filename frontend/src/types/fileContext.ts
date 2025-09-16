@@ -3,7 +3,7 @@
  */
 
 import { PageOperation } from './pageEditor';
-import { FileId, FileMetadata } from './file';
+import { FileId, BaseFileMetadata } from './file';
 
 // Re-export FileId for convenience
 export type { FileId };
@@ -40,7 +40,6 @@ export interface ProcessedFilePage {
 export interface ProcessedFileMetadata {
   pages: ProcessedFilePage[];
   totalPages?: number;
-  thumbnailUrl?: string;
   lastProcessed?: number;
   [key: string]: any;
 }
@@ -52,16 +51,17 @@ export interface ProcessedFileMetadata {
  * separately in refs for memory efficiency. Supports multi-tool workflows
  * where files persist across tool operations.
  */
-export interface StirlingFileStub {
-  id: FileId;                    // UUID primary key for collision-free operations
-  name: string;                  // Display name for UI
-  size: number;                  // File size for progress indicators
-  type: string;                  // MIME type for format validation
-  lastModified: number;          // Original timestamp for deduplication
+/**
+ * StirlingFileStub - Runtime UI metadata for files in the active workbench session
+ *
+ * Contains UI display data and processing state. Actual File objects stored
+ * separately in refs for memory efficiency. Supports multi-tool workflows
+ * where files persist across tool operations.
+ */
+export interface StirlingFileStub extends BaseFileMetadata {
   quickKey?: string;             // Fast deduplication key: name|size|lastModified
   thumbnailUrl?: string;         // Generated thumbnail blob URL for visual display
   blobUrl?: string;             // File access blob URL for downloads/processing
-  createdAt?: number;           // When added to workbench for sorting
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string;   // Page ID after which this file should be inserted
   isPinned?: boolean;           // Protected from tool consumption (replace/remove)
@@ -107,6 +107,11 @@ export function isStirlingFile(file: File): file is StirlingFile {
 
 // Create a StirlingFile from a regular File object
 export function createStirlingFile(file: File, id?: FileId): StirlingFile {
+  // Check if file is already a StirlingFile to avoid property redefinition
+  if (isStirlingFile(file)) {
+    return file; // Already has fileId and quickKey properties
+  }
+
   const fileId = id || createFileId();
   const quickKey = createQuickKey(file);
 
@@ -151,9 +156,11 @@ export function isFileObject(obj: any): obj is File | StirlingFile {
 
 
 
-export function toStirlingFileStub(
+export function createNewStirlingFileStub(
   file: File,
-  id?: FileId
+  id?: FileId,
+  thumbnail?: string,
+  processedFileMetadata?: ProcessedFileMetadata
 ): StirlingFileStub {
   const fileId = id || createFileId();
   return {
@@ -162,8 +169,13 @@ export function toStirlingFileStub(
     size: file.size,
     type: file.type,
     lastModified: file.lastModified,
+    originalFileId: fileId,
     quickKey: createQuickKey(file),
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    isLeaf: true, // New files are leaf nodes by default
+    versionNumber: 1, // New files start at version 1
+    thumbnailUrl: thumbnail,
+    processedFile: processedFileMetadata
   };
 }
 
@@ -209,7 +221,6 @@ export interface FileOperation {
   metadata?: {
     originalFileName?: string;
     outputFileNames?: string[];
-    parameters?: Record<string, any>;
     fileSize?: number;
     pageCount?: number;
     error?: string;
@@ -286,8 +297,7 @@ export type FileContextAction =
 export interface FileContextActions {
   // File management - lightweight actions only
   addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
-  addProcessedFiles: (filesWithThumbnails: Array<{ file: File; thumbnail?: string; pageCount?: number }>) => Promise<StirlingFile[]>;
-  addStoredFiles: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>, options?: { selectFiles?: boolean }) => Promise<StirlingFile[]>;
+  addStirlingFileStubs: (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateStirlingFileStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
@@ -299,7 +309,7 @@ export interface FileContextActions {
   unpinFile: (file: StirlingFile) => void;
 
   // File consumption (replace unpinned files with outputs)
-  consumeFiles: (inputFileIds: FileId[], outputFiles: File[]) => Promise<FileId[]>;
+  consumeFiles: (inputFileIds: FileId[], outputStirlingFiles: StirlingFile[], outputStirlingFileStubs: StirlingFileStub[]) => Promise<FileId[]>;
   undoConsumeFiles: (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]) => Promise<void>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;

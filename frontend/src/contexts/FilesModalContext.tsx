@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useFileHandler } from '../hooks/useFileHandler';
-import { FileMetadata } from '../types/file';
-import { FileId } from '../types/file';
+import { useFileActions } from './FileContext';
+import { StirlingFileStub } from '../types/fileContext';
+import { fileStorage } from '../services/fileStorage';
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;
   openFilesModal: (options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void }) => void;
   closeFilesModal: () => void;
-  onFileSelect: (file: File) => void;
-  onFilesSelect: (files: File[]) => void;
-  onStoredFilesSelect: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => void;
+  onFileUpload: (files: File[]) => void;
+  onRecentFileSelect: (stirlingFileStubs: StirlingFileStub[]) => void;
   onModalClose?: () => void;
   setOnModalClose: (callback: () => void) => void;
 }
@@ -17,7 +17,8 @@ interface FilesModalContextType {
 const FilesModalContext = createContext<FilesModalContextType | null>(null);
 
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { addToActiveFiles, addMultipleFiles, addStoredFiles } = useFileHandler();
+  const { addFiles } = useFileHandler();
+  const { actions } = useFileActions();
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
@@ -36,39 +37,45 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     onModalClose?.();
   }, [onModalClose]);
 
-  const handleFileSelect = useCallback((file: File) => {
-    if (customHandler) {
-      // Use custom handler for special cases (like page insertion)
-      customHandler([file], insertAfterPage);
-    } else {
-      // Use normal file handling
-      addToActiveFiles(file);
-    }
-    closeFilesModal();
-  }, [addToActiveFiles, closeFilesModal, insertAfterPage, customHandler]);
-
-  const handleFilesSelect = useCallback((files: File[]) => {
+  const handleFileUpload = useCallback((files: File[]) => {
     if (customHandler) {
       // Use custom handler for special cases (like page insertion)
       customHandler(files, insertAfterPage);
     } else {
       // Use normal file handling
-      addMultipleFiles(files);
+      addFiles(files);
     }
     closeFilesModal();
-  }, [addMultipleFiles, closeFilesModal, insertAfterPage, customHandler]);
+  }, [addFiles, closeFilesModal, insertAfterPage, customHandler]);
 
-  const handleStoredFilesSelect = useCallback((filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => {
+  const handleRecentFileSelect = useCallback(async (stirlingFileStubs: StirlingFileStub[]) => {
     if (customHandler) {
-      // Use custom handler for special cases (like page insertion)
-      const files = filesWithMetadata.map(item => item.file);
-      customHandler(files, insertAfterPage);
+      // Load the actual files from storage for custom handler
+      try {
+        const loadedFiles: File[] = [];
+        for (const stub of stirlingFileStubs) {
+          const stirlingFile = await fileStorage.getStirlingFile(stub.id);
+          if (stirlingFile) {
+            loadedFiles.push(stirlingFile);
+          }
+        }
+        
+        if (loadedFiles.length > 0) {
+          customHandler(loadedFiles, insertAfterPage);
+        }
+      } catch (error) {
+        console.error('Failed to load files for custom handler:', error);
+      }
     } else {
-      // Use normal file handling
-      addStoredFiles(filesWithMetadata);
+      // Normal case - use addStirlingFileStubs to preserve metadata
+      if (actions.addStirlingFileStubs) {
+        actions.addStirlingFileStubs(stirlingFileStubs, { selectFiles: true });
+      } else {
+        console.error('addStirlingFileStubs action not available');
+      }
     }
     closeFilesModal();
-  }, [addStoredFiles, closeFilesModal, insertAfterPage, customHandler]);
+  }, [actions.addStirlingFileStubs, closeFilesModal, customHandler, insertAfterPage]);
 
   const setModalCloseCallback = useCallback((callback: () => void) => {
     setOnModalClose(() => callback);
@@ -78,18 +85,16 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     isFilesModalOpen,
     openFilesModal,
     closeFilesModal,
-    onFileSelect: handleFileSelect,
-    onFilesSelect: handleFilesSelect,
-    onStoredFilesSelect: handleStoredFilesSelect,
+    onFileUpload: handleFileUpload,
+    onRecentFileSelect: handleRecentFileSelect,
     onModalClose,
     setOnModalClose: setModalCloseCallback,
   }), [
     isFilesModalOpen,
     openFilesModal,
     closeFilesModal,
-    handleFileSelect,
-    handleFilesSelect,
-    handleStoredFilesSelect,
+    handleFileUpload,
+    handleRecentFileSelect,
     onModalClose,
     setModalCloseCallback,
   ]);

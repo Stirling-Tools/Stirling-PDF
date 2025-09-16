@@ -12,7 +12,7 @@ import { useIndexedDBThumbnail } from "../../hooks/useIndexedDBThumbnail";
 
 interface FileCardProps {
   file: File;
-  record?: StirlingFileStub;
+  fileStub?: StirlingFileStub;
   onRemove: () => void;
   onDoubleClick?: () => void;
   onView?: () => void;
@@ -22,12 +22,11 @@ interface FileCardProps {
   isSupported?: boolean; // Whether the file format is supported by the current tool
 }
 
-const FileCard = ({ file, record, onRemove, onDoubleClick, onView, onEdit, isSelected, onSelect, isSupported = true }: FileCardProps) => {
+const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isSelected, onSelect, isSupported = true }: FileCardProps) => {
   const { t } = useTranslation();
   // Use record thumbnail if available, otherwise fall back to IndexedDB lookup
-  const fileMetadata = record ? { id: record.id, name: record.name, type: record.type, size: record.size, lastModified: record.lastModified } : null;
-  const { thumbnail: indexedDBThumb, isGenerating } = useIndexedDBThumbnail(fileMetadata);
-  const thumb = record?.thumbnailUrl || indexedDBThumb;
+  const { thumbnail: indexedDBThumb, isGenerating } = useIndexedDBThumbnail(fileStub);
+  const thumb = fileStub?.thumbnailUrl || indexedDBThumb;
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -177,7 +176,7 @@ const FileCard = ({ file, record, onRemove, onDoubleClick, onView, onEdit, isSel
           <Badge color="blue" variant="light" size="sm">
             {getFileDate(file)}
           </Badge>
-          {record?.id && (
+          {fileStub?.id && (
             <Badge
               color="green"
               variant="light"

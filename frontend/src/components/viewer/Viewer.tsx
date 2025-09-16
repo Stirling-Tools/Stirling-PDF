@@ -372,11 +372,12 @@ const Viewer = ({
         else if (effectiveFile.url?.startsWith('indexeddb:')) {
           const fileId = effectiveFile.url.replace('indexeddb:', '') as FileId /* FIX ME: Not sure this is right - at least probably not the right place for this logic */;
 
-          // Get data directly from IndexedDB
-          const arrayBuffer = await fileStorage.getFileData(fileId);
-          if (!arrayBuffer) {
+          // Get file directly from IndexedDB
+          const file = await fileStorage.getStirlingFile(fileId);
+          if (!file) {
             throw new Error('File not found in IndexedDB - may have been purged by browser');
           }
+          const arrayBuffer = await file.arrayBuffer();
 
           // Store reference for cleanup
           currentArrayBufferRef.current = arrayBuffer;
