@@ -19,7 +19,7 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
           label={t('removeBlanks.threshold.label', 'Pixel Whiteness Threshold')}
           value={parameters.threshold}
           onChange={(v) => onParameterChange('threshold', typeof v === 'string' ? Number(v) : v)}
-          unit={t('removeBlanks.threshold.unit', '')}
+          unit=''
           min={0}
           max={255}
           disabled={disabled}
@@ -31,7 +31,7 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
           label={t('removeBlanks.whitePercent.label', 'White Percent')}
           value={parameters.whitePercent}
           onChange={(v) => onParameterChange('whitePercent', typeof v === 'string' ? Number(v) : v)}
-          unit={t('removeBlanks.whitePercent.unit', '%')}
+          unit='%'
           min={0.1}
           max={100}
           disabled={disabled}

@@ -17,7 +17,6 @@ export const removePagesOperationConfig = {
   buildFormData: buildRemovePagesFormData,
   operationType: 'remove-pages',
   endpoint: '/api/v1/general/remove-pages',
-  filePrefix: 'removed_pages_',
   defaultParameters,
 } as const satisfies ToolOperationConfig<RemovePagesParameters>;
 
@@ -34,7 +33,6 @@ export const useRemovePagesOperation = () => {
   return useToolOperation<RemovePagesParameters>({
     ...removePagesOperationConfig,
     responseHandler,
-    filePrefix: t('removePages.filenamePrefix', 'removed_pages') + '_',
     getErrorMessage: createStandardErrorHandler(
       t('removePages.error.failed', 'Failed to remove pages')
     )

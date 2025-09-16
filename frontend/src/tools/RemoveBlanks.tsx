@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "../types/tool";
@@ -19,23 +18,6 @@ const RemoveBlanks = (props: BaseToolProps) => {
     props
   );
 
-  // Step expansion state management
-  const [expandedStep, setExpandedStep] = useState<"files" | "settings" | null>("files");
-
-  // Auto-expand settings when files are selected
-  useEffect(() => {
-    if (base.selectedFiles.length > 0 && expandedStep === "files") {
-      setExpandedStep("settings");
-    }
-  }, [base.selectedFiles.length, expandedStep]);
-
-  // Collapse all steps when results appear
-  useEffect(() => {
-    if (base.hasResults) {
-      setExpandedStep(null);
-    }
-  }, [base.hasResults]);
-
   const settingsContent = (
     <RemoveBlanksSettings
       parameters={base.params.parameters}
@@ -47,9 +29,6 @@ const RemoveBlanks = (props: BaseToolProps) => {
   const handleSettingsClick = () => {
     if (base.hasResults) {
       base.handleSettingsReset();
-    } else {
-      if (!base.hasFiles) return; 
-      setExpandedStep(expandedStep === "settings" ? null : "settings");
     }
   };
 
@@ -61,7 +40,7 @@ const RemoveBlanks = (props: BaseToolProps) => {
     steps: [
       {
         title: t("removeBlanks.settings.title", "Settings"),
-        isCollapsed: expandedStep !== "settings",
+        isCollapsed: base.settingsCollapsed,
         onCollapsedClick: handleSettingsClick,
         content: settingsContent,
         tooltip: tooltipContent,

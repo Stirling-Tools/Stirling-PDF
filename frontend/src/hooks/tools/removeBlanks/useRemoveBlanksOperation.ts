@@ -19,7 +19,6 @@ export const removeBlanksOperationConfig = {
   buildFormData: buildRemoveBlanksFormData,
   operationType: 'remove-blanks',
   endpoint: '/api/v1/misc/remove-blanks',
-  filePrefix: 'noblank_',
   defaultParameters,
 } as const satisfies ToolOperationConfig<RemoveBlanksParameters>;
 
@@ -35,7 +34,6 @@ export const useRemoveBlanksOperation = () => {
   return useToolOperation<RemoveBlanksParameters>({
     ...removeBlanksOperationConfig,
     responseHandler,
-    filePrefix: t('removeBlanks.filenamePrefix', 'noblank') + '_',
     getErrorMessage: createStandardErrorHandler(
       t('removeBlanks.error.failed', 'Failed to remove blank pages')
     )
