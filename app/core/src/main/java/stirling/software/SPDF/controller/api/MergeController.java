@@ -69,7 +69,13 @@ public class MergeController {
     // Returns a comparator for sorting MultipartFile arrays based on the given sort type
     private Comparator<MultipartFile> getSortComparator(String sortType) {
         return switch (sortType) {
-            case "byFileName" -> Comparator.comparing(MultipartFile::getOriginalFilename);
+            case "byFileName" ->
+                    Comparator.comparing(
+                            (MultipartFile mf) -> {
+                                String name = mf.getOriginalFilename();
+                                return name == null ? "" : name;
+                            },
+                            String.CASE_INSENSITIVE_ORDER);
             case "byDateModified" ->
                     (file1, file2) -> {
                         long t1 = getPdfModificationTimeSafe(file1);
@@ -127,11 +133,11 @@ public class MergeController {
                 }
 
                 // Fallback to XMP metadata if Info dates are missing
-        PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
+                PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
                 if (metadata != null) {
                     try (InputStream is = metadata.createInputStream()) {
-            DomXmpParser parser = new DomXmpParser();
-            XMPMetadata xmp = parser.parse(is);
+                        DomXmpParser parser = new DomXmpParser();
+                        XMPMetadata xmp = parser.parse(is);
                         XMPBasicSchema basic = xmp.getXMPBasicSchema();
                         if (basic != null) {
                             if (basic.getModifyDate() != null) {
@@ -142,7 +148,9 @@ public class MergeController {
                             }
                         }
                     } catch (Exception e) {
-                        log.debug("Unable to read XMP metadata dates from uploaded file: {}", e.getMessage());
+                        log.debug(
+                                "Unable to read XMP metadata dates from uploaded file: {}",
+                                e.getMessage());
                     }
                 }
             }
@@ -161,11 +169,11 @@ public class MergeController {
                 }
 
                 // Fallback to XMP metadata
-        PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
+                PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
                 if (metadata != null) {
                     try (InputStream is = metadata.createInputStream()) {
-            DomXmpParser parser = new DomXmpParser();
-            XMPMetadata xmp = parser.parse(is);
+                        DomXmpParser parser = new DomXmpParser();
+                        XMPMetadata xmp = parser.parse(is);
                         XMPBasicSchema basic = xmp.getXMPBasicSchema();
                         if (basic != null && basic.getCreateDate() != null) {
                             return basic.getCreateDate().getTimeInMillis();
@@ -237,12 +245,12 @@ public class MergeController {
 
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
-        MultipartFile[] files = request.getFileInput();
+            MultipartFile[] files = request.getFileInput();
 
-        Arrays.sort(
-            files,
-            getSortComparator(
-                request.getSortType())); // Sort files based on requested sort type
+            Arrays.sort(
+                    files,
+                    getSortComparator(
+                            request.getSortType())); // Sort files based on requested sort type
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;
@@ -304,9 +312,8 @@ public class MergeController {
                 return WebResponseUtils.pdfFileToWebResponse(
                         outputTempFile, mergedFileName); // Return the modified PDF as stream
             }
-    } catch (Exception ex) {
-        if (ex instanceof IOException
-            && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
+        } catch (Exception ex) {
+            if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
             } else {
                 log.error("Error in merge pdf process", ex);
