@@ -1,4 +1,4 @@
-import { Stack, Card, Text } from '@mantine/core';
+import { Stack, Card, Text, Flex  } from '@mantine/core';
 import { Tooltip } from '../../shared/Tooltip';
 import { useTranslation } from 'react-i18next';
 import { type SplitMethod, METHOD_OPTIONS } from '../../../constants/splitConstants';
@@ -38,7 +38,7 @@ const SplitMethodSelector = ({
           <Card
             radius="md"
             w="100%"
-            h={'3.5rem'}
+            h={'2.8rem'}
             style={{
               cursor: disabled ? 'default' : 'pointer',
               backgroundColor: 'var(--mantine-color-gray-2)',
@@ -64,26 +64,20 @@ const SplitMethodSelector = ({
             }}
             onClick={() => handleMethodClick(option.method)}
           >
-            <div style={{  width: '100%', position: 'relative', display: 'flex', flexDirection: 'row'  }}>
-              {/* Prefix in top left corner */}
-              <Text size="xs" c="dimmed" ta="center" fw={400} style={{
-
-              }}>
+            <Flex align={'center'} w="100%" >
+              <Text size="sm" c="dimmed" ta="center" fw={350} >
                 {t(option.prefixKey, "Split by")}
               </Text>
-
-              <div style={{  }}>
-                <Text
-                  fw={500}
-                  size="sm"
-                  c={undefined}
-                  ta="center"
-                  style={{ marginLeft: '0.25rem' }}
+              <Text
+                fw={600}
+                size="sm"
+                c={undefined}
+                ta="center"
+                style={{ marginLeft: '0.25rem' }}
                 >
                   {t(option.nameKey, "Method Name")}
-                </Text>
-              </div>
-            </div>
+              </Text>
+            </Flex>
           </Card>
         </Tooltip>
       ))}
