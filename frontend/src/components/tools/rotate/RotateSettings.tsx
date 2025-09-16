@@ -44,7 +44,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
             style={{
               width: '280px',
               height: '280px',
-              border: '2px dashed var(--mantine-color-gray-4)',
+              border: '1px solid var(--mantine-color-gray-3)',
               borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
