@@ -15,7 +15,7 @@ interface ButtonSelectorProps<T> {
   fullWidth?: boolean;
 }
 
-const ButtonSelector = <T extends string>({
+const ButtonSelector = <T extends string | number>({
   value,
   onChange,
   options,
