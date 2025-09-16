@@ -77,7 +77,6 @@ const Split = (props: BaseToolProps) => {
         tooltip: methodTips,
         content: (
           <SplitMethodSelector
-            selectedMethod={base.params.parameters.method}
             onMethodSelect={(method) => base.params.updateParameter('method', method)}
             disabled={base.endpointLoading}
           />
