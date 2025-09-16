@@ -7,14 +7,14 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.service.ServerCertificateService;
+import stirling.software.common.service.ServerCertificateServiceInterface;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class ServerCertificateInitializer {
 
-    private final ServerCertificateService serverCertificateService;
+    private final ServerCertificateServiceInterface serverCertificateService;
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializeServerCertificate() {

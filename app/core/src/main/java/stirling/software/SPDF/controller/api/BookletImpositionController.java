@@ -43,8 +43,8 @@ public class BookletImpositionController {
             summary = "Create a booklet with proper page imposition",
             description =
                     "This operation combines page reordering for booklet printing with multi-page layout. "
-                    + "It rearranges pages in the correct order for booklet printing and places multiple pages "
-                    + "on each sheet for proper folding and binding. Input:PDF Output:PDF Type:SISO")
+                            + "It rearranges pages in the correct order for booklet printing and places multiple pages "
+                            + "on each sheet for proper folding and binding. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> createBookletImposition(
             @ModelAttribute BookletImpositionRequest request) throws IOException {
 
@@ -56,7 +56,8 @@ public class BookletImpositionController {
 
         // Validate pages per sheet for booklet
         if (pagesPerSheet != 2 && pagesPerSheet != 4) {
-            throw new IllegalArgumentException("pagesPerSheet must be 2 or 4 for booklet imposition");
+            throw new IllegalArgumentException(
+                    "pagesPerSheet must be 2 or 4 for booklet imposition");
         }
 
         PDDocument sourceDocument = pdfDocumentFactory.load(file);
@@ -65,9 +66,12 @@ public class BookletImpositionController {
         // Step 1: Reorder pages for booklet (reusing logic from RearrangePagesPDFController)
         List<Integer> bookletOrder = getBookletPageOrder(bookletType, totalPages);
 
-        // Step 2: Create new document with multi-page layout (reusing logic from MultiPageLayoutController)
-        PDDocument newDocument = createBookletWithLayout(sourceDocument, bookletOrder, pagesPerSheet, addBorder, pageOrientation);
-        
+        // Step 2: Create new document with multi-page layout (reusing logic from
+        // MultiPageLayoutController)
+        PDDocument newDocument =
+                createBookletWithLayout(
+                        sourceDocument, bookletOrder, pagesPerSheet, addBorder, pageOrientation);
+
         sourceDocument.close();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -112,75 +116,93 @@ public class BookletImpositionController {
     }
 
     // Reused and adapted logic from MultiPageLayoutController
-    private PDDocument createBookletWithLayout(PDDocument sourceDocument, List<Integer> pageOrder, 
-                                             int pagesPerSheet, boolean addBorder, String pageOrientation) throws IOException {
-        
-        PDDocument newDocument = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
-        
+    private PDDocument createBookletWithLayout(
+            PDDocument sourceDocument,
+            List<Integer> pageOrder,
+            int pagesPerSheet,
+            boolean addBorder,
+            String pageOrientation)
+            throws IOException {
+
+        PDDocument newDocument =
+                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
+
         int cols = pagesPerSheet == 2 ? 2 : 2; // 2x1 for 2 pages, 2x2 for 4 pages
         int rows = pagesPerSheet == 2 ? 1 : 2;
-        
+
         int currentPageIndex = 0;
         int totalOrderedPages = pageOrder.size();
-        
+
         while (currentPageIndex < totalOrderedPages) {
             // Use landscape orientation for booklets (A4 landscape -> A5 portrait when folded)
-            PDRectangle pageSize = "LANDSCAPE".equals(pageOrientation) ? 
-                new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth()) : PDRectangle.A4;
+            PDRectangle pageSize =
+                    "LANDSCAPE".equals(pageOrientation)
+                            ? new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth())
+                            : PDRectangle.A4;
             PDPage newPage = new PDPage(pageSize);
             newDocument.addPage(newPage);
-            
+
             float cellWidth = newPage.getMediaBox().getWidth() / cols;
             float cellHeight = newPage.getMediaBox().getHeight() / rows;
-            
-            PDPageContentStream contentStream = new PDPageContentStream(
-                    newDocument, newPage, PDPageContentStream.AppendMode.APPEND, true, true);
+
+            PDPageContentStream contentStream =
+                    new PDPageContentStream(
+                            newDocument,
+                            newPage,
+                            PDPageContentStream.AppendMode.APPEND,
+                            true,
+                            true);
             LayerUtility layerUtility = new LayerUtility(newDocument);
-            
+
             if (addBorder) {
                 contentStream.setLineWidth(1.5f);
                 contentStream.setStrokingColor(Color.BLACK);
             }
-            
+
             // Place pages on the current sheet
-            for (int sheetPosition = 0; sheetPosition < pagesPerSheet && currentPageIndex < totalOrderedPages; sheetPosition++) {
+            for (int sheetPosition = 0;
+                    sheetPosition < pagesPerSheet && currentPageIndex < totalOrderedPages;
+                    sheetPosition++) {
                 int sourcePageIndex = pageOrder.get(currentPageIndex);
                 PDPage sourcePage = sourceDocument.getPage(sourcePageIndex);
                 PDRectangle rect = sourcePage.getMediaBox();
-                
+
                 float scaleWidth = cellWidth / rect.getWidth();
                 float scaleHeight = cellHeight / rect.getHeight();
                 float scale = Math.min(scaleWidth, scaleHeight);
-                
+
                 int rowIndex = sheetPosition / cols;
                 int colIndex = sheetPosition % cols;
-                
+
                 float x = colIndex * cellWidth + (cellWidth - rect.getWidth() * scale) / 2;
-                float y = newPage.getMediaBox().getHeight()
-                        - ((rowIndex + 1) * cellHeight - (cellHeight - rect.getHeight() * scale) / 2);
-                
+                float y =
+                        newPage.getMediaBox().getHeight()
+                                - ((rowIndex + 1) * cellHeight
+                                        - (cellHeight - rect.getHeight() * scale) / 2);
+
                 contentStream.saveGraphicsState();
                 contentStream.transform(Matrix.getTranslateInstance(x, y));
                 contentStream.transform(Matrix.getScaleInstance(scale, scale));
-                
-                PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, sourcePageIndex);
+
+                PDFormXObject formXObject =
+                        layerUtility.importPageAsForm(sourceDocument, sourcePageIndex);
                 contentStream.drawForm(formXObject);
-                
+
                 contentStream.restoreGraphicsState();
-                
+
                 if (addBorder) {
                     float borderX = colIndex * cellWidth;
                     float borderY = newPage.getMediaBox().getHeight() - (rowIndex + 1) * cellHeight;
                     contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
                     contentStream.stroke();
                 }
-                
+
                 currentPageIndex++;
             }
-            
+
             contentStream.close();
         }
-        
+
         return newDocument;
     }
 }

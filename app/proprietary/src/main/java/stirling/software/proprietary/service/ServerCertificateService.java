@@ -11,8 +11,14 @@ import java.security.cert.X509Certificate;
 import java.util.Date;
 
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
+import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
@@ -186,6 +192,36 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
                 new JcaX509v3CertificateBuilder(
                         subject, serialNumber, notBefore, notAfter, subject, keyPair.getPublic());
 
+        // Add PDF-specific certificate extensions for optimal PDF signing compatibility
+        JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+
+        // 1) End-entity certificate, not a CA (critical)
+        certBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
+
+        // 2) Key usage for PDF digital signatures (critical)
+        certBuilder.addExtension(
+                Extension.keyUsage,
+                true,
+                new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation));
+
+        // 3) Extended key usage for document signing (non-critical, widely accepted)
+        certBuilder.addExtension(
+                Extension.extendedKeyUsage,
+                false,
+                new ExtendedKeyUsage(KeyPurposeId.id_kp_codeSigning));
+
+        // 4) Subject Key Identifier for chain building (non-critical)
+        certBuilder.addExtension(
+                Extension.subjectKeyIdentifier,
+                false,
+                extUtils.createSubjectKeyIdentifier(keyPair.getPublic()));
+
+        // 5) Authority Key Identifier for self-signed cert (non-critical)
+        certBuilder.addExtension(
+                Extension.authorityKeyIdentifier,
+                false,
+                extUtils.createAuthorityKeyIdentifier(keyPair.getPublic()));
+
         // Sign certificate
         ContentSigner signer =
                 new JcaContentSignerBuilder("SHA256WithRSA")
@@ -213,5 +249,4 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
             keyStore.store(fos, DEFAULT_PASSWORD.toCharArray());
         }
     }
-
 }

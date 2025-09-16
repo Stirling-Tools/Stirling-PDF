@@ -112,8 +112,7 @@ public class ServerCertificateController {
     @GetMapping("/certificate")
     @Operation(
             summary = "Download server certificate",
-            description =
-                    "Download the server certificate in DER format for validation purposes")
+            description = "Download the server certificate in DER format for validation purposes")
     public ResponseEntity<byte[]> getServerCertificate() {
         try {
             if (!serverCertificateService.hasServerCertificate()) {

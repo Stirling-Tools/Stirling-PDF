@@ -53,6 +53,7 @@ import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.PKCSException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,12 +71,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
-import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -106,7 +105,8 @@ public class CertSignController {
 
     public CertSignController(
             CustomPDFDocumentFactory pdfDocumentFactory,
-            @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService) {
+            @Autowired(required = false)
+                    ServerCertificateServiceInterface serverCertificateService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateService = serverCertificateService;
     }

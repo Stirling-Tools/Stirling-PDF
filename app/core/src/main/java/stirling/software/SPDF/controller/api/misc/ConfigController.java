@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import lombok.RequiredArgsConstructor;
-
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -36,7 +34,7 @@ public class ConfigController {
             ApplicationContext applicationContext,
             EndpointConfiguration endpointConfiguration,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
-            ServerCertificateServiceInterface serverCertificateService) {
+                    ServerCertificateServiceInterface serverCertificateService) {
         this.applicationProperties = applicationProperties;
         this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
@@ -76,7 +74,8 @@ public class ConfigController {
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
             // Server certificate settings
-            configData.put("serverCertificateEnabled",
+            configData.put(
+                    "serverCertificateEnabled",
                     serverCertificateService != null && serverCertificateService.isEnabled());
 
             // Legal settings
