@@ -142,6 +142,8 @@ public class ScannerEffectController {
                     image = pdfRenderer.renderImageWithDPI(i, safeResolution);
                 } catch (OutOfMemoryError e) {
                     throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, safeResolution, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, safeResolution, e);
                 }
 
                 log.debug(

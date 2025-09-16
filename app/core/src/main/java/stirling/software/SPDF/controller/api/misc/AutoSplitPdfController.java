@@ -145,6 +145,8 @@ public class AutoSplitPdfController {
                     bim = pdfRenderer.renderImageWithDPI(page, renderDpi);
                 } catch (OutOfMemoryError e) {
                     throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
                 }
                 String result = decodeQRCode(bim);
 

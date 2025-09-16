@@ -63,6 +63,8 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                                     page, renderDpi); // Render page with global DPI setting
                 } catch (OutOfMemoryError e) {
                     throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
                 }
 
                 // Invert the colors

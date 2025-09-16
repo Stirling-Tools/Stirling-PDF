@@ -84,6 +84,8 @@ public class FlattenController {
                         image = pdfRenderer.renderImageWithDPI(i, renderDpi, ImageType.RGB);
                     } catch (OutOfMemoryError e) {
                         throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                    } catch (NegativeArraySizeException e) {
+                        throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
                     }
                     PDPage page = new PDPage();
                     page.setMediaBox(document.getPage(i).getMediaBox());

@@ -326,6 +326,28 @@ public class ExceptionUtils {
     }
 
     /**
+     * Create a RuntimeException for memory/image size errors when rendering PDF images with DPI.
+     * Handles OutOfMemoryError and related conditions (e.g., NegativeArraySizeException) that
+     * result from images exceeding Java's array/memory limits.
+     *
+     * @param pageNumber the page number that caused the error
+     * @param dpi the DPI value used
+     * @param cause the original error/exception (e.g., OutOfMemoryError,
+     *     NegativeArraySizeException)
+     * @return RuntimeException with user-friendly message
+     */
+    public static RuntimeException createOutOfMemoryDpiException(
+            int pageNumber, int dpi, Throwable cause) {
+        String message =
+                MessageFormat.format(
+                        "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI. "
+                                + "This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). "
+                                + "Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.",
+                        pageNumber, dpi);
+        return new RuntimeException(message, cause);
+    }
+
+    /**
      * Create a RuntimeException for OutOfMemoryError when rendering PDF images with DPI.
      *
      * @param pageNumber the page number that caused the error
@@ -335,29 +357,30 @@ public class ExceptionUtils {
      */
     public static RuntimeException createOutOfMemoryDpiException(
             int pageNumber, int dpi, OutOfMemoryError cause) {
-        String message =
-                MessageFormat.format(
-                        "Out of memory error occurred while rendering PDF page {0} at {1} DPI. "
-                                + "The image is too large to fit in memory. Please try using a lower DPI value "
-                                + "(recommended: 150 or less) or process the document in smaller chunks.",
-                        pageNumber, dpi);
-        return new RuntimeException(message, cause);
+        return createOutOfMemoryDpiException(pageNumber, dpi, (Throwable) cause);
     }
 
     /**
-     * Create a RuntimeException for OutOfMemoryError when rendering PDF images with DPI.
+     * Create a RuntimeException for memory/image size errors when rendering PDF images with DPI.
+     * Handles OutOfMemoryError and related conditions (e.g., NegativeArraySizeException) that
+     * result from images exceeding Java's array/memory limits.
      *
      * @param dpi the DPI value used
-     * @param cause the original OutOfMemoryError
+     * @param cause the original error/exception (e.g., OutOfMemoryError,
+     *     NegativeArraySizeException)
      * @return RuntimeException with user-friendly message
      */
-    public static RuntimeException createOutOfMemoryDpiException(int dpi, OutOfMemoryError cause) {
+    public static RuntimeException createOutOfMemoryDpiException(int dpi, Throwable cause) {
         String message =
                 MessageFormat.format(
-                        "Out of memory error occurred while rendering PDF at {0} DPI. "
-                                + "The image is too large to fit in memory. Please try using a lower DPI value "
-                                + "(recommended: 150 or less) or process the document in smaller chunks.",
+                        "Out of memory or image-too-large error while rendering PDF at {0} DPI. "
+                                + "This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). "
+                                + "Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.",
                         dpi);
         return new RuntimeException(message, cause);
+    }
+
+    public static RuntimeException createOutOfMemoryDpiException(int dpi, OutOfMemoryError cause) {
+        return createOutOfMemoryDpiException(dpi, (Throwable) cause);
     }
 }

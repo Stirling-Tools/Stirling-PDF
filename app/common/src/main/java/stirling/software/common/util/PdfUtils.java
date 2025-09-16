@@ -207,6 +207,8 @@ public class PdfUtils {
                                 throw e;
                             } catch (OutOfMemoryError e) {
                                 throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
+                            } catch (NegativeArraySizeException e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                             writer.writeToSequence(new IIOImage(image, null, null), param);
                         }
@@ -257,6 +259,8 @@ public class PdfUtils {
                                 throw e;
                             } catch (OutOfMemoryError e) {
                                 throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
+                            } catch (NegativeArraySizeException e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                             pdfSizeImageIndex = i;
                             dimension =
@@ -302,6 +306,8 @@ public class PdfUtils {
                                 throw e;
                             } catch (OutOfMemoryError e) {
                                 throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
+                            } catch (NegativeArraySizeException e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                         }
 
@@ -337,6 +343,8 @@ public class PdfUtils {
                             }
                             throw e;
                         } catch (OutOfMemoryError e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
+                        } catch (NegativeArraySizeException e) {
                             throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                         }
                         try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
@@ -400,6 +408,8 @@ public class PdfUtils {
                 }
                 throw e;
             } catch (OutOfMemoryError e) {
+                throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, 300, e);
+            } catch (NegativeArraySizeException e) {
                 throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, 300, e);
             }
             PDPage originalPage = document.getPage(page);

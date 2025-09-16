@@ -126,6 +126,9 @@ public class BlankPageController {
                         } catch (OutOfMemoryError e) {
                             throw ExceptionUtils.createOutOfMemoryDpiException(
                                     pageIndex + 1, renderDpi, e);
+                        } catch (NegativeArraySizeException e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(
+                                    pageIndex + 1, renderDpi, e);
                         }
                         blank = isBlankImage(image, threshold, whitePercent, threshold);
                     }

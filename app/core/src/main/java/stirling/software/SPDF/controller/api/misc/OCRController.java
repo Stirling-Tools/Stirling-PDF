@@ -373,6 +373,9 @@ public class OCRController {
                         } catch (OutOfMemoryError e) {
                             throw ExceptionUtils.createOutOfMemoryDpiException(
                                     pageNum + 1, renderDpi, e);
+                        } catch (NegativeArraySizeException e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(
+                                    pageNum + 1, renderDpi, e);
                         }
                         File imagePath =
                                 new File(tempImagesDir, String.format("page_%d.png", pageNum));

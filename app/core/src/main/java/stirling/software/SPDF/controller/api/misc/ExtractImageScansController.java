@@ -113,6 +113,8 @@ public class ExtractImageScansController {
                             image = pdfRenderer.renderImageWithDPI(i, renderDpi);
                         } catch (OutOfMemoryError e) {
                             throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                        } catch (NegativeArraySizeException e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
                         }
                         ImageIO.write(image, "png", tempFile.toFile());
 
