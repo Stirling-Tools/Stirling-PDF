@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Stack, Text, Box, ActionIcon, Group, Center } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
@@ -24,21 +24,29 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
   }, [selectedFiles]);
 
   // Get thumbnail for the selected file
-  const thumbnail = useMemo(() => {
-    if (!selectedFile) return null;
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedFile) {
+      setThumbnail(null);
+      return;
+    }
 
     const pageId = `${selectedFile.fileId}-1`;
-    
+
     // Try to get cached thumbnail first
     const cached = getThumbnailFromCache(pageId);
-    if (cached) return cached;
+    if (cached) {
+      setThumbnail(cached);
+      return;
+    }
 
     // Request thumbnail if not cached
-    requestThumbnail(pageId, selectedFile, 1).then(() => {
-      // Component will re-render when thumbnail is available
+    requestThumbnail(pageId, selectedFile, 1).then((result) => {
+      setThumbnail(result);
+    }).catch(() => {
+      setThumbnail(null);
     });
-
-    return null;
   }, [selectedFile, getThumbnailFromCache, requestThumbnail]);
 
   // Calculate current angle display
