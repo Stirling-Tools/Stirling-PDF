@@ -127,7 +127,9 @@
 /* Information text container */
 .informationContainer {
   background-color: var(--information-text-bg);
-  padding: 8px;
+  padding: 2px;
+  padding-left: 8px;
+  padding-right: 8px;
   border-radius: 10px;
   margin-top: 8px;
   margin-bottom: 8px;
@@ -138,8 +140,8 @@
 }
 
 .informationText {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 400;
   color: var(--information-text-color);
 }
 

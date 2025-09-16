@@ -110,6 +110,48 @@ export default function StampPreview({ parameters, onParameterChange, file, show
     )
   ), [containerSize, parameters, imageMeta, pageSize, showQuickGrid, hoverTile, pageThumbnail]);
 
+  // Keep center fixed when scaling via slider (or any fontSize changes)
+  const prevDimsRef = useRef<{ fontSize: number; widthPx: number; heightPx: number; leftPx: number; bottomPx: number } | null>(null);
+  useEffect(() => {
+    const itemStyle = style.item as any;
+    if (!itemStyle || containerSize.width <= 0 || containerSize.height <= 0) return;
+
+    const parse = (v: any) => parseFloat(String(v).replace('px', '')) || 0;
+    const leftPx = parse(itemStyle.left);
+    const bottomPx = parse(itemStyle.bottom);
+    const widthPx = parse(itemStyle.width);
+    const heightPx = parse(itemStyle.height);
+
+    const prev = prevDimsRef.current;
+    const hasOverrides = parameters.overrideX >= 0 && parameters.overrideY >= 0;
+    const canAdjust = hasOverrides && !showQuickGrid;
+    if (
+      prev &&
+      canAdjust &&
+      parameters.fontSize !== prev.fontSize &&
+      prev.widthPx > 0 &&
+      prev.heightPx > 0 &&
+      widthPx > 0 &&
+      heightPx > 0
+    ) {
+      const centerX = prev.leftPx + prev.widthPx / 2;
+      const centerY = prev.bottomPx + prev.heightPx / 2;
+      const newLeftPx = centerX - widthPx / 2;
+      const newBottomPx = centerY - heightPx / 2;
+
+      const widthPts = pageSize?.widthPts ?? 595.28;
+      const heightPts = pageSize?.heightPts ?? 841.89;
+      const scaleX = containerSize.width / widthPts;
+      const scaleY = containerSize.height / heightPts;
+      const newLeftPts = Math.max(0, Math.min(containerSize.width, newLeftPx)) / scaleX;
+      const newBottomPts = Math.max(0, Math.min(containerSize.height, newBottomPx)) / scaleY;
+      onParameterChange('overrideX', newLeftPts as any);
+      onParameterChange('overrideY', newBottomPts as any);
+    }
+
+    prevDimsRef.current = { fontSize: parameters.fontSize, widthPx, heightPx, leftPx, bottomPx };
+  }, [parameters.fontSize, style.item, containerSize, pageSize, showQuickGrid, parameters.overrideX, parameters.overrideY, onParameterChange]);
+
   // Drag/resize/rotate interactions
   const draggingRef = useRef<{ type: 'move' | 'resize' | 'rotate'; startX: number; startY: number; initLeft: number; initBottom: number; initHeight: number; centerX: number; centerY: number } | null>(null);
 

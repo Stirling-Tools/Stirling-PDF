@@ -12,6 +12,7 @@ import LocalIcon from "../components/shared/LocalIcon";
 import styles from "../components/tools/addStamp/StampPreview.module.css";
 import { Tooltip } from "../components/shared/Tooltip";
 import FitText from "../components/shared/FitText";
+import ButtonSelector from "../components/shared/ButtonSelector";
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -99,24 +100,17 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         <Stack gap="md" justify="space-between" flex={1}>
           <div>
             <Text size="sm" fw={500} mb="xs">{t('AddStampRequest.stampType', 'Stamp Type')}</Text>
-            <Group className={styles.modeToggleGroup} grow>
-              <Button
-                variant={params.parameters.stampType === 'text' ? 'filled' : 'outline'}
-                className={styles.modeToggleButton}
-                onClick={() => params.updateParameter('stampType', 'text')}
-                disabled={endpointLoading}
-              >
-                {t('watermark.type.1', 'Text')}
-              </Button>
-              <Button
-                variant={params.parameters.stampType === 'image' ? 'filled' : 'outline'}
-                className={styles.modeToggleButton}
-                onClick={() => params.updateParameter('stampType', 'image')}
-                disabled={endpointLoading}
-              >
-                {t('watermark.type.2', 'Image')}
-              </Button>
-            </Group>
+            <ButtonSelector
+              value={params.parameters.stampType}
+              onChange={(v: 'text' | 'image') => params.updateParameter('stampType', v)}
+              options={[
+                { value: 'text', label: t('watermark.type.1', 'Text') },
+                { value: 'image', label: t('watermark.type.2', 'Image') },
+              ]}
+              disabled={endpointLoading}
+              buttonClassName={styles.modeToggleButton}
+              textClassName={styles.modeToggleButtonText}
+            />
           </div>
 
           {params.parameters.stampType === 'text' && (
@@ -208,45 +202,31 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         <Stack gap="md" justify="space-between">
           {/* Mode toggle: Quick grid vs Custom drag - only show for image stamps */}
           {params.parameters.stampType === 'image' && (
-            <Group className={styles.modeToggleGroup} grow>
-              <Button
-                variant={quickPositionModeSelected ? 'filled' : 'outline'}
-                className={styles.modeToggleButton}
-                onClick={() => {
-                  setQuickPositionModeSelected(true);
-                  setCustomPositionModeSelected(false);
-                }}
-              >
-                <FitText
-                  text={t('quickPosition', 'Quick Position')}
-                  lines={1}
-                  minimumFontScale={0.5}
-                  fontSize={10}
-                  className={styles.modeToggleButtonText}
-                />
-              </Button>
-              <Button
-                variant={customPositionModeSelected ? 'filled' : 'outline'}
-                className={styles.modeToggleButton}
-                onClick={() => {
-                  setQuickPositionModeSelected(false);
-                  setCustomPositionModeSelected(true);
-                }}
-              >
-                <FitText
-                  text={t('customPosition', 'Custom Position')}
-                  lines={1}
-                  minimumFontScale={0.5}
-                  fontSize={10}
-                  className={styles.modeToggleButtonText}
-                />
-              </Button>
-            </Group>
+            <ButtonSelector
+              value={quickPositionModeSelected ? 'quick' : 'custom'}
+              onChange={(v: 'quick' | 'custom') => {
+                const isQuick = v === 'quick';
+                setQuickPositionModeSelected(isQuick);
+                setCustomPositionModeSelected(!isQuick);
+              }}
+              options={[
+                { value: 'quick', label: t('quickPosition', 'Quick Position') },
+                { value: 'custom', label: t('customPosition', 'Custom Position') },
+              ]}
+              disabled={endpointLoading}
+              buttonClassName={styles.modeToggleButton}
+              textClassName={styles.modeToggleButtonText}
+            />
           )}
 
           {params.parameters.stampType === 'image' && customPositionModeSelected && (
             <div className={styles.informationContainer}>
-              <Text className={styles.informationText}>{t('customPosition', 'Drag the stamp to the desired location in the preview window.')}</Text>
+              <Text className={styles.informationText}>{t('AddStampRequest.customPosition', 'Drag the stamp to the desired location in the preview window.')}</Text>
+            </div>
+          )}
+          {params.parameters.stampType === 'image' && !customPositionModeSelected && (
+            <div className={styles.informationContainer}>
+              <Text className={styles.informationText}>{t('AddStampRequest.quickPosition', 'Select a position on the page to place the stamp.')}</Text>
             </div>
           )}
 

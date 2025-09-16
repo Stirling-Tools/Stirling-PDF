@@ -9,9 +9,7 @@ export const buildAddStampFormData = (parameters: AddStampParameters, file: File
   formData.append('pageNumbers', parameters.pageNumbers);
   formData.append('customMargin', 'medium'); 
   formData.append('position', String(parameters.position));
-  const effectiveFontSize = parameters.stampType === 'text'
-    ? parameters.fontSize * 2.2 // upscale to match the preview size
-    : parameters.fontSize;
+  const effectiveFontSize = parameters.fontSize;
   formData.append('fontSize', String(effectiveFontSize));
   formData.append('rotation', String(parameters.rotation));
   formData.append('opacity', String(parameters.opacity / 100));

@@ -192,7 +192,7 @@ export function computeStampPreviewStyle(
       height: `${heightPx}px`,
       opacity: displayOpacity,
       transform: `rotate(${-parameters.rotation}deg)`,
-      transformOrigin: 'left bottom',
+      transformOrigin: 'center center',
       color: parameters.customColor,
       display: 'flex',
       flexDirection: 'column',
