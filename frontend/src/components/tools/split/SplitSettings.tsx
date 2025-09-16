@@ -1,6 +1,7 @@
-import { Stack, TextInput, Select, Checkbox } from '@mantine/core';
+import { Stack, TextInput, Checkbox, Anchor, Text } from '@mantine/core';
+import LocalIcon from '../../shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
-import { isSplitMethod, SPLIT_METHODS } from '../../../constants/splitConstants';
+import { SPLIT_METHODS } from '../../../constants/splitConstants';
 import { SplitParameters } from '../../../hooks/tools/split/useSplitParameters';
 
 export interface SplitSettingsProps {
@@ -113,32 +114,48 @@ const SplitSettings = ({
     </Stack>
   );
 
+  const renderByPageDividerForm = () => (
+    <Stack gap="sm">
+      <Anchor
+        href="https://stirlingpdf.io/files/Auto%20Splitter%20Divider%20(with%20instructions).pdf"
+        target="_blank"
+        size="sm"
+        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+      >
+        <LocalIcon icon="download-rounded" width="2rem" height="2rem" />
+        {t("autoSplitPDF.dividerDownload2", "Download 'Auto Splitter Divider (with instructions).pdf'")}
+      </Anchor>
+
+      <Checkbox
+        label={t("autoSplitPDF.duplexMode", "Duplex Mode (Front and back scanning)")}
+        checked={parameters.duplexMode}
+        onChange={(e) => onParameterChange('duplexMode', e.currentTarget.checked)}
+        disabled={disabled}
+      />
+    </Stack>
+  );
+
+  // Don't render anything if no method is selected
+  if (!parameters.method) {
+    return (
+      <Stack gap="sm">
+        <Text c="dimmed" ta="center">
+          {t("split.settings.selectMethodFirst", "Please select a split method first")}
+        </Text>
+      </Stack>
+    );
+  }
+
   return (
     <Stack gap="md">
-      {/* Method Selector */}
-      <Select
-        label={t("split.method.label", "Choose split method")}
-        placeholder={t("split.method.placeholder", "Select how to split the PDF")}
-        value={parameters.method}
-        onChange={(v) => isSplitMethod(v) && onParameterChange('method', v)}
-        disabled={disabled}
-        data={[
-          { value: SPLIT_METHODS.BY_PAGES, label: t("split.methods.byPages", "Split at Pages Numbers") },
-          { value: SPLIT_METHODS.BY_SECTIONS, label: t("split.methods.bySections", "Split by Sections") },
-          { value: SPLIT_METHODS.BY_SIZE, label: t("split.methods.bySize", "Split by Size") },
-          { value: SPLIT_METHODS.BY_PAGE_COUNT, label: t("split.methods.byPageCount", "Split by Page Count") },
-          { value: SPLIT_METHODS.BY_DOC_COUNT, label: t("split.methods.byDocCount", "Split by Document Count") },
-          { value: SPLIT_METHODS.BY_CHAPTERS, label: t("split.methods.byChapters", "Split by Chapters") },
-        ]}
-      />
-
-      {/* Parameter Form */}
+      {/* Method-Specific Form */}
       {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
       {parameters.method === SPLIT_METHODS.BY_SECTIONS && renderBySectionsForm()}
       {(parameters.method === SPLIT_METHODS.BY_SIZE ||
         parameters.method === SPLIT_METHODS.BY_PAGE_COUNT ||
         parameters.method === SPLIT_METHODS.BY_DOC_COUNT) && renderSplitValueForm()}
       {parameters.method === SPLIT_METHODS.BY_CHAPTERS && renderByChaptersForm()}
+      {parameters.method === SPLIT_METHODS.BY_PAGE_DIVIDER && renderByPageDividerForm()}
     </Stack>
   );
 }
