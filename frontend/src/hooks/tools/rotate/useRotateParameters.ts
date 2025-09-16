@@ -4,8 +4,7 @@ import { useMemo, useCallback } from 'react';
 
 // Normalize angle to valid backend values (0, 90, 180, 270)
 export const normalizeAngle = (angle: number): number => {
-  const normalized = angle % 360;
-  return normalized < 0 ? normalized + 360 : normalized;
+  return ((angle % 360) + 360) % 360;
 };
 
 export interface RotateParameters extends BaseParameters {

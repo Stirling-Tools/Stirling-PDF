@@ -54,25 +54,29 @@ describe('useRotateOperation', () => {
   });
 
   test.each([
-    { angle: 0 },
-    { angle: 90 },
-    { angle: 180 },
-    { angle: 270 },
-  ])('should create form data correctly with angle $angle', ({ angle }) => {
+    { angle: 0, expectedNormalized: 0 },
+    { angle: 90, expectedNormalized: 90 },
+    { angle: 180, expectedNormalized: 180 },
+    { angle: 270, expectedNormalized: 270 },
+    { angle: 360, expectedNormalized: 0 },
+    { angle: -90, expectedNormalized: 270 },
+    { angle: -180, expectedNormalized: 180 },
+    { angle: -270, expectedNormalized: 90 },
+    { angle: 450, expectedNormalized: 90 },
+  ])('should create form data correctly with angle $angle (normalized to $expectedNormalized)', ({ angle, expectedNormalized }) => {
     renderHook(() => useRotateOperation());
 
     const callArgs = getToolConfig();
-    const buildFormData = callArgs.buildFormData;
 
     const testParameters: RotateParameters = { angle };
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-    const formData = buildFormData(testParameters, testFile);
+    const formData = callArgs.buildFormData(testParameters, testFile);
 
     // Verify the form data contains the file
     expect(formData.get('fileInput')).toBe(testFile);
 
-    // Verify angle parameter
-    expect(formData.get('angle')).toBe(angle.toString());
+    // Verify angle parameter is normalized for backend
+    expect(formData.get('angle')).toBe(expectedNormalized.toString());
   });
 
   test('should use correct translation for error messages', () => {

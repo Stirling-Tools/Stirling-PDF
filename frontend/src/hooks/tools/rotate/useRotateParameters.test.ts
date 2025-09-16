@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useRotateParameters, defaultParameters } from './useRotateParameters';
+import { useRotateParameters, defaultParameters, normalizeAngle } from './useRotateParameters';
 
 describe('useRotateParameters', () => {
   test('should initialize with default parameters', () => {
@@ -52,7 +52,8 @@ describe('useRotateParameters', () => {
     act(() => {
       result.current.rotateClockwise();
     });
-    expect(result.current.parameters.angle).toBe(0); // Should wrap around
+    expect(result.current.parameters.angle).toBe(360);
+    expect(normalizeAngle(result.current.parameters.angle)).toBe(0);
     expect(result.current.hasRotation).toBe(false);
   });
 
@@ -62,23 +63,24 @@ describe('useRotateParameters', () => {
     act(() => {
       result.current.rotateAnticlockwise();
     });
-    expect(result.current.parameters.angle).toBe(270);
+    expect(result.current.parameters.angle).toBe(-90);
     expect(result.current.hasRotation).toBe(true);
 
     act(() => {
       result.current.rotateAnticlockwise();
     });
-    expect(result.current.parameters.angle).toBe(180);
+    expect(result.current.parameters.angle).toBe(-180);
 
     act(() => {
       result.current.rotateAnticlockwise();
     });
-    expect(result.current.parameters.angle).toBe(90);
+    expect(result.current.parameters.angle).toBe(-270);
 
     act(() => {
       result.current.rotateAnticlockwise();
     });
-    expect(result.current.parameters.angle).toBe(0); // Should wrap around
+    expect(result.current.parameters.angle).toBe(-360);
+    expect(normalizeAngle(result.current.parameters.angle)).toBe(0);
     expect(result.current.hasRotation).toBe(false);
   });
 
@@ -113,18 +115,20 @@ describe('useRotateParameters', () => {
     expect(result.current.hasRotation).toBe(false);
   });
 
-  test('should update parameters and normalize angles', () => {
+  test('should update parameters', () => {
     const { result } = renderHook(() => useRotateParameters());
 
     act(() => {
       result.current.updateParameter('angle', 450);
     });
-    expect(result.current.parameters.angle).toBe(90); // Should be normalized
+    expect(result.current.parameters.angle).toBe(450);
+    expect(normalizeAngle(result.current.parameters.angle)).toBe(90);
 
     act(() => {
       result.current.updateParameter('angle', -90);
     });
-    expect(result.current.parameters.angle).toBe(270); // Should be normalized
+    expect(result.current.parameters.angle).toBe(-90);
+    expect(normalizeAngle(result.current.parameters.angle)).toBe(270);
   });
 
   test('should return correct endpoint name', () => {
