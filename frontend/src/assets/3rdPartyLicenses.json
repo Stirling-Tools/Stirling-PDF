@@ -24,7 +24,7 @@
         {
             "moduleName": "@iconify/react",
             "moduleUrl": "git+https://github.com/iconify/iconify.git",
-            "moduleVersion": "6.0.1",
+            "moduleVersion": "6.0.2",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "git+https://github.com/iconify/iconify.git"
         },
@@ -87,7 +87,7 @@
         {
             "moduleName": "axios",
             "moduleUrl": "git+https://github.com/axios/axios.git",
-            "moduleVersion": "1.12.1",
+            "moduleVersion": "1.12.2",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "git+https://github.com/axios/axios.git"
         },
@@ -143,7 +143,7 @@
         {
             "moduleName": "posthog-js",
             "moduleUrl": "git+https://github.com/PostHog/posthog-js.git",
-            "moduleVersion": "1.265.0",
+            "moduleVersion": "1.266.0",
             "moduleLicense": "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE",
             "moduleLicenseUrl": "git+https://github.com/PostHog/posthog-js.git"
         },
