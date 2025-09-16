@@ -29,11 +29,6 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
           ]}
           disabled={disabled}
         />
-        <Text size="xs" c="dimmed">
-          {parameters.bookletType === 'BOOKLET'
-            ? t('bookletImposition.bookletType.standardDesc', 'Standard booklet for saddle-stitched binding (fold in half)')
-            : t('bookletImposition.bookletType.sideStitchDesc', 'Side-stitched booklet for binding along the edge')}
-        </Text>
       </Stack>
 
       <Divider />
@@ -50,11 +45,6 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
           ]}
           disabled={disabled}
         />
-        <Text size="xs" c="dimmed">
-          {parameters.pagesPerSheet === 2
-            ? t('bookletImposition.pagesPerSheet.twoDesc', 'Two pages side by side on each sheet (most common)')
-            : t('bookletImposition.pagesPerSheet.fourDesc', 'Four pages arranged in a 2x2 grid on each sheet')}
-        </Text>
       </Stack>
 
       <Divider />
@@ -71,11 +61,6 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
           ]}
           disabled={disabled}
         />
-        <Text size="xs" c="dimmed">
-          {parameters.pageOrientation === 'LANDSCAPE'
-            ? t('bookletImposition.pageOrientation.landscapeDesc', 'A4 landscape → A5 portrait when folded (recommended, standard booklet size)')
-            : t('bookletImposition.pageOrientation.portraitDesc', 'A4 portrait → A6 when folded (smaller booklet)')}
-        </Text>
       </Stack>
 
       <Divider />
@@ -94,9 +79,6 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
           />
           <Text size="sm">{t('bookletImposition.addBorder.label', 'Add borders around pages')}</Text>
         </label>
-        <Text size="xs" c="dimmed" style={{ marginLeft: 'var(--mantine-spacing-lg)' }}>
-          {t('bookletImposition.addBorder.description', 'Helpful for cutting and alignment when printing')}
-        </Text>
       </Stack>
     </Stack>
   );

@@ -4,6 +4,7 @@ import BookletImpositionSettings from "../components/tools/bookletImposition/Boo
 import { useBookletImpositionParameters } from "../hooks/tools/bookletImposition/useBookletImpositionParameters";
 import { useBookletImpositionOperation } from "../hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
+import { useBookletImpositionTips } from "../components/tooltips/useBookletImpositionTips";
 import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const BookletImposition = (props: BaseToolProps) => {
@@ -16,6 +17,8 @@ const BookletImposition = (props: BaseToolProps) => {
     props
   );
 
+  const bookletTips = useBookletImpositionTips();
+
   return createToolFlow({
     files: {
       selectedFiles: base.selectedFiles,
@@ -26,6 +29,7 @@ const BookletImposition = (props: BaseToolProps) => {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        tooltip: bookletTips,
         content: (
           <BookletImpositionSettings
             parameters={base.params.parameters}

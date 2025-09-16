@@ -1710,6 +1710,31 @@
       "tooltip": "Adds borders around each page section to help with cutting and alignment",
       "description": "Helpful for cutting and alignment when printing"
     },
+    "tooltip": {
+      "title": "Booklet Imposition Guide",
+      "overview": {
+        "title": "What is Booklet Imposition?",
+        "description": "Arranges PDF pages in the correct order for booklet printing. Pages are reordered so that when printed and folded, they appear in sequence.",
+        "bullet1": "Creates printable booklets from regular PDFs",
+        "bullet2": "Handles page ordering for folding",
+        "bullet3": "Supports saddle-stitch and side-stitch binding"
+      },
+      "bookletTypes": {
+        "title": "Booklet Types",
+        "standard": "Standard: Saddle-stitched binding (staples along fold)",
+        "sideStitch": "Side-Stitch: Binding along edge (spiral, ring, perfect)"
+      },
+      "pagesPerSheet": {
+        "title": "Pages Per Sheet",
+        "two": "2 Pages: Standard layout (most common)",
+        "four": "4 Pages: Compact layout"
+      },
+      "orientation": {
+        "title": "Page Orientation",
+        "landscape": "Landscape: A4 → A5 booklet (recommended)",
+        "portrait": "Portrait: A4 → A6 booklet (compact)"
+      }
+    },
     "files": {
     },
     "error": {
