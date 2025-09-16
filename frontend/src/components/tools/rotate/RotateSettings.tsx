@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Stack, Text, Box, ActionIcon, Group, Center } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
@@ -71,7 +71,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: 'var(--mantine-color-gray-0)',
-              overflow: 'hidden'
+              overflow: 'hidden',
             }}
           >
             <Box
@@ -82,16 +82,12 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
                 transition: 'transform 0.3s ease-in-out',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
               }}
             >
               <DocumentThumbnail
                 file={selectedFile}
                 thumbnail={thumbnail}
-                style={{
-                  maxWidth: '260px',
-                  maxHeight: '260px'
-                }}
               />
             </Box>
           </Box>
