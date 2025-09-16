@@ -683,7 +683,76 @@
       "8": "Document #6: Page 10"
     },
     "splitPages": "Enter pages to split on:",
-    "submit": "Split"
+    "submit": "Split",
+    "error": {
+      "failed": "An error occurred while splitting the PDF."
+    },
+    "method": {
+      "label": "Choose split method",
+      "placeholder": "Select how to split the PDF"
+    },
+    "methods": {
+      "byPages": "Split at Page Numbers",
+      "bySections": "Split by Sections",
+      "bySize": "Split by File Size",
+      "byPageCount": "Split by Page Count",
+      "byDocCount": "Split by Document Count",
+      "byChapters": "Split by Chapters"
+    },
+    "value": {
+      "fileSize": {
+        "label": "File Size",
+        "placeholder": "e.g. 10MB, 500KB"
+      },
+      "pageCount": {
+        "label": "Pages per File",
+        "placeholder": "e.g. 5, 10"
+      },
+      "docCount": {
+        "label": "Number of Files",
+        "placeholder": "e.g. 3, 5"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Split Methods Overview"
+      },
+      "byPages": {
+        "title": "Split at Page Numbers",
+        "text": "Split your PDF at specific page numbers. Using 'n' splits after page n. Using 'n-m' splits before page n and after page m.",
+        "bullet1": "Single split points: 3,7 (splits after pages 3 and 7)",
+        "bullet2": "Range split points: 3-8 (splits before page 3 and after page 8)",
+        "bullet3": "Mixed: 2,5-10,15 (splits after page 2, before page 5, after page 10, and after page 15)"
+      },
+      "bySections": {
+        "title": "Split by Grid Sections",
+        "text": "Divide each page into a grid of sections. Useful for splitting documents with multiple columns or extracting specific areas.",
+        "bullet1": "Horizontal: Number of rows to create",
+        "bullet2": "Vertical: Number of columns to create",
+        "bullet3": "Merge: Combine all sections into one PDF"
+      },
+      "bySize": {
+        "title": "Split by File Size",
+        "text": "Create multiple PDFs that don't exceed a specified file size. Ideal for file size limitations or email attachments.",
+        "bullet1": "Use MB for larger files (e.g., 10MB)",
+        "bullet2": "Use KB for smaller files (e.g., 500KB)",
+        "bullet3": "System will split at page boundaries"
+      },
+      "byCount": {
+        "title": "Split by Count",
+        "text": "Create multiple PDFs with a specific number of pages or documents each.",
+        "bullet1": "Page Count: Fixed number of pages per file",
+        "bullet2": "Document Count: Fixed number of output files",
+        "bullet3": "Useful for batch processing workflows"
+      },
+      "byChapters": {
+        "title": "Split by Chapters",
+        "text": "Use PDF bookmarks to automatically split at chapter boundaries. Requires PDFs with bookmark structure.",
+        "bullet1": "Bookmark Level: Which level to split on (1=top level)",
+        "bullet2": "Include Metadata: Preserve document properties",
+        "bullet3": "Allow Duplicates: Handle repeated bookmark names"
+      }
+    }
   },
   "rotate": {
     "tags": "server side",
