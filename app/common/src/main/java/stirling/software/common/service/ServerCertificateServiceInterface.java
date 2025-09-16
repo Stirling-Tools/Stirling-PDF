@@ -5,7 +5,10 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
-public interface ServerCertificateService {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+public interface ServerCertificateServiceInterface {
 
     boolean isEnabled();
 
@@ -27,40 +30,13 @@ public interface ServerCertificateService {
 
     ServerCertificateInfo getServerCertificateInfo() throws Exception;
 
+    @Getter
+    @AllArgsConstructor
     class ServerCertificateInfo {
         private final boolean exists;
         private final String subject;
         private final String issuer;
         private final Date validFrom;
         private final Date validTo;
-
-        public ServerCertificateInfo(
-                boolean exists, String subject, String issuer, Date validFrom, Date validTo) {
-            this.exists = exists;
-            this.subject = subject;
-            this.issuer = issuer;
-            this.validFrom = validFrom;
-            this.validTo = validTo;
-        }
-
-        public boolean isExists() {
-            return exists;
-        }
-
-        public String getSubject() {
-            return subject;
-        }
-
-        public String getIssuer() {
-            return issuer;
-        }
-
-        public Date getValidFrom() {
-            return validFrom;
-        }
-
-        public Date getValidTo() {
-            return validTo;
-        }
     }
 }

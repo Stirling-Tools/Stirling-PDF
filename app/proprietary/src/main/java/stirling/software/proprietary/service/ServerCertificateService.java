@@ -23,10 +23,11 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.service.ServerCertificateServiceInterface;
 
 @Service
 @Slf4j
-public class ServerCertificateService implements stirling.software.common.service.ServerCertificateService {
+public class ServerCertificateService implements ServerCertificateServiceInterface {
 
     private static final String KEYSTORE_FILENAME = "server-certificate.p12";
     private static final String KEYSTORE_ALIAS = "stirling-pdf-server";

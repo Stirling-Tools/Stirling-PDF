@@ -68,11 +68,12 @@ import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
-import stirling.software.common.service.ServerCertificateService;
+import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -82,7 +83,6 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/security")
 @Slf4j
 @Tag(name = "Security", description = "Security APIs")
-@RequiredArgsConstructor
 public class CertSignController {
 
     static {
@@ -102,7 +102,14 @@ public class CertSignController {
     }
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final ServerCertificateService serverCertificateService;
+    private final ServerCertificateServiceInterface serverCertificateService;
+
+    public CertSignController(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.serverCertificateService = serverCertificateService;
+    }
 
     private static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
@@ -197,6 +204,11 @@ public class CertSignController {
                 ks.load(jksfile.getInputStream(), password.toCharArray());
                 break;
             case "SERVER":
+                if (serverCertificateService == null) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.serverCertificateNotAvailable",
+                            "Server certificate service is not available in this edition");
+                }
                 if (!serverCertificateService.isEnabled()) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.serverCertificateDisabled",
