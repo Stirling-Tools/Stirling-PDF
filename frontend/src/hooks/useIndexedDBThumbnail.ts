@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileMetadata } from "../types/file";
+import { StirlingFileStub } from "../types/fileContext";
 import { useIndexedDB } from "../contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "../utils/thumbnailUtils";
 import { FileId } from "../types/fileContext";
@@ -9,7 +9,7 @@ import { FileId } from "../types/fileContext";
  * Hook for IndexedDB-aware thumbnail loading
  * Handles thumbnail generation for files not in IndexedDB
  */
-export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
+export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null): {
   thumbnail: string | null;
   isGenerating: boolean
 } {
@@ -27,8 +27,8 @@ export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
       }
 
       // First priority: use stored thumbnail
-      if (file.thumbnail) {
-        setThumb(file.thumbnail);
+      if (file.thumbnailUrl) {
+        setThumb(file.thumbnailUrl);
         return;
       }
 
@@ -77,7 +77,7 @@ export function useIndexedDBThumbnail(file: FileMetadata | undefined | null): {
 
     loadThumbnail();
     return () => { cancelled = true; };
-  }, [file, file?.thumbnail, file?.id, indexedDB, generating]);
+  }, [file, file?.thumbnailUrl, file?.id, indexedDB, generating]);
 
   return { thumbnail: thumb, isGenerating: generating };
 }
