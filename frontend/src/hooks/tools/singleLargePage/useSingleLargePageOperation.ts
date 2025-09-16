@@ -16,7 +16,6 @@ export const singleLargePageOperationConfig = {
   buildFormData: buildSingleLargePageFormData,
   operationType: 'single-large-page',
   endpoint: '/api/v1/general/pdf-to-single-page',
-  filePrefix: 'single_page_', // Will be overridden in hook with translation
   defaultParameters,
 } as const;
 
@@ -25,7 +24,6 @@ export const useSingleLargePageOperation = () => {
 
   return useToolOperation<SingleLargePageParameters>({
     ...singleLargePageOperationConfig,
-    filePrefix: t('pdfToSinglePage.filenamePrefix', 'single_page') + '_',
     getErrorMessage: createStandardErrorHandler(t('pdfToSinglePage.error.failed', 'An error occurred while converting to single page.'))
   });
 };
