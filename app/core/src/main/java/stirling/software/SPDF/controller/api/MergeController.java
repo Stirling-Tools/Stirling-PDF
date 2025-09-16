@@ -2,9 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -13,12 +11,17 @@ import java.util.List;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.schema.XMPBasicSchema;
+import org.apache.xmpbox.xml.DomXmpParser;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -69,43 +72,38 @@ public class MergeController {
             case "byFileName" -> Comparator.comparing(MultipartFile::getOriginalFilename);
             case "byDateModified" ->
                     (file1, file2) -> {
-                        try {
-                            BasicFileAttributes attr1 =
-                                    Files.readAttributes(
-                                            Paths.get(file1.getOriginalFilename()),
-                                            BasicFileAttributes.class);
-                            BasicFileAttributes attr2 =
-                                    Files.readAttributes(
-                                            Paths.get(file2.getOriginalFilename()),
-                                            BasicFileAttributes.class);
-                            return attr1.lastModifiedTime().compareTo(attr2.lastModifiedTime());
-                        } catch (IOException e) {
-                            return 0; // If there's an error, treat them as equal
-                        }
+                        long t1 = getPdfModificationTimeSafe(file1);
+                        long t2 = getPdfModificationTimeSafe(file2);
+                        return Long.compare(t2, t1);
                     };
             case "byDateCreated" ->
                     (file1, file2) -> {
-                        try {
-                            BasicFileAttributes attr1 =
-                                    Files.readAttributes(
-                                            Paths.get(file1.getOriginalFilename()),
-                                            BasicFileAttributes.class);
-                            BasicFileAttributes attr2 =
-                                    Files.readAttributes(
-                                            Paths.get(file2.getOriginalFilename()),
-                                            BasicFileAttributes.class);
-                            return attr1.creationTime().compareTo(attr2.creationTime());
-                        } catch (IOException e) {
-                            return 0; // If there's an error, treat them as equal
-                        }
+                        long t1 = getPdfCreationTimeSafe(file1);
+                        long t2 = getPdfCreationTimeSafe(file2);
+                        return Long.compare(t2, t1);
                     };
             case "byPDFTitle" ->
                     (file1, file2) -> {
                         try (PDDocument doc1 = pdfDocumentFactory.load(file1);
                                 PDDocument doc2 = pdfDocumentFactory.load(file2)) {
-                            String title1 = doc1.getDocumentInformation().getTitle();
-                            String title2 = doc2.getDocumentInformation().getTitle();
-                            return title1.compareTo(title2);
+                            String title1 =
+                                    doc1.getDocumentInformation() != null
+                                            ? doc1.getDocumentInformation().getTitle()
+                                            : null;
+                            String title2 =
+                                    doc2.getDocumentInformation() != null
+                                            ? doc2.getDocumentInformation().getTitle()
+                                            : null;
+                            if (title1 == null && title2 == null) {
+                                return 0;
+                            }
+                            if (title1 == null) {
+                                return 1;
+                            }
+                            if (title2 == null) {
+                                return -1;
+                            }
+                            return title1.compareToIgnoreCase(title2);
                         } catch (IOException e) {
                             return 0;
                         }
@@ -113,6 +111,74 @@ public class MergeController {
             case "orderProvided" -> (file1, file2) -> 0; // Default is the order provided
             default -> (file1, file2) -> 0; // Default is the order provided
         };
+    }
+
+    private long getPdfModificationTimeSafe(MultipartFile file) {
+        try {
+            try (PDDocument doc = pdfDocumentFactory.load(file)) {
+                PDDocumentInformation info = doc.getDocumentInformation();
+                if (info != null) {
+                    if (info.getModificationDate() != null) {
+                        return info.getModificationDate().getTimeInMillis();
+                    }
+                    if (info.getCreationDate() != null) {
+                        return info.getCreationDate().getTimeInMillis();
+                    }
+                }
+
+                // Fallback to XMP metadata if Info dates are missing
+        PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
+                if (metadata != null) {
+                    try (InputStream is = metadata.createInputStream()) {
+            DomXmpParser parser = new DomXmpParser();
+            XMPMetadata xmp = parser.parse(is);
+                        XMPBasicSchema basic = xmp.getXMPBasicSchema();
+                        if (basic != null) {
+                            if (basic.getModifyDate() != null) {
+                                return basic.getModifyDate().getTimeInMillis();
+                            }
+                            if (basic.getCreateDate() != null) {
+                                return basic.getCreateDate().getTimeInMillis();
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.debug("Unable to read XMP metadata dates from uploaded file: {}", e.getMessage());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            log.debug("Unable to read PDF dates from uploaded file: {}", e.getMessage());
+        }
+        return 0L;
+    }
+
+    private long getPdfCreationTimeSafe(MultipartFile file) {
+        try {
+            try (PDDocument doc = pdfDocumentFactory.load(file)) {
+                PDDocumentInformation info = doc.getDocumentInformation();
+                if (info != null && info.getCreationDate() != null) {
+                    return info.getCreationDate().getTimeInMillis();
+                }
+
+                // Fallback to XMP metadata
+        PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
+                if (metadata != null) {
+                    try (InputStream is = metadata.createInputStream()) {
+            DomXmpParser parser = new DomXmpParser();
+            XMPMetadata xmp = parser.parse(is);
+                        XMPBasicSchema basic = xmp.getXMPBasicSchema();
+                        if (basic != null && basic.getCreateDate() != null) {
+                            return basic.getCreateDate().getTimeInMillis();
+                        }
+                    } catch (Exception ignored) {
+                        // ignore and fallback
+                    }
+                }
+            }
+        } catch (IOException e) {
+            log.debug("Unable to read PDF creation date from uploaded file: {}", e.getMessage());
+        }
+        return 0L;
     }
 
     // Adds a table of contents to the merged document using filenames as chapter titles
@@ -126,8 +192,7 @@ public class MergeController {
         // Iterate through the original files
         for (MultipartFile file : files) {
             // Get the filename without extension to use as bookmark title
-            String filename = file.getOriginalFilename();
-            String title = filename;
+            String title = file.getOriginalFilename();
             if (title != null && title.contains(".")) {
                 title = title.substring(0, title.lastIndexOf('.'));
             }
@@ -165,19 +230,19 @@ public class MergeController {
     public ResponseEntity<StreamingResponseBody> mergePdfs(@ModelAttribute MergePdfsRequest request)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
-        TempFile mergedTempFile = null;
-        TempFile outputTempFile = null;
-        PDDocument mergedDocument = null;
+        TempFile outputTempFile;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
         boolean generateToc = request.isGenerateToc();
 
-        try {
-            MultipartFile[] files = request.getFileInput();
-            Arrays.sort(
-                    files,
-                    getSortComparator(
-                            request.getSortType())); // Sort files based on the given sort type
+        try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
+
+        MultipartFile[] files = request.getFileInput();
+
+        Arrays.sort(
+            files,
+            getSortComparator(
+                request.getSortType())); // Sort files based on requested sort type
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;
@@ -190,8 +255,7 @@ public class MergeController {
                 mergerUtility.addSource(tempFile); // Add source file to the merger utility
             }
 
-            mergedTempFile = new TempFile(tempFileManager, ".pdf");
-            mergerUtility.setDestinationFileName(mergedTempFile.getFile().getAbsolutePath());
+            mergerUtility.setDestinationFileName(mt.getFile().getAbsolutePath());
 
             try {
                 mergerUtility.mergeDocuments(
@@ -205,57 +269,52 @@ public class MergeController {
                 throw e;
             }
 
-            // Load the merged PDF document
-            mergedDocument = pdfDocumentFactory.load(mergedTempFile.getFile());
+            // Load the merged PDF document and operate on it inside try-with-resources
+            try (PDDocument mergedDocument = pdfDocumentFactory.load(mt.getFile())) {
+                // Remove signatures if removeCertSign is true
+                if (removeCertSign) {
+                    PDDocumentCatalog catalog = mergedDocument.getDocumentCatalog();
+                    PDAcroForm acroForm = catalog.getAcroForm();
+                    if (acroForm != null) {
+                        List<PDField> fieldsToRemove =
+                                acroForm.getFields().stream()
+                                        .filter(PDSignatureField.class::isInstance)
+                                        .toList();
 
-            // Remove signatures if removeCertSign is true
-            if (removeCertSign) {
-                PDDocumentCatalog catalog = mergedDocument.getDocumentCatalog();
-                PDAcroForm acroForm = catalog.getAcroForm();
-                if (acroForm != null) {
-                    List<PDField> fieldsToRemove =
-                            acroForm.getFields().stream()
-                                    .filter(PDSignatureField.class::isInstance)
-                                    .toList();
-
-                    if (!fieldsToRemove.isEmpty()) {
-                        acroForm.flatten(
-                                fieldsToRemove,
-                                false); // Flatten the fields, effectively removing them
+                        if (!fieldsToRemove.isEmpty()) {
+                            acroForm.flatten(
+                                    fieldsToRemove,
+                                    false); // Flatten the fields, effectively removing them
+                        }
                     }
                 }
+
+                // Add table of contents if generateToc is true
+                if (generateToc && files.length > 0) {
+                    addTableOfContents(mergedDocument, files);
+                }
+
+                // Save the modified document to a temporary file
+                outputTempFile = new TempFile(tempFileManager, ".pdf");
+                mergedDocument.save(outputTempFile.getFile());
+
+                String mergedFileName =
+                        files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                                + "_merged_unsigned.pdf";
+                return WebResponseUtils.pdfFileToWebResponse(
+                        outputTempFile, mergedFileName); // Return the modified PDF as stream
             }
-
-            // Add table of contents if generateToc is true
-            if (generateToc && files.length > 0) {
-                addTableOfContents(mergedDocument, files);
-            }
-
-            // Save the modified document to a temporary file
-            outputTempFile = new TempFile(tempFileManager, ".pdf");
-            mergedDocument.save(outputTempFile.getFile());
-
-            String mergedFileName =
-                    files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                            + "_merged_unsigned.pdf";
-            return WebResponseUtils.pdfFileToWebResponse(
-                    outputTempFile, mergedFileName); // Return the modified PDF as stream
-        } catch (Exception ex) {
-            if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
+    } catch (Exception ex) {
+        if (ex instanceof IOException
+            && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
             } else {
                 log.error("Error in merge pdf process", ex);
             }
             throw ex;
         } finally {
-            if (mergedDocument != null) {
-                mergedDocument.close(); // Close the merged document
-            }
             for (File file : filesToDelete) {
                 tempFileManager.deleteTempFile(file); // Delete temporary files
-            }
-            if (mergedTempFile != null) {
-                mergedTempFile.close();
             }
         }
     }
