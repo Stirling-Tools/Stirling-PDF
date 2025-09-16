@@ -145,12 +145,17 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
 
       // Validate that all IDs exist in current state
       const validIds = orderedFileIds.filter(id => state.files.byId[id]);
-
+      // Reorder selected files by passed order
+      const selectedFileIds = orderedFileIds.filter(id => state.ui.selectedFileIds.includes(id));
       return {
         ...state,
         files: {
           ...state.files,
           ids: validIds
+        },
+        ui: {
+          ...state.ui,
+          selectedFileIds,
         }
       };
     }
@@ -234,11 +239,14 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
 
     case 'CONSUME_FILES': {
       const { inputFileIds, outputStirlingFileStubs } = action.payload;
+
       return processFileSwap(state, inputFileIds, outputStirlingFileStubs);
     }
 
+
     case 'UNDO_CONSUME_FILES': {
       const { inputStirlingFileStubs, outputFileIds } = action.payload;
+
       return processFileSwap(state, outputFileIds, inputStirlingFileStubs);
     }
 

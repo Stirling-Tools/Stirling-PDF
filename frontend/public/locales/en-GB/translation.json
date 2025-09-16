@@ -51,11 +51,11 @@
   "filesSelected": "{{count}} files selected",
   "files": {
     "title": "Files",
-    "placeholder": "Select a PDF file in the main view to get started",
     "upload": "Upload",
     "uploadFiles": "Upload Files",
     "addFiles": "Add files",
-    "selectFromWorkbench": "Select files from the workbench or "
+    "selectFromWorkbench": "Select files from the workbench or ",
+    "selectMultipleFromWorkbench": "Select at least {{count}} files from the workbench or "
   },
   "noFavourites": "No favourites added",
   "downloadComplete": "Download Complete",
@@ -510,13 +510,9 @@
       "title": "Show Javascript",
       "desc": "Searches and displays any JS injected into a PDF"
     },
-    "autoRedact": {
-      "title": "Auto Redact",
-      "desc": "Auto Redacts(Blacks out) text in a PDF based on input text"
-    },
     "redact": {
-      "title": "Manual Redaction",
-      "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
+      "title": "Redact",
+      "desc": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
     "overlay-pdfs": {
       "title": "Overlay PDFs",
@@ -660,11 +656,29 @@
   "merge": {
     "tags": "merge,Page operations,Back end,server side",
     "title": "Merge",
-    "header": "Merge multiple PDFs (2+)",
-    "sortByName": "Sort by name",
-    "sortByDate": "Sort by date",
-    "removeCertSign": "Remove digital signature in the merged file?",
-    "submit": "Merge"
+    "removeDigitalSignature": "Remove digital signature in the merged file?",
+    "generateTableOfContents": "Generate table of contents in the merged file?",
+    "removeDigitalSignature.tooltip": {
+      "title": "Remove Digital Signature",
+      "description": "Digital signatures will be invalidated when merging files. Check this to remove them from the final merged PDF."
+    },
+    "generateTableOfContents.tooltip": {
+      "title": "Generate Table of Contents",
+      "description": "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers."
+    },
+    "submit": "Merge",
+    "sortBy": {
+      "description": "Files will be merged in the order they're selected. Drag to reorder or sort below.",
+      "label": "Sort By",
+      "filename": "File Name",
+      "dateModified": "Date Modified",
+      "ascending": "Ascending",
+      "descending": "Descending",
+      "sort": "Sort"
+    },
+    "error": {
+      "failed": "An error occurred while merging the PDFs."
+    }
   },
   "split": {
     "tags": "Page operations,divide,Multi Page,cut,server side",
@@ -681,7 +695,116 @@
       "8": "Document #6: Page 10"
     },
     "splitPages": "Enter pages to split on:",
-    "submit": "Split"
+    "submit": "Split",
+    "steps": {
+      "chooseMethod": "Choose Method",
+      "settings": "Settings"
+    },
+    "settings": {
+      "selectMethodFirst": "Please select a split method first"
+    },
+    "error": {
+      "failed": "An error occurred while splitting the PDF."
+    },
+    "method": {
+      "label": "Choose split method",
+      "placeholder": "Select how to split the PDF"
+    },
+    "methods": {
+      "prefix": {
+        "splitAt": "Split at",
+        "splitBy": "Split by"
+      },
+      "byPages": {
+        "name": "Page Numbers",
+        "desc": "Extract specific pages (1,3,5-10)",
+        "tooltip": "Enter page numbers separated by commas or ranges with hyphens"
+      },
+      "bySections": {
+        "name": "Sections",
+        "desc": "Divide pages into grid sections",
+        "tooltip": "Split each page into horizontal and vertical sections"
+      },
+      "bySize": {
+        "name": "File Size",
+        "desc": "Limit maximum file size",
+        "tooltip": "Specify maximum file size (e.g. 10MB, 500KB)"
+      },
+      "byPageCount": {
+        "name": "Page Count",
+        "desc": "Fixed pages per file",
+        "tooltip": "Enter the number of pages for each split file"
+      },
+      "byDocCount": {
+        "name": "Document Count",
+        "desc": "Create specific number of files",
+        "tooltip": "Enter how many files you want to create"
+      },
+      "byChapters": {
+        "name": "Chapters",
+        "desc": "Split at bookmark boundaries",
+        "tooltip": "Uses PDF bookmarks to determine split points"
+      },
+      "byPageDivider": {
+        "name": "Page Divider",
+        "desc": "Auto-split with divider sheets",
+        "tooltip": "Use QR code divider sheets between documents when scanning"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "File Size",
+        "placeholder": "e.g. 10MB, 500KB"
+      },
+      "pageCount": {
+        "label": "Pages per File",
+        "placeholder": "e.g. 5, 10"
+      },
+      "docCount": {
+        "label": "Number of Files",
+        "placeholder": "e.g. 3, 5"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Split Methods Overview"
+      },
+      "byPages": {
+        "title": "Split at Page Numbers",
+        "text": "Split your PDF at specific page numbers. Using 'n' splits after page n. Using 'n-m' splits before page n and after page m.",
+        "bullet1": "Single split points: 3,7 (splits after pages 3 and 7)",
+        "bullet2": "Range split points: 3-8 (splits before page 3 and after page 8)",
+        "bullet3": "Mixed: 2,5-10,15 (splits after page 2, before page 5, after page 10, and after page 15)"
+      },
+      "bySections": {
+        "title": "Split by Grid Sections",
+        "text": "Divide each page into a grid of sections. Useful for splitting documents with multiple columns or extracting specific areas.",
+        "bullet1": "Horizontal: Number of rows to create",
+        "bullet2": "Vertical: Number of columns to create",
+        "bullet3": "Merge: Combine all sections into one PDF"
+      },
+      "bySize": {
+        "title": "Split by File Size",
+        "text": "Create multiple PDFs that don't exceed a specified file size. Ideal for file size limitations or email attachments.",
+        "bullet1": "Use MB for larger files (e.g., 10MB)",
+        "bullet2": "Use KB for smaller files (e.g., 500KB)",
+        "bullet3": "System will split at page boundaries"
+      },
+      "byCount": {
+        "title": "Split by Count",
+        "text": "Create multiple PDFs with a specific number of pages or documents each.",
+        "bullet1": "Page Count: Fixed number of pages per file",
+        "bullet2": "Document Count: Fixed number of output files",
+        "bullet3": "Useful for batch processing workflows"
+      },
+      "byChapters": {
+        "title": "Split by Chapters",
+        "text": "Use PDF bookmarks to automatically split at chapter boundaries. Requires PDFs with bookmark structure.",
+        "bullet1": "Bookmark Level: Which level to split on (1=top level)",
+        "bullet2": "Include Metadata: Preserve document properties",
+        "bullet3": "Allow Duplicates: Handle repeated bookmark names"
+      }
+    }
   },
   "rotate": {
     "tags": "server side",
@@ -1569,13 +1692,50 @@
     }
   },
   "scalePages": {
-    "tags": "resize,modify,dimension,adapt",
     "title": "Adjust page-scale",
     "header": "Adjust page-scale",
     "pageSize": "Size of a page of the document.",
     "keepPageSize": "Original Size",
     "scaleFactor": "Zoom level (crop) of a page.",
     "submit": "Submit"
+  },
+  "adjustPageScale": {
+    "tags": "resize,modify,dimension,adapt",
+    "title": "Adjust Page Scale",
+    "header": "Adjust Page Scale",
+    "scaleFactor": {
+      "label": "Scale Factor"
+    },
+    "pageSize": {
+      "label": "Target Page Size",
+      "keep": "Keep Original Size",
+      "letter": "Letter",
+      "legal": "Legal"
+    },
+    "submit": "Adjust Page Scale",
+    "error": {
+      "failed": "An error occurred while adjusting the page scale."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Page Scale Settings Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Adjust the size of PDF content and change the page dimensions."
+      },
+      "scaleFactor": {
+        "title": "Scale Factor",
+        "text": "Controls how large or small the content appears on the page. Content is scaled and centred - if scaled content is larger than the page size, it may be cropped.",
+        "bullet1": "1.0 = Original size",
+        "bullet2": "0.5 = Half size (50% smaller)",
+        "bullet3": "2.0 = Double size (200% larger, may crop)"
+      },
+      "pageSize": {
+        "title": "Target Page Size",
+        "text": "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, whilst other options resize to standard paper sizes."
+      }
+    }
   },
   "add-page-numbers": {
     "tags": "paginate,label,organize,index"
@@ -1698,50 +1858,123 @@
     "downloadJS": "Download Javascript",
     "submit": "Show"
   },
-  "autoRedact": {
-    "tags": "Redact,Hide,black out,black,marker,hidden",
-    "title": "Auto Redact",
-    "header": "Auto Redact",
-    "colorLabel": "Colour",
-    "textsToRedactLabel": "Text to Redact (line-separated)",
-    "textsToRedactPlaceholder": "e.g. \\nConfidential \\nTop-Secret",
-    "useRegexLabel": "Use Regex",
-    "wholeWordSearchLabel": "Whole Word Search",
-    "customPaddingLabel": "Custom Extra Padding",
-    "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
-    "submitButton": "Submit"
-  },
   "redact": {
-    "tags": "Redact,Hide,black out,black,marker,hidden,manual",
-    "title": "Manual Redaction",
-    "header": "Manual Redaction",
+    "tags": "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact",
+    "title": "Redact",
     "submit": "Redact",
-    "textBasedRedaction": "Text based Redaction",
-    "pageBasedRedaction": "Page-based Redaction",
-    "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
-    "pageRedactionNumbers": {
-      "title": "Pages",
-      "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
+    "error": {
+      "failed": "An error occurred while redacting the PDF."
     },
-    "redactionColor": {
-      "title": "Redaction Color"
+    "modeSelector": {
+      "title": "Redaction Method",
+      "mode": "Mode",
+      "automatic": "Automatic",
+      "automaticDesc": "Redact text based on search terms",
+      "manual": "Manual",
+      "manualDesc": "Click and drag to redact specific areas",
+      "manualComingSoon": "Manual redaction coming soon"
     },
-    "export": "Export",
-    "upload": "Upload",
-    "boxRedaction": "Box draw redaction",
-    "zoom": "Zoom",
-    "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out",
-    "nextPage": "Next Page",
-    "previousPage": "Previous Page",
-    "toggleSidebar": "Toggle Sidebar",
-    "showThumbnails": "Show Thumbnails",
-    "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
-    "showAttatchments": "Show Attachments",
-    "showLayers": "Show Layers (double-click to reset all layers to the default state)",
-    "colourPicker": "Colour Picker",
-    "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "auto": {
+      "header": "Auto Redact",
+      "settings": {
+        "title": "Redaction Settings",
+        "advancedTitle": "Advanced"
+      },
+      "colorLabel": "Box Colour",
+      "wordsToRedact": {
+        "title": "Words to Redact",
+        "placeholder": "Enter a word",
+        "add": "Add",
+        "examples": "Examples: Confidential, Top-Secret"
+      },
+      "useRegexLabel": "Use Regex",
+      "wholeWordSearchLabel": "Whole Word Search",
+      "customPaddingLabel": "Custom Extra Padding",
+      "convertPDFToImageLabel": "Convert PDF to PDF-Image"
+    },
+    "tooltip": {
+      "mode": {
+        "header": {
+          "title": "Redaction Method"
+        },
+        "automatic": {
+          "title": "Automatic Redaction",
+          "text": "Automatically finds and redacts specified text throughout the document. Perfect for removing consistent sensitive information like names, addresses, or confidential markers."
+        },
+        "manual": {
+          "title": "Manual Redaction",
+          "text": "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)"
+        }
+      },
+      "words": {
+        "header": {
+          "title": "Words to Redact"
+        },
+        "description": {
+          "title": "Text Matching",
+          "text": "Enter words or phrases to find and redact in your document. Each word will be searched for separately."
+        },
+        "bullet1": "Add one word at a time",
+        "bullet2": "Press Enter or click 'Add Another' to add",
+        "bullet3": "Click × to remove words",
+        "examples": {
+          "title": "Common Examples",
+          "text": "Typical words to redact include: bank details, email addresses, or specific names."
+        }
+      },
+      "advanced": {
+        "header": {
+          "title": "Advanced Redaction Settings"
+        },
+        "color": {
+          "title": "Box Colour & Padding",
+          "text": "Customise the appearance of redaction boxes. Black is standard, but you can choose any colour. Padding adds extra space around the found text."
+        },
+        "regex": {
+          "title": "Use Regex",
+          "text": "Enable regular expressions for advanced pattern matching. Useful for finding phone numbers, emails, or complex patterns.",
+          "bullet1": "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format",
+          "bullet2": "Use with caution - test thoroughly"
+        },
+        "wholeWord": {
+          "title": "Whole Word Search",
+          "text": "Only match complete words, not partial matches. 'John' won't match 'Johnson' when enabled."
+        },
+        "convert": {
+          "title": "Convert to PDF-Image",
+          "text": "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable."
+        }
+      }
+    },
+    "manual": {
+      "header": "Manual Redaction",
+      "textBasedRedaction": "Text-based Redaction",
+      "pageBasedRedaction": "Page-based Redaction",
+      "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
+      "pageRedactionNumbers": {
+        "title": "Pages",
+        "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
+      },
+      "redactionColor": {
+        "title": "Redaction Colour"
+      },
+      "export": "Export",
+      "upload": "Upload",
+      "boxRedaction": "Box draw redaction",
+      "zoom": "Zoom",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "nextPage": "Next Page",
+      "previousPage": "Previous Page",
+      "toggleSidebar": "Toggle Sidebar",
+      "showThumbnails": "Show Thumbnails",
+      "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
+      "showAttachments": "Show Attachments",
+      "showLayers": "Show Layers (double-click to reset all layers to the default state)",
+      "colourPicker": "Colour Picker",
+      "findCurrentOutlineItem": "Find current outline item",
+      "applyChanges": "Apply Changes"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Table Extraction,extract,convert"
@@ -1952,6 +2185,11 @@
     "title": "Compress",
     "desc": "Compress PDFs to reduce their file size.",
     "header": "Compress PDF",
+    "method": {
+      "title": "Compression Method",
+      "quality": "Quality",
+      "filesize": "File Size"
+    },
     "credit": "This service uses qpdf for PDF Compress/Optimisation.",
     "grayscale": {
       "label": "Apply Grayscale for Compression"
