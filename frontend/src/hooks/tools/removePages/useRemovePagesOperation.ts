@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
