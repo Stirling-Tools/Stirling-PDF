@@ -1,31 +1,53 @@
 import { useEffect, useState } from 'react';
 import { useSelectionCapability, SelectionRangeX } from '@embedpdf/plugin-selection/react';
+import { useViewer } from '../../contexts/ViewerContext';
 
 /**
- * Component that runs inside EmbedPDF context and exports selection controls globally
+ * Component that runs inside EmbedPDF context and updates selection state in ViewerContext
  */
 export function SelectionAPIBridge() {
   const { provides: selection } = useSelectionCapability();
+  const { registerBridge } = useViewer();
   const [hasSelection, setHasSelection] = useState(false);
+  
+  // Store state locally
+  const [_localState, setLocalState] = useState({
+    hasSelection: false
+  });
 
   useEffect(() => {
     if (selection) {
-      // Export selection controls to global window
-      (window as any).embedPdfSelection = {
-        copyToClipboard: () => selection.copyToClipboard(),
-        getSelectedText: () => selection.getSelectedText(),
-        getFormattedSelection: () => selection.getFormattedSelection(),
-        hasSelection: hasSelection,
+      // Update local state
+      const newState = {
+        hasSelection
       };
+      setLocalState(newState);
+
+      // Register this bridge with ViewerContext
+      registerBridge('selection', {
+        state: newState,
+        api: {
+          copyToClipboard: () => selection.copyToClipboard(),
+          getSelectedText: () => selection.getSelectedText(),
+          getFormattedSelection: () => selection.getFormattedSelection(),
+        }
+      });
 
       // Listen for selection changes to track when text is selected
       const unsubscribe = selection.onSelectionChange((sel: SelectionRangeX | null) => {
         const hasText = !!sel;
         setHasSelection(hasText);
-        // Update global state
-        if ((window as any).embedPdfSelection) {
-          (window as any).embedPdfSelection.hasSelection = hasText;
-        }
+        const updatedState = { hasSelection: hasText };
+        setLocalState(updatedState);
+        // Re-register with updated state
+        registerBridge('selection', {
+          state: updatedState,
+          api: {
+            copyToClipboard: () => selection.copyToClipboard(),
+            getSelectedText: () => selection.getSelectedText(),
+            getFormattedSelection: () => selection.getFormattedSelection(),
+          }
+        });
       });
 
       // Intercept Ctrl+C only when we have PDF text selected
@@ -45,7 +67,7 @@ export function SelectionAPIBridge() {
         document.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [selection, hasSelection]);
+  }, [selection, hasSelection, registerBridge]);
 
   return null;
 }

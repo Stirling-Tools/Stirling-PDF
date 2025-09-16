@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearch } from '@embedpdf/plugin-search/react';
+import { useViewer } from '../../contexts/ViewerContext';
 
 interface SearchLayerProps {
   pageIndex: number;
@@ -32,6 +33,7 @@ export function CustomSearchLayer({
   borderRadius = 4
 }: SearchLayerProps) {
   const { provides: searchProvides } = useSearch();
+  const { scrollActions } = useViewer();
   const [searchResultState, setSearchResultState] = useState<SearchResultState | null>(null);
 
   // Subscribe to search result state changes
@@ -41,27 +43,13 @@ export function CustomSearchLayer({
     }
     
     const unsubscribe = searchProvides.onSearchResultStateChange?.((state: SearchResultState) => {
-      // Expose search results globally for SearchInterface
-      if (state?.results) {
-        (window as any).currentSearchResults = state.results;
-        (window as any).currentActiveIndex = (state.activeResultIndex || 0) + 1; // Convert to 1-based index
-
-        // Auto-scroll to active result if we have one
-        if (state.activeResultIndex !== undefined && state.activeResultIndex >= 0) {
-          const activeResult = state.results[state.activeResultIndex];
-          if (activeResult) {            
-            // Use the scroll API to navigate to the page containing the active result
-            const scrollAPI = (window as any).embedPdfScroll;
-            if (scrollAPI && scrollAPI.scrollToPage) {
-              // Convert 0-based page index to 1-based page number
-              const pageNumber = activeResult.pageIndex + 1;
-              scrollAPI.scrollToPage(pageNumber);
-            }
-          }
+      // Auto-scroll to active search result
+      if (state?.results && state.activeResultIndex !== undefined && state.activeResultIndex >= 0) {
+        const activeResult = state.results[state.activeResultIndex];
+        if (activeResult) {            
+          const pageNumber = activeResult.pageIndex + 1; // Convert to 1-based page number
+          scrollActions.scrollToPage(pageNumber);
         }
-      } else {
-        (window as any).currentSearchResults = null;
-        (window as any).currentActiveIndex = 0;
       }
       
       setSearchResultState(state);

@@ -2286,7 +2286,12 @@
     "downloadSelected": "Download Selected Files",
     "downloadAll": "Download All",
     "toggleTheme": "Toggle Theme",
-    "language": "Language"
+    "language": "Language",
+    "search": "Search PDF",
+    "panMode": "Pan Mode",
+    "rotateLeft": "Rotate Left",
+    "rotateRight": "Rotate Right",
+    "toggleSidebar": "Toggle Sidebar"
   },
   "toolPicker": {
     "searchPlaceholder": "Search tools...",

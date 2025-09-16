@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, ScrollArea, ActionIcon, Tooltip } from '@mantine/core';
-import { LocalIcon } from '../shared/LocalIcon';
+import { Box, ScrollArea } from '@mantine/core';
+import { useViewer } from '../../contexts/ViewerContext';
 import '../../types/embedPdf';
 
 interface ThumbnailSidebarProps {
@@ -9,40 +9,33 @@ interface ThumbnailSidebarProps {
   colorScheme: 'light' | 'dark' | 'auto';
 }
 
-export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSidebarProps) {
-  const [selectedPage, setSelectedPage] = useState<number>(1);
+export function ThumbnailSidebar({ visible, onToggle: _onToggle, colorScheme }: ThumbnailSidebarProps) {
+  const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
-  const [totalPages, setTotalPages] = useState<number>(0);
+  
+  const scrollState = getScrollState();
+  const thumbnailAPI = getThumbnailAPI();
 
   // Convert color scheme
   const actualColorScheme = colorScheme === 'auto' ? 'light' : colorScheme;
 
-  // Get total pages from scroll API
-  useEffect(() => {
-    const scrollAPI = window.embedPdfScroll;
-    if (scrollAPI && scrollAPI.totalPages) {
-      setTotalPages(scrollAPI.totalPages);
-    }
-  }, [visible]);
-
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
-    if (!visible || totalPages === 0) return;
+    if (!visible || scrollState.totalPages === 0) return;
 
-    const thumbnailAPI = window.embedPdfThumbnail?.thumbnailAPI;
     console.log('📄 ThumbnailSidebar useEffect triggered:', {
       visible,
       thumbnailAPI: !!thumbnailAPI,
-      totalPages,
+      totalPages: scrollState.totalPages,
       existingThumbnails: Object.keys(thumbnails).length
     });
     
     if (!thumbnailAPI) return;
 
     const generateThumbnails = async () => {
-      console.log('📄 Starting thumbnail generation for', totalPages, 'pages');
+      console.log('📄 Starting thumbnail generation for', scrollState.totalPages, 'pages');
       
-      for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+      for (let pageIndex = 0; pageIndex < scrollState.totalPages; pageIndex++) {
         if (thumbnails[pageIndex]) continue; // Skip if already generated
 
         try {
@@ -89,17 +82,11 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
         }
       });
     };
-  }, [visible, totalPages]);
+  }, [visible, scrollState.totalPages, thumbnailAPI]);
 
   const handlePageClick = (pageIndex: number) => {
     const pageNumber = pageIndex + 1; // Convert to 1-based
-    setSelectedPage(pageNumber);
-    
-    // Use scroll API to navigate to page
-    const scrollAPI = window.embedPdfScroll;
-    if (scrollAPI && scrollAPI.scrollToPage) {
-      scrollAPI.scrollToPage(pageNumber);
-    }
+    scrollActions.scrollToPage(pageNumber);
   };
 
   return (
@@ -129,7 +116,7 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
                 flexDirection: 'column',
                 gap: '12px'
               }}>
-                {Array.from({ length: totalPages }, (_, pageIndex) => (
+                {Array.from({ length: scrollState.totalPages }, (_, pageIndex) => (
                   <Box
                     key={pageIndex}
                     onClick={() => handlePageClick(pageIndex)}
@@ -137,10 +124,10 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
                       cursor: 'pointer',
                       borderRadius: '8px',
                       padding: '8px',
-                      backgroundColor: selectedPage === pageIndex + 1
+                      backgroundColor: scrollState.currentPage === pageIndex + 1
                         ? (actualColorScheme === 'dark' ? '#364FC7' : '#e7f5ff')
                         : 'transparent',
-                      border: selectedPage === pageIndex + 1 
+                      border: scrollState.currentPage === pageIndex + 1 
                         ? '2px solid #1c7ed6'
                         : '2px solid transparent',
                       transition: 'all 0.2s ease',
@@ -150,12 +137,12 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
                       gap: '8px'
                     }}
                     onMouseEnter={(e) => {
-                      if (selectedPage !== pageIndex + 1) {
+                      if (scrollState.currentPage !== pageIndex + 1) {
                         e.currentTarget.style.backgroundColor = actualColorScheme === 'dark' ? '#25262b' : '#f1f3f5';
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (selectedPage !== pageIndex + 1) {
+                      if (scrollState.currentPage !== pageIndex + 1) {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }
                     }}
@@ -209,7 +196,7 @@ export function ThumbnailSidebar({ visible, onToggle, colorScheme }: ThumbnailSi
                     <div style={{
                       fontSize: '12px',
                       fontWeight: 500,
-                      color: selectedPage === pageIndex + 1
+                      color: scrollState.currentPage === pageIndex + 1
                         ? (actualColorScheme === 'dark' ? '#ffffff' : '#1c7ed6')
                         : (actualColorScheme === 'dark' ? '#adb5bd' : '#6c757d')
                     }}>

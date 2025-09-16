@@ -5,7 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 
 import { useFileState } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
-import { ViewerProvider, useViewer } from "../../contexts/ViewerContext";
+import { useViewer } from "../../contexts/ViewerContext";
 import { LocalEmbedPDF } from './LocalEmbedPDF';
 import { PdfViewerToolbar } from './PdfViewerToolbar';
 import { ThumbnailSidebar } from './ThumbnailSidebar';
@@ -28,7 +28,8 @@ const EmbedPdfViewerContent = ({
   const { colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar } = useViewer();
+  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions } = useViewer();
+
 
   // Get current file from FileContext
   const { selectors } = useFileState();
@@ -68,15 +69,12 @@ const EmbedPdfViewerContent = ({
         event.preventDefault();
         event.stopPropagation();
 
-        const zoomAPI = window.embedPdfZoom;
-        if (zoomAPI) {
-          if (event.deltaY < 0) {
-            // Scroll up - zoom in
-            zoomAPI.zoomIn();
-          } else {
-            // Scroll down - zoom out
-            zoomAPI.zoomOut();
-          }
+        if (event.deltaY < 0) {
+          // Scroll up - zoom in
+          zoomActions.zoomIn();
+        } else {
+          // Scroll down - zoom out
+          zoomActions.zoomOut();
         }
       }
     };
@@ -97,17 +95,14 @@ const EmbedPdfViewerContent = ({
 
       // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
       if (event.ctrlKey || event.metaKey) {
-        const zoomAPI = window.embedPdfZoom;
-        if (zoomAPI) {
-          if (event.key === '=' || event.key === '+') {
-            // Ctrl+= or Ctrl++ for zoom in
-            event.preventDefault();
-            zoomAPI.zoomIn();
-          } else if (event.key === '-' || event.key === '_') {
-            // Ctrl+- for zoom out
-            event.preventDefault();
-            zoomAPI.zoomOut();
-          }
+        if (event.key === '=' || event.key === '+') {
+          // Ctrl+= or Ctrl++ for zoom in
+          event.preventDefault();
+          zoomActions.zoomIn();
+        } else if (event.key === '-' || event.key === '_') {
+          // Ctrl+- for zoom out
+          event.preventDefault();
+          zoomActions.zoomOut();
         }
       }
     };
@@ -118,14 +113,6 @@ const EmbedPdfViewerContent = ({
     };
   }, [isViewerHovered]);
 
-  // Expose toggle functions globally for right rail buttons
-  React.useEffect(() => {
-    window.toggleThumbnailSidebar = toggleThumbnailSidebar;
-    
-    return () => {
-      delete window.toggleThumbnailSidebar;
-    };
-  }, [toggleThumbnailSidebar]);
 
   return (
     <Box 
@@ -210,7 +197,7 @@ const EmbedPdfViewerContent = ({
               }}
               dualPage={false}
               onDualPageToggle={() => {
-                window.embedPdfSpread?.toggleSpreadMode();
+                spreadActions.toggleSpreadMode();
               }}
               currentZoom={100}
             />
@@ -230,11 +217,7 @@ const EmbedPdfViewerContent = ({
 };
 
 const EmbedPdfViewer = (props: EmbedPdfViewerProps) => {
-  return (
-    <ViewerProvider>
-      <EmbedPdfViewerContent {...props} />
-    </ViewerProvider>
-  );
+  return <EmbedPdfViewerContent {...props} />;
 };
 
 export default EmbedPdfViewer;

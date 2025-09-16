@@ -1,26 +1,23 @@
 import { useEffect } from 'react';
 import { useThumbnailCapability } from '@embedpdf/plugin-thumbnail/react';
+import { useViewer } from '../../contexts/ViewerContext';
 
 /**
- * Component that runs inside EmbedPDF context and exports thumbnail controls globally
+ * ThumbnailAPIBridge provides thumbnail generation functionality.
+ * Exposes thumbnail API to UI components without managing state.
  */
 export function ThumbnailAPIBridge() {
   const { provides: thumbnail } = useThumbnailCapability();
+  const { registerBridge } = useViewer();
 
   useEffect(() => {
-    console.log('📄 ThumbnailAPIBridge useEffect:', { thumbnail: !!thumbnail });
     if (thumbnail) {
-      console.log('📄 Exporting thumbnail controls to window:', {
-        availableMethods: Object.keys(thumbnail),
-        renderThumb: typeof thumbnail.renderThumb
+      registerBridge('thumbnail', {
+        state: null, // No state - just provides API
+        api: thumbnail
       });
-      // Export thumbnail controls to global window for debugging
-      (window as any).embedPdfThumbnail = {
-        thumbnailAPI: thumbnail,
-        availableMethods: Object.keys(thumbnail),
-      };
     }
-  }, [thumbnail]);
+  }, [thumbnail, registerBridge]);
 
   return null;
 }

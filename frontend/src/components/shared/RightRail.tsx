@@ -14,11 +14,15 @@ import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { Tooltip } from '../shared/Tooltip';
 import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
 import { SearchInterface } from '../viewer/SearchInterface';
+import { ViewerContext } from '../../contexts/ViewerContext';
 
 export default function RightRail() {
   const { t } = useTranslation();
   const [isPanning, setIsPanning] = useState(false);
-  const [currentRotation, setCurrentRotation] = useState(0);
+  const [_currentRotation, setCurrentRotation] = useState(0);
+  
+  // Viewer context for PDF controls - safely handle when not available
+  const viewerContext = React.useContext(ViewerContext);
   const { toggleTheme } = useRainbowThemeContext();
   const { buttons, actions } = useRightRail();
   const topButtons = useMemo(() => buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true)), [buttons]);
@@ -32,23 +36,13 @@ export default function RightRail() {
   // Navigation view
   const { workbench: currentView } = useNavigationState();
 
-  // Sync rotation state with EmbedPDF API
+  // Update rotation display when switching to viewer mode
   useEffect(() => {
-    if (currentView === 'viewer' && window.embedPdfRotate) {
-      const updateRotation = () => {
-        const rotation = window.embedPdfRotate?.getRotation() || 0;
-        setCurrentRotation(rotation * 90); // Convert enum to degrees
-      };
-      
-      // Update rotation immediately
-      updateRotation();
-      
-      // Set up periodic updates to keep state in sync
-      const interval = setInterval(updateRotation, 1000);
-      
-      return () => clearInterval(interval);
+    if (currentView === 'viewer' && viewerContext) {
+      const rotationState = viewerContext.getRotationState();
+      setCurrentRotation((rotationState?.rotation ?? 0) * 90);
     }
-  }, [currentView]);
+  }, [currentView, viewerContext]);
 
   // File state and selection
   const { state, selectors } = useFileState();
@@ -269,7 +263,7 @@ export default function RightRail() {
                 radius="md"
                 className="right-rail-icon"
                 onClick={() => {
-                  window.embedPdfPan?.togglePan();
+                  viewerContext?.panActions.togglePan();
                   setIsPanning(!isPanning);
                 }}
                 disabled={currentView !== 'viewer'}
@@ -285,7 +279,7 @@ export default function RightRail() {
                 radius="md"
                 className="right-rail-icon"
                 onClick={() => {
-                  window.embedPdfRotate?.rotateBackward();
+                  viewerContext?.rotationActions.rotateBackward();
                 }}
                 disabled={currentView !== 'viewer'}
               >
@@ -300,7 +294,7 @@ export default function RightRail() {
                 radius="md"
                 className="right-rail-icon"
                 onClick={() => {
-                  window.embedPdfRotate?.rotateForward();
+                  viewerContext?.rotationActions.rotateForward();
                 }}
                 disabled={currentView !== 'viewer'}
               >
@@ -314,7 +308,9 @@ export default function RightRail() {
                 variant="subtle"
                 radius="md"
                 className="right-rail-icon"
-                onClick={() => window.toggleThumbnailSidebar?.()}
+                onClick={() => {
+                  viewerContext?.toggleThumbnailSidebar();
+                }}
                 disabled={currentView !== 'viewer'}
               >
                 <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />

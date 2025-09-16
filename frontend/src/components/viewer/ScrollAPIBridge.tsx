@@ -1,27 +1,34 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
+import { useViewer } from '../../contexts/ViewerContext';
 
 /**
- * Component that runs inside EmbedPDF context and exports scroll controls globally
+ * ScrollAPIBridge manages scroll state and exposes scroll actions.
+ * Registers with ViewerContext to provide scroll functionality to UI components.
  */
 export function ScrollAPIBridge() {
   const { provides: scroll, state: scrollState } = useScroll();
+  const { registerBridge } = useViewer();
+  
+  const [_localState, setLocalState] = useState({
+    currentPage: 1,
+    totalPages: 0
+  });
 
   useEffect(() => {
     if (scroll && scrollState) {
-      // Export scroll controls to global window for toolbar access
-      (window as any).embedPdfScroll = {
-        scrollToPage: (page: number) => scroll.scrollToPage({ pageNumber: page }),
-        scrollToNextPage: () => scroll.scrollToNextPage(),
-        scrollToPreviousPage: () => scroll.scrollToPreviousPage(),
-        scrollToFirstPage: () => scroll.scrollToPage({ pageNumber: 1 }),
-        scrollToLastPage: () => scroll.scrollToPage({ pageNumber: scrollState.totalPages }),
+      const newState = {
         currentPage: scrollState.currentPage,
         totalPages: scrollState.totalPages,
       };
+      setLocalState(newState);
 
+      registerBridge('scroll', {
+        state: newState,
+        api: scroll
+      });
     }
-  }, [scroll, scrollState]);
+  }, [scroll, scrollState, registerBridge]);
 
   return null;
 }

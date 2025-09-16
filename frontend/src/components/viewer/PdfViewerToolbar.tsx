@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Paper, Group, NumberInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { useViewer } from '../../contexts/ViewerContext';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -19,104 +20,60 @@ interface PdfViewerToolbarProps {
   dualPage?: boolean;
   onDualPageToggle?: () => void;
   
-  // Zoom controls (will connect to window.embedPdfZoom)
+  // Zoom controls (connected via ViewerContext)
   currentZoom?: number;
 }
 
 export function PdfViewerToolbar({
   currentPage = 1,
-  totalPages = 1,
+  totalPages: _totalPages = 1,
   onPageChange,
   dualPage = false,
   onDualPageToggle,
-  currentZoom = 100,
+  currentZoom: _currentZoom = 100,
 }: PdfViewerToolbarProps) {
   const { t } = useTranslation();
-  const [pageInput, setPageInput] = useState(currentPage);
-  const [dynamicZoom, setDynamicZoom] = useState(currentZoom);
-  const [dynamicPage, setDynamicPage] = useState(currentPage);
-  const [dynamicTotalPages, setDynamicTotalPages] = useState(totalPages);
+  const { getScrollState, getZoomState, scrollActions, zoomActions } = useViewer();
+  
+  const scrollState = getScrollState();
+  const zoomState = getZoomState();
+  const [pageInput, setPageInput] = useState(scrollState.currentPage || currentPage);
 
-  // Update zoom and scroll state from EmbedPDF APIs
+  // Update page input when scroll state changes
   useEffect(() => {
-    const updateState = () => {
-      // Update zoom
-      if (window.embedPdfZoom) {
-        const zoomPercent = window.embedPdfZoom.zoomPercent || currentZoom;
-        setDynamicZoom(zoomPercent);
-      }
-      
-      // Update scroll/page state
-      if (window.embedPdfScroll) {
-        const currentPageNum = window.embedPdfScroll.currentPage || currentPage;
-        const totalPagesNum = window.embedPdfScroll.totalPages || totalPages;
-        setDynamicPage(currentPageNum);
-        setDynamicTotalPages(totalPagesNum);
-        setPageInput(currentPageNum);
-      }
-      
-    };
-
-    // Update state immediately
-    updateState();
-
-    // Set up periodic updates to keep state in sync
-    const interval = setInterval(updateState, 200);
-    
-    return () => clearInterval(interval);
-  }, [currentZoom, currentPage, totalPages]);
+    setPageInput(scrollState.currentPage);
+  }, [scrollState.currentPage]);
 
   const handleZoomOut = () => {
-    if (window.embedPdfZoom) {
-      window.embedPdfZoom.zoomOut();
-    }
+    zoomActions.zoomOut();
   };
 
   const handleZoomIn = () => {
-    if (window.embedPdfZoom) {
-      window.embedPdfZoom.zoomIn();
-    }
+    zoomActions.zoomIn();
   };
 
   const handlePageNavigation = (page: number) => {
-    if (window.embedPdfScroll) {
-      window.embedPdfScroll.scrollToPage(page);
-    } else if (onPageChange) {
+    scrollActions.scrollToPage(page);
+    if (onPageChange) {
       onPageChange(page);
     }
     setPageInput(page);
   };
 
   const handleFirstPage = () => {
-    if (window.embedPdfScroll) {
-      window.embedPdfScroll.scrollToFirstPage();
-    } else {
-      handlePageNavigation(1);
-    }
+    scrollActions.scrollToFirstPage();
   };
 
   const handlePreviousPage = () => {
-    if (window.embedPdfScroll) {
-      window.embedPdfScroll.scrollToPreviousPage();
-    } else {
-      handlePageNavigation(Math.max(1, dynamicPage - 1));
-    }
+    scrollActions.scrollToPreviousPage();
   };
 
   const handleNextPage = () => {
-    if (window.embedPdfScroll) {
-      window.embedPdfScroll.scrollToNextPage();
-    } else {
-      handlePageNavigation(Math.min(dynamicTotalPages, dynamicPage + 1));
-    }
+    scrollActions.scrollToNextPage();
   };
 
   const handleLastPage = () => {
-    if (window.embedPdfScroll) {
-      window.embedPdfScroll.scrollToLastPage();
-    } else {
-      handlePageNavigation(dynamicTotalPages);
-    }
+    scrollActions.scrollToLastPage();
   };
 
   return (
@@ -146,7 +103,7 @@ export function PdfViewerToolbar({
           px={8}
           radius="xl"
           onClick={handleFirstPage}
-          disabled={dynamicPage === 1}
+          disabled={scrollState.currentPage === 1}
           style={{ minWidth: '2.5rem' }}
           title={t("viewer.firstPage", "First Page")}
         >
@@ -161,7 +118,7 @@ export function PdfViewerToolbar({
           px={8}
           radius="xl"
           onClick={handlePreviousPage}
-          disabled={dynamicPage === 1}
+          disabled={scrollState.currentPage === 1}
           style={{ minWidth: '2.5rem' }}
           title={t("viewer.previousPage", "Previous Page")}
         >
@@ -174,12 +131,12 @@ export function PdfViewerToolbar({
           onChange={(value) => {
             const page = Number(value);
             setPageInput(page);
-            if (!isNaN(page) && page >= 1 && page <= dynamicTotalPages) {
+            if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
               handlePageNavigation(page);
             }
           }}
           min={1}
-          max={dynamicTotalPages}
+          max={scrollState.totalPages}
           hideControls
           styles={{
             input: { width: 48, textAlign: "center", fontWeight: 500, fontSize: 16 },
@@ -187,7 +144,7 @@ export function PdfViewerToolbar({
         />
         
         <span style={{ fontWeight: 500, fontSize: 16 }}>
-          / {dynamicTotalPages}
+          / {scrollState.totalPages}
         </span>
 
         {/* Next Page Button */}
@@ -198,7 +155,7 @@ export function PdfViewerToolbar({
           px={8}
           radius="xl"
           onClick={handleNextPage}
-          disabled={dynamicPage === dynamicTotalPages}
+          disabled={scrollState.currentPage === scrollState.totalPages}
           style={{ minWidth: '2.5rem' }}
           title={t("viewer.nextPage", "Next Page")}
         >
@@ -213,7 +170,7 @@ export function PdfViewerToolbar({
           px={8}
           radius="xl"
           onClick={handleLastPage}
-          disabled={dynamicPage === dynamicTotalPages}
+          disabled={scrollState.currentPage === scrollState.totalPages}
           style={{ minWidth: '2.5rem' }}
           title={t("viewer.lastPage", "Last Page")}
         >
@@ -247,7 +204,7 @@ export function PdfViewerToolbar({
             −
           </Button>
           <span style={{ minWidth: '2.5rem', textAlign: "center" }}>
-            {dynamicZoom}%
+            {zoomState.zoomPercent}%
           </span>
           <Button
             variant="subtle"
