@@ -1,6 +1,6 @@
 // Pure helper utilities for the BulkSelectionPanel UI
 
-export type LogicalOperator = 'and' | 'or' | 'not';
+export type LogicalOperator = 'and' | 'or' | 'not' | 'even' | 'odd';
 
 // Returns a new CSV expression with expr appended.
 // If current ends with an operator token, expr is appended directly.
@@ -9,7 +9,12 @@ export function appendExpression(currentInput: string, expr: string): string {
   const current = (currentInput || '').trim();
   if (!current) return expr;
   const endsWithOperator = /(\b(and|not|or)\s*|[&|,!]\s*)$/i.test(current);
-  return endsWithOperator ? `${current}${expr}` : `${current} or ${expr}`;
+  // Add space if operator doesn't already have one
+  if (endsWithOperator) {
+    const needsSpace = !current.endsWith(' ');
+    return `${current}${needsSpace ? ' ' : ''}${expr}`;
+  }
+  return `${current} or ${expr}`;
 }
 
 // Smartly inserts/normalizes a logical operator at the end of the current input.
@@ -17,6 +22,18 @@ export function appendExpression(currentInput: string, expr: string): string {
 export function insertOperatorSmart(currentInput: string, op: LogicalOperator): string {
   const text = (currentInput || '').trim();
   if (text.length === 0) return `${op} `;
+
+  // Handle 'even' and 'odd' as page selection expressions, not logical operators
+  if (op === 'even' || op === 'odd') {
+    // If current input ends with a logical operator, append the page selection with proper spacing
+    const endsWithOperator = /(\b(and|not|or)\s*|[&|,!]\s*)$/i.test(text);
+    if (endsWithOperator) {
+      // Add space if the operator doesn't already have one
+      const needsSpace = !text.endsWith(' ');
+      return `${text}${needsSpace ? ' ' : ''}${op} `;
+    }
+    return `${text} or ${op} `;
+  }
 
   // Extract up to the last two operator tokens (words or symbols) from the end
   const tokens: string[] = [];
@@ -39,19 +56,19 @@ export function insertOperatorSmart(currentInput: string, op: LogicalOperator): 
 
   // Normalize to allowed set
   const phrase = tokens.join(' ');
-  const allowed = new Set(['and', 'or', 'not', 'and or', 'and not']);
+  const allowed = new Set(['and', 'or', 'not', 'and not', 'or not']);
 
   // Helpers for transitions from a single trailing token
   const fromSingle = (t: string): string => {
     if (t === 'and') {
       if (click === 'and') return 'and';
-      if (click === 'or') return 'and or';
+      if (click === 'or') return 'or'; // 'and or' is invalid, so just use 'or'
       return 'and not';
     }
     if (t === 'or') {
       if (click === 'and') return 'and';
       if (click === 'or') return 'or';
-      return 'not';
+      return 'or not';
     }
     // t === 'not'
     if (click === 'and') return 'and';
@@ -61,17 +78,19 @@ export function insertOperatorSmart(currentInput: string, op: LogicalOperator): 
 
   // From combined phrase
   const fromCombo = (p: string): string => {
-    if (p === 'and or') {
-      if (click === 'or') return 'and or';
-      if (click === 'and') return 'and';
-      return 'and not';
-    }
     if (p === 'and not') {
       if (click === 'not') return 'and not';
       if (click === 'and') return 'and';
-      return 'and or';
+      if (click === 'or') return 'or'; // 'and not or' is invalid, so just use 'or'
+      return 'and not';
     }
-    // Invalid combos (e.g., 'not and', 'not or', 'or and') → collapse to clicked op
+    if (p === 'or not') {
+      if (click === 'not') return 'or not';
+      if (click === 'or') return 'or';
+      if (click === 'and') return 'and'; // 'or not and' is invalid, so just use 'and'
+      return 'or not';
+    }
+    // Invalid combos (e.g., 'not and', 'not or', 'or and', 'and or') → collapse to clicked op
     return click;
   };
 

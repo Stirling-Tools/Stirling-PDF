@@ -1,15 +1,19 @@
-import { Button, Text, Group } from '@mantine/core';
+import { Button, Text, Group, Divider } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import classes from './BulkSelectionPanel.module.css';
+import { LogicalOperator } from './BulkSelection';
 
 interface OperatorsSectionProps {
   csvInput: string;
-  onInsertOperator: (op: 'and' | 'or' | 'not') => void;
+  onInsertOperator: (op: LogicalOperator) => void;
 }
 
 const OperatorsSection = ({ csvInput, onInsertOperator }: OperatorsSectionProps) => {
+  const { t } = useTranslation();
+  
   return (
     <div>
-      <Text size="xs" c="var(--text-muted)" fw={500} mb="xs">Add Operators:</Text>
+      <Text size="xs" c="var(--text-muted)" fw={500} mb="xs">{t('bulkSelection.keywords.title', 'Keywords')}:</Text>
       <Group gap="sm" wrap="nowrap">
         <Button 
           size="sm" 
@@ -40,6 +44,29 @@ const OperatorsSection = ({ csvInput, onInsertOperator }: OperatorsSectionProps)
           title="Exclude from selection"
         >
           <Text size="xs" fw={500}>not</Text>
+        </Button>
+      </Group>
+      <Divider my="sm" />
+      <Group gap="sm" wrap="nowrap">
+        <Button 
+          size="sm" 
+          variant="outline"
+          className={classes.operatorChip} 
+          onClick={() => onInsertOperator('even')}
+          disabled={!csvInput.trim()}
+          title="Combine selections (both conditions must be true)"
+        >
+          <Text size="xs" fw={500}>even</Text>
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline"
+          className={classes.operatorChip} 
+          onClick={() => onInsertOperator('odd')}
+          disabled={!csvInput.trim()}
+          title="Add to selection (either condition can be true)"
+        >
+          <Text size="xs" fw={500}>odd</Text>
         </Button>
       </Group>
     </div>

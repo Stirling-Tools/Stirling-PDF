@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Flex } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import classes from './BulkSelectionPanel.module.css';
 import {
   appendExpression,
@@ -8,6 +9,7 @@ import {
   lastNExpression,
   everyNthExpression,
   rangeExpression,
+  LogicalOperator,
 } from './BulkSelection';
 import SelectPages from './SelectPages';
 import OperatorsSection from './OperatorsSection';
@@ -27,6 +29,7 @@ const AdvancedSelectionPanel = ({
   maxPages,
   advancedOpened,
 }: AdvancedSelectionPanelProps) => {
+  const { t } = useTranslation();
   const [rangeEnd, setRangeEnd] = useState<number | ''>('');
 
   const handleRangeEndChange = (val: string | number) => {
@@ -47,11 +50,6 @@ const AdvancedSelectionPanel = ({
     return null;
   };
 
-  const validateRangeEnd = (end: number): string | null => {
-    if (end <= 0) return 'Values must be positive';
-    return null;
-  };
-
   // Named callback functions
   const applyExpression = (expr: string) => {
     const nextInput = appendExpression(csvInput, expr);
@@ -59,9 +57,13 @@ const AdvancedSelectionPanel = ({
     onUpdatePagesFromCSV(nextInput);
   };
 
-  const insertOperator = (op: 'and' | 'or' | 'not') => {
+  const insertOperator = (op: LogicalOperator) => {
     const next = insertOperatorSmart(csvInput, op);
     setCsvInput(next);
+    // Trigger visual selection update for 'even' and 'odd' operators
+    if (op === 'even' || op === 'odd') {
+      onUpdatePagesFromCSV(next);
+    }
   };
 
   const handleFirstNApply = (value: number) => {
@@ -95,36 +97,36 @@ const AdvancedSelectionPanel = ({
             {/* Cards row */}
             <Flex direction="row" mb="xs" wrap="wrap">
               <SelectPages
-                title="First N Pages"
-                placeholder="Number of pages"
+                title={t('bulkSelection.firstNPages.title', 'First N Pages')}
+                placeholder={t('bulkSelection.firstNPages.placeholder', 'Number of pages')}
                 onApply={handleFirstNApply}
                 maxPages={maxPages}
                 validationFn={validatePositiveNumber}
               />
               
               <SelectPages
-                title="Range"
-                placeholder="From"
+                title={t('bulkSelection.range.title', 'Range')}
+                placeholder={t('bulkSelection.range.fromPlaceholder', 'From')}
                 onApply={handleRangeApply}
                 maxPages={maxPages}
                 validationFn={validateRangeStart}
                 isRange={true}
                 rangeEndValue={rangeEnd}
                 onRangeEndChange={handleRangeEndChange}
-                rangeEndPlaceholder="To"
+                rangeEndPlaceholder={t('bulkSelection.range.toPlaceholder', 'To')}
               />
               
               <SelectPages
-                title="Last N Pages"
-                placeholder="Number of pages"
+                title={t('bulkSelection.lastNPages.title', 'Last N Pages')}
+                placeholder={t('bulkSelection.lastNPages.placeholder', 'Number of pages')}
                 onApply={handleLastNApply}
                 maxPages={maxPages}
                 validationFn={validatePositiveNumber}
               />
               
               <SelectPages
-                title="Every Nth Page"
-                placeholder="Step size"
+                title={t('bulkSelection.everyNthPage.title', 'Every Nth Page')}
+                placeholder={t('bulkSelection.everyNthPage.placeholder', 'Step size')}
                 onApply={handleEveryNthApply}
                 maxPages={maxPages}
               />

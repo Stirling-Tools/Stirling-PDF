@@ -1207,6 +1207,29 @@
       "every3rd": "Every 3rd",
       "oddWithinExcluding": "Odd within 1-20 excluding 5-7",
       "combineSets": "Combine sets"
+    },
+    "firstNPages": {
+      "title": "First N Pages",
+      "placeholder": "Number of pages"
+    },
+    "lastNPages": {
+      "title": "Last N Pages",
+      "placeholder": "Number of pages"
+    },
+    "everyNthPage": {
+      "title": "Every Nth Page",
+      "placeholder": "Step size"
+    },
+    "range": {
+      "title": "Range",
+      "fromPlaceholder": "From",
+      "toPlaceholder": "To"
+    },
+    "keywords": {
+      "title": "Keywords"
+    },
+    "advanced": {
+      "title": "Advanced"
     }
   },
   "compressPdfs": {

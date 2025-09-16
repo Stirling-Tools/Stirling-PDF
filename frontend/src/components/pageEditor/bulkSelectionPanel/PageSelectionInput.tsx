@@ -1,4 +1,5 @@
 import { TextInput, Button, Text, Flex, Switch } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import LocalIcon from '../../shared/LocalIcon';
 import { Tooltip } from '../../shared/Tooltip';
 import { usePageSelectionTips } from '../../tooltips/usePageSelectionTips';
@@ -21,6 +22,7 @@ const PageSelectionInput = ({
   advancedOpened,
   onToggleAdvanced,
 }: PageSelectionInputProps) => {
+  const { t } = useTranslation();
   const pageSelectionTips = usePageSelectionTips();
 
   return (
@@ -43,12 +45,12 @@ const PageSelectionInput = ({
         </Tooltip>
         {typeof advancedOpened === 'boolean' && (
           <Flex align="center" gap="xs">
-            <Text size="sm" c="var(--text-secondary)">Advanced</Text>
+            <Text size="sm" c="var(--text-secondary)">{t('bulkSelection.advanced.title', 'Advanced')}</Text>
             <Switch
               size="sm"
               checked={!!advancedOpened}
               onChange={(e) => onToggleAdvanced?.(e.currentTarget.checked)}
-              title="Advanced"
+              title={t('bulkSelection.advanced.title', 'Advanced')}
               className={classes.advancedSwitch}
             />
           </Flex>
