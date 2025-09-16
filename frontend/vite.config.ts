@@ -12,4 +12,5 @@ export default defineConfig({
       },
     },
   },
+  base: "http://localhost:8080",
 });
