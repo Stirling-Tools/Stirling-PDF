@@ -8,22 +8,17 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { StirlingFileStub } from '../../types/fileContext';
 
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
 import { FileId } from '../../types/file';
+import ToolChain from '../shared/ToolChain';
 
-interface FileItem {
-  id: FileId;
-  name: string;
-  pageCount: number;
-  thumbnail: string | null;
-  size: number;
-  modifiedAt?: number | string | Date;
-}
+
 
 interface FileEditorThumbnailProps {
-  file: FileItem;
+  file: StirlingFileStub;
   index: number;
   totalFiles: number;
   selectedFiles: FileId[];
@@ -63,6 +58,8 @@ const FileEditorThumbnail = ({
     return activeFiles.find(f => f.fileId === file.id);
   }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
+
+  const pageCount = file.processedFile?.totalPages || 0;
 
   const downloadSelectedFile = useCallback(() => {
     // Prefer parent-provided handler if available
@@ -109,22 +106,21 @@ const FileEditorThumbnail = ({
 
   const pageLabel = useMemo(
     () =>
-      file.pageCount > 0
-        ? `${file.pageCount} ${file.pageCount === 1 ? 'Page' : 'Pages'}`
+      pageCount > 0
+        ? `${pageCount} ${pageCount === 1 ? 'Page' : 'Pages'}`
         : '',
-    [file.pageCount]
+    [pageCount]
   );
 
   const dateLabel = useMemo(() => {
-    const d =
-      file.modifiedAt != null ? new Date(file.modifiedAt) : new Date(); // fallback
+    const d = new Date(file.lastModified);
     if (Number.isNaN(d.getTime())) return '';
     return new Intl.DateTimeFormat(undefined, {
       month: 'short',
       day: '2-digit',
       year: 'numeric',
     }).format(d);
-  }, [file.modifiedAt]);
+  }, [file.lastModified]);
 
   // ---- Drag & drop wiring ----
   const fileElementRef = useCallback((element: HTMLDivElement | null) => {
@@ -350,7 +346,8 @@ const FileEditorThumbnail = ({
           lineClamp={3}
           title={`${extUpper || 'FILE'} • ${prettySize}`}
         >
-          {/* e.g., Jan 29, 2025 - PDF file - 3 Pages */}
+          {/* e.g.,  v2 - Jan 29, 2025 - PDF file - 3 Pages */}
+          {`v${file.versionNumber} - `}
           {dateLabel}
           {extUpper ? ` - ${extUpper} file` : ''}
           {pageLabel ? ` - ${pageLabel}` : ''}
@@ -360,9 +357,9 @@ const FileEditorThumbnail = ({
       {/* Preview area */}
       <div className={`${styles.previewBox} mx-6 mb-4 relative flex-1`}>
         <div className={styles.previewPaper}>
-          {file.thumbnail && (
+          {file.thumbnailUrl && (
             <img
-              src={file.thumbnail}
+              src={file.thumbnailUrl}
               alt={file.name}
               draggable={false}
               loading="lazy"
@@ -399,6 +396,29 @@ const FileEditorThumbnail = ({
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
           <DragIndicatorIcon fontSize="small" />
         </span>
+
+        {/* Tool chain display at bottom */}
+        {file.toolHistory && (
+          <div style={{
+            position: 'absolute',
+            bottom: '4px',
+            left: '4px',
+            right: '4px',
+            padding: '4px 6px',
+            textAlign: 'center',
+            fontWeight: 600,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap'
+          }}>
+            <ToolChain
+              toolChain={file.toolHistory}
+              displayStyle="text"
+              size="xs"
+              maxWidth={'100%'}
+              color='var(--mantine-color-gray-7)'
+            />
+          </div>
+        )}
       </div>
     </div>
   );
