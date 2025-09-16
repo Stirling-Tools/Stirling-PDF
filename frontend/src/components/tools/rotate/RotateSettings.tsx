@@ -63,7 +63,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
         <Center>
           <Box
             style={{
-              width: '200px',
+              width: '280px',
               height: '280px',
               border: '2px dashed var(--mantine-color-gray-4)',
               borderRadius: '8px',
@@ -89,7 +89,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
                 file={selectedFile}
                 thumbnail={thumbnail}
                 style={{
-                  maxWidth: '180px',
+                  maxWidth: '260px',
                   maxHeight: '260px'
                 }}
               />
