@@ -12,6 +12,7 @@ export interface FilesStepConfig {
   minFiles?: number;
   onCollapsedClick?: () => void;
   isVisible?: boolean;
+  placeholder?: string;
 }
 
 export interface MiddleStepConfig {
