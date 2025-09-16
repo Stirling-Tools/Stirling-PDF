@@ -16,7 +16,6 @@ export const adjustPageScaleOperationConfig = {
   buildFormData: buildAdjustPageScaleFormData,
   operationType: 'adjustPageScale',
   endpoint: '/api/v1/general/scale-pages',
-  filePrefix: 'scaled_',
   defaultParameters,
 } as const;
 
