@@ -22,17 +22,9 @@ export const removePagesOperationConfig = {
 
 export const useRemovePagesOperation = () => {
   const { t } = useTranslation();
-  // const { extractZipFiles } = useToolResources();
-
-  const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
-    // Backend returns a PDF for remove-pages
-    const base = originalFiles[0]?.name?.replace(/\.[^.]+$/, '') || 'document';
-    return [new File([blob], `removed_pages_${base}.pdf`, { type: 'application/pdf' })];
-  }, []);
 
   return useToolOperation<RemovePagesParameters>({
     ...removePagesOperationConfig,
-    responseHandler,
     getErrorMessage: createStandardErrorHandler(
       t('removePages.error.failed', 'Failed to remove pages')
     )
