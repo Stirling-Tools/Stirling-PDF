@@ -1,13 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { useToolOperation, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { RotateParameters, defaultParameters } from './useRotateParameters';
+import { RotateParameters, defaultParameters, normalizeAngle } from './useRotateParameters';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildRotateFormData = (parameters: RotateParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
-  formData.append("angle", parameters.angle.toString());
+  // Normalize angle for backend (0, 90, 180, 270)
+  formData.append("angle", normalizeAngle(parameters.angle).toString());
   return formData;
 };
 

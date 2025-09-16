@@ -2,6 +2,12 @@ import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 import { useMemo, useCallback } from 'react';
 
+// Normalize angle to valid backend values (0, 90, 180, 270)
+export const normalizeAngle = (angle: number): number => {
+  const normalized = angle % 360;
+  return normalized < 0 ? normalized + 360 : normalized;
+};
+
 export interface RotateParameters extends BaseParameters {
   angle: number; // Current rotation angle (0, 90, 180, 270)
 }
@@ -27,38 +33,29 @@ export const useRotateParameters = (): RotateParametersHook => {
     },
   });
 
-  // Normalize angle to valid backend values (0, 90, 180, 270)
-  const normalizeAngle = useCallback((angle: number): number => {
-    const normalized = angle % 360;
-    return normalized < 0 ? normalized + 360 : normalized;
-  }, []);
-
   // Rotate clockwise by 90 degrees
   const rotateClockwise = useCallback(() => {
-    baseHook.updateParameter('angle', normalizeAngle(baseHook.parameters.angle + 90));
-  }, [baseHook, normalizeAngle]);
+    baseHook.updateParameter('angle', baseHook.parameters.angle + 90);
+  }, [baseHook]);
 
   // Rotate anticlockwise by 90 degrees
   const rotateAnticlockwise = useCallback(() => {
-    baseHook.updateParameter('angle', normalizeAngle(baseHook.parameters.angle - 90));
-  }, [baseHook, normalizeAngle]);
+    baseHook.updateParameter('angle', baseHook.parameters.angle - 90);
+  }, [baseHook]);
 
   // Check if rotation will actually change the document
   const hasRotation = useMemo(() => {
-    return baseHook.parameters.angle !== 0;
-  }, [baseHook.parameters.angle]);
+    const normalized = normalizeAngle(baseHook.parameters.angle);
+    return normalized !== 0;
+  }, [baseHook.parameters.angle, normalizeAngle]);
 
-  // Override updateParameter to normalize angles
+  // Override updateParameter - no longer normalize angles here
   const updateParameter = useCallback(<K extends keyof RotateParameters>(
     parameter: K,
     value: RotateParameters[K]
   ) => {
-    if (parameter === 'angle') {
-      baseHook.updateParameter(parameter, normalizeAngle(value as number) as RotateParameters[K]);
-    } else {
-      baseHook.updateParameter(parameter, value);
-    }
-  }, [baseHook, normalizeAngle]);
+    baseHook.updateParameter(parameter, value);
+  }, [baseHook]);
 
   return {
     ...baseHook,
