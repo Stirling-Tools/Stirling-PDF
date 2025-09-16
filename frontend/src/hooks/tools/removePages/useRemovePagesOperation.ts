@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RemovePagesParameters, defaultParameters } from './useRemovePagesParameters';
-import { useToolResources } from '../shared/useToolResources';
+// import { useToolResources } from '../shared/useToolResources';
 
 export const buildRemovePagesFormData = (parameters: RemovePagesParameters, file: File): FormData => {
   const formData = new FormData();
@@ -23,37 +23,13 @@ export const removePagesOperationConfig = {
 
 export const useRemovePagesOperation = () => {
   const { t } = useTranslation();
-  const { extractZipFiles } = useToolResources();
+  // const { extractZipFiles } = useToolResources();
 
   const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
-    // Try to detect zip vs pdf
-    const headBuf = await blob.slice(0, 4).arrayBuffer();
-    const head = new TextDecoder().decode(new Uint8Array(headBuf));
-
-    // PDF response: return as single file
-    if (head.startsWith('%PDF')) {
-      const base = originalFiles[0]?.name?.replace(/\.[^.]+$/, '') || 'document';
-      return [new File([blob], `removed_pages_${base}.pdf`, { type: 'application/pdf' })];
-    }
-
-    // ZIP: extract PDFs inside
-    if (head.startsWith('PK')) {
-      const files = await extractZipFiles(blob);
-      if (files.length > 0) return files;
-    }
-
-    // Unknown blob type
-    const textBuf = await blob.slice(0, 1024).arrayBuffer();
-    const text = new TextDecoder().decode(new Uint8Array(textBuf));
-    if (/error|exception|html/i.test(text)) {
-      const title =
-        text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ||
-        text.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] ||
-        'Unknown error';
-      throw new Error(`Remove pages service error: ${title}`);
-    }
-    throw new Error('Unexpected response format from remove pages service');
-  }, [extractZipFiles]);
+    // Backend returns a PDF for remove-pages
+    const base = originalFiles[0]?.name?.replace(/\.[^.]+$/, '') || 'document';
+    return [new File([blob], `removed_pages_${base}.pdf`, { type: 'application/pdf' })];
+  }, []);
 
   return useToolOperation<RemovePagesParameters>({
     ...removePagesOperationConfig,

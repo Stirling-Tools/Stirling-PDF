@@ -29,20 +29,7 @@ export const useRemoveBlanksOperation = () => {
 
   const responseHandler = useCallback(async (blob: Blob): Promise<File[]> => {
     // Backend always returns a ZIP file containing the processed PDFs
-    const files = await extractZipFiles(blob);
-    if (files.length > 0) return files;
-
-    // Fallback error handling
-    const textBuf = await blob.slice(0, 1024).arrayBuffer();
-    const text = new TextDecoder().decode(new Uint8Array(textBuf));
-    if (/error|exception|html/i.test(text)) {
-      const title =
-        text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ||
-        text.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] ||
-        'Unknown error';
-      throw new Error(`Remove blanks service error: ${title}`);
-    }
-    throw new Error('Unexpected response format from remove blanks service');
+    return await extractZipFiles(blob);
   }, [extractZipFiles]);
 
   return useToolOperation<RemoveBlanksParameters>({
