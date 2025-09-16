@@ -38,7 +38,7 @@ const Rotate = (props: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t("rotate.submit", "Rotate"),
+      text: t("rotate.submit", "Apply Rotation"),
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,

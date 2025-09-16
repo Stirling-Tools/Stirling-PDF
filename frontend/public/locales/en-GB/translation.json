@@ -757,7 +757,7 @@
   "rotate": {
     "tags": "server side",
     "title": "Rotate PDF",
-    "submit": "Rotate",
+    "submit": "Apply Rotation",
     "error": {
       "failed": "An error occurred while rotating the PDF."
     },
