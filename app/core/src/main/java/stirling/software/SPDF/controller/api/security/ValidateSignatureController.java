@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
@@ -64,6 +65,7 @@ public class ValidateSignatureController {
                 });
     }
 
+    @JsonDataResponse
     @Operation(
             summary = "Validate PDF Digital Signature",
             description =

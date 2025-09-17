@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.AddAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -35,6 +36,7 @@ public class AttachmentController {
     private final AttachmentServiceInterface pdfAttachmentService;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-attachments")
+    @StandardPdfResponse
     @Operation(
             summary = "Add attachments to PDF",
             description =

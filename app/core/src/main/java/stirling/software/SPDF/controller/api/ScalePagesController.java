@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.ScalePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -39,6 +40,7 @@ public class ScalePagesController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(value = "/scale-pages", consumes = "multipart/form-data")
+    @StandardPdfResponse
     @Operation(
             summary = "Change the size of a PDF page/document",
             description =

@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.service.PdfImageRemovalService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
@@ -47,11 +48,12 @@ public class PdfImageRemovalController {
      * @throws IOException If an error occurs while processing the PDF file.
      */
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-image-pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Remove images from file to reduce the file size.",
             description =
                     "This endpoint remove images from file to reduce the file size.Input:PDF"
-                            + " Output:PDF Type:MISO")
+                            + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile file) throws IOException {
         // Load the PDF document
         PDDocument document = pdfDocumentFactory.load(file);

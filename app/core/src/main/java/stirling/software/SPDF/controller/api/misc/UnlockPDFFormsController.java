@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -38,6 +39,7 @@ public class UnlockPDFFormsController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/unlock-pdf-forms")
+    @StandardPdfResponse
     @Operation(
             summary = "Remove read-only property from form fields",
             description =

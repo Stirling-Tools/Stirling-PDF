@@ -32,6 +32,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -155,6 +156,7 @@ public class MergeController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/merge-pdfs")
+    @StandardPdfResponse
     @Operation(
             summary = "Merge multiple PDF files into one",
             description =

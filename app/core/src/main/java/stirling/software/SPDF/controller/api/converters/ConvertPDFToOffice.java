@@ -17,6 +17,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.PowerPointConversionResponse;
+import stirling.software.SPDF.config.swagger.TextPlainConversionResponse;
+import stirling.software.SPDF.config.swagger.WordConversionResponse;
+import stirling.software.SPDF.config.swagger.XmlConversionResponse;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
@@ -35,6 +39,7 @@ public class ConvertPDFToOffice {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/presentation")
+    @PowerPointConversionResponse
     @Operation(
             summary = "Convert PDF to Presentation format",
             description =
@@ -50,6 +55,7 @@ public class ConvertPDFToOffice {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/text")
+    @TextPlainConversionResponse
     @Operation(
             summary = "Convert PDF to Text or RTF format",
             description =
@@ -78,6 +84,7 @@ public class ConvertPDFToOffice {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/word")
+    @WordConversionResponse
     @Operation(
             summary = "Convert PDF to Word document",
             description =
@@ -92,6 +99,7 @@ public class ConvertPDFToOffice {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/xml")
+    @XmlConversionResponse
     @Operation(
             summary = "Convert PDF to XML",
             description =

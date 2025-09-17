@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
@@ -41,6 +42,7 @@ public class ConvertEmlToPDF {
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/eml/pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert EML to PDF",
             description =

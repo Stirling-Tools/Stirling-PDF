@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
@@ -37,6 +38,7 @@ public class ConvertHtmlToPDF {
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/html/pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =

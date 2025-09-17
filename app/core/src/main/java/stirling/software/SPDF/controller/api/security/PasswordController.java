@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -33,6 +34,7 @@ public class PasswordController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-password")
+    @StandardPdfResponse
     @Operation(
             summary = "Remove password from a PDF file",
             description =
@@ -59,6 +61,7 @@ public class PasswordController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-password")
+    @StandardPdfResponse
     @Operation(
             summary = "Add password to a PDF file",
             description =

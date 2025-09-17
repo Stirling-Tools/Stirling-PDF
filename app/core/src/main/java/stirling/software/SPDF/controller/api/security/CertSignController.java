@@ -71,10 +71,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
-import stirling.software.common.service.ServerCertificateService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.ServerCertificateService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -140,9 +141,8 @@ public class CertSignController {
         }
     }
 
-    @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/cert-sign")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cert-sign")
+    @StandardPdfResponse
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =

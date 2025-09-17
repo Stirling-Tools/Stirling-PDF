@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -37,6 +38,7 @@ public class MultiPageLayoutController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(value = "/multi-page-layout", consumes = "multipart/form-data")
+    @StandardPdfResponse
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
             description =

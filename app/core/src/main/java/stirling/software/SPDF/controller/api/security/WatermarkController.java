@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -65,6 +66,7 @@ public class WatermarkController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-watermark")
+    @StandardPdfResponse
     @Operation(
             summary = "Add watermark to a PDF file",
             description =

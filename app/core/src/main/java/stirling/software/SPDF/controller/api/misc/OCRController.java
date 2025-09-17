@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.ApplicationProperties;
@@ -77,6 +78,7 @@ public class OCRController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Process a PDF file with OCR",
             description =

@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -47,6 +48,7 @@ public class RepairController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/repair")
+    @StandardPdfResponse
     @Operation(
             summary = "Repair a PDF file",
             description =

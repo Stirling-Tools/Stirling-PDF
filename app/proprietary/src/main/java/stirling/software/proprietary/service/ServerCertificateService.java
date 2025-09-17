@@ -26,7 +26,8 @@ import stirling.software.common.configuration.InstallationPathConfig;
 
 @Service
 @Slf4j
-public class ServerCertificateService implements stirling.software.common.service.ServerCertificateService {
+public class ServerCertificateService
+        implements stirling.software.common.service.ServerCertificateService {
 
     private static final String KEYSTORE_FILENAME = "server-certificate.p12";
     private static final String KEYSTORE_ALIAS = "stirling-pdf-server";
@@ -212,5 +213,4 @@ public class ServerCertificateService implements stirling.software.common.servic
             keyStore.store(fos, DEFAULT_PASSWORD.toCharArray());
         }
     }
-
 }

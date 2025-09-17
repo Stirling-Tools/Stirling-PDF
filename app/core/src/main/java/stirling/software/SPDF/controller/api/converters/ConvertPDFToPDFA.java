@@ -65,6 +65,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.util.ExceptionUtils;
@@ -79,6 +80,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertPDFToPDFA {
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert a PDF to a PDF/A",
             description =

@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -40,6 +41,7 @@ public class PdfOverlayController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(value = "/overlay-pdfs", consumes = "multipart/form-data")
+    @StandardPdfResponse
     @Operation(
             summary = "Overlay PDF files in various modes",
             description =

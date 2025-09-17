@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
@@ -46,6 +47,7 @@ public class ConvertMarkdownToPdf {
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =

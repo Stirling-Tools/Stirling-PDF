@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.SortTypes;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
@@ -39,6 +40,7 @@ public class RearrangePagesPDFController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-pages")
+    @StandardPdfResponse
     @Operation(
             summary = "Remove pages from a PDF file",
             description =
@@ -238,6 +240,7 @@ public class RearrangePagesPDFController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/rearrange-pages")
+    @StandardPdfResponse
     @Operation(
             summary = "Rearrange pages in a PDF file",
             description =

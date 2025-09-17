@@ -50,6 +50,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -659,6 +660,7 @@ public class CompressController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Optimize PDF file",
             description =

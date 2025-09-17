@@ -30,6 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -44,6 +45,7 @@ public class SplitPdfBySectionsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(value = "/split-pdf-by-sections", consumes = "multipart/form-data")
+    @MultiFileResponse
     @Operation(
             summary = "Split PDF pages into smaller sections",
             description =

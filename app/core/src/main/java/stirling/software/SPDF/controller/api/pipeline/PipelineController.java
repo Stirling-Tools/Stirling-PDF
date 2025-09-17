@@ -20,11 +20,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
@@ -47,6 +52,45 @@ public class PipelineController {
     private final PostHogService postHogService;
 
     @AutoJobPostMapping(value = "/handleData", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @MultiFileResponse
+    @Operation(
+            summary = "Execute automated PDF processing pipeline",
+            description =
+                    "This endpoint processes multiple PDF files through a configurable pipeline of operations. "
+                            + "Users provide files and a JSON configuration defining the sequence of operations to perform. "
+                            + "Input:PDF Output:PDF/ZIP Type:MIMO")
+    @RequestBody(
+            content =
+                    @Content(
+                            mediaType = "multipart/form-data",
+                            examples =
+                                    @ExampleObject(
+                                            name = "Email Preparation Pipeline",
+                                            summary =
+                                                    "Repair, sanitize, and compress PDFs for email",
+                                            value =
+                                                    "{\n"
+                                                            + "  \"name\": \"Prepare-pdfs-for-email\",\n"
+                                                            + "  \"pipeline\": [\n"
+                                                            + "    {\n"
+                                                            + "      \"operation\": \"/api/v1/misc/repair\",\n"
+                                                            + "      \"parameters\": {}\n"
+                                                            + "    },\n"
+                                                            + "    {\n"
+                                                            + "      \"operation\": \"/api/v1/security/sanitize-pdf\",\n"
+                                                            + "      \"parameters\": {\n"
+                                                            + "        \"removeJavaScript\": true,\n"
+                                                            + "        \"removeEmbeddedFiles\": false\n"
+                                                            + "      }\n"
+                                                            + "    },\n"
+                                                            + "    {\n"
+                                                            + "      \"operation\": \"/api/v1/misc/compress-pdf\",\n"
+                                                            + "      \"parameters\": {\n"
+                                                            + "        \"optimizeLevel\": 2\n"
+                                                            + "      }\n"
+                                                            + "    }\n"
+                                                            + "  ]\n"
+                                                            + "}")))
     public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
             throws JsonMappingException, JsonProcessingException {
         MultipartFile[] files = request.getFileInput();

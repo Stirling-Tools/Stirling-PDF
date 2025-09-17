@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -53,6 +54,7 @@ public class MetadataController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/update-metadata")
+    @StandardPdfResponse
     @Operation(
             summary = "Update metadata of a PDF file",
             description =

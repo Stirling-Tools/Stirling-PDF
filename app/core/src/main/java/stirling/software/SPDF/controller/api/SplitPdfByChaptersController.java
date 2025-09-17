@@ -30,6 +30,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.PdfMetadata;
@@ -118,6 +119,7 @@ public class SplitPdfByChaptersController {
     }
 
     @AutoJobPostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
+    @MultiFileResponse
     @Operation(
             summary = "Split PDFs by Chapters",
             description = "Splits a PDF into chapters and returns a ZIP file.")

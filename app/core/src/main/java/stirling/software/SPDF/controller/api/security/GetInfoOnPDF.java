@@ -60,6 +60,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -189,6 +190,7 @@ public class GetInfoOnPDF {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/get-info-on-pdf")
+    @JsonDataResponse
     @Operation(summary = "Summary here", description = "desc. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();

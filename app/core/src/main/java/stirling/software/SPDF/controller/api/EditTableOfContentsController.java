@@ -29,6 +29,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.JsonDataResponse;
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -45,6 +47,7 @@ public class EditTableOfContentsController {
     private final ObjectMapper objectMapper;
 
     @AutoJobPostMapping(value = "/extract-bookmarks", consumes = "multipart/form-data")
+    @JsonDataResponse
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
@@ -153,6 +156,7 @@ public class EditTableOfContentsController {
     }
 
     @AutoJobPostMapping(value = "/edit-table-of-contents", consumes = "multipart/form-data")
+    @StandardPdfResponse
     @Operation(
             summary = "Edit Table of Contents",
             description = "Add or edit bookmarks/table of contents in a PDF document.")

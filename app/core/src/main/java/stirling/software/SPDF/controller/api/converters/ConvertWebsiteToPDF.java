@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -41,6 +42,7 @@ public class ConvertWebsiteToPDF {
     private final ApplicationProperties applicationProperties;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/url/pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert a URL to a PDF",
             description =

@@ -30,6 +30,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -52,6 +54,7 @@ public class ConvertImgPDFController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/img")
+    @MultiFileResponse
     @Operation(
             summary = "Convert PDF to image(s)",
             description =
@@ -212,6 +215,7 @@ public class ConvertImgPDFController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/img/pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert images to a PDF file",
             description =

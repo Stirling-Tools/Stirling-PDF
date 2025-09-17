@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
@@ -57,6 +58,7 @@ public class RedactController {
     }
 
     @AutoJobPostMapping(value = "/redact", consumes = "multipart/form-data")
+    @StandardPdfResponse
     @Operation(
             operationId = "redactPdfManual",
             summary = "Redacts areas and pages in a PDF document",
@@ -192,6 +194,7 @@ public class RedactController {
     }
 
     @AutoJobPostMapping(value = "/auto-redact", consumes = "multipart/form-data")
+    @StandardPdfResponse
     @Operation(
             operationId = "redactPdfAuto",
             summary = "Redacts listOfText in a PDF document",

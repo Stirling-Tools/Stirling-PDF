@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.FilterResponse;
 import stirling.software.SPDF.model.api.PDFComparisonAndCount;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
@@ -38,6 +39,7 @@ public class FilterController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-contains-text")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF contains set text, returns true if does",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -56,6 +58,7 @@ public class FilterController {
 
     // TODO
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-contains-image")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF contains an image",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -72,6 +75,7 @@ public class FilterController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-page-count")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF is greater, less or equal to a setPageCount",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -105,6 +109,7 @@ public class FilterController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-page-size")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF is of a certain size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -148,6 +153,7 @@ public class FilterController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-file-size")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF is a set file size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -181,6 +187,7 @@ public class FilterController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-page-rotation")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF is of a certain rotation",
             description = "Input:PDF Output:Boolean Type:SISO")

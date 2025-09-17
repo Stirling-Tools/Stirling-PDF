@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -103,6 +104,7 @@ public class AutoSplitPdfController {
     }
 
     @AutoJobPostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
+    @MultiFileResponse
     @Operation(
             summary = "Auto split PDF pages into separate documents",
             description =
