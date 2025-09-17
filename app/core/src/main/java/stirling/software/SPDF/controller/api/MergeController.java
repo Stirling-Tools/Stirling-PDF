@@ -178,8 +178,10 @@ public class MergeController {
                         if (basic != null && basic.getCreateDate() != null) {
                             return basic.getCreateDate().getTimeInMillis();
                         }
-                    } catch (Exception ignored) {
-                        // ignore and fallback
+                    } catch (Exception e) {
+                        log.debug(
+                                "Unable to read XMP metadata creation date from uploaded file: {}",
+                                e.getMessage());
                     }
                 }
             }
