@@ -11,7 +11,6 @@ import StampPreview from "../components/tools/addStamp/StampPreview";
 import LocalIcon from "../components/shared/LocalIcon";
 import styles from "../components/tools/addStamp/StampPreview.module.css";
 import { Tooltip } from "../components/shared/Tooltip";
-import FitText from "../components/shared/FitText";
 import ButtonSelector from "../components/shared/ButtonSelector";
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
