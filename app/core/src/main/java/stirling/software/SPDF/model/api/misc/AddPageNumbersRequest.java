@@ -39,9 +39,8 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
                             + " 7=bottom-left, 8=bottom-center, 9=bottom-right)",
             type = "integer",
             allowableValues = {"1", "2", "3", "4", "5", "6", "7", "8", "9"},
-            defaultValue = "8",
             requiredMode = RequiredMode.REQUIRED)
-    private int position;
+    private int position = 8;
 
     @Schema(
             description = "Starting number for page numbering",

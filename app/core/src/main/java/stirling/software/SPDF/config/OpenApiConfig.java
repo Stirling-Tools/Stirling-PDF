@@ -52,7 +52,7 @@ public class OpenApiConfig {
                                         .email("contact@stirlingpdf.com"))
                         .description(DEFAULT_DESCRIPTION);
 
-        OpenAPI openAPI = new OpenAPI().info(info);
+        OpenAPI openAPI = new OpenAPI().info(info).openapi("3.0.3");
 
         // Add server configuration from environment variable
         String swaggerServerUrl = System.getenv("SWAGGER_SERVER_URL");

@@ -14,10 +14,9 @@ public class MergeMultiplePagesRequest extends PDFFile {
     @Schema(
             description = "The number of pages to fit onto a single sheet in the output PDF.",
             type = "integer",
-            defaultValue = "2",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"2", "3", "4", "9", "16"})
-    private int pagesPerSheet;
+    private int pagesPerSheet = 2;
 
     @Schema(description = "Boolean for if you wish to add border around the pages")
     private Boolean addBorder;

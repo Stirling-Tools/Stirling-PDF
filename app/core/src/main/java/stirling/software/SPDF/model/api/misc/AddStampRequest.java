@@ -56,9 +56,8 @@ public class AddStampRequest extends PDFWithPageNums {
                             + " 7: top-left, 8: top-center, 9: top-right)",
             type = "integer",
             allowableValues = {"1", "2", "3", "4", "5", "6", "7", "8", "9"},
-            defaultValue = "5",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private int position;
+    private int position = 5;
 
     @Schema(
             description =
