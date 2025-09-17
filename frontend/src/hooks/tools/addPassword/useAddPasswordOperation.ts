@@ -30,7 +30,6 @@ export const addPasswordOperationConfig = {
   buildFormData: buildAddPasswordFormData,
   operationType: 'addPassword',
   endpoint: '/api/v1/security/add-password',
-  filePrefix: 'encrypted_', // Will be overridden in hook with translation
   defaultParameters: fullDefaultParameters,
 } as const;
 
@@ -39,7 +38,6 @@ export const useAddPasswordOperation = () => {
 
   return useToolOperation<AddPasswordFullParameters>({
     ...addPasswordOperationConfig,
-    filePrefix: t('addPassword.filenamePrefix', 'encrypted') + '_',
     getErrorMessage: createStandardErrorHandler(t('addPassword.error.failed', 'An error occurred while encrypting the PDF.'))
   });
 };

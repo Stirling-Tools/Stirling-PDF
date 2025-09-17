@@ -39,7 +39,6 @@ export const addWatermarkOperationConfig = {
   buildFormData: buildAddWatermarkFormData,
   operationType: 'watermark',
   endpoint: '/api/v1/security/add-watermark',
-  filePrefix: 'watermarked_', // Will be overridden in hook with translation
   defaultParameters,
 } as const;
 
@@ -48,7 +47,6 @@ export const useAddWatermarkOperation = () => {
 
   return useToolOperation<AddWatermarkParameters>({
     ...addWatermarkOperationConfig,
-    filePrefix: t('watermark.filenamePrefix', 'watermarked') + '_',
     getErrorMessage: createStandardErrorHandler(t('watermark.error.failed', 'An error occurred while adding watermark to the PDF.'))
   });
 };
