@@ -38,6 +38,9 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
       formData.append("includeMetadata", parameters.includeMetadata.toString());
       formData.append("allowDuplicates", parameters.allowDuplicates.toString());
       break;
+    case SPLIT_METHODS.BY_PAGE_DIVIDER:
+      formData.append("duplexMode", parameters.duplexMode.toString());
+      break;
     default:
       throw new Error(`Unknown split method: ${parameters.method}`);
   }
@@ -57,6 +60,8 @@ export const getSplitEndpoint = (parameters: SplitParameters): string => {
       return "/api/v1/general/split-by-size-or-count";
     case SPLIT_METHODS.BY_CHAPTERS:
       return "/api/v1/general/split-pdf-by-chapters";
+    case SPLIT_METHODS.BY_PAGE_DIVIDER:
+      return "/api/v1/misc/auto-split-pdf";
     default:
       throw new Error(`Unknown split method: ${parameters.method}`);
   }
@@ -68,7 +73,6 @@ export const splitOperationConfig = {
   buildFormData: buildSplitFormData,
   operationType: 'splitPdf',
   endpoint: getSplitEndpoint,
-  filePrefix: 'split_',
   defaultParameters,
 } as const;
 

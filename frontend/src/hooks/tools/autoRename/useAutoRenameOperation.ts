@@ -28,7 +28,6 @@ export const autoRenameOperationConfig = {
   buildFormData: buildAutoRenameFormData,
   operationType: 'autoRename',
   endpoint: '/api/v1/misc/auto-rename',
-  filePrefix: 'autoRename_',
   preserveBackendFilename: true, // Use filename from backend response headers
   defaultParameters,
 } as const;
