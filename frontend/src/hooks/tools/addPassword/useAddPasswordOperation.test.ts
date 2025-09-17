@@ -1,7 +1,7 @@
-import { describe, expect, test, vi, beforeEach, MockedFunction } from 'vitest';
+import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useAddPasswordOperation } from './useAddPasswordOperation';
-import type { AddPasswordFullParameters, AddPasswordParameters } from './useAddPasswordParameters';
+import type { AddPasswordFullParameters } from './useAddPasswordParameters';
 
 // Mock the useToolOperation hook
 vi.mock('../shared/useToolOperation', async () => {
@@ -119,7 +119,6 @@ describe('useAddPasswordOperation', () => {
   test.each([
     { property: 'toolType' as const, expectedValue: ToolType.singleFile },
     { property: 'endpoint' as const, expectedValue: '/api/v1/security/add-password' },
-    { property: 'filePrefix' as const, expectedValue: 'translated-addPassword.filenamePrefix_' },
     { property: 'operationType' as const, expectedValue: 'addPassword' }
   ])('should configure $property correctly', ({ property, expectedValue }) => {
     renderHook(() => useAddPasswordOperation());

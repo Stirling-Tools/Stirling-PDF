@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useMemo, useRef } from 'react';
-import { Text, Stack, Box, Flex, Divider } from '@mantine/core';
+import React, { createContext, useContext, useMemo } from 'react';
+import { Text, Stack, Flex, Divider } from '@mantine/core';
 import LocalIcon from '../../shared/LocalIcon';
 import { Tooltip } from '../../shared/Tooltip';
 import { TooltipTip } from '../../../types/tips';
@@ -53,7 +53,7 @@ const renderTooltipTitle = (
           <Text fw={400} size="sm">
             {title}
           </Text>
-          <LocalIcon icon="gpp-maybe-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />
+          <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />
         </Flex>
       </Tooltip>
     );

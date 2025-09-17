@@ -11,13 +11,15 @@
 
 import React from 'react';
 import { describe, test, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useConvertOperation } from '../../hooks/tools/convert/useConvertOperation';
 import { ConvertParameters } from '../../hooks/tools/convert/useConvertParameters';
 import { FileContextProvider } from '../../contexts/FileContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n/config';
 import axios from 'axios';
+import { createTestStirlingFile } from '../utils/testFileHelpers';
+import { StirlingFile } from '../../types/fileContext';
 
 // Mock axios
 vi.mock('axios');
@@ -51,13 +53,9 @@ vi.mock('../../services/thumbnailGenerationService', () => ({
 }));
 
 // Create realistic test files
-const createTestFile = (name: string, content: string, type: string): File => {
-  return new File([content], name, { type });
-};
-
-const createPDFFile = (): File => {
+const createPDFFile = (): StirlingFile => {
   const pdfContent = '%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\ntrailer\n<<\n/Size 2\n/Root 1 0 R\n>>\nstartxref\n0\n%%EOF';
-  return createTestFile('test.pdf', pdfContent, 'application/pdf');
+  return createTestStirlingFile('test.pdf', pdfContent, 'application/pdf');
 };
 
 // Test wrapper component
@@ -143,7 +141,7 @@ describe('Convert Tool Integration Tests', () => {
 
       // Verify hook state updates
       expect(result.current.downloadUrl).toBeTruthy();
-      expect(result.current.downloadFilename).toBe('test_converted.png');
+      expect(result.current.downloadFilename).toBe('test.png');
       expect(result.current.isLoading).toBe(false);
       expect(result.current.errorMessage).toBe(null);
     });
@@ -162,7 +160,7 @@ describe('Convert Tool Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const testFile = createTestFile('invalid.txt', 'not a pdf', 'text/plain');
+      const testFile = createTestStirlingFile('invalid.txt', 'not a pdf', 'text/plain');
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'png',
@@ -365,7 +363,7 @@ describe('Convert Tool Integration Tests', () => {
 
       // Verify hook state updates correctly
       expect(result.current.downloadUrl).toBeTruthy();
-      expect(result.current.downloadFilename).toBe('test_converted.csv');
+      expect(result.current.downloadFilename).toBe('test.csv');
       expect(result.current.isLoading).toBe(false);
       expect(result.current.errorMessage).toBe(null);
     });
@@ -426,7 +424,7 @@ describe('Convert Tool Integration Tests', () => {
       });
       const files = [
         createPDFFile(),
-        createTestFile('test2.pdf', '%PDF-1.4...', 'application/pdf')
+        createTestStirlingFile('test2.pdf', '%PDF-1.4...', 'application/pdf')
       ]
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
@@ -527,7 +525,7 @@ describe('Convert Tool Integration Tests', () => {
         wrapper: TestWrapper
       });
 
-      const corruptedFile = createTestFile('corrupted.pdf', 'not-a-pdf', 'application/pdf');
+      const corruptedFile = createTestStirlingFile('corrupted.pdf', 'not-a-pdf', 'application/pdf');
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'png',

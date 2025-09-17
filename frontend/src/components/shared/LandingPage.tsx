@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Text, Button, Checkbox, Group, useMantineColorScheme } from '@mantine/core';
+import { Container, Button, Group, useMantineColorScheme } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import LocalIcon from './LocalIcon';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,7 @@ import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 
 const LandingPage = () => {
-  const { addMultipleFiles } = useFileHandler();
+  const { addFiles } = useFileHandler();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { colorScheme } = useMantineColorScheme();
   const { t } = useTranslation();
@@ -15,7 +15,7 @@ const LandingPage = () => {
   const [isUploadHover, setIsUploadHover] = React.useState(false);
 
   const handleFileDrop = async (files: File[]) => {
-    await addMultipleFiles(files);
+    await addFiles(files);
   };
 
   const handleOpenFilesModal = () => {
@@ -29,7 +29,7 @@ const LandingPage = () => {
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
-      await addMultipleFiles(files);
+      await addFiles(files);
     }
     // Reset the input so the same file can be selected again
     event.target.value = '';

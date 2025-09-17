@@ -4,7 +4,7 @@ import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RemoveCertificateSignParameters, defaultParameters } from './useRemoveCertificateSignParameters';
 
 // Static function that can be used by both the hook and automation executor
-export const buildRemoveCertificateSignFormData = (parameters: RemoveCertificateSignParameters, file: File): FormData => {
+export const buildRemoveCertificateSignFormData = (_parameters: RemoveCertificateSignParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   return formData;
@@ -16,7 +16,6 @@ export const removeCertificateSignOperationConfig = {
   buildFormData: buildRemoveCertificateSignFormData,
   operationType: 'remove-certificate-sign',
   endpoint: '/api/v1/security/remove-cert-sign',
-  filePrefix: 'unsigned_', // Will be overridden in hook with translation
   defaultParameters,
 } as const;
 
@@ -25,7 +24,6 @@ export const useRemoveCertificateSignOperation = () => {
 
   return useToolOperation<RemoveCertificateSignParameters>({
     ...removeCertificateSignOperationConfig,
-    filePrefix: t('removeCertSign.filenamePrefix', 'unsigned') + '_',
     getErrorMessage: createStandardErrorHandler(t('removeCertSign.error.failed', 'An error occurred while removing certificate signatures.'))
   });
 };

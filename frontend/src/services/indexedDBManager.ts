@@ -73,7 +73,7 @@ class IndexedDBManager {
       request.onsuccess = () => {
         const db = request.result;
         console.log(`Successfully opened ${config.name}`);
-        
+
         // Set up close handler to clean up our references
         db.onclose = () => {
           console.log(`Database ${config.name} closed`);
@@ -87,45 +87,133 @@ class IndexedDBManager {
       request.onupgradeneeded = (event) => {
         const db = request.result;
         const oldVersion = event.oldVersion;
-        
+        const transaction = request.transaction;
+
         console.log(`Upgrading ${config.name} from v${oldVersion} to v${config.version}`);
 
         // Create or update object stores
         config.stores.forEach(storeConfig => {
-          let store: IDBObjectStore;
+          let store: IDBObjectStore | undefined;
 
           if (db.objectStoreNames.contains(storeConfig.name)) {
-            // Store exists - for now, just continue (could add migration logic here)
+            // Store exists - get reference for migration
             console.log(`Object store '${storeConfig.name}' already exists`);
-            return;
+            store = transaction?.objectStore(storeConfig.name);
+
+            // Add new indexes if they don't exist
+            if (storeConfig.indexes && store) {
+              storeConfig.indexes.forEach(indexConfig => {
+                if (!store?.indexNames.contains(indexConfig.name)) {
+                  store?.createIndex(
+                    indexConfig.name,
+                    indexConfig.keyPath,
+                    { unique: indexConfig.unique }
+                  );
+                  console.log(`Created index '${indexConfig.name}' on '${storeConfig.name}'`);
+                }
+              });
+            }
+          } else {
+            // Create new object store
+            const options: IDBObjectStoreParameters = {};
+            if (storeConfig.keyPath) {
+              options.keyPath = storeConfig.keyPath;
+            }
+            if (storeConfig.autoIncrement) {
+              options.autoIncrement = storeConfig.autoIncrement;
+            }
+
+            store = db.createObjectStore(storeConfig.name, options);
+            console.log(`Created object store '${storeConfig.name}'`);
+
+            // Create indexes
+            if (storeConfig.indexes) {
+              storeConfig.indexes.forEach(indexConfig => {
+                store?.createIndex(
+                  indexConfig.name,
+                  indexConfig.keyPath,
+                  { unique: indexConfig.unique }
+                );
+                console.log(`Created index '${indexConfig.name}' on '${storeConfig.name}'`);
+              });
+            }
           }
 
-          // Create new object store
-          const options: IDBObjectStoreParameters = {};
-          if (storeConfig.keyPath) {
-            options.keyPath = storeConfig.keyPath;
-          }
-          if (storeConfig.autoIncrement) {
-            options.autoIncrement = storeConfig.autoIncrement;
-          }
-
-          store = db.createObjectStore(storeConfig.name, options);
-          console.log(`Created object store '${storeConfig.name}'`);
-
-          // Create indexes
-          if (storeConfig.indexes) {
-            storeConfig.indexes.forEach(indexConfig => {
-              store.createIndex(
-                indexConfig.name,
-                indexConfig.keyPath,
-                { unique: indexConfig.unique }
-              );
-              console.log(`Created index '${indexConfig.name}' on '${storeConfig.name}'`);
-            });
+          // Perform data migration for files database
+          if (config.name === 'stirling-pdf-files' && storeConfig.name === 'files' && store) {
+            this.migrateFileHistoryFields(store, oldVersion);
           }
         });
       };
     });
+  }
+
+  /**
+   * Migrate existing file records to include new file history fields
+   */
+  private migrateFileHistoryFields(store: IDBObjectStore, oldVersion: number): void {
+    // Only migrate if upgrading from a version before file history was added (version < 3)
+    if (oldVersion >= 3) {
+      return;
+    }
+
+    console.log('Starting file history migration for existing records...');
+
+    const cursor = store.openCursor();
+    let migratedCount = 0;
+
+    cursor.onsuccess = (event) => {
+      const cursor = (event.target as IDBRequest).result;
+      if (cursor) {
+        const record = cursor.value;
+        let needsUpdate = false;
+
+        // Add missing file history fields with sensible defaults
+        if (record.isLeaf === undefined) {
+          record.isLeaf = true; // Existing files are unprocessed, should appear in recent files
+          needsUpdate = true;
+        }
+
+        if (record.versionNumber === undefined) {
+          record.versionNumber = 1; // Existing files are first version
+          needsUpdate = true;
+        }
+
+        if (record.originalFileId === undefined) {
+          record.originalFileId = record.id; // Existing files are their own root
+          needsUpdate = true;
+        }
+
+        if (record.parentFileId === undefined) {
+          record.parentFileId = undefined; // No parent for existing files
+          needsUpdate = true;
+        }
+
+        if (record.toolHistory === undefined) {
+          record.toolHistory = []; // No history for existing files
+          needsUpdate = true;
+        }
+
+        // Update the record if any fields were missing
+        if (needsUpdate) {
+          try {
+            cursor.update(record);
+            migratedCount++;
+          } catch (error) {
+            console.error('Failed to migrate record:', record.id, error);
+          }
+        }
+
+        cursor.continue();
+      } else {
+        // Migration complete
+        console.log(`File history migration completed. Migrated ${migratedCount} records.`);
+      }
+    };
+
+    cursor.onerror = (event) => {
+      console.error('File history migration failed:', (event.target as IDBRequest).error);
+    };
   }
 
   /**
@@ -168,7 +256,7 @@ class IndexedDBManager {
 
     return new Promise((resolve, reject) => {
       const deleteRequest = indexedDB.deleteDatabase(name);
-      
+
       deleteRequest.onerror = () => reject(deleteRequest.error);
       deleteRequest.onsuccess = () => {
         console.log(`Deleted database: ${name}`);
@@ -203,13 +291,16 @@ class IndexedDBManager {
 export const DATABASE_CONFIGS = {
   FILES: {
     name: 'stirling-pdf-files',
-    version: 2,
+    version: 3,
     stores: [{
       name: 'files',
       keyPath: 'id',
       indexes: [
         { name: 'name', keyPath: 'name', unique: false },
-        { name: 'lastModified', keyPath: 'lastModified', unique: false }
+        { name: 'lastModified', keyPath: 'lastModified', unique: false },
+        { name: 'originalFileId', keyPath: 'originalFileId', unique: false },
+        { name: 'parentFileId', keyPath: 'parentFileId', unique: false },
+        { name: 'versionNumber', keyPath: 'versionNumber', unique: false }
       ]
     }]
   } as DatabaseConfig,
@@ -221,7 +312,8 @@ export const DATABASE_CONFIGS = {
       name: 'drafts',
       keyPath: 'id'
     }]
-  } as DatabaseConfig
+  } as DatabaseConfig,
+
 } as const;
 
 export const indexedDBManager = IndexedDBManager.getInstance();

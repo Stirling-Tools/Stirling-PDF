@@ -11,12 +11,15 @@ import ChangePermissions from "../tools/ChangePermissions";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
+import Merge from '../tools/Merge';
 import Repair from "../tools/Repair";
+import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
 import ManageSignatures from "../tools/ManageSignatures";
 import BookletImposition from "../tools/BookletImposition";
+import Flatten from "../tools/Flatten";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -32,6 +35,10 @@ import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCerti
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
 import { manageSignaturesOperationConfig } from "../hooks/tools/manageSignatures/useManageSignaturesOperation";
 import { bookletImpositionOperationConfig } from "../hooks/tools/bookletImposition/useBookletImpositionOperation";
+import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
+import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
+import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
+import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -45,7 +52,14 @@ import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
 import CertificateTypeSettings from "../components/tools/manageSignatures/CertificateTypeSettings";
 import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
+import FlattenSettings from "../components/tools/flatten/FlattenSettings";
+import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
+import Redact from "../tools/Redact";
+import AdjustPageScale from "../tools/AdjustPageScale";
 import { ToolId } from "../types/toolId";
+import MergeSettings from '../components/tools/merge/MergeSettings';
+import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
+import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -208,10 +222,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       flatten: {
         icon: <LocalIcon icon="layers-clear-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.flatten.title", "Flatten"),
-        component: null,
+        component: Flatten,
         description: t("home.flatten.desc", "Remove all interactive elements and forms from a PDF"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
+        maxFiles: -1,
+        endpoints: ["flatten"],
+        operationConfig: flattenOperationConfig,
+        settingsComponent: FlattenSettings,
       },
       "unlock-pdf-forms": {
         icon: <LocalIcon icon="preview-off-rounded" width="1.5rem" height="1.5rem" />,
@@ -332,11 +350,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       "adjust-page-size-scale": {
         icon: <LocalIcon icon="crop-free-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.scalePages.title", "Adjust page size/scale"),
-        component: null,
-
+        component: AdjustPageScale,
         description: t("home.scalePages.desc", "Change the size/scale of a page and/or its contents."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["scale-pages"],
+        operationConfig: adjustPageScaleOperationConfig,
+        settingsComponent: AdjustPageScaleSettings,
       },
       addPageNumbers: {
         icon: <LocalIcon icon="123-rounded" width="1.5rem" height="1.5rem" />,
@@ -375,6 +396,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
+        urlPath: '/pdf-to-single-page',
         endpoints: ["pdf-to-single-page"],
         operationConfig: singleLargePageOperationConfig,
       },
@@ -484,7 +506,10 @@ export function useFlatToolRegistry(): ToolRegistry {
       "auto-rename-pdf-file": {
         icon: <LocalIcon icon="match-word-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.auto-rename.title", "Auto Rename PDF File"),
-        component: null,
+        component: AutoRename,
+        maxFiles: -1,
+        endpoints: ["remove-certificate-sign"],
+        operationConfig: autoRenameOperationConfig,
         description: t("home.auto-rename.desc", "Automatically rename PDF files based on their content"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION,
@@ -676,12 +701,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       mergePdfs: {
         icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.merge.title", "Merge"),
-        component: null,
-
+        component: Merge,
         description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        endpoints: ["merge-pdfs"],
+        operationConfig: mergeOperationConfig,
+        settingsComponent: MergeSettings
       },
       "multi-tool": {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
@@ -701,16 +728,21 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        urlPath: '/ocr-pdf',
         operationConfig: ocrOperationConfig,
         settingsComponent: OCRSettings,
       },
       redact: {
         icon: <LocalIcon icon="visibility-off-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.redact.title", "Redact"),
-        component: null,
+        component: Redact,
         description: t("home.redact.desc", "Permanently remove sensitive information from PDF documents"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: -1,
+        endpoints: ["auto-redact"],
+        operationConfig: redactOperationConfig,
+        settingsComponent: RedactSingleStepSettings,
       },
     };
 

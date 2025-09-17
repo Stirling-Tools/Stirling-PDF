@@ -4,13 +4,14 @@ import { useEndpointEnabled } from '../../useEndpointConfig';
 import { BaseToolProps } from '../../../types/tool';
 import { ToolOperationHook } from './useToolOperation';
 import { BaseParametersHook } from './useBaseParameters';
+import { StirlingFile } from '../../../types/fileContext';
 
-interface BaseToolReturn<TParams> {
+interface BaseToolReturn<TParams, TParamsHook extends BaseParametersHook<TParams>> {
   // File management
-  selectedFiles: File[];
+  selectedFiles: StirlingFile[];
 
   // Tool-specific hooks
-  params: BaseParametersHook<TParams>;
+  params: TParamsHook;
   operation: ToolOperationHook<TParams>;
 
   // Endpoint validation
@@ -32,12 +33,14 @@ interface BaseToolReturn<TParams> {
 /**
  * Base tool hook for tool components. Manages standard behaviour for tools.
  */
-export function useBaseTool<TParams>(
+export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TParams>>(
   toolName: string,
-  useParams: () => BaseParametersHook<TParams>,
+  useParams: () => TParamsHook,
   useOperation: () => ToolOperationHook<TParams>,
   props: BaseToolProps,
-): BaseToolReturn<TParams> {
+  options?: { minFiles?: number }
+): BaseToolReturn<TParams, TParamsHook> {
+  const minFiles = options?.minFiles ?? 1;
   const { onPreviewFile, onComplete, onError } = props;
 
   // File selection
@@ -95,7 +98,7 @@ export function useBaseTool<TParams>(
   }, [operation, onPreviewFile]);
 
   // Standard computed state
-  const hasFiles = selectedFiles.length > 0;
+  const hasFiles = selectedFiles.length >= minFiles;
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
 

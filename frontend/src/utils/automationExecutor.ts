@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { ToolRegistry } from '../data/toolsTaxonomy';
-import { AutomationConfig, AutomationExecutionCallbacks } from '../types/automation';
 import { AUTOMATION_CONSTANTS } from '../constants/automation';
 import { AutomationFileProcessor } from './automationFileProcessor';
-import { ResourceManager } from './resourceManager';
 import { ToolType } from '../hooks/tools/shared/useToolOperation';
+import { processResponse } from './toolResponseProcessor';
 
 
 /**
@@ -69,12 +68,17 @@ export const executeToolOperationWithPrefix = async (
       let result;
       if (response.data.type === 'application/pdf' ||
           (response.headers && response.headers['content-type'] === 'application/pdf')) {
-        // Single PDF response (e.g. split with merge option) - use original filename
-        const originalFileName = files[0]?.name || 'document.pdf';
-        const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
+        // Single PDF response (e.g. split with merge option) - use processResponse to respect preserveBackendFilename
+        const processedFiles = await processResponse(
+          response.data,
+          files,
+          filePrefix,
+          undefined,
+          config.preserveBackendFilename ? response.headers : undefined
+        );
         result = {
           success: true,
-          files: [singleFile],
+          files: processedFiles,
           errors: []
         };
       } else {
@@ -86,7 +90,8 @@ export const executeToolOperationWithPrefix = async (
         console.warn(`⚠️ File processing warnings:`, result.errors);
       }
       // Apply prefix to files, replacing any existing prefix
-      const processedFiles = filePrefix
+      // Skip prefixing if preserveBackendFilename is true and backend provided a filename
+      const processedFiles = filePrefix && !config.preserveBackendFilename
         ? result.files.map(file => {
             const nameWithoutPrefix = file.name.replace(/^[^_]*_/, '');
             return new File([file], `${filePrefix}${nameWithoutPrefix}`, { type: file.type });
@@ -118,15 +123,16 @@ export const executeToolOperationWithPrefix = async (
 
         console.log(`📥 Response ${i+1} status: ${response.status}, size: ${response.data.size} bytes`);
 
-        // Create result file with automation prefix
-
-        const resultFile = ResourceManager.createResultFile(
+        // Create result file using processResponse to respect preserveBackendFilename setting
+        const processedFiles = await processResponse(
           response.data,
-          file.name,
-          filePrefix
+          [file],
+          filePrefix,
+          undefined,
+          config.preserveBackendFilename ? response.headers : undefined
         );
-        resultFiles.push(resultFile);
-        console.log(`✅ Created result file: ${resultFile.name}`);
+        resultFiles.push(...processedFiles);
+        console.log(`✅ Created result file(s): ${processedFiles.map(f => f.name).join(', ')}`);
       }
 
       console.log(`🎉 Single-file processing complete: ${resultFiles.length} files`);

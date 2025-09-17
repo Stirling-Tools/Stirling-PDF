@@ -6,8 +6,9 @@ import type { ProcessingProgress } from './useToolState';
 export interface ApiCallsConfig<TParams = void> {
   endpoint: string | ((params: TParams) => string);
   buildFormData: (params: TParams, file: File) => FormData;
-  filePrefix: string;
+  filePrefix?: string;
   responseHandler?: ResponseHandler;
+  preserveBackendFilename?: boolean;
 }
 
 export const useToolApiCalls = <TParams = void>() => {
@@ -46,7 +47,8 @@ export const useToolApiCalls = <TParams = void>() => {
           response.data,
           [file],
           config.filePrefix,
-          config.responseHandler
+          config.responseHandler,
+          config.preserveBackendFilename ? response.headers : undefined
         );
         processedFiles.push(...responseFiles);
 

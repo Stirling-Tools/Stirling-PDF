@@ -19,17 +19,17 @@ export function useEndpointEnabled(endpoint: string): {
       setLoading(false);
       return;
     }
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch(`/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to check endpoint: ${response.status} ${response.statusText}`);
       }
-      
+
       const isEnabled: boolean = await response.json();
       setEnabled(isEnabled);
     } catch (err) {
@@ -72,27 +72,27 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       setLoading(false);
       return;
     }
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       // Use batch API for efficiency
       const endpointsParam = endpoints.join(',');
-      
+
       const response = await fetch(`/api/v1/config/endpoints-enabled?endpoints=${encodeURIComponent(endpointsParam)}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to check endpoints: ${response.status} ${response.statusText}`);
       }
-      
+
       const statusMap: Record<string, boolean> = await response.json();
       setEndpointStatus(statusMap);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
       console.error('Failed to check multiple endpoints:', err);
-      
+
       // Fallback: assume all endpoints are disabled on error
       const fallbackStatus = endpoints.reduce((acc, endpoint) => {
         acc[endpoint] = false;
@@ -105,7 +105,6 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   };
 
   useEffect(() => {
-    const endpointsKey = endpoints.join(',');
     fetchAllEndpointStatuses();
   }, [endpoints.join(',')]); // Re-run when endpoints array changes
 

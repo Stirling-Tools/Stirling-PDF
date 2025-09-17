@@ -1,6 +1,5 @@
-import React from "react";
-import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import ButtonSelector from "../../shared/ButtonSelector";
 
 interface WatermarkTypeSettingsProps {
   watermarkType?: 'text' | 'image';
@@ -12,32 +11,21 @@ const WatermarkTypeSettings = ({ watermarkType, onWatermarkTypeChange, disabled 
   const { t } = useTranslation();
 
   return (
-    <Stack gap="sm">
-      <div style={{ display: 'flex', gap: '4px' }}>
-        <Button
-          variant={watermarkType === 'text' ? 'filled' : 'outline'}
-          color={watermarkType === 'text' ? 'blue' : 'var(--text-muted)'}
-          onClick={() => onWatermarkTypeChange('text')}
-          disabled={disabled}
-          style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-        >
-          <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-            {t('watermark.watermarkType.text', 'Text')}
-          </div>
-        </Button>
-        <Button
-          variant={watermarkType === 'image' ? 'filled' : 'outline'}
-          color={watermarkType === 'image' ? 'blue' : 'var(--text-muted)'}
-          onClick={() => onWatermarkTypeChange('image')}
-          disabled={disabled}
-          style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-        >
-          <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-            {t('watermark.watermarkType.image', 'Image')}
-          </div>
-        </Button>
-      </div>
-    </Stack>
+    <ButtonSelector
+      value={watermarkType}
+      onChange={onWatermarkTypeChange}
+      options={[
+        {
+          value: 'text',
+          label: t('watermark.watermarkType.text', 'Text'),
+        },
+        {
+          value: 'image',
+          label: t('watermark.watermarkType.image', 'Image'),
+        },
+      ]}
+      disabled={disabled}
+    />
   );
 };
 

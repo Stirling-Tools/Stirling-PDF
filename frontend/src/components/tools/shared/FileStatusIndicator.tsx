@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Text, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import FolderIcon from '@mui/icons-material/Folder';
@@ -6,18 +6,20 @@ import UploadIcon from '@mui/icons-material/Upload';
 import { useFilesModalContext } from "../../../contexts/FilesModalContext";
 import { useAllFiles } from "../../../contexts/FileContext";
 import { useFileManager } from "../../../hooks/useFileManager";
+import { StirlingFile } from "../../../types/fileContext";
 
 export interface FileStatusIndicatorProps {
-  selectedFiles?: File[];
-  placeholder?: string;
+  selectedFiles?: StirlingFile[];
+  minFiles?: number;
 }
 
 const FileStatusIndicator = ({
   selectedFiles = [],
+  minFiles = 1,
 }: FileStatusIndicatorProps) => {
   const { t } = useTranslation();
-  const { openFilesModal, onFilesSelect } = useFilesModalContext();
-  const { files: workbenchFiles } = useAllFiles();
+  const { openFilesModal, onFileUpload } = useFilesModalContext();
+  const { files: stirlingFileStubs } = useAllFiles();
   const { loadRecentFiles } = useFileManager();
   const [hasRecentFiles, setHasRecentFiles] = useState<boolean | null>(null);
 
@@ -27,7 +29,7 @@ const FileStatusIndicator = ({
       try {
         const recentFiles = await loadRecentFiles();
         setHasRecentFiles(recentFiles.length > 0);
-      } catch (error) {
+      } catch {
         setHasRecentFiles(false);
       }
     };
@@ -43,7 +45,7 @@ const FileStatusIndicator = ({
     input.onchange = (event) => {
       const files = Array.from((event.target as HTMLInputElement).files || []);
       if (files.length > 0) {
-        onFilesSelect(files);
+        onFileUpload(files);
       }
     };
     input.click();
@@ -54,8 +56,16 @@ const FileStatusIndicator = ({
     return null;
   }
 
+  const getPlaceholder = () => {
+    if (minFiles === undefined || minFiles === 1) {
+      return t("files.selectFromWorkbench", "Select files from the workbench or ");
+    } else {
+      return t("files.selectMultipleFromWorkbench", "Select at least {{count}} files from the workbench or ", { count: minFiles });
+    }
+  };
+
   // Check if there are no files in the workbench
-  if (workbenchFiles.length === 0) {
+  if (stirlingFileStubs.length === 0) {
     // If no recent files, show upload button
     if (!hasRecentFiles) {
       return (
@@ -88,12 +98,12 @@ const FileStatusIndicator = ({
   }
 
   // Show selection status when there are files in workbench
-  if (selectedFiles.length === 0) {
+  if (selectedFiles.length < minFiles) {
     // If no recent files, show upload option
     if (!hasRecentFiles) {
       return (
         <Text size="sm" c="dimmed">
-          {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
+          {getPlaceholder() + " "}
           <Anchor
             size="sm"
             onClick={handleNativeUpload}
@@ -108,7 +118,7 @@ const FileStatusIndicator = ({
       // If there are recent files, show add files option
       return (
         <Text size="sm" c="dimmed">
-          {t("files.selectFromWorkbench", "Select files from the workbench or ") + " "}
+          {getPlaceholder() + " "}
           <Anchor
             size="sm"
             onClick={() => openFilesModal()}
@@ -124,7 +134,7 @@ const FileStatusIndicator = ({
 
   return (
    <Text size="sm" c="dimmed" style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
-        ✓ {selectedFiles.length === 1 ? t("fileSelected", "Selected: {{filename}}", { filename: selectedFiles[0]?.name }) : t("filesSelected", "{{count}} files selected", { count: selectedFiles.length })}
+      ✓ {selectedFiles.length === 1 ? t("fileSelected", "Selected: {{filename}}", { filename: selectedFiles[0]?.name }) : t("filesSelected", "{{count}} files selected", { count: selectedFiles.length })}
     </Text>
   );
 };

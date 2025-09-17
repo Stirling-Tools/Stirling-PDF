@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Modal,
@@ -32,7 +32,6 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
   const { t } = useTranslation();
 
   const [parameters, setParameters] = useState<any>({});
-  const [isValid, setIsValid] = useState(true);
 
   // Get tool info from registry
   const toolInfo = toolRegistry[tool.operation as keyof ToolRegistry];
@@ -87,9 +86,7 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
   };
 
   const handleSave = () => {
-    if (isValid) {
-      onSave(parameters);
-    }
+    onSave(parameters);
   };
 
   return (
@@ -127,7 +124,6 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
           <Button
             leftSection={<CheckIcon />}
             onClick={handleSave}
-            disabled={!isValid}
           >
             {t('automate.config.save', 'Save Configuration')}
           </Button>

@@ -22,13 +22,13 @@ import {
   OUTPUT_OPTIONS,
   FIT_OPTIONS
 } from "../../../constants/convertConstants";
-import { FileId } from "../../../types/file";
+import { StirlingFile } from "../../../types/fileContext";
 
 interface ConvertSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: (key: keyof ConvertParameters, value: any) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
   getAvailableToExtensions: (fromExtension: string) => Array<{value: string, label: string, group: string}>;
-  selectedFiles: File[];
+  selectedFiles: StirlingFile[];
   disabled?: boolean;
 }
 
@@ -129,7 +129,7 @@ const ConvertSettings = ({
   };
 
   const filterFilesByExtension = (extension: string) => {
-    const files = activeFiles.map(fileId => selectors.getFile(fileId)).filter(Boolean) as File[];
+    const files = activeFiles.map(fileId => selectors.getFile(fileId)).filter(Boolean) as StirlingFile[];
     return files.filter(file => {
       const fileExtension = detectFileExtension(file.name);
 
@@ -143,21 +143,8 @@ const ConvertSettings = ({
     });
   };
 
-  const updateFileSelection = (files: File[]) => {
-    // Map File objects to their actual IDs in FileContext
-    const fileIds = files.map(file => {
-      // Find the file ID by matching file properties
-      const fileRecord = state.files.ids
-        .map(id => selectors.getFileRecord(id))
-        .find(record =>
-          record &&
-          record.name === file.name &&
-          record.size === file.size &&
-          record.lastModified === file.lastModified
-        );
-      return fileRecord?.id;
-    }).filter((id): id is FileId => id !== undefined); // Type guard to ensure only strings
-
+  const updateFileSelection = (files: StirlingFile[]) => {
+    const fileIds = files.map(file => file.fileId);
     setSelectedFiles(fileIds);
   };
 

@@ -1,73 +1,40 @@
 import { useState, useCallback } from 'react';
 import { useIndexedDB } from '../contexts/IndexedDBContext';
-import { FileMetadata } from '../types/file';
-import { generateThumbnailForFile } from '../utils/thumbnailUtils';
-import { FileId } from '../types/file';
+import { fileStorage } from '../services/fileStorage';
+import { StirlingFileStub, StirlingFile } from '../types/fileContext';
+import { FileId } from '../types/fileContext';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
   const indexedDB = useIndexedDB();
 
-  const convertToFile = useCallback(async (fileMetadata: FileMetadata): Promise<File> => {
+  const convertToFile = useCallback(async (fileStub: StirlingFileStub): Promise<File> => {
     if (!indexedDB) {
       throw new Error('IndexedDB context not available');
     }
 
-    // Handle drafts differently from regular files
-    if (fileMetadata.isDraft) {
-      // Load draft from the drafts database
-      try {
-        const { indexedDBManager, DATABASE_CONFIGS } = await import('../services/indexedDBManager');
-        const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.DRAFTS);
-
-        return new Promise((resolve, reject) => {
-          const transaction = db.transaction(['drafts'], 'readonly');
-          const store = transaction.objectStore('drafts');
-          const request = store.get(fileMetadata.id);
-
-          request.onsuccess = () => {
-            const draft = request.result;
-            if (draft && draft.pdfData) {
-              const file = new File([draft.pdfData], fileMetadata.name, {
-                type: 'application/pdf',
-                lastModified: fileMetadata.lastModified
-              });
-              resolve(file);
-            } else {
-              reject(new Error('Draft data not found'));
-            }
-          };
-
-          request.onerror = () => reject(request.error);
-        });
-      } catch (error) {
-        throw new Error(`Failed to load draft: ${fileMetadata.name} (${error})`);
-      }
-    }
-
     // Regular file loading
-    if (fileMetadata.id) {
-      const file = await indexedDB.loadFile(fileMetadata.id);
+    if (fileStub.id) {
+      const file = await indexedDB.loadFile(fileStub.id);
       if (file) {
         return file;
       }
     }
-    throw new Error(`File not found in storage: ${fileMetadata.name} (ID: ${fileMetadata.id})`);
+    throw new Error(`File not found in storage: ${fileStub.name} (ID: ${fileStub.id})`);
   }, [indexedDB]);
 
-  const loadRecentFiles = useCallback(async (): Promise<FileMetadata[]> => {
+  const loadRecentFiles = useCallback(async (): Promise<StirlingFileStub[]> => {
     setLoading(true);
     try {
       if (!indexedDB) {
         return [];
       }
 
-      // Load regular files metadata only
-      const storedFileMetadata = await indexedDB.loadAllMetadata();
+      // Load only leaf files metadata (processed files that haven't been used as input for other tools)
+      const stirlingFileStubs = await fileStorage.getLeafStirlingFileStubs();
 
       // For now, only regular files - drafts will be handled separately in the future
-      const allFiles = storedFileMetadata;
-      const sortedFiles = allFiles.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+      const sortedFiles = stirlingFileStubs.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
 
       return sortedFiles;
     } catch (error) {
@@ -78,7 +45,7 @@ export const useFileManager = () => {
     }
   }, [indexedDB]);
 
-  const handleRemoveFile = useCallback(async (index: number, files: FileMetadata[], setFiles: (files: FileMetadata[]) => void) => {
+  const handleRemoveFile = useCallback(async (index: number, files: StirlingFileStub[], setFiles: (files: StirlingFileStub[]) => void) => {
     const file = files[index];
     if (!file.id) {
       throw new Error('File ID is required for removal');
@@ -103,10 +70,10 @@ export const useFileManager = () => {
       // Store file with provided UUID from FileContext (thumbnail generated internally)
       const metadata = await indexedDB.saveFile(file, fileId);
 
-      // Convert file to ArrayBuffer for StoredFile interface compatibility
+      // Convert file to ArrayBuffer for storage compatibility
       const arrayBuffer = await file.arrayBuffer();
 
-      // Return StoredFile format for compatibility with old API
+      // This method is deprecated - use FileStorage directly instead
       return {
         id: fileId,
         name: file.name,
@@ -114,7 +81,7 @@ export const useFileManager = () => {
         size: file.size,
         lastModified: file.lastModified,
         data: arrayBuffer,
-        thumbnail: metadata.thumbnail
+        thumbnail: metadata.thumbnailUrl
       };
     } catch (error) {
       console.error('Failed to store file:', error);
@@ -138,23 +105,24 @@ export const useFileManager = () => {
       setSelectedFiles([]);
     };
 
-    const selectMultipleFiles = async (files: FileMetadata[], onStoredFilesSelect: (filesWithMetadata: Array<{ file: File; originalId: FileId; metadata: FileMetadata }>) => void) => {
+    const selectMultipleFiles = async (files: StirlingFileStub[], onStirlingFilesSelect: (stirlingFiles: StirlingFile[]) => void) => {
       if (selectedFiles.length === 0) return;
 
       try {
-        // Filter by UUID and convert to File objects
+        // Filter by UUID and load full StirlingFile objects directly
         const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id));
 
-        // Use stored files flow that preserves IDs
-        const filesWithMetadata = await Promise.all(
-          selectedFileObjects.map(async (metadata) => ({
-            file: await convertToFile(metadata),
-            originalId: metadata.id,
-            metadata
-          }))
+        const stirlingFiles = await Promise.all(
+          selectedFileObjects.map(async (stub) => {
+            const stirlingFile = await fileStorage.getStirlingFile(stub.id);
+            if (!stirlingFile) {
+              throw new Error(`File not found in storage: ${stub.name}`);
+            }
+            return stirlingFile;
+          })
         );
-        onStoredFilesSelect(filesWithMetadata);
 
+        onStirlingFilesSelect(stirlingFiles);
         clearSelection();
       } catch (error) {
         console.error('Failed to load selected files:', error);

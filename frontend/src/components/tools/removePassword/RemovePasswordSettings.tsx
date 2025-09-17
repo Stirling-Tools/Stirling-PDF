@@ -1,10 +1,10 @@
-import { Stack, Text, PasswordInput } from "@mantine/core";
+import { Stack, PasswordInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemovePasswordParameters } from "../../../hooks/tools/removePassword/useRemovePasswordParameters";
 
 interface RemovePasswordSettingsProps {
   parameters: RemovePasswordParameters;
-  onParameterChange: (key: keyof RemovePasswordParameters, value: string) => void;
+  onParameterChange: <K extends keyof RemovePasswordParameters>(key: K, value: RemovePasswordParameters[K]) => void;
   disabled?: boolean;
 }
 

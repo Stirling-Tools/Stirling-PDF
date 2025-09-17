@@ -1,11 +1,14 @@
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
+import CardSelector from "../components/shared/CardSelector";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
 import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
+import { useSplitMethodTips } from "../components/tooltips/useSplitMethodTips";
+import { useSplitSettingsTips } from "../components/tooltips/useSplitSettingsTips";
 import { BaseToolProps, ToolComponent } from "../types/tool";
+import { type SplitMethod, METHOD_OPTIONS, type MethodOption } from "../constants/splitConstants";
 
 const Split = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -17,6 +20,27 @@ const Split = (props: BaseToolProps) => {
     props
   );
 
+  const methodTips = useSplitMethodTips();
+  const settingsTips = useSplitSettingsTips(base.params.parameters.method);
+
+  // Get tooltip content for a specific method
+  const getMethodTooltip = (option: MethodOption) => {
+    const tooltipContent = useSplitSettingsTips(option.value);
+    return tooltipContent?.tips || [];
+  };
+
+  // Get the method name for the settings step title
+  const getSettingsTitle = () => {
+    if (!base.params.parameters.method) return t("split.steps.settings", "Settings");
+
+    const methodOption = METHOD_OPTIONS.find(option => option.value === base.params.parameters.method);
+    if (!methodOption) return t("split.steps.settings", "Settings");
+
+    const prefix = t(methodOption.prefixKey, "Split by");
+    const name = t(methodOption.nameKey, "Method Name");
+    return `${prefix} ${name}`;
+  };
+
   return createToolFlow({
     files: {
       selectedFiles: base.selectedFiles,
@@ -24,9 +48,25 @@ const Split = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: "Settings",
-        isCollapsed: base.settingsCollapsed,
+        title: t("split.steps.chooseMethod", "Choose Method"),
+        isCollapsed: !!base.params.parameters.method, // Collapse when method is selected
+        onCollapsedClick: () => base.params.updateParameter('method', '')
+        ,
+        tooltip: methodTips,
+        content: (
+          <CardSelector<SplitMethod, MethodOption>
+            options={METHOD_OPTIONS}
+            onSelect={(method) => base.params.updateParameter('method', method)}
+            disabled={base.endpointLoading}
+            getTooltipContent={getMethodTooltip}
+          />
+        ),
+      },
+      {
+        title: getSettingsTitle(),
+        isCollapsed: !base.params.parameters.method, // Collapsed until method selected
         onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
+        tooltip: settingsTips || undefined,
         content: (
           <SplitSettings
             parameters={base.params.parameters}

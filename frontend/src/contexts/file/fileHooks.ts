@@ -9,7 +9,7 @@ import {
   FileContextStateValue,
   FileContextActionsValue
 } from './contexts';
-import { FileRecord } from '../../types/fileContext';
+import { StirlingFileStub, StirlingFile } from '../../types/fileContext';
 import { FileId } from '../../types/file';
 
 /**
@@ -38,13 +38,13 @@ export function useFileActions(): FileContextActionsValue {
 /**
  * Hook for current/primary file (first in list)
  */
-export function useCurrentFile(): { file?: File; record?: FileRecord } {
+export function useCurrentFile(): { file?: File; record?: StirlingFileStub } {
   const { state, selectors } = useFileState();
 
   const primaryFileId = state.files.ids[0];
   return useMemo(() => ({
     file: primaryFileId ? selectors.getFile(primaryFileId) : undefined,
-    record: primaryFileId ? selectors.getFileRecord(primaryFileId) : undefined
+    record: primaryFileId ? selectors.getStirlingFileStub(primaryFileId) : undefined
   }), [primaryFileId, selectors]);
 }
 
@@ -87,7 +87,7 @@ export function useFileManagement() {
     addFiles: actions.addFiles,
     removeFiles: actions.removeFiles,
     clearAllFiles: actions.clearAllFiles,
-    updateFileRecord: actions.updateFileRecord,
+    updateStirlingFileStub: actions.updateStirlingFileStub,
     reorderFiles: actions.reorderFiles
   }), [actions]);
 }
@@ -111,24 +111,24 @@ export function useFileUI() {
 /**
  * Hook for specific file by ID (optimized for individual file access)
  */
-export function useFileRecord(fileId: FileId): { file?: File; record?: FileRecord } {
+export function useStirlingFileStub(fileId: FileId): { file?: File; record?: StirlingFileStub } {
   const { selectors } = useFileState();
 
   return useMemo(() => ({
     file: selectors.getFile(fileId),
-    record: selectors.getFileRecord(fileId)
+    record: selectors.getStirlingFileStub(fileId)
   }), [fileId, selectors]);
 }
 
 /**
  * Hook for all files (use sparingly - causes re-renders on file list changes)
  */
-export function useAllFiles(): { files: File[]; records: FileRecord[]; fileIds: FileId[] } {
+export function useAllFiles(): { files: StirlingFile[]; records: StirlingFileStub[]; fileIds: FileId[] } {
   const { state, selectors } = useFileState();
 
   return useMemo(() => ({
     files: selectors.getFiles(),
-    records: selectors.getFileRecords(),
+    records: selectors.getStirlingFileStubs(),
     fileIds: state.files.ids
   }), [state.files.ids, selectors]);
 }
@@ -136,13 +136,13 @@ export function useAllFiles(): { files: File[]; records: FileRecord[]; fileIds: 
 /**
  * Hook for selected files (optimized for selection-based UI)
  */
-export function useSelectedFiles(): { files: File[]; records: FileRecord[]; fileIds: FileId[] } {
+export function useSelectedFiles(): { selectedFiles: StirlingFile[]; selectedRecords: StirlingFileStub[]; selectedFileIds: FileId[] } {
   const { state, selectors } = useFileState();
 
   return useMemo(() => ({
-    files: selectors.getSelectedFiles(),
-    records: selectors.getSelectedFileRecords(),
-    fileIds: state.ui.selectedFileIds
+    selectedFiles: selectors.getSelectedFiles(),
+    selectedRecords: selectors.getSelectedStirlingFileStubs(),
+    selectedFileIds: state.ui.selectedFileIds
   }), [state.ui.selectedFileIds, selectors]);
 }
 
@@ -166,10 +166,9 @@ export function useFileContext() {
     addFiles: actions.addFiles,
     consumeFiles: actions.consumeFiles,
     undoConsumeFiles: actions.undoConsumeFiles,
-    recordOperation: (fileId: FileId, operation: any) => {}, // Operation tracking not implemented
-    markOperationApplied: (fileId: FileId, operationId: string) => {}, // Operation tracking not implemented
-    markOperationFailed: (fileId: FileId, operationId: string, error: string) => {}, // Operation tracking not implemented
-
+    recordOperation: (_fileId: FileId, _operation: any) => {}, // Operation tracking not implemented
+    markOperationApplied: (_fileId: FileId, _operationId: string) => {}, // Operation tracking not implemented
+    markOperationFailed: (_fileId: FileId, _operationId: string, _error: string) => {}, // Operation tracking not implemented
     // File ID lookup
     findFileId: (file: File) => {
       return state.files.ids.find(id => {

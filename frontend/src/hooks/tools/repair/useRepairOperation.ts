@@ -4,7 +4,7 @@ import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RepairParameters, defaultParameters } from './useRepairParameters';
 
 // Static function that can be used by both the hook and automation executor
-export const buildRepairFormData = (parameters: RepairParameters, file: File): FormData => {
+export const buildRepairFormData = (_parameters: RepairParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   return formData;
@@ -16,7 +16,6 @@ export const repairOperationConfig = {
   buildFormData: buildRepairFormData,
   operationType: 'repair',
   endpoint: '/api/v1/misc/repair',
-  filePrefix: 'repaired_', // Will be overridden in hook with translation
   defaultParameters,
 } as const;
 
@@ -25,7 +24,6 @@ export const useRepairOperation = () => {
 
   return useToolOperation<RepairParameters>({
     ...repairOperationConfig,
-    filePrefix: t('repair.filenamePrefix', 'repaired') + '_',
     getErrorMessage: createStandardErrorHandler(t('repair.error.failed', 'An error occurred while repairing the PDF.'))
   });
 };

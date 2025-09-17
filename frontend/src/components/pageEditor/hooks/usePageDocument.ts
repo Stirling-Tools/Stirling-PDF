@@ -27,9 +27,9 @@ export function usePageDocument(): PageDocumentHook {
   const globalProcessing = state.ui.isProcessing;
 
   // Get primary file record outside useMemo to track processedFile changes
-  const primaryFileRecord = primaryFileId ? selectors.getFileRecord(primaryFileId) : null;
-  const processedFilePages = primaryFileRecord?.processedFile?.pages;
-  const processedFileTotalPages = primaryFileRecord?.processedFile?.totalPages;
+  const primaryStirlingFileStub = primaryFileId ? selectors.getStirlingFileStub(primaryFileId) : null;
+  const processedFilePages = primaryStirlingFileStub?.processedFile?.pages;
+  const processedFileTotalPages = primaryStirlingFileStub?.processedFile?.totalPages;
 
   // Compute merged document with stable signature (prevents infinite loops)
   const mergedPdfDocument = useMemo((): PDFDocument | null => {
@@ -38,16 +38,16 @@ export function usePageDocument(): PageDocumentHook {
     const primaryFile = primaryFileId ? selectors.getFile(primaryFileId) : null;
 
     // If we have file IDs but no file record, something is wrong - return null to show loading
-    if (!primaryFileRecord) {
+    if (!primaryStirlingFileStub) {
       console.log('🎬 PageEditor: No primary file record found, showing loading');
       return null;
     }
 
     const name =
       activeFileIds.length === 1
-        ? (primaryFileRecord.name ?? 'document.pdf')
+        ? (primaryStirlingFileStub.name ?? 'document.pdf')
         : activeFileIds
-            .map(id => (selectors.getFileRecord(id)?.name ?? 'file').replace(/\.pdf$/i, ''))
+            .map(id => (selectors.getStirlingFileStub(id)?.name ?? 'file').replace(/\.pdf$/i, ''))
             .join(' + ');
 
     // Build page insertion map from files with insertion positions
@@ -55,7 +55,7 @@ export function usePageDocument(): PageDocumentHook {
     const originalFileIds: FileId[] = [];
 
     activeFileIds.forEach(fileId => {
-      const record = selectors.getFileRecord(fileId);
+      const record = selectors.getStirlingFileStub(fileId);
       if (record?.insertAfterPageId !== undefined) {
         if (!insertionMap.has(record.insertAfterPageId)) {
           insertionMap.set(record.insertAfterPageId, []);
@@ -68,16 +68,15 @@ export function usePageDocument(): PageDocumentHook {
 
     // Build pages by interleaving original pages with insertions
     let pages: PDFPage[] = [];
-    let totalPageCount = 0;
 
     // Helper function to create pages from a file
     const createPagesFromFile = (fileId: FileId, startPageNumber: number): PDFPage[] => {
-      const fileRecord = selectors.getFileRecord(fileId);
-      if (!fileRecord) {
+      const stirlingFileStub = selectors.getStirlingFileStub(fileId);
+      if (!stirlingFileStub) {
         return [];
       }
 
-      const processedFile = fileRecord.processedFile;
+      const processedFile = stirlingFileStub.processedFile;
       let filePages: PDFPage[] = [];
 
       if (processedFile?.pages && processedFile.pages.length > 0) {
@@ -144,8 +143,6 @@ export function usePageDocument(): PageDocumentHook {
       });
     }
 
-    totalPageCount = pages.length;
-
     if (pages.length === 0) {
       return null;
     }
@@ -159,7 +156,7 @@ export function usePageDocument(): PageDocumentHook {
     };
 
     return mergedDoc;
-  }, [activeFileIds, primaryFileId, primaryFileRecord, processedFilePages, processedFileTotalPages, selectors, filesSignature]);
+  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, filesSignature]);
 
   // Large document detection for smart loading
   const isVeryLargeDocument = useMemo(() => {

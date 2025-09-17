@@ -1,20 +1,19 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme, ActionIcon, Box, Tabs } from "@mantine/core";
+import { Paper, Stack, Text, ScrollArea, Center, Button, Group, NumberInput, useMantineTheme, ActionIcon, Box, Tabs } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { pdfWorkerManager } from "../../services/pdfWorkerManager";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import LastPageIcon from "@mui/icons-material/LastPage";
-import ViewSidebarIcon from "@mui/icons-material/ViewSidebar";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek"; // for dual page (book)
 import DescriptionIcon from "@mui/icons-material/Description"; // for single page
 import CloseIcon from "@mui/icons-material/Close";
-import { useLocalStorage } from "@mantine/hooks";
 import { fileStorage } from "../../services/fileStorage";
 import SkeletonLoader from '../shared/SkeletonLoader';
-import { useFileState, useFileActions, useCurrentFile } from "../../contexts/FileContext";
+import { useFileState } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
+import { isFileObject } from "../../types/fileContext";
 import { FileId } from "../../types/file";
 
 
@@ -141,8 +140,6 @@ export interface ViewerProps {
 }
 
 const Viewer = ({
-  sidebarsVisible,
-  setSidebarsVisible,
   onClose,
   previewFile,
 }: ViewerProps) => {
@@ -151,13 +148,7 @@ const Viewer = ({
 
   // Get current file from FileContext
   const { selectors } = useFileState();
-  const { actions } = useFileActions();
-  const currentFile = useCurrentFile();
 
-  const getCurrentFile = () => currentFile.file;
-  const getCurrentProcessedFile = () => currentFile.record?.processedFile || undefined;
-  const clearAllFiles = actions.clearAllFiles;
-  const addFiles = actions.addFiles;
   const activeFiles = selectors.getFiles();
 
   // Tab management for multiple files
@@ -201,7 +192,7 @@ const Viewer = ({
   const effectiveFile = React.useMemo(() => {
     if (previewFile) {
       // Validate the preview file
-      if (!(previewFile instanceof File)) {
+      if (!isFileObject(previewFile)) {
         return null;
       }
 
@@ -381,11 +372,12 @@ const Viewer = ({
         else if (effectiveFile.url?.startsWith('indexeddb:')) {
           const fileId = effectiveFile.url.replace('indexeddb:', '') as FileId /* FIX ME: Not sure this is right - at least probably not the right place for this logic */;
 
-          // Get data directly from IndexedDB
-          const arrayBuffer = await fileStorage.getFileData(fileId);
-          if (!arrayBuffer) {
+          // Get file directly from IndexedDB
+          const file = await fileStorage.getStirlingFile(fileId);
+          if (!file) {
             throw new Error('File not found in IndexedDB - may have been purged by browser');
           }
+          const arrayBuffer = await file.arrayBuffer();
 
           // Store reference for cleanup
           currentArrayBufferRef.current = arrayBuffer;
@@ -405,7 +397,7 @@ const Viewer = ({
           // Start progressive preloading after a short delay
           setTimeout(() => startProgressivePreload(), 100);
         }
-      } catch (error) {
+      } catch {
         if (!cancelled) {
           setPageImages([]);
           setNumPages(0);

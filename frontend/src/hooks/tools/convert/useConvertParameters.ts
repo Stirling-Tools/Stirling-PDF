@@ -2,7 +2,6 @@ import {
   COLOR_TYPES,
   OUTPUT_OPTIONS,
   FIT_OPTIONS,
-  TO_FORMAT_OPTIONS,
   CONVERSION_MATRIX,
   type ColorType,
   type OutputOption,
@@ -127,7 +126,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
     endpointName: getEndpointName,
     validateFn: validateParameters,
   }), []);
-  
+
   const baseHook = useBaseParameters(config);
 
   const getEndpoint = () => {
@@ -166,7 +165,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
         if (prev.isSmartDetection === false && prev.smartDetectionType === 'none') {
           return prev; // No change needed
         }
-        
+
         return {
           ...prev,
           isSmartDetection: false,
@@ -290,13 +289,13 @@ export const useConvertParameters = (): ConvertParametersHook => {
         // All files are images - use image-to-pdf conversion
         baseHook.setParameters(prev => {
           // Only update if something actually changed
-          if (prev.isSmartDetection === true && 
-              prev.smartDetectionType === 'images' && 
-              prev.fromExtension === 'image' && 
+          if (prev.isSmartDetection === true &&
+              prev.smartDetectionType === 'images' &&
+              prev.fromExtension === 'image' &&
               prev.toExtension === 'pdf') {
             return prev; // No change needed
           }
-          
+
           return {
             ...prev,
             isSmartDetection: true,
@@ -309,13 +308,13 @@ export const useConvertParameters = (): ConvertParametersHook => {
         // All files are web files - use html-to-pdf conversion
         baseHook.setParameters(prev => {
           // Only update if something actually changed
-          if (prev.isSmartDetection === true && 
-              prev.smartDetectionType === 'web' && 
-              prev.fromExtension === 'html' && 
+          if (prev.isSmartDetection === true &&
+              prev.smartDetectionType === 'web' &&
+              prev.fromExtension === 'html' &&
               prev.toExtension === 'pdf') {
             return prev; // No change needed
           }
-          
+
           return {
             ...prev,
             isSmartDetection: true,
@@ -328,13 +327,13 @@ export const useConvertParameters = (): ConvertParametersHook => {
         // Mixed non-image types - use file-to-pdf conversion
         baseHook.setParameters(prev => {
           // Only update if something actually changed
-          if (prev.isSmartDetection === true && 
-              prev.smartDetectionType === 'mixed' && 
-              prev.fromExtension === 'any' && 
+          if (prev.isSmartDetection === true &&
+              prev.smartDetectionType === 'mixed' &&
+              prev.fromExtension === 'any' &&
               prev.toExtension === 'pdf') {
             return prev; // No change needed
           }
-          
+
           return {
             ...prev,
             isSmartDetection: true,

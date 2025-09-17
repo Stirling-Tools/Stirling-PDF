@@ -107,7 +107,7 @@ async function main() {
         needsRegeneration = false;
         info(`✅ Icon set already up-to-date (${usedIcons.length} icons, ${Math.round(fs.statSync(outputPath).size / 1024)}KB)`);
       }
-    } catch (error) {
+    } catch {
       // If we can't parse existing file, regenerate
       needsRegeneration = true;
     }

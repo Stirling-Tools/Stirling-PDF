@@ -1,11 +1,10 @@
-import React from "react";
-import { Stack, Text, PasswordInput, Select } from "@mantine/core";
+import { Stack, PasswordInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "../../../hooks/tools/addPassword/useAddPasswordParameters";
 
 interface AddPasswordSettingsProps {
   parameters: AddPasswordParameters;
-  onParameterChange: (key: keyof AddPasswordParameters, value: any) => void;
+  onParameterChange: <K extends keyof AddPasswordParameters>(key: K, value: AddPasswordParameters[K]) => void;
   disabled?: boolean;
 }
 
