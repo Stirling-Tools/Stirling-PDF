@@ -17,7 +17,9 @@ public class SpringDocConfig {
                         "/api/v1/admin/**",
                         "/api/v1/user/**",
                         "/api/v1/settings/**",
+                        "/api/v1/team/**",
                         "/api/v1/ui-data/**",
+                        "/api/v1/proprietary/ui-data/**",
                         "/api/v1/info/**",
                         "/api/v1/general/job/**",
                         "/api/v1/general/files/**")
@@ -37,7 +39,7 @@ public class SpringDocConfig {
         return GroupedOpenApi.builder()
                 .group("management")
                 .displayName("Management")
-                .pathsToMatch("/api/v1/admin/**", "/api/v1/user/**", "/api/v1/settings/**")
+                .pathsToMatch("/api/v1/admin/**", "/api/v1/user/**", "/api/v1/settings/**", "/api/v1/team/**")
                 .addOpenApiCustomizer(
                         openApi -> {
                             openApi.info(
@@ -56,6 +58,7 @@ public class SpringDocConfig {
                 .displayName("System & UI API")
                 .pathsToMatch(
                         "/api/v1/ui-data/**",
+                        "/api/v1/proprietary/ui-data/**",
                         "/api/v1/info/**",
                         "/api/v1/general/job/**",
                         "/api/v1/general/files/**")

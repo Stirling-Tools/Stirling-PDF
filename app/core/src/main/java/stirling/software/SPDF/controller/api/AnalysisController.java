@@ -14,18 +14,16 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.AnalysisApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
-@RestController
-@RequestMapping("/api/v1/analysis")
-@Tag(name = "Analysis", description = "Analysis APIs")
+@AnalysisApi
 @RequiredArgsConstructor
 public class AnalysisController {
 

@@ -20,7 +20,9 @@
       "Bash(__NEW_LINE__ echo \"\")",
       "Bash(for key in $keys)",
       "Bash(do)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(while read file)",
+      "Bash(do echo \"=== $file ===\")"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

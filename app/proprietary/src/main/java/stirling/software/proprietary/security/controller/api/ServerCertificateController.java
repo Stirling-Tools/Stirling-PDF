@@ -9,19 +9,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.api.AdminServerCertificateApi;
 import stirling.software.common.service.ServerCertificateService;
 
-@RestController
-@RequestMapping("/api/v1/admin/server-certificate")
+@AdminServerCertificateApi
 @Slf4j
-@Tag(
-        name = "Admin - Server Certificate",
-        description = "Admin APIs for server certificate management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class ServerCertificateController {

@@ -18,13 +18,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +32,7 @@ import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
@@ -42,10 +40,8 @@ import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
 
-@RestController
-@RequestMapping("/api/v1/security")
+@SecurityApi
 @Slf4j
-@Tag(name = "Security", description = "Security APIs")
 @RequiredArgsConstructor
 public class RedactController {
 
