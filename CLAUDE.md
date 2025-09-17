@@ -39,7 +39,7 @@ Frontend designed for **stateful document processing**:
 #### FileContext - Central State Management
 **Location**: `src/contexts/FileContext.tsx`
 - **Active files**: Currently loaded PDFs and their variants
-- **Tool navigation**: Current mode (viewer/pageEditor/fileEditor/toolName)  
+- **Tool navigation**: Current mode (viewer/pageEditor/fileEditor/toolName)
 - **Memory management**: PDF document cleanup, blob URL lifecycle, Web Worker management
 - **IndexedDB persistence**: File storage with thumbnail caching
 - **Preview system**: Tools can preview results (e.g., Split → Viewer → back to Split) without context pollution
@@ -89,7 +89,6 @@ return useToolOperation({
   endpoint: '/api/v1/misc/compress-pdf',
   buildFormData: (params, file: File) => { /* single file */ },
   multiFileEndpoint: false,
-  filePrefix: 'compressed_'
 });
 ```
 
@@ -103,7 +102,7 @@ return useToolOperation({
   endpoint: '/api/v1/general/split-pages',
   buildFormData: (params, files: File[]) => { /* all files */ },
   multiFileEndpoint: true,
-  filePrefix: 'split_'
+  filePrefix: 'split_',
 });
 ```
 
@@ -115,13 +114,12 @@ return useToolOperation({
 return useToolOperation({
   operationType: 'convert',
   customProcessor: async (params, files) => { /* custom logic */ },
-  filePrefix: 'converted_'
 });
 ```
 
 **Benefits**:
 - **No Timeouts**: Operations run until completion (supports 100GB+ files)
-- **Consistent**: All tools follow same pattern and interface  
+- **Consistent**: All tools follow same pattern and interface
 - **Maintainable**: Single responsibility hooks, easy to test and modify
 - **i18n Ready**: Built-in internationalization support
 - **Type Safe**: Full TypeScript support with generic interfaces
@@ -185,7 +183,7 @@ return useToolOperation({
 ## Frontend Architecture Status
 
 - **Core Status**: React SPA architecture complete with multi-tool workflow support
-- **State Management**: FileContext handles all file operations and tool navigation  
+- **State Management**: FileContext handles all file operations and tool navigation
 - **File Processing**: Production-ready with memory management for large PDF workflows (up to 100GB+)
 - **Tool Integration**: Modular hook architecture with `useToolOperation` orchestrator
   - Individual hooks: `useToolState`, `useToolApiCalls`, `useToolResources`
