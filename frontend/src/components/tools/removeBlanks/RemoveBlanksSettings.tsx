@@ -1,4 +1,4 @@
-import { Stack, Text, Checkbox } from "@mantine/core";
+import { Stack, Text, Checkbox, Slider, NumberInput, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import NumberInputWithUnit from "../shared/NumberInputWithUnit";
 import { RemoveBlanksParameters } from "../../../hooks/tools/removeBlanks/useRemoveBlanksParameters";
@@ -27,15 +27,31 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
       </Stack>
 
       <Stack gap="xs">
-        <NumberInputWithUnit
-          label={t('removeBlanks.whitePercent.label', 'White Percent')}
-          value={parameters.whitePercent}
-          onChange={(v) => onParameterChange('whitePercent', typeof v === 'string' ? Number(v) : v)}
-          unit='%'
-          min={0.1}
-          max={100}
-          disabled={disabled}
-        />
+        <Text size="sm" fw={500}>
+          {t('removeBlanks.whitePercent.label', 'White Percent')}
+        </Text>
+        <Group align="center">
+          <NumberInput
+            value={parameters.whitePercent}
+            onChange={(v) => onParameterChange('whitePercent', typeof v === 'number' ? v : 0.1)}
+            min={0.1}
+            max={100}
+            step={0.1}
+            size="sm"
+            rightSection="%"
+            style={{ width: '80px' }}
+            disabled={disabled}
+          />
+          <Slider
+            value={parameters.whitePercent}
+            onChange={(value) => onParameterChange('whitePercent', value)}
+            min={0.1}
+            max={100}
+            step={0.1}
+            style={{ flex: 1 }}
+            disabled={disabled}
+          />
+        </Group>
       </Stack>
 
       <Stack gap="xs">
