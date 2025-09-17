@@ -1,8 +1,17 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'node:child_process';
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { argv } from 'node:process';
+const inputIdx = argv.indexOf('--input');
+const INPUT_FILE = inputIdx > -1 ? argv[inputIdx + 1] : null;
+const POSTPROCESS_ONLY = !!INPUT_FILE;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Generate 3rd party licenses for frontend dependencies
@@ -14,59 +23,54 @@ const PACKAGE_JSON = path.join(__dirname, '..', 'package.json');
 
 // Ensure the output directory exists
 const outputDir = path.dirname(OUTPUT_FILE);
-if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+if (!existsSync(outputDir)) {
+    mkdirSync(outputDir, { recursive: true });
 }
 
 console.log('🔍 Generating frontend license report...');
 
 try {
-    // Install license-checker if not present
-    try {
-        require.resolve('license-checker');
-    } catch {
-        console.log('📦 Installing license-checker...');
-        execSync('npm install --save-dev license-checker', { stdio: 'inherit' });
+    // Safety guard: don't run this script on fork PRs (workflow setzt PR_IS_FORK)
+    if (process.env.PR_IS_FORK === 'true' && !POSTPROCESS_ONLY) {
+        console.error('Fork PR detected: only --input (postprocess-only) mode is allowed.');
+        process.exit(2);
     }
-
-    // Generate license report using license-checker (more reliable)
-    const licenseReport = execSync('npx license-checker --production --json', {
-        encoding: 'utf8',
-        cwd: path.dirname(PACKAGE_JSON)
-    });
 
     let licenseData;
-    try {
-        licenseData = JSON.parse(licenseReport);
-    } catch (parseError) {
-        console.error('❌ Failed to parse license data:', parseError.message);
-        console.error('Raw output:', licenseReport.substring(0, 500) + '...');
+    // Generate license report using pinned license-checker; disable lifecycle scripts
+    if (POSTPROCESS_ONLY) {
+      if (!INPUT_FILE || !existsSync(INPUT_FILE)) {
+        console.error('❌ --input file missing or not found');
         process.exit(1);
+      }
+      licenseData = JSON.parse(readFileSync(INPUT_FILE, 'utf8'));
+    } else {
+      const licenseReport = execSync(
+          // 'npx --yes license-checker@25.0.1 --production --json',
+          'npx --yes license-report --only=prod --output=json',
+          {
+              encoding: 'utf8',
+              cwd: path.dirname(PACKAGE_JSON),
+              env: { ...process.env, NPM_CONFIG_IGNORE_SCRIPTS: 'true' }
+          }
+      );
+      try {
+          licenseData = JSON.parse(licenseReport);
+      } catch (parseError) {
+          console.error('❌ Failed to parse license data:', parseError.message);
+          console.error('Raw output:', licenseReport.substring(0, 500) + '...');
+          process.exit(1);
+      }
     }
 
-    if (!licenseData || typeof licenseData !== 'object') {
+    if (!Array.isArray(licenseData)) {
         console.error('❌ Invalid license data structure');
         process.exit(1);
     }
 
     // Convert license-checker format to array
-    const licenseArray = Object.entries(licenseData).map(([key, value]) => {
-        let name, version;
-
-        // Handle scoped packages like @mantine/core@1.0.0
-        if (key.startsWith('@')) {
-            const parts = key.split('@');
-            name = `@${parts[1]}`;
-            version = parts[2];
-        } else {
-            // Handle regular packages like react@18.0.0
-            const lastAtIndex = key.lastIndexOf('@');
-            name = key.substring(0, lastAtIndex);
-            version = key.substring(lastAtIndex + 1);
-        }
-
-        // Normalize license types for edge cases
-        let licenseType = value.licenses;
+    const licenseArray = licenseData.map(dep => {
+        let licenseType = dep.licenseType;
 
         // Handle missing or null licenses
         if (!licenseType || licenseType === null || licenseType === undefined) {
@@ -88,13 +92,17 @@ try {
             licenseType = 'Unknown';
         }
 
+        if ( "posthog-js" === dep.name && licenseType.startsWith("SEE LICENSE IN LICENSE")) {
+            licenseType = "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE";
+        }
+
         return {
-            name: name,
-            version: version || value.version || 'unknown',
+            name: dep.name,
+            version: dep.installedVersion || dep.definedVersion || dep.remoteVersion || 'unknown',
             licenseType: licenseType,
-            repository: value.repository,
-            url: value.url,
-            link: value.licenseUrl
+            repository: dep.link,
+            url: dep.link,
+            link: dep.link
         };
     });
 
@@ -153,7 +161,7 @@ try {
 
         // Write license warnings to a separate file for CI/CD
         const warningsFile = path.join(__dirname, '..', 'src', 'assets', 'license-warnings.json');
-        fs.writeFileSync(warningsFile, JSON.stringify({
+        writeFileSync(warningsFile, JSON.stringify({
             warnings: problematicLicenses,
             generated: new Date().toISOString()
         }, null, 2));
@@ -163,7 +171,7 @@ try {
     }
 
     // Write to file
-    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(transformedData, null, 4));
+    writeFileSync(OUTPUT_FILE, JSON.stringify(transformedData, null, 4));
 
     console.log(`✅ License report generated successfully!`);
     console.log(`📄 Found ${transformedData.dependencies.length} dependencies`);
@@ -274,7 +282,8 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
         'MIT', 'MIT*', 'Apache-2.0', 'Apache License 2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'BSD',
         'ISC', 'CC0-1.0', 'Public Domain', 'Unlicense', '0BSD', 'BlueOak-1.0.0',
         'Zlib', 'Artistic-2.0', 'Python-2.0', 'Ruby', 'MPL-2.0', 'CC-BY-4.0',
-        'SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE'
+        'SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE',
+        'SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE'
     ]);
 
     // Helper function to normalize license names for comparison

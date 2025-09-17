@@ -5,8 +5,8 @@
  * and ensuring proper cleanup when operations complete.
  */
 
-import * as pdfjsLib from 'pdfjs-dist';
-const { getDocument, GlobalWorkerOptions } = pdfjsLib;
+import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+
 
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
@@ -31,7 +31,10 @@ class PDFWorkerManager {
    */
   private initializeWorker(): void {
     if (!this.isInitialized) {
-      GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+      GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
+        import.meta.url
+      ).toString();
       this.isInitialized = true;
     }
   }
