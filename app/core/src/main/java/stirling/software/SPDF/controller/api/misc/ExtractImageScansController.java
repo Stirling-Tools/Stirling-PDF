@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -51,6 +52,7 @@ public class ExtractImageScansController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
+    @MultiFileResponse
     @Operation(
             summary = "Extract image scans from an input file",
             description =

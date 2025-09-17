@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.JavaScriptResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -33,6 +34,7 @@ public class ShowJavascript {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/show-javascript")
+    @JavaScriptResponse
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
             description = "desc. Input:PDF Output:JS Type:SISO")

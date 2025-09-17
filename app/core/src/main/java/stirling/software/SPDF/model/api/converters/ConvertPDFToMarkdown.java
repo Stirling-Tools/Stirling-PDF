@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.swagger.MarkdownConversionResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.PDFToFile;
@@ -19,6 +20,7 @@ import stirling.software.common.util.PDFToFile;
 public class ConvertPDFToMarkdown {
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/markdown")
+    @MarkdownConversionResponse
     @Operation(
             summary = "Convert PDF to Markdown",
             description =

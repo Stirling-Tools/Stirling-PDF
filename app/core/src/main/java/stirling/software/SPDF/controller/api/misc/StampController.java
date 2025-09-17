@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -53,6 +54,7 @@ public class StampController {
     private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-stamp")
+    @StandardPdfResponse
     @Operation(
             summary = "Add stamp to a PDF file",
             description =

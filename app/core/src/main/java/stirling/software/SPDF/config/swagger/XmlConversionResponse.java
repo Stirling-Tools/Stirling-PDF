@@ -1,0 +1,63 @@
+package stirling.software.SPDF.config.swagger;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+/**
+ * API response annotation for PDF to XML conversions. Use for endpoints that convert PDF to XML
+ * format.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@ApiResponses(
+        value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "PDF converted successfully to XML format",
+                    content =
+                            @Content(
+                                    mediaType = "application/xml",
+                                    schema =
+                                            @Schema(
+                                                    type = "string",
+                                                    format = "binary",
+                                                    description = "XML file converted from PDF"))),
+            @ApiResponse(
+                    responseCode = "400",
+                    description =
+                            "Bad request - Invalid input parameters, unsupported format, or corrupted PDF",
+                    content =
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "413",
+                    description = "Payload too large - File exceeds maximum allowed size",
+                    content =
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "422",
+                    description =
+                            "Unprocessable entity - PDF is valid but cannot be converted to XML format",
+                    content =
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error - Unexpected error during XML conversion",
+                    content =
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)))
+        })
+public @interface XmlConversionResponse {}

@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.CsvConversionResponse;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.FlexibleCSVWriter;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -47,6 +48,7 @@ public class ExtractCSVController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
+    @CsvConversionResponse
     @Operation(
             summary = "Extracts a CSV document from a PDF",
             description =
