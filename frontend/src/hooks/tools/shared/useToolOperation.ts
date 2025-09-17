@@ -31,7 +31,10 @@ interface BaseToolOperationConfig<TParams> {
   /** Operation identifier for tracking and logging */
   operationType: string;
 
-  /** Prefix added to processed filenames (e.g., 'compressed_', 'split_') */
+  /**
+   * Prefix added to processed filenames (e.g., 'compressed_', 'split_').
+   * Only generally useful for multiFile interfaces.
+   */
   filePrefix?: string;
 
   /**
@@ -67,6 +70,9 @@ export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperatio
 export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
   /** This tool processes multiple files at once. */
   toolType: ToolType.multiFile;
+
+  /** Prefix added to processed filename (e.g., 'merged_', 'split_') */
+  filePrefix: string;
 
   /** Builds FormData for API request. */
   buildFormData: ((params: TParams, files: File[]) => FormData);
@@ -214,9 +220,9 @@ export const useToolOperation = <TParams>(
             processedFiles = await config.responseHandler(response.data, filesForAPI);
           } else if (response.data.type === 'application/pdf' ||
                     (response.headers && response.headers['content-type'] === 'application/pdf')) {
-            // Single PDF response (e.g. split with merge option) - use original filename
-            const originalFileName = filesForAPI[0]?.name || 'document.pdf';
-            const singleFile = new File([response.data], originalFileName, { type: 'application/pdf' });
+            // Single PDF response (e.g. split with merge option) - add prefix to first original filename
+            const filename = `${config.filePrefix}${filesForAPI[0]?.name || 'document.pdf'}`;
+            const singleFile = new File([response.data], filename, { type: 'application/pdf' });
             processedFiles = [singleFile];
           } else {
             // Default: assume ZIP response for multi-file endpoints

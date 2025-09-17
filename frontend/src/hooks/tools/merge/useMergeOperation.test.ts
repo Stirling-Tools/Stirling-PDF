@@ -81,24 +81,6 @@ describe('useMergeOperation', () => {
     expect(formData.get('generateToc')).toBe('false');
   });
 
-  test('should handle response correctly', () => {
-    renderHook(() => useMergeOperation());
-
-    const config = getToolConfig();
-    const mockBlob = new Blob(['merged content'], { type: 'application/pdf' });
-    const mockFiles = [
-      new File(['content1'], 'file1.pdf', { type: 'application/pdf' }),
-      new File(['content2'], 'file2.pdf', { type: 'application/pdf' })
-    ];
-
-    const result = config.responseHandler!(mockBlob, mockFiles) as File[];
-
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('merged_file1.pdf');
-    expect(result[0].type).toBe('application/pdf');
-    expect(result[0].size).toBe(mockBlob.size);
-  });
-
   test('should return the hook result from useToolOperation', () => {
     const { result } = renderHook(() => useMergeOperation());
 
