@@ -20,7 +20,7 @@ export function useSingleExpandController(opts: {
   // If single-expand is turned off, clear selection
   useEffect(() => {
     if (!enabled && expandedStep !== null) setExpandedStep(null);
-  }, [enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [enabled]); 
 
   // If the selected step becomes invisible, clear it
   useEffect(() => {
@@ -28,7 +28,7 @@ export function useSingleExpandController(opts: {
     if (expandedStep && !visibleIds.includes(expandedStep)) {
       setExpandedStep(null);
     }
-  }, [enabled, expandedStep, visibleIds]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [enabled, expandedStep, visibleIds]); 
 
   // When results become visible, automatically expand them and collapse all others
   useEffect(() => {
