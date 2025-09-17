@@ -18,7 +18,6 @@ export const rotateOperationConfig = {
   buildFormData: buildRotateFormData,
   operationType: 'rotate',
   endpoint: '/api/v1/general/rotate-pdf',
-  filePrefix: 'rotated_',
   defaultParameters,
 } as const;
 
