@@ -106,7 +106,7 @@ public class ScalePagesController {
     private PDRectangle getTargetSize(String targetPDRectangle, PDDocument sourceDocument) {
         if ("KEEP".equals(targetPDRectangle)) {
             if (sourceDocument.getNumberOfPages() == 0) {
-                // Do not return null here — throw a clear exception so callers don't get a nullable
+                // Do not return null here; throw a clear exception so callers don't get a nullable
                 // PDRectangle.
                 throw ExceptionUtils.createInvalidPageSizeException("KEEP");
             }
