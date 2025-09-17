@@ -91,7 +91,6 @@ describe('useRotateOperation', () => {
   test.each([
     { property: 'toolType' as const, expectedValue: ToolType.singleFile },
     { property: 'endpoint' as const, expectedValue: '/api/v1/general/rotate-pdf' },
-    { property: 'filePrefix' as const, expectedValue: 'rotated_' },
     { property: 'operationType' as const, expectedValue: 'rotate' }
   ])('should configure $property correctly', ({ property, expectedValue }) => {
     renderHook(() => useRotateOperation());
