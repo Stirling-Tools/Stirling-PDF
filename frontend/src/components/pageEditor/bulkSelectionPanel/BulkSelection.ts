@@ -21,10 +21,9 @@ export function appendExpression(currentInput: string, expr: string): string {
 // Produces a trailing space to allow the next token to be typed naturally.
 export function insertOperatorSmart(currentInput: string, op: LogicalOperator): string {
   const text = (currentInput || '').trim();
-  if (text.length === 0) return `${op} `;
-
   // Handle 'even' and 'odd' as page selection expressions, not logical operators
   if (op === 'even' || op === 'odd') {
+    if (text.length === 0) return `${op} `;
     // If current input ends with a logical operator, append the page selection with proper spacing
     const endsWithOperator = /(\b(and|not|or)\s*|[&|,!]\s*)$/i.test(text);
     if (endsWithOperator) {
@@ -34,6 +33,8 @@ export function insertOperatorSmart(currentInput: string, op: LogicalOperator): 
     }
     return `${text} or ${op} `;
   }
+  
+  if (text.length === 0) return `${op} `;
 
   // Extract up to the last two operator tokens (words or symbols) from the end
   const tokens: string[] = [];

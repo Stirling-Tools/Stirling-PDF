@@ -53,8 +53,7 @@ const OperatorsSection = ({ csvInput, onInsertOperator }: OperatorsSectionProps)
           variant="outline"
           className={classes.operatorChip} 
           onClick={() => onInsertOperator('even')}
-          disabled={!csvInput.trim()}
-          title="Combine selections (both conditions must be true)"
+          title="Select all even-numbered pages (2, 4, 6, 8...)"
         >
           <Text size="xs" fw={500}>even</Text>
         </Button>
@@ -63,8 +62,7 @@ const OperatorsSection = ({ csvInput, onInsertOperator }: OperatorsSectionProps)
           variant="outline"
           className={classes.operatorChip} 
           onClick={() => onInsertOperator('odd')}
-          disabled={!csvInput.trim()}
-          title="Add to selection (either condition can be true)"
+          title="Select all odd-numbered pages (1, 3, 5, 7...)"
         >
           <Text size="xs" fw={500}>odd</Text>
         </Button>
