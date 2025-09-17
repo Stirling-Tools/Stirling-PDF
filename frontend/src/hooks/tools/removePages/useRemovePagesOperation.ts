@@ -7,7 +7,8 @@ import { RemovePagesParameters, defaultParameters } from './useRemovePagesParame
 export const buildRemovePagesFormData = (parameters: RemovePagesParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
-  formData.append('pageNumbers', parameters.pageNumbers);
+  const cleaned = parameters.pageNumbers.replace(/\s+/g, '');
+  formData.append('pageNumbers', cleaned);
   return formData;
 };
 
