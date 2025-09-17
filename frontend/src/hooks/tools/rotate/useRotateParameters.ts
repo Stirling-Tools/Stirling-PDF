@@ -2,7 +2,7 @@ import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 import { useMemo, useCallback } from 'react';
 
-// Normalize angle to valid backend values (0, 90, 180, 270)
+// Normalize angle to number between 0 and 359
 export const normalizeAngle = (angle: number): number => {
   return ((angle % 360) + 360) % 360;
 };
