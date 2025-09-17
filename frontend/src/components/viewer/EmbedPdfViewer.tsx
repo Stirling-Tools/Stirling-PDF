@@ -175,7 +175,6 @@ const EmbedPdfViewerContent = ({
             <LocalEmbedPDF
               file={effectiveFile.file}
               url={effectiveFile.url}
-              colorScheme={colorScheme}
             />
           </Box>
         </>
@@ -219,7 +218,6 @@ const EmbedPdfViewerContent = ({
       <ThumbnailSidebar
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
-        colorScheme={colorScheme}
       />
     </Box>
   );

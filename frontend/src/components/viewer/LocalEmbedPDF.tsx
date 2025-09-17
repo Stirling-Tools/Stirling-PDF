@@ -31,14 +31,11 @@ import { RotateAPIBridge } from './RotateAPIBridge';
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
-  colorScheme: 'light' | 'dark' | 'auto';
+  colorScheme?: 'light' | 'dark' | 'auto'; // Optional since we use CSS variables
 }
 
-export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-
-  // Convert color scheme (handle 'auto' mode by defaulting to 'light')
-  const actualColorScheme = colorScheme === 'auto' ? 'light' : colorScheme;
 
   // Convert File to URL if needed
   useEffect(() => {
@@ -129,8 +126,8 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100%',
-        background: actualColorScheme === 'dark' ? '#1a1b1e' : '#f8f9fa',
-        color: actualColorScheme === 'dark' ? '#ffffff' : '#666666',
+        background: 'var(--bg-surface)',
+        color: 'var(--text-secondary)',
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>📄</div>
@@ -147,8 +144,8 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100%',
-        background: actualColorScheme === 'dark' ? '#1a1b1e' : '#f1f3f5',
-        color: actualColorScheme === 'dark' ? '#ffffff' : '#666666',
+        background: 'var(--bg-surface)',
+        color: 'var(--text-secondary)',
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
@@ -165,8 +162,8 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100%',
-        background: actualColorScheme === 'dark' ? '#1a1b1e' : '#f1f3f5',
-        color: '#ff6b6b',
+        background: 'var(--bg-surface)',
+        color: 'var(--color-red-500)',
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>❌</div>
@@ -199,7 +196,7 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
         <GlobalPointerProvider>
           <Viewport
             style={{
-              backgroundColor: actualColorScheme === 'dark' ? '#1a1b1e' : '#f1f3f5',
+              backgroundColor: 'var(--bg-surface)',
               height: '100%',
               width: '100%',
               maxHeight: '100%',

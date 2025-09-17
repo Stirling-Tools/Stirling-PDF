@@ -6,18 +6,15 @@ import '../../types/embedPdf';
 interface ThumbnailSidebarProps {
   visible: boolean;
   onToggle: () => void;
-  colorScheme: 'light' | 'dark' | 'auto';
+  colorScheme?: 'light' | 'dark' | 'auto'; // Optional since we use CSS variables
 }
 
-export function ThumbnailSidebar({ visible, onToggle: _onToggle, colorScheme }: ThumbnailSidebarProps) {
+export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSidebarProps) {
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
   
   const scrollState = getScrollState();
   const thumbnailAPI = getThumbnailAPI();
-
-  // Convert color scheme
-  const actualColorScheme = colorScheme === 'auto' ? 'light' : colorScheme;
 
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
@@ -100,8 +97,8 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, colorScheme }: 
             top: 0,
             bottom: 0,
             width: '15rem',
-            backgroundColor: actualColorScheme === 'dark' ? '#1a1b1e' : '#f8f9fa',
-            borderLeft: `1px solid ${actualColorScheme === 'dark' ? '#373A40' : '#e9ecef'}`,
+            backgroundColor: 'var(--bg-surface)',
+            borderLeft: '1px solid var(--border-subtle)',
             zIndex: 998,
             display: 'flex',
             flexDirection: 'column',
@@ -125,10 +122,10 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, colorScheme }: 
                       borderRadius: '8px',
                       padding: '8px',
                       backgroundColor: scrollState.currentPage === pageIndex + 1
-                        ? (actualColorScheme === 'dark' ? '#364FC7' : '#e7f5ff')
+                        ? 'var(--color-primary-100)'
                         : 'transparent',
                       border: scrollState.currentPage === pageIndex + 1 
-                        ? '2px solid #1c7ed6'
+                        ? '2px solid var(--color-primary-500)'
                         : '2px solid transparent',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -138,7 +135,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, colorScheme }: 
                     }}
                     onMouseEnter={(e) => {
                       if (scrollState.currentPage !== pageIndex + 1) {
-                        e.currentTarget.style.backgroundColor = actualColorScheme === 'dark' ? '#25262b' : '#f1f3f5';
+                        e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -157,20 +154,20 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, colorScheme }: 
                           height: 'auto',
                           borderRadius: '4px',
                           boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                          border: `1px solid ${actualColorScheme === 'dark' ? '#373A40' : '#e9ecef'}`
+                          border: '1px solid var(--border-subtle)'
                         }}
                       />
                     ) : thumbnails[pageIndex] === 'error' ? (
                       <div style={{
                         width: '11.5rem',
                         height: '15rem',
-                        backgroundColor: actualColorScheme === 'dark' ? '#2d1b1b' : '#ffebee',
-                        border: `1px solid ${actualColorScheme === 'dark' ? '#5d3737' : '#ffcdd2'}`,
+                        backgroundColor: 'var(--color-red-50)',
+                        border: '1px solid var(--color-red-200)',
                         borderRadius: '4px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#d32f2f',
+                        color: 'var(--color-red-500)',
                         fontSize: '12px'
                       }}>
                         Failed
@@ -179,13 +176,13 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, colorScheme }: 
                       <div style={{
                         width: '11.5rem',
                         height: '15rem',
-                        backgroundColor: actualColorScheme === 'dark' ? '#25262b' : '#f8f9fa',
-                        border: `1px solid ${actualColorScheme === 'dark' ? '#373A40' : '#e9ecef'}`,
+                        backgroundColor: 'var(--bg-muted)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: '4px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: actualColorScheme === 'dark' ? '#adb5bd' : '#6c757d',
+                        color: 'var(--text-muted)',
                         fontSize: '12px'
                       }}>
                         Loading...
@@ -197,8 +194,8 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, colorScheme }: 
                       fontSize: '12px',
                       fontWeight: 500,
                       color: scrollState.currentPage === pageIndex + 1
-                        ? (actualColorScheme === 'dark' ? '#ffffff' : '#1c7ed6')
-                        : (actualColorScheme === 'dark' ? '#adb5bd' : '#6c757d')
+                        ? 'var(--color-primary-500)'
+                        : 'var(--text-muted)'
                     }}>
                       Page {pageIndex + 1}
                     </div>
