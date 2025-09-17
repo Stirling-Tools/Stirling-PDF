@@ -22,6 +22,7 @@ export const mergeOperationConfig: ToolOperationConfig<MergeParameters> = {
   buildFormData,
   operationType: 'merge',
   endpoint: '/api/v1/general/merge-pdfs',
+  filePrefix: 'merged_',
 };
 
 export const useMergeOperation = () => {
