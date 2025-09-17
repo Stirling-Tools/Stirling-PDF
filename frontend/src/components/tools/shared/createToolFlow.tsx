@@ -5,6 +5,8 @@ import OperationButton from './OperationButton';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
 import { ToolWorkflowTitle, ToolWorkflowTitleProps } from './ToolWorkflowTitle';
 import { StirlingFile } from '../../../types/fileContext';
+import { SingleExpansionProvider } from './SingleExpansionContext';
+import { useSingleExpandController } from './useSingleExpandController';
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -57,38 +59,46 @@ export interface ToolFlowConfig {
   executeButton?: ExecuteButtonConfig;
   review: ReviewStepConfig;
   forceStepNumbers?: boolean;
+  maxOneExpanded?: boolean;
+  initialExpandedStep?: string | null;
 }
 
-/**
- * Creates a flexible tool flow with configurable steps and state management left to the tool.
- * Reduces boilerplate while allowing tools to manage their own collapse/expansion logic.
- */
-export function createToolFlow(config: ToolFlowConfig) {
+// Hoist ToolFlowContent outside to make it stable across renders
+function ToolFlowContent({ config }: { config: ToolFlowConfig }) {
   const steps = createToolSteps();
+  const { onToggle, isCollapsed } = useSingleExpandController({
+    filesVisible: config.files.isVisible !== false,
+    stepVisibilities: config.steps.map(s => s.isVisible),
+    resultsVisible: config.review.isVisible,
+  });
 
   return (
-    <Stack gap="sm" p="sm" >
-    {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
+    <Stack gap="sm" p="sm">
       <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>
         {config.title && <ToolWorkflowTitle {...config.title} />}
 
         {/* Files Step */}
         {config.files.isVisible !== false && steps.createFilesStep({
           selectedFiles: config.files.selectedFiles,
-          isCollapsed: config.files.isCollapsed,
+          isCollapsed: isCollapsed('files', config.files.isCollapsed),
           minFiles: config.files.minFiles,
-          onCollapsedClick: config.files.onCollapsedClick
+          onCollapsedClick: () => onToggle('files', config.files.onCollapsedClick)
         })}
 
         {/* Middle Steps */}
-        {config.steps.map((stepConfig) =>
-          steps.create(stepConfig.title, {
-            isVisible: stepConfig.isVisible,
-            isCollapsed: stepConfig.isCollapsed,
-            onCollapsedClick: stepConfig.onCollapsedClick,
-            tooltip: stepConfig.tooltip
-          }, stepConfig.content)
-        )}
+        {config.steps.map((stepConfig, index) => {
+          const stepId = `step-${index}`;
+          return (
+            <React.Fragment key={stepId}>
+              {steps.create(stepConfig.title, {
+                isVisible: stepConfig.isVisible,
+                isCollapsed: isCollapsed(stepId, stepConfig.isCollapsed),
+                onCollapsedClick: () => onToggle(stepId, stepConfig.onCollapsedClick),
+                tooltip: stepConfig.tooltip
+              }, stepConfig.content)}
+            </React.Fragment>
+          );
+        })}
 
         {/* Execute Button */}
         {config.executeButton && config.executeButton.isVisible !== false && (
@@ -108,9 +118,28 @@ export function createToolFlow(config: ToolFlowConfig) {
           operation: config.review.operation,
           title: config.review.title,
           onFileClick: config.review.onFileClick,
-          onUndo: config.review.onUndo
+          onUndo: config.review.onUndo,
+          isCollapsed: isCollapsed('review', false),
+          onCollapsedClick: () => onToggle('review', undefined)
         })}
       </ToolStepProvider>
     </Stack>
   );
+}
+
+export interface ToolFlowProps extends ToolFlowConfig {}
+
+export function ToolFlow(props: ToolFlowProps) {
+  return (
+    <SingleExpansionProvider 
+      enabled={props.maxOneExpanded ?? false}
+      initialExpandedStep={props.initialExpandedStep ?? null}
+    >
+      <ToolFlowContent config={props} />
+    </SingleExpansionProvider>
+  );
+}
+
+export function createToolFlow(config: ToolFlowConfig) {
+  return <ToolFlow {...config} />;
 }

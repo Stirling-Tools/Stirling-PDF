@@ -20,7 +20,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const [collapsedType, setCollapsedType] = useState(false);
   const [collapsedFormatting, setCollapsedFormatting] = useState(true);
   const [collapsedPageSelection, setCollapsedPageSelection] = useState(false);
-  const [textConfirmed, setTextConfirmed] = useState(false);
   const [quickPositionModeSelected, setQuickPositionModeSelected] = useState(false);
   const [customPositionModeSelected, setCustomPositionModeSelected] = useState(true);
 
@@ -34,25 +33,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   }, [params.parameters]);
 
-  // Auto-collapse steps 2 and 3, and auto-expand step 4 when an image is uploaded
-  useEffect(() => {
-    if (params.parameters.stampType === 'image' && params.parameters.stampImage) {
-      setCollapsedType(true);
-      setCollapsedPageSelection(true);
-      setCollapsedFormatting(false); // Auto-expand step 4 (Position & Formatting)
-    }
-  }, [params.parameters.stampType, params.parameters.stampImage]);
-
-  // Reset text confirmation when inputs change
-  useEffect(() => {
-    if (params.parameters.stampType !== 'text') {
-      setTextConfirmed(false);
-    } else {
-      setTextConfirmed(false);
-    }
-  }, [params.parameters.stampType, params.parameters.stampText, params.parameters.alphabet]);
-
-  // Do not auto-collapse when switching types to avoid hiding file input prematurely
 
   const handleExecute = async () => {
     try {
@@ -71,7 +51,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const getSteps = () => {
     const steps: any[] = [];
 
-    // Step 1: File settings (page selection) - auto-collapse when image is uploaded
+    // Step 1: File settings (page selection)
     steps.push({
       title: t("AddStampRequest.pageSelection", "Page Selection"),
       isCollapsed: hasResults || collapsedPageSelection,
@@ -89,7 +69,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       ),
     });
 
-    // Step 2: Type & Content - auto-collapse when image is uploaded
+    // Step 2: Type & Content
     steps.push({
       title: t("AddStampRequest.stampType", "Stamp Type"),
       isCollapsed: hasResults ? true : collapsedType,
@@ -122,21 +102,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 minRows={2}
                 disabled={endpointLoading}
               />
-              <Group justify="flex-start">
-                <Button
-                  size="xs"
-                  onClick={() => {
-                    if ((params.parameters.stampText || '').trim().length === 0) return;
-                    setTextConfirmed(true);
-                    setCollapsedType(true);
-                    setCollapsedPageSelection(true);
-                    setCollapsedFormatting(false);
-                  }}
-                  disabled={(params.parameters.stampText || '').trim().length === 0}
-                >
-                  {textConfirmed ? t('confirmed', 'Confirmed') : t('confirm', 'Confirm')}
-                </Button>
-              </Group>
               <Select
                 label={t('AddStampRequest.alphabet', 'Alphabet')}
                 value={params.parameters.alphabet}
@@ -176,9 +141,16 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 {t('chooseFile', 'Choose File')}
               </Button>
               {params.parameters.stampImage && (
-                <Text size="xs" c="dimmed">
-                  {params.parameters.stampImage.name}
-                </Text>
+                <Stack gap="xs">
+                  <img
+                    src={URL.createObjectURL(params.parameters.stampImage)}
+                    alt="Selected stamp image"
+                    className="max-h-24 w-full object-contain border border-gray-200 rounded bg-gray-50"
+                  />
+                  <Text size="xs" c="dimmed">
+                    {params.parameters.stampImage.name}
+                  </Text>
+                </Stack>
               )}
             </Stack>
           )}
@@ -190,12 +162,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     steps.push({
       title: t("AddStampRequest.positionAndFormatting", "Position & Formatting"),
       isCollapsed: hasResults ? true : collapsedFormatting,
-      onCollapsedClick: hasResults ? () => operation.resetResults() : () => {
-        // Prevent collapsing until text confirmed
-        if (params.parameters.stampType === 'text' && !textConfirmed) return;
-        setCollapsedFormatting(!collapsedFormatting);
-        if (collapsedFormatting) setCollapsedType(true);
-      },
+      onCollapsedClick: hasResults ? () => operation.resetResults() : () => setCollapsedFormatting(!collapsedFormatting),
       isVisible: hasFiles || hasResults,
       content: (
         <Stack gap="md" justify="space-between">
@@ -394,6 +361,8 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       },
     },
     forceStepNumbers: true,
+    maxOneExpanded: true,
+    initialExpandedStep: "files"
   });
 };
 
