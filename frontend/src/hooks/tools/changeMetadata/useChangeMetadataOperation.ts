@@ -57,7 +57,6 @@ export const changeMetadataOperationConfig = {
   buildFormData: buildChangeMetadataFormData,
   operationType: 'changeMetadata',
   endpoint: '/api/v1/misc/update-metadata',
-  filePrefix: 'metadata_',
   defaultParameters,
 } as const;
 
