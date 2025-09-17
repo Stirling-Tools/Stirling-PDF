@@ -33,17 +33,20 @@ export function PdfViewerToolbar({
   currentZoom: _currentZoom = 100,
 }: PdfViewerToolbarProps) {
   const { t } = useTranslation();
-  const { getScrollState, getZoomState, scrollActions, zoomActions, registerImmediateZoomUpdate } = useViewer();
+  const { getScrollState, getZoomState, scrollActions, zoomActions, registerImmediateZoomUpdate, registerImmediateScrollUpdate } = useViewer();
   
   const scrollState = getScrollState();
   const zoomState = getZoomState();
   const [pageInput, setPageInput] = useState(scrollState.currentPage || currentPage);
   const [displayZoomPercent, setDisplayZoomPercent] = useState(zoomState.zoomPercent || 140);
 
-  // Update page input when scroll state changes
+  // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
+    registerImmediateScrollUpdate((currentPage, totalPages) => {
+      setPageInput(currentPage);
+    });
     setPageInput(scrollState.currentPage);
-  }, [scrollState.currentPage]);
+  }, [registerImmediateScrollUpdate]);
 
   // Register for immediate zoom updates and sync with actual zoom state
   useEffect(() => {

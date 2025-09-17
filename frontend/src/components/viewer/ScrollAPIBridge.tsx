@@ -8,7 +8,7 @@ import { useViewer } from '../../contexts/ViewerContext';
  */
 export function ScrollAPIBridge() {
   const { provides: scroll, state: scrollState } = useScroll();
-  const { registerBridge } = useViewer();
+  const { registerBridge, triggerImmediateScrollUpdate } = useViewer();
   
   const [_localState, setLocalState] = useState({
     currentPage: 1,
@@ -25,6 +25,8 @@ export function ScrollAPIBridge() {
       setLocalState(prevState => {
         // Only update if state actually changed
         if (prevState.currentPage !== newState.currentPage || prevState.totalPages !== newState.totalPages) {
+          // Trigger immediate update for responsive UI
+          triggerImmediateScrollUpdate(newState.currentPage, newState.totalPages);
           return newState;
         }
         return prevState;

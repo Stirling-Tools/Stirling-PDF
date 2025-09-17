@@ -61,6 +61,10 @@ interface ViewerContextType {
   
   // Immediate update callbacks
   registerImmediateZoomUpdate: (callback: (percent: number) => void) => void;
+  registerImmediateScrollUpdate: (callback: (currentPage: number, totalPages: number) => void) => void;
+  
+  // Internal - for bridges to trigger immediate updates
+  triggerImmediateScrollUpdate: (currentPage: number, totalPages: number) => void;
   
   // Action handlers - call EmbedPDF APIs directly
   scrollActions: {
@@ -138,6 +142,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   // Immediate zoom callback for responsive display updates
   const immediateZoomUpdateCallback = useRef<((percent: number) => void) | null>(null);
+  
+  // Immediate scroll callback for responsive display updates
+  const immediateScrollUpdateCallback = useRef<((currentPage: number, totalPages: number) => void) | null>(null);
 
   const registerBridge = (type: string, ref: BridgeRef) => {
     bridgeRefs.current[type as keyof typeof bridgeRefs.current] = ref;
@@ -383,6 +390,16 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     immediateZoomUpdateCallback.current = callback;
   };
 
+  const registerImmediateScrollUpdate = (callback: (currentPage: number, totalPages: number) => void) => {
+    immediateScrollUpdateCallback.current = callback;
+  };
+
+  const triggerImmediateScrollUpdate = (currentPage: number, totalPages: number) => {
+    if (immediateScrollUpdateCallback.current) {
+      immediateScrollUpdateCallback.current(currentPage, totalPages);
+    }
+  };
+
   const value: ViewerContextType = {
     // UI state
     isThumbnailSidebarVisible,
@@ -401,6 +418,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     
     // Immediate updates
     registerImmediateZoomUpdate,
+    registerImmediateScrollUpdate,
+    triggerImmediateScrollUpdate,
     
     // Actions
     scrollActions,
