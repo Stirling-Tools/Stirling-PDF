@@ -28,36 +28,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                             @Schema(
                                                     type = "string",
                                                     format = "binary",
-                                                    description = "The processed PDF file"))),
-            @ApiResponse(
-                    responseCode = "400",
-                    description =
-                            "Bad request - Invalid input parameters, unsupported file format, or corrupted PDF",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "413",
-                    description = "Payload too large - File exceeds maximum allowed size",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "422",
-                    description =
-                            "Unprocessable entity - PDF is valid but cannot be processed (e.g., encrypted, corrupted)",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "Internal server error - Unexpected error during PDF processing",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)))
+                                                    description = "The processed PDF file")))
         })
 public @interface StandardPdfResponse {}

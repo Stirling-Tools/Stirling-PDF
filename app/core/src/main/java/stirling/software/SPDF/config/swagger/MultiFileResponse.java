@@ -52,35 +52,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                                 type = "string",
                                                 format = "binary",
                                                 description = "Single image file (JPEG)"))
-                    }),
-            @ApiResponse(
-                    responseCode = "400",
-                    description =
-                            "Bad request - Invalid input parameters, unsupported file format, or corrupted files",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "413",
-                    description = "Payload too large - Files exceed maximum allowed size",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "422",
-                    description = "Unprocessable entity - Files are valid but cannot be processed",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "Internal server error - Unexpected error during file processing",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)))
+                    })
         })
 public @interface MultiFileResponse {}

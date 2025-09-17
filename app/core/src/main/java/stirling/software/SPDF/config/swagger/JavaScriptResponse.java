@@ -29,37 +29,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                                     type = "string",
                                                     format = "binary",
                                                     description =
-                                                            "JavaScript code extracted from PDF"))),
-            @ApiResponse(
-                    responseCode = "400",
-                    description =
-                            "Bad request - Invalid input parameters, unsupported format, or corrupted PDF",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "413",
-                    description = "Payload too large - File exceeds maximum allowed size",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "422",
-                    description =
-                            "Unprocessable entity - PDF is valid but contains no JavaScript code",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "500",
-                    description =
-                            "Internal server error - Unexpected error during JavaScript extraction",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)))
+                                                            "JavaScript code extracted from PDF")))
         })
 public @interface JavaScriptResponse {}

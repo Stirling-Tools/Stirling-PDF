@@ -28,36 +28,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                             @Schema(
                                                     type = "object",
                                                     description =
-                                                            "JSON object containing the requested data or analysis results"))),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Bad request - Invalid input parameters or corrupted PDF",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "413",
-                    description = "Payload too large - File exceeds maximum allowed size",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "422",
-                    description =
-                            "Unprocessable entity - PDF is valid but cannot be analyzed or processed",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "500",
-                    description =
-                            "Internal server error - Unexpected error during analysis or processing",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)))
+                                                            "JSON object containing the requested data or analysis results")))
         })
 public @interface JsonDataResponse {}

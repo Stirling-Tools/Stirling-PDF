@@ -28,36 +28,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                             @Schema(
                                                     type = "string",
                                                     format = "binary",
-                                                    description = "XML file converted from PDF"))),
-            @ApiResponse(
-                    responseCode = "400",
-                    description =
-                            "Bad request - Invalid input parameters, unsupported format, or corrupted PDF",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "413",
-                    description = "Payload too large - File exceeds maximum allowed size",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "422",
-                    description =
-                            "Unprocessable entity - PDF is valid but cannot be converted to XML format",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "Internal server error - Unexpected error during XML conversion",
-                    content =
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)))
+                                                    description = "XML file converted from PDF")))
         })
 public @interface XmlConversionResponse {}

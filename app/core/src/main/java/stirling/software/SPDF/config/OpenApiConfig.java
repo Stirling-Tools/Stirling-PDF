@@ -8,6 +8,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
@@ -60,15 +61,40 @@ public class OpenApiConfig {
             openAPI.addServersItem(server);
         }
 
+        // Add ErrorResponse schema to components
+        Schema<?> errorResponseSchema =
+                new Schema<>()
+                        .type("object")
+                        .addProperty(
+                                "timestamp",
+                                new Schema<>()
+                                        .type("string")
+                                        .format("date-time")
+                                        .description("Error timestamp"))
+                        .addProperty(
+                                "status",
+                                new Schema<>().type("integer").description("HTTP status code"))
+                        .addProperty(
+                                "error", new Schema<>().type("string").description("Error type"))
+                        .addProperty(
+                                "message",
+                                new Schema<>().type("string").description("Error message"))
+                        .addProperty(
+                                "path", new Schema<>().type("string").description("Request path"))
+                        .description("Standard error response format");
+
+        Components components = new Components().addSchemas("ErrorResponse", errorResponseSchema);
+
         if (!applicationProperties.getSecurity().getEnableLogin()) {
-            return openAPI.components(new Components());
+            return openAPI.components(components);
         } else {
             SecurityScheme apiKeyScheme =
                     new SecurityScheme()
                             .type(SecurityScheme.Type.APIKEY)
                             .in(SecurityScheme.In.HEADER)
                             .name("X-API-KEY");
-            return openAPI.components(new Components().addSecuritySchemes("apiKey", apiKeyScheme))
+            components.addSecuritySchemes("apiKey", apiKeyScheme);
+            return openAPI.components(components)
                     .addSecurityItem(new SecurityRequirement().addList("apiKey"));
         }
     }
