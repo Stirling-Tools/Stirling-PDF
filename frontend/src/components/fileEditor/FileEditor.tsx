@@ -11,6 +11,8 @@ import FileEditorThumbnail from './FileEditorThumbnail';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import { FileId, StirlingFile } from '../../types/fileContext';
+import { downloadBlob } from '../../utils/downloadUtils';
+
 
 interface FileEditorProps {
   onOpenPageEditor?: () => void;
@@ -278,7 +280,6 @@ const FileEditor = ({
   const handleDeleteFile = useCallback((fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
-
     if (record && file) {
       // Remove file from context but keep in storage (close, don't delete)
       const contextFileId = record.id;
@@ -289,6 +290,14 @@ const FileEditor = ({
       setSelectedFiles(currentSelected);
     }
   }, [activeStirlingFileStubs, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
+
+  const handleDownloadFile = useCallback((fileId: FileId) => {
+    const record = activeStirlingFileStubs.find(r => r.id === fileId);
+    const file = record ? selectors.getFile(record.id) : null;
+    if (record && file) {
+       downloadBlob(file, file.name);
+    }
+  }, [activeStirlingFileStubs, selectors, setStatus]);
 
   const handleViewFile = useCallback((fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
@@ -401,6 +410,7 @@ const FileEditor = ({
                   onViewFile={handleViewFile}
                   onSetStatus={setStatus}
                   onReorderFiles={handleReorderFiles}
+                  onDownloadFile={handleDownloadFile}
                   toolMode={toolMode}
                   isSupported={isFileSupported(record.name)}
                 />
