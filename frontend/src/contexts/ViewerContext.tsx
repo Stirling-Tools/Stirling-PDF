@@ -59,6 +59,9 @@ interface ViewerContextType {
   getSearchActiveIndex: () => number;
   getThumbnailAPI: () => any;
   
+  // Immediate update callbacks
+  registerImmediateZoomUpdate: (callback: (percent: number) => void) => void;
+  
   // Action handlers - call EmbedPDF APIs directly
   scrollActions: {
     scrollToPage: (page: number) => void;
@@ -132,6 +135,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     rotation: null as BridgeRef | null,
     thumbnail: null as BridgeRef | null,
   });
+
+  // Immediate zoom callback for responsive display updates
+  const immediateZoomUpdateCallback = useRef<((percent: number) => void) | null>(null);
 
   const registerBridge = (type: string, ref: BridgeRef) => {
     bridgeRefs.current[type as keyof typeof bridgeRefs.current] = ref;
@@ -217,12 +223,24 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     zoomIn: () => {
       const api = bridgeRefs.current.zoom?.api;
       if (api?.zoomIn) {
+        // Update display immediately if callback is registered
+        if (immediateZoomUpdateCallback.current) {
+          const currentState = getZoomState();
+          const newPercent = Math.min(Math.round(currentState.zoomPercent * 1.2), 300);
+          immediateZoomUpdateCallback.current(newPercent);
+        }
         api.zoomIn();
       }
     },
     zoomOut: () => {
       const api = bridgeRefs.current.zoom?.api;
       if (api?.zoomOut) {
+        // Update display immediately if callback is registered
+        if (immediateZoomUpdateCallback.current) {
+          const currentState = getZoomState();
+          const newPercent = Math.max(Math.round(currentState.zoomPercent / 1.2), 20);
+          immediateZoomUpdateCallback.current(newPercent);
+        }
         api.zoomOut();
       }
     },
@@ -361,6 +379,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   };
 
+  const registerImmediateZoomUpdate = (callback: (percent: number) => void) => {
+    immediateZoomUpdateCallback.current = callback;
+  };
+
   const value: ViewerContextType = {
     // UI state
     isThumbnailSidebarVisible,
@@ -376,6 +398,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     getSearchResults,
     getSearchActiveIndex,
     getThumbnailAPI,
+    
+    // Immediate updates
+    registerImmediateZoomUpdate,
     
     // Actions
     scrollActions,

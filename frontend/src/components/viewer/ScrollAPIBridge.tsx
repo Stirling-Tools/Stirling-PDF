@@ -21,14 +21,21 @@ export function ScrollAPIBridge() {
         currentPage: scrollState.currentPage,
         totalPages: scrollState.totalPages,
       };
-      setLocalState(newState);
+      
+      setLocalState(prevState => {
+        // Only update if state actually changed
+        if (prevState.currentPage !== newState.currentPage || prevState.totalPages !== newState.totalPages) {
+          return newState;
+        }
+        return prevState;
+      });
 
       registerBridge('scroll', {
         state: newState,
         api: scroll
       });
     }
-  }, [scroll, scrollState, registerBridge]);
+  }, [scroll, scrollState]);
 
   return null;
 }

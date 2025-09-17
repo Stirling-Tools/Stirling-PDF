@@ -39,7 +39,7 @@ export function PanAPIBridge() {
         }
       });
     }
-  }, [pan, isPanning, registerBridge]);
+  }, [pan, isPanning]);
 
   return null;
 }

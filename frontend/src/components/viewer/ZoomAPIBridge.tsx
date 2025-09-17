@@ -9,7 +9,7 @@ export function ZoomAPIBridge() {
   const { provides: zoom, state: zoomState } = useZoom();
   const { registerBridge } = useViewer();
   const hasSetInitialZoom = useRef(false);
-  
+
   // Store state locally
   const [_localState, setLocalState] = useState({
     currentZoom: 1.4,
@@ -30,10 +30,14 @@ export function ZoomAPIBridge() {
   useEffect(() => {
     if (zoom && zoomState) {
       // Update local state
+      const currentZoomLevel = zoomState.currentZoomLevel || 1.4;
       const newState = {
-        currentZoom: zoomState.currentZoomLevel || 1.4,
-        zoomPercent: Math.round((zoomState.currentZoomLevel || 1.4) * 100),
+        currentZoom: currentZoomLevel,
+        zoomPercent: Math.round(currentZoomLevel * 100),
       };
+      
+      console.log('ZoomAPIBridge - Raw zoom level:', currentZoomLevel, 'Rounded percent:', newState.zoomPercent);
+      
       setLocalState(newState);
 
       // Register this bridge with ViewerContext
@@ -42,7 +46,7 @@ export function ZoomAPIBridge() {
         api: zoom
       });
     }
-  }, [zoom, zoomState, registerBridge]);
+  }, [zoom, zoomState]);
 
   return null;
 }

@@ -67,7 +67,7 @@ export function SelectionAPIBridge() {
         document.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [selection, hasSelection, registerBridge]);
+  }, [selection, hasSelection]);
 
   return null;
 }

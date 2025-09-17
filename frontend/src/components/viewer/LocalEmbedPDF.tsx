@@ -231,16 +231,13 @@ export function LocalEmbedPDF({ file, url, colorScheme }: LocalEmbedPDFProps) {
                     onDrop={(e) => e.preventDefault()}
                     onDragOver={(e) => e.preventDefault()}
                   >
-                    {/* 1. Low-resolution base layer for immediate feedback */}
-                    <RenderLayer pageIndex={pageIndex} scale={0.5} />
-
-                    {/* 2. High-resolution tile layer on top */}
+                    {/* High-resolution tile layer */}
                     <TilingLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* 3. Search highlight layer */}
+                    {/* Search highlight layer */}
                     <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* 4. Selection layer for text interaction */}
+                    {/* Selection layer for text interaction */}
                     <SelectionLayer pageIndex={pageIndex} scale={scale} />
                   </div>
                 </PagePointerProvider>

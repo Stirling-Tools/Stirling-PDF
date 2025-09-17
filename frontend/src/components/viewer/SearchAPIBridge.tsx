@@ -20,9 +20,17 @@ export function SearchAPIBridge() {
     if (!search) return;
 
     const unsubscribe = search.onSearchResultStateChange?.((state: any) => {
-      setLocalState({
+      const newState = {
         results: state?.results || null,
         activeIndex: (state?.activeResultIndex || 0) + 1 // Convert to 1-based index
+      };
+      
+      setLocalState(prevState => {
+        // Only update if state actually changed
+        if (prevState.results !== newState.results || prevState.activeIndex !== newState.activeIndex) {
+          return newState;
+        }
+        return prevState;
       });
     });
 
@@ -49,7 +57,7 @@ export function SearchAPIBridge() {
         }
       });
     }
-  }, [search, localState, registerBridge]);
+  }, [search, localState]);
 
   return null;
 }

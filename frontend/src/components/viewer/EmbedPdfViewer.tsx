@@ -28,7 +28,11 @@ const EmbedPdfViewerContent = ({
   const { colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions } = useViewer();
+  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState } = useViewer();
+  
+  const scrollState = getScrollState();
+  const zoomState = getZoomState();
+  const spreadState = getSpreadState();
 
 
   // Get current file from FileContext
@@ -71,28 +75,13 @@ const EmbedPdfViewerContent = ({
         event.preventDefault();
         event.stopPropagation();
 
-<<<<<<< HEAD
         if (event.deltaY < 0) {
           // Scroll up - zoom in
           zoomActions.zoomIn();
         } else {
           // Scroll down - zoom out
           zoomActions.zoomOut();
-=======
-        // Convert smooth scrolling gestures into discrete notches
-        accumulator += event.deltaY;
-        const threshold = 10;
 
-        const zoomAPI = window.embedPdfZoom;
-        if (zoomAPI) {
-          if (accumulator <= -threshold) {
-            zoomAPI.zoomIn();
-            accumulator = 0;
-          } else if (accumulator >= threshold) {
-            zoomAPI.zoomOut();
-            accumulator = 0;
-          }
->>>>>>> 81c5d8ff46dcc5fc983109fb2348b6d6dfb129d2
         }
       }
     };
@@ -131,17 +120,6 @@ const EmbedPdfViewerContent = ({
     };
   }, [isViewerHovered]);
 
-<<<<<<< HEAD
-=======
-  // Expose toggle functions globally for right rail buttons
-  React.useEffect(() => {
-    window.toggleThumbnailSidebar = toggleThumbnailSidebar;
-
-    return () => {
-      delete window.toggleThumbnailSidebar;
-    };
-  }, [toggleThumbnailSidebar]);
->>>>>>> 81c5d8ff46dcc5fc983109fb2348b6d6dfb129d2
 
   return (
     <Box
@@ -220,17 +198,17 @@ const EmbedPdfViewerContent = ({
         >
           <div style={{ pointerEvents: "auto" }}>
             <PdfViewerToolbar
-              currentPage={1}
-              totalPages={1}
+              currentPage={scrollState.currentPage}
+              totalPages={scrollState.totalPages}
               onPageChange={(page) => {
                 // Placeholder - will implement page navigation later
                 console.log('Navigate to page:', page);
               }}
-              dualPage={false}
+              dualPage={spreadState.isDualPage}
               onDualPageToggle={() => {
                 spreadActions.toggleSpreadMode();
               }}
-              currentZoom={100}
+              currentZoom={zoomState.zoomPercent}
             />
           </div>
         </div>

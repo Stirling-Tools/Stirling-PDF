@@ -33,7 +33,7 @@ export function RotateAPIBridge() {
         }
       });
     }
-  }, [rotate, rotation, registerBridge]);
+  }, [rotate, rotation]);
 
   return null;
 }

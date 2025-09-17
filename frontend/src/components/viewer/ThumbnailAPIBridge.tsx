@@ -17,7 +17,7 @@ export function ThumbnailAPIBridge() {
         api: thumbnail
       });
     }
-  }, [thumbnail, registerBridge]);
+  }, [thumbnail]);
 
   return null;
 }

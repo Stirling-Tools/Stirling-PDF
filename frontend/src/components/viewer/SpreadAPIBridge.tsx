@@ -41,7 +41,7 @@ export function SpreadAPIBridge() {
         }
       });
     }
-  }, [spread, spreadMode, registerBridge]);
+  }, [spread, spreadMode]);
 
   return null;
 }
