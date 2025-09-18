@@ -13,6 +13,7 @@ import { StirlingFileStub } from '../../types/fileContext';
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
 import { FileId } from '../../types/file';
+import { formatFileSize } from '../../utils/fileUtils';
 import ToolChain from '../shared/ToolChain';
 
 
@@ -28,7 +29,7 @@ interface FileEditorThumbnailProps {
   onViewFile: (fileId: FileId) => void;
   onSetStatus: (status: string) => void;
   onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
-  onDownloadFile?: (fileId: FileId) => void;
+  onDownloadFile: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
 }
@@ -61,29 +62,6 @@ const FileEditorThumbnail = ({
 
   const pageCount = file.processedFile?.totalPages || 0;
 
-  const downloadSelectedFile = useCallback(() => {
-    // Prefer parent-provided handler if available
-    if (typeof onDownloadFile === 'function') {
-      onDownloadFile(file.id);
-      return;
-    }
-
-    // Fallback: attempt to download using the File object if provided
-    const maybeFile = (file as unknown as { file?: File }).file;
-    if (maybeFile instanceof File) {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(maybeFile);
-      link.download = maybeFile.name || file.name || 'download';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-      return;
-    }
-
-    // If we can't find a way to download, surface a status message
-    onSetStatus?.(typeof t === 'function' ? t('downloadUnavailable', 'Download unavailable for this item') : 'Download unavailable for this item');
-  }, [file, onDownloadFile, onSetStatus, t]);
   const handleRef = useRef<HTMLSpanElement | null>(null);
 
   // ---- Selection ----
@@ -91,12 +69,7 @@ const FileEditorThumbnail = ({
 
   // ---- Meta formatting ----
   const prettySize = useMemo(() => {
-    const bytes = file.size ?? 0;
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+    return formatFileSize(file.size);
   }, [file.size]);
 
   const extUpper = useMemo(() => {
@@ -305,7 +278,7 @@ const FileEditorThumbnail = ({
 
           <button
             className={styles.actionRow}
-            onClick={() => { downloadSelectedFile(); setShowActions(false); }}
+            onClick={() => { onDownloadFile(file.id); setShowActions(false); }}
           >
             <DownloadOutlinedIcon fontSize="small" />
             <span>{t('download', 'Download')}</span>
