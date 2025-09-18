@@ -13,8 +13,9 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const { t } = useTranslation();
   const viewerContext = React.useContext(ViewerContext);
   
-  const searchResults = viewerContext?.getSearchResults();
-  const searchActiveIndex = viewerContext?.getSearchActiveIndex();
+  const searchState = viewerContext?.getSearchState();
+  const searchResults = searchState?.results;
+  const searchActiveIndex = searchState?.activeIndex;
   const searchActions = viewerContext?.searchActions;
   const [searchQuery, setSearchQuery] = useState('');
   const [jumpToValue, setJumpToValue] = useState('');

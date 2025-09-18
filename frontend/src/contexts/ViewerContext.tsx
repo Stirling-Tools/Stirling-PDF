@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useRef } from 'react';
+import { SpreadMode } from '@embedpdf/plugin-spread/react';
 
 // State interfaces - represent the shape of data from each bridge
 interface ScrollState {
@@ -20,7 +21,7 @@ interface SelectionState {
 }
 
 interface SpreadState {
-  spreadMode: any;
+  spreadMode: SpreadMode;
   isDualPage: boolean;
 }
 
@@ -28,10 +29,15 @@ interface RotationState {
   rotation: number;
 }
 
+interface SearchState {
+  results: any[] | null;
+  activeIndex: number;
+}
+
 // Bridge registration interface - bridges register with state and API
-interface BridgeRef {
-  state: any;
-  api: any;
+interface BridgeRef<TState = unknown, TApi = unknown> {
+  state: TState;
+  api: TApi;
 }
 
 /**
@@ -55,9 +61,8 @@ interface ViewerContextType {
   getSelectionState: () => SelectionState;
   getSpreadState: () => SpreadState;
   getRotationState: () => RotationState;
-  getSearchResults: () => any[] | null;
-  getSearchActiveIndex: () => number;
-  getThumbnailAPI: () => any;
+  getSearchState: () => SearchState;
+  getThumbnailAPI: () => unknown;
   
   // Immediate update callbacks
   registerImmediateZoomUpdate: (callback: (percent: number) => void) => void;
@@ -65,6 +70,7 @@ interface ViewerContextType {
   
   // Internal - for bridges to trigger immediate updates
   triggerImmediateScrollUpdate: (currentPage: number, totalPages: number) => void;
+  triggerImmediateZoomUpdate: (zoomPercent: number) => void;
   
   // Action handlers - call EmbedPDF APIs directly
   scrollActions: {
@@ -91,12 +97,12 @@ interface ViewerContextType {
   selectionActions: {
     copyToClipboard: () => void;
     getSelectedText: () => string;
-    getFormattedSelection: () => any;
+    getFormattedSelection: () => unknown;
   };
   
   spreadActions: {
-    setSpreadMode: (mode: any) => void;
-    getSpreadMode: () => any;
+    setSpreadMode: (mode: SpreadMode) => void;
+    getSpreadMode: () => SpreadMode;
     toggleSpreadMode: () => void;
   };
   
@@ -130,14 +136,14 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   
   // Bridge registry - bridges register their state and APIs here
   const bridgeRefs = useRef({
-    scroll: null as BridgeRef | null,
-    zoom: null as BridgeRef | null,
-    pan: null as BridgeRef | null,
-    selection: null as BridgeRef | null,
-    search: null as BridgeRef | null,
-    spread: null as BridgeRef | null,
-    rotation: null as BridgeRef | null,
-    thumbnail: null as BridgeRef | null,
+    scroll: null as BridgeRef<ScrollState> | null,
+    zoom: null as BridgeRef<ZoomState> | null,
+    pan: null as BridgeRef<PanState> | null,
+    selection: null as BridgeRef<SelectionState> | null,
+    search: null as BridgeRef<SearchState> | null,
+    spread: null as BridgeRef<SpreadState> | null,
+    rotation: null as BridgeRef<RotationState> | null,
+    thumbnail: null as BridgeRef<unknown> | null,
   });
 
   // Immediate zoom callback for responsive display updates
@@ -147,7 +153,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const immediateScrollUpdateCallback = useRef<((currentPage: number, totalPages: number) => void) | null>(null);
 
   const registerBridge = (type: string, ref: BridgeRef) => {
-    bridgeRefs.current[type as keyof typeof bridgeRefs.current] = ref;
+    (bridgeRefs.current as any)[type] = ref;
   };
 
   const toggleThumbnailSidebar = () => {
@@ -172,19 +178,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   };
 
   const getSpreadState = (): SpreadState => {
-    return bridgeRefs.current.spread?.state || { spreadMode: null, isDualPage: false };
+    return bridgeRefs.current.spread?.state || { spreadMode: SpreadMode.None, isDualPage: false };
   };
 
   const getRotationState = (): RotationState => {
     return bridgeRefs.current.rotation?.state || { rotation: 0 };
   };
 
-  const getSearchResults = () => {
-    return bridgeRefs.current.search?.state?.results || null;
-  };
-
-  const getSearchActiveIndex = () => {
-    return bridgeRefs.current.search?.state?.activeIndex || 0;
+  const getSearchState = (): SearchState => {
+    return bridgeRefs.current.search?.state || { results: null, activeIndex: 0 };
   };
 
   const getThumbnailAPI = () => {
@@ -194,32 +196,32 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // Action handlers - call APIs directly
   const scrollActions = {
     scrollToPage: (page: number) => {
-      const api = bridgeRefs.current.scroll?.api;
+      const api = bridgeRefs.current.scroll?.api as any;
       if (api?.scrollToPage) {
         api.scrollToPage({ pageNumber: page });
       }
     },
     scrollToFirstPage: () => {
-      const api = bridgeRefs.current.scroll?.api;
+      const api = bridgeRefs.current.scroll?.api as any;
       if (api?.scrollToPage) {
         api.scrollToPage({ pageNumber: 1 });
       }
     },
     scrollToPreviousPage: () => {
-      const api = bridgeRefs.current.scroll?.api;
+      const api = bridgeRefs.current.scroll?.api as any;
       if (api?.scrollToPreviousPage) {
         api.scrollToPreviousPage();
       }
     },
     scrollToNextPage: () => {
-      const api = bridgeRefs.current.scroll?.api;
+      const api = bridgeRefs.current.scroll?.api as any;
       if (api?.scrollToNextPage) {
         api.scrollToNextPage();
       }
     },
     scrollToLastPage: () => {
       const scrollState = getScrollState();
-      const api = bridgeRefs.current.scroll?.api;
+      const api = bridgeRefs.current.scroll?.api as any;
       if (api?.scrollToPage && scrollState.totalPages > 0) {
         api.scrollToPage({ pageNumber: scrollState.totalPages });
       }
@@ -228,7 +230,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const zoomActions = {
     zoomIn: () => {
-      const api = bridgeRefs.current.zoom?.api;
+      const api = bridgeRefs.current.zoom?.api as any;
       if (api?.zoomIn) {
         // Update display immediately if callback is registered
         if (immediateZoomUpdateCallback.current) {
@@ -240,7 +242,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       }
     },
     zoomOut: () => {
-      const api = bridgeRefs.current.zoom?.api;
+      const api = bridgeRefs.current.zoom?.api as any;
       if (api?.zoomOut) {
         // Update display immediately if callback is registered
         if (immediateZoomUpdateCallback.current) {
@@ -252,13 +254,13 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       }
     },
     toggleMarqueeZoom: () => {
-      const api = bridgeRefs.current.zoom?.api;
+      const api = bridgeRefs.current.zoom?.api as any;
       if (api?.toggleMarqueeZoom) {
         api.toggleMarqueeZoom();
       }
     },
     requestZoom: (level: number) => {
-      const api = bridgeRefs.current.zoom?.api;
+      const api = bridgeRefs.current.zoom?.api as any;
       if (api?.requestZoom) {
         api.requestZoom(level);
       }
@@ -267,19 +269,19 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const panActions = {
     enablePan: () => {
-      const api = bridgeRefs.current.pan?.api;
+      const api = bridgeRefs.current.pan?.api as any;
       if (api?.enable) {
         api.enable();
       }
     },
     disablePan: () => {
-      const api = bridgeRefs.current.pan?.api;
+      const api = bridgeRefs.current.pan?.api as any;
       if (api?.disable) {
         api.disable();
       }
     },
     togglePan: () => {
-      const api = bridgeRefs.current.pan?.api;
+      const api = bridgeRefs.current.pan?.api as any;
       if (api?.toggle) {
         api.toggle();
       }
@@ -288,20 +290,20 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const selectionActions = {
     copyToClipboard: () => {
-      const api = bridgeRefs.current.selection?.api;
+      const api = bridgeRefs.current.selection?.api as any;
       if (api?.copyToClipboard) {
         api.copyToClipboard();
       }
     },
     getSelectedText: () => {
-      const api = bridgeRefs.current.selection?.api;
+      const api = bridgeRefs.current.selection?.api as any;
       if (api?.getSelectedText) {
         return api.getSelectedText();
       }
       return '';
     },
     getFormattedSelection: () => {
-      const api = bridgeRefs.current.selection?.api;
+      const api = bridgeRefs.current.selection?.api as any;
       if (api?.getFormattedSelection) {
         return api.getFormattedSelection();
       }
@@ -310,21 +312,21 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   };
 
   const spreadActions = {
-    setSpreadMode: (mode: any) => {
-      const api = bridgeRefs.current.spread?.api;
+    setSpreadMode: (mode: SpreadMode) => {
+      const api = bridgeRefs.current.spread?.api as any;
       if (api?.setSpreadMode) {
         api.setSpreadMode(mode);
       }
     },
     getSpreadMode: () => {
-      const api = bridgeRefs.current.spread?.api;
+      const api = bridgeRefs.current.spread?.api as any;
       if (api?.getSpreadMode) {
         return api.getSpreadMode();
       }
       return null;
     },
     toggleSpreadMode: () => {
-      const api = bridgeRefs.current.spread?.api;
+      const api = bridgeRefs.current.spread?.api as any;
       if (api?.toggleSpreadMode) {
         api.toggleSpreadMode();
       }
@@ -333,25 +335,25 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const rotationActions = {
     rotateForward: () => {
-      const api = bridgeRefs.current.rotation?.api;
+      const api = bridgeRefs.current.rotation?.api as any;
       if (api?.rotateForward) {
         api.rotateForward();
       }
     },
     rotateBackward: () => {
-      const api = bridgeRefs.current.rotation?.api;
+      const api = bridgeRefs.current.rotation?.api as any;
       if (api?.rotateBackward) {
         api.rotateBackward();
       }
     },
     setRotation: (rotation: number) => {
-      const api = bridgeRefs.current.rotation?.api;
+      const api = bridgeRefs.current.rotation?.api as any;
       if (api?.setRotation) {
         api.setRotation(rotation);
       }
     },
     getRotation: () => {
-      const api = bridgeRefs.current.rotation?.api;
+      const api = bridgeRefs.current.rotation?.api as any;
       if (api?.getRotation) {
         return api.getRotation();
       }
@@ -361,25 +363,25 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const searchActions = {
     search: async (query: string) => {
-      const api = bridgeRefs.current.search?.api;
+      const api = bridgeRefs.current.search?.api as any;
       if (api?.search) {
         return api.search(query);
       }
     },
     next: () => {
-      const api = bridgeRefs.current.search?.api;
+      const api = bridgeRefs.current.search?.api as any;
       if (api?.next) {
         api.next();
       }
     },
     previous: () => {
-      const api = bridgeRefs.current.search?.api;
+      const api = bridgeRefs.current.search?.api as any;
       if (api?.previous) {
         api.previous();
       }
     },
     clear: () => {
-      const api = bridgeRefs.current.search?.api;
+      const api = bridgeRefs.current.search?.api as any;
       if (api?.clear) {
         api.clear();
       }
@@ -400,6 +402,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   };
 
+  const triggerImmediateZoomUpdate = (zoomPercent: number) => {
+    if (immediateZoomUpdateCallback.current) {
+      immediateZoomUpdateCallback.current(zoomPercent);
+    }
+  };
+
   const value: ViewerContextType = {
     // UI state
     isThumbnailSidebarVisible,
@@ -412,14 +420,14 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     getSelectionState,
     getSpreadState,
     getRotationState,
-    getSearchResults,
-    getSearchActiveIndex,
+    getSearchState,
     getThumbnailAPI,
     
     // Immediate updates
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
     triggerImmediateScrollUpdate,
+    triggerImmediateZoomUpdate,
     
     // Actions
     scrollActions,

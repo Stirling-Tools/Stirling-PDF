@@ -9,7 +9,6 @@ import { useViewer } from "../../contexts/ViewerContext";
 import { LocalEmbedPDF } from './LocalEmbedPDF';
 import { PdfViewerToolbar } from './PdfViewerToolbar';
 import { ThumbnailSidebar } from './ThumbnailSidebar';
-import '../../types/embedPdf';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -200,7 +199,7 @@ const EmbedPdfViewerContent = ({
               currentPage={scrollState.currentPage}
               totalPages={scrollState.totalPages}
               onPageChange={(page) => {
-                // Placeholder - will implement page navigation later
+                // Page navigation handled by scrollActions
                 console.log('Navigate to page:', page);
               }}
               dualPage={spreadState.isDualPage}

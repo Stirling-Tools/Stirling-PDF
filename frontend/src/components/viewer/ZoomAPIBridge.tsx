@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useZoom } from '@embedpdf/plugin-zoom/react';
 import { useViewer } from '../../contexts/ViewerContext';
 
@@ -7,21 +7,14 @@ import { useViewer } from '../../contexts/ViewerContext';
  */
 export function ZoomAPIBridge() {
   const { provides: zoom, state: zoomState } = useZoom();
-  const { registerBridge } = useViewer();
+  const { registerBridge, triggerImmediateZoomUpdate } = useViewer();
   const hasSetInitialZoom = useRef(false);
-
-  // Store state locally
-  const [_localState, setLocalState] = useState({
-    currentZoom: 1.4,
-    zoomPercent: 140
-  });
 
   // Set initial zoom once when plugin is ready
   useEffect(() => {
     if (zoom && !hasSetInitialZoom.current) {
       hasSetInitialZoom.current = true;
       setTimeout(() => {
-        console.log('Setting initial zoom to 140%');
         zoom.requestZoom(1.4);
       }, 50);
     }
@@ -35,10 +28,9 @@ export function ZoomAPIBridge() {
         currentZoom: currentZoomLevel,
         zoomPercent: Math.round(currentZoomLevel * 100),
       };
-      
-      console.log('ZoomAPIBridge - Raw zoom level:', currentZoomLevel, 'Rounded percent:', newState.zoomPercent);
-      
-      setLocalState(newState);
+
+      // Trigger immediate update for responsive UI
+      triggerImmediateZoomUpdate(newState.zoomPercent);
 
       // Register this bridge with ViewerContext
       registerBridge('zoom', {

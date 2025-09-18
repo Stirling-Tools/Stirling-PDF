@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, ScrollArea } from '@mantine/core';
 import { useViewer } from '../../contexts/ViewerContext';
-import '../../types/embedPdf';
 
 interface ThumbnailSidebarProps {
   visible: boolean;
@@ -19,39 +18,25 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
     if (!visible || scrollState.totalPages === 0) return;
-
-    console.log('📄 ThumbnailSidebar useEffect triggered:', {
-      visible,
-      thumbnailAPI: !!thumbnailAPI,
-      totalPages: scrollState.totalPages,
-      existingThumbnails: Object.keys(thumbnails).length
-    });
-    
     if (!thumbnailAPI) return;
 
     const generateThumbnails = async () => {
-      console.log('📄 Starting thumbnail generation for', scrollState.totalPages, 'pages');
-      
       for (let pageIndex = 0; pageIndex < scrollState.totalPages; pageIndex++) {
         if (thumbnails[pageIndex]) continue; // Skip if already generated
 
         try {
-          console.log('📄 Attempting to generate thumbnail for page', pageIndex + 1);
-          const thumbTask = thumbnailAPI.renderThumb(pageIndex, 1.0);
-          console.log('📄 Received thumbTask:', thumbTask);
+          const thumbTask = (thumbnailAPI as any).renderThumb(pageIndex, 1.0);
           
           // Convert Task to Promise and handle properly
           thumbTask.toPromise().then((thumbBlob: Blob) => {
-            console.log('📄 Thumbnail generated successfully for page', pageIndex + 1, 'blob:', thumbBlob);
             const thumbUrl = URL.createObjectURL(thumbBlob);
-            console.log('📄 Created blob URL:', thumbUrl);
             
             setThumbnails(prev => ({
               ...prev,
               [pageIndex]: thumbUrl
             }));
           }).catch((error: any) => {
-            console.error('📄 Failed to generate thumbnail for page', pageIndex + 1, error);
+            console.error('Failed to generate thumbnail for page', pageIndex + 1, error);
             setThumbnails(prev => ({
               ...prev,
               [pageIndex]: 'error'

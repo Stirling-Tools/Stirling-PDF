@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { useViewer } from '../../contexts/ViewerContext';
 
@@ -8,21 +8,13 @@ import { useViewer } from '../../contexts/ViewerContext';
 export function SpreadAPIBridge() {
   const { provides: spread, spreadMode } = useSpread();
   const { registerBridge } = useViewer();
-  
-  // Store state locally
-  const [_localState, setLocalState] = useState({
-    spreadMode: SpreadMode.None,
-    isDualPage: false
-  });
 
   useEffect(() => {
     if (spread) {
-      // Update local state
       const newState = {
         spreadMode, 
         isDualPage: spreadMode !== SpreadMode.None
       };
-      setLocalState(newState);
 
       // Register this bridge with ViewerContext
       registerBridge('spread', {

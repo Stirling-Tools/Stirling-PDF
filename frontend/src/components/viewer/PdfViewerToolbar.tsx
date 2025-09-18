@@ -8,7 +8,6 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
-import '../../types/embedPdf';
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)

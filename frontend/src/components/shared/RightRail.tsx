@@ -7,7 +7,6 @@ import { useRightRail } from '../../contexts/RightRailContext';
 import { useFileState, useFileSelection, useFileManagement } from '../../contexts/FileContext';
 import { useNavigationState } from '../../contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
-import '../../types/embedPdf';
 
 import LanguageSelector from '../shared/LanguageSelector';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';

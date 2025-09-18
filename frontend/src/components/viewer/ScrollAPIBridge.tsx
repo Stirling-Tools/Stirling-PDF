@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
 import { useViewer } from '../../contexts/ViewerContext';
 
@@ -9,11 +9,6 @@ import { useViewer } from '../../contexts/ViewerContext';
 export function ScrollAPIBridge() {
   const { provides: scroll, state: scrollState } = useScroll();
   const { registerBridge, triggerImmediateScrollUpdate } = useViewer();
-  
-  const [_localState, setLocalState] = useState({
-    currentPage: 1,
-    totalPages: 0
-  });
 
   useEffect(() => {
     if (scroll && scrollState) {
@@ -22,15 +17,8 @@ export function ScrollAPIBridge() {
         totalPages: scrollState.totalPages,
       };
       
-      setLocalState(prevState => {
-        // Only update if state actually changed
-        if (prevState.currentPage !== newState.currentPage || prevState.totalPages !== newState.totalPages) {
-          // Trigger immediate update for responsive UI
-          triggerImmediateScrollUpdate(newState.currentPage, newState.totalPages);
-          return newState;
-        }
-        return prevState;
-      });
+      // Trigger immediate update for responsive UI
+      triggerImmediateScrollUpdate(newState.currentPage, newState.totalPages);
 
       registerBridge('scroll', {
         state: newState,

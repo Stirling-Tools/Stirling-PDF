@@ -9,19 +9,12 @@ export function SelectionAPIBridge() {
   const { provides: selection } = useSelectionCapability();
   const { registerBridge } = useViewer();
   const [hasSelection, setHasSelection] = useState(false);
-  
-  // Store state locally
-  const [_localState, setLocalState] = useState({
-    hasSelection: false
-  });
 
   useEffect(() => {
     if (selection) {
-      // Update local state
       const newState = {
         hasSelection
       };
-      setLocalState(newState);
 
       // Register this bridge with ViewerContext
       registerBridge('selection', {
@@ -38,7 +31,6 @@ export function SelectionAPIBridge() {
         const hasText = !!sel;
         setHasSelection(hasText);
         const updatedState = { hasSelection: hasText };
-        setLocalState(updatedState);
         // Re-register with updated state
         registerBridge('selection', {
           state: updatedState,
