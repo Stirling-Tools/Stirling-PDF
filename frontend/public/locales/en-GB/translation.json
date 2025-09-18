@@ -1194,9 +1194,7 @@
   },
   "pageSelection": {
     "tooltip": {
-      "header": {
-        "title": "Page Selection Guide"
-      },
+      "header": { "title": "Page Selection Guide" },
       "basic": {
         "title": "Basic Usage",
         "text": "Select specific pages from your PDF document using simple syntax.",
@@ -1213,7 +1211,74 @@
         "bullet1": "Page numbers start from 1 (not 0)",
         "bullet2": "Spaces are automatically removed",
         "bullet3": "Invalid expressions are ignored"
+      },
+      "syntax": {
+        "title": "Syntax Basics",
+        "text": "Use numbers, ranges, keywords, and progressions (n starts at 0). Parentheses are supported.",
+        "bullets": {
+          "numbers": "Numbers/ranges: 5, 10-20",
+          "keywords": "Keywords: odd, even",
+          "progressions": "Progressions: 3n, 4n+1"
+        }
+      },
+      "operators": {
+        "title": "Operators",
+        "text": "AND has higher precedence than comma. NOT applies within the document range.",
+        "and": "AND: & or \"and\" — require both conditions (e.g., 1-50 & even)",
+        "comma": "Comma: , or | — combine selections (e.g., 1-10, 20)",
+        "not": "NOT: ! or \"not\" — exclude pages (e.g., 3n & not 30)"
+      },
+      "examples": { "title": "Examples" }
+    }
+  },
+  "bulkSelection": {
+    "header": { "title": "Page Selection Guide" },
+    "syntax": {
+      "title": "Syntax Basics",
+      "text": "Use numbers, ranges, keywords, and progressions (n starts at 0). Parentheses are supported.",
+      "bullets": {
+        "numbers": "Numbers/ranges: 5, 10-20",
+        "keywords": "Keywords: odd, even",
+        "progressions": "Progressions: 3n, 4n+1"
       }
+    },
+    "operators": {
+      "title": "Operators",
+      "text": "AND has higher precedence than comma. NOT applies within the document range.",
+      "and": "AND: & or \"and\" — require both conditions (e.g., 1-50 & even)",
+      "comma": "Comma: , or | — combine selections (e.g., 1-10, 20)",
+      "not": "NOT: ! or \"not\" — exclude pages (e.g., 3n & not 30)"
+    },
+    "examples": {
+      "title": "Examples",
+      "first50": "First 50",
+      "last50": "Last 50",
+      "every3rd": "Every 3rd",
+      "oddWithinExcluding": "Odd within 1-20 excluding 5-7",
+      "combineSets": "Combine sets"
+    },
+    "firstNPages": {
+      "title": "First N Pages",
+      "placeholder": "Number of pages"
+    },
+    "lastNPages": {
+      "title": "Last N Pages",
+      "placeholder": "Number of pages"
+    },
+    "everyNthPage": {
+      "title": "Every Nth Page",
+      "placeholder": "Step size"
+    },
+    "range": {
+      "title": "Range",
+      "fromPlaceholder": "From",
+      "toPlaceholder": "To"
+    },
+    "keywords": {
+      "title": "Keywords"
+    },
+    "advanced": {
+      "title": "Advanced"
     }
   },
   "compressPdfs": {

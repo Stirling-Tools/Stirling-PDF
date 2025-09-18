@@ -59,6 +59,7 @@ export class DeletePagesCommand extends DOMCommand {
   private originalSelectedPages: number[] = [];
   private hasExecuted: boolean = false;
   private pageIdsToDelete: string[] = [];
+  private onAllPagesDeleted?: () => void;
 
   constructor(
     private pagesToDelete: number[],
@@ -67,9 +68,11 @@ export class DeletePagesCommand extends DOMCommand {
     private setSelectedPages: (pages: number[]) => void,
     private getSplitPositions: () => Set<number>,
     private setSplitPositions: (positions: Set<number>) => void,
-    private getSelectedPages: () => number[]
+    private getSelectedPages: () => number[],
+    onAllPagesDeleted?: () => void
   ) {
     super();
+    this.onAllPagesDeleted = onAllPagesDeleted;
   }
 
   execute(): void {
@@ -99,7 +102,13 @@ export class DeletePagesCommand extends DOMCommand {
       !this.pageIdsToDelete.includes(page.id)
     );
 
-    if (remainingPages.length === 0) return; // Safety check
+    if (remainingPages.length === 0) {
+      // If all pages would be deleted, clear selection/splits and close PDF
+      this.setSelectedPages([]);
+      this.setSplitPositions(new Set());
+      this.onAllPagesDeleted?.();
+      return;
+    }
 
     // Renumber remaining pages
     remainingPages.forEach((page, index) => {
