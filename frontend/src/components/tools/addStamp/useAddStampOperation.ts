@@ -7,7 +7,7 @@ export const buildAddStampFormData = (parameters: AddStampParameters, file: File
   const formData = new FormData();
   formData.append('fileInput', file);
   formData.append('pageNumbers', parameters.pageNumbers);
-  formData.append('customMargin', 'medium'); 
+  formData.append('customMargin', parameters.customMargin || 'medium'); 
   formData.append('position', String(parameters.position));
   const effectiveFontSize = parameters.fontSize;
   formData.append('fontSize', String(effectiveFontSize));
@@ -34,7 +34,6 @@ export const addStampOperationConfig = {
   buildFormData: buildAddStampFormData,
   operationType: 'stamp',
   endpoint: '/api/v1/misc/add-stamp',
-  filePrefix: 'stamped_',
   defaultParameters,
 } as const;
 
@@ -43,7 +42,6 @@ export const useAddStampOperation = () => {
 
   return useToolOperation<AddStampParameters>({
     ...addStampOperationConfig,
-    filePrefix: t('stamp.filenamePrefix', 'stamped') + '_',
     getErrorMessage: createStandardErrorHandler(
       t('AddStampRequest.error.failed', 'An error occurred while adding stamp to the PDF.')
     ),

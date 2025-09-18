@@ -323,6 +323,23 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           )}
 
 
+          {/* Margin selection appears when using quick grid (and for text stamps) */}
+          {(params.parameters.stampType === 'text' || (params.parameters.stampType === 'image' && quickPositionModeSelected)) && (
+            <Select
+              label={t('AddStampRequest.margin', 'Margin')}
+              value={params.parameters.customMargin}
+              onChange={(v) => params.updateParameter('customMargin', (v as any) || 'medium')}
+              data={[
+                { value: 'small', label: t('margin.small', 'Small') },
+                { value: 'medium', label: t('margin.medium', 'Medium') },
+                { value: 'large', label: t('margin.large', 'Large') },
+                { value: 'x-large', label: t('margin.xLarge', 'Extra Large') },
+              ]}
+              disabled={endpointLoading}
+            />
+          )}
+
+
           {/* Unified preview; when in quick mode, overlay grid inside preview */}
           <StampPreview
             parameters={params.parameters}
