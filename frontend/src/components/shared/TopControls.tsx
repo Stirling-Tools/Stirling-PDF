@@ -20,63 +20,64 @@ const viewOptionStyle = {
 
 // Build view options showing text always
 const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchType | null, isToolSelected: boolean) => {
-  const options = [
-    {
-      label: (
-        <div style={viewOptionStyle as React.CSSProperties}>
-          {switchingTo === "viewer" ? (
-            <Loader size="xs" />
-          ) : (
-            <VisibilityIcon fontSize="small" />
-          )}
-          <span>Viewer</span>
-        </div>
-      ),
-      value: "viewer",
-    },
-    {
-      label: (
-        <div style={viewOptionStyle as React.CSSProperties}>
-          {currentView === "fileEditor" ? (
-            <>
-              {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
-              <span>Active Files</span>
-            </>
-          ) : (
-            <>
-              {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
-              <span>Active Files</span>
-            </>
-          )}
-        </div>
-      ),
-      value: "fileEditor",
-    },
+  const viewerOption = {
+    label: (
+      <div style={viewOptionStyle as React.CSSProperties}>
+        {switchingTo === "viewer" ? (
+          <Loader size="xs" />
+        ) : (
+          <VisibilityIcon fontSize="small" />
+        )}
+        <span>Viewer</span>
+      </div>
+    ),
+    value: "viewer",
+  };
+
+  const pageEditorOption = {
+    label: (
+      <div style={viewOptionStyle as React.CSSProperties}>
+        {currentView === "pageEditor" ? (
+          <>
+            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
+            <span>Page Editor</span>
+          </>
+        ) : (
+          <>
+            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
+            <span>Page Editor</span>
+          </>
+        )}
+      </div>
+    ),
+    value: "pageEditor",
+  };
+
+  const fileEditorOption = {
+    label: (
+      <div style={viewOptionStyle as React.CSSProperties}>
+        {currentView === "fileEditor" ? (
+          <>
+            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
+            <span>Active Files</span>
+          </>
+        ) : (
+          <>
+            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
+            <span>Active Files</span>
+          </>
+        )}
+      </div>
+    ),
+    value: "fileEditor",
+  };
+
+  // Build options array conditionally
+  return [
+    viewerOption,
+    ...(isToolSelected ? [] : [pageEditorOption]),
+    fileEditorOption,
   ];
-
-  // Only add Page Editor option when not in a tool
-  if (!isToolSelected) {
-    options.splice(1, 0, {
-      label: (
-        <div style={viewOptionStyle as React.CSSProperties}>
-          {currentView === "pageEditor" ? (
-            <>
-              {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
-              <span>Page Editor</span>
-            </>
-          ) : (
-            <>
-              {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
-              <span>Page Editor</span>
-            </>
-          )}
-        </div>
-      ),
-      value: "pageEditor",
-    });
-  }
-
-  return options;
 };
 
 interface TopControlsProps {
