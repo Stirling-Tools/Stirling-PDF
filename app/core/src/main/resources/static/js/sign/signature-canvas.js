@@ -4,8 +4,20 @@ const redoButton = document.getElementById("signature-redo-button");
 const signaturePad = new SignaturePad(signaturePadCanvas, {
   minWidth: 1,
   maxWidth: 2,
-  penColor: 'black',
+  penColor: '#000000', // default color
 });
+
+(function initSignatureColor() {
+  const colorInput = document.getElementById('signature-color');
+  if (!colorInput) return;
+
+  if (colorInput.value) {
+    signaturePad.penColor = colorInput.value;
+  }
+  colorInput.addEventListener('input', () => {
+    signaturePad.penColor = colorInput.value || '#000000';
+  });
+})();
 
 let undoData = [];
 
@@ -16,10 +28,10 @@ signaturePad.addEventListener("endStroke", () => {
 window.addEventListener("keydown", (event) => {
   switch (true) {
     case event.key === "z" && event.ctrlKey:
-      undoButton.click();
+      undoButton?.click();
       break;
     case event.key === "y" && event.ctrlKey:
-      redoButton.click();
+      redoButton?.click();
       break;
   }
 });
