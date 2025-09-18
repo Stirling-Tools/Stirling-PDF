@@ -15,6 +15,13 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
   const scrollState = getScrollState();
   const thumbnailAPI = getThumbnailAPI();
 
+  // Clear thumbnails when sidebar closes
+  useEffect(() => {
+    if (!visible) {
+      setThumbnails({});
+    }
+  }, [visible]);
+
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
     if (!visible || scrollState.totalPages === 0) return;
@@ -45,7 +52,6 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
           
         } catch (error) {
           console.error('Failed to generate thumbnail for page', pageIndex + 1, error);
-          // Set a placeholder or error state
           setThumbnails(prev => ({
             ...prev,
             [pageIndex]: 'error'
@@ -55,16 +61,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
     };
 
     generateThumbnails();
-
-    // Cleanup blob URLs when component unmounts
-    return () => {
-      Object.values(thumbnails).forEach(url => {
-        if (url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
-  }, [visible, scrollState.totalPages, thumbnailAPI]);
+  }, [visible, scrollState.totalPages, thumbnailAPI, thumbnails]);
 
   const handlePageClick = (pageIndex: number) => {
     const pageNumber = pageIndex + 1; // Convert to 1-based

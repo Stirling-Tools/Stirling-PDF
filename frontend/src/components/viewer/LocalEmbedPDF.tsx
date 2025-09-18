@@ -20,6 +20,8 @@ import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { Rotation } from '@embedpdf/models';
 import { CustomSearchLayer } from './CustomSearchLayer';
 import { ZoomAPIBridge } from './ZoomAPIBridge';
+import ToolLoadingFallback from '../tools/ToolLoadingFallback';
+import { Center, Stack, Text } from '@mantine/core';
 import { ScrollAPIBridge } from './ScrollAPIBridge';
 import { SelectionAPIBridge } from './SelectionAPIBridge';
 import { PanAPIBridge } from './PanAPIBridge';
@@ -121,55 +123,31 @@ export function LocalEmbedPDF({ file, url }: LocalEmbedPDFProps) {
   // Early return if no file or URL provided
   if (!file && !url) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100%',
-        background: 'var(--bg-surface)',
-        color: 'var(--text-secondary)',
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', marginBottom: '16px' }}>📄</div>
-          <div>No PDF provided</div>
-        </div>
-      </div>
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: '24px' }}>📄</div>
+          <Text c="dimmed" size="sm">
+            No PDF provided
+          </Text>
+        </Stack>
+      </Center>
     );
   }
 
   if (isLoading || !engine || !pdfUrl) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100%',
-        background: 'var(--bg-surface)',
-        color: 'var(--text-secondary)',
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
-          <div>Loading PDF Engine...</div>
-        </div>
-      </div>
-    );
+    return <ToolLoadingFallback toolName="PDF Engine" />;
   }
 
   if (error) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100%',
-        background: 'var(--bg-surface)',
-        color: 'var(--color-red-500)',
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', marginBottom: '16px' }}>❌</div>
-          <div>Error loading PDF engine: {error.message}</div>
-        </div>
-      </div>
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: '24px' }}>❌</div>
+          <Text c="red" size="sm" style={{ textAlign: 'center' }}>
+            Error loading PDF engine: {error.message}
+          </Text>
+        </Stack>
+      </Center>
     );
   }
 
