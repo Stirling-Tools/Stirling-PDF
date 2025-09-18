@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Button, ScrollArea, ActionIcon } from '@mantine/core';
+import { Menu, Button, ScrollArea, ActionIcon, Tooltip } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { supportedLanguages } from '../../i18n';
 import LocalIcon from './LocalIcon';
@@ -33,6 +33,7 @@ interface LanguageItemProps {
   rippleEffect?: RippleEffect | null;
   pendingLanguage: string | null;
   compact: boolean;
+  disabled?: boolean;
 }
 
 const LanguageItem: React.FC<LanguageItemProps> = ({
@@ -43,8 +44,19 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
   onClick,
   rippleEffect,
   pendingLanguage,
-  compact
+  compact,
+  disabled = false
 }) => {
+  const { t } = useTranslation();
+
+  const label = disabled ? (
+    <Tooltip label={t('comingSoon', 'Coming soon')} position="left" withArrow>
+      <p>{option.label}</p>
+    </Tooltip>
+  ) : (
+    <p>{option.label}</p>
+  );
+
   return (
     <div
       className={styles.languageItem}
@@ -58,8 +70,9 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
         variant="subtle"
         size="sm"
         fullWidth
-        onClick={onClick}
+        onClick={disabled ? undefined : onClick}
         data-selected={isSelected}
+        disabled={disabled}
         styles={{
           root: {
             borderRadius: '4px',
@@ -71,17 +84,20 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
             backgroundColor: isSelected
               ? 'light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))'
               : 'transparent',
-            color: isSelected
+            color: disabled
+              ? 'light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3))'
+              : isSelected
               ? 'light-dark(var(--mantine-color-blue-9), var(--mantine-color-white))'
               : 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-white))',
             transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            '&:hover': {
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            '&:hover': !disabled ? {
               backgroundColor: isSelected
                 ? 'light-dark(var(--mantine-color-blue-2), var(--mantine-color-blue-7))'
                 : 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))',
               transform: 'translateY(-1px)',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-            }
+            } : {}
           },
           label: {
             fontSize: '13px',
@@ -95,7 +111,7 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
           }
         }}
       >
-        {option.label}
+        {label}
         {!compact && rippleEffect && pendingLanguage === option.value && (
           <div
             key={rippleEffect.key}
@@ -252,19 +268,25 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
         >
           <ScrollArea h={190} type="scroll">
             <div className={styles.languageGrid}>
-              {languageOptions.map((option, index) => (
-                <LanguageItem
-                  key={option.value}
-                  option={option}
-                  index={index}
-                  animationTriggered={animationTriggered}
-                  isSelected={option.value === i18n.language}
-                  onClick={(event) => handleLanguageChange(option.value, event)}
-                  rippleEffect={rippleEffect}
-                  pendingLanguage={pendingLanguage}
-                  compact={compact}
-                />
-              ))}
+              {languageOptions.map((option, index) => {
+                const isEnglishGB = option.value === 'en-GB'; // Currently only English GB has enough translations to use
+                const isDisabled = !isEnglishGB;
+
+                return (
+                  <LanguageItem
+                    key={option.value}
+                    option={option}
+                    index={index}
+                    animationTriggered={animationTriggered}
+                    isSelected={option.value === i18n.language}
+                    onClick={(event) => handleLanguageChange(option.value, event)}
+                    rippleEffect={rippleEffect}
+                    pendingLanguage={pendingLanguage}
+                    compact={compact}
+                    disabled={isDisabled}
+                  />
+                );
+              })}
             </div>
           </ScrollArea>
         </Menu.Dropdown>
