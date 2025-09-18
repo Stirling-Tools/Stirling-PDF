@@ -20,5 +20,27 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/v1/admin/server-certificate")
 @Tag(
         name = "Admin - Server Certificate",
-        description = "Admin APIs for server certificate management")
+        description =
+                """
+                Server certificate management for secure enterprise deployments and encrypted communications.
+
+                This endpoint group provides certificate lifecycle management for organizations
+                requiring secure communications in document processing infrastructure.
+
+                Common use cases:
+                • Corporate security compliance and encrypted communications for healthcare/finance
+                • Customer data protection, internal audits, and multi-environment standardization
+                • Third-party security assessments and disaster recovery security measures
+
+                Business applications:
+                • Enterprise security governance, client trust protection, and secure B2B exchange
+                • Legal requirement fulfillment, liability reduction, and M&A security preparation
+
+                Operational scenarios:
+                • Certificate renewal, emergency replacement, and security incident response
+                • Multi-site deployment coordination and cloud migration preparation
+
+                Target users: Security administrators, compliance officers, and IT infrastructure
+                teams requiring enterprise-grade security for document processing systems.
+                """)
 public @interface AdminServerCertificateApi {}

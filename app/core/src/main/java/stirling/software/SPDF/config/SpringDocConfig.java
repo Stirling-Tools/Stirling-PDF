@@ -29,7 +29,7 @@ public class SpringDocConfig {
                                     openApi.getInfo()
                                             .title("Stirling PDF - Processing API")
                                             .description(
-                                                    "API documentation for PDF processing operations including conversion, manipulation, security, and utility functions."));
+                                                    "API documentation for PDF processing operations including conversion, manipulation, security, and utilities."));
                         })
                 .build();
     }
@@ -39,14 +39,18 @@ public class SpringDocConfig {
         return GroupedOpenApi.builder()
                 .group("management")
                 .displayName("Management")
-                .pathsToMatch("/api/v1/admin/**", "/api/v1/user/**", "/api/v1/settings/**", "/api/v1/team/**")
+                .pathsToMatch(
+                        "/api/v1/admin/**",
+                        "/api/v1/user/**",
+                        "/api/v1/settings/**",
+                        "/api/v1/team/**")
                 .addOpenApiCustomizer(
                         openApi -> {
                             openApi.info(
                                     openApi.getInfo()
                                             .title("Stirling PDF - Admin API")
                                             .description(
-                                                    "API documentation for administrative functions, user management, settings, and system configuration."));
+                                                    "API documentation for administrative functions, user management, and system configuration."));
                         })
                 .build();
     }
@@ -68,7 +72,7 @@ public class SpringDocConfig {
                                     openApi.getInfo()
                                             .title("Stirling PDF - System API")
                                             .description(
-                                                    "API documentation for system information, UI data, and general utility endpoints."));
+                                                    "API documentation for system information, UI data, and utility endpoints."));
                         })
                 .build();
     }

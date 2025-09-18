@@ -19,5 +19,29 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/proprietary/ui-data")
-@Tag(name = "Proprietary UI Data", description = "APIs for React UI data (Enterprise features)")
+@Tag(
+        name = "Proprietary UI Data",
+        description =
+                """
+                Enterprise user interface data services for commercial deployments and advanced business features.
+
+                This endpoint group provides enhanced data services for commercial and enterprise features,
+                supporting advanced business workflows and professional-grade functionality.
+
+                Common use cases:
+                • Enterprise-grade dashboards, multi-tenant deployment, and business intelligence
+                • Organizational hierarchy management and commercial feature licensing
+                • Professional support integration and advanced workflow automation
+
+                Business applications:
+                • ERP integration, CRM development, and executive reporting dashboards
+                • Multi-subsidiary management, professional service delivery, and compliance interfaces
+
+                Operational scenarios:
+                • Large-scale deployment management and white-label solution development
+                • Advanced system integration and commercial feature rollout
+
+                Target users: Enterprise administrators, business analysts, and organizations utilizing
+                commercial features and advanced business capabilities.
+                """)
 public @interface ProprietaryUiDataApi {}

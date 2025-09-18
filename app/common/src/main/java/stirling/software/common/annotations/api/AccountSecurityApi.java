@@ -18,5 +18,31 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/account")
-@Tag(name = "Account Security", description = "Account Security APIs")
+@Tag(
+        name = "Account Security",
+        description =
+                """
+                Account security and protection services for user safety and organizational compliance.
+
+                This endpoint group provides account security capabilities for organizations requiring
+                enhanced protection against unauthorized access, security threats, and compliance violations.
+
+                Common use cases:
+                • Corporate security policy compliance and SOX, HIPAA, GDPR requirements
+                • Fraud prevention, identity theft protection, and account compromise recovery
+                • Multi-factor authentication implementation and insider threat mitigation
+                • Account recovery and emergency access procedures
+
+                Business applications:
+                • Enterprise risk management, security governance, and customer trust protection
+                • Legal liability reduction and insurance requirement fulfillment
+                • Audit preparation, compliance reporting, and business continuity management
+
+                Operational scenarios:
+                • Security incident response, forensic investigation, and user training
+                • Emergency account lockdown, suspicious activity monitoring, and compliance documentation
+
+                Target users: Security administrators, compliance officers, and organizations
+                prioritizing account security and regulatory compliance.
+                """)
 public @interface AccountSecurityApi {}
