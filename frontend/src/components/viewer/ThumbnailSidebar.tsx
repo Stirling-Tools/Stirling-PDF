@@ -61,7 +61,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
     };
 
     generateThumbnails();
-  }, [visible, scrollState.totalPages, thumbnailAPI, thumbnails]);
+  }, [visible, scrollState.totalPages, thumbnailAPI]);
 
   const handlePageClick = (pageIndex: number) => {
     const pageNumber = pageIndex + 1; // Convert to 1-based

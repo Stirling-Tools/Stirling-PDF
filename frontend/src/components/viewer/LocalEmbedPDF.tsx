@@ -7,7 +7,7 @@ import { usePdfiumEngine } from '@embedpdf/engines/react';
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react';
 import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll/react';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
-import { RenderLayer, RenderPluginPackage } from '@embedpdf/plugin-render/react';
+import { RenderPluginPackage } from '@embedpdf/plugin-render/react';
 import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/react';
 import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/react';
 import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selection/react';

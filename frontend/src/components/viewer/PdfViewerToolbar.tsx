@@ -41,7 +41,7 @@ export function PdfViewerToolbar({
 
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
-    registerImmediateScrollUpdate((currentPage, totalPages) => {
+    registerImmediateScrollUpdate((currentPage, _totalPages) => {
       setPageInput(currentPage);
     });
     setPageInput(scrollState.currentPage);

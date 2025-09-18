@@ -24,7 +24,7 @@ const EmbedPdfViewerContent = ({
   previewFile,
 }: EmbedPdfViewerProps) => {
   const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
+  const { colorScheme: _colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
   const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState } = useViewer();
@@ -66,8 +66,6 @@ const EmbedPdfViewerContent = ({
 
   // Handle scroll wheel zoom
   React.useEffect(() => {
-    let accumulator = 0;
-
     const handleWheel = (event: WheelEvent) => {
       // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
       if (event.ctrlKey || event.metaKey) {

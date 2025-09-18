@@ -30,6 +30,17 @@
   --color-primary-800: #1e40af;
   --color-primary-900: #1e3a8a;
 
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+
   --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
   --color-gray-200: #e5e7eb;
@@ -199,6 +210,17 @@
   --border: 55 65 81;
 
   /* Dark theme Mantine colors */
+  --color-red-50: #2d1b1b;
+  --color-red-100: #3a2323;
+  --color-red-200: #4a2d2d;
+  --color-red-300: #5c3535;
+  --color-red-400: #7c4a4a;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+
   --color-gray-50: #111827;
   --color-gray-100: #1F2329;
   --color-gray-200: #2A2F36;
