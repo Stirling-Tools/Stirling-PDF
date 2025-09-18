@@ -684,6 +684,13 @@
     },
     "splitPages": "Enter pages to split on:",
     "submit": "Split",
+    "steps": {
+      "chooseMethod": "Choose Method",
+      "settings": "Settings"
+    },
+    "settings": {
+      "selectMethodFirst": "Please select a split method first"
+    },
     "error": {
       "failed": "An error occurred while splitting the PDF."
     },
@@ -692,12 +699,45 @@
       "placeholder": "Select how to split the PDF"
     },
     "methods": {
-      "byPages": "Split at Page Numbers",
-      "bySections": "Split by Sections",
-      "bySize": "Split by File Size",
-      "byPageCount": "Split by Page Count",
-      "byDocCount": "Split by Document Count",
-      "byChapters": "Split by Chapters"
+      "prefix": {
+        "splitAt": "Split at",
+        "splitBy": "Split by"
+      },
+      "byPages": {
+        "name": "Page Numbers",
+        "desc": "Extract specific pages (1,3,5-10)",
+        "tooltip": "Enter page numbers separated by commas or ranges with hyphens"
+      },
+      "bySections": {
+        "name": "Sections",
+        "desc": "Divide pages into grid sections",
+        "tooltip": "Split each page into horizontal and vertical sections"
+      },
+      "bySize": {
+        "name": "File Size",
+        "desc": "Limit maximum file size",
+        "tooltip": "Specify maximum file size (e.g. 10MB, 500KB)"
+      },
+      "byPageCount": {
+        "name": "Page Count",
+        "desc": "Fixed pages per file",
+        "tooltip": "Enter the number of pages for each split file"
+      },
+      "byDocCount": {
+        "name": "Document Count",
+        "desc": "Create specific number of files",
+        "tooltip": "Enter how many files you want to create"
+      },
+      "byChapters": {
+        "name": "Chapters",
+        "desc": "Split at bookmark boundaries",
+        "tooltip": "Uses PDF bookmarks to determine split points"
+      },
+      "byPageDivider": {
+        "name": "Page Divider",
+        "desc": "Auto-split with divider sheets",
+        "tooltip": "Use QR code divider sheets between documents when scanning"
+      }
     },
     "value": {
       "fileSize": {
@@ -2371,6 +2411,13 @@
     "storageLow": "Storage is running low. Consider removing old files.",
     "supportMessage": "Powered by browser database storage for unlimited capacity",
     "noFileSelected": "No files selected",
+    "showHistory": "Show History",
+    "hideHistory": "Hide History",
+    "fileHistory": "File History",
+    "loadingHistory": "Loading History...",
+    "lastModified": "Last Modified",
+    "toolChain": "Tools Applied",
+    "restore": "Restore",
     "searchFiles": "Search files...",
     "recent": "Recent",
     "localFiles": "Local Files",

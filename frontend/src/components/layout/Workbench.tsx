@@ -42,7 +42,7 @@ export default function Workbench() {
   // Get tool registry to look up selected tool
   const { toolRegistry } = useToolManagement();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
-  const { addToActiveFiles } = useFileHandler();
+  const { addFiles } = useFileHandler();
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -81,7 +81,7 @@ export default function Workbench() {
                 setCurrentView("pageEditor");
               },
               onMergeFiles: (filesToMerge) => {
-                filesToMerge.forEach(addToActiveFiles);
+                addFiles(filesToMerge);
                 setCurrentView("viewer");
               }
             })}
