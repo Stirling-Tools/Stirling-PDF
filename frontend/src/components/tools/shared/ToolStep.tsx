@@ -48,6 +48,7 @@ const renderTooltipTitle = (
         tips={tooltip.tips}
         header={tooltip.header}
         sidebarTooltip={true}
+        pinOnClick={true}
       >
         <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
           <Text fw={400} size="sm">
