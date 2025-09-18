@@ -27,6 +27,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/remove-password': 'remove-password',
   '/single-large-page': 'single-large-page',
   '/repair': 'repair',
+  '/rotate-pdf': 'rotate',
   '/unlock-pdf-forms': 'unlock-pdf-forms',
   '/remove-certificate-sign': 'remove-certificate-sign',
   '/remove-cert-sign': 'remove-certificate-sign'

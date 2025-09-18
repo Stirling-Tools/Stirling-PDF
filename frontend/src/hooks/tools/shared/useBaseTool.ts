@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useFileSelection } from '../../../contexts/FileContext';
 import { useEndpointEnabled } from '../../useEndpointConfig';
 import { BaseToolProps } from '../../../types/tool';
@@ -45,6 +45,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
 
   // File selection
   const { selectedFiles } = useFileSelection();
+  const previousFileCount = useRef(selectedFiles.length);
 
   // Tool-specific hooks
   const params = useParams();
@@ -65,6 +66,18 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
       operation.resetResults();
       onPreviewFile?.(null);
     }
+  }, [selectedFiles.length]);
+
+  // Reset parameters when transitioning from 0 files to at least 1 file
+  useEffect(() => {
+    const currentFileCount = selectedFiles.length;
+    const prevFileCount = previousFileCount.current;
+
+    if (prevFileCount === 0 && currentFileCount > 0) {
+      params.resetParameters();
+    }
+
+    previousFileCount.current = currentFileCount;
   }, [selectedFiles.length]);
 
   // Standard handlers
