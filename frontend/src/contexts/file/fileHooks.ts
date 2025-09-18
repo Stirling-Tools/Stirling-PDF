@@ -123,12 +123,12 @@ export function useStirlingFileStub(fileId: FileId): { file?: File; record?: Sti
 /**
  * Hook for all files (use sparingly - causes re-renders on file list changes)
  */
-export function useAllFiles(): { files: StirlingFile[]; records: StirlingFileStub[]; fileIds: FileId[] } {
+export function useAllFiles(): { files: StirlingFile[]; fileStubs: StirlingFileStub[]; fileIds: FileId[] } {
   const { state, selectors } = useFileState();
 
   return useMemo(() => ({
     files: selectors.getFiles(),
-    records: selectors.getStirlingFileStubs(),
+    fileStubs: selectors.getStirlingFileStubs(),
     fileIds: state.files.ids
   }), [state.files.ids, selectors]);
 }
@@ -136,12 +136,12 @@ export function useAllFiles(): { files: StirlingFile[]; records: StirlingFileStu
 /**
  * Hook for selected files (optimized for selection-based UI)
  */
-export function useSelectedFiles(): { selectedFiles: StirlingFile[]; selectedRecords: StirlingFileStub[]; selectedFileIds: FileId[] } {
+export function useSelectedFiles(): { selectedFiles: StirlingFile[]; selectedFileStubs: StirlingFileStub[]; selectedFileIds: FileId[] } {
   const { state, selectors } = useFileState();
 
   return useMemo(() => ({
     selectedFiles: selectors.getSelectedFiles(),
-    selectedRecords: selectors.getSelectedStirlingFileStubs(),
+    selectedFileStubs: selectors.getSelectedStirlingFileStubs(),
     selectedFileIds: state.ui.selectedFileIds
   }), [state.ui.selectedFileIds, selectors]);
 }
