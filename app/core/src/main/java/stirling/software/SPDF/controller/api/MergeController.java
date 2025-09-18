@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -237,7 +238,9 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
                             + " provided. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<StreamingResponseBody> mergePdfs(@ModelAttribute MergePdfsRequest request)
+    public ResponseEntity<StreamingResponseBody> mergePdfs(
+            @ModelAttribute MergePdfsRequest request,
+            @RequestParam(value = "fileOrder", required = false) String fileOrder)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
         TempFile outputTempFile;
@@ -249,10 +252,15 @@ public class MergeController {
 
             MultipartFile[] files = request.getFileInput();
 
-            Arrays.sort(
-                    files,
-                    getSortComparator(
-                            request.getSortType())); // Sort files based on requested sort type
+            // If front-end provided explicit visible order, honor it and override backend sorting
+            if (fileOrder != null && !fileOrder.isBlank()) {
+                files = reorderFilesByProvidedOrder(files, fileOrder);
+            } else {
+                Arrays.sort(
+                        files,
+                        getSortComparator(
+                                request.getSortType())); // Sort files based on requested sort type
+            }
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;
@@ -326,5 +334,33 @@ public class MergeController {
                 tempFileManager.deleteTempFile(file); // Delete temporary files
             }
         }
+    }
+
+    // Re-order files to match the explicit order provided by the front-end.
+    // fileOrder is newline-delimited original filenames in the desired order.
+    private MultipartFile[] reorderFilesByProvidedOrder(MultipartFile[] files, String fileOrder) {
+        String[] desired = fileOrder.split("\n", -1);
+        List<MultipartFile> remaining = new ArrayList<>(Arrays.asList(files));
+        List<MultipartFile> ordered = new ArrayList<>(files.length);
+
+        for (String name : desired) {
+            if (name == null || name.isEmpty()) continue;
+            int idx = indexOfByOriginalFilename(remaining, name);
+            if (idx >= 0) {
+                ordered.add(remaining.remove(idx));
+            }
+        }
+
+        // Append any files not explicitly listed, preserving their relative order
+        ordered.addAll(remaining);
+        return ordered.toArray(new MultipartFile[0]);
+    }
+
+    private int indexOfByOriginalFilename(List<MultipartFile> list, String name) {
+        for (int i = 0; i < list.size(); i++) {
+            MultipartFile f = list.get(i);
+            if (name.equals(f.getOriginalFilename())) return i;
+        }
+        return -1;
     }
 }
