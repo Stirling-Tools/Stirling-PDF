@@ -168,12 +168,44 @@ export function computeStampPreviewStyle(
   const xPts = calcX();
   const yPts = calcY();
   const xPx = xPts * scaleX;
-  const yPx = yPts * scaleY;
+  let yPx = yPts * scaleY;
+  // Vertical correction: text appears lower in preview vs output for middle/bottom rows
+  if (parameters.stampType === 'text') {
+    try {
+      const rootFontSizePx = parseFloat(getComputedStyle(document.documentElement).fontSize || '16') || 16;
+      const middleRowOffsetPx = 1 * rootFontSizePx; 
+      const bottomRowOffsetPx = 1.25 * rootFontSizePx; 
+      const rowIndex = Math.floor((position - 1) / 3); 
+      if (rowIndex === 1) {
+        yPx += middleRowOffsetPx;
+      } else if (rowIndex === 2) {
+        yPx += bottomRowOffsetPx;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
   const widthPx = widthPtsContent * scaleX;
   const heightPx = heightPtsContent * scaleY;
 
   const opacity = Math.max(0, Math.min(1, parameters.opacity / 100));
   const displayOpacity = opacity;
+
+  // Horizontal alignment inside the preview item for text stamps
+  let alignItems: 'flex-start' | 'center' | 'flex-end' = 'flex-start';
+  if (parameters.stampType === 'text') {
+    const colIndex = position % 3; // 1: left, 2: center, 0: right
+    switch (colIndex) {
+      case 2: // center column
+        alignItems = 'center';
+        break;
+      case 0: // right column
+        alignItems = 'flex-end';
+        break;
+      default:
+        alignItems = 'flex-start';
+    }
+  }
 
   return {
     container: {
@@ -198,6 +230,7 @@ export function computeStampPreviewStyle(
       flexDirection: 'column',
       justifyContent: 'flex-start',
       lineHeight: 1,
+      alignItems,
       cursor: showQuickGrid ? 'default' : 'move',
       pointerEvents: showQuickGrid ? 'none' : 'auto',
     }

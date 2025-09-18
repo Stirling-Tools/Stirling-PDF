@@ -15,6 +15,7 @@ export interface AddStampParameters extends BaseParameters {
   customMargin: 'small' | 'medium' | 'large' | 'x-large';
   customColor: string;
   pageNumbers: string;
+  _activePill: 'fontSize' | 'rotation' | 'opacity';
 }
 
 export const defaultParameters: AddStampParameters = {
@@ -30,6 +31,7 @@ export const defaultParameters: AddStampParameters = {
   customMargin: 'medium',
   customColor: '#d3d3d3',
   pageNumbers: '1',
+  _activePill: 'fontSize',
 };
 
 export type AddStampParametersHook = BaseParametersHook<AddStampParameters>;

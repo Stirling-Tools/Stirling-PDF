@@ -1467,7 +1467,8 @@
     "overrideY": "Override Y Coordinate",
     "customMargin": "Custom Margin",
     "customColor": "Custom Text Color",
-    "submit": "Submit"
+    "submit": "Submit",
+    "noStampSelected": "No stamp selected. Return to Step 3."
   },
   "removeImagePdf": {
     "tags": "Remove Image,Page operations,Back end,server side"

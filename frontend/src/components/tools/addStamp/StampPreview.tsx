@@ -3,7 +3,6 @@ import { AddStampParameters } from './useAddStampParameters';
 import { pdfWorkerManager } from '../../../services/pdfWorkerManager';
 import { useThumbnailGeneration } from '../../../hooks/useThumbnailGeneration';
 import { A4_ASPECT_RATIO, getFirstSelectedPage, getFontFamily, computeStampPreviewStyle } from './StampPreviewUtils';
-import FitText from '../../shared/FitText';
 import styles from './StampPreview.module.css';
 
 type Props = {
@@ -87,7 +86,7 @@ export default function StampPreview({ parameters, onParameterChange, file, show
       }
       try {
         const pageNumber = Math.max(1, getFirstSelectedPage(parameters.pageNumbers));
-        const pageId = `${file.name}:page:${pageNumber}`;
+        const pageId = `${file.name}:${file.size}:${file.lastModified}:page:${pageNumber}`;
         const thumb = await requestThumbnail(pageId, file, pageNumber);
         if (isActive) setPageThumbnail(thumb || null);
       } catch {
@@ -277,18 +276,17 @@ export default function StampPreview({ parameters, onParameterChange, file, show
             style={style.item as React.CSSProperties}
           >
             {(parameters.stampText || '').split('\n').map((line, idx) => (
-              <FitText
+              <span
                 key={idx}
-                text={line || '\u00A0'}
-                lines={1}
-                minimumFontScale={0.5}
-                fontSize={parameters.fontSize}
                 className={styles.textLine}
                 style={{
                   fontFamily: getFontFamily(parameters.alphabet),
+                  fontSize: `${Math.max(1, parameters.fontSize / 2)}px`,
+                  whiteSpace: 'nowrap',
                 }}
-                as="span"
-              />
+              >
+                {line || '\u00A0'}
+              </span>
             ))}
             {itemHandles}
           </div>

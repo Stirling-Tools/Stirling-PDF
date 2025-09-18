@@ -12,14 +12,13 @@ import LocalIcon from "../components/shared/LocalIcon";
 import styles from "../components/tools/addStamp/StampPreview.module.css";
 import { Tooltip } from "../components/shared/Tooltip";
 import ButtonSelector from "../components/shared/ButtonSelector";
+import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
+import ObscuredOverlay from "../components/shared/ObscuredOverlay";
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
 
-  const [collapsedType, setCollapsedType] = useState(false);
-  const [collapsedFormatting, setCollapsedFormatting] = useState(true);
-  const [collapsedPageSelection, setCollapsedPageSelection] = useState(false);
   const [quickPositionModeSelected, setQuickPositionModeSelected] = useState(false);
   const [customPositionModeSelected, setCustomPositionModeSelected] = useState(true);
 
@@ -48,14 +47,34 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const hasFiles = selectedFiles.length > 0;
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
 
+  enum AddStampStep {
+    NONE = 'none',
+    PAGE_SELECTION = 'pageSelection',
+    STAMP_TYPE = 'stampType',
+    POSITION_FORMATTING = 'positionFormatting'
+  }
+
+  const accordion = useAccordionSteps<AddStampStep>({
+    noneValue: AddStampStep.NONE,
+    initialStep: AddStampStep.PAGE_SELECTION,
+    stateConditions: {
+      hasFiles,
+      hasResults
+    },
+    afterResults: () => {
+      operation.resetResults();
+      onPreviewFile?.(null);
+    }
+  });
+
   const getSteps = () => {
     const steps: any[] = [];
 
     // Step 1: File settings (page selection)
     steps.push({
       title: t("AddStampRequest.pageSelection", "Page Selection"),
-      isCollapsed: hasResults || collapsedPageSelection,
-      onCollapsedClick: hasResults ? () => operation.resetResults() : () => setCollapsedPageSelection(!collapsedPageSelection),
+      isCollapsed: accordion.getCollapsedState(AddStampStep.PAGE_SELECTION),
+      onCollapsedClick: () => accordion.handleStepToggle(AddStampStep.PAGE_SELECTION),
       isVisible: hasFiles || hasResults,
       content: (
         <Stack gap="md">
@@ -72,8 +91,8 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     // Step 2: Type & Content
     steps.push({
       title: t("AddStampRequest.stampType", "Stamp Type"),
-      isCollapsed: hasResults ? true : collapsedType,
-      onCollapsedClick: hasResults ? () => operation.resetResults() : () => setCollapsedType(!collapsedType),
+      isCollapsed: accordion.getCollapsedState(AddStampStep.STAMP_TYPE),
+      onCollapsedClick: () => accordion.handleStepToggle(AddStampStep.STAMP_TYPE),
       isVisible: hasFiles || hasResults,
       content: (
         <Stack gap="md" justify="space-between" flex={1}>
@@ -161,8 +180,8 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     // Step 3: Formatting & Position
     steps.push({
       title: t("AddStampRequest.positionAndFormatting", "Position & Formatting"),
-      isCollapsed: hasResults ? true : collapsedFormatting,
-      onCollapsedClick: hasResults ? () => operation.resetResults() : () => setCollapsedFormatting(!collapsedFormatting),
+      isCollapsed: accordion.getCollapsedState(AddStampStep.POSITION_FORMATTING),
+      onCollapsedClick: () => accordion.handleStepToggle(AddStampStep.POSITION_FORMATTING),
       isVisible: hasFiles || hasResults,
       content: (
         <Stack gap="md" justify="space-between">
@@ -201,27 +220,27 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <div className="flex justify-between gap-[0.5rem]">
             <Tooltip content={t('AddStampRequest.rotation', 'Rotation')} position="top">
               <Button
-                variant={(params.parameters as any)._activePill === 'rotation' ? 'filled' : 'outline'}
+                variant={params.parameters._activePill === 'rotation' ? 'filled' : 'outline'}
                 className="flex-1"
-                onClick={() => params.updateParameter('_activePill' as any, 'rotation' as any)}
+                onClick={() => params.updateParameter('_activePill', 'rotation')}
               >
                 <LocalIcon icon="rotate-right-rounded" width="1.1rem" height="1.1rem" />
               </Button>
             </Tooltip>
             <Tooltip content={t('AddStampRequest.opacity', 'Opacity')} position="top">
               <Button
-                variant={(params.parameters as any)._activePill === 'opacity' ? 'filled' : 'outline'}
+                variant={params.parameters._activePill === 'opacity' ? 'filled' : 'outline'}
                 className="flex-1"
-                onClick={() => params.updateParameter('_activePill' as any, 'opacity' as any)}
+                onClick={() => params.updateParameter('_activePill', 'opacity')}
               >
                 <LocalIcon icon="opacity" width="1.1rem" height="1.1rem" />
               </Button>
             </Tooltip>
             <Tooltip content={params.parameters.stampType === 'image' ? t('AddStampRequest.imageSize', 'Image Size') : t('AddStampRequest.fontSize', 'Font Size')} position="top">
               <Button
-                variant={(params.parameters as any)._activePill === 'fontSize' ? 'filled' : 'outline'}
+                variant={params.parameters._activePill === 'fontSize' ? 'filled' : 'outline'}
                 className="flex-1"
-                onClick={() => params.updateParameter('_activePill' as any, 'fontSize' as any)}
+                onClick={() => params.updateParameter('_activePill', 'fontSize')}
               >
                 <LocalIcon icon="zoom-in-map-rounded" width="1.1rem" height="1.1rem" />
               </Button>
@@ -229,7 +248,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           </div>
 
           {/* Single slider bound to selected pill */}
-          {(params.parameters as any)._activePill === 'fontSize' && (
+          {params.parameters._activePill === 'fontSize' && (
             <Stack gap="xs">
               <Text className={styles.labelText}>
                 {params.parameters.stampType === 'image' 
@@ -259,7 +278,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               </Group>
             </Stack>
           )}
-          {(params.parameters as any)._activePill === 'rotation' && (
+          {params.parameters._activePill === 'rotation' && (
             <Stack gap="xs">
               <Text className={styles.labelText}>{t('AddStampRequest.rotation', 'Rotation')}</Text>
               <Group className={styles.sliderGroup} align="center">
@@ -285,7 +304,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               </Group>
             </Stack>
           )}
-          {(params.parameters as any)._activePill === 'opacity' && (
+          {params.parameters._activePill === 'opacity' && (
             <Stack gap="xs">
               <Text className={styles.labelText}>{t('AddStampRequest.opacity', 'Opacity')}</Text>
               <Group className={styles.sliderGroup} align="center">
@@ -340,13 +359,26 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           )}
 
 
-          {/* Unified preview; when in quick mode, overlay grid inside preview */}
-          <StampPreview
-            parameters={params.parameters}
-            onParameterChange={params.updateParameter}
-            file={selectedFiles[0] || null}
-            showQuickGrid={params.parameters.stampType === 'text' ? true : quickPositionModeSelected}
-          />
+          {/* Unified preview wrapped with obscured overlay if no stamp selected in step 4 */}
+          <ObscuredOverlay
+            obscured={
+              accordion.currentStep === AddStampStep.POSITION_FORMATTING &&
+              ((params.parameters.stampType === 'text' && params.parameters.stampText.trim().length === 0) ||
+               (params.parameters.stampType === 'image' && !params.parameters.stampImage))
+            }
+            overlayMessage={
+              <Text size="sm" c="white" fw={600}>
+                {t('AddStampRequest.noStampSelected', 'No stamp selected. Return to Step 3.')}
+              </Text>
+            }
+          >
+            <StampPreview
+              parameters={params.parameters}
+              onParameterChange={params.updateParameter}
+              file={selectedFiles[0] || null}
+              showQuickGrid={params.parameters.stampType === 'text' ? true : quickPositionModeSelected}
+            />
+          </ObscuredOverlay>
         </Stack>
       ),
     });
@@ -377,9 +409,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         onPreviewFile?.(null);
       },
     },
-    forceStepNumbers: true,
-    maxOneExpanded: true,
-    initialExpandedStep: "files"
   });
 };
 
