@@ -1,4 +1,5 @@
 import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
 import '../vite-env.d.ts';
 import './index.css'; // Import Tailwind CSS
 import React from 'react';

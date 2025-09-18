@@ -1220,24 +1220,127 @@
   },
   "changeMetadata": {
     "tags": "Title,author,date,creation,time,publisher,producer,stats",
-    "title": "Change Metadata",
     "header": "Change Metadata",
-    "selectText": {
-      "1": "Please edit the variables you wish to change",
-      "2": "Delete all metadata",
-      "3": "Show Custom Metadata:",
-      "4": "Other Metadata:",
-      "5": "Add Custom Metadata Entry"
+    "submit": "Change",
+    "filenamePrefix": "metadata",
+    "settings": {
+      "title": "Metadata Settings"
     },
-    "author": "Author:",
-    "creationDate": "Creation Date (yyyy/MM/dd HH:mm:ss):",
-    "creator": "Creator:",
-    "keywords": "Keywords:",
-    "modDate": "Modification Date (yyyy/MM/dd HH:mm:ss):",
-    "producer": "Producer:",
-    "subject": "Subject:",
-    "trapped": "Trapped:",
-    "submit": "Change"
+    "standardFields": {
+      "title": "Standard Fields"
+    },
+    "deleteAll": {
+      "label": "Remove Existing Metadata",
+      "checkbox": "Delete all metadata"
+    },
+    "title": {
+      "label": "Title",
+      "placeholder": "Document title"
+    },
+    "author": {
+      "label": "Author",
+      "placeholder": "Document author"
+    },
+    "subject": {
+      "label": "Subject",
+      "placeholder": "Document subject"
+    },
+    "keywords": {
+      "label": "Keywords",
+      "placeholder": "Document keywords"
+    },
+    "creator": {
+      "label": "Creator",
+      "placeholder": "Document creator"
+    },
+    "producer": {
+      "label": "Producer",
+      "placeholder": "Document producer"
+    },
+    "dates": {
+      "title": "Date Fields"
+    },
+    "creationDate": {
+      "label": "Creation Date",
+      "placeholder": "Creation date"
+    },
+    "modificationDate": {
+      "label": "Modification Date",
+      "placeholder": "Modification date"
+    },
+    "trapped": {
+      "label": "Trapped Status",
+      "unknown": "Unknown",
+      "true": "True",
+      "false": "False"
+    },
+    "advanced": {
+      "title": "Advanced Options"
+    },
+    "customFields": {
+      "title": "Custom Metadata",
+      "description": "Add custom metadata fields to the document",
+      "add": "Add Field",
+      "key": "Key",
+      "keyPlaceholder": "Custom key",
+      "value": "Value",
+      "valuePlaceholder": "Custom value",
+      "remove": "Remove"
+    },
+    "results": {
+      "title": "Updated PDFs"
+    },
+    "error": {
+      "failed": "An error occurred while changing the PDF metadata."
+    },
+    "tooltip": {
+      "header": {
+        "title": "PDF Metadata Overview"
+      },
+      "standardFields": {
+        "title": "Standard Fields",
+        "text": "Common PDF metadata fields that describe the document.",
+        "bullet1": "Title: Document name or heading",
+        "bullet2": "Author: Person who created the document",
+        "bullet3": "Subject: Brief description of content",
+        "bullet4": "Keywords: Search terms for the document",
+        "bullet5": "Creator/Producer: Software used to create the PDF"
+      },
+      "dates": {
+        "title": "Date Fields",
+        "text": "When the document was created and modified.",
+        "bullet1": "Creation Date: When original document was made",
+        "bullet2": "Modification Date: When last changed"
+      },
+      "options": {
+        "title": "Additional Options",
+        "text": "Custom fields and privacy controls.",
+        "bullet1": "Custom Metadata: Add your own key-value pairs",
+        "bullet2": "Trapped Status: High-quality printing setting",
+        "bullet3": "Delete All: Remove all metadata for privacy"
+      },
+      "deleteAll": {
+        "title": "Remove Existing Metadata",
+        "text": "Complete metadata deletion to ensure privacy."
+      },
+      "customFields": {
+        "title": "Custom Metadata",
+        "text": "Add your own custom key-value metadata pairs.",
+        "bullet1": "Add any custom fields relevant to your document",
+        "bullet2": "Examples: Department, Project, Version, Status",
+        "bullet3": "Both key and value are required for each entry"
+      },
+      "advanced": {
+        "title": "Advanced Options",
+        "trapped": {
+          "title": "Trapped Status",
+          "description": "Indicates if document is prepared for high-quality printing.",
+          "bullet1": "True: Document has been trapped for printing",
+          "bullet2": "False: Document has not been trapped",
+          "bullet3": "Unknown: Trapped status is not specified"
+        }
+      }
+    }
   },
   "fileToPDF": {
     "tags": "transformation,format,document,picture,slide,text,conversion,office,docs,word,excel,powerpoint",
