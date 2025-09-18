@@ -19,56 +19,56 @@
               <form method="post" id="form1" enctype="multipart/form-data" th:action="@{'/api/v1/misc/update-metadata'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
-                <div class="form-check mb-3-inline ms-3">
-                  <input class="form-check-input" id="deleteAll" name="deleteAll" type="checkbox">
-                  <label class="form-check-label" for="deleteAll" th:text="#{changeMetadata.selectText.2}" ></label>
+                <div class="form-check mb-3 ms-3">
+                  <input id="deleteAll" name="deleteAll" type="checkbox">
+                  <label for="deleteAll" th:text="#{changeMetadata.selectText.2}" ></label>
                 </div>
-                <div class="form-check mb-3-inline ms-3">
-                  <input class="form-check-input" id="customModeCheckbox" type="checkbox">
-                  <label class="form-check-label" for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
+                <div class="form-check mb-3 ms-3">
+                  <input id="customModeCheckbox" type="checkbox">
+                  <label for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
                 </div>
                 <div class="mb-3">
-                  <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label>
+                  <label for="author" th:text="#{changeMetadata.author}"></label>
                   <input type="text" class="form-control" id="author" name="author">
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-check-label" for="creationDate" th:text="#{changeMetadata.creationDate}"></label>
+                  <label for="creationDate" th:text="#{changeMetadata.creationDate}"></label>
                   <input type="text" class="form-control" id="creationDate" name="creationDate" placeholder="2020/12/25 18:30:59">
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-check-label" for="creator" th:text="#{changeMetadata.creator}"></label>
+                  <label for="creator" th:text="#{changeMetadata.creator}"></label>
                   <input type="text" class="form-control" id="creator" name="creator">
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-check-label" for="keywords" th:text="#{changeMetadata.keywords}"></label>
+                  <label for="keywords" th:text="#{changeMetadata.keywords}"></label>
                   <input type="text" class="form-control" id="keywords" name="keywords">
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-check-label" for="modificationDate" th:text="#{changeMetadata.modDate}"></label>
+                  <label for="modificationDate" th:text="#{changeMetadata.modDate}"></label>
                   <input type="text" class="form-control" id="modificationDate" name="modificationDate" placeholder="2020/12/25 18:30:59">
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-check-label" for="producer" th:text="#{changeMetadata.producer}"></label>
+                  <label for="producer" th:text="#{changeMetadata.producer}"></label>
                   <input type="text" class="form-control" id="producer" name="producer">
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-check-label" for="subject" th:text="#{changeMetadata.subject}"></label>
+                  <label for="subject" th:text="#{changeMetadata.subject}"></label>
                   <input type="text" class="form-control" id="subject" name="subject">
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-check-label" for="title" th:text="#{changeMetadata.title}"></label>
+                  <label for="title" th:text="#{changeMetadata.title}"></label>
                   <input type="text" class="form-control" id="title" name="title">
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-check-label" for="trapped" th:text="#{changeMetadata.trapped}"></label>
+                  <label for="trapped" th:text="#{changeMetadata.trapped}"></label>
                   <select class="form-control" id="trapped" name="trapped">
                     <option value="True" th:text="#{true}"></option>
                     <option value="False" th:text="#{false}" selected></option>

@@ -26,9 +26,9 @@
                 <label for="verticalDivisions" th:text="#{split-by-sections.vertical.label}">Vertical Divisions</label>
                 <input type="number" id="verticalDivisions" name="verticalDivisions" class="form-control" min="0" max="300" required value="1" th:placeholder="#{split-by-sections.vertical.placeholder}">
                 <br>
-                <div class="mb-3 form-check">
-                  <input class="form-check-input" id="merge" name="merge" type="checkbox">
-                  <label class="form-check-label" for="merge" th:text="#{split-by-sections.merge}">merge PDFs into one</label>
+                <div class="form-check mb-3">
+                  <input id="merge" name="merge" type="checkbox">
+                  <label for="merge" th:text="#{split-by-sections.merge}">merge PDFs into one</label>
                 </div>
                 <br>
                 <div id="pdfVisualAid" class="pdf-visual-aid"></div>

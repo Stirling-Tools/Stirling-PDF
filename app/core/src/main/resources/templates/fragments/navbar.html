@@ -284,12 +284,12 @@
             <span id="zipThresholdValue" class="ms-2"></span>
           </div>
           <div class="form-check mb-3">
-            <input class="form-check-input" id="boredWaiting" th:title="#{settings.bored.help}" type="checkbox">
-            <label class="form-check-label" for="boredWaiting" th:text="#{bored}"></label>
+            <input id="boredWaiting" th:title="#{settings.bored.help}" type="checkbox">
+            <label for="boredWaiting" th:text="#{bored}"></label>
           </div>
           <div class="form-check mb-3">
-            <input class="form-check-input" id="cacheInputs" th:title="#{settings.cacheInputs.help}" type="checkbox">
-            <label class="form-check-label" for="cacheInputs" th:text="#{settings.cacheInputs.name}"></label>
+            <input id="cacheInputs" th:title="#{settings.cacheInputs.help}" type="checkbox">
+            <label for="cacheInputs" th:text="#{settings.cacheInputs.name}"></label>
           </div>
 
           <a th:if="${@loginEnabled and @activeSecurity}" th:href="@{'/account'}" class="btn btn-sm btn-outline-primary"

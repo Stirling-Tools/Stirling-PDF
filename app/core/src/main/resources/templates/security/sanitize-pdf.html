@@ -21,28 +21,28 @@
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 </div>
                 <div class="form-check ms-3">
-                  <input checked class="form-check-input" id="removeJavaScript" name="removeJavaScript" type="checkbox">
-                  <label class="form-check-label" for="removeJavaScript" th:text="#{sanitizePDF.selectText.1}"></label>
+                  <input checked id="removeJavaScript" name="removeJavaScript" type="checkbox">
+                  <label for="removeJavaScript" th:text="#{sanitizePDF.selectText.1}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input checked class="form-check-input" id="removeEmbeddedFiles" name="removeEmbeddedFiles" type="checkbox">
-                  <label class="form-check-label" for="removeEmbeddedFiles" th:text="#{sanitizePDF.selectText.2}"></label>
+                  <input checked id="removeEmbeddedFiles" name="removeEmbeddedFiles" type="checkbox">
+                  <label for="removeEmbeddedFiles" th:text="#{sanitizePDF.selectText.2}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input class="form-check-input" id="removeXMPMetadata" name="removeXMPMetadata" type="checkbox">
-                  <label class="form-check-label" for="removeXMPMetadata" th:text="#{sanitizePDF.selectText.3}"></label>
+                  <input id="removeXMPMetadata" name="removeXMPMetadata" type="checkbox">
+                  <label for="removeXMPMetadata" th:text="#{sanitizePDF.selectText.3}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input class="form-check-input" id="removeMetadata" name="removeMetadata" type="checkbox">
-                  <label class="form-check-label" for="removeMetadata" th:text="#{sanitizePDF.selectText.6}"></label>
+                  <input id="removeMetadata" name="removeMetadata" type="checkbox">
+                  <label for="removeMetadata" th:text="#{sanitizePDF.selectText.6}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input class="form-check-input" id="removeLinks" name="removeLinks" type="checkbox">
-                  <label class="form-check-label" for="removeLinks" th:text="#{sanitizePDF.selectText.4}"></label>
+                  <input id="removeLinks" name="removeLinks" type="checkbox">
+                  <label for="removeLinks" th:text="#{sanitizePDF.selectText.4}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input class="form-check-input" id="removeFonts" name="removeFonts" type="checkbox">
-                  <label class="form-check-label" for="removeFonts" th:text="#{sanitizePDF.selectText.5}"></label>
+                  <input id="removeFonts" name="removeFonts" type="checkbox">
+                  <label for="removeFonts" th:text="#{sanitizePDF.selectText.5}"></label>
                 </div>
                 <br>
                 <div class="mb-3 text-left">

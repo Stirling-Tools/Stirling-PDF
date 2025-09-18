@@ -40,9 +40,9 @@
           <div
             th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
           </div>
-          <div class="mb-3 form-check d-none">
-            <input checked class="form-check-input" id="convertPDFToImage" name="convertPDFToImage" type="checkbox">
-            <label class="form-check-label" for="convertPDFToImage" th:text="#{redact.convertPDFToImageLabel}"></label>
+          <div class="form-check mb-3 d-none">
+            <input checked id="convertPDFToImage" name="convertPDFToImage" type="checkbox">
+            <label for="convertPDFToImage" th:text="#{redact.convertPDFToImageLabel}"></label>
           </div>
           <div class="mb-3 d-none">
             <label for="pageNumbers" th:text="#{redact.pageRedactionNumbers.title} + ':'" class="mb-2"></label>
