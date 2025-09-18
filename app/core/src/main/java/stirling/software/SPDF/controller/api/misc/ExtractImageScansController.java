@@ -32,7 +32,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -97,7 +99,23 @@ public class ExtractImageScansController {
                         Path tempFile = Files.createTempFile("image_", ".png");
 
                         // Render image and save as temp file
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300);
+                        BufferedImage image;
+
+                        // Use global maximum DPI setting, fallback to 300 if not set
+                        int renderDpi = 300; // Default fallback
+                        ApplicationProperties properties =
+                                ApplicationContextProvider.getBean(ApplicationProperties.class);
+                        if (properties != null && properties.getSystem() != null) {
+                            renderDpi = properties.getSystem().getMaxDPI();
+                        }
+
+                        try {
+                            image = pdfRenderer.renderImageWithDPI(i, renderDpi);
+                        } catch (OutOfMemoryError e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                        } catch (NegativeArraySizeException e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                        }
                         ImageIO.write(image, "png", tempFile.toFile());
 
                         // Add temp file path to images list
