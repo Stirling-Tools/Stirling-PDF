@@ -8,6 +8,8 @@ import ConvertPanel from "../tools/Convert";
 import Sanitize from "../tools/Sanitize";
 import AddPassword from "../tools/AddPassword";
 import ChangePermissions from "../tools/ChangePermissions";
+import RemoveBlanks from "../tools/RemoveBlanks";
+import RemovePages from "../tools/RemovePages";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AddWatermark from "../tools/AddWatermark";
@@ -20,6 +22,8 @@ import RemoveCertificateSign from "../tools/RemoveCertificateSign";
 import ManageSignatures from "../tools/ManageSignatures";
 import BookletImposition from "../tools/BookletImposition";
 import Flatten from "../tools/Flatten";
+import Rotate from "../tools/Rotate";
+import ChangeMetadata from "../tools/ChangeMetadata";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -39,6 +43,8 @@ import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
 import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
 import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
 import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
+import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
+import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -54,12 +60,14 @@ import CertificateTypeSettings from "../components/tools/manageSignatures/Certif
 import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
+import RotateSettings from "../components/tools/rotate/RotateSettings";
 import Redact from "../tools/Redact";
 import AdjustPageScale from "../tools/AdjustPageScale";
 import { ToolId } from "../types/toolId";
 import MergeSettings from '../components/tools/merge/MergeSettings';
 import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
+import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -302,10 +310,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       "change-metadata": {
         icon: <LocalIcon icon="assignment-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.changeMetadata.title", "Change Metadata"),
-        component: null,
+        component: ChangeMetadata,
         description: t("home.changeMetadata.desc", "Change/Remove/Add metadata from a PDF document"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
+        maxFiles: -1,
+        endpoints: ["update-metadata"],
+        operationConfig: changeMetadataOperationConfig,
+        settingsComponent: ChangeMetadataSingleStep,
       },
       // Page Formatting
 
@@ -320,10 +332,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       rotate: {
         icon: <LocalIcon icon="rotate-right-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.rotate.title", "Rotate"),
-        component: null,
+        component: Rotate,
         description: t("home.rotate.desc", "Easily rotate your PDFs."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["rotate-pdf"],
+        operationConfig: rotateOperationConfig,
+        settingsComponent: RotateSettings,
       },
       split: {
         icon: <LocalIcon icon="content-cut-rounded" width="1.5rem" height="1.5rem" />,
@@ -434,18 +450,22 @@ export function useFlatToolRegistry(): ToolRegistry {
       removePages: {
         icon: <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removePages.title", "Remove Pages"),
-        component: null,
+        component: RemovePages,
         description: t("home.removePages.desc", "Remove specific pages from a PDF document"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        maxFiles: 1,
+        endpoints: ["remove-pages"],
       },
       "remove-blank-pages": {
         icon: <LocalIcon icon="scan-delete-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeBlanks.title", "Remove Blank Pages"),
-        component: null,
+        component: RemoveBlanks,
         description: t("home.removeBlanks.desc", "Remove blank pages from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        maxFiles: 1,
+        endpoints: ["remove-blanks"],
       },
       "remove-annotations": {
         icon: <LocalIcon icon="thread-unread-rounded" width="1.5rem" height="1.5rem" />,

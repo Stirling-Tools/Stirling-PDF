@@ -178,6 +178,12 @@
   --checkbox-border: #2F83BF;
   --checkbox-checked-bg: #3FAFFF;
   --checkbox-tick: #FFFFFF;
+
+  /* Bulk selection panel specific colors (light mode) */
+  --bulk-panel-bg: #ffffff; /* white background for parent container */
+  --bulk-card-bg: #ffffff; /* white background for cards */
+  --bulk-card-border: #e5e7eb; /* light gray border for cards and buttons */
+  --bulk-card-hover-border: #d1d5db; /* slightly darker on hover */
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -321,6 +327,12 @@
   /* Tool panel search bar background colors (dark mode) */
   --tool-panel-search-bg: #1F2329;
   --tool-panel-search-border-bottom: #4B525A;
+
+  /* Bulk selection panel specific colors (dark mode) */
+  --bulk-panel-bg: var(--bg-raised); /* dark background for parent container */
+  --bulk-card-bg: var(--bg-raised); /* dark background for cards */
+  --bulk-card-border: var(--border-default); /* default border for cards and buttons */
+  --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
 
 }
 

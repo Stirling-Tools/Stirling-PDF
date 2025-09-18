@@ -171,7 +171,8 @@ const PageEditor = ({
           },
           () => splitPositions,
           setSplitPositions,
-          () => getPageNumbersFromIds(selectedPageIds)
+          () => getPageNumbersFromIds(selectedPageIds),
+          closePdf
         );
         undoManagerRef.current.executeCommand(deleteCommand);
       }
@@ -228,7 +229,8 @@ const PageEditor = ({
       },
       () => splitPositions,
       setSplitPositions,
-      () => selectedPageNumbers
+      () => selectedPageNumbers,
+      closePdf
     );
     undoManagerRef.current.executeCommand(deleteCommand);
   }, [selectedPageIds, displayDocument, splitPositions, getPageNumbersFromIds, getPageIdsFromNumbers]);
@@ -246,7 +248,8 @@ const PageEditor = ({
       },
       () => splitPositions,
       setSplitPositions,
-      () => getPageNumbersFromIds(selectedPageIds)
+      () => getPageNumbersFromIds(selectedPageIds),
+      closePdf
     );
     undoManagerRef.current.executeCommand(deleteCommand);
   }, [displayDocument, splitPositions, selectedPageIds, getPageNumbersFromIds]);
