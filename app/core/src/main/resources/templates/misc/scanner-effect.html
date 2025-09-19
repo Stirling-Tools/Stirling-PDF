@@ -40,8 +40,8 @@
                   </select>
                 </div>
                 <div class="form-check mb-3">
-                  <input class="form-check-input" type="checkbox" id="advancedSettingsToggle">
-                  <label class="form-check-label" for="advancedSettingsToggle" th:text="#{scannerEffect.advancedSettings}"></label>
+                  <input id="advancedSettingsToggle" type="checkbox">
+                  <label for="advancedSettingsToggle" th:text="#{scannerEffect.advancedSettings}"></label>
                 </div>
                 <div id="advancedSettings" style="display:none; border:1px solid #eee; padding:1em; border-radius:8px; margin-bottom:1em;">
                   <div class="mb-3">
@@ -79,9 +79,9 @@
                     <label for="noise" class="form-label" th:text="#{scannerEffect.noise}"></label>
                     <input type="range" class="form-range" id="noise" name="noise" min="0" max="20" step="0.1" value="8.0">
                   </div>
-                  <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="yellowish" name="yellowish">
-                    <label class="form-check-label" for="yellowish" th:text="#{scannerEffect.yellowish}"></label>
+                  <div class="mb-3">
+                    <input id="yellowish" name="yellowish" type="checkbox">
+                    <label for="yellowish" th:text="#{scannerEffect.yellowish}"></label>
                   </div>
                   <div class="mb-3">
                     <label for="resolution" class="form-label" th:text="#{scannerEffect.resolution}"></label>
