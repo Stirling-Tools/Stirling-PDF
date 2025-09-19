@@ -91,8 +91,9 @@ export const useCropParameters = (): CropParametersHook => {
 
     // PDF bounds validation if provided
     if (pdfBounds) {
-      return cropArea.x + cropArea.width <= pdfBounds.actualWidth &&
-             cropArea.y + cropArea.height <= pdfBounds.actualHeight;
+      const tolerance = 0.01; // Small tolerance for floating point precision
+      return cropArea.x + cropArea.width <= pdfBounds.actualWidth + tolerance &&
+             cropArea.y + cropArea.height <= pdfBounds.actualHeight + tolerance;
     }
 
     return true;
