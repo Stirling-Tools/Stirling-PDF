@@ -388,8 +388,8 @@
       "desc": "Comprimir PDFs para reduzir o tamanho do arquivo."
     },
     "unlockPDFForms": {
-      "title": "Unlock PDF Forms",
-      "desc": "Remove read-only property of form fields in a PDF document."
+      "title": "Desbloquear Formulários do PDF",
+      "desc": "Remove a propriedade de apenas leitura de formulários em um documento PDF."
     },
     "changeMetadata": {
       "title": "Alterar Metadados",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Substitui e Inverte Cores",
       "desc": "Substitui cor do texto e plano de fundo de um PDF e/ou inverte a toda cor do PDF para reduzir o tamanho."
+    },
+    "convert": {
+      "title": "Converter"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Extrair Página(s)"
+    },
+    "removePages": {
+      "title": "Remover Páginas",
+      "desc": "Excluir páginas indesejadas do seu PDF."
+    },
+    "removeImagePdf": {
+      "title": "Remover Imagem",
+      "desc": "Remova imagens do PDF para reduzir o tamanho do arquivo."
+    },
+    "autoSizeSplitPDF": {
+      "title": "Divisão Manual do PDF",
+      "desc": "Divida um PDF em vários, com base no tamanho, contagem de páginas ou contagem de documentos."
+    },
+    "adjust-contrast": {
+      "title": "Ajuste Visual do PDF",
+      "desc": "Ajustar Contraste, Saturação e Brilho de um PDF."
+    },
+    "replaceColorPdf": {
+      "title": "Substitui e Inverte Cores",
+      "desc": "Substitui cor do texto e plano de fundo de um PDF e/ou inverte a toda cor do PDF para reduzir o tamanho."
+    },
+    "changePermissions": {
+      "title": "Alterar Permissões"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "Classificar por Nome",
     "sortByDate": "Classificar por Data",
     "removeCertSign": "Remover a assinatura digital do arquivo mesclado?",
-    "submit": "Mesclar"
+    "submit": "Mesclar",
+    "sortBy": {
+      "filename": "Nome do Arquivo"
+    }
   },
   "split": {
     "tags": "Operações de Página,dividir,Múltiplas Páginas,cortar,lado do servidor",
@@ -634,7 +669,20 @@
       "8": "Documento Nº6: Página 10 e 11 (e mais se tiver)"
     },
     "splitPages": "Digite as páginas para a divisão:",
-    "submit": "Dividir"
+    "submit": "Dividir",
+    "steps": {
+      "settings": "Configurações"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Tamanho do Arquivo"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Tamanho do Arquivo"
+      }
+    }
   },
   "rotate": {
     "tags": "Lado do servidor",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Texto",
       "2": "Imagem"
+    },
+    "watermarkType": {
+      "text": "Texto"
+    },
+    "settings": {
+      "fontSize": "Tamanho da Fonte"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Alterar"
   },
   "removePages": {
-    "tags": "Remover páginas,excluir páginas"
+    "tags": "Remover páginas,excluir páginas",
+    "title": "Remover Páginas",
+    "submit": "Remover Páginas"
   },
   "addPassword": {
     "tags": "seguro,segurança",
@@ -758,7 +814,12 @@
       "15": "Restringe o que pode ser feito com o documento depois de aberto (não suportado por todos os leitores).",
       "16": "Restringe a abertura do próprio documento."
     },
-    "submit": "Criptografar"
+    "submit": "Criptografar",
+    "tooltip": {
+      "permissions": {
+        "title": "Alterar Permissões"
+      }
+    }
   },
   "removePassword": {
     "tags": "seguro, descriptografar, segurança, remover senha",
@@ -768,15 +829,20 @@
       "1": "Selecione o PDF para descriptografar:",
       "2": "Senha"
     },
-    "submit": "Descriptografar"
+    "submit": "Descriptografar",
+    "desc": "Descriptografar o PDF realizando a remoção da senha.",
+    "password": {
+      "stepTitle": "Desproteger PDF",
+      "label": "Senha Atual"
+    }
   },
   "compressPdfs": {
     "tags": "compactar,pequeno,mínimo"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
-    "title": "Remove Read-Only from Form Fields",
-    "header": "Unlock PDF Forms",
+    "tags": "remoção,apagar,formulario,campo,apenasleitura",
+    "title": "Remover Apenas Leitura de Formulários",
+    "header": "Desbloquear Formulários do PDF",
     "submit": "Remove"
   },
   "changeMetadata": {
@@ -829,7 +895,25 @@
     },
     "help": "Por favor, leia a documentação abaixo para saber mais sobre OCR e sua utilização.",
     "credit": "Este serviço usa Qpdf e Tesseract para OCR.",
-    "submit": "Processar OCR no PDF"
+    "submit": "Processar OCR no PDF",
+    "desc": "Reconhecimento Óptico de Caracteres transforma PDFs com imagens em documentos pesquisáveis e com texto selecionável.",
+    "settings": {
+      "title": "Configurações",
+      "ocrMode": {
+        "label": "Modo OCR:"
+      },
+      "languages": {
+        "label": "Idiomas"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Modo OCR:"
+      },
+      "languages": {
+        "title": "Idiomas"
+      }
+    }
   },
   "extractImages": {
     "tags": "imagem,foto,salvar,arquivo,zip,captura,coleta",
@@ -938,7 +1022,13 @@
     "title": "Achatar",
     "header": "Achatar",
     "flattenOnlyForms": "Achatar apenas formulários interativos.",
-    "submit": "Achatar"
+    "submit": "Achatar",
+    "steps": {
+      "settings": "Configurações"
+    },
+    "options": {
+      "flattenOnlyForms": "Achatar apenas formulários interativos."
+    }
   },
   "repair": {
     "tags": "corrigir,restaurar,correção,recuperar",
@@ -1174,7 +1264,22 @@
     "showLayers": "Mostrar Camadas (duplo clique para restabelecer as camadas para o estado padrão)",
     "colourPicker": "Seletor de Cores",
     "findCurrentOutlineItem": "Encontrar item atual",
-    "applyChanges": "Aplicar Alterações"
+    "applyChanges": "Aplicar Alterações",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Avançado"
+      },
+      "wordsToRedact": {
+        "add": "Adicionar"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Páginas",
+        "placeholder": "(por exemplo 1,2,8 ou 4,7,12-16 ou 2n-1)"
+      },
+      "export": "Exportar"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,extração de tabela,extrair,converter"
@@ -1336,7 +1441,7 @@
     "alreadyLoggedIn": "Você já está conectado em",
     "alreadyLoggedIn2": "aparelhos. Por favor saia dos aparelhos e tente novamente.",
     "toManySessions": "Você tem muitas sessões ativas",
-    "logoutMessage": "You have been logged out."
+    "logoutMessage": "Você foi desconectado."
   },
   "pdfToSinglePage": {
     "title": "PDF para Página Única",
@@ -1386,7 +1491,10 @@
       "4": "Modo Automático - Ajusta automaticamente a qualidade para atingir o tamanho exato desejado",
       "5": "Tamanho esperado do PDF (por exemplo, 25 MB, 10,8 MB, 25 KB):"
     },
-    "submit": "Comprimir"
+    "submit": "Comprimir",
+    "method": {
+      "filesize": "Tamanho do Arquivo"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1555,6 +1663,84 @@
       "analytics": {
         "title": "Cookies Analíticos",
         "description": "Estes cookies nos ajudam a entender como nossas ferramentas estão sendo utilizadas, para que possamos nos concentrar na construção dos recursos que nossa comunidade mais valoriza. Fique tranquilo: o Stirling PDF não pode e nunca rastreará o conteúdo dos documentos com os quais você manipula."
+      }
+    }
+  },
+  "download": "Baixar (JSON)",
+  "undo": "Desfazer",
+  "convert": {
+    "title": "Converter",
+    "settings": "Configurações",
+    "color": "Cor",
+    "greyscale": "Escala de Cinza",
+    "fillPage": "Preencher a página",
+    "pdfaDigitalSignatureWarning": "O PDF contém uma assinatura digital. Isso será removido na próxima etapa.",
+    "grayscale": "Escala de Cinza"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Selecionar Tudo",
+    "deselectAll": "Desselecionar Tudo"
+  },
+  "quickAccess": {
+    "sign": "Assinar"
+  },
+  "fileUpload": {
+    "loading": "Carregando...",
+    "or": "ou"
+  },
+  "fileManager": {
+    "fileName": "Nome",
+    "fileVersion": "Versão",
+    "selectAll": "Selecionar Tudo",
+    "deselectAll": "Desselecionar Tudo",
+    "deleteSelected": "Apagar Selecionados",
+    "download": "Baixar (JSON)",
+    "delete": "Apagar"
+  },
+  "sanitize": {
+    "submit": "Higienizar",
+    "steps": {
+      "settings": "Configurações"
+    }
+  },
+  "changePermissions": {
+    "title": "Alterar Permissões",
+    "submit": "Alterar Permissões",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Impedir montagem do documento."
+      },
+      "preventExtractContent": {
+        "label": "Impedir extração de conteúdo."
+      },
+      "preventExtractForAccessibility": {
+        "label": "Impedir extração para acessibilidade."
+      },
+      "preventFillInForm": {
+        "label": "Impedir preenchimento de formulário."
+      },
+      "preventModify": {
+        "label": "Impedir modificações."
+      },
+      "preventModifyAnnotations": {
+        "label": "Impedir modificação de anotações."
+      },
+      "preventPrinting": {
+        "label": "Impedir impressão."
+      },
+      "preventPrintingFaithful": {
+        "label": "Impedir impressão de formatos diferentes."
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Alterar Permissões"
       }
     }
   }

@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "Φόρτωση...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Αντικατάσταση και αναστροφή χρώματος",
       "desc": "Αντικατάσταση χρώματος για κείμενο και φόντο σε PDF και αναστροφή πλήρους χρώματος για μείωση μεγέθους αρχείου"
+    },
+    "convert": {
+      "title": "Μετατροπή"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Εξαγωγή σελίδων"
+    },
+    "removePages": {
+      "title": "Αφαίρεση",
+      "desc": "Διαγραφή ανεπιθύμητων σελίδων από το έγγραφο PDF."
+    },
+    "removeImagePdf": {
+      "title": "Αφαίρεση εικόνας",
+      "desc": "Αφαίρεση εικόνας από PDF για μείωση μεγέθους αρχείου"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Αυτόματος διαχωρισμός ανά μέγεθος/πλήθος",
+      "desc": "Διαχωρισμός ενός PDF σε πολλαπλά έγγραφα βάσει μεγέθους, αριθμού σελίδων ή αριθμού εγγράφων"
+    },
+    "adjust-contrast": {
+      "title": "Προσαρμογή χρωμάτων/αντίθεσης",
+      "desc": "Προσαρμογή αντίθεσης, κορεσμού και φωτεινότητας ενός PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Αντικατάσταση και αναστροφή χρώματος",
+      "desc": "Αντικατάσταση χρώματος για κείμενο και φόντο σε PDF και αναστροφή πλήρους χρώματος για μείωση μεγέθους αρχείου"
+    },
+    "changePermissions": {
+      "title": "Αλλαγή δικαιωμάτων"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "Ταξινόμηση κατά όνομα",
     "sortByDate": "Ταξινόμηση κατά ημερομηνία",
     "removeCertSign": "Αφαίρεση ψηφιακής υπογραφής στο συγχωνευμένο αρχείο;",
-    "submit": "Συγχώνευση"
+    "submit": "Συγχώνευση",
+    "sortBy": {
+      "filename": "Όνομα αρχείου"
+    }
   },
   "split": {
     "tags": "λειτουργίες σελίδων,διαίρεση,πολλαπλές σελίδες,κοπή,πλευρά διακομιστή",
@@ -634,7 +669,20 @@
       "8": "Έγγραφο #6: Σελίδα 10"
     },
     "splitPages": "Εισάγετε σελίδες για διαχωρισμό:",
-    "submit": "Διαχωρισμός"
+    "submit": "Διαχωρισμός",
+    "steps": {
+      "settings": "Ρυθμίσεις"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Μέγεθος αρχείου"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Μέγεθος αρχείου"
+      }
+    }
   },
   "rotate": {
     "tags": "πλευρά διακομιστή",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Κείμενο",
       "2": "Εικόνα"
+    },
+    "watermarkType": {
+      "text": "Κείμενο"
+    },
+    "settings": {
+      "fontSize": "Μέγεθος γραμματοσειράς"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Αλλαγή"
   },
   "removePages": {
-    "tags": "αφαίρεση σελίδων,διαγραφή σελίδων"
+    "tags": "αφαίρεση σελίδων,διαγραφή σελίδων",
+    "title": "Αφαίρεση",
+    "submit": "Αφαίρεση"
   },
   "addPassword": {
     "tags": "ασφάλεια,ασφάλεια",
@@ -758,7 +814,12 @@
       "15": "Περιορίζει τι μπορεί να γίνει με το έγγραφο μετά το άνοιγμά του (Δεν υποστηρίζεται από όλα τα προγράμματα ανάγνωσης)",
       "16": "Περιορίζει το άνοιγμα του ίδιου του εγγράφου"
     },
-    "submit": "Κρυπτογράφηση"
+    "submit": "Κρυπτογράφηση",
+    "tooltip": {
+      "permissions": {
+        "title": "Αλλαγή δικαιωμάτων"
+      }
+    }
   },
   "removePassword": {
     "tags": "ασφάλεια,αποκρυπτογράφηση,ασφάλεια,αφαίρεση κωδικού,διαγραφή κωδικού",
@@ -768,7 +829,12 @@
       "1": "Επιλέξτε PDF για αποκρυπτογράφηση",
       "2": "Κωδικός"
     },
-    "submit": "Αφαίρεση"
+    "submit": "Αφαίρεση",
+    "desc": "Αφαίρεση προστασίας κωδικού από το έγγραφο PDF.",
+    "password": {
+      "stepTitle": "Αφαίρεση κωδικού",
+      "label": "Τρέχων κωδικός"
+    }
   },
   "compressPdfs": {
     "tags": "συμπίεση,μικρό,μικροσκοπικό"
@@ -829,7 +895,25 @@
     },
     "help": "Παρακαλώ διαβάστε αυτή την τεκμηρίωση για το πώς να το χρησιμοποιήσετε για άλλες γλώσσες ή/και χρήση εκτός docker",
     "credit": "Αυτή η υπηρεσία χρησιμοποιεί qpdf και Tesseract για OCR.",
-    "submit": "Επεξεργασία PDF με OCR"
+    "submit": "Επεξεργασία PDF με OCR",
+    "desc": "Καθαρισμός σαρώσεων και ανίχνευση κειμένου από εικόνες μέσα σε PDF και επαναπροσθήκη ως κείμενο.",
+    "settings": {
+      "title": "Ρυθμίσεις",
+      "ocrMode": {
+        "label": "Λειτουργία OCR"
+      },
+      "languages": {
+        "label": "Γλώσσες"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Λειτουργία OCR"
+      },
+      "languages": {
+        "title": "Γλώσσες"
+      }
+    }
   },
   "extractImages": {
     "tags": "εικόνα,φωτογραφία,αποθήκευση,αρχείο,zip,σύλληψη,λήψη",
@@ -938,7 +1022,13 @@
     "title": "Ισοπέδωση",
     "header": "Ισοπέδωση PDF",
     "flattenOnlyForms": "Ισοπέδωση μόνο φορμών",
-    "submit": "Ισοπέδωση"
+    "submit": "Ισοπέδωση",
+    "steps": {
+      "settings": "Ρυθμίσεις"
+    },
+    "options": {
+      "flattenOnlyForms": "Ισοπέδωση μόνο φορμών"
+    }
   },
   "repair": {
     "tags": "επιδιόρθωση,αποκατάσταση,διόρθωση,ανάκτηση",
@@ -1106,10 +1196,10 @@
     "credit": "Χρησιμοποιεί το WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "markup,περιεχόμενο-web,μετατροπή,μετατροπή",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Μετατροπή"
   },
   "getPdfInfo": {
     "tags": "πληροφορίες,δεδομένα,στατιστικά,στατιστική",
@@ -1174,7 +1264,22 @@
     "showLayers": "Εμφάνιση επιπέδων (διπλό κλικ για επαναφορά όλων των επιπέδων στην προεπιλεγμένη κατάσταση)",
     "colourPicker": "Επιλογέας χρώματος",
     "findCurrentOutlineItem": "Εύρεση τρέχοντος στοιχείου περιγράμματος",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Προχωρημένα"
+      },
+      "wordsToRedact": {
+        "add": "Προσθήκη"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Σελίδες",
+        "placeholder": "(π.χ. 1,2,8 ή 4,7,12-16 ή 2n-1)"
+      },
+      "export": "Εξαγωγή"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,εξαγωγή πίνακα,εξαγωγή,μετατροπή"
@@ -1386,7 +1491,10 @@
       "4": "Αυτόματη λειτουργία - Αυτόματη προσαρμογή ποιότητας για επίτευξη ακριβούς μεγέθους PDF",
       "5": "Αναμενόμενο μέγεθος PDF (π.χ. 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Συμπίεση"
+    "submit": "Συμπίεση",
+    "method": {
+      "filesize": "Μέγεθος αρχείου"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Αυτό το αρχείο προστατεύεται με κωδικό πρόσβασης. Παρακαλώ εισάγετε τον κωδικό:",
@@ -1555,6 +1663,83 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Λήψη",
+  "convert": {
+    "title": "Μετατροπή",
+    "settings": "Ρυθμίσεις",
+    "color": "Χρώμα",
+    "greyscale": "Κλίμακα του γκρι",
+    "fillPage": "Γέμισμα σελίδας",
+    "pdfaDigitalSignatureWarning": "Το PDF περιέχει ψηφιακή υπογραφή. Αυτή θα αφαιρεθεί στο επόμενο βήμα.",
+    "grayscale": "Κλίμακα του γκρι"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Επιλογή όλων",
+    "deselectAll": "Αποεπιλογή όλων"
+  },
+  "quickAccess": {
+    "sign": "Υπογραφή"
+  },
+  "fileUpload": {
+    "loading": "Φόρτωση...",
+    "or": "ή"
+  },
+  "fileManager": {
+    "fileName": "Όνομα",
+    "fileVersion": "Έκδοση",
+    "selectAll": "Επιλογή όλων",
+    "deselectAll": "Αποεπιλογή όλων",
+    "deleteSelected": "Διαγραφή επιλεγμένων",
+    "download": "Λήψη",
+    "delete": "Διαγραφή"
+  },
+  "sanitize": {
+    "submit": "Εξυγίανση PDF",
+    "steps": {
+      "settings": "Ρυθμίσεις"
+    }
+  },
+  "changePermissions": {
+    "title": "Αλλαγή δικαιωμάτων",
+    "submit": "Αλλαγή δικαιωμάτων",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Αποτροπή συναρμολόγησης εγγράφου"
+      },
+      "preventExtractContent": {
+        "label": "Αποτροπή εξαγωγής περιεχομένου"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Αποτροπή εξαγωγής για προσβασιμότητα"
+      },
+      "preventFillInForm": {
+        "label": "Αποτροπή συμπλήρωσης φόρμας"
+      },
+      "preventModify": {
+        "label": "Αποτροπή τροποποίησης"
+      },
+      "preventModifyAnnotations": {
+        "label": "Αποτροπή τροποποίησης σχολιασμών"
+      },
+      "preventPrinting": {
+        "label": "Αποτροπή εκτύπωσης"
+      },
+      "preventPrintingFaithful": {
+        "label": "Αποτροπή εκτύπωσης σε διαφορετικές μορφές"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Αλλαγή δικαιωμάτων"
       }
     }
   }
