@@ -195,12 +195,12 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       {/* Manual Coordinate Input */}
       <Stack gap="xs">
         <Text size="sm" fw={500}>
-          {t("crop.coordinates.title", "Precise Coordinates (PDF Points)")}
+          {t("crop.coordinates.title", "Position and Size")}
         </Text>
 
         <Group grow>
           <NumberInput
-            label={t("crop.coordinates.x", "X (Left)")}
+            label={t("crop.coordinates.x", "X Position")}
             value={Math.round(cropArea.x * 10) / 10}
             onChange={(value) => handleCoordinateChange('x', value)}
             disabled={disabled}
@@ -211,7 +211,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
             size="xs"
           />
           <NumberInput
-            label={t("crop.coordinates.y", "Y (Bottom)")}
+            label={t("crop.coordinates.y", "Y Position")}
             value={Math.round(cropArea.y * 10) / 10}
             onChange={(value) => handleCoordinateChange('y', value)}
             disabled={disabled}
