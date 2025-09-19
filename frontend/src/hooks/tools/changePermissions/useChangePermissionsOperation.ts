@@ -26,7 +26,7 @@ export const buildChangePermissionsFormData = (parameters: ChangePermissionsPara
 export const changePermissionsOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildChangePermissionsFormData,
-  operationType: 'change-permissions',
+  operationType: 'changePermissions',
   endpoint: '/api/v1/security/add-password', // Change Permissions is a fake endpoint for the Add Password tool
   defaultParameters,
 } as const;
