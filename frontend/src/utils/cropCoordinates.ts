@@ -59,7 +59,7 @@ export const calculatePDFBounds = (
   const thumbnailWidth = actualPDFWidth * scale;
   const thumbnailHeight = actualPDFHeight * scale;
 
-  // Calculate centering offsets
+  // Calculate centering offsets - these represent where the thumbnail is positioned within the container
   const offsetX = (containerWidth - thumbnailWidth) / 2;
   const offsetY = (containerHeight - thumbnailHeight) / 2;
 

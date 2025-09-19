@@ -1,28 +1,24 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Stack, Text, Box, Group, NumberInput, ActionIcon, Center, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import InfoIcon from "@mui/icons-material/Info";
 import { CropParametersHook } from "../../../hooks/tools/crop/useCropParameters";
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
-import { useFileContext } from "../../../contexts/FileContext";
-import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
 import CropAreaSelector from "./CropAreaSelector";
 import {
   calculatePDFBounds,
   PDFBounds,
-  CropArea,
-  getPDFAspectRatio,
-  createFullPDFCropArea
+  CropArea
 } from "../../../utils/cropCoordinates";
 import { pdfWorkerManager } from "../../../services/pdfWorkerManager";
+import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
 
 interface CropSettingsProps {
   parameters: CropParametersHook;
   disabled?: boolean;
 }
 
-const CONTAINER_SIZE = 400; // Larger container for better crop precision
+const CONTAINER_SIZE = 250; // Fit within actual pane width
 
 const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const { t } = useTranslation();
@@ -41,7 +37,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   // Get thumbnail for the selected file
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [pdfBounds, setPdfBounds] = useState<PDFBounds | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadPDFDimensions = async () => {
@@ -52,7 +47,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       }
 
       setThumbnail(selectedStub.thumbnailUrl || null);
-      setLoading(true);
 
       try {
         // Get PDF dimensions from the actual file
@@ -95,8 +89,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         if (parameters.parameters.width === 595 && parameters.parameters.height === 842) {
           parameters.resetToFullPDF(bounds);
         }
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -105,6 +97,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
 
   // Current crop area
   const cropArea = parameters.getCropArea();
+
 
   // Handle crop area changes from the selector
   const handleCropAreaChange = (newCropArea: CropArea) => {
@@ -138,19 +131,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     const cropAreaSize = cropArea.width * cropArea.height;
     return Math.round((cropAreaSize / totalArea) * 100);
   }, [cropArea, pdfBounds]);
-
-  // Get aspect ratio information
-  const aspectRatioInfo = useMemo(() => {
-    if (!pdfBounds) return null;
-    const pdfRatio = getPDFAspectRatio(pdfBounds);
-    const cropRatio = cropArea.width / cropArea.height;
-
-    return {
-      pdf: pdfRatio.toFixed(2),
-      crop: cropRatio.toFixed(2),
-      orientation: pdfRatio > 1 ? 'Landscape' : 'Portrait'
-    };
-  }, [pdfBounds, cropArea]);
 
   if (!selectedStub || !pdfBounds) {
     return (
@@ -222,14 +202,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           <Text size="xs" color="dimmed">
             {t("crop.info.percentage", "Area: {{percentage}}%", { percentage: cropPercentage })}
           </Text>
-          {aspectRatioInfo && (
-            <Text size="xs" color="dimmed">
-              {t("crop.info.ratio", "Ratio: {{ratio}} ({{orientation}})", {
-                ratio: aspectRatioInfo.crop,
-                orientation: parseFloat(aspectRatioInfo.crop) > 1 ? 'Landscape' : 'Portrait'
-              })}
-            </Text>
-          )}
         </Group>
       </Stack>
 
@@ -289,28 +261,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           />
         </Group>
 
-        {/* PDF Dimensions Info */}
-        <Alert
-          icon={<InfoIcon />}
-          color="blue"
-          variant="light"
-          style={{ fontSize: '0.75rem' }}
-        >
-          <Text size="xs">
-            {t("crop.info.pdfDimensions", "PDF Size: {{width}} × {{height}} points", {
-              width: Math.round(pdfBounds.actualWidth),
-              height: Math.round(pdfBounds.actualHeight)
-            })}
-          </Text>
-          {aspectRatioInfo && (
-            <Text size="xs">
-              {t("crop.info.aspectRatio", "Aspect Ratio: {{ratio}} ({{orientation}})", {
-                ratio: aspectRatioInfo.pdf,
-                orientation: aspectRatioInfo.orientation
-              })}
-            </Text>
-          )}
-        </Alert>
 
         {/* Validation Alert */}
         {!isCropValid && (

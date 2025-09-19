@@ -43,7 +43,7 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
   // Convert PDF crop area to DOM coordinates for display
   const domRect = pdfToDOMCoordinates(cropArea, pdfBounds);
 
-  // Handle mouse down on overlay (start dragging)
+  // Handle mouse down on overlay (start dragging or resizing)
   const handleOverlayMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled || !containerRef.current) return;
 
@@ -54,18 +54,18 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // Check if we're clicking on a resize handle
+    // Check if we're clicking on a resize handle first (higher priority)
     const handle = getResizeHandle(x, y, domRect);
 
     if (handle) {
       setIsResizing(handle);
       setInitialCropArea(cropArea);
-    } else {
-      // Check if we're clicking within the crop area for dragging
-      if (isPointInCropArea(x, y, domRect)) {
-        setIsDragging(true);
-        setDragStart({ x: x - domRect.x, y: y - domRect.y });
-      }
+      setIsDragging(false); // Ensure we're not dragging when resizing
+    } else if (isPointInCropArea(x, y, domRect)) {
+      // Only allow dragging if we're not on a resize handle
+      setIsDragging(true);
+      setIsResizing(null); // Ensure we're not resizing when dragging
+      setDragStart({ x: x - domRect.x, y: y - domRect.y });
     }
   }, [disabled, cropArea, domRect]);
 
@@ -211,15 +211,15 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
 
 function getResizeHandle(x: number, y: number, domRect: DOMRect): ResizeHandle {
   const handleSize = 8;
-  const tolerance = 4;
+  const tolerance = handleSize;
 
-  // Corner handles
+  // Corner handles (check these first, they have priority)
   if (isNear(x, domRect.x, tolerance) && isNear(y, domRect.y, tolerance)) return 'nw';
   if (isNear(x, domRect.x + domRect.width, tolerance) && isNear(y, domRect.y, tolerance)) return 'ne';
   if (isNear(x, domRect.x, tolerance) && isNear(y, domRect.y + domRect.height, tolerance)) return 'sw';
   if (isNear(x, domRect.x + domRect.width, tolerance) && isNear(y, domRect.y + domRect.height, tolerance)) return 'se';
 
-  // Edge handles
+  // Edge handles (only if not in corner area)
   if (isNear(x, domRect.x + domRect.width / 2, tolerance) && isNear(y, domRect.y, tolerance)) return 'n';
   if (isNear(x, domRect.x + domRect.width, tolerance) && isNear(y, domRect.y + domRect.height / 2, tolerance)) return 'e';
   if (isNear(x, domRect.x + domRect.width / 2, tolerance) && isNear(y, domRect.y + domRect.height, tolerance)) return 's';
