@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.ConvertCbzToPdfRequest;
+import stirling.software.SPDF.model.api.converters.ConvertPdfToCbzRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -41,6 +42,7 @@ import stirling.software.common.util.CbzUtils;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfToCbzUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -275,6 +277,41 @@ public class ConvertImgPDFController {
         filename = filename.replaceFirst("[.][^.]+$", "") + "_converted.pdf";
 
         return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbz")
+    @Operation(
+            summary = "Convert PDF to CBZ comic book archive",
+            description =
+                    "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive. "
+                            + "Input:PDF Output:CBZ Type:SISO")
+    public ResponseEntity<byte[]> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
+        Integer dpi = request.getDpi();
+
+        if (dpi == null || dpi <= 0) {
+            dpi = 300;
+        }
+
+        byte[] cbzBytes;
+        try {
+            cbzBytes = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory);
+        } catch (IllegalArgumentException ex) {
+            String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null) {
+            filename = "comic";
+        }
+        filename = filename.replaceFirst("[.][^.]+$", "") + "_converted.cbz";
+
+        return WebResponseUtils.bytesToWebResponse(
+                cbzBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private String getMediaType(String imageFormat) {

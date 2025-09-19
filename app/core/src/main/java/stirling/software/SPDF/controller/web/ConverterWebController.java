@@ -30,6 +30,13 @@ public class ConverterWebController {
         return "convert/cbz-to-pdf";
     }
 
+    @GetMapping("/pdf-to-cbz")
+    @Hidden
+    public String convertPdfToCbzForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-cbz");
+        return "convert/pdf-to-cbz";
+    }
+
     @GetMapping("/html-to-pdf")
     @Hidden
     public String convertHTMLToPdfForm(Model model) {
