@@ -27,49 +27,6 @@
               
               <br>
               <button class="btn btn-primary" id="submitBtn" th:text="#{cbzToPDF.submit}" type="submit">Convert to PDF</button>
-              
-              <script>
-                document.getElementById("cbzToPDFForm").addEventListener("submit", async function (e) {
-                  e.preventDefault();
-
-                  const form = e.target;
-                  const formData = new FormData(form);
-                  const submitBtn = document.getElementById("submitBtn");
-                  const originalText = submitBtn.textContent;
-                  try {
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = "Converting...";
-
-                    const response = await fetch(form.action, {
-                      method: "POST",
-                      body: formData
-                    });
-
-                    if (response.ok) {
-                      const blob = await response.blob();
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = response.headers.get('Content-Disposition')?.split('filename=')[1] || 'comic.pdf';
-                      document.body.appendChild(a);
-                      a.click();
-                      window.URL.revokeObjectURL(url);
-                      document.body.removeChild(a);
-                    } else {
-                      const errorText = await response.text();
-                      alert("Conversion failed: " + errorText);
-                    }
-
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
-                  } catch (error) {
-                    console.error("Error:", error);
-                    alert("Error: " + error.message);
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
-                  }
-                });
-              </script>
             </form>
           </div>
         </div>
