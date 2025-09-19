@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearch } from '@embedpdf/plugin-search/react';
 import { useViewer } from '../../contexts/ViewerContext';
+import { SEARCH_CONSTANTS } from './constants/search';
 
 interface SearchLayerProps {
   pageIndex: number;
@@ -26,10 +27,10 @@ interface SearchResultState {
 export function CustomSearchLayer({ 
   pageIndex, 
   scale, 
-  highlightColor = 'var(--search-highlight-bg)',
-  activeHighlightColor = 'var(--search-highlight-active-bg)',
-  opacity = 0.6,
-  padding = 2,
+  highlightColor = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.BACKGROUND,
+  activeHighlightColor = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.ACTIVE_BACKGROUND,
+  opacity = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.OPACITY,
+  padding = SEARCH_CONSTANTS.UI.HIGHLIGHT_PADDING,
   borderRadius = 4
 }: SearchLayerProps) {
   const { provides: searchProvides } = useSearch();
@@ -104,10 +105,10 @@ export function CustomSearchLayer({
                 borderRadius: `${borderRadius}px`,
                 transform: 'scale(1.02)',
                 transformOrigin: 'center',
-                transition: 'opacity 0.3s ease-in-out, background-color 0.2s ease-in-out',
+                transition: 'opacity 0.2s ease-in-out, background-color 0.2s ease-in-out',
                 pointerEvents: 'none',
                 boxShadow: originalIndex === searchResultState?.activeResultIndex
-                  ? '0 0 0 1px var(--search-highlight-active-border)'
+                  ? `0 0 0 1px ${SEARCH_CONSTANTS.HIGHLIGHT_COLORS.ACTIVE_BACKGROUND}80`
                   : 'none'
               }}
             />
