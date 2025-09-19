@@ -16,3 +16,7 @@ declare module '../assets/material-symbols-icons.json' {
   };
   export default value;
 }
+
+// TODO: Add proper EmbedPDF types for local submodule integration
+
+export {};
