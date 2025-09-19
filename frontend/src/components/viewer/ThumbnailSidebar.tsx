@@ -15,12 +15,18 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
   const scrollState = getScrollState();
   const thumbnailAPI = getThumbnailAPI();
 
-  // Clear thumbnails when sidebar closes
+  // Clear thumbnails when sidebar closes and revoke blob URLs to prevent memory leaks
   useEffect(() => {
     if (!visible) {
+      Object.values(thumbnails).forEach((thumbUrl) => {
+        // Only revoke if it's a blob URL (not 'error')
+        if (typeof thumbUrl === 'string' && thumbUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(thumbUrl);
+        }
+      });
       setThumbnails({});
     }
-  }, [visible]);
+  }, [visible, thumbnails]);
 
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
@@ -32,7 +38,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
         if (thumbnails[pageIndex]) continue; // Skip if already generated
 
         try {
-          const thumbTask = (thumbnailAPI as any).renderThumb(pageIndex, 1.0);
+          const thumbTask = thumbnailAPI.renderThumb(pageIndex, 1.0);
           
           // Convert Task to Promise and handle properly
           thumbTask.toPromise().then((thumbBlob: Blob) => {

@@ -28,7 +28,7 @@ const EmbedPdfViewerContent = ({
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
   const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState } = useViewer();
-  
+
   const scrollState = getScrollState();
   const zoomState = getZoomState();
   const spreadState = getSpreadState();
@@ -64,21 +64,27 @@ const EmbedPdfViewerContent = ({
     }
   }, [previewFile, fileWithUrl]);
 
-  // Handle scroll wheel zoom
+  // Handle scroll wheel zoom with accumulator for smooth trackpad pinch
   React.useEffect(() => {
+    let accumulator = 0;
+
     const handleWheel = (event: WheelEvent) => {
       // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
       if (event.ctrlKey || event.metaKey) {
         event.preventDefault();
         event.stopPropagation();
 
-        if (event.deltaY < 0) {
-          // Scroll up - zoom in
-          zoomActions.zoomIn();
-        } else {
-          // Scroll down - zoom out
-          zoomActions.zoomOut();
+        accumulator += event.deltaY;
+        const threshold = 10;
 
+        if (accumulator <= -threshold) {
+          // Accumulated scroll up - zoom in
+          zoomActions.zoomIn();
+          accumulator = 0;
+        } else if (accumulator >= threshold) {
+          // Accumulated scroll down - zoom out
+          zoomActions.zoomOut();
+          accumulator = 0;
         }
       }
     };
@@ -90,7 +96,7 @@ const EmbedPdfViewerContent = ({
         viewerElement.removeEventListener('wheel', handleWheel);
       };
     }
-  }, []);
+  }, [zoomActions]);
 
   // Handle keyboard zoom shortcuts
   React.useEffect(() => {

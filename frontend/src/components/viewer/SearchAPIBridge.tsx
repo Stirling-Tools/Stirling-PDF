@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react';
 import { useSearch } from '@embedpdf/plugin-search/react';
 import { useViewer } from '../../contexts/ViewerContext';
 
+interface SearchResult {
+  pageIndex: number;
+  rects: Array<{
+    origin: { x: number; y: number };
+    size: { width: number; height: number };
+  }>;
+}
+
 /**
  * SearchAPIBridge manages search state and provides search functionality.
  * Listens for search result changes from EmbedPDF and maintains local state.
@@ -11,7 +19,7 @@ export function SearchAPIBridge() {
   const { registerBridge } = useViewer();
   
   const [localState, setLocalState] = useState({
-    results: null as any[] | null,
+    results: null as SearchResult[] | null,
     activeIndex: 0
   });
 

@@ -26,8 +26,8 @@ interface SearchResultState {
 export function CustomSearchLayer({ 
   pageIndex, 
   scale, 
-  highlightColor = '#FFFF00',
-  activeHighlightColor = '#FFBF00',
+  highlightColor = 'var(--search-highlight-bg)',
+  activeHighlightColor = 'var(--search-highlight-active-bg)',
   opacity = 0.6,
   padding = 2,
   borderRadius = 4
@@ -107,7 +107,7 @@ export function CustomSearchLayer({
                 transition: 'opacity 0.3s ease-in-out, background-color 0.2s ease-in-out',
                 pointerEvents: 'none',
                 boxShadow: originalIndex === searchResultState?.activeResultIndex
-                  ? '0 0 0 1px rgba(255, 191, 0, 0.8)'
+                  ? '0 0 0 1px var(--search-highlight-active-border)'
                   : 'none'
               }}
             />

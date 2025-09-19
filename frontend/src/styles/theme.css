@@ -152,6 +152,11 @@
   --text-brand: var(--color-gray-700);
   --text-brand-accent: #DC2626;
 
+  /* Search highlight colors */
+  --search-highlight-bg: #FFFF00;
+  --search-highlight-active-bg: #FFBF00;
+  --search-highlight-active-border: rgba(255, 191, 0, 0.8);
+
   /* Placeholder text colors */
   --search-text-and-icon-color: #6B7382;
 
@@ -336,6 +341,11 @@
   /* Subcategory title styling (dark mode) */
   --tool-subcategory-text-color: #9CA3AF; /* lighter text in dark mode as well */
   --tool-subcategory-rule-color: #3A4047; /* doubly lighter (relative) line in dark */
+
+  /* Search highlight colors (dark mode) */
+  --search-highlight-bg: #FFF700;
+  --search-highlight-active-bg: #FFD700;
+  --search-highlight-active-border: rgba(255, 215, 0, 0.8);
 
   /* Placeholder text colors (dark mode) */
   --search-text-and-icon-color: #FFFFFF !important;

@@ -18,8 +18,7 @@ import { ViewerContext } from '../../contexts/ViewerContext';
 export default function RightRail() {
   const { t } = useTranslation();
   const [isPanning, setIsPanning] = useState(false);
-  const [_currentRotation, setCurrentRotation] = useState(0);
-  
+
   // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);
   const { toggleTheme } = useRainbowThemeContext();
@@ -34,14 +33,6 @@ export default function RightRail() {
 
   // Navigation view
   const { workbench: currentView } = useNavigationState();
-
-  // Update rotation display when switching to viewer mode
-  useEffect(() => {
-    if (currentView === 'viewer' && viewerContext) {
-      const rotationState = viewerContext.getRotationState();
-      setCurrentRotation((rotationState?.rotation ?? 0) * 90);
-    }
-  }, [currentView, viewerContext]);
 
   // File state and selection
   const { state, selectors } = useFileState();
@@ -244,9 +235,9 @@ export default function RightRail() {
                 </Popover.Target>
                 <Popover.Dropdown>
                   <div style={{ minWidth: '20rem' }}>
-                    <SearchInterface 
-                      visible={true} 
-                      onClose={() => {}} 
+                    <SearchInterface
+                      visible={true}
+                      onClose={() => {}}
                     />
                   </div>
                 </Popover.Dropdown>
