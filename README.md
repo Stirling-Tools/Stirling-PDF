@@ -121,7 +121,7 @@ Stirling-PDF currently supports 40 languages!
 | Basque (Euskara) (eu_ES)                     | ![36%](https://geps.dev/progress/36)   |
 | Bulgarian (Български) (bg_BG)                | ![68%](https://geps.dev/progress/68)   |
 | Catalan (Català) (ca_CA)                     | ![67%](https://geps.dev/progress/67)   |
-| Croatian (Hrvatski) (hr_HR)                  | ![60%](https://geps.dev/progress/60)   |
+| Croatian (Hrvatski) (hr_HR)                  | ![98%](https://geps.dev/progress/98)   |
 | Czech (Česky) (cs_CZ)                        | ![69%](https://geps.dev/progress/69)   |
 | Danish (Dansk) (da_DK)                       | ![61%](https://geps.dev/progress/61)   |
 | Dutch (Nederlands) (nl_NL)                   | ![60%](https://geps.dev/progress/60)   |
