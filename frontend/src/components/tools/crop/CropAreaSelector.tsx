@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Box } from '@mantine/core';
+import { Box, useMantineTheme, MantineTheme } from '@mantine/core';
 import {
   PDFBounds,
   CropArea,
@@ -32,6 +32,7 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
   disabled = false,
   children
 }) => {
+  const theme = useMantineTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -170,15 +171,15 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
             top: domRect.y,
             width: domRect.width,
             height: domRect.height,
-            border: '2px solid #ff4757',
-            backgroundColor: 'rgba(255, 71, 87, 0.1)',
+            border: `2px solid ${theme.other.crop.overlayBorder}`,
+            backgroundColor: theme.other.crop.overlayBackground,
             cursor: 'move',
             pointerEvents: 'auto'
           }}
           onMouseDown={handleOverlayMouseDown}
         >
           {/* Resize Handles */}
-          {renderResizeHandles(disabled)}
+          {renderResizeHandles(disabled, theme)}
         </Box>
       )}
     </Box>
@@ -267,7 +268,7 @@ function calculateResizedRect(
   return { x, y, width, height };
 }
 
-function renderResizeHandles(disabled: boolean) {
+function renderResizeHandles(disabled: boolean, theme: MantineTheme) {
   if (disabled) return null;
 
   const handleSize = 8;
@@ -275,8 +276,8 @@ function renderResizeHandles(disabled: boolean) {
     position: 'absolute' as const,
     width: handleSize,
     height: handleSize,
-    backgroundColor: '#ff4757',
-    border: '1px solid white',
+    backgroundColor: theme.other.crop.handleColor,
+    border: `1px solid ${theme.other.crop.handleBorder}`,
     borderRadius: '2px',
     pointerEvents: 'auto' as const
   };
