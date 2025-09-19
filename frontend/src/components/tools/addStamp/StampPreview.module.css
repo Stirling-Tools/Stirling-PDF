@@ -1,0 +1,195 @@
+/* StampPreview.module.css */
+
+/* Container styles */
+.container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.containerWithThumbnail {
+  background-color: transparent;
+}
+
+.containerWithoutThumbnail {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.containerBorder {
+  border: 1px solid var(--border-default, #333);
+}
+
+/* Page thumbnail styles */
+.pageThumbnail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(10%) contrast(95%) brightness(105%);
+}
+
+/* Stamp item styles */
+.stampItem {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  line-height: 1;
+  transform-origin: left bottom;
+}
+
+.stampItemDraggable {
+  cursor: move;
+  pointer-events: auto;
+}
+
+.stampItemGridMode {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Text stamp styles */
+.textLine {
+  white-space: pre;
+  display: block;
+  word-break: keep-all;
+  overflow: visible;
+}
+
+/* Image stamp styles */
+.stampImage {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Quick grid overlay styles */
+.quickGrid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 8px;
+  padding: 8px;
+  pointer-events: auto;
+}
+
+.gridTile {
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  background-color: transparent;
+  color: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  user-select: none;
+}
+
+.gridTileSelected,
+.gridTileHovered {
+  border: 2px solid var(--mantine-primary-color-filled, #3b82f6);
+}
+
+/* Preview header */
+.previewHeader {
+  margin-bottom: 12px;
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--border-default, #333);
+  margin-bottom: 8px;
+}
+
+.previewLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+/* Preview disclaimer */
+.previewDisclaimer {
+  margin-top: 8px;
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+/* AddStamp.tsx specific styles */
+
+/* Information text container */
+.informationContainer {
+  background-color: var(--information-text-bg);
+  padding: 2px;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 10px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.informationText {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--information-text-color);
+}
+
+/* Mode toggle buttons */
+.modeToggleGroup {
+  gap: 0.25rem;
+  flex-grow: 1;
+}
+
+.modeToggleButton {
+  border-radius: 0.125rem;
+  font-size: 0.75rem;
+  width: 100%;
+}
+
+/* Icon pill buttons */
+.iconPillGroup {
+  gap: 0.25rem;
+  flex-grow: 1;
+}
+
+.iconPillButton {
+  border-radius: 0.125rem;
+  font-size: 0.75rem;
+  width: 100%;
+}
+
+/* Slider controls */
+.sliderGroup {
+  gap: 1rem;
+  align-items: center;
+}
+
+.numberInput {
+  width: 80px;
+  font-size: 0.875rem;
+}
+
+.slider {
+  flex: 1;
+}
+
+.sliderWide {
+  flex: 1.2;
+}
+
+/* Label text */
+.labelText {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
