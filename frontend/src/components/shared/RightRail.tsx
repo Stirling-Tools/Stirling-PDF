@@ -7,14 +7,23 @@ import { useRightRail } from '../../contexts/RightRailContext';
 import { useFileState, useFileSelection, useFileManagement } from '../../contexts/FileContext';
 import { useNavigationState } from '../../contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
+
 import LanguageSelector from '../shared/LanguageSelector';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { Tooltip } from '../shared/Tooltip';
 import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
+import { SearchInterface } from '../viewer/SearchInterface';
+import { ViewerContext } from '../../contexts/ViewerContext';
+
 import { parseSelection } from '../../utils/bulkselection/parseSelection';
+
 
 export default function RightRail() {
   const { t } = useTranslation();
+  const [isPanning, setIsPanning] = useState(false);
+
+  // Viewer context for PDF controls - safely handle when not available
+  const viewerContext = React.useContext(ViewerContext);
   const { toggleTheme } = useRainbowThemeContext();
   const { buttons, actions } = useRightRail();
   const topButtons = useMemo(() => buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true)), [buttons]);
@@ -168,6 +177,105 @@ export default function RightRail() {
           </>
         )}
 
+        {/* Group: PDF Viewer Controls - visible only in viewer mode */}
+        <div
+          className={`right-rail-slot ${currentView === 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
+          aria-hidden={currentView !== 'viewer'}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            {/* Search */}
+            <Tooltip content={t('rightRail.search', 'Search PDF')} position="left" offset={12} arrow>
+              <Popover position="left" withArrow shadow="md" offset={8}>
+                <Popover.Target>
+                  <div style={{ display: 'inline-flex' }}>
+                    <ActionIcon
+                      variant="subtle"
+                      radius="md"
+                      className="right-rail-icon"
+                      disabled={currentView !== 'viewer'}
+                      aria-label={typeof t === 'function' ? t('rightRail.search', 'Search PDF') : 'Search PDF'}
+                    >
+                      <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
+                    </ActionIcon>
+                  </div>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <div style={{ minWidth: '20rem' }}>
+                    <SearchInterface
+                      visible={true}
+                      onClose={() => {}}
+                    />
+                  </div>
+                </Popover.Dropdown>
+              </Popover>
+            </Tooltip>
+
+
+            {/* Pan Mode */}
+            <Tooltip content={t('rightRail.panMode', 'Pan Mode')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant={isPanning ? "filled" : "subtle"}
+                color={isPanning ? "blue" : undefined}
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => {
+                  viewerContext?.panActions.togglePan();
+                  setIsPanning(!isPanning);
+                }}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Rotate Left */}
+            <Tooltip content={t('rightRail.rotateLeft', 'Rotate Left')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => {
+                  viewerContext?.rotationActions.rotateBackward();
+                }}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="rotate-left" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Rotate Right */}
+            <Tooltip content={t('rightRail.rotateRight', 'Rotate Right')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => {
+                  viewerContext?.rotationActions.rotateForward();
+                }}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="rotate-right" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Sidebar Toggle */}
+            <Tooltip content={t('rightRail.toggleSidebar', 'Toggle Sidebar')} position="left" offset={12} arrow>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={() => {
+                  viewerContext?.toggleThumbnailSidebar();
+                }}
+                disabled={currentView !== 'viewer'}
+              >
+                <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />
+              </ActionIcon>
+            </Tooltip>
+          </div>
+          <Divider className="right-rail-divider" />
+        </div>
+
         {/* Group: Selection controls + Close, animate as one unit when entering/leaving viewer */}
         <div
           className={`right-rail-slot ${currentView !== 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
@@ -224,6 +332,7 @@ export default function RightRail() {
                       </div>
                   </Popover.Target>
                   <Popover.Dropdown>
+
                     <div style={{ minWidth: '24rem', maxWidth: '32rem' }}>
                       <BulkSelectionPanel
                         csvInput={csvInput}

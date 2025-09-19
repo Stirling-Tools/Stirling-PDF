@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Reemplazar e Invertir Color",
       "desc": "Reemplaza el color del texto y el fondo en el PDF e invierte el color completo del PDF para reducir el tamaño del archivo"
+    },
+    "convert": {
+      "title": "Convertir"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Extraer Páginas"
+    },
+    "removePages": {
+      "title": "Eliminar",
+      "desc": "Eliminar páginas no deseadas del documento PDF"
+    },
+    "removeImagePdf": {
+      "title": "Eliminar imagen",
+      "desc": "Eliminar imagen del PDF> para reducir el tamaño de archivo"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Auto dividir por tamaño/conteo",
+      "desc": "Divide un solo PDF en múltiples documentos según su tamaño, número de páginas, o número de documento"
+    },
+    "adjust-contrast": {
+      "title": "Ajustar Color/Contraste",
+      "desc": "Ajustar Contraste, Saturación y Brillo de un PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Reemplazar e Invertir Color",
+      "desc": "Reemplaza el color del texto y el fondo en el PDF e invierte el color completo del PDF para reducir el tamaño del archivo"
+    },
+    "changePermissions": {
+      "title": "Cambiar permisos"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "Ordenar por nombre",
     "sortByDate": "Ordenar por fecha",
     "removeCertSign": "¿Eliminar la firma digital en el archivo unido?",
-    "submit": "Unir"
+    "submit": "Unir",
+    "sortBy": {
+      "filename": "Nombre de Archivo"
+    }
   },
   "split": {
     "tags": "Operaciones de página,dividir,Multi-página,cortar,Backend",
@@ -634,7 +669,20 @@
       "8": "Documento #6: Página 10"
     },
     "splitPages": "Introducir las páginas para dividir:",
-    "submit": "Dividir"
+    "submit": "Dividir",
+    "steps": {
+      "settings": "Configuración"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Tamaño de archivo"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Tamaño de archivo"
+      }
+    }
   },
   "rotate": {
     "tags": "Backend",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Texto",
       "2": "Imagen"
+    },
+    "watermarkType": {
+      "text": "Texto"
+    },
+    "settings": {
+      "fontSize": "Tamaño de Letra"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Cambiar"
   },
   "removePages": {
-    "tags": "Borrar páginas,eliminar páginas"
+    "tags": "Borrar páginas,eliminar páginas",
+    "title": "Eliminar",
+    "submit": "Eliminar"
   },
   "addPassword": {
     "tags": "seguro,seguridad",
@@ -758,7 +814,12 @@
       "15": "Restringir qué se puede hacer con el documento una vez abierto (no soportado por todos los lectores)",
       "16": "Restringir la apertura del propio documento"
     },
-    "submit": "Encriptar"
+    "submit": "Encriptar",
+    "tooltip": {
+      "permissions": {
+        "title": "Cambiar permisos"
+      }
+    }
   },
   "removePassword": {
     "tags": "seguro,Desencriptar,seguridad,quitar contraseña,eliminar contraseña",
@@ -768,7 +829,12 @@
       "1": "Seleccionar PDF para desencriptar",
       "2": "Contraseña"
     },
-    "submit": "Eliminar"
+    "submit": "Eliminar",
+    "desc": "Eliminar la contraseña del documento PDF",
+    "password": {
+      "stepTitle": "Eliminar contraseña",
+      "label": "Contraseña actual"
+    }
   },
   "compressPdfs": {
     "tags": "aplastar,pequeño,diminuto"
@@ -829,7 +895,25 @@
     },
     "help": "Lea esta documentación sobre cómo usar esto para otros idiomas y/o no usarlo en Docker",
     "credit": "Este servicio utiliza qpdf y Tesseract para OCR",
-    "submit": "Procesar PDF con OCR"
+    "submit": "Procesar PDF con OCR",
+    "desc": "Tareas de limpieza y detectar texto en imágenes dentro de un PDF y volver a incrustarlo como texto",
+    "settings": {
+      "title": "Configuración",
+      "ocrMode": {
+        "label": "Modo OCR"
+      },
+      "languages": {
+        "label": "Idiomas"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Modo OCR"
+      },
+      "languages": {
+        "title": "Idiomas"
+      }
+    }
   },
   "extractImages": {
     "tags": "imagen,fotografía,guardar,archivo,zip,capturar,coger",
@@ -938,7 +1022,13 @@
     "title": "Aplanar",
     "header": "Acoplar archivos PDF",
     "flattenOnlyForms": "Aplanar sólo formularios",
-    "submit": "Aplanar"
+    "submit": "Aplanar",
+    "steps": {
+      "settings": "Configuración"
+    },
+    "options": {
+      "flattenOnlyForms": "Aplanar sólo formularios"
+    }
   },
   "repair": {
     "tags": "reparar,restaurar,corregir,recuperar",
@@ -1174,7 +1264,22 @@
     "showLayers": "Mostrar Capas (doble clic para restablecer las capas a su estado inicial)",
     "colourPicker": "Selector de color",
     "findCurrentOutlineItem": "Resaltar el marcador",
-    "applyChanges": "Aplicar cambios"
+    "applyChanges": "Aplicar cambios",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Avanzado"
+      },
+      "wordsToRedact": {
+        "add": "Agregar"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Páginas",
+        "placeholder": "(por ejemplo 1,2,8 o 4,7,12-16 o 2n-1)"
+      },
+      "export": "Exportar"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Extraer tabla,extraer,convertir"
@@ -1386,7 +1491,10 @@
       "4": "Modo automático: ajusta automáticamente la calidad para que el PDF tenga el tamaño exacto",
       "5": "Tamaño esperado del PDF (por ejemplo, 25 MB, 10.8 MB, 25 KB)"
     },
-    "submit": "Comprimir"
+    "submit": "Comprimir",
+    "method": {
+      "filesize": "Tamaño de archivo"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Este archivo está protegido con contraseña. Introdúzca la contraseña:",
@@ -1555,6 +1663,84 @@
       "analytics": {
         "title": "Análisis",
         "description": "Estas cookies nos ayudan a entender cómo se están utilizando nuestras herramientas, para que podamos centrarnos en desarrollar las funciones que nuestra comunidad valora más. Tenga la seguridad de que Stirling PDF no puede y nunca podrá rastrear el contenido de los documentos con los que trabaja."
+      }
+    }
+  },
+  "download": "Descargar",
+  "undo": "Deshacer",
+  "convert": {
+    "title": "Convertir",
+    "settings": "Configuración",
+    "color": "Color",
+    "greyscale": "Escala de grises",
+    "fillPage": "Ocupar toda la página",
+    "pdfaDigitalSignatureWarning": "El PDF contiene una firma digital. Ésta se eliminará en el siguiente paso.",
+    "grayscale": "Escala de grises"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Seleccionar Todo",
+    "deselectAll": "Deseleccionar Todo"
+  },
+  "quickAccess": {
+    "sign": "Firmar"
+  },
+  "fileUpload": {
+    "loading": "Cargando...",
+    "or": "o"
+  },
+  "fileManager": {
+    "fileName": "Nombre",
+    "fileVersion": "Versión",
+    "selectAll": "Seleccionar Todo",
+    "deselectAll": "Deseleccionar Todo",
+    "deleteSelected": "Borrar selecionado(s)",
+    "download": "Descargar",
+    "delete": "Borrar"
+  },
+  "sanitize": {
+    "submit": "Limpiar archivo PDF",
+    "steps": {
+      "settings": "Configuración"
+    }
+  },
+  "changePermissions": {
+    "title": "Cambiar permisos",
+    "submit": "Cambiar permisos",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Impedir el ensamblaje del documento"
+      },
+      "preventExtractContent": {
+        "label": "Impedir la extracción de contenido"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Impedir la extracción para la accesibilidad"
+      },
+      "preventFillInForm": {
+        "label": "Impedir rellenar formulario"
+      },
+      "preventModify": {
+        "label": "Impedir modificación"
+      },
+      "preventModifyAnnotations": {
+        "label": "Impedir modificación de anotaciones"
+      },
+      "preventPrinting": {
+        "label": "Impedir imprimir"
+      },
+      "preventPrintingFaithful": {
+        "label": "Impedir imprimir diferentes formatos"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Cambiar permisos"
       }
     }
   }
