@@ -14,7 +14,7 @@ export const buildRemoveCertificateSignFormData = (_parameters: RemoveCertificat
 export const removeCertificateSignOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildRemoveCertificateSignFormData,
-  operationType: 'remove-certificate-sign',
+  operationType: 'removeCertSign',
   endpoint: '/api/v1/security/remove-cert-sign',
   defaultParameters,
 } as const;

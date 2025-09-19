@@ -71,7 +71,7 @@ export const getSplitEndpoint = (parameters: SplitParameters): string => {
 export const splitOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildSplitFormData,
-  operationType: 'splitPdf',
+  operationType: 'split',
   endpoint: getSplitEndpoint,
   defaultParameters,
 } as const;

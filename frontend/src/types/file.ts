@@ -3,6 +3,8 @@
  * FileContext uses pure File objects with separate ID tracking
  */
 
+import { ToolId } from "./toolId";
+
 declare const tag: unique symbol;
 export type FileId = string & { readonly [tag]: 'FileId' };
 
@@ -11,7 +13,7 @@ export type FileId = string & { readonly [tag]: 'FileId' };
  * Note: Parameters removed for security - sensitive data like passwords should not be stored in history
  */
 export interface ToolOperation {
-  toolName: string;
+  toolId: ToolId;
   timestamp: number;
 }
 
@@ -32,9 +34,5 @@ export interface BaseFileMetadata {
   originalFileId: string; // Root file ID for grouping versions
   versionNumber: number; // Version number in chain
   parentFileId?: FileId; // Immediate parent file ID
-  toolHistory?: Array<{
-    toolName: string;
-    timestamp: number;
-  }>; // Tool chain for history tracking
-
+  toolHistory?: ToolOperation[]; // Tool chain for history tracking
 }

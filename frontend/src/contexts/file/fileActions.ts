@@ -12,7 +12,7 @@ import {
   createStirlingFile,
   ProcessedFileMetadata,
 } from '../../types/fileContext';
-import { FileId } from '../../types/file';
+import { FileId, ToolOperation } from '../../types/file';
 import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
 import { FileLifecycleManager } from './lifecycle';
 import { buildQuickKeySet } from './fileSelectors';
@@ -104,7 +104,7 @@ export async function generateProcessedFileMetadata(file: File): Promise<Process
  */
 export function createChildStub(
   parentStub: StirlingFileStub,
-  operation: { toolName: string; timestamp: number },
+  operation: ToolOperation,
   resultingFile: File,
   thumbnail?: string,
   processedFileMetadata?: ProcessedFileMetadata
