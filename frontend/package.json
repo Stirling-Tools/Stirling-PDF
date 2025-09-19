@@ -25,6 +25,7 @@
     "@emotion/styled": "^11.14.0",
     "@iconify/react": "^6.0.0",
     "@mantine/core": "^8.0.1",
+    "@mantine/dates": "^8.0.1",
     "@mantine/dropzone": "^8.0.1",
     "@mantine/hooks": "^8.0.1",
     "@mui/icons-material": "^7.1.0",
