@@ -221,7 +221,7 @@ public class ExtractImageScansController {
                         try {
                             Files.deleteIfExists(path);
                         } catch (IOException e) {
-                            log.error("Failed to delete temporary image file: " + path, e);
+                            log.error("Failed to delete temporary image file: {}", path, e);
                         }
                     });
 
@@ -229,7 +229,7 @@ public class ExtractImageScansController {
                 try {
                     Files.deleteIfExists(tempZipFile);
                 } catch (IOException e) {
-                    log.error("Failed to delete temporary zip file: " + tempZipFile, e);
+                    log.error("Failed to delete temporary zip file: {}", tempZipFile, e);
                 }
             }
 
@@ -238,7 +238,7 @@ public class ExtractImageScansController {
                         try {
                             FileUtils.deleteDirectory(dir.toFile());
                         } catch (IOException e) {
-                            log.error("Failed to delete temporary directory: " + dir, e);
+                            log.error("Failed to delete temporary directory: {}", dir, e);
                         }
                     });
         }

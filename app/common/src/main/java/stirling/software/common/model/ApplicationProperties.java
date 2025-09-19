@@ -73,11 +73,11 @@ public class ApplicationProperties {
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
             throws IOException {
         String configPath = InstallationPathConfig.getSettingsPath();
-        log.debug("Attempting to load settings from: " + configPath);
+        log.debug("Attempting to load settings from: {}", configPath);
 
         File file = new File(configPath);
         if (!file.exists()) {
-            log.error("Warning: Settings file does not exist at: " + configPath);
+            log.error("Warning: Settings file does not exist at: {}", configPath);
         }
 
         Resource resource = new FileSystemResource(configPath);
@@ -90,7 +90,7 @@ public class ApplicationProperties {
                 new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
         environment.getPropertySources().addFirst(propertySource);
 
-        log.debug("Loaded properties: " + propertySource.getSource());
+        log.debug("Loaded properties: {}", propertySource.getSource());
 
         return propertySource;
     }
