@@ -175,7 +175,7 @@
     "search": "Search",
     "sections": {
       "organize": "Organize",
-      "convertTo": "Convert to PDF",
+      "convertTo": "Konvertovať do PDF",
       "convertFrom": "Convert from PDF",
       "security": "Sign & Security",
       "advance": "Advanced",
@@ -332,7 +332,7 @@
     "globalPopularity": "Global Popularity",
     "sortBy": "Sort by:",
     "multiTool": {
-      "title": "PDF Multi Tool",
+      "title": "PDF Multi Nástroj",
       "desc": "Zlúčiť, otočiť, preusporiadať a odstrániť stránky"
     },
     "merge": {
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "convert": {
+      "title": "Konvertovať"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Extrahovať stránky"
+    },
+    "removePages": {
+      "title": "Odstrániť",
+      "desc": "Odstrániť nechcené stránky z vášho PDF dokumentu."
+    },
+    "removeImagePdf": {
+      "title": "Remove image",
+      "desc": "Remove image from PDF to reduce file size"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Automatické rozdelenie podľa veľkosti/počtu",
+      "desc": "Rozdelí jeden PDF na viacero dokumentov na základe veľkosti, počtu stránok alebo počtu dokumentov"
+    },
+    "adjust-contrast": {
+      "title": "Upraviť farby/kontrast",
+      "desc": "Upravte kontrast, sýtosť a jas PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Replace and Invert Color",
+      "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "changePermissions": {
+      "title": "Zmeniť povolenia"
     }
   },
   "viewPdf": {
@@ -602,10 +634,10 @@
     "addFile": "Add File",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "split": "Split",
+    "split": "Rozdeliť",
     "moveLeft": "Move Left",
     "moveRight": "Move Right",
-    "delete": "Delete",
+    "delete": "Vymazať",
     "dragDropMessage": "Page(s) Selected",
     "undo": "Undo",
     "redo": "Redo"
@@ -634,7 +666,10 @@
       "8": "Dokument č. 6: Strana 10"
     },
     "splitPages": "Zadajte stránky na rozdelenie:",
-    "submit": "Rozdeliť"
+    "submit": "Rozdeliť",
+    "steps": {
+      "settings": "Nastavenia"
+    }
   },
   "rotate": {
     "tags": "beží na serveri",
@@ -734,7 +769,9 @@
     "submit": "Zmeniť"
   },
   "removePages": {
-    "tags": "Odstrániť stránky,vymazať stránky"
+    "tags": "Odstrániť stránky,vymazať stránky",
+    "title": "Odstrániť",
+    "submit": "Odstrániť"
   },
   "addPassword": {
     "tags": "zaistiť,bezpečnosť",
@@ -758,7 +795,12 @@
       "15": "Obmedzuje, čo môže byť vykonané s dokumentom po jeho otvorení (Nepodporované všetkými čítačmi)",
       "16": "Obmedzuje samotné otvorenie dokumentu"
     },
-    "submit": "Zašifrovať"
+    "submit": "Zašifrovať",
+    "tooltip": {
+      "permissions": {
+        "title": "Zmeniť povolenia"
+      }
+    }
   },
   "removePassword": {
     "tags": "zaistiť,Dešifrovať,bezpečnosť,odheslovať,vymazať heslo",
@@ -768,7 +810,12 @@
       "1": "Vyberte PDF na dešifrovanie",
       "2": "Heslo"
     },
-    "submit": "Odstrániť"
+    "submit": "Odstrániť",
+    "desc": "Odstrániť ochranu heslom z vášho PDF dokumentu.",
+    "password": {
+      "stepTitle": "Odstrániť heslo",
+      "label": "Aktuálne heslo"
+    }
   },
   "compressPdfs": {
     "tags": "stlačiť,malé,drobné"
@@ -829,7 +876,19 @@
     },
     "help": "Prosím, prečítajte si túto dokumentáciu o tom, ako používať OCR pre iné jazyky a/alebo použitie mimo docker",
     "credit": "Táto služba používa qpdf a Tesseract pre OCR.",
-    "submit": "Spracovať PDF s OCR"
+    "submit": "Spracovať PDF s OCR",
+    "desc": "Čistenie skenov a rozpoznanie textu z obrázkov v PDF a opätovné pridanie ako text.",
+    "settings": {
+      "title": "Nastavenia",
+      "ocrMode": {
+        "label": "OCR režim"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR režim"
+      }
+    }
   },
   "extractImages": {
     "tags": "obrázok,fotografia,uložiť,archív,zip,zachytiť,chytiť",
@@ -924,7 +983,7 @@
     "sharedSigs": "Shared Signatures",
     "noSavedSigs": "No saved signatures found",
     "addToAll": "Add to all pages",
-    "delete": "Delete",
+    "delete": "Vymazať",
     "first": "First page",
     "last": "Last page",
     "next": "Next page",
@@ -938,7 +997,13 @@
     "title": "Zploštiť",
     "header": "Zploštiť PDF",
     "flattenOnlyForms": "Zploštiť iba formuláre",
-    "submit": "Zploštiť"
+    "submit": "Zploštiť",
+    "steps": {
+      "settings": "Nastavenia"
+    },
+    "options": {
+      "flattenOnlyForms": "Zploštiť iba formuláre"
+    }
   },
   "repair": {
     "tags": "opraviť,obnoviť,oprava,obnovenie",
@@ -1106,10 +1171,10 @@
     "credit": "Používa WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "markup, webový obsah, transformácia, konvertovať",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Konvertovať"
   },
   "getPdfInfo": {
     "tags": "informácie, údaje, štatistiky",
@@ -1148,7 +1213,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1239,17 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "wordsToRedact": {
+        "add": "Pridať"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "placeholder": "(napr. 1,2,8 alebo 4,7,12-16 alebo 2n-1)"
+      }
+    }
   },
   "tableExtraxt": {
     "tags": "CSV, extrakcia tabuliek, extrahovať, konvertovať"
@@ -1261,8 +1336,8 @@
     },
     "signer": "Signer",
     "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
+    "reason": "Dôvod",
+    "location": "Miesto",
     "noSignatures": "No digital signatures found in this document",
     "chain": {
       "invalid": "Certificate chain validation failed - cannot verify signer's identity"
@@ -1281,7 +1356,7 @@
       "validUntil": "Valid Until",
       "algorithm": "Algorithm",
       "keySize": "Key Size",
-      "version": "Version",
+      "version": "Verzia",
       "keyUsage": "Key Usage",
       "selfSigned": "Self-Signed",
       "bits": "bits"
@@ -1501,7 +1576,7 @@
       "3": "Include Metadata: If checked, the original PDF's metadata will be included in each split PDF.",
       "4": "Allow Duplicates: If checked, allows multiple bookmarks on the same page to create separate PDFs."
     },
-    "submit": "Split PDF"
+    "submit": "Rozdeliť PDF"
   },
   "fileChooser": {
     "click": "Click",
@@ -1555,6 +1630,71 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Stiahnuť",
+  "convert": {
+    "title": "Konvertovať",
+    "settings": "Nastavenia",
+    "color": "Farba",
+    "greyscale": "Odtiene šedej",
+    "fillPage": "Vyplniť stránku",
+    "grayscale": "Odtiene šedej"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "quickAccess": {
+    "sign": "Podpísať"
+  },
+  "fileManager": {
+    "fileName": "Meno",
+    "fileVersion": "Verzia",
+    "download": "Stiahnuť",
+    "delete": "Vymazať"
+  },
+  "sanitize": {
+    "submit": "Vyčistiť PDF",
+    "steps": {
+      "settings": "Nastavenia"
+    }
+  },
+  "changePermissions": {
+    "title": "Zmeniť povolenia",
+    "submit": "Zmeniť povolenia",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Zakázať zostavovanie dokumentu"
+      },
+      "preventExtractContent": {
+        "label": "Zakázať extrakciu obsahu"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Zakázať extrakciu pre prístupnosť"
+      },
+      "preventFillInForm": {
+        "label": "Zakázať vypĺňanie formulárov"
+      },
+      "preventModify": {
+        "label": "Zakázať úpravy"
+      },
+      "preventModifyAnnotations": {
+        "label": "Zakázať úpravu anotácií"
+      },
+      "preventPrinting": {
+        "label": "Zakázať tlač"
+      },
+      "preventPrintingFaithful": {
+        "label": "Zakázať tlač rôznych formátov"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Zmeniť povolenia"
       }
     }
   }

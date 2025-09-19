@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "جارٍ التحميل...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "إستبدال و عكس الألوان",
       "desc": "استبدال الألوان للنصوص والخلفيات في المستندات PDF وإلغاء تعكير اللون الكامل للمستند لتقليل حجم الملف"
+    },
+    "convert": {
+      "title": "تحويل"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "استخراج الصفحات"
+    },
+    "removePages": {
+      "title": "إزالة الصفحات",
+      "desc": "حذف الصفحات غير المرغوب فيها من مستند PDF الخاص بك."
+    },
+    "removeImagePdf": {
+      "title": "إزالة الصورة",
+      "desc": "إزالة الصورة من PDF لتقليل حجم الملف"
+    },
+    "autoSizeSplitPDF": {
+      "title": "تقسيم تلقائي حسب الحجم/العدد",
+      "desc": "تقسيم ملف PDF واحد إلى مستندات متعددة بناءً على الحجم أو عدد الصفحات أو عدد المستندات"
+    },
+    "adjust-contrast": {
+      "title": "ضبط الألوان/التباين",
+      "desc": "ضبط التباين والتشبع والسطوع لملف PDF"
+    },
+    "replaceColorPdf": {
+      "title": "إستبدال و عكس الألوان",
+      "desc": "استبدال الألوان للنصوص والخلفيات في المستندات PDF وإلغاء تعكير اللون الكامل للمستند لتقليل حجم الملف"
+    },
+    "changePermissions": {
+      "title": "تغيير الأذونات"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "الترتيب حسب الاسم",
     "sortByDate": "الترتيب حسب التاريخ",
     "removeCertSign": "إزالة التوقيع الرقمي في الملف المدمج؟",
-    "submit": "دمج"
+    "submit": "دمج",
+    "sortBy": {
+      "filename": "اسم الملف"
+    }
   },
   "split": {
     "tags": "عمليات الصفحة,تقسيم,صفحات متعددة,قص,جانب الخادم",
@@ -634,7 +669,20 @@
       "8": "المستند رقم 6: الصفحة 10"
     },
     "splitPages": "أدخل الصفحات المراد تقسيمها:",
-    "submit": "تقسيم"
+    "submit": "تقسيم",
+    "steps": {
+      "settings": "إعدادات"
+    },
+    "methods": {
+      "bySize": {
+        "name": "حجم الملف"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "حجم الملف"
+      }
+    }
   },
   "rotate": {
     "tags": "جانب الخادم",
@@ -712,6 +760,12 @@
     "type": {
       "1": "نص",
       "2": "صورة"
+    },
+    "watermarkType": {
+      "text": "نص"
+    },
+    "settings": {
+      "fontSize": "حجم الخط"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "تغيير"
   },
   "removePages": {
-    "tags": "إزالة الصفحات,حذف الصفحات"
+    "tags": "إزالة الصفحات,حذف الصفحات",
+    "title": "إزالة الصفحات",
+    "submit": "إزالة الصفحات"
   },
   "addPassword": {
     "tags": "تأمين,أمان",
@@ -758,7 +814,12 @@
       "15": "يقيد ما يمكن القيام به بالمستند بمجرد فتحه (غير مدعوم من قبل جميع القراء)",
       "16": "يقيد فتح المستند نفسه"
     },
-    "submit": "تشفير"
+    "submit": "تشفير",
+    "tooltip": {
+      "permissions": {
+        "title": "تغيير الأذونات"
+      }
+    }
   },
   "removePassword": {
     "tags": "تأمين,فك التشفير,أمان,إزالة كلمة المرور,حذف كلمة المرور",
@@ -768,7 +829,12 @@
       "1": "حدد PDF لفك التشفير",
       "2": "كلمة المرور"
     },
-    "submit": "إزالة"
+    "submit": "إزالة",
+    "desc": "إزالة الحماية بكلمة مرور من مستند PDF الخاص بك.",
+    "password": {
+      "stepTitle": "إزالة كلمة المرور",
+      "label": "كلمة المرور الحالية"
+    }
   },
   "compressPdfs": {
     "tags": "ضغط,صغير,ضئيل"
@@ -829,7 +895,25 @@
     },
     "help": "يرجى قراءة هذه الوثائق حول كيفية استخدام هذا للغات أخرى و/أو الاستخدام ليس في Docker",
     "credit": "تستخدم هذه الخدمة qpdf و Tesseract للتعرف الضوئي على الحروف.",
-    "submit": "معالجة PDF باستخدام OCR"
+    "submit": "معالجة PDF باستخدام OCR",
+    "desc": "يقوم برنامج التنظيف بمسح واكتشاف النص من الصور داخل ملف PDF ويعيد إضافته كنص",
+    "settings": {
+      "title": "إعدادات",
+      "ocrMode": {
+        "label": "وضع التعرف الضوئي على الحروف"
+      },
+      "languages": {
+        "label": "اللغات"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "وضع التعرف الضوئي على الحروف"
+      },
+      "languages": {
+        "title": "اللغات"
+      }
+    }
   },
   "extractImages": {
     "tags": "صورة,صورة فوتوغرافية,حفظ,أرشيف,ملف مضغوط,التقاط,انتزاع",
@@ -924,7 +1008,7 @@
     "sharedSigs": "توقيعات مشتركة",
     "noSavedSigs": "لم يتم العثور على توقيعات محفوظة",
     "addToAll": "Add to all pages",
-    "delete": "Delete",
+    "delete": "حذف",
     "first": "First page",
     "last": "Last page",
     "next": "Next page",
@@ -938,7 +1022,13 @@
     "title": "تسطيح",
     "header": "تسطيح ملفات PDF",
     "flattenOnlyForms": "تسطيح النماذج فقط",
-    "submit": "تسطيح"
+    "submit": "تسطيح",
+    "steps": {
+      "settings": "إعدادات"
+    },
+    "options": {
+      "flattenOnlyForms": "تسطيح النماذج فقط"
+    }
   },
   "repair": {
     "tags": "إصلاح,استعادة,تصحيح,استرداد",
@@ -1106,10 +1196,10 @@
     "credit": "يستخدم WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "لغة الترميز,محتوى الويب,تحويل,تحويل",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "تحويل"
   },
   "getPdfInfo": {
     "tags": "معلومات,بيانات,إحصائيات,إحصاءات",
@@ -1148,7 +1238,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1264,22 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "متقدم"
+      },
+      "wordsToRedact": {
+        "add": "إضافة"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "صفحات",
+        "placeholder": "(مثال: 1,2,8 أو 4,7,12-16 أو 2n-1)"
+      },
+      "export": "تصدير"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,استخراج الجدول,استخراج,تحويل"
@@ -1261,8 +1366,8 @@
     },
     "signer": "Signer",
     "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
+    "reason": "السبب",
+    "location": "الموقع",
     "noSignatures": "No digital signatures found in this document",
     "chain": {
       "invalid": "Certificate chain validation failed - cannot verify signer's identity"
@@ -1281,7 +1386,7 @@
       "validUntil": "Valid Until",
       "algorithm": "Algorithm",
       "keySize": "Key Size",
-      "version": "Version",
+      "version": "الإصدار",
       "keyUsage": "Key Usage",
       "selfSigned": "Self-Signed",
       "bits": "bits"
@@ -1386,7 +1491,10 @@
       "4": "الوضع التلقائي - يضبط الجودة تلقائيًا للحصول على ملف PDF بالحجم المحدد",
       "5": "حجم PDF المتوقع (على سبيل المثال 25 ميجا بايت، 10.8 ميجا بايت، 25 كيلو بايت)"
     },
-    "submit": "ضغط"
+    "submit": "ضغط",
+    "method": {
+      "filesize": "حجم الملف"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1555,6 +1663,83 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "تنزيل",
+  "convert": {
+    "title": "تحويل",
+    "settings": "إعدادات",
+    "color": "لون",
+    "greyscale": "تدرج الرمادي",
+    "fillPage": "ملء الصفحة",
+    "pdfaDigitalSignatureWarning": "يحتوي PDF على توقيع رقمي. سيتم إزالة هذا في الخطوة التالية.",
+    "grayscale": "تدرج الرمادي"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "تحديد الكل",
+    "deselectAll": "إلغاء تحديد الكل"
+  },
+  "quickAccess": {
+    "sign": "توقيع"
+  },
+  "fileUpload": {
+    "loading": "جارٍ التحميل...",
+    "or": "أو"
+  },
+  "fileManager": {
+    "fileName": "الاسم",
+    "fileVersion": "الإصدار",
+    "selectAll": "تحديد الكل",
+    "deselectAll": "إلغاء تحديد الكل",
+    "deleteSelected": "حذف المحدد",
+    "download": "تنزيل",
+    "delete": "حذف"
+  },
+  "sanitize": {
+    "submit": "تنظيف PDF",
+    "steps": {
+      "settings": "إعدادات"
+    }
+  },
+  "changePermissions": {
+    "title": "تغيير الأذونات",
+    "submit": "تغيير الأذونات",
+    "permissions": {
+      "preventAssembly": {
+        "label": "منع تجميع المستند"
+      },
+      "preventExtractContent": {
+        "label": "منع استخراج المحتوى"
+      },
+      "preventExtractForAccessibility": {
+        "label": "منع الاستخراج للوصول"
+      },
+      "preventFillInForm": {
+        "label": "منع ملء النموذج"
+      },
+      "preventModify": {
+        "label": "منع التعديل"
+      },
+      "preventModifyAnnotations": {
+        "label": "منع تعديل التعليق التوضيحي"
+      },
+      "preventPrinting": {
+        "label": "منع الطباعة"
+      },
+      "preventPrintingFaithful": {
+        "label": "منع طباعة التنسيقات المختلفة"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "تغيير الأذونات"
       }
     }
   }
