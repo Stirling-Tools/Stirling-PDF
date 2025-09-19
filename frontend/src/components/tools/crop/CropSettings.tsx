@@ -1,0 +1,328 @@
+import React, { useMemo, useState, useEffect } from "react";
+import { Stack, Text, Box, Group, NumberInput, ActionIcon, Center, Alert } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import InfoIcon from "@mui/icons-material/Info";
+import { CropParametersHook } from "../../../hooks/tools/crop/useCropParameters";
+import { useSelectedFiles } from "../../../contexts/file/fileHooks";
+import { useFileContext } from "../../../contexts/FileContext";
+import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
+import CropAreaSelector from "./CropAreaSelector";
+import {
+  calculatePDFBounds,
+  PDFBounds,
+  CropArea,
+  getPDFAspectRatio,
+  createFullPDFCropArea
+} from "../../../utils/cropCoordinates";
+import { pdfWorkerManager } from "../../../services/pdfWorkerManager";
+
+interface CropSettingsProps {
+  parameters: CropParametersHook;
+  disabled?: boolean;
+}
+
+const CONTAINER_SIZE = 400; // Larger container for better crop precision
+
+const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
+  const { t } = useTranslation();
+  const { selectedFiles, selectedFileStubs } = useSelectedFiles();
+
+  // Get the first selected file for preview
+  const selectedStub = useMemo(() => {
+    return selectedFileStubs.length > 0 ? selectedFileStubs[0] : null;
+  }, [selectedFileStubs]);
+
+  // Get the first selected file for PDF processing
+  const selectedFile = useMemo(() => {
+    return selectedFiles.length > 0 ? selectedFiles[0] : null;
+  }, [selectedFiles]);
+
+  // Get thumbnail for the selected file
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [pdfBounds, setPdfBounds] = useState<PDFBounds | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadPDFDimensions = async () => {
+      if (!selectedStub || !selectedFile) {
+        setPdfBounds(null);
+        setThumbnail(null);
+        return;
+      }
+
+      setThumbnail(selectedStub.thumbnailUrl || null);
+      setLoading(true);
+
+      try {
+        // Get PDF dimensions from the actual file
+        const arrayBuffer = await selectedFile.arrayBuffer();
+
+        // Load PDF to get actual dimensions
+        const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
+          disableAutoFetch: true,
+          disableStream: true,
+          stopAtErrors: false
+        });
+
+        const firstPage = await pdf.getPage(1);
+        const viewport = firstPage.getViewport({ scale: 1 });
+
+        const pdfWidth = viewport.width;
+        const pdfHeight = viewport.height;
+
+        const bounds = calculatePDFBounds(pdfWidth, pdfHeight, CONTAINER_SIZE, CONTAINER_SIZE);
+        setPdfBounds(bounds);
+
+        // Initialize crop area to full PDF if parameters are still default
+        const isDefault = parameters.parameters.width === 595 &&
+                         parameters.parameters.height === 842 &&
+                         parameters.parameters.x === 0 &&
+                         parameters.parameters.y === 0;
+
+        if (isDefault) {
+          parameters.resetToFullPDF(bounds);
+        }
+
+        // Cleanup PDF
+        pdfWorkerManager.destroyDocument(pdf);
+      } catch (error) {
+        console.error('Failed to load PDF dimensions:', error);
+        // Fallback to A4 dimensions if PDF loading fails
+        const bounds = calculatePDFBounds(595, 842, CONTAINER_SIZE, CONTAINER_SIZE);
+        setPdfBounds(bounds);
+
+        if (parameters.parameters.width === 595 && parameters.parameters.height === 842) {
+          parameters.resetToFullPDF(bounds);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPDFDimensions();
+  }, [selectedStub, selectedFile, parameters]);
+
+  // Current crop area
+  const cropArea = parameters.getCropArea();
+
+  // Handle crop area changes from the selector
+  const handleCropAreaChange = (newCropArea: CropArea) => {
+    if (pdfBounds) {
+      parameters.setCropArea(newCropArea, pdfBounds);
+    }
+  };
+
+  // Handle manual coordinate input changes
+  const handleCoordinateChange = (field: keyof CropArea, value: number | string) => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(numValue)) return;
+
+    const newCropArea = { ...cropArea, [field]: numValue };
+    if (pdfBounds) {
+      parameters.setCropArea(newCropArea, pdfBounds);
+    }
+  };
+
+  // Reset to full PDF
+  const handleReset = () => {
+    if (pdfBounds) {
+      parameters.resetToFullPDF(pdfBounds);
+    }
+  };
+
+  // Calculate crop percentage
+  const cropPercentage = useMemo(() => {
+    if (!pdfBounds) return 100;
+    const totalArea = pdfBounds.actualWidth * pdfBounds.actualHeight;
+    const cropAreaSize = cropArea.width * cropArea.height;
+    return Math.round((cropAreaSize / totalArea) * 100);
+  }, [cropArea, pdfBounds]);
+
+  // Get aspect ratio information
+  const aspectRatioInfo = useMemo(() => {
+    if (!pdfBounds) return null;
+    const pdfRatio = getPDFAspectRatio(pdfBounds);
+    const cropRatio = cropArea.width / cropArea.height;
+
+    return {
+      pdf: pdfRatio.toFixed(2),
+      crop: cropRatio.toFixed(2),
+      orientation: pdfRatio > 1 ? 'Landscape' : 'Portrait'
+    };
+  }, [pdfBounds, cropArea]);
+
+  if (!selectedStub || !pdfBounds) {
+    return (
+      <Center style={{ height: '200px' }}>
+        <Text color="dimmed">
+          {t("crop.noFileSelected", "Select a PDF file to begin cropping")}
+        </Text>
+      </Center>
+    );
+  }
+
+  const isCropValid = parameters.isCropAreaValid(pdfBounds);
+  const isFullCrop = parameters.isFullPDFCrop(pdfBounds);
+
+  return (
+    <Stack gap="md">
+      {/* PDF Preview with Crop Selector */}
+      <Stack gap="xs">
+        <Group justify="space-between" align="center">
+          <Text size="sm" fw={500}>
+            {t("crop.preview.title", "Crop Area Selection")}
+          </Text>
+          <ActionIcon
+            variant="outline"
+            onClick={handleReset}
+            disabled={disabled || isFullCrop}
+            title={t("crop.reset", "Reset to full PDF")}
+            aria-label={t("crop.reset", "Reset to full PDF")}
+          >
+            <RestartAltIcon style={{ fontSize: '1rem' }} />
+          </ActionIcon>
+        </Group>
+
+        <Center>
+          <Box
+            style={{
+              width: CONTAINER_SIZE,
+              height: CONTAINER_SIZE,
+              border: '1px solid var(--mantine-color-gray-3)',
+              borderRadius: '8px',
+              backgroundColor: 'var(--mantine-color-gray-0)',
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+          >
+            <CropAreaSelector
+              pdfBounds={pdfBounds}
+              cropArea={cropArea}
+              onCropAreaChange={handleCropAreaChange}
+              disabled={disabled}
+            >
+              <DocumentThumbnail
+                file={selectedStub}
+                thumbnail={thumbnail}
+                style={{
+                  width: pdfBounds.thumbnailWidth,
+                  height: pdfBounds.thumbnailHeight,
+                  position: 'absolute',
+                  left: pdfBounds.offsetX,
+                  top: pdfBounds.offsetY
+                }}
+              />
+            </CropAreaSelector>
+          </Box>
+        </Center>
+
+        {/* Crop Info */}
+        <Group justify="center" gap="lg">
+          <Text size="xs" color="dimmed">
+            {t("crop.info.percentage", "Area: {{percentage}}%", { percentage: cropPercentage })}
+          </Text>
+          {aspectRatioInfo && (
+            <Text size="xs" color="dimmed">
+              {t("crop.info.ratio", "Ratio: {{ratio}} ({{orientation}})", {
+                ratio: aspectRatioInfo.crop,
+                orientation: parseFloat(aspectRatioInfo.crop) > 1 ? 'Landscape' : 'Portrait'
+              })}
+            </Text>
+          )}
+        </Group>
+      </Stack>
+
+      {/* Manual Coordinate Input */}
+      <Stack gap="xs">
+        <Text size="sm" fw={500}>
+          {t("crop.coordinates.title", "Precise Coordinates (PDF Points)")}
+        </Text>
+
+        <Group grow>
+          <NumberInput
+            label={t("crop.coordinates.x", "X (Left)")}
+            value={Math.round(cropArea.x * 10) / 10}
+            onChange={(value) => handleCoordinateChange('x', value)}
+            disabled={disabled}
+            min={0}
+            max={pdfBounds.actualWidth}
+            step={0.1}
+            decimalScale={1}
+            size="xs"
+          />
+          <NumberInput
+            label={t("crop.coordinates.y", "Y (Bottom)")}
+            value={Math.round(cropArea.y * 10) / 10}
+            onChange={(value) => handleCoordinateChange('y', value)}
+            disabled={disabled}
+            min={0}
+            max={pdfBounds.actualHeight}
+            step={0.1}
+            decimalScale={1}
+            size="xs"
+          />
+        </Group>
+
+        <Group grow>
+          <NumberInput
+            label={t("crop.coordinates.width", "Width")}
+            value={Math.round(cropArea.width * 10) / 10}
+            onChange={(value) => handleCoordinateChange('width', value)}
+            disabled={disabled}
+            min={0.1}
+            max={pdfBounds.actualWidth}
+            step={0.1}
+            decimalScale={1}
+            size="xs"
+          />
+          <NumberInput
+            label={t("crop.coordinates.height", "Height")}
+            value={Math.round(cropArea.height * 10) / 10}
+            onChange={(value) => handleCoordinateChange('height', value)}
+            disabled={disabled}
+            min={0.1}
+            max={pdfBounds.actualHeight}
+            step={0.1}
+            decimalScale={1}
+            size="xs"
+          />
+        </Group>
+
+        {/* PDF Dimensions Info */}
+        <Alert
+          icon={<InfoIcon />}
+          color="blue"
+          variant="light"
+          style={{ fontSize: '0.75rem' }}
+        >
+          <Text size="xs">
+            {t("crop.info.pdfDimensions", "PDF Size: {{width}} × {{height}} points", {
+              width: Math.round(pdfBounds.actualWidth),
+              height: Math.round(pdfBounds.actualHeight)
+            })}
+          </Text>
+          {aspectRatioInfo && (
+            <Text size="xs">
+              {t("crop.info.aspectRatio", "Aspect Ratio: {{ratio}} ({{orientation}})", {
+                ratio: aspectRatioInfo.pdf,
+                orientation: aspectRatioInfo.orientation
+              })}
+            </Text>
+          )}
+        </Alert>
+
+        {/* Validation Alert */}
+        {!isCropValid && (
+          <Alert color="red" variant="light">
+            <Text size="xs">
+              {t("crop.error.invalidArea", "Crop area extends beyond PDF boundaries")}
+            </Text>
+          </Alert>
+        )}
+      </Stack>
+    </Stack>
+  );
+};
+
+export default CropSettings;
