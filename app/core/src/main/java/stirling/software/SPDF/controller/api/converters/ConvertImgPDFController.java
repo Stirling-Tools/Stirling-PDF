@@ -17,6 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -32,15 +33,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.model.api.converters.ConvertCbzToPdfRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CbzUtils;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -51,6 +55,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
     @Operation(
@@ -242,6 +247,34 @@ public class ConvertImgPDFController {
                 bytes,
                 new File(file[0].getOriginalFilename()).getName().replaceFirst("[.][^.]+$", "")
                         + "_converted.pdf");
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbz/pdf")
+    @Operation(
+            summary = "Convert CBZ comic book archive to PDF",
+            description =
+                    "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file. "
+                            + "Input:CBZ Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
+        byte[] pdfBytes;
+        try {
+            pdfBytes = CbzUtils.convertCbzToPdf(file, pdfDocumentFactory, tempFileManager);
+        } catch (IllegalArgumentException ex) {
+            String message = ex.getMessage() == null ? "Invalid CBZ file" : ex.getMessage();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null) {
+            filename = "comic";
+        }
+        filename = filename.replaceFirst("[.][^.]+$", "") + "_converted.pdf";
+
+        return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
     }
 
     private String getMediaType(String imageFormat) {
