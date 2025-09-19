@@ -33,7 +33,6 @@ import { RotateAPIBridge } from './RotateAPIBridge';
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
-  colorScheme?: 'light' | 'dark' | 'auto'; // Optional since we use CSS variables
 }
 
 export function LocalEmbedPDF({ file, url }: LocalEmbedPDFProps) {

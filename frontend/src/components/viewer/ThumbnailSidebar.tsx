@@ -5,13 +5,12 @@ import { useViewer } from '../../contexts/ViewerContext';
 interface ThumbnailSidebarProps {
   visible: boolean;
   onToggle: () => void;
-  colorScheme?: 'light' | 'dark' | 'auto'; // Optional since we use CSS variables
 }
 
 export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSidebarProps) {
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
-  
+
   const scrollState = getScrollState();
   const thumbnailAPI = getThumbnailAPI();
 
@@ -39,11 +38,11 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
 
         try {
           const thumbTask = thumbnailAPI.renderThumb(pageIndex, 1.0);
-          
+
           // Convert Task to Promise and handle properly
           thumbTask.toPromise().then((thumbBlob: Blob) => {
             const thumbUrl = URL.createObjectURL(thumbBlob);
-            
+
             setThumbnails(prev => ({
               ...prev,
               [pageIndex]: thumbUrl
@@ -55,7 +54,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
               [pageIndex]: 'error'
             }));
           });
-          
+
         } catch (error) {
           console.error('Failed to generate thumbnail for page', pageIndex + 1, error);
           setThumbnails(prev => ({
@@ -96,7 +95,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
           {/* Thumbnails Container */}
           <ScrollArea style={{ flex: 1 }}>
             <Box p="sm">
-              <div style={{ 
+              <div style={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px'
@@ -112,7 +111,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
                       backgroundColor: scrollState.currentPage === pageIndex + 1
                         ? 'var(--color-primary-100)'
                         : 'transparent',
-                      border: scrollState.currentPage === pageIndex + 1 
+                      border: scrollState.currentPage === pageIndex + 1
                         ? '2px solid var(--color-primary-500)'
                         : '2px solid transparent',
                       transition: 'all 0.2s ease',
@@ -134,7 +133,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
                   >
                     {/* Thumbnail Image */}
                     {thumbnails[pageIndex] && thumbnails[pageIndex] !== 'error' ? (
-                      <img 
+                      <img
                         src={thumbnails[pageIndex]}
                         alt={`Page ${pageIndex + 1} thumbnail`}
                         style={{
@@ -176,7 +175,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
                         Loading...
                       </div>
                     )}
-                    
+
                     {/* Page Number */}
                     <div style={{
                       fontSize: '12px',
