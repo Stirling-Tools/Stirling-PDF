@@ -119,7 +119,7 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
 
     } else if (isResizing) {
       // Resizing the crop area
-      const newDomRect = calculateResizedRect(isResizing, domRect, x, y, initialCropArea, pdfBounds);
+      const newDomRect = calculateResizedRect(isResizing, domRect, x, y);
       const constrainedRect = constrainDOMRectToThumbnail(newDomRect, pdfBounds);
       const newCropArea = domToPDFCoordinates(constrainedRect, pdfBounds);
       onCropAreaChange(newCropArea);
@@ -144,28 +144,6 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
       };
     }
   }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
-
-  // Update cursor based on mouse position
-  const getCursor = useCallback((clientX: number, clientY: number): string => {
-    if (disabled || !containerRef.current) return 'default';
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-
-    if (!isPointInThumbnail(x, y, pdfBounds)) return 'default';
-
-    const handle = getResizeHandle(x, y, domRect);
-    if (handle) {
-      return getResizeCursor(handle);
-    }
-
-    if (isPointInCropArea(x, y, domRect)) {
-      return 'move';
-    }
-
-    return 'crosshair';
-  }, [disabled, pdfBounds, domRect]);
 
   return (
     <Box
@@ -237,27 +215,11 @@ function isPointInCropArea(x: number, y: number, domRect: DOMRect): boolean {
          y >= domRect.y && y <= domRect.y + domRect.height;
 }
 
-function getResizeCursor(handle: ResizeHandle): string {
-  const cursors = {
-    'nw': 'nw-resize',
-    'ne': 'ne-resize',
-    'sw': 'sw-resize',
-    'se': 'se-resize',
-    'n': 'n-resize',
-    'e': 'e-resize',
-    's': 's-resize',
-    'w': 'w-resize'
-  };
-  return cursors[handle!] || 'default';
-}
-
 function calculateResizedRect(
   handle: ResizeHandle,
   currentRect: DOMRect,
   mouseX: number,
   mouseY: number,
-  initialCropArea: CropArea,
-  pdfBounds: PDFBounds
 ): DOMRect {
   let { x, y, width, height } = currentRect;
 

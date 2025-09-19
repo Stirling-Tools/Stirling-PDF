@@ -1,6 +1,6 @@
 import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import { CropArea, PDFBounds, constrainCropAreaToPDF, createFullPDFCropArea, roundCropArea } from '../../../utils/cropCoordinates';
 
 export interface CropParameters extends BaseParameters {
@@ -141,16 +141,6 @@ export const useCropParameters = (): CropParametersHook => {
     baseHook.updateParameter(parameter, value);
   }, [baseHook]);
 
-  // Calculate crop area percentage of original PDF
-  const getCropPercentage = useCallback((pdfBounds?: PDFBounds): number => {
-    if (!pdfBounds) return 100;
-
-    const cropArea = getCropArea();
-    const totalArea = pdfBounds.actualWidth * pdfBounds.actualHeight;
-    const cropAreaSize = cropArea.width * cropArea.height;
-
-    return (cropAreaSize / totalArea) * 100;
-  }, [getCropArea]);
 
   return {
     ...baseHook,

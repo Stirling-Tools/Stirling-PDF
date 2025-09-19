@@ -187,13 +187,6 @@ export const isPointInThumbnail = (
 };
 
 /**
- * Get the aspect ratio of the PDF
- */
-export const getPDFAspectRatio = (pdfBounds: PDFBounds): number => {
-  return pdfBounds.actualWidth / pdfBounds.actualHeight;
-};
-
-/**
  * Create a default crop area that covers the entire PDF
  */
 export const createFullPDFCropArea = (pdfBounds: PDFBounds): CropArea => {
