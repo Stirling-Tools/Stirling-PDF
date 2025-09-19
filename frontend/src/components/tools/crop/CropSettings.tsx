@@ -124,13 +124,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     }
   };
 
-  // Calculate crop percentage
-  const cropPercentage = useMemo(() => {
-    if (!pdfBounds) return 100;
-    const totalArea = pdfBounds.actualWidth * pdfBounds.actualHeight;
-    const cropAreaSize = cropArea.width * cropArea.height;
-    return Math.round((cropAreaSize / totalArea) * 100);
-  }, [cropArea, pdfBounds]);
 
   if (!selectedStub || !pdfBounds) {
     return (
@@ -197,12 +190,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           </Box>
         </Center>
 
-        {/* Crop Info */}
-        <Group justify="center" gap="lg">
-          <Text size="xs" color="dimmed">
-            {t("crop.info.percentage", "Area: {{percentage}}%", { percentage: cropPercentage })}
-          </Text>
-        </Group>
       </Stack>
 
       {/* Manual Coordinate Input */}
