@@ -396,12 +396,12 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["pdf-to-single-page"],
         operationConfig: singleLargePageOperationConfig,
       },
-      attachments: {
+      addAttachments: {
         icon: <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.attachments.title", "Add Attachments"),
+        name: t("home.addAttachments.title", "Add Attachments"),
         component: null,
 
-        description: t("home.attachments.desc", "Add or remove embedded files (attachments) to/from a PDF"),
+        description: t("home.addAttachments.desc", "Add or remove embedded files (attachments) to/from a PDF"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },

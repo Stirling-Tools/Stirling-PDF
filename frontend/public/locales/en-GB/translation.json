@@ -382,7 +382,7 @@
       "title": "Add image",
       "desc": "Adds a image onto a set location on the PDF"
     },
-    "attachments": {
+    "addAttachments": {
       "title": "Add Attachments",
       "desc": "Add or remove embedded files (attachments) to/from a PDF"
     },

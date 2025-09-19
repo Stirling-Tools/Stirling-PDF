@@ -41,7 +41,7 @@ const TOOL_IDS = [
   'reorganizePages',
   'extractImages',
   'addStamp',
-  'attachments',
+  'addAttachments',
   'changeMetadata',
   'overlayPdfs',
   'manageCertificates',
