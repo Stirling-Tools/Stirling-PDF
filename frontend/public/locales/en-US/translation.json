@@ -45,7 +45,7 @@
   "close": "Close",
   "chooseFile": "Choose File",
   "fileSelected": "Selected: {{filename}}",
-  "filesSelected": "files selected",
+  "filesSelected": "{{count}} files selected",
   "files": {
     "title": "Files",
     "placeholder": "Select a PDF file in the main view to get started"
@@ -55,6 +55,7 @@
   "bored": "Bored Waiting?",
   "alphabet": "Alphabet",
   "downloadPdf": "Download PDF",
+
   "text": "Text",
   "font": "Font",
   "selectFillter": "-- Select --",
@@ -399,7 +400,7 @@
       "desc": "Change document restrictions and permissions."
     },
     "removePassword": {
-      "title": "Remove password",
+      "title": "Remove Password",
       "desc": "Remove password protection from your PDF document."
     },
     "compress": {
@@ -415,7 +416,7 @@
       "desc": "Remove read-only property of form fields in a PDF document."
     },
     "changeMetadata": {
-      "title": "Title:",
+      "title": "Change Metadata",
       "desc": "Change/Remove/Add metadata from a PDF document"
     },
     "fileToPDF": {
@@ -605,28 +606,6 @@
     "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
-    },
-    "attachments": {
-      "title": "Add attachments"
-    },
-    "removePages": {
-      "title": "Remove",
-      "desc": "Delete unwanted pages from your PDF document."
-    },
-    "removeImagePdf": {
-      "title": "Remove image",
-      "desc": "Remove image from PDF to reduce file size"
-    },
-    "autoSizeSplitPDF": {
-      "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
-    },
-    "adjust-contrast": {
-      "title": "Adjust Colors/Contrast",
-      "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
-    },
-    "replaceColorPdf": {
-      "title": "Replace and Invert Color",
-      "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }
   },
   "landing": {
@@ -697,10 +676,10 @@
     "submit": "Rotate"
   },
   "imageToPdf": {
-    "tags": "conversion,img,jpg,picture,photo,psd,photoshop"
+    "tags": "conversion,img,jpg,picture,photo"
   },
   "pdfToImage": {
-    "tags": "conversion,img,jpg,picture,photo,psd,photoshop",
+    "tags": "conversion,img,jpg,picture,photo",
     "title": "PDF to Image",
     "header": "PDF to Image",
     "selectText": "Image Format",
@@ -765,7 +744,7 @@
   },
   "removePages": {
     "tags": "Remove pages,delete pages",
-    "title": "Remove",
+    "title": "Remove Pages",
     "pageNumbers": "Pages to Remove",
     "pageNumbersPlaceholder": "e.g. 1,3,5-7",
     "pageNumbersHelp": "Enter page numbers separated by commas, or ranges like 1-5. Example: 1,3,5-7",
@@ -782,7 +761,7 @@
     "results": {
       "title": "Page Removal Results"
     },
-    "submit": "Remove"
+    "submit": "Remove Pages"
   },
   "pageSelection": {
     "tooltip": {
@@ -838,7 +817,7 @@
     "tags": "remove,delete,form,field,readonly",
     "title": "Remove Read-Only from Form Fields",
     "header": "Unlock PDF Forms",
-    "submit": "Remove",
+    "submit": "Unlock Forms",
     "description": "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable.",
     "filenamePrefix": "unlocked_forms",
     "files": {
@@ -854,7 +833,7 @@
   "changeMetadata": {
     "tags": "Title,author,date,creation,time,publisher,producer,stats",
     "title": "Title:",
-    "header": "Title:",
+    "header": "Change Metadata",
     "selectText": {
       "1": "Please edit the variables you wish to change",
       "2": "Delete all metadata",
@@ -1264,7 +1243,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Manual Redaction",
+    "submit": "Redact",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1710,7 +1689,7 @@
     "imageOptions": "Image Options",
     "colorType": "Color Type",
     "color": "Color",
-    "greyscale": "Grayscale",
+    "greyscale": "Greyscale",
     "blackwhite": "Black & White",
     "dpi": "DPI",
     "output": "Output",
@@ -1739,10 +1718,8 @@
     "sanitize": {
       "submit": "Sanitize PDF",
       "completed": "Sanitization completed successfully",
-      "error": {
-        "generic": "Sanitization failed",
-        "failed": "An error occurred while sanitizing the PDF."
-      },
+      "error.generic": "Sanitization failed",
+      "error.failed": "An error occurred while sanitizing the PDF.",
       "filenamePrefix": "sanitized",
       "sanitizationResults": "Sanitization Results",
       "steps": {
@@ -1756,27 +1733,20 @@
       "options": {
         "title": "Sanitization Options",
         "note": "Select the elements you want to remove from the PDF. At least one option must be selected.",
-        "removeJavaScript": {
-          "desc": "Remove JavaScript actions and scripts from the PDF"
-        },
-        "removeEmbeddedFiles": {
-          "desc": "Remove any files embedded within the PDF"
-        },
-        "removeXMPMetadata": {
-          "desc": "Remove XMP metadata from the PDF"
-        },
-        "removeMetadata": {
-          "desc": "Remove document information metadata (title, author, etc.)"
-        },
-        "removeLinks": {
-          "desc": "Remove external links and launch actions from the PDF"
-        },
-        "removeFonts": {
-          "desc": "Remove embedded fonts from the PDF"
-        }
+        "removeJavaScript": "Remove JavaScript",
+        "removeJavaScript.desc": "Remove JavaScript actions and scripts from the PDF",
+        "removeEmbeddedFiles": "Remove Embedded Files",
+        "removeEmbeddedFiles.desc": "Remove any files embedded within the PDF",
+        "removeXMPMetadata": "Remove XMP Metadata",
+        "removeXMPMetadata.desc": "Remove XMP metadata from the PDF",
+        "removeMetadata": "Remove Document Metadata",
+        "removeMetadata.desc": "Remove document information metadata (title, author, etc.)",
+        "removeLinks": "Remove Links",
+        "removeLinks.desc": "Remove external links and launch actions from the PDF",
+        "removeFonts": "Remove Fonts",
+        "removeFonts.desc": "Remove embedded fonts from the PDF"
       }
-    },
-    "grayscale": "Grayscale"
+    }
   },
   "addPassword": {
     "title": "Add Password",
@@ -2137,11 +2107,11 @@
     "downloadAll": "Download All"
   },
   "removePassword": {
-    "title": "Remove password",
+    "title": "Remove Password",
     "desc": "Remove password protection from your PDF document.",
     "tags": "secure,Decrypt,security,unpassword,delete password",
     "password": {
-      "stepTitle": "Remove password",
+      "stepTitle": "Remove Password",
       "label": "Current Password",
       "placeholder": "Enter current password",
       "completed": "Password configured"
@@ -2153,7 +2123,7 @@
     "tooltip": {
       "description": "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
     },
-    "submit": "Remove",
+    "submit": "Remove Password",
     "results": {
       "title": "Decrypted PDFs"
     }
@@ -2172,14 +2142,5 @@
   },
   "automate": {
     "copyToSaved": "Copy to Saved"
-  },
-  "attachments": {
-    "tags": "embed,attach,file,attachment,attachments",
-    "title": "Add attachments",
-    "header": "Add attachments",
-    "submit": "Add attachments"
-  },
-  "sanitize": {
-    "submit": "Sanitize PDF"
   }
 }
