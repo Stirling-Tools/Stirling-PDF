@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "A carregar...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Substituir e Inverter Cor",
       "desc": "Substituir cor para texto e fundo em PDF e inverter cor completa do pdf para reduzir tamanho do ficheiro"
+    },
+    "convert": {
+      "title": "Converter"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Extrair Páginas"
+    },
+    "removePages": {
+      "title": "Remover",
+      "desc": "Eliminar páginas indesejadas do seu documento PDF."
+    },
+    "removeImagePdf": {
+      "title": "Remover imagem",
+      "desc": "Remover imagem do PDF para reduzir tamanho do ficheiro"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Divisão Automática por Tamanho/Contagem",
+      "desc": "Dividir um único PDF em múltiplos documentos baseado em tamanho, contagem de páginas, ou contagem de documentos"
+    },
+    "adjust-contrast": {
+      "title": "Ajustar Cores/Contraste",
+      "desc": "Ajustar Contraste, Saturação e Brilho de um PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Substituir e Inverter Cor",
+      "desc": "Substituir cor para texto e fundo em PDF e inverter cor completa do pdf para reduzir tamanho do ficheiro"
+    },
+    "changePermissions": {
+      "title": "Alterar Permissões"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "Ordenar por nome",
     "sortByDate": "Ordenar por data",
     "removeCertSign": "Remover assinatura digital no ficheiro junto?",
-    "submit": "Juntar"
+    "submit": "Juntar",
+    "sortBy": {
+      "filename": "Nome do Ficheiro"
+    }
   },
   "split": {
     "tags": "Operações de página,dividir,Multi Página,cortar,lado servidor",
@@ -634,7 +669,20 @@
       "8": "Documento #6: Página 10"
     },
     "splitPages": "Introduza páginas para dividir:",
-    "submit": "Dividir"
+    "submit": "Dividir",
+    "steps": {
+      "settings": "Definições"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Tamanho do Ficheiro"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Tamanho do Ficheiro"
+      }
+    }
   },
   "rotate": {
     "tags": "lado servidor",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Texto",
       "2": "Imagem"
+    },
+    "watermarkType": {
+      "text": "Texto"
+    },
+    "settings": {
+      "fontSize": "Tamanho da Fonte"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Alterar"
   },
   "removePages": {
-    "tags": "Remover páginas,eliminar páginas"
+    "tags": "Remover páginas,eliminar páginas",
+    "title": "Remover",
+    "submit": "Remover"
   },
   "addPassword": {
     "tags": "seguro,segurança",
@@ -758,7 +814,12 @@
       "15": "Restringe o que pode ser feito com o documento uma vez aberto (Não suportado por todos os leitores)",
       "16": "Restringe a abertura do próprio documento"
     },
-    "submit": "Encriptar"
+    "submit": "Encriptar",
+    "tooltip": {
+      "permissions": {
+        "title": "Alterar Permissões"
+      }
+    }
   },
   "removePassword": {
     "tags": "seguro,Desencriptar,segurança,sem palavra-passe,eliminar palavra-passe",
@@ -768,7 +829,12 @@
       "1": "Selecione PDF para Desencriptar",
       "2": "Palavra-passe"
     },
-    "submit": "Remover"
+    "submit": "Remover",
+    "desc": "Remover proteção por palavra-passe do seu documento PDF.",
+    "password": {
+      "stepTitle": "Remover Palavra-passe",
+      "label": "Palavra-passe Atual"
+    }
   },
   "compressPdfs": {
     "tags": "comprimir,pequeno,minúsculo"
@@ -829,7 +895,25 @@
     },
     "help": "Por favor leia esta documentação sobre como usar isto para outros idiomas e/ou usar fora do docker",
     "credit": "Este serviço usa qpdf e Tesseract para OCR.",
-    "submit": "Processar PDF com OCR"
+    "submit": "Processar PDF com OCR",
+    "desc": "Limpa digitalizações e deteta texto de imagens dentro de um PDF e readiciona-o como texto.",
+    "settings": {
+      "title": "Definições",
+      "ocrMode": {
+        "label": "Modo OCR"
+      },
+      "languages": {
+        "label": "Idiomas"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Modo OCR"
+      },
+      "languages": {
+        "title": "Idiomas"
+      }
+    }
   },
   "extractImages": {
     "tags": "imagem,foto,guardar,arquivo,zip,capturar,extrair",
@@ -938,7 +1022,13 @@
     "title": "Achatar",
     "header": "Achatar PDFs",
     "flattenOnlyForms": "Achatar apenas formulários",
-    "submit": "Achatar"
+    "submit": "Achatar",
+    "steps": {
+      "settings": "Definições"
+    },
+    "options": {
+      "flattenOnlyForms": "Achatar apenas formulários"
+    }
   },
   "repair": {
     "tags": "corrigir,restaurar,correção,recuperar",
@@ -1106,10 +1196,10 @@
     "credit": "Usa WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "marcação,conteúdo-web,transformação,converter",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Converter"
   },
   "getPdfInfo": {
     "tags": "informação,dados,estatísticas,estatísticas",
@@ -1174,7 +1264,22 @@
     "showLayers": "Mostrar Camadas (duplo clique para repor todas as camadas para o estado predefinido)",
     "colourPicker": "Seletor de Cor",
     "findCurrentOutlineItem": "Encontrar item atual do esquema",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Avançado"
+      },
+      "wordsToRedact": {
+        "add": "Adicionar"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Páginas",
+        "placeholder": "(ex. 1,2,8 ou 4,7,12-16 ou 2n-1)"
+      },
+      "export": "Exportar"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Extração de Tabela,extrair,converter"
@@ -1386,7 +1491,10 @@
       "4": "Modo automático - Ajusta automaticamente a qualidade para obter o PDF com o tamanho exato",
       "5": "Tamanho esperado do PDF (ex. 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Comprimir"
+    "submit": "Comprimir",
+    "method": {
+      "filesize": "Tamanho do Ficheiro"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Este ficheiro está protegido por palavra-passe. Por favor introduza a palavra-passe:",
@@ -1555,6 +1663,83 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Transferir",
+  "convert": {
+    "title": "Converter",
+    "settings": "Definições",
+    "color": "Cor",
+    "greyscale": "Escala de Cinza",
+    "fillPage": "Preencher Página",
+    "pdfaDigitalSignatureWarning": "O PDF contém uma assinatura digital. Esta será removida no próximo passo.",
+    "grayscale": "Escala de Cinza"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Selecionar Tudo",
+    "deselectAll": "Desselecionar Tudo"
+  },
+  "quickAccess": {
+    "sign": "Assinar"
+  },
+  "fileUpload": {
+    "loading": "A carregar...",
+    "or": "ou"
+  },
+  "fileManager": {
+    "fileName": "Nome",
+    "fileVersion": "Versão",
+    "selectAll": "Selecionar Tudo",
+    "deselectAll": "Desselecionar Tudo",
+    "deleteSelected": "Eliminar Selecionadas",
+    "download": "Transferir",
+    "delete": "Eliminar"
+  },
+  "sanitize": {
+    "submit": "Sanitizar PDF",
+    "steps": {
+      "settings": "Definições"
+    }
+  },
+  "changePermissions": {
+    "title": "Alterar Permissões",
+    "submit": "Alterar Permissões",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Impedir montagem do documento"
+      },
+      "preventExtractContent": {
+        "label": "Impedir extração de conteúdo"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Impedir extração para acessibilidade"
+      },
+      "preventFillInForm": {
+        "label": "Impedir preenchimento de formulário"
+      },
+      "preventModify": {
+        "label": "Impedir modificação"
+      },
+      "preventModifyAnnotations": {
+        "label": "Impedir modificação de anotação"
+      },
+      "preventPrinting": {
+        "label": "Impedir impressão"
+      },
+      "preventPrintingFaithful": {
+        "label": "Impedir impressão em diferentes formatos"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Alterar Permissões"
       }
     }
   }

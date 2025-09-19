@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "กำลังโหลด...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -568,7 +568,7 @@
       "desc": "ลบภาพออกจาก PDF เพื่อลดขนาดไฟล์"
     },
     "splitByChapters": {
-      "title": "Split PDF by Chapters",
+      "title": "แบ่งไฟล์ PDF ตามหมวดหมู่",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
     "validateSignature": {
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "convert": {
+      "title": "แปลง"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "แยกหน้า"
+    },
+    "removePages": {
+      "title": "ลบ",
+      "desc": "ลบหน้าที่ไม่ต้องการจากเอกสาร PDF ของคุณ"
+    },
+    "removeImagePdf": {
+      "title": "ลบภาพออกจาก PDF",
+      "desc": "ลบภาพออกจาก PDF เพื่อลดขนาดไฟล์"
+    },
+    "autoSizeSplitPDF": {
+      "title": "แยกตามขนาด/จำนวน",
+      "desc": "แยก PDF เป็นเอกสารหลายฉบับตามขนาด จำนวนหน้า หรือจำนวนเอกสาร"
+    },
+    "adjust-contrast": {
+      "title": "ปรับสี/คอนทราสต์",
+      "desc": "ปรับคอนทราสต์ ความอิ่มตัว และความสว่างของ PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Replace and Invert Color",
+      "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "changePermissions": {
+      "title": "เปลี่ยนสิทธิ์"
     }
   },
   "viewPdf": {
@@ -594,7 +626,7 @@
     "deselectAll": "Deselect All",
     "selectPages": "Page Select",
     "selectedPages": "Selected Pages",
-    "page": "Page",
+    "page": "หน้า",
     "deleteSelected": "Delete Selected",
     "downloadAll": "Export",
     "downloadSelected": "Export Selected",
@@ -602,10 +634,10 @@
     "addFile": "Add File",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "split": "Split",
+    "split": "แยกไฟล์ PDF",
     "moveLeft": "Move Left",
     "moveRight": "Move Right",
-    "delete": "Delete",
+    "delete": "ลบ",
     "dragDropMessage": "Page(s) Selected",
     "undo": "Undo",
     "redo": "Redo"
@@ -617,7 +649,10 @@
     "sortByName": "จัดเรียงตามชื่อ",
     "sortByDate": "จัดเรียงตามวันที่",
     "removeCertSign": "ลบลายเซ็นดิจิทัลในไฟล์ที่รวม?",
-    "submit": "รวม"
+    "submit": "รวม",
+    "sortBy": {
+      "filename": "ชื่อไฟล์"
+    }
   },
   "split": {
     "tags": "การดำเนินการหน้า, แบ่ง, หลายหน้า, ตัด, ฝั่งเซิร์ฟเวอร์",
@@ -634,7 +669,20 @@
       "8": "เอกสาร #6: หน้า 10"
     },
     "splitPages": "ป้อนหน้าที่ต้องการแยก:",
-    "submit": "แยก"
+    "submit": "แยก",
+    "steps": {
+      "settings": "การตั้งค่า"
+    },
+    "methods": {
+      "bySize": {
+        "name": "ขนาดไฟล์"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "ขนาดไฟล์"
+      }
+    }
   },
   "rotate": {
     "tags": "ฝั่งเซิร์ฟเวอร์",
@@ -712,6 +760,12 @@
     "type": {
       "1": "ข้อความ",
       "2": "ภาพ"
+    },
+    "watermarkType": {
+      "text": "ข้อความ"
+    },
+    "settings": {
+      "fontSize": "ขนาดตัวอักษร"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "เปลี่ยน"
   },
   "removePages": {
-    "tags": "ลบหน้า, ลบหน้า"
+    "tags": "ลบหน้า, ลบหน้า",
+    "title": "ลบ",
+    "submit": "ลบ"
   },
   "addPassword": {
     "tags": "ปลอดภัย, ความปลอดภัย",
@@ -758,7 +814,12 @@
       "15": "จำกัดสิ่งที่สามารถทำได้กับเอกสารเมื่อเปิด (ไม่รองรับโดยผู้อ่านทั้งหมด)",
       "16": "จำกัดการเปิดเอกสาร"
     },
-    "submit": "เข้ารหัส"
+    "submit": "เข้ารหัส",
+    "tooltip": {
+      "permissions": {
+        "title": "เปลี่ยนสิทธิ์"
+      }
+    }
   },
   "removePassword": {
     "tags": "ปลอดภัย, ถอดรหัส, ความปลอดภัย, ลบรหัสผ่าน",
@@ -768,7 +829,12 @@
       "1": "เลือก PDF ที่ต้องการถอดรหัส",
       "2": "รหัสผ่าน"
     },
-    "submit": "ลบ"
+    "submit": "ลบ",
+    "desc": "ลบรหัสผ่านจากการป้องกันเอกสาร PDF ของคุณ",
+    "password": {
+      "stepTitle": "ลบรหัสผ่าน",
+      "label": "รหัสผ่านปัจจุบัน"
+    }
   },
   "compressPdfs": {
     "tags": "ย่อ, เล็ก, จิ๋ว"
@@ -829,7 +895,25 @@
     },
     "help": "โปรดอ่านเอกสารนี้เพื่อใช้งานภาษาอื่นๆ และ/หรือใช้งานนอก docker",
     "credit": "บริการนี้ใช้ qpdf และ Tesseract สำหรับ OCR",
-    "submit": "ประมวลผล PDF ด้วย OCR"
+    "submit": "ประมวลผล PDF ด้วย OCR",
+    "desc": "ทำความสะอาดการสแกนและตรวจจับข้อความจากภาพภายใน PDF และเพิ่มเป็นข้อความอีกครั้ง",
+    "settings": {
+      "title": "การตั้งค่า",
+      "ocrMode": {
+        "label": "โหมด OCR"
+      },
+      "languages": {
+        "label": "ภาษา"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "โหมด OCR"
+      },
+      "languages": {
+        "title": "ภาษา"
+      }
+    }
   },
   "extractImages": {
     "tags": "รูปภาพ, ภาพ, บันทึก, เก็บถาวร, zip, จับ, รับ",
@@ -924,7 +1008,7 @@
     "sharedSigs": "ลายเซ็นร่วม",
     "noSavedSigs": "ไม่พบลายเซ็นที่บันทึกไว้",
     "addToAll": "Add to all pages",
-    "delete": "Delete",
+    "delete": "ลบ",
     "first": "First page",
     "last": "Last page",
     "next": "Next page",
@@ -938,7 +1022,13 @@
     "title": "แบน",
     "header": "แบน PDF",
     "flattenOnlyForms": "แบนเฉพาะฟอร์ม",
-    "submit": "แบน"
+    "submit": "แบน",
+    "steps": {
+      "settings": "การตั้งค่า"
+    },
+    "options": {
+      "flattenOnlyForms": "แบนเฉพาะฟอร์ม"
+    }
   },
   "repair": {
     "tags": "ซ่อมแซม, กู้คืน, กู้",
@@ -1106,10 +1196,10 @@
     "credit": "ใช้ WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "มาร์กอัป, เนื้อหาเว็บ, การแปลง, การแปลง",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "แปลง"
   },
   "getPdfInfo": {
     "tags": "ข้อมูล, สถิติ, สถิติ",
@@ -1148,7 +1238,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1264,21 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "ขั้นสูง"
+      },
+      "wordsToRedact": {
+        "add": "เพิ่ม"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "หน้า",
+        "placeholder": "(เช่น 1,2,8 หรือ 4,7,12-16 หรือ 2n-1)"
+      }
+    }
   },
   "tableExtraxt": {
     "tags": "CSV, การแยกตาราง, แยก, การแปลง"
@@ -1261,8 +1365,8 @@
     },
     "signer": "Signer",
     "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
+    "reason": "เหตุผล",
+    "location": "ตำแหน่ง",
     "noSignatures": "No digital signatures found in this document",
     "chain": {
       "invalid": "Certificate chain validation failed - cannot verify signer's identity"
@@ -1281,7 +1385,7 @@
       "validUntil": "Valid Until",
       "algorithm": "Algorithm",
       "keySize": "Key Size",
-      "version": "Version",
+      "version": "เวอร์ชัน",
       "keyUsage": "Key Usage",
       "selfSigned": "Self-Signed",
       "bits": "bits"
@@ -1386,7 +1490,10 @@
       "4": "โหมดอัตโนมัติ - ปรับคุณภาพอัตโนมัติเพื่อให้ PDF ตรงกับขนาดที่ต้องการ",
       "5": "ขนาด PDF ที่คาดหวัง (เช่น 25MB, 10.8MB, 25KB)"
     },
-    "submit": "บีบอัด"
+    "submit": "บีบอัด",
+    "method": {
+      "filesize": "ขนาดไฟล์"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1555,6 +1662,75 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "ดาวน์โหลด",
+  "convert": {
+    "title": "แปลง",
+    "settings": "การตั้งค่า",
+    "color": "สี",
+    "greyscale": "ระดับสีเทา",
+    "fillPage": "เติมหน้า",
+    "pdfaDigitalSignatureWarning": "PDF มีลายเซ็นดิจิทัล ซึ่งจะถูกลบในขั้นตอนถัดไป",
+    "grayscale": "ระดับสีเทา"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "quickAccess": {
+    "sign": "เซ็นชื่อ"
+  },
+  "fileUpload": {
+    "loading": "กำลังโหลด..."
+  },
+  "fileManager": {
+    "fileName": "ชื่อ",
+    "fileVersion": "เวอร์ชัน",
+    "download": "ดาวน์โหลด",
+    "delete": "ลบ"
+  },
+  "sanitize": {
+    "submit": "ทำความสะอาด PDF",
+    "steps": {
+      "settings": "การตั้งค่า"
+    }
+  },
+  "changePermissions": {
+    "title": "เปลี่ยนสิทธิ์",
+    "submit": "เปลี่ยนสิทธิ์",
+    "permissions": {
+      "preventAssembly": {
+        "label": "ป้องกันการประกอบเอกสาร"
+      },
+      "preventExtractContent": {
+        "label": "ป้องกันการสกัดเนื้อหา"
+      },
+      "preventExtractForAccessibility": {
+        "label": "ป้องกันการสกัดเพื่อการเข้าถึง"
+      },
+      "preventFillInForm": {
+        "label": "ป้องกันการกรอกแบบฟอร์ม"
+      },
+      "preventModify": {
+        "label": "ป้องกันการแก้ไข"
+      },
+      "preventModifyAnnotations": {
+        "label": "ป้องกันการแก้ไขคำอธิบายประกอบ"
+      },
+      "preventPrinting": {
+        "label": "ป้องกันการพิมพ์"
+      },
+      "preventPrintingFaithful": {
+        "label": "ป้องกันการพิมพ์รูปแบบต่างๆ"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "เปลี่ยนสิทธิ์"
       }
     }
   }

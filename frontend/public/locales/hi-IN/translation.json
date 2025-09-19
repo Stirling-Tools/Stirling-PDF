@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "लोड हो रहा है...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "रंग बदलें और उल्टा करें",
       "desc": "PDF में टेक्स्ट और पृष्ठभूमि के लिए रंग बदलें और फ़ाइल आकार कम करने के लिए पूर्ण रंग को उल्टा करें"
+    },
+    "convert": {
+      "title": "बदलें"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "पृष्ठ निकालें"
+    },
+    "removePages": {
+      "title": "निकालें",
+      "desc": "अपने PDF दस्तावेज से अवांछित पृष्ठ हटाएं।"
+    },
+    "removeImagePdf": {
+      "title": "छवि हटाएं",
+      "desc": "फ़ाइल आकार कम करने के लिए PDF से छवि हटाएं"
+    },
+    "autoSizeSplitPDF": {
+      "title": "आकार/संख्या के आधार पर स्वतः विभाजित करें",
+      "desc": "एक PDF को आकार, पृष्ठ संख्या, या दस्तावेज़ संख्या के आधार पर कई दस्तावेज़ों में विभाजित करें"
+    },
+    "adjust-contrast": {
+      "title": "रंग/कंट्रास्ट समायोजित करें",
+      "desc": "PDF का कंट्रास्ट, संतृप्ति और चमक समायोजित करें"
+    },
+    "replaceColorPdf": {
+      "title": "रंग बदलें और उल्टा करें",
+      "desc": "PDF में टेक्स्ट और पृष्ठभूमि के लिए रंग बदलें और फ़ाइल आकार कम करने के लिए पूर्ण रंग को उल्टा करें"
+    },
+    "changePermissions": {
+      "title": "अनुमतियां बदलें"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "नाम से क्रमबद्ध करें",
     "sortByDate": "तिथि से क्रमबद्ध करें",
     "removeCertSign": "मर्ज की गई फ़ाइल में डिजिटल हस्ताक्षर हटाएं?",
-    "submit": "मर्ज करें"
+    "submit": "मर्ज करें",
+    "sortBy": {
+      "filename": "फ़ाइल नाम"
+    }
   },
   "split": {
     "tags": "पेज ऑपरेशन्स,डिवाइड,मल्टी पेज,कट,सर्वर साइड",
@@ -634,7 +669,20 @@
       "8": "दस्तावेज़ #6: पृष्ठ 10"
     },
     "splitPages": "विभाजन करने के लिए पृष्ठ दर्ज करें:",
-    "submit": "विभाजित करें"
+    "submit": "विभाजित करें",
+    "steps": {
+      "settings": "सेटिंग्स"
+    },
+    "methods": {
+      "bySize": {
+        "name": "फ़ाइल आकार"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "फ़ाइल आकार"
+      }
+    }
   },
   "rotate": {
     "tags": "सर्वर साइड",
@@ -712,6 +760,12 @@
     "type": {
       "1": "टेक्स्ट",
       "2": "छवि"
+    },
+    "watermarkType": {
+      "text": "टेक्स्ट"
+    },
+    "settings": {
+      "fontSize": "फ़ॉन्ट आकार"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "बदलें"
   },
   "removePages": {
-    "tags": "पृष्ठ निकालें,पृष्ठ हटाएं"
+    "tags": "पृष्ठ निकालें,पृष्ठ हटाएं",
+    "title": "निकालें",
+    "submit": "निकालें"
   },
   "addPassword": {
     "tags": "सुरक्षित,सुरक्षा",
@@ -758,7 +814,12 @@
       "15": "एक बार खुलने के बाद दस्तावेज़ के साथ क्या किया जा सकता है को प्रतिबंधित करता है (सभी पाठकों द्वारा समर्थित नहीं)",
       "16": "दस्तावेज़ को खोलने को प्रतिबंधित करता है"
     },
-    "submit": "एन्क्रिप्ट करें"
+    "submit": "एन्क्रिप्ट करें",
+    "tooltip": {
+      "permissions": {
+        "title": "अनुमतियां बदलें"
+      }
+    }
   },
   "removePassword": {
     "tags": "सुरक्षित,डिक्रिप्ट,सुरक्षा,अनपासवर्ड,पासवर्ड हटाएं",
@@ -768,7 +829,12 @@
       "1": "डिक्रिप्ट करने के लिए PDF चुनें",
       "2": "पासवर्ड"
     },
-    "submit": "हटाएं"
+    "submit": "हटाएं",
+    "desc": "अपने PDF दस्तावेज से पासवर्ड सुरक्षा हटाएं।",
+    "password": {
+      "stepTitle": "पासवर्ड हटाएं",
+      "label": "वर्तमान पासवर्ड"
+    }
   },
   "compressPdfs": {
     "tags": "कम्प्रेस,छोटा,छोटा"
@@ -829,7 +895,25 @@
     },
     "help": "कृपया अन्य भाषाओं के लिए उपयोग और/या डॉकर में उपयोग न करने के बारे में यह दस्तावेज़ीकरण पढ़ें",
     "credit": "यह सेवा OCR के लिए qpdf और Tesseract का उपयोग करती है।",
-    "submit": "OCR के साथ PDF प्रोसेस करें"
+    "submit": "OCR के साथ PDF प्रोसेस करें",
+    "desc": "स्कैन को साफ करें और PDF के अंदर छवियों से टेक्स्ट का पता लगाएं और उसे टेक्स्ट के रूप में फिर से जोड़ें।",
+    "settings": {
+      "title": "सेटिंग्स",
+      "ocrMode": {
+        "label": "OCR मोड"
+      },
+      "languages": {
+        "label": "भाषाएं"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR मोड"
+      },
+      "languages": {
+        "title": "भाषाएं"
+      }
+    }
   },
   "extractImages": {
     "tags": "चित्र,फोटो,सहेजें,संग्रह,ज़िप,कैप्चर,ग्रैब",
@@ -938,7 +1022,13 @@
     "title": "समतल करें",
     "header": "PDF समतल करें",
     "flattenOnlyForms": "केवल फ़ॉर्म समतल करें",
-    "submit": "समतल करें"
+    "submit": "समतल करें",
+    "steps": {
+      "settings": "सेटिंग्स"
+    },
+    "options": {
+      "flattenOnlyForms": "केवल फ़ॉर्म समतल करें"
+    }
   },
   "repair": {
     "tags": "ठीक करें,पुनर्स्थापित करें,सुधार,पुनर्प्राप्त करें",
@@ -1106,10 +1196,10 @@
     "credit": "WeasyPrint का उपयोग करता है"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "मार्कअप,वेब-सामग्री,रूपांतरण,बदलें",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "बदलें"
   },
   "getPdfInfo": {
     "tags": "जानकारी,डेटा,आँकड़े,सांख्यिकी",
@@ -1174,7 +1264,22 @@
     "showLayers": "लेयर्स दिखाएं (सभी लेयर्स को डिफ़ॉल्ट स्थिति में रीसेट करने के लिए डबल-क्लिक करें)",
     "colourPicker": "रंग चयनकर्ता",
     "findCurrentOutlineItem": "वर्तमान आउटलाइन आइटम खोजें",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "उन्नत"
+      },
+      "wordsToRedact": {
+        "add": "जोड़ें"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "पृष्ठ",
+        "placeholder": "(जैसे 1,2,8 या 4,7,12-16 या 2n-1)"
+      },
+      "export": "निर्यात करें"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,तालिका निष्कर्षण,निकालें,बदलें"
@@ -1386,7 +1491,10 @@
       "4": "स्वतः मोड - PDF को सटीक आकार प्राप्त करने के लिए गुणवत्ता को स्वतः समायोजित करता है",
       "5": "अपेक्षित PDF आकार (जैसे 25MB, 10.8MB, 25KB)"
     },
-    "submit": "कम्प्रेस करें"
+    "submit": "कम्प्रेस करें",
+    "method": {
+      "filesize": "फ़ाइल आकार"
+    }
   },
   "decrypt": {
     "passwordPrompt": "यह फ़ाइल पासवर्ड से सुरक्षित है। कृपया पासवर्ड दर्ज करें:",
@@ -1555,6 +1663,83 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "डाउनलोड करें",
+  "convert": {
+    "title": "बदलें",
+    "settings": "सेटिंग्स",
+    "color": "रंग",
+    "greyscale": "ग्रेस्केल",
+    "fillPage": "पृष्ठ भरें",
+    "pdfaDigitalSignatureWarning": "PDF में एक डिजिटल हस्ताक्षर है। यह अगले चरण में हटा दिया जाएगा।",
+    "grayscale": "ग्रेस्केल"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "सभी चुनें",
+    "deselectAll": "सभी अचयनित करें"
+  },
+  "quickAccess": {
+    "sign": "हस्ताक्षर करें"
+  },
+  "fileUpload": {
+    "loading": "लोड हो रहा है...",
+    "or": "या"
+  },
+  "fileManager": {
+    "fileName": "नाम",
+    "fileVersion": "संस्करण",
+    "selectAll": "सभी चुनें",
+    "deselectAll": "सभी अचयनित करें",
+    "deleteSelected": "चयनित हटाएं",
+    "download": "डाउनलोड करें",
+    "delete": "हटाएं"
+  },
+  "sanitize": {
+    "submit": "PDF सैनिटाइज़ करें",
+    "steps": {
+      "settings": "सेटिंग्स"
+    }
+  },
+  "changePermissions": {
+    "title": "अनुमतियां बदलें",
+    "submit": "अनुमतियां बदलें",
+    "permissions": {
+      "preventAssembly": {
+        "label": "दस्तावेज़ असेंबली को रोकें"
+      },
+      "preventExtractContent": {
+        "label": "सामग्री निष्कर्षण को रोकें"
+      },
+      "preventExtractForAccessibility": {
+        "label": "पहुंच योग्यता के लिए निष्कर्षण को रोकें"
+      },
+      "preventFillInForm": {
+        "label": "फॉर्म भरने को रोकें"
+      },
+      "preventModify": {
+        "label": "संशोधन को रोकें"
+      },
+      "preventModifyAnnotations": {
+        "label": "टिप्पणी संशोधन को रोकें"
+      },
+      "preventPrinting": {
+        "label": "प्रिंटिंग को रोकें"
+      },
+      "preventPrintingFaithful": {
+        "label": "विभिन्न प्रारूपों में प्रिंटिंग को रोकें"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "अनुमतियां बदलें"
       }
     }
   }

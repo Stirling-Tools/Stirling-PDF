@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "로딩 중...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "색상 교체 및 반전",
       "desc": "PDF에서 텍스트와 배경의 색상을 교체하고 파일 크기를 줄이기 위해 전체 PDF 색상을 반전"
+    },
+    "convert": {
+      "title": "변환"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "페이지 추출"
+    },
+    "removePages": {
+      "title": "제거",
+      "desc": "PDF 문서에서 원하지 않는 페이지를 삭제합니다."
+    },
+    "removeImagePdf": {
+      "title": "이미지 제거",
+      "desc": "파일 크기를 줄이기 위해 PDF에서 이미지 제거"
+    },
+    "autoSizeSplitPDF": {
+      "title": "크기/개수별 자동 분할",
+      "desc": "단일 PDF를 크기, 페이지 수 또는 문서 수를 기준으로 여러 문서로 분할"
+    },
+    "adjust-contrast": {
+      "title": "색상/대비 조정",
+      "desc": "PDF의 대비, 채도 및 밝기 조정"
+    },
+    "replaceColorPdf": {
+      "title": "색상 교체 및 반전",
+      "desc": "PDF에서 텍스트와 배경의 색상을 교체하고 파일 크기를 줄이기 위해 전체 PDF 색상을 반전"
+    },
+    "changePermissions": {
+      "title": "권한 변경"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "이름으로 정렬",
     "sortByDate": "날짜로 정렬",
     "removeCertSign": "병합된 파일에서 디지털 서명을 제거하시겠습니까?",
-    "submit": "병합"
+    "submit": "병합",
+    "sortBy": {
+      "filename": "파일 이름"
+    }
   },
   "split": {
     "tags": "페이지 작업,나누기,멀티 페이지,자르기,서버 사이드",
@@ -634,7 +669,20 @@
       "8": "문서 #6: 10페이지"
     },
     "splitPages": "분할할 페이지 입력:",
-    "submit": "분할"
+    "submit": "분할",
+    "steps": {
+      "settings": "설정"
+    },
+    "methods": {
+      "bySize": {
+        "name": "파일 크기"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "파일 크기"
+      }
+    }
   },
   "rotate": {
     "tags": "서버 사이드",
@@ -712,6 +760,12 @@
     "type": {
       "1": "텍스트",
       "2": "이미지"
+    },
+    "watermarkType": {
+      "text": "텍스트"
+    },
+    "settings": {
+      "fontSize": "글꼴 크기"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "변경"
   },
   "removePages": {
-    "tags": "페이지 제거,페이지 삭제"
+    "tags": "페이지 제거,페이지 삭제",
+    "title": "제거",
+    "submit": "제거"
   },
   "addPassword": {
     "tags": "보안,보안",
@@ -758,7 +814,12 @@
       "15": "문서가 열린 후 수행할 수 있는 작업 제한 (모든 리더에서 지원되지 않음)",
       "16": "문서 자체 열기 제한"
     },
-    "submit": "암호화"
+    "submit": "암호화",
+    "tooltip": {
+      "permissions": {
+        "title": "권한 변경"
+      }
+    }
   },
   "removePassword": {
     "tags": "보안,암호 해제,보안,비밀번호 해제,비밀번호 삭제",
@@ -768,7 +829,12 @@
       "1": "복호화할 PDF 선택",
       "2": "비밀번호"
     },
-    "submit": "제거"
+    "submit": "제거",
+    "desc": "PDF 문서에서 비밀번호 보호를 제거합니다.",
+    "password": {
+      "stepTitle": "비밀번호 제거",
+      "label": "현재 비밀번호"
+    }
   },
   "compressPdfs": {
     "tags": "압축,작게,매우 작게"
@@ -829,7 +895,25 @@
     },
     "help": "다른 언어 사용 방법 및/또는 Docker에서 사용하지 않는 방법에 대한 문서를 읽어보세요",
     "credit": "이 서비스는 OCR을 위해 qpdf와 Tesseract를 사용합니다.",
-    "submit": "OCR로 PDF 처리"
+    "submit": "OCR로 PDF 처리",
+    "desc": "스캔을 정리하고 PDF 내 이미지에서 텍스트를 감지하여 다시 텍스트로 추가합니다.",
+    "settings": {
+      "title": "설정",
+      "ocrMode": {
+        "label": "OCR 모드"
+      },
+      "languages": {
+        "label": "언어"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR 모드"
+      },
+      "languages": {
+        "title": "언어"
+      }
+    }
   },
   "extractImages": {
     "tags": "사진,저장,아카이브,zip,캡처,가져오기",
@@ -938,7 +1022,13 @@
     "title": "평면화",
     "header": "PDF 평면화",
     "flattenOnlyForms": "양식만 평면화",
-    "submit": "평면화"
+    "submit": "평면화",
+    "steps": {
+      "settings": "설정"
+    },
+    "options": {
+      "flattenOnlyForms": "양식만 평면화"
+    }
   },
   "repair": {
     "tags": "수정,복원,교정,복구",
@@ -1174,7 +1264,22 @@
     "showLayers": "레이어 보기 (더블클릭하여 모든 레이어를 기본 상태로 재설정)",
     "colourPicker": "색상 선택기",
     "findCurrentOutlineItem": "현재 개요 항목 찾기",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "고급"
+      },
+      "wordsToRedact": {
+        "add": "추가"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "페이지",
+        "placeholder": "(예: 1,2,8 또는 4,7,12-16 또는 2n-1)"
+      },
+      "export": "내보내기"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,테이블-추출,추출,변환"
@@ -1386,7 +1491,10 @@
       "4": "자동 모드 - PDF를 정확한 크기로 만들기 위해 품질 자동 조정",
       "5": "예상 PDF 크기 (예: 25MB, 10.8MB, 25KB)"
     },
-    "submit": "압축"
+    "submit": "압축",
+    "method": {
+      "filesize": "파일 크기"
+    }
   },
   "decrypt": {
     "passwordPrompt": "이 파일은 비밀번호로 보호되어 있습니다. 비밀번호를 입력하세요:",
@@ -1555,6 +1663,83 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "다운로드",
+  "convert": {
+    "title": "변환",
+    "settings": "설정",
+    "color": "색상",
+    "greyscale": "그레이스케일",
+    "fillPage": "페이지 채우기",
+    "pdfaDigitalSignatureWarning": "PDF에 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다.",
+    "grayscale": "그레이스케일"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "모두 선택",
+    "deselectAll": "모두 선택 해제"
+  },
+  "quickAccess": {
+    "sign": "서명"
+  },
+  "fileUpload": {
+    "loading": "로딩 중...",
+    "or": "또는"
+  },
+  "fileManager": {
+    "fileName": "이름",
+    "fileVersion": "버전",
+    "selectAll": "모두 선택",
+    "deselectAll": "모두 선택 해제",
+    "deleteSelected": "선택 항목 삭제",
+    "download": "다운로드",
+    "delete": "삭제"
+  },
+  "sanitize": {
+    "submit": "PDF 정리",
+    "steps": {
+      "settings": "설정"
+    }
+  },
+  "changePermissions": {
+    "title": "권한 변경",
+    "submit": "권한 변경",
+    "permissions": {
+      "preventAssembly": {
+        "label": "문서 조립 방지"
+      },
+      "preventExtractContent": {
+        "label": "콘텐츠 추출 방지"
+      },
+      "preventExtractForAccessibility": {
+        "label": "접근성을 위한 추출 방지"
+      },
+      "preventFillInForm": {
+        "label": "양식 작성 방지"
+      },
+      "preventModify": {
+        "label": "수정 방지"
+      },
+      "preventModifyAnnotations": {
+        "label": "주석 수정 방지"
+      },
+      "preventPrinting": {
+        "label": "인쇄 방지"
+      },
+      "preventPrintingFaithful": {
+        "label": "다른 형식으로 인쇄 방지"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "권한 변경"
       }
     }
   }

@@ -25,9 +25,9 @@
   "multiPdfDropPrompt": "Выберите (или перетащите) все необходимые PDF-файлы",
   "imgPrompt": "Выберите изображение(я)",
   "genericSubmit": "Отправить",
-  "uploadLimit": "Maximum file size:",
-  "uploadLimitExceededSingular": "is too large. Maximum allowed size is",
-  "uploadLimitExceededPlural": "are too large. Maximum allowed size is",
+  "uploadLimit": "Максимальный размер файла:",
+  "uploadLimitExceededSingular": "слишком большой. Максимально допустимый размер",
+  "uploadLimitExceededPlural": "слишком большой. Максимально допустимый размер",
   "processTimeWarning": "Внимание: Данный процесс может занять до минуты в зависимости от размера файла",
   "pageOrderPrompt": "Пользовательский порядок страниц (Введите список номеров страниц через запятую или функции типа 2n+1):",
   "pageSelectionPrompt": "Выбор страниц (Введите список номеров страниц через запятую 1,5,6 или функции типа 2n+1):",
@@ -118,14 +118,14 @@
   "addToDoc": "Добавить в документ",
   "reset": "Сбросить",
   "apply": "Применить",
-  "noFileSelected": "No file selected. Please upload one.",
+  "noFileSelected": "Файл не выбран. Пожалуйста, загрузите его.",
   "legal": {
     "privacy": "Политика конфиденциальности",
     "terms": "Условия использования",
     "accessibility": "Доступность",
     "cookie": "Политика использования файлов cookie",
     "impressum": "Выходные данные",
-    "showCookieBanner": "Cookie Preferences"
+    "showCookieBanner": "Настройки файлов cookie"
   },
   "pipeline": {
     "header": "Меню конвейера (Beta)",
@@ -265,7 +265,7 @@
     "disabledUsers": "Отключенные пользователи:",
     "totalUsers": "Всего пользователей:",
     "lastRequest": "Последний запрос",
-    "usage": "View Usage"
+    "usage": "Просмотр использования"
   },
   "endpointStatistics": {
     "title": "Статистика конечных точек",
@@ -320,17 +320,17 @@
     "desc": "Ваше локальное решение для всех потребностей, связанных с PDF.",
     "searchBar": "Поиск функций...",
     "viewPdf": {
-      "title": "View/Edit PDF",
+      "title": "Смотреть/Редактировать PDF",
       "desc": "Просмотр, аннотирование, добавление текста или изображений"
     },
-    "setFavorites": "Set Favourites",
-    "hideFavorites": "Hide Favourites",
-    "showFavorites": "Show Favourites",
-    "legacyHomepage": "Old homepage",
-    "newHomePage": "Try our new homepage!",
-    "alphabetical": "Alphabetical",
-    "globalPopularity": "Global Popularity",
-    "sortBy": "Sort by:",
+    "setFavorites": "Добавить в избранное",
+    "hideFavorites": "Скрыть из избранного",
+    "showFavorites": "Показать избранное",
+    "legacyHomepage": "Старый вид главной страницы",
+    "newHomePage": "Попробуйте нашу новую главную страницу!",
+    "alphabetical": "Алфавиту",
+    "globalPopularity": "Популярности",
+    "sortBy": "Сортировать по:",
     "multiTool": {
       "title": "Мультиинструмент PDF",
       "desc": "Объединение, поворот, переупорядочивание и удаление страниц"
@@ -388,8 +388,8 @@
       "desc": "Сжимайте PDF-файлы для уменьшения их размера."
     },
     "unlockPDFForms": {
-      "title": "Unlock PDF Forms",
-      "desc": "Remove read-only property of form fields in a PDF document."
+      "title": "Разблокировать PDF-формы",
+      "desc": "Удалите свойство 'только для чтения' для полей формы в PDF-документа."
     },
     "changeMetadata": {
       "title": "Изменить метаданные",
@@ -578,11 +578,48 @@
     "replace-color": {
       "title": "Замена и инверсия цвета",
       "desc": "Заменяет цвет текста и фона в PDF и инвертирует все цвета PDF для уменьшения размера файла"
+    },
+    "convert": {
+      "title": "Преобразовать"
+    },
+    "attachments": {
+      "title": "Добавлять вложения",
+      "desc": "Добавление или удаление встроенных файлов (вложений) в PDF-файл или из него"
+    },
+    "editTableOfContents": {
+      "title": "Редактир оглавления",
+      "desc": "Добавление или редактирование закладок и оглавления в PDF-документах"
+    },
+    "extractPages": {
+      "title": "Извлечь страницы"
+    },
+    "removePages": {
+      "title": "Удалить",
+      "desc": "Удалите ненужные страницы из вашего PDF-документа."
+    },
+    "removeImagePdf": {
+      "title": "Удалить изображение",
+      "desc": "Удаляет изображения из PDF для уменьшения размера файла"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Авторазделение по размеру/количеству",
+      "desc": "Разделяет один PDF на несколько документов на основе размера, количества страниц или количества документов"
+    },
+    "adjust-contrast": {
+      "title": "Настройка цветов/контраста",
+      "desc": "Настройка контраста, насыщенности и яркости PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Замена и инверсия цвета",
+      "desc": "Заменяет цвет текста и фона в PDF и инвертирует все цвета PDF для уменьшения размера файла"
+    },
+    "changePermissions": {
+      "title": "Изменить разрешения"
     }
   },
   "viewPdf": {
     "tags": "просмотр,чтение,аннотации,текст,изображение",
-    "title": "View/Edit PDF",
+    "title": "Смотреть/Редактировать PDF",
     "header": "Просмотр PDF"
   },
   "multiTool": {
@@ -617,7 +654,10 @@
     "sortByName": "Сортировать по имени",
     "sortByDate": "Сортировать по дате",
     "removeCertSign": "Удалить цифровую подпись в объединенном файле?",
-    "submit": "Объединить"
+    "submit": "Объединить",
+    "sortBy": {
+      "filename": "Имя файла"
+    }
   },
   "split": {
     "tags": "операции со страницами,разделение,многостраничный,вырезание,серверная часть",
@@ -634,7 +674,20 @@
       "8": "Документ #6: Страница 10"
     },
     "splitPages": "Введите страницы для разделения:",
-    "submit": "Разделить"
+    "submit": "Разделить",
+    "steps": {
+      "settings": "Настройки"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Размер файла"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Размер файла"
+      }
+    }
   },
   "rotate": {
     "tags": "серверная часть",
@@ -679,7 +732,7 @@
       "8": "Удалить последнюю",
       "9": "Удалить первую и последнюю",
       "10": "Объединение четных-нечетных",
-      "11": "Duplicate all pages"
+      "11": "Дублировать все страницы"
     },
     "placeholder": "(например, 1,3,2 или 4-8,2,10-12 или 2n-1)"
   },
@@ -712,6 +765,12 @@
     "type": {
       "1": "Текст",
       "2": "Изображение"
+    },
+    "watermarkType": {
+      "text": "Текст"
+    },
+    "settings": {
+      "fontSize": "Размер шрифта"
     }
   },
   "permissions": {
@@ -734,7 +793,9 @@
     "submit": "Изменить"
   },
   "removePages": {
-    "tags": "Удалить страницы,удаление страниц"
+    "tags": "Удалить страницы,удаление страниц",
+    "title": "Удалить",
+    "submit": "Удалить"
   },
   "addPassword": {
     "tags": "безопасность,защита",
@@ -758,7 +819,12 @@
       "15": "Ограничивает действия с документом после его открытия (Поддерживается не всеми программами чтения)",
       "16": "Ограничивает само открытие документа"
     },
-    "submit": "Зашифровать"
+    "submit": "Зашифровать",
+    "tooltip": {
+      "permissions": {
+        "title": "Изменить разрешения"
+      }
+    }
   },
   "removePassword": {
     "tags": "безопасность,расшифровка,защита,удаление пароля",
@@ -768,15 +834,20 @@
       "1": "Выберите PDF для расшифровки",
       "2": "Пароль"
     },
-    "submit": "Удалить"
+    "submit": "Удалить",
+    "desc": "Удалите защиту паролем из вашего PDF-документа.",
+    "password": {
+      "stepTitle": "Удалить пароль",
+      "label": "Текущий пароль"
+    }
   },
   "compressPdfs": {
     "tags": "сжатие,маленький,крошечный"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
-    "title": "Remove Read-Only from Form Fields",
-    "header": "Unlock PDF Forms",
+    "tags": "удалить,форма,поле,только для чтения",
+    "title": "Удалить поля формы, доступные только для чтения",
+    "header": "Разблокировать PDF-формы",
     "submit": "Remove"
   },
   "changeMetadata": {
@@ -797,7 +868,7 @@
     "modDate": "Дата изменения (yyyy/MM/dd HH:mm:ss):",
     "producer": "Производитель:",
     "subject": "Тема:",
-    "trapped": "Trapped:",
+    "trapped": "Захвачен:",
     "submit": "Изменить"
   },
   "fileToPDF": {
@@ -829,7 +900,25 @@
     },
     "help": "Пожалуйста, прочтите эту документацию о том, как использовать это для других языков и/или использовать не в Docker",
     "credit": "Этот сервис использует qpdf и Tesseract для OCR.",
-    "submit": "Обработать PDF с OCR"
+    "submit": "Обработать PDF с OCR",
+    "desc": "Очистка сканов и распознавание текста с изображений в PDF с последующим добавлением его как текст.",
+    "settings": {
+      "title": "Настройки",
+      "ocrMode": {
+        "label": "Режим OCR"
+      },
+      "languages": {
+        "label": "Языки"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Режим OCR"
+      },
+      "languages": {
+        "title": "Языки"
+      }
+    }
   },
   "extractImages": {
     "tags": "картинка,фото,сохранение,архив,zip,захват,извлечение",
@@ -870,7 +959,7 @@
     "submit": "Преобразовать"
   },
   "PDFToText": {
-    "tags": "richformat,richtextformat,rich text format",
+    "tags": "rtf,richformat,richtextformat,rich text format",
     "title": "PDF в RTF (текст)",
     "header": "PDF в RTF (текст)",
     "selectText": {
@@ -930,15 +1019,21 @@
     "next": "Следующая страница",
     "previous": "Предыдущая страница",
     "maintainRatio": "Переключить сохранение пропорций",
-    "undo": "Undo",
-    "redo": "Redo"
+    "undo": "Отменить",
+    "redo": "Повторить"
   },
   "flatten": {
     "tags": "статический,деактивация,неинтерактивный,упрощение",
     "title": "Сведение",
     "header": "Сведение PDF",
     "flattenOnlyForms": "Свести только формы",
-    "submit": "Свести"
+    "submit": "Свести",
+    "steps": {
+      "settings": "Настройки"
+    },
+    "options": {
+      "flattenOnlyForms": "Свести только формы"
+    }
   },
   "repair": {
     "tags": "исправление,восстановление,коррекция,возврат",
@@ -1106,10 +1201,10 @@
     "credit": "Использует WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
-    "title": "PDF To Markdown",
-    "header": "PDF To Markdown",
-    "submit": "Convert"
+    "tags": "разметка,веб-контент,преобразование,конвертацтя,md",
+    "title": "PDF в Markdown",
+    "header": "PDF в Markdown",
+    "submit": "Преобразовать"
   },
   "getPdfInfo": {
     "tags": "информация,данные,статистика,параметры",
@@ -1125,7 +1220,7 @@
     "tags": "одна страница"
   },
   "showJS": {
-    "tags": "JS",
+    "tags": "JS,Javascript",
     "title": "Показать Javascript",
     "header": "Показать Javascript",
     "downloadJS": "Скачать Javascript",
@@ -1174,7 +1269,22 @@
     "showLayers": "Показать слои (двойной щелчок для сброса всех слоев к состоянию по умолчанию)",
     "colourPicker": "Выбор цвета",
     "findCurrentOutlineItem": "Найти текущий элемент структуры",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Расширенные"
+      },
+      "wordsToRedact": {
+        "add": "Добавить"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Страницы",
+        "placeholder": "(например, 1,2,8 или 4,7,12-16 или 2n-1)"
+      },
+      "export": "Экспорт"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Извлечение таблиц,извлечение,конвертация"
@@ -1336,7 +1446,7 @@
     "alreadyLoggedIn": "Вы уже вошли в",
     "alreadyLoggedIn2": "устройств(а). Пожалуйста, выйдите из этих устройств и попробуйте снова.",
     "toManySessions": "У вас слишком много активных сессий",
-    "logoutMessage": "You have been logged out."
+    "logoutMessage": "Вы вышли из системы."
   },
   "pdfToSinglePage": {
     "title": "PDF в одну страницу",
@@ -1355,10 +1465,10 @@
     "selectText": {
       "1": "Удалить JavaScript-действия",
       "2": "Удалить встроенные файлы",
-      "3": "Remove XMP metadata",
+      "3": "Удалить XMP метаданные",
       "4": "Удалить ссылки",
       "5": "Удалить шрифты",
-      "6": "Remove Document Info Metadata"
+      "6": "Удалить метаданные с информацией о документе"
     },
     "submit": "Очистить PDF"
   },
@@ -1380,13 +1490,16 @@
     "selectText": {
       "1": {
         "_value": "Compression Settings",
-        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+        "1": "1-3 сжатие PDF,</br> 4-6 лёгкое сжатие изображений,</br> 7-9 интенсивное сжатие изображений (значительно снижает качество изображений)"
       },
       "2": "Уровень оптимизации:",
       "4": "Автоматический режим - автоматически настраивает качество для получения точного размера PDF",
       "5": "Ожидаемый размер PDF (например, 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Сжать"
+    "submit": "Сжать",
+    "method": {
+      "filesize": "Размер файла"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Этот файл защищен паролем. Пожалуйста, введите пароль:",
@@ -1472,15 +1585,15 @@
     "button": "Пройти опрос",
     "dontShowAgain": "Больше не показывать",
     "meeting": {
-      "1": "If you're using Stirling PDF at work, we'd love to speak to you. We're offering technical support sessions in exchange for a 15 minute user discovery session.",
-      "2": "This is a chance to:",
-      "3": "Get help with deployment, integrations, or troubleshooting",
-      "4": "Provide direct feedback on performance, edge cases, and feature gaps",
-      "5": "Help us refine Stirling PDF for real-world enterprise use",
-      "6": "If you're interested, you can book time with our team directly. (English speaking only)",
-      "7": "Looking forward to digging into your use cases and making Stirling PDF even better!",
-      "notInterested": "Not a business and/or interested in a meeting?",
-      "button": "Book meeting"
+      "1": "Если вы используете Stirling PDF в своей работе, мы будем рады с вами пообщаться. Мы предлагаем сеансы технической поддержки в обмен на 15-минутный сеанс знакомства с пользователями.",
+      "2": "Это возможность:",
+      "3": "Получить помощь в развертывании, интеграции или устранении неполадок",
+      "4": "Предоставляйте прямые отзывы о производительности, передовых решениях и недостатках в функциях",
+      "5": "Помогите нам усовершенствовать Stirling PDF для использования в реальных корпоративных условиях",
+      "6": "Если вы заинтересованы, вы можете забронировать время у нашей команды напрямую. (Только для говорящих по-английски)",
+      "7": "С нетерпением ждем возможности изучить ваши варианты использования и сделать Stirling PDF еще лучше!",
+      "notInterested": "Не занимаетесь бизнесом и/или не заинтересованы во встрече?",
+      "button": "Забронировать встречу"
     }
   },
   "removeImage": {
@@ -1523,38 +1636,116 @@
   },
   "cookieBanner": {
     "popUp": {
-      "title": "How we use Cookies",
+      "title": "Как мы используем файлы cookie",
       "description": {
-        "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
+        "1": "Мы используем файлы cookie и другие технологии, чтобы улучшить работу Stirling PDF для вас, это помогает нам совершенствовать наши инструменты и создавать функции, которые вам понравятся.",
         "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
       },
-      "acceptAllBtn": "Okay",
-      "acceptNecessaryBtn": "No Thanks",
-      "showPreferencesBtn": "Manage preferences"
+      "acceptAllBtn": "Хорошо",
+      "acceptNecessaryBtn": "Нет, спасибо",
+      "showPreferencesBtn": "Управление предпочтениями"
     },
     "preferencesModal": {
-      "title": "Consent Preferences Center",
-      "acceptAllBtn": "Accept all",
-      "acceptNecessaryBtn": "Reject all",
-      "savePreferencesBtn": "Save preferences",
-      "closeIconLabel": "Close modal",
-      "serviceCounterLabel": "Service|Services",
-      "subtitle": "Cookie Usage",
+      "title": "Центр согласия предпочтений",
+      "acceptAllBtn": "Принять все",
+      "acceptNecessaryBtn": "Отклонить все",
+      "savePreferencesBtn": "Сохранить предпочтения",
+      "closeIconLabel": "Закрыть модальное окно",
+      "serviceCounterLabel": "Сервис|Услуги",
+      "subtitle": "Использование файлов cookie",
       "description": {
-        "1": "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.",
-        "2": "Stirling PDF cannot—and will never—track or access the content of the documents you use.",
-        "3": "Your privacy and trust are at the core of what we do."
+        "1": "Stirling PDF использует файлы cookie и аналогичные технологии, чтобы улучшить ваш опыт и понять, как используются наши инструменты. Это помогает нам повышать производительность, разрабатывать функции, которые вам интересны, и обеспечивать постоянную поддержку наших пользователей.",
+        "2": "Stirling PDF не может — и никогда не будет — отслеживать или получать доступ к содержимому используемых вами документов.",
+        "3": "Ваша конфиденциальность и доверие лежат в основе того, что мы делаем."
       },
       "necessary": {
         "title": {
-          "1": "Strictly Necessary Cookies",
-          "2": "Always Enabled"
+          "1": "Строго необходимые файлы cookie",
+          "2": "Всегда включены"
         },
         "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
       },
       "analytics": {
-        "title": "Analytics",
-        "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+        "title": "Аналитика",
+        "description": "Эти файлы cookie помогают нам понять, как используются наши инструменты, чтобы мы могли сосредоточиться на создании функций, которые больше всего ценятся нашим сообществом. Будьте уверены — Stirling PDF не может и никогда не будет отслеживать содержание документов, с которыми вы работаете."
+      }
+    }
+  },
+  "download": "Скачать",
+  "undo": "Отменить",
+  "convert": {
+    "title": "Преобразовать",
+    "settings": "Настройки",
+    "color": "Цвет",
+    "greyscale": "Оттенки серого",
+    "fillPage": "Заполнить страницу",
+    "pdfaDigitalSignatureWarning": "PDF содержит цифровую подпись. Она будет удалена на следующем шаге.",
+    "grayscale": "Оттенки серого"
+  },
+  "attachments": {
+    "tags": "вставлять,прикреплять,файл,вложение,вложения",
+    "title": "Добавлять вложения",
+    "header": "Добавлять вложения",
+    "submit": "Добавлять вложения"
+  },
+  "rightRail": {
+    "selectAll": "Выбрать все",
+    "deselectAll": "Отменить выбор всех"
+  },
+  "quickAccess": {
+    "sign": "Подпись"
+  },
+  "fileUpload": {
+    "loading": "Загрузка...",
+    "or": "или"
+  },
+  "fileManager": {
+    "fileName": "Имя",
+    "fileVersion": "Версия",
+    "selectAll": "Выбрать все",
+    "deselectAll": "Отменить выбор всех",
+    "deleteSelected": "Удалить выбранные",
+    "download": "Скачать",
+    "delete": "Удалить"
+  },
+  "sanitize": {
+    "submit": "Очистить PDF",
+    "steps": {
+      "settings": "Настройки"
+    }
+  },
+  "changePermissions": {
+    "title": "Изменить разрешения",
+    "submit": "Изменить разрешения",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Запретить компоновку документа"
+      },
+      "preventExtractContent": {
+        "label": "Запретить извлечение содержимого"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Запретить извлечение для специальных возможностей"
+      },
+      "preventFillInForm": {
+        "label": "Запретить заполнение форм"
+      },
+      "preventModify": {
+        "label": "Запретить модификацию"
+      },
+      "preventModifyAnnotations": {
+        "label": "Запретить модификацию аннотаций"
+      },
+      "preventPrinting": {
+        "label": "Запретить печать"
+      },
+      "preventPrintingFaithful": {
+        "label": "Запретить печать в высоком качестве"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Изменить разрешения"
       }
     }
   }

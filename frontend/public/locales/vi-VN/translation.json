@@ -137,7 +137,7 @@
     "scanHelp": "Trợ giúp quét thư mục",
     "deletePrompt": "Bạn có chắc chắn muốn xóa pipeline",
     "tags": "tự động hóa,chuỗi,kịch bản,xử lý hàng loạt",
-    "title": "Pipeline"
+    "title": "Pipeline (Nâng cao)"
   },
   "pipelineOptions": {
     "header": "Cấu hình Pipeline",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "convert": {
+      "title": "Chuyển đổi"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Trích xuất trang"
+    },
+    "removePages": {
+      "title": "Xóa",
+      "desc": "Xóa các trang không mong muốn khỏi tài liệu PDF của bạn."
+    },
+    "removeImagePdf": {
+      "title": "Remove image",
+      "desc": "Remove image from PDF to reduce file size"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Tự động chia theo kích thước/số lượng",
+      "desc": "Chia một tệp PDF thành nhiều tài liệu dựa trên kích thước, số trang hoặc số lượng tài liệu"
+    },
+    "adjust-contrast": {
+      "title": "Điều chỉnh màu sắc/tương phản",
+      "desc": "Điều chỉnh độ tương phản, độ bão hòa và độ sáng của PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Replace and Invert Color",
+      "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "changePermissions": {
+      "title": "Thay đổi quyền"
     }
   },
   "viewPdf": {
@@ -602,10 +634,10 @@
     "addFile": "Add File",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "split": "Split",
+    "split": "Tách",
     "moveLeft": "Move Left",
     "moveRight": "Move Right",
-    "delete": "Delete",
+    "delete": "Xóa",
     "dragDropMessage": "Page(s) Selected",
     "undo": "Undo",
     "redo": "Redo"
@@ -617,7 +649,10 @@
     "sortByName": "Sắp xếp theo tên",
     "sortByDate": "Sắp xếp theo ngày",
     "removeCertSign": "Xóa chữ ký số trong tệp đã trộn?",
-    "submit": "Trộn"
+    "submit": "Trộn",
+    "sortBy": {
+      "filename": "Tên tệp"
+    }
   },
   "split": {
     "tags": "Thao tác trang,chia,Nhiều trang,cắt,phía máy chủ",
@@ -634,7 +669,20 @@
       "8": "Tài liệu #6: Trang 10"
     },
     "splitPages": "Nhập các trang cần chia:",
-    "submit": "Chia"
+    "submit": "Chia",
+    "steps": {
+      "settings": "Cài đặt"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Kích thước tệp"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Kích thước tệp"
+      }
+    }
   },
   "rotate": {
     "tags": "phía máy chủ",
@@ -712,6 +760,9 @@
     "type": {
       "1": "Văn bản",
       "2": "Hình ảnh"
+    },
+    "watermarkType": {
+      "text": "Văn bản"
     }
   },
   "permissions": {
@@ -734,7 +785,9 @@
     "submit": "Thay đổi"
   },
   "removePages": {
-    "tags": "Xóa trang,xóa trang"
+    "tags": "Xóa trang,xóa trang",
+    "title": "Xóa",
+    "submit": "Xóa"
   },
   "addPassword": {
     "tags": "bảo mật,an toàn",
@@ -758,7 +811,12 @@
       "15": "Hạn chế những gì có thể làm với tài liệu sau khi mở (Không được hỗ trợ bởi tất cả các trình đọc)",
       "16": "Hạn chế việc mở tài liệu"
     },
-    "submit": "Mã hóa"
+    "submit": "Mã hóa",
+    "tooltip": {
+      "permissions": {
+        "title": "Thay đổi quyền"
+      }
+    }
   },
   "removePassword": {
     "tags": "bảo mật,Giải mã,an toàn,bỏ mật khẩu,xóa mật khẩu",
@@ -768,7 +826,12 @@
       "1": "Chọn PDF để giải mã",
       "2": "Mật khẩu"
     },
-    "submit": "Xóa"
+    "submit": "Xóa",
+    "desc": "Xóa bảo vệ mật khẩu khỏi tài liệu PDF của bạn.",
+    "password": {
+      "stepTitle": "Xóa mật khẩu",
+      "label": "Mật khẩu hiện tại"
+    }
   },
   "compressPdfs": {
     "tags": "ép,nhỏ,nhỏ gọn"
@@ -829,7 +892,25 @@
     },
     "help": "Vui lòng đọc tài liệu này về cách sử dụng cho các ngôn ngữ khác và/hoặc sử dụng không trong docker",
     "credit": "Dịch vụ này sử dụng qpdf và Tesseract cho OCR.",
-    "submit": "Xử lý PDF với OCR"
+    "submit": "Xử lý PDF với OCR",
+    "desc": "Dọn dẹp bản quét và phát hiện văn bản từ hình ảnh trong PDF và thêm lại dưới dạng văn bản.",
+    "settings": {
+      "title": "Cài đặt",
+      "ocrMode": {
+        "label": "Chế độ OCR"
+      },
+      "languages": {
+        "label": "Ngôn ngữ"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Chế độ OCR"
+      },
+      "languages": {
+        "title": "Ngôn ngữ"
+      }
+    }
   },
   "extractImages": {
     "tags": "hình ảnh,ảnh,lưu,lưu trữ,zip,chụp,lấy",
@@ -924,7 +1005,7 @@
     "sharedSigs": "Shared Signatures",
     "noSavedSigs": "No saved signatures found",
     "addToAll": "Add to all pages",
-    "delete": "Delete",
+    "delete": "Xóa",
     "first": "First page",
     "last": "Last page",
     "next": "Next page",
@@ -938,7 +1019,13 @@
     "title": "Làm phẳng",
     "header": "Làm phẳng PDF",
     "flattenOnlyForms": "Chỉ làm phẳng biểu mẫu",
-    "submit": "Làm phẳng"
+    "submit": "Làm phẳng",
+    "steps": {
+      "settings": "Cài đặt"
+    },
+    "options": {
+      "flattenOnlyForms": "Chỉ làm phẳng biểu mẫu"
+    }
   },
   "repair": {
     "tags": "sửa,khôi phục,sửa chữa,phục hồi",
@@ -1106,10 +1193,10 @@
     "credit": "Sử dụng WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "đánh dấu,nội dung web,chuyển đổi,chuyển",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Chuyển đổi"
   },
   "getPdfInfo": {
     "tags": "thông tin,dữ liệu,số liệu thống kê,thống kê",
@@ -1148,7 +1235,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1261,20 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Nâng cao"
+      },
+      "wordsToRedact": {
+        "add": "Thêm"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "placeholder": "(ví dụ: 1,2,8 hoặc 4,7,12-16 hoặc 2n-1)"
+      }
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Trích xuất bảng,trích xuất,chuyển đổi"
@@ -1261,8 +1361,8 @@
     },
     "signer": "Signer",
     "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
+    "reason": "Lý do",
+    "location": "Vị trí",
     "noSignatures": "No digital signatures found in this document",
     "chain": {
       "invalid": "Certificate chain validation failed - cannot verify signer's identity"
@@ -1281,7 +1381,7 @@
       "validUntil": "Valid Until",
       "algorithm": "Algorithm",
       "keySize": "Key Size",
-      "version": "Version",
+      "version": "Phiên bản",
       "keyUsage": "Key Usage",
       "selfSigned": "Self-Signed",
       "bits": "bits"
@@ -1386,7 +1486,10 @@
       "4": "Chế độ tự động - Tự động điều chỉnh chất lượng để đạt được kích thước PDF chính xác",
       "5": "Kích thước PDF mong muốn (ví dụ: 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Nén"
+    "submit": "Nén",
+    "method": {
+      "filesize": "Kích thước tệp"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1501,7 +1604,7 @@
       "3": "Include Metadata: If checked, the original PDF's metadata will be included in each split PDF.",
       "4": "Allow Duplicates: If checked, allows multiple bookmarks on the same page to create separate PDFs."
     },
-    "submit": "Split PDF"
+    "submit": "Chia PDF"
   },
   "fileChooser": {
     "click": "Click",
@@ -1555,6 +1658,72 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Tải xuống",
+  "convert": {
+    "title": "Chuyển đổi",
+    "settings": "Cài đặt",
+    "color": "Màu sắc",
+    "greyscale": "Thang độ xám",
+    "fillPage": "Lấp đầy trang",
+    "pdfaDigitalSignatureWarning": "PDF chứa chữ ký số. Điều này sẽ bị xóa trong bước tiếp theo.",
+    "grayscale": "Thang độ xám"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "quickAccess": {
+    "sign": "Ký"
+  },
+  "fileManager": {
+    "fileName": "Tên",
+    "fileVersion": "Phiên bản",
+    "download": "Tải xuống",
+    "delete": "Xóa"
+  },
+  "sanitize": {
+    "submit": "Làm sạch PDF",
+    "steps": {
+      "settings": "Cài đặt"
+    }
+  },
+  "changePermissions": {
+    "title": "Thay đổi quyền",
+    "submit": "Thay đổi quyền",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Ngăn chặn lắp ráp tài liệu"
+      },
+      "preventExtractContent": {
+        "label": "Ngăn chặn trích xuất nội dung"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Ngăn chặn trích xuất để truy cập"
+      },
+      "preventFillInForm": {
+        "label": "Ngăn chặn điền vào biểu mẫu"
+      },
+      "preventModify": {
+        "label": "Ngăn chặn sửa đổi"
+      },
+      "preventModifyAnnotations": {
+        "label": "Ngăn chặn sửa đổi chú thích"
+      },
+      "preventPrinting": {
+        "label": "Ngăn chặn in"
+      },
+      "preventPrintingFaithful": {
+        "label": "Ngăn chặn in các định dạng khác nhau"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Thay đổi quyền"
       }
     }
   }

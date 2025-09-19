@@ -137,7 +137,7 @@
     "scanHelp": "Ajutor pentru Scanarea Dosarului",
     "deletePrompt": "Sigur doriți să ștergeți pipeline-ul",
     "tags": "automatizează,secvență,scriptare,procesare-lot",
-    "title": "Pipeline"
+    "title": "Pipeline (Avansat)"
   },
   "pipelineOptions": {
     "header": "Configurare Pipeline",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "convert": {
+      "title": "Convertește"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Extrage Pagini"
+    },
+    "removePages": {
+      "title": "Elimină",
+      "desc": "Șterge paginile nedorite din documentul PDF."
+    },
+    "removeImagePdf": {
+      "title": "Elimină imagine",
+      "desc": "Elimină imaginea din PDF pentru a reduce dimensiunea fișierului"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Despărțire Automată după Dimensiune/Număr",
+      "desc": "Împarte un singur PDF în mai multe documente bazat pe dimensiune, număr de pagini sau număr de documente"
+    },
+    "adjust-contrast": {
+      "title": "Ajustează Culorile/Contrastul",
+      "desc": "Ajustează Contrastul, Saturația și Luminozitatea unui PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Replace and Invert Color",
+      "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "changePermissions": {
+      "title": "Schimbă Permisiunile"
     }
   },
   "viewPdf": {
@@ -602,10 +634,10 @@
     "addFile": "Add File",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "split": "Split",
+    "split": "Desparte",
     "moveLeft": "Move Left",
     "moveRight": "Move Right",
-    "delete": "Delete",
+    "delete": "Șterge",
     "dragDropMessage": "Page(s) Selected",
     "undo": "Undo",
     "redo": "Redo"
@@ -617,7 +649,10 @@
     "sortByName": "Sortează după nume",
     "sortByDate": "Sortează după dată",
     "removeCertSign": "Elimină semnătura digitală în fișierul unificat?",
-    "submit": "Unire"
+    "submit": "Unire",
+    "sortBy": {
+      "filename": "Nume Fișier"
+    }
   },
   "split": {
     "tags": "Operații pagină,divizare,Pagină Multiplă,tăiere,server side",
@@ -634,7 +669,20 @@
       "8": "Documentul #6: Pagina 10"
     },
     "splitPages": "Introduceți paginile pe care să le împărțiți:",
-    "submit": "Împarte"
+    "submit": "Împarte",
+    "steps": {
+      "settings": "Setări"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Dimensiune Fișier"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Dimensiune Fișier"
+      }
+    }
   },
   "rotate": {
     "tags": "server side",
@@ -712,6 +760,9 @@
     "type": {
       "1": "Text",
       "2": "Imagine"
+    },
+    "settings": {
+      "fontSize": "Dimensiune Font"
     }
   },
   "permissions": {
@@ -734,7 +785,9 @@
     "submit": "Schimbă"
   },
   "removePages": {
-    "tags": "Elimină pagini,șterge pagini"
+    "tags": "Elimină pagini,șterge pagini",
+    "title": "Elimină",
+    "submit": "Elimină"
   },
   "addPassword": {
     "tags": "securizează,securitate",
@@ -758,7 +811,12 @@
       "15": "Restricționează ce se poate face cu documentul odată ce este deschis (Nu este suportat de toate programele de citire)",
       "16": "Restricționează deschiderea documentului în sine"
     },
-    "submit": "Criptează"
+    "submit": "Criptează",
+    "tooltip": {
+      "permissions": {
+        "title": "Schimbă Permisiunile"
+      }
+    }
   },
   "removePassword": {
     "tags": "securizează,Decriptează,securitate,elimină parola,șterge parola",
@@ -768,7 +826,12 @@
       "1": "Selectează PDF-ul pentru decodificare",
       "2": "Parolă"
     },
-    "submit": "Elimină"
+    "submit": "Elimină",
+    "desc": "Elimină protecția cu parolă din documentul PDF.",
+    "password": {
+      "stepTitle": "Elimină Parola",
+      "label": "Parola Curentă"
+    }
   },
   "compressPdfs": {
     "tags": "comprimă,mic,minuscul"
@@ -829,7 +892,25 @@
     },
     "help": "Citiți documentația pentru a afla cum să utilizați acest serviciu pentru alte limbi și/sau în afara mediului Docker",
     "credit": "Acest serviciu utilizează qpdf și Tesseract pentru OCR.",
-    "submit": "Procesează PDF-ul cu OCR"
+    "submit": "Procesează PDF-ul cu OCR",
+    "desc": "Curăță scanările și detectează textul din imaginile dintr-un PDF și îl adaugă ca text.",
+    "settings": {
+      "title": "Setări",
+      "ocrMode": {
+        "label": "Mod OCR"
+      },
+      "languages": {
+        "label": "Limbi"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Mod OCR"
+      },
+      "languages": {
+        "title": "Limbi"
+      }
+    }
   },
   "extractImages": {
     "tags": "poză,fotografie,salvează,arhivă,zip,captură,extrage",
@@ -924,7 +1005,7 @@
     "sharedSigs": "Shared Signatures",
     "noSavedSigs": "No saved signatures found",
     "addToAll": "Add to all pages",
-    "delete": "Delete",
+    "delete": "Șterge",
     "first": "First page",
     "last": "Last page",
     "next": "Next page",
@@ -938,7 +1019,13 @@
     "title": "Nivelare",
     "header": "Nivelează documente PDF",
     "flattenOnlyForms": "Nivelează doar formularele",
-    "submit": "Nivelează"
+    "submit": "Nivelează",
+    "steps": {
+      "settings": "Setări"
+    },
+    "options": {
+      "flattenOnlyForms": "Nivelează doar formularele"
+    }
   },
   "repair": {
     "tags": "repară,restaurează,corectare,recuperează",
@@ -1106,10 +1193,10 @@
     "credit": "Folosește WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "markup,conținut-web,transformare,convertește",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Convertește"
   },
   "getPdfInfo": {
     "tags": "informații,date,statistici,statistici",
@@ -1148,7 +1235,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1261,20 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Avansat"
+      },
+      "wordsToRedact": {
+        "add": "Adaugă"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "placeholder": "(ex. 1,2,8 sau 4,7,12-16 sau 2n-1)"
+      }
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Extragere Tabel,extrage,convertește"
@@ -1261,8 +1361,8 @@
     },
     "signer": "Signer",
     "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
+    "reason": "Motivul",
+    "location": "Locația",
     "noSignatures": "No digital signatures found in this document",
     "chain": {
       "invalid": "Certificate chain validation failed - cannot verify signer's identity"
@@ -1281,7 +1381,7 @@
       "validUntil": "Valid Until",
       "algorithm": "Algorithm",
       "keySize": "Key Size",
-      "version": "Version",
+      "version": "Versiune",
       "keyUsage": "Key Usage",
       "selfSigned": "Self-Signed",
       "bits": "bits"
@@ -1386,7 +1486,10 @@
       "4": "Mod automat - ajustează automat calitatea pentru a aduce PDF-ul la dimensiunea exactă",
       "5": "Dimensiunea PDF așteptată (de ex. 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Comprimare"
+    "submit": "Comprimare",
+    "method": {
+      "filesize": "Dimensiune Fișier"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1501,7 +1604,7 @@
       "3": "Include Metadata: If checked, the original PDF's metadata will be included in each split PDF.",
       "4": "Allow Duplicates: If checked, allows multiple bookmarks on the same page to create separate PDFs."
     },
-    "submit": "Split PDF"
+    "submit": "Împarte PDF"
   },
   "fileChooser": {
     "click": "Click",
@@ -1555,6 +1658,72 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Descarcă",
+  "convert": {
+    "title": "Convertește",
+    "settings": "Setări",
+    "color": "Culoare",
+    "greyscale": "Scală de gri",
+    "fillPage": "Umple Pagina",
+    "pdfaDigitalSignatureWarning": "PDF-ul conține o semnătură digitală. Aceasta va fi eliminată în pasul următor.",
+    "grayscale": "Scală de gri"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "quickAccess": {
+    "sign": "Semnează"
+  },
+  "fileManager": {
+    "fileName": "Numele",
+    "fileVersion": "Versiune",
+    "download": "Descarcă",
+    "delete": "Șterge"
+  },
+  "sanitize": {
+    "submit": "Igienizează PDF",
+    "steps": {
+      "settings": "Setări"
+    }
+  },
+  "changePermissions": {
+    "title": "Schimbă Permisiunile",
+    "submit": "Schimbă Permisiunile",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Previne asamblarea documentului"
+      },
+      "preventExtractContent": {
+        "label": "Previne extragerea conținutului"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Previne extragerea pentru accesibilitate"
+      },
+      "preventFillInForm": {
+        "label": "Previne completarea formularului"
+      },
+      "preventModify": {
+        "label": "Previne modificarea"
+      },
+      "preventModifyAnnotations": {
+        "label": "Previne modificarea adnotărilor"
+      },
+      "preventPrinting": {
+        "label": "Previne tipărirea"
+      },
+      "preventPrintingFaithful": {
+        "label": "Previne tipărirea în formate diferite"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Schimbă Permisiunile"
       }
     }
   }

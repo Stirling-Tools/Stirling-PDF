@@ -25,9 +25,9 @@
   "multiPdfDropPrompt": "选择（或拖拽）所需的 PDF",
   "imgPrompt": "选择图像",
   "genericSubmit": "提交",
-  "uploadLimit": "Maximum file size:",
-  "uploadLimitExceededSingular": "is too large. Maximum allowed size is",
-  "uploadLimitExceededPlural": "are too large. Maximum allowed size is",
+  "uploadLimit": "最大文件大小：",
+  "uploadLimitExceededSingular": "文件过大。最大允许大小为",
+  "uploadLimitExceededPlural": "文件过大。最大允许大小为",
   "processTimeWarning": "警告：此过程可能需要多达一分钟，具体时间取决于文件大小",
   "pageOrderPrompt": "页面顺序（输入逗号分隔的页码列表或函数）：",
   "pageSelectionPrompt": "自定义页面选择（输入以逗号分隔的页码列表或函数：1,5,6、2n+1）：",
@@ -118,14 +118,14 @@
   "addToDoc": "添加至文件",
   "reset": "重置",
   "apply": "应用",
-  "noFileSelected": "No file selected. Please upload one.",
+  "noFileSelected": "未选择文件，请上传一个文件。",
   "legal": {
     "privacy": "隐私政策",
     "terms": "服务条款",
     "accessibility": "无障碍",
     "cookie": "Cookie 政策",
-    "impressum": "Impressum",
-    "showCookieBanner": "Cookie Preferences"
+    "impressum": "版权声明",
+    "showCookieBanner": "Cookie 偏好设置"
   },
   "pipeline": {
     "header": "流水线菜单（Beta）",
@@ -265,32 +265,32 @@
     "disabledUsers": "禁用用户:",
     "totalUsers": "总用户:",
     "lastRequest": "最后登录",
-    "usage": "View Usage"
+    "usage": "查看使用情况"
   },
   "endpointStatistics": {
-    "title": "Endpoint Statistics",
-    "header": "Endpoint Statistics",
-    "top10": "Top 10",
-    "top20": "Top 20",
-    "all": "All",
-    "refresh": "Refresh",
-    "includeHomepage": "Include Homepage ('/')",
-    "includeLoginPage": "Include Login Page ('/login')",
-    "totalEndpoints": "Total Endpoints",
-    "totalVisits": "Total Visits",
-    "showing": "Showing",
-    "selectedVisits": "Selected Visits",
-    "endpoint": "Endpoint",
-    "visits": "Visits",
-    "percentage": "Percentage",
-    "loading": "Loading...",
-    "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
-    "home": "Home",
-    "login": "Login",
-    "top": "Top",
-    "numberOfVisits": "Number of Visits",
-    "visitsTooltip": "Visits: {0} ({1}% of total)",
-    "retry": "Retry"
+    "title": "端点统计",
+    "header": "端点统计",
+    "top10": "前10",
+    "top20": "前20",
+    "all": "全部",
+    "refresh": "刷新",
+    "includeHomepage": "包含主页('/')",
+    "includeLoginPage": "包含登录页('/login')",
+    "totalEndpoints": "端点总数",
+    "totalVisits": "访问总数",
+    "showing": "显示",
+    "selectedVisits": "选中访问数",
+    "endpoint": "端点",
+    "visits": "访问次数",
+    "percentage": "百分比",
+    "loading": "加载中...",
+    "failedToLoad": "加载端点数据失败。请尝试刷新。",
+    "home": "主页",
+    "login": "登录",
+    "top": "顶部",
+    "numberOfVisits": "访问次数",
+    "visitsTooltip": "访问次数：{0}(占总数的{1}%)",
+    "retry": "重试"
   },
   "database": {
     "title": "数据库 导入/导出",
@@ -320,7 +320,7 @@
     "desc": "本地部署的一站式服务，满足您的所有 PDF 需求。",
     "searchBar": "搜索您需要的功能...",
     "viewPdf": {
-      "title": "View/Edit PDF",
+      "title": "浏览/编辑 PDF",
       "desc": "浏览、注释、添加文本或图像"
     },
     "setFavorites": "编辑收藏夹",
@@ -388,8 +388,8 @@
       "desc": "压缩 PDF 文件以减小文件大小。"
     },
     "unlockPDFForms": {
-      "title": "Unlock PDF Forms",
-      "desc": "Remove read-only property of form fields in a PDF document."
+      "title": "解锁PDF表单",
+      "desc": "移除表单字段只读属性"
     },
     "changeMetadata": {
       "title": "更改元数据",
@@ -578,11 +578,48 @@
     "replace-color": {
       "title": "替换和反转颜色",
       "desc": "替换 PDF 中文本和背景的颜色，并将PDF全色反转以减小文件大小"
+    },
+    "convert": {
+      "title": "转换"
+    },
+    "attachments": {
+      "title": "添加附件",
+      "desc": "在 PDF 中添加或删除嵌入文件（附件）"
+    },
+    "editTableOfContents": {
+      "title": "编辑目录",
+      "desc": "为 PDF 文档添加或编辑目录和书签"
+    },
+    "extractPages": {
+      "title": "提取页面"
+    },
+    "removePages": {
+      "title": "删除",
+      "desc": "从 PDF 文档中删除不需要的页面。"
+    },
+    "removeImagePdf": {
+      "title": "删除图像",
+      "desc": "删除图像减少 PDF 大小"
+    },
+    "autoSizeSplitPDF": {
+      "title": "自动根据大小/数目拆分 PDF",
+      "desc": "将单个 PDF 拆分为多个文档，基于大小、页数或文档数"
+    },
+    "adjust-contrast": {
+      "title": "调整颜色/对比度",
+      "desc": "调整 PDF 的对比度、饱和度和亮度"
+    },
+    "replaceColorPdf": {
+      "title": "替换和反转颜色",
+      "desc": "替换 PDF 中文本和背景的颜色，并将PDF反转颜色以减小文件大小"
+    },
+    "changePermissions": {
+      "title": "更改权限"
     }
   },
   "viewPdf": {
     "tags": "浏览、阅读、注释、文本、图像",
-    "title": "View/Edit PDF",
+    "title": "浏览/编辑 PDF",
     "header": "浏览 PDF"
   },
   "multiTool": {
@@ -592,9 +629,9 @@
     "uploadPrompts": "文件名",
     "selectAll": "选择所有",
     "deselectAll": "取消选择所有",
-    "selectPages": "Page Select",
+    "selectPages": "页面选择",
     "selectedPages": "已选择的页面",
-    "page": "Page",
+    "page": "页面",
     "deleteSelected": "删除已选",
     "downloadAll": "导出全部",
     "downloadSelected": "导出已选",
@@ -617,7 +654,10 @@
     "sortByName": "按名称排序",
     "sortByDate": "按日期排序",
     "removeCertSign": "删除合并文件的数字签名吗？",
-    "submit": "合并"
+    "submit": "合并",
+    "sortBy": {
+      "filename": "文件名"
+    }
   },
   "split": {
     "tags": "页面操作，划分，多页面，剪切，服务器端",
@@ -634,7 +674,20 @@
       "8": "文档 #6：第 9 页和第 10 页"
     },
     "splitPages": "输入要分割的页面：",
-    "submit": "拆分"
+    "submit": "拆分",
+    "steps": {
+      "settings": "设置"
+    },
+    "methods": {
+      "bySize": {
+        "name": "文件大小"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "文件大小"
+      }
+    }
   },
   "rotate": {
     "tags": "服务器端",
@@ -679,7 +732,7 @@
       "8": "删除最后一页",
       "9": "删除第一页和最后一页",
       "10": "奇偶合并",
-      "11": "Duplicate all pages"
+      "11": "复制所有页面"
     },
     "placeholder": "（例如：1,3,2 或 4-8,2,10-12 或 2n-1）"
   },
@@ -712,6 +765,12 @@
     "type": {
       "1": "文字",
       "2": "图片"
+    },
+    "watermarkType": {
+      "text": "文本"
+    },
+    "settings": {
+      "fontSize": "字体大小"
     }
   },
   "permissions": {
@@ -734,7 +793,9 @@
     "submit": "改变"
   },
   "removePages": {
-    "tags": "删除页面、删除"
+    "tags": "删除页面、删除",
+    "title": "删除",
+    "submit": "删除"
   },
   "addPassword": {
     "tags": "安全、密码、加密",
@@ -758,7 +819,12 @@
       "15": "限制打开后对文档的操作（不被所有阅读器支持）",
       "16": "限制打开文档本身"
     },
-    "submit": "加密"
+    "submit": "加密",
+    "tooltip": {
+      "permissions": {
+        "title": "更改权限"
+      }
+    }
   },
   "removePassword": {
     "tags": "安全、解密、密码、安全性、删除密码",
@@ -768,15 +834,20 @@
       "1": "选择要解密的 PDF",
       "2": "密码"
     },
-    "submit": "删除"
+    "submit": "删除",
+    "desc": "从 PDF 文档中移除密码保护。",
+    "password": {
+      "stepTitle": "删除密码",
+      "label": "当前密码"
+    }
   },
   "compressPdfs": {
     "tags": "压缩、小、微小"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
-    "title": "Remove Read-Only from Form Fields",
-    "header": "Unlock PDF Forms",
+    "tags": "移除,删除,表单,字段,只读",
+    "title": "移除表单字段只读属性",
+    "header": "解锁 PDF 表单",
     "submit": "Remove"
   },
   "changeMetadata": {
@@ -829,7 +900,25 @@
     },
     "help": "请阅读此文档，了解如何将其用于其他语言和/或不在 docker 中使用。",
     "credit": "此服务使用 qpdf 和 Tesseract 进行 OCR。",
-    "submit": "用 OCR 处理 PDF"
+    "submit": "用 OCR 处理 PDF",
+    "desc": "清理和识别 PDF 中的图像文本，并将其转换为可编辑文本。",
+    "settings": {
+      "title": "设置",
+      "ocrMode": {
+        "label": "OCR 模式"
+      },
+      "languages": {
+        "label": "语言"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR 模式"
+      },
+      "languages": {
+        "title": "语言"
+      }
+    }
   },
   "extractImages": {
     "tags": "图片、照片、保存、归档、压缩包、截取、抓取",
@@ -938,7 +1027,13 @@
     "title": "展平",
     "header": "展平 PDF",
     "flattenOnlyForms": "仅展平表格",
-    "submit": "展平"
+    "submit": "展平",
+    "steps": {
+      "settings": "设置"
+    },
+    "options": {
+      "flattenOnlyForms": "仅展平表格"
+    }
   },
   "repair": {
     "tags": "修复、恢复、纠正、恢复",
@@ -1174,7 +1269,22 @@
     "showLayers": "显示图层（双击将所有图层重置为默认状态）",
     "colourPicker": "颜色选择器",
     "findCurrentOutlineItem": "查找当前大纲项目",
-    "applyChanges": "应用"
+    "applyChanges": "应用",
+    "auto": {
+      "settings": {
+        "advancedTitle": "高级功能"
+      },
+      "wordsToRedact": {
+        "add": "添加"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "页码",
+        "placeholder": "（例如：1,2,8 或 4,7,12-16 或 2n-1）"
+      },
+      "export": "导出全部"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV、表格提取、提取、转换"
@@ -1331,12 +1441,12 @@
     "oauth2AccessDenied": "拒绝访问",
     "oauth2InvalidTokenResponse": "无效的 Token 响应",
     "oauth2InvalidIdToken": "无效的 Token",
-    "relyingPartyRegistrationNotFound": "No relying party registration found",
+    "relyingPartyRegistrationNotFound": "未找到依赖方注册信息",
     "userIsDisabled": "用户被禁用，登录已被阻止。请联系管理员。",
     "alreadyLoggedIn": "您已经登录到了",
     "alreadyLoggedIn2": "设备，请注销设备后重试。",
     "toManySessions": "你已经有太多的会话了。请注销一些设备后重试。",
-    "logoutMessage": "You have been logged out."
+    "logoutMessage": "您已退出登录。"
   },
   "pdfToSinglePage": {
     "title": "PDF 转单页",
@@ -1355,10 +1465,10 @@
     "selectText": {
       "1": "移除 JavaScript 操作",
       "2": "移除嵌入的文件",
-      "3": "Remove XMP metadata",
+      "3": "移除 XMP 元数据",
       "4": "移除链接",
       "5": "移除字体",
-      "6": "Remove Document Info Metadata"
+      "6": "移除文档信息元数据"
     },
     "submit": "清理PDF"
   },
@@ -1380,13 +1490,16 @@
     "selectText": {
       "1": {
         "_value": "Compression Settings",
-        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+        "1": "1-3 PDF 压缩，</br> 4-6 轻度图像压缩，</br> 7-9 深度图像压缩（将显著降低图像质量）"
       },
       "2": "优化级别：",
       "4": "自动模式 - 自动调整质量以获得精确大小的PDF",
       "5": "预期PDF大小（例如：25MB、10.8MB、25KB）"
     },
-    "submit": "压缩"
+    "submit": "压缩",
+    "method": {
+      "filesize": "文件大小"
+    }
   },
   "decrypt": {
     "passwordPrompt": "此文件受密码保护。请输入密码：",
@@ -1472,15 +1585,15 @@
     "button": "参与调查",
     "dontShowAgain": "不再显示",
     "meeting": {
-      "1": "If you're using Stirling PDF at work, we'd love to speak to you. We're offering technical support sessions in exchange for a 15 minute user discovery session.",
-      "2": "This is a chance to:",
-      "3": "Get help with deployment, integrations, or troubleshooting",
-      "4": "Provide direct feedback on performance, edge cases, and feature gaps",
-      "5": "Help us refine Stirling PDF for real-world enterprise use",
-      "6": "If you're interested, you can book time with our team directly. (English speaking only)",
-      "7": "Looking forward to digging into your use cases and making Stirling PDF even better!",
-      "notInterested": "Not a business and/or interested in a meeting?",
-      "button": "Book meeting"
+      "1": "如果您在工作中使用 Stirling PDF，我们非常希望与您交流。我们正在提供技术支持服务，以换取一次 15 分钟的用户访谈。",
+      "2": "这是一个机会：",
+      "3": "获取部署、集成或故障排除方面的帮助",
+      "4": "提供直接反馈，包括性能、边缘案例和功能差距",
+      "5": "帮助我们改进 Stirling PDF 以满足实际的企业使用需求",
+      "6": "如果您有兴趣，可以直接与我们团队预约时间。（仅限英语）",
+      "7": "期待深入了解您的使用案例，并使 Stirling PDF 变得更好！",
+      "notInterested": "不是企业或对会议不感兴趣？",
+      "button": "预约会议"
     }
   },
   "removeImage": {
@@ -1523,38 +1636,116 @@
   },
   "cookieBanner": {
     "popUp": {
-      "title": "How we use Cookies",
+      "title": "我们如何使用 Cookie",
       "description": {
-        "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
+        "1": "我们使用 Cookie 和其他技术来使 Stirling PDF 更好地为您服务——帮助我们改进工具并构建您喜爱的功能。",
         "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
       },
-      "acceptAllBtn": "Okay",
-      "acceptNecessaryBtn": "No Thanks",
-      "showPreferencesBtn": "Manage preferences"
+      "acceptAllBtn": "全部接受",
+      "acceptNecessaryBtn": "拒绝",
+      "showPreferencesBtn": "管理偏好设置"
     },
     "preferencesModal": {
-      "title": "Consent Preferences Center",
-      "acceptAllBtn": "Accept all",
-      "acceptNecessaryBtn": "Reject all",
-      "savePreferencesBtn": "Save preferences",
-      "closeIconLabel": "Close modal",
-      "serviceCounterLabel": "Service|Services",
-      "subtitle": "Cookie Usage",
+      "title": "隐私偏好设置中心",
+      "acceptAllBtn": "全部接受",
+      "acceptNecessaryBtn": "拒绝所有",
+      "savePreferencesBtn": "保存设置",
+      "closeIconLabel": "关闭弹窗",
+      "serviceCounterLabel": "服务",
+      "subtitle": "Cookie使用说明",
       "description": {
-        "1": "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.",
-        "2": "Stirling PDF cannot—and will never—track or access the content of the documents you use.",
-        "3": "Your privacy and trust are at the core of what we do."
+        "1": "Stirling PDF通过Cookie及类似技术优化用户体验并分析工具使用情况，帮助我们提升性能、开发实用功能并提供持续支持。",
+        "2": "我们承诺：Stirling PDF永远不会追踪或访问您使用的文档内容。",
+        "3": "用户隐私与信任是我们一切工作的核心。"
       },
       "necessary": {
         "title": {
-          "1": "Strictly Necessary Cookies",
-          "2": "Always Enabled"
+          "1": "必要Cookie",
+          "2": "始终启用"
         },
         "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
       },
       "analytics": {
-        "title": "Analytics",
-        "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+        "title": "分析统计",
+        "description": "这些Cookie帮助我们分析工具使用情况，以便聚焦开发用户最需要的功能。再次强调：Stirling PDF绝不会追踪您处理的文档内容。"
+      }
+    }
+  },
+  "download": "下载",
+  "undo": "撤销",
+  "convert": {
+    "title": "转换",
+    "settings": "设置",
+    "color": "颜色",
+    "greyscale": "灰度",
+    "fillPage": "填充页面",
+    "pdfaDigitalSignatureWarning": "该PDF包含数字签名，下一步将移除该签名。",
+    "grayscale": "灰度"
+  },
+  "attachments": {
+    "tags": "嵌入、附件、文件、附加",
+    "title": "添加附件",
+    "header": "添加附件",
+    "submit": "添加附件"
+  },
+  "rightRail": {
+    "selectAll": "选择所有",
+    "deselectAll": "取消选择所有"
+  },
+  "quickAccess": {
+    "sign": "签名"
+  },
+  "fileUpload": {
+    "loading": "加载中...",
+    "or": "或"
+  },
+  "fileManager": {
+    "fileName": "名称",
+    "fileVersion": "版本",
+    "selectAll": "选择所有",
+    "deselectAll": "取消选择所有",
+    "deleteSelected": "删除已选",
+    "download": "下载",
+    "delete": "删除"
+  },
+  "sanitize": {
+    "submit": "清理 PDF",
+    "steps": {
+      "settings": "设置"
+    }
+  },
+  "changePermissions": {
+    "title": "更改权限",
+    "submit": "更改权限",
+    "permissions": {
+      "preventAssembly": {
+        "label": "防止文件的拼接"
+      },
+      "preventExtractContent": {
+        "label": "防止内容提取"
+      },
+      "preventExtractForAccessibility": {
+        "label": "防止提取内容的可访问性"
+      },
+      "preventFillInForm": {
+        "label": "防止填写表格"
+      },
+      "preventModify": {
+        "label": "防止修改"
+      },
+      "preventModifyAnnotations": {
+        "label": "防止修改注释"
+      },
+      "preventPrinting": {
+        "label": "防止打印"
+      },
+      "preventPrintingFaithful": {
+        "label": "防止打印不同的格式"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "更改权限"
       }
     }
   }

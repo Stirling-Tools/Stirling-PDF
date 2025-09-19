@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "Načítání...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Nahrazení a inverze barev",
       "desc": "Úprava barev textu a pozadí v PDF nebo jejich inverze ke snížení velikosti souboru"
+    },
+    "convert": {
+      "title": "Převést"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Extrahovat stránky"
+    },
+    "removePages": {
+      "title": "Odstranit",
+      "desc": "Smazat nežádoucí stránky z vašeho PDF dokumentu."
+    },
+    "removeImagePdf": {
+      "title": "Odstranit obrázek",
+      "desc": "Odstranit obrázek z PDF pro zmenšení velikosti souboru"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Automaticky rozdělit podle velikosti/počtu",
+      "desc": "Rozdělí jeden PDF na více dokumentů podle velikosti, počtu stránek nebo počtu dokumentů"
+    },
+    "adjust-contrast": {
+      "title": "Upravit barvy/kontrast",
+      "desc": "Upravit kontrast, sytost a jas PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Nahrazení a inverze barev",
+      "desc": "Úprava barev textu a pozadí v PDF nebo jejich inverze ke snížení velikosti souboru"
+    },
+    "changePermissions": {
+      "title": "Změnit oprávnění"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "Seřadit podle názvu",
     "sortByDate": "Seřadit podle data",
     "removeCertSign": "Odstranit digitální podpis v sloučeném souboru?",
-    "submit": "Sloučit"
+    "submit": "Sloučit",
+    "sortBy": {
+      "filename": "Název souboru"
+    }
   },
   "split": {
     "tags": "Operace se stránkami,rozdělit,Více stránek,vyjmout,serverová strana",
@@ -634,7 +669,20 @@
       "8": "Dokument #6: Stránka 10"
     },
     "splitPages": "Zadejte stránky pro rozdělení:",
-    "submit": "Rozdělit"
+    "submit": "Rozdělit",
+    "steps": {
+      "settings": "Nastavení"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Velikost souboru"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Velikost souboru"
+      }
+    }
   },
   "rotate": {
     "tags": "serverová strana",
@@ -712,6 +760,9 @@
     "type": {
       "1": "Text",
       "2": "Obrázek"
+    },
+    "settings": {
+      "fontSize": "Velikost písma"
     }
   },
   "permissions": {
@@ -734,7 +785,9 @@
     "submit": "Změnit"
   },
   "removePages": {
-    "tags": "Odstranit stránky,smazat stránky"
+    "tags": "Odstranit stránky,smazat stránky",
+    "title": "Odstranit",
+    "submit": "Odstranit"
   },
   "addPassword": {
     "tags": "zabezpečit,bezpečnost",
@@ -758,7 +811,12 @@
       "15": "Omezuje, co lze s dokumentem dělat po jeho otevření (Není podporováno všemi čtečkami)",
       "16": "Omezuje samotné otevření dokumentu"
     },
-    "submit": "Zašifrovat"
+    "submit": "Zašifrovat",
+    "tooltip": {
+      "permissions": {
+        "title": "Změnit oprávnění"
+      }
+    }
   },
   "removePassword": {
     "tags": "zabezpečit,dešifrovat,bezpečnost,odstranit heslo,smazat heslo",
@@ -768,7 +826,12 @@
       "1": "Vyberte PDF k dešifrování",
       "2": "Heslo"
     },
-    "submit": "Odstranit"
+    "submit": "Odstranit",
+    "desc": "Odstranit ochranu heslem z vašeho PDF dokumentu.",
+    "password": {
+      "stepTitle": "Odstranit heslo",
+      "label": "Současné heslo"
+    }
   },
   "compressPdfs": {
     "tags": "stlačit,malý,drobný"
@@ -829,7 +892,25 @@
     },
     "help": "Přečtěte si prosím tuto dokumentaci o použití pro jiné jazyky a/nebo použití mimo Docker",
     "credit": "Tato služba používá qpdf a Tesseract pro OCR.",
-    "submit": "Zpracovat PDF pomocí OCR"
+    "submit": "Zpracovat PDF pomocí OCR",
+    "desc": "Vyčistí skeny a detekuje text z obrázků v PDF a znovu ho přidá jako text.",
+    "settings": {
+      "title": "Nastavení",
+      "ocrMode": {
+        "label": "Režim OCR"
+      },
+      "languages": {
+        "label": "Jazyky"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Režim OCR"
+      },
+      "languages": {
+        "title": "Jazyky"
+      }
+    }
   },
   "extractImages": {
     "tags": "obrázek,fotka,uložit,archiv,zip,zachytit,získat",
@@ -938,7 +1019,13 @@
     "title": "Zploštit",
     "header": "Zploštit PDF",
     "flattenOnlyForms": "Zploštit pouze formuláře",
-    "submit": "Zploštit"
+    "submit": "Zploštit",
+    "steps": {
+      "settings": "Nastavení"
+    },
+    "options": {
+      "flattenOnlyForms": "Zploštit pouze formuláře"
+    }
   },
   "repair": {
     "tags": "opravit,obnovit,korekce,obnovit",
@@ -1174,7 +1261,22 @@
     "showLayers": "Zobrazit vrstvy (dvojklik pro obnovení všech vrstev do výchozího stavu)",
     "colourPicker": "Výběr barvy",
     "findCurrentOutlineItem": "Najít aktuální položku osnovy",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Pokročilé"
+      },
+      "wordsToRedact": {
+        "add": "Přidat"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Stránky",
+        "placeholder": "(např. 1,2,8 nebo 4,7,12-16 nebo 2n-1)"
+      },
+      "export": "Exportovat"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Extrakce tabulek,extrahovat,převést"
@@ -1386,7 +1488,10 @@
       "4": "Automatický režim - Automaticky upravuje kvalitu pro dosažení přesné velikosti PDF",
       "5": "Očekávaná velikost PDF (např. 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Komprimovat"
+    "submit": "Komprimovat",
+    "method": {
+      "filesize": "Velikost souboru"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Tento soubor je chráněn heslem. Zadejte prosím heslo:",
@@ -1555,6 +1660,83 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Stáhnout",
+  "convert": {
+    "title": "Převést",
+    "settings": "Nastavení",
+    "color": "Barva",
+    "greyscale": "Stupně šedi",
+    "fillPage": "Vyplnit stránku",
+    "pdfaDigitalSignatureWarning": "PDF obsahuje digitální podpis, který bude v dalším kroku odstraněn.",
+    "grayscale": "Stupně šedi"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Vybrat vše",
+    "deselectAll": "Zrušit výběr všeho"
+  },
+  "quickAccess": {
+    "sign": "Podepsat"
+  },
+  "fileUpload": {
+    "loading": "Načítání...",
+    "or": "nebo"
+  },
+  "fileManager": {
+    "fileName": "Jméno",
+    "fileVersion": "Verze",
+    "selectAll": "Vybrat vše",
+    "deselectAll": "Zrušit výběr všeho",
+    "deleteSelected": "Smazat vybrané",
+    "download": "Stáhnout",
+    "delete": "Smazat"
+  },
+  "sanitize": {
+    "submit": "Sanitizovat PDF",
+    "steps": {
+      "settings": "Nastavení"
+    }
+  },
+  "changePermissions": {
+    "title": "Změnit oprávnění",
+    "submit": "Změnit oprávnění",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Zabránit sestavení dokumentu"
+      },
+      "preventExtractContent": {
+        "label": "Zabránit extrakci obsahu"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Zabránit extrakci pro přístupnost"
+      },
+      "preventFillInForm": {
+        "label": "Zabránit vyplňování formulářů"
+      },
+      "preventModify": {
+        "label": "Zabránit úpravám"
+      },
+      "preventModifyAnnotations": {
+        "label": "Zabránit úpravám poznámek"
+      },
+      "preventPrinting": {
+        "label": "Zabránit tisku"
+      },
+      "preventPrintingFaithful": {
+        "label": "Zabránit tisku v různých formátech"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Změnit oprávnění"
       }
     }
   }

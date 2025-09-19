@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "Laden...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Vervang de kleur van tekst en achtergrond in een PDF en omverkeer de volledige kleur van het document om bestandsgrootte te verkleinen."
+    },
+    "convert": {
+      "title": "Omzetten"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Pagina's extraheren"
+    },
+    "removePages": {
+      "title": "Verwijderen",
+      "desc": "Verwijder ongewenste pagina's uit je PDF-document."
+    },
+    "removeImagePdf": {
+      "title": "Afbeelding verwijderen",
+      "desc": "Afbeeldingen uit PDF verwijderen om het bestandsgrootte te verminderen"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Automatisch splitsen op grootte/aantal",
+      "desc": "Splits een enkele PDF in meerdere documenten op basis van grootte, aantal pagina's of aantal documenten"
+    },
+    "adjust-contrast": {
+      "title": "Kleuren/contrast aanpassen",
+      "desc": "Pas contrast, verzadiging en helderheid van een PDF aan"
+    },
+    "replaceColorPdf": {
+      "title": "Replace and Invert Color",
+      "desc": "Vervang de kleur van tekst en achtergrond in een PDF en omverkeer de volledige kleur van het document om bestandsgrootte te verkleinen."
+    },
+    "changePermissions": {
+      "title": "Rechten wijzigen"
     }
   },
   "viewPdf": {
@@ -594,7 +626,7 @@
     "deselectAll": "Deselect All",
     "selectPages": "Page Select",
     "selectedPages": "Selected Pages",
-    "page": "Page",
+    "page": "Pagina",
     "deleteSelected": "Delete Selected",
     "downloadAll": "Export",
     "downloadSelected": "Export Selected",
@@ -602,10 +634,10 @@
     "addFile": "Add File",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "split": "Split",
+    "split": "Splitsen",
     "moveLeft": "Move Left",
     "moveRight": "Move Right",
-    "delete": "Delete",
+    "delete": "Verwijderen",
     "dragDropMessage": "Page(s) Selected",
     "undo": "Undo",
     "redo": "Redo"
@@ -617,7 +649,10 @@
     "sortByName": "Sorteer op naam",
     "sortByDate": "Sorteer op datum",
     "removeCertSign": "Verwijder digitale handtekening in het samengevoegde bestand?",
-    "submit": "Samenvoegen"
+    "submit": "Samenvoegen",
+    "sortBy": {
+      "filename": "Bestandsnaam"
+    }
   },
   "split": {
     "tags": "Pagina bewerkingen,verdelen,meerdere pagina's,knippen,serverzijde",
@@ -634,7 +669,20 @@
       "8": "Document #6: Pagina 10"
     },
     "splitPages": "Voer pagina's in om op te splitsen:",
-    "submit": "Splitsen"
+    "submit": "Splitsen",
+    "steps": {
+      "settings": "Instellingen"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Bestandsgrootte"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Bestandsgrootte"
+      }
+    }
   },
   "rotate": {
     "tags": "serverzijde",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Tekst",
       "2": "Afbeelding"
+    },
+    "watermarkType": {
+      "text": "Tekst"
+    },
+    "settings": {
+      "fontSize": "Lettertypegrootte"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Wijzigen"
   },
   "removePages": {
-    "tags": "Pagina's verwijderen"
+    "tags": "Pagina's verwijderen",
+    "title": "Verwijderen",
+    "submit": "Verwijderen"
   },
   "addPassword": {
     "tags": "veilig,beveiliging",
@@ -758,7 +814,12 @@
       "15": "Beperkt wat gedaan kan worden met het document nadat het is geopend (Niet ondersteund door alle lezers)",
       "16": "Beperkt het openen van het document zelf"
     },
-    "submit": "Versleutelen"
+    "submit": "Versleutelen",
+    "tooltip": {
+      "permissions": {
+        "title": "Rechten wijzigen"
+      }
+    }
   },
   "removePassword": {
     "tags": "veilig,ontsleutelen,beveiliging,wachtwoord verwijderen",
@@ -768,7 +829,12 @@
       "1": "Selecteer PDF om te decrypteren",
       "2": "Wachtwoord"
     },
-    "submit": "Verwijderen"
+    "submit": "Verwijderen",
+    "desc": "Verwijder wachtwoordbeveiliging van je PDF-document.",
+    "password": {
+      "stepTitle": "Wachtwoord verwijderen",
+      "label": "Huidige wachtwoord"
+    }
   },
   "compressPdfs": {
     "tags": "comprimeren,klein"
@@ -829,7 +895,25 @@
     },
     "help": "Lees deze documentatie over hoe dit te gebruiken voor andere talen en/of gebruik buiten docker",
     "credit": "Deze dienst maakt gebruik van qpdf en Tesseract voor OCR.",
-    "submit": "Verwerk PDF met OCR"
+    "submit": "Verwerk PDF met OCR",
+    "desc": "Ruim scans op, detecteert tekst van afbeeldingen in een PDF en voegt deze opnieuw toe als tekst.",
+    "settings": {
+      "title": "Instellingen",
+      "ocrMode": {
+        "label": "OCR-modus"
+      },
+      "languages": {
+        "label": "Talen"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR-modus"
+      },
+      "languages": {
+        "title": "Talen"
+      }
+    }
   },
   "extractImages": {
     "tags": "foto,opslaan,archief,zip,vastleggen,plukken",
@@ -924,7 +1008,7 @@
     "sharedSigs": "Gedeelde Signatuuren",
     "noSavedSigs": "Geen opgeslagen signatuuren gevonden",
     "addToAll": "Add to all pages",
-    "delete": "Delete",
+    "delete": "Verwijderen",
     "first": "First page",
     "last": "Last page",
     "next": "Next page",
@@ -938,7 +1022,13 @@
     "title": "Afvlakken",
     "header": "PDF's afvlakken",
     "flattenOnlyForms": "Alleen formulieren afvlakken",
-    "submit": "Afvlakken"
+    "submit": "Afvlakken",
+    "steps": {
+      "settings": "Instellingen"
+    },
+    "options": {
+      "flattenOnlyForms": "Alleen formulieren afvlakken"
+    }
   },
   "repair": {
     "tags": "repareren,herstellen,correctie,terughalen",
@@ -1106,10 +1196,10 @@
     "credit": "Gebruikt WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "markup,web-inhoud,transformatie,omzetten",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Omzetten"
   },
   "getPdfInfo": {
     "tags": "informatie,data,statistieken",
@@ -1148,7 +1238,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1264,21 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Geavanceerd"
+      },
+      "wordsToRedact": {
+        "add": "Toevoegen"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Pagen",
+        "placeholder": "(bijv. 1,2,8 of 4,7,12-16 of 2n-1)"
+      }
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,tabel extractie,extractie,converteren"
@@ -1261,8 +1365,8 @@
     },
     "signer": "Signer",
     "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
+    "reason": "Reden",
+    "location": "Locatie",
     "noSignatures": "No digital signatures found in this document",
     "chain": {
       "invalid": "Certificate chain validation failed - cannot verify signer's identity"
@@ -1281,7 +1385,7 @@
       "validUntil": "Valid Until",
       "algorithm": "Algorithm",
       "keySize": "Key Size",
-      "version": "Version",
+      "version": "Versie",
       "keyUsage": "Key Usage",
       "selfSigned": "Self-Signed",
       "bits": "bits"
@@ -1386,7 +1490,10 @@
       "4": "Automatische modus - Past kwaliteit automatisch aan om PDF naar exacte grootte te krijgen",
       "5": "Verwachte PDF-grootte (bijv. 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Comprimeren"
+    "submit": "Comprimeren",
+    "method": {
+      "filesize": "Bestandsgrootte"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1555,6 +1662,75 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Downloaden",
+  "convert": {
+    "title": "Omzetten",
+    "settings": "Instellingen",
+    "color": "Kleur",
+    "greyscale": "Grijstinten",
+    "fillPage": "Pagina vullen",
+    "pdfaDigitalSignatureWarning": "Dit PDF bestand bevat een digitale handtekening. Deze wordt in de volgende stap verwijderd.",
+    "grayscale": "Grijstinten"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "quickAccess": {
+    "sign": "Ondertekenen"
+  },
+  "fileUpload": {
+    "loading": "Laden..."
+  },
+  "fileManager": {
+    "fileName": "Naam",
+    "fileVersion": "Versie",
+    "download": "Downloaden",
+    "delete": "Verwijderen"
+  },
+  "sanitize": {
+    "submit": "PDF opschonen",
+    "steps": {
+      "settings": "Instellingen"
+    }
+  },
+  "changePermissions": {
+    "title": "Rechten wijzigen",
+    "submit": "Rechten wijzigen",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Voorkom samenvoegen van document"
+      },
+      "preventExtractContent": {
+        "label": "Voorkom inhoudsextractie"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Voorkom extractie voor toegankelijkheid"
+      },
+      "preventFillInForm": {
+        "label": "Voorkom invullen van formulier"
+      },
+      "preventModify": {
+        "label": "Voorkom wijziging"
+      },
+      "preventModifyAnnotations": {
+        "label": "Voorkom annotatie wijziging"
+      },
+      "preventPrinting": {
+        "label": "Voorkom afdrukken"
+      },
+      "preventPrintingFaithful": {
+        "label": "Voorkom afdrukken in verschillende formaten"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Rechten wijzigen"
       }
     }
   }

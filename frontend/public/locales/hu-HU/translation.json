@@ -25,7 +25,7 @@
   "multiPdfDropPrompt": "Válassza ki (vagy húzza ide) az összes szükséges PDF-fájlt",
   "imgPrompt": "Kép kiválasztása",
   "genericSubmit": "Küldés",
-  "uploadLimit": "Maximum file size:",
+  "uploadLimit": "Maximális fájlméret:",
   "uploadLimitExceededSingular": "túl nagy. A maximálisan megengedett méret",
   "uploadLimitExceededPlural": "túl nagyok. A maximálisan megengedett méretek",
   "processTimeWarning": "Figyelmeztetés: A folyamat akár egy percig is eltarthat a fájlmérettől függően",
@@ -166,7 +166,7 @@
   },
   "navbar": {
     "favorite": "Kedvencek",
-    "recent": "New and recently updated",
+    "recent": "Új és nemrég frissített",
     "darkmode": "Sötét mód",
     "language": "Nyelvek",
     "settings": "Beállítások",
@@ -578,6 +578,43 @@
     "replace-color": {
       "title": "Színek cseréje és invertálása",
       "desc": "PDF szöveg és háttérszíneinek cseréje és teljes színinvertálás a fájlméret csökkentése érdekében"
+    },
+    "convert": {
+      "title": "Konvertálás"
+    },
+    "attachments": {
+      "title": "Csatolmányok hozzáadása a PDF-hez",
+      "desc": "Csatolmányok (beágyazott fájlok) hozzáadása vagy eltávolítása a PDF-ből"
+    },
+    "editTableOfContents": {
+      "title": "Szerkesztés vagy hozzáadás a PDF tartalomjegyzékéhez",
+      "desc": "PDF dokumentumokban könyvjelzők és tartalomjegyzék hozzáadása vagy szerkesztése"
+    },
+    "extractPages": {
+      "title": "Oldalak kinyerése"
+    },
+    "removePages": {
+      "title": "Eltávolítás",
+      "desc": "Felesleges oldalak törlése a PDF dokumentumból."
+    },
+    "removeImagePdf": {
+      "title": "Képek eltávolítása",
+      "desc": "Képek eltávolítása PDF-ből a fájlméret csökkentése érdekében"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Automatikus felosztás méret/darabszám szerint",
+      "desc": "Egyetlen PDF felosztása több dokumentumra méret, oldalszám vagy dokumentumszám alapján"
+    },
+    "adjust-contrast": {
+      "title": "Színek/kontraszt beállítása",
+      "desc": "PDF kontraszt, telítettség és fényerő beállítása"
+    },
+    "replaceColorPdf": {
+      "title": "Színek cseréje és invertálása",
+      "desc": "PDF szöveg és háttérszíneinek cseréje és teljes színinvertálás a fájlméret csökkentése érdekében"
+    },
+    "changePermissions": {
+      "title": "Jogosultságok módosítása"
     }
   },
   "viewPdf": {
@@ -617,7 +654,10 @@
     "sortByName": "Rendezés név szerint",
     "sortByDate": "Rendezés dátum szerint",
     "removeCertSign": "Digitális aláírás eltávolítása az egyesített fájlban?",
-    "submit": "Egyesítés"
+    "submit": "Egyesítés",
+    "sortBy": {
+      "filename": "Fájlnév"
+    }
   },
   "split": {
     "tags": "Oldalműveletek,felosztás,Több oldal,vágás,szerver oldali",
@@ -634,7 +674,20 @@
       "8": "6. dokumentum: 10. oldal"
     },
     "splitPages": "Adja meg a felosztási pontokat:",
-    "submit": "Felosztás"
+    "submit": "Felosztás",
+    "steps": {
+      "settings": "Beállítások"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Fájlméret"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Fájlméret"
+      }
+    }
   },
   "rotate": {
     "tags": "szerver oldali",
@@ -712,6 +765,12 @@
     "type": {
       "1": "Szöveg",
       "2": "Kép"
+    },
+    "watermarkType": {
+      "text": "Szöveg"
+    },
+    "settings": {
+      "fontSize": "Betűméret"
     }
   },
   "permissions": {
@@ -734,7 +793,9 @@
     "submit": "Módosítás"
   },
   "removePages": {
-    "tags": "Oldalak eltávolítása,oldalak törlése"
+    "tags": "Oldalak eltávolítása,oldalak törlése",
+    "title": "Eltávolítás",
+    "submit": "Eltávolítás"
   },
   "addPassword": {
     "tags": "biztonság,védelem",
@@ -758,7 +819,12 @@
       "15": "Korlátozza, hogy mi végezhető el a dokumentum megnyitása után (Nem minden olvasó támogatja)",
       "16": "Korlátozza a dokumentum megnyithatságát"
     },
-    "submit": "Titkosítás"
+    "submit": "Titkosítás",
+    "tooltip": {
+      "permissions": {
+        "title": "Jogosultságok módosítása"
+      }
+    }
   },
   "removePassword": {
     "tags": "biztonság,feloldás,védelem,jelszó törlése",
@@ -768,7 +834,12 @@
       "1": "Válassza ki a visszafejtendő PDF-et",
       "2": "Jelszó"
     },
-    "submit": "Eltávolítás"
+    "submit": "Eltávolítás",
+    "desc": "Jelszavas védelem eltávolítása a PDF dokumentumból",
+    "password": {
+      "stepTitle": "Jelszó eltávolítása",
+      "label": "Jelenlegi jelszó"
+    }
   },
   "compressPdfs": {
     "tags": "tömörítés,kicsi,kompakt"
@@ -829,7 +900,25 @@
     },
     "help": "Kérjük, olvassa el ezt a dokumentációt más nyelvek használatáról és/vagy nem Docker környezetben való használatról",
     "credit": "Ez a szolgáltatás a qpdf és Tesseract OCR használatával működik.",
-    "submit": "PDF feldolgozása OCR-rel"
+    "submit": "PDF feldolgozása OCR-rel",
+    "desc": "Szkennelt dokumentumok tisztítása és szövegfelismerés képekből, majd visszaadása szerkeszthető szövegként",
+    "settings": {
+      "title": "Beállítások",
+      "ocrMode": {
+        "label": "OCR mód"
+      },
+      "languages": {
+        "label": "Nyelvek"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR mód"
+      },
+      "languages": {
+        "title": "Nyelvek"
+      }
+    }
   },
   "extractImages": {
     "tags": "kép,fotó,mentés,archívum,tömörítés,kinyerés,gyűjtés",
@@ -930,15 +1019,21 @@
     "next": "Következő oldal",
     "previous": "Előző oldal",
     "maintainRatio": "Képarány fenntartása váltása",
-    "undo": "Undo",
-    "redo": "Redo"
+    "undo": "Visszavonás",
+    "redo": "Újra"
   },
   "flatten": {
     "tags": "statikus,deaktiválás,nem interaktív,egyszerűsítés",
     "title": "Lapítás",
     "header": "PDF-ek lapítása",
     "flattenOnlyForms": "Csak űrlapok lapítása",
-    "submit": "Lapítás"
+    "submit": "Lapítás",
+    "steps": {
+      "settings": "Beállítások"
+    },
+    "options": {
+      "flattenOnlyForms": "Csak űrlapok lapítása"
+    }
   },
   "repair": {
     "tags": "javítás,helyreállítás,korrekció,visszaállítás",
@@ -1174,7 +1269,22 @@
     "showLayers": "Rétegek megjelenítése (dupla kattintás az összes réteg alaphelyzetbe állításához)",
     "colourPicker": "Színválasztó",
     "findCurrentOutlineItem": "Keresés a jelenlegi vázlatban",
-    "applyChanges": "Változtatások mentése"
+    "applyChanges": "Változtatások mentése",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Haladó"
+      },
+      "wordsToRedact": {
+        "add": "Hozzáadás"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Oldal",
+        "placeholder": "(pl. 1,2,8 vagy 4,7,12-16 vagy 2n-1)"
+      },
+      "export": "Exportálás"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Táblázat kinyerése,kinyerés,konvertálás"
@@ -1386,7 +1496,10 @@
       "4": "Automatikus mód - Automatikusan állítja a minőséget a megadott PDF méret eléréséhez",
       "5": "Kívánt PDF méret (pl. 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Tömörítés"
+    "submit": "Tömörítés",
+    "method": {
+      "filesize": "Fájlméret"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Ez a fájl jelszóval védett. Kérjük, adja meg a jelszót:",
@@ -1555,6 +1668,84 @@
       "analytics": {
         "title": "Adatelemzések",
         "description": "Ezek a sütik segítenek megérteni, hogyan használják eszközeinket, így a közösségünk által leginkább értékelt funkciókra összpontosíthatunk. Nyugodt lehet-a Stirling PDF nem képes és soha nem is fog nyomon követni az Ön által használt dokumentumok tartalmát."
+      }
+    }
+  },
+  "download": "Letöltés",
+  "undo": "Visszavonás",
+  "convert": {
+    "title": "Konvertálás",
+    "settings": "Beállítások",
+    "color": "Szín",
+    "greyscale": "Szürkeárnyalatos",
+    "fillPage": "Oldal kitöltése",
+    "pdfaDigitalSignatureWarning": "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül.",
+    "grayscale": "Szürkeárnyalatos"
+  },
+  "attachments": {
+    "tags": "beágyazás,csatolás,fájl,csatolmány,csatolmányok",
+    "title": "Mellékletek hozzáadása",
+    "header": "Mellékletek hozzáadása",
+    "submit": "Csatolmányok hozzáadása a PDF-hez"
+  },
+  "rightRail": {
+    "selectAll": "Összes kijelölése",
+    "deselectAll": "Kijelölés megszüntetése"
+  },
+  "quickAccess": {
+    "sign": "Aláírás"
+  },
+  "fileUpload": {
+    "loading": "Betöltés...",
+    "or": "vagy"
+  },
+  "fileManager": {
+    "fileName": "Név",
+    "fileVersion": "Verzió",
+    "selectAll": "Összes kijelölése",
+    "deselectAll": "Kijelölés megszüntetése",
+    "deleteSelected": "Kijelöltek törlése",
+    "download": "Letöltés",
+    "delete": "Törlés"
+  },
+  "sanitize": {
+    "submit": "PDF tisztítása",
+    "steps": {
+      "settings": "Beállítások"
+    }
+  },
+  "changePermissions": {
+    "title": "Jogosultságok módosítása",
+    "submit": "Jogosultságok módosítása",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Dokumentum egyesítésének megakadályozása"
+      },
+      "preventExtractContent": {
+        "label": "Tartalom kinyerésének megakadályozása"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Akadálymentesítési célú kinyerés megakadályozása"
+      },
+      "preventFillInForm": {
+        "label": "Űrlapkitöltés megakadályozása"
+      },
+      "preventModify": {
+        "label": "Módosítás megakadályozása"
+      },
+      "preventModifyAnnotations": {
+        "label": "Megjegyzések módosításának megakadályozása"
+      },
+      "preventPrinting": {
+        "label": "Nyomtatás megakadályozása"
+      },
+      "preventPrintingFaithful": {
+        "label": "Különböző formátumú nyomtatás megakadályozása"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Jogosultságok módosítása"
       }
     }
   }

@@ -132,7 +132,7 @@
     "uploadButton": "Upload Custom",
     "configureButton": "Configure",
     "defaultOption": "Custom",
-    "submitButton": "Submit",
+    "submitButton": "Bidali",
     "help": "Pipeline Help",
     "scanHelp": "Folder Scanning Help",
     "deletePrompt": "Are you sure you want to delete pipeline",
@@ -147,7 +147,7 @@
     "selectOperation": "Select Operation",
     "addOperationButton": "Add operation",
     "pipelineHeader": "Pipeline:",
-    "saveButton": "Download",
+    "saveButton": "Distira",
     "validateButton": "Validate"
   },
   "enterpriseEdition": {
@@ -175,7 +175,7 @@
     "search": "Search",
     "sections": {
       "organize": "Organize",
-      "convertTo": "Convert to PDF",
+      "convertTo": "PDF bihurtu",
       "convertFrom": "Convert from PDF",
       "security": "Sign & Security",
       "advance": "Advanced",
@@ -209,10 +209,10 @@
     "title": "Change Credentials",
     "header": "Update Your Account Details",
     "changePassword": "You are using default login credentials. Please enter a new password",
-    "newUsername": "New Username",
+    "newUsername": "Erabiltzaile izen berria",
     "oldPassword": "Current Password",
-    "newPassword": "New Password",
-    "confirmNewPassword": "Confirm New Password",
+    "newPassword": "Pasahitz berria",
+    "confirmNewPassword": "Konfirmatu pasahitz berria",
     "submit": "Submit Changes"
   },
   "account": {
@@ -578,6 +578,37 @@
     "replace-color": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "convert": {
+      "title": "Bihurtu"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Atera orriak"
+    },
+    "removePages": {
+      "title": "Ezabatu",
+      "desc": "Ezabatu nahi ez dituzun orrialdeak PDF dokumentutik"
+    },
+    "removeImagePdf": {
+      "title": "Remove image",
+      "desc": "Remove image from PDF to reduce file size"
+    },
+    "autoSizeSplitPDF": {
+      "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
+    },
+    "adjust-contrast": {
+      "title": "Koloreak/kontrastea doitu",
+      "desc": "PDF baten kontrastea, saturazioa eta distira doitzea"
+    },
+    "replaceColorPdf": {
+      "title": "Replace and Invert Color",
+      "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "changePermissions": {
+      "title": "Aldatu baimenak"
     }
   },
   "viewPdf": {
@@ -602,10 +633,10 @@
     "addFile": "Add File",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "split": "Split",
+    "split": "Zatitu",
     "moveLeft": "Move Left",
     "moveRight": "Move Right",
-    "delete": "Delete",
+    "delete": "ezabatu",
     "dragDropMessage": "Page(s) Selected",
     "undo": "Undo",
     "redo": "Redo"
@@ -634,7 +665,10 @@
       "8": "#6 Dokumentua: 10. orrialdeak"
     },
     "splitPages": "Sartu orrialdeak zatitzeko:",
-    "submit": "Zatitu"
+    "submit": "Zatitu",
+    "steps": {
+      "settings": "Ezarpenak"
+    }
   },
   "rotate": {
     "tags": "server side",
@@ -644,10 +678,10 @@
     "submit": "Biratu"
   },
   "imageToPdf": {
-    "tags": "conversion,img,jpg,picture,photo"
+    "tags": "conversion,img,jpg,picture,photo,psd,photoshop"
   },
   "pdfToImage": {
-    "tags": "conversion,img,jpg,picture,photo",
+    "tags": "conversion,img,jpg,picture,photo,psd,photoshop",
     "title": "PDFa irudi bihurtu",
     "header": "PDFa irudi bihurtu",
     "selectText": "Irudi-formatua",
@@ -712,6 +746,9 @@
     "type": {
       "1": "Text",
       "2": "Image"
+    },
+    "watermarkType": {
+      "text": "Testua"
     }
   },
   "permissions": {
@@ -734,7 +771,9 @@
     "submit": "Aldatu"
   },
   "removePages": {
-    "tags": "Remove pages,delete pages"
+    "tags": "Remove pages,delete pages",
+    "title": "Ezabatu",
+    "submit": "Ezabatu"
   },
   "addPassword": {
     "tags": "secure,security",
@@ -758,7 +797,12 @@
       "15": "Mugatu zer egin daitekeen dokumentuarekin behin zabalduta (Irakurle guztiek onartu gabe)",
       "16": "Mugatu dokumentu bera zabaltzeko aukera"
     },
-    "submit": "Enkriptatu"
+    "submit": "Enkriptatu",
+    "tooltip": {
+      "permissions": {
+        "title": "Aldatu baimenak"
+      }
+    }
   },
   "removePassword": {
     "tags": "secure,Decrypt,security,unpassword,delete password",
@@ -768,7 +812,11 @@
       "1": "Hautatu PDFa desenkriptatzeko",
       "2": "Pasahitza"
     },
-    "submit": "Ezabatu"
+    "submit": "Ezabatu",
+    "desc": "Ezabatu pasahitza PDF dokumentutik",
+    "password": {
+      "stepTitle": "Ezabatu pasahitza"
+    }
   },
   "compressPdfs": {
     "tags": "squish,small,tiny"
@@ -829,7 +877,19 @@
     },
     "help": "Irakurri honen erabilerari buruzko dokumentazioa beste hizkuntza batzuetarako eta/edo ez erabili Docker-en",
     "credit": "Zerbitzu honek qpdf eta OCR-rako Tesseract erabiltzen ditu",
-    "submit": "PDF prozesatu OCR-rekin"
+    "submit": "PDF prozesatu OCR-rekin",
+    "desc": "Garbiketa-eskaneatzeak eta irudi-testuak detektatu PDF baten barruan eta berriz ere gehitu testu gisa",
+    "settings": {
+      "title": "Ezarpenak",
+      "ocrMode": {
+        "label": "OCR modua"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR modua"
+      }
+    }
   },
   "extractImages": {
     "tags": "picture,photo,save,archive,zip,capture,grab",
@@ -924,7 +984,7 @@
     "sharedSigs": "Shared Signatures",
     "noSavedSigs": "No saved signatures found",
     "addToAll": "Add to all pages",
-    "delete": "Delete",
+    "delete": "ezabatu",
     "first": "First page",
     "last": "Last page",
     "next": "Next page",
@@ -938,7 +998,10 @@
     "title": "Lautu",
     "header": "Akoplatu PDF fitxategiak",
     "flattenOnlyForms": "Flatten only forms",
-    "submit": "Lautu"
+    "submit": "Lautu",
+    "steps": {
+      "settings": "Ezarpenak"
+    }
   },
   "repair": {
     "tags": "fix,restore,correction,recover",
@@ -1106,10 +1169,10 @@
     "credit": "WeasyPrint darabil"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "markup,web-content,transformation,convert",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Bihurtu"
   },
   "getPdfInfo": {
     "tags": "infomation,data,stats,statistics",
@@ -1148,7 +1211,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1237,12 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "wordsToRedact": {
+        "add": "Gehitu"
+      }
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Table Extraction,extract,convert"
@@ -1206,7 +1274,7 @@
       "foreground": "Foreground",
       "background": "Background"
     },
-    "submit": "Submit"
+    "submit": "Bidali"
   },
   "split-by-sections": {
     "tags": "Section Split, Divide, Customize",
@@ -1220,7 +1288,7 @@
       "label": "Vertical Divisions",
       "placeholder": "Enter number of vertical divisions"
     },
-    "submit": "Split PDF",
+    "submit": "Zatitu PDFa",
     "merge": "Merge Into One PDF"
   },
   "AddStampRequest": {
@@ -1230,16 +1298,16 @@
     "stampType": "Stamp Type",
     "stampText": "Stamp Text",
     "stampImage": "Stamp Image",
-    "alphabet": "Alphabet",
+    "alphabet": "Alfabetoa",
     "fontSize": "Font/Image Size",
     "rotation": "Rotation",
     "opacity": "Opacity",
-    "position": "Position",
+    "position": "Posizioa",
     "overrideX": "Override X Coordinate",
     "overrideY": "Override Y Coordinate",
     "customMargin": "Custom Margin",
     "customColor": "Custom Text Color",
-    "submit": "Submit"
+    "submit": "Bidali"
   },
   "removeImagePdf": {
     "tags": "Remove Image,Page operations,Back end,server side"
@@ -1261,8 +1329,8 @@
     },
     "signer": "Signer",
     "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
+    "reason": "Arrazoia",
+    "location": "Kokalekua",
     "noSignatures": "No digital signatures found in this document",
     "chain": {
       "invalid": "Certificate chain validation failed - cannot verify signer's identity"
@@ -1442,7 +1510,7 @@
       "label": "Enter Value",
       "placeholder": "Enter size (e.g., 2MB or 3KB) or count (e.g., 5)"
     },
-    "submit": "Submit"
+    "submit": "Bidali"
   },
   "printFile": {
     "title": "Print File",
@@ -1501,7 +1569,7 @@
       "3": "Include Metadata: If checked, the original PDF's metadata will be included in each split PDF.",
       "4": "Allow Duplicates: If checked, allows multiple bookmarks on the same page to create separate PDFs."
     },
-    "submit": "Split PDF"
+    "submit": "Zatitu PDFa"
   },
   "fileChooser": {
     "click": "Click",
@@ -1555,6 +1623,69 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Distira",
+  "convert": {
+    "title": "Bihurtu",
+    "settings": "Ezarpenak",
+    "color": "Color",
+    "greyscale": "Gris-eskala",
+    "grayscale": "Gris-eskala"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "quickAccess": {
+    "sign": "Sinatu"
+  },
+  "fileManager": {
+    "fileName": "Izena",
+    "download": "Distira",
+    "delete": "ezabatu"
+  },
+  "sanitize": {
+    "submit": "PDF-a desinfektatu",
+    "steps": {
+      "settings": "Ezarpenak"
+    }
+  },
+  "changePermissions": {
+    "title": "Aldatu baimenak",
+    "submit": "Aldatu baimenak",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Galarazi dokumentuaren mihiztaketa"
+      },
+      "preventExtractContent": {
+        "label": "Galarazi edukia ateratzea"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Galarazi ateratzea irisgarritasunerako"
+      },
+      "preventFillInForm": {
+        "label": "Galarazi inprimakia betetzea"
+      },
+      "preventModify": {
+        "label": "Galarazi aldaketak egitea"
+      },
+      "preventModifyAnnotations": {
+        "label": "Galarazi oharrak aldatzea"
+      },
+      "preventPrinting": {
+        "label": "Galarazi inprimatzea"
+      },
+      "preventPrintingFaithful": {
+        "label": "Galarazi zenbait formatu inprimatzea"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Aldatu baimenak"
       }
     }
   }
