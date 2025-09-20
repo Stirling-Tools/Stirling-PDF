@@ -30,7 +30,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -108,7 +111,25 @@ public class BlankPageController {
                     if (hasImages) {
                         log.info("page {} has image, running blank detection", pageIndex);
                         // Render image and save as temp file
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, 30);
+                        BufferedImage image;
+
+                        // Use global maximum DPI setting
+                        int renderDpi = 30; // Default fallback
+                        ApplicationProperties properties =
+                                ApplicationContextProvider.getBean(ApplicationProperties.class);
+                        if (properties != null && properties.getSystem() != null) {
+                            renderDpi = properties.getSystem().getMaxDPI();
+                        }
+
+                        try {
+                            image = pdfRenderer.renderImageWithDPI(pageIndex, renderDpi);
+                        } catch (OutOfMemoryError e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(
+                                    pageIndex + 1, renderDpi, e);
+                        } catch (NegativeArraySizeException e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(
+                                    pageIndex + 1, renderDpi, e);
+                        }
                         blank = isBlankImage(image, threshold, whitePercent, threshold);
                     }
                 }
