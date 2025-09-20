@@ -75,6 +75,10 @@ public class PdfToCbzUtils {
 
                 } catch (IOException e) {
                     log.warn("Error processing page {}: {}", pageIndex + 1, e.getMessage());
+                } catch (OutOfMemoryError e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, dpi, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, dpi, e);
                 }
             }
 
