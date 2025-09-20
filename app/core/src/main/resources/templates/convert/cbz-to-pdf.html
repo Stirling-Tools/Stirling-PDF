@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html th:data-language="${#locale.toString()}" th:dir="#{language.direction}" th:lang="${#locale.language}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{cbzToPDF.title}, header=#{cbzToPDF.header})}"></th:block>
+</head>
+
+<body>
+  <th:block th:insert="~{fragments/common :: game}"></th:block>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon convertto">auto_stories</span>
+              <span class="tool-header-text" th:text="#{cbzToPDF.header}"></span>
+            </div>
+            <form enctype="multipart/form-data" id="cbzToPDFForm" method="post"
+              th:action="@{'/api/v1/convert/cbz/pdf'}">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.cbz,.zip', inputText=#{cbzToPDF.selectText})}">
+              </div>
+              
+              <br>
+              <button class="btn btn-primary" id="submitBtn" th:text="#{cbzToPDF.submit}" type="submit">Convert to PDF</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>
