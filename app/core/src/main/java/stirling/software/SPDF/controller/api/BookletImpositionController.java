@@ -49,28 +49,37 @@ public class BookletImpositionController {
             @ModelAttribute BookletImpositionRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();
-        String bookletType = request.getBookletType();
         int pagesPerSheet = request.getPagesPerSheet();
         boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
-        String pageOrientation = request.getPageOrientation();
+        String spineLocation =
+                request.getSpineLocation() != null ? request.getSpineLocation() : "LEFT";
+        boolean addGutter = Boolean.TRUE.equals(request.getAddGutter());
+        float gutterSize = request.getGutterSize();
+        boolean doubleSided = Boolean.TRUE.equals(request.getDoubleSided());
+        String duplexPass = request.getDuplexPass() != null ? request.getDuplexPass() : "BOTH";
+        boolean flipOnShortEdge = Boolean.TRUE.equals(request.getFlipOnShortEdge());
 
-        // Validate pages per sheet for booklet
-        if (pagesPerSheet != 2 && pagesPerSheet != 4) {
+        // Validate pages per sheet for booklet - only 2-up landscape is proper booklet
+        if (pagesPerSheet != 2) {
             throw new IllegalArgumentException(
-                    "pagesPerSheet must be 2 or 4 for booklet imposition");
+                    "Booklet printing uses 2 pages per side (landscape). For 4-up, use the N-up feature.");
         }
 
         PDDocument sourceDocument = pdfDocumentFactory.load(file);
         int totalPages = sourceDocument.getNumberOfPages();
 
-        // Step 1: Reorder pages for booklet (reusing logic from RearrangePagesPDFController)
-        List<Integer> bookletOrder = getBookletPageOrder(bookletType, totalPages);
-
-        // Step 2: Create new document with multi-page layout (reusing logic from
-        // MultiPageLayoutController)
+        // Create proper booklet with signature-based page ordering
         PDDocument newDocument =
-                createBookletWithLayout(
-                        sourceDocument, bookletOrder, pagesPerSheet, addBorder, pageOrientation);
+                createSaddleBooklet(
+                        sourceDocument,
+                        totalPages,
+                        addBorder,
+                        spineLocation,
+                        addGutter,
+                        gutterSize,
+                        doubleSided,
+                        duplexPass,
+                        flipOnShortEdge);
 
         sourceDocument.close();
 
@@ -85,124 +94,231 @@ public class BookletImpositionController {
                         + "_booklet.pdf");
     }
 
-    // Reused logic from RearrangePagesPDFController
-    private List<Integer> getBookletPageOrder(String bookletType, int totalPages) {
-        if ("SIDE_STITCH_BOOKLET".equals(bookletType)) {
-            return sideStitchBookletSort(totalPages);
-        } else {
-            return bookletSort(totalPages);
+    private static int padToMultipleOf4(int n) {
+        return (n + 3) / 4 * 4;
+    }
+
+    private static class Side {
+        final int left, right;
+        final boolean isBack;
+
+        Side(int left, int right, boolean isBack) {
+            this.left = left;
+            this.right = right;
+            this.isBack = isBack;
         }
     }
 
-    private List<Integer> bookletSort(int totalPages) {
-        List<Integer> newPageOrder = new ArrayList<>();
-        for (int i = 0; i < totalPages / 2; i++) {
-            newPageOrder.add(i);
-            newPageOrder.add(totalPages - i - 1);
+    private static List<Side> saddleStitchSides(
+            int totalPagesOriginal,
+            boolean doubleSided,
+            String duplexPass,
+            boolean flipOnShortEdge) {
+        int N = padToMultipleOf4(totalPagesOriginal);
+        List<Side> out = new ArrayList<>();
+        int sheets = N / 4;
+
+        for (int s = 0; s < sheets; s++) {
+            int a = N - 1 - (s * 2); // left, front
+            int b = (s * 2); // right, front
+            int c = (s * 2) + 1; // left, back
+            int d = N - 2 - (s * 2); // right, back
+
+            // clamp to -1 (blank) if >= totalPagesOriginal
+            a = (a < totalPagesOriginal) ? a : -1;
+            b = (b < totalPagesOriginal) ? b : -1;
+            c = (c < totalPagesOriginal) ? c : -1;
+            d = (d < totalPagesOriginal) ? d : -1;
+
+            // Handle duplex pass selection
+            boolean includeFront = "BOTH".equals(duplexPass) || "FIRST".equals(duplexPass);
+            boolean includeBack = "BOTH".equals(duplexPass) || "SECOND".equals(duplexPass);
+
+            if (includeFront) {
+                out.add(new Side(a, b, false)); // front side
+            }
+
+            if (includeBack) {
+                // For short-edge duplex, swap back-side left/right
+                // Note: flipOnShortEdge is ignored in manual duplex mode since users physically
+                // flip the stack
+                if (doubleSided && flipOnShortEdge) {
+                    out.add(new Side(d, c, true)); // swapped back side (automatic duplex only)
+                } else {
+                    out.add(new Side(c, d, true)); // normal back side
+                }
+            }
         }
-        return newPageOrder;
+        return out;
     }
 
-    private List<Integer> sideStitchBookletSort(int totalPages) {
-        List<Integer> newPageOrder = new ArrayList<>();
-        for (int i = 0; i < (totalPages + 3) / 4; i++) {
-            int begin = i * 4;
-            newPageOrder.add(Math.min(begin + 3, totalPages - 1));
-            newPageOrder.add(Math.min(begin, totalPages - 1));
-            newPageOrder.add(Math.min(begin + 1, totalPages - 1));
-            newPageOrder.add(Math.min(begin + 2, totalPages - 1));
-        }
-        return newPageOrder;
-    }
-
-    // Reused and adapted logic from MultiPageLayoutController
-    private PDDocument createBookletWithLayout(
-            PDDocument sourceDocument,
-            List<Integer> pageOrder,
-            int pagesPerSheet,
+    private PDDocument createSaddleBooklet(
+            PDDocument src,
+            int totalPages,
             boolean addBorder,
-            String pageOrientation)
+            String spineLocation,
+            boolean addGutter,
+            float gutterSize,
+            boolean doubleSided,
+            String duplexPass,
+            boolean flipOnShortEdge)
             throws IOException {
 
-        PDDocument newDocument =
-                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
+        PDDocument dst = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(src);
 
-        int cols = pagesPerSheet == 2 ? 2 : 2; // 2x1 for 2 pages, 2x2 for 4 pages
-        int rows = pagesPerSheet == 2 ? 1 : 2;
+        // Derive paper size from source document's first page CropBox
+        PDRectangle srcBox = src.getPage(0).getCropBox();
+        PDRectangle portraitPaper = new PDRectangle(srcBox.getWidth(), srcBox.getHeight());
+        // Force landscape for booklet (Acrobat booklet uses landscape paper to fold to portrait)
+        PDRectangle pageSize = new PDRectangle(portraitPaper.getHeight(), portraitPaper.getWidth());
 
-        int currentPageIndex = 0;
-        int totalOrderedPages = pageOrder.size();
+        // Validate and clamp gutter size
+        if (gutterSize < 0) gutterSize = 0;
+        if (gutterSize >= pageSize.getWidth() / 2f) gutterSize = pageSize.getWidth() / 2f - 1f;
 
-        while (currentPageIndex < totalOrderedPages) {
-            // Use landscape orientation for booklets (A4 landscape -> A5 portrait when folded)
-            PDRectangle pageSize =
-                    "LANDSCAPE".equals(pageOrientation)
-                            ? new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth())
-                            : PDRectangle.A4;
-            PDPage newPage = new PDPage(pageSize);
-            newDocument.addPage(newPage);
+        List<Side> sides = saddleStitchSides(totalPages, doubleSided, duplexPass, flipOnShortEdge);
 
-            float cellWidth = newPage.getMediaBox().getWidth() / cols;
-            float cellHeight = newPage.getMediaBox().getHeight() / rows;
+        for (Side side : sides) {
+            PDPage out = new PDPage(pageSize);
+            dst.addPage(out);
 
-            PDPageContentStream contentStream =
+            float cellW = pageSize.getWidth() / 2f;
+            float cellH = pageSize.getHeight();
+
+            // For RIGHT spine (RTL), swap left/right placements
+            boolean rtl = "RIGHT".equalsIgnoreCase(spineLocation);
+            int leftCol = rtl ? 1 : 0;
+            int rightCol = rtl ? 0 : 1;
+
+            // Apply gutter margins with centered gap option
+            float g = addGutter ? gutterSize : 0f;
+            float leftCellX = leftCol * cellW + (g / 2f);
+            float rightCellX = rightCol * cellW - (g / 2f);
+            float leftCellW = cellW - (g / 2f);
+            float rightCellW = cellW - (g / 2f);
+
+            // Create LayerUtility once per page for efficiency
+            LayerUtility layerUtility = new LayerUtility(dst);
+
+            try (PDPageContentStream cs =
                     new PDPageContentStream(
-                            newDocument,
-                            newPage,
-                            PDPageContentStream.AppendMode.APPEND,
-                            true,
-                            true);
-            LayerUtility layerUtility = new LayerUtility(newDocument);
-
-            if (addBorder) {
-                contentStream.setLineWidth(1.5f);
-                contentStream.setStrokingColor(Color.BLACK);
-            }
-
-            // Place pages on the current sheet
-            for (int sheetPosition = 0;
-                    sheetPosition < pagesPerSheet && currentPageIndex < totalOrderedPages;
-                    sheetPosition++) {
-                int sourcePageIndex = pageOrder.get(currentPageIndex);
-                PDPage sourcePage = sourceDocument.getPage(sourcePageIndex);
-                PDRectangle rect = sourcePage.getMediaBox();
-
-                float scaleWidth = cellWidth / rect.getWidth();
-                float scaleHeight = cellHeight / rect.getHeight();
-                float scale = Math.min(scaleWidth, scaleHeight);
-
-                int rowIndex = sheetPosition / cols;
-                int colIndex = sheetPosition % cols;
-
-                float x = colIndex * cellWidth + (cellWidth - rect.getWidth() * scale) / 2;
-                float y =
-                        newPage.getMediaBox().getHeight()
-                                - ((rowIndex + 1) * cellHeight
-                                        - (cellHeight - rect.getHeight() * scale) / 2);
-
-                contentStream.saveGraphicsState();
-                contentStream.transform(Matrix.getTranslateInstance(x, y));
-                contentStream.transform(Matrix.getScaleInstance(scale, scale));
-
-                PDFormXObject formXObject =
-                        layerUtility.importPageAsForm(sourceDocument, sourcePageIndex);
-                contentStream.drawForm(formXObject);
-
-                contentStream.restoreGraphicsState();
+                            dst, out, PDPageContentStream.AppendMode.APPEND, true, true)) {
 
                 if (addBorder) {
-                    float borderX = colIndex * cellWidth;
-                    float borderY = newPage.getMediaBox().getHeight() - (rowIndex + 1) * cellHeight;
-                    contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
-                    contentStream.stroke();
+                    cs.setLineWidth(1.5f);
+                    cs.setStrokingColor(Color.BLACK);
                 }
 
-                currentPageIndex++;
+                // draw left cell
+                drawCell(
+                        src,
+                        dst,
+                        cs,
+                        layerUtility,
+                        side.left,
+                        leftCellX,
+                        0f,
+                        leftCellW,
+                        cellH,
+                        addBorder);
+                // draw right cell
+                drawCell(
+                        src,
+                        dst,
+                        cs,
+                        layerUtility,
+                        side.right,
+                        rightCellX,
+                        0f,
+                        rightCellW,
+                        cellH,
+                        addBorder);
             }
+        }
+        return dst;
+    }
 
-            contentStream.close();
+    private void drawCell(
+            PDDocument src,
+            PDDocument dst,
+            PDPageContentStream cs,
+            LayerUtility layerUtility,
+            int pageIndex,
+            float cellX,
+            float cellY,
+            float cellW,
+            float cellH,
+            boolean addBorder)
+            throws IOException {
+
+        if (pageIndex < 0) {
+            // Draw border for blank cell if needed
+            if (addBorder) {
+                cs.addRect(cellX, cellY, cellW, cellH);
+                cs.stroke();
+            }
+            return;
         }
 
-        return newDocument;
+        PDPage srcPage = src.getPage(pageIndex);
+        PDRectangle r = srcPage.getCropBox(); // Use CropBox instead of MediaBox
+        int rot = (srcPage.getRotation() + 360) % 360;
+
+        // Calculate scale factors, accounting for rotation
+        float sx = cellW / r.getWidth();
+        float sy = cellH / r.getHeight();
+        float s = Math.min(sx, sy);
+
+        // If rotated 90/270 degrees, swap dimensions for fitting
+        if (rot == 90 || rot == 270) {
+            sx = cellW / r.getHeight();
+            sy = cellH / r.getWidth();
+            s = Math.min(sx, sy);
+        }
+
+        float drawnW = (rot == 90 || rot == 270) ? r.getHeight() * s : r.getWidth() * s;
+        float drawnH = (rot == 90 || rot == 270) ? r.getWidth() * s : r.getHeight() * s;
+
+        // Center in cell, accounting for CropBox offset
+        float tx = cellX + (cellW - drawnW) / 2f - r.getLowerLeftX() * s;
+        float ty = cellY + (cellH - drawnH) / 2f - r.getLowerLeftY() * s;
+
+        cs.saveGraphicsState();
+        cs.transform(Matrix.getTranslateInstance(tx, ty));
+        cs.transform(Matrix.getScaleInstance(s, s));
+
+        // Apply rotation if needed (rotate about origin), then translate to keep in cell
+        switch (rot) {
+            case 90:
+                cs.transform(Matrix.getRotateInstance(Math.PI / 2, 0, 0));
+                // After 90° CCW, the content spans x in [-r.getHeight(), 0] and y in [0,
+                // r.getWidth()]
+                cs.transform(Matrix.getTranslateInstance(0, -r.getWidth()));
+                break;
+            case 180:
+                cs.transform(Matrix.getRotateInstance(Math.PI, 0, 0));
+                cs.transform(Matrix.getTranslateInstance(-r.getWidth(), -r.getHeight()));
+                break;
+            case 270:
+                cs.transform(Matrix.getRotateInstance(3 * Math.PI / 2, 0, 0));
+                // After 270° CCW, the content spans x in [0, r.getHeight()] and y in
+                // [-r.getWidth(), 0]
+                cs.transform(Matrix.getTranslateInstance(-r.getHeight(), 0));
+                break;
+            default:
+                // 0°: no-op
+        }
+
+        // Reuse LayerUtility passed from caller
+        PDFormXObject form = layerUtility.importPageAsForm(src, pageIndex);
+        cs.drawForm(form);
+
+        cs.restoreGraphicsState();
+
+        // Draw border on top of form to ensure visibility
+        if (addBorder) {
+            cs.addRect(cellX, cellY, cellW, cellH);
+            cs.stroke();
+        }
     }
 }

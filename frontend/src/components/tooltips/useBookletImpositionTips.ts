@@ -6,37 +6,50 @@ export const useBookletImpositionTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("bookletImposition.tooltip.title", "Booklet Imposition Guide")
+      title: t("bookletImposition.tooltip.header.title", "Booklet Creation Guide")
     },
     tips: [
       {
-        title: t("bookletImposition.tooltip.overview.title", "What is Booklet Imposition?"),
-        description: t("bookletImposition.tooltip.overview.description", "Arranges PDF pages in the correct order for booklet printing. Pages are reordered so that when printed and folded, they appear in sequence."),
+        title: t("bookletImposition.tooltip.description.title", "What is Booklet Imposition?"),
+        description: t("bookletImposition.tooltip.description.text", "Creates professional booklets by arranging pages in the correct printing order. Your PDF pages are placed 2-up on landscape sheets so when folded and bound, they read in proper sequence like a real book.")
+      },
+      {
+        title: t("bookletImposition.tooltip.example.title", "Example: 8-Page Booklet"),
+        description: t("bookletImposition.tooltip.example.text", "Your 8-page document becomes 2 sheets:"),
         bullets: [
-          t("bookletImposition.tooltip.overview.bullet1", "Creates printable booklets from regular PDFs"),
-          t("bookletImposition.tooltip.overview.bullet2", "Handles page ordering for folding"),
-          t("bookletImposition.tooltip.overview.bullet3", "Supports saddle-stitch and side-stitch binding")
+          t("bookletImposition.tooltip.example.bullet1", "Sheet 1 Front: Pages 8, 1  |  Back: Pages 2, 7"),
+          t("bookletImposition.tooltip.example.bullet2", "Sheet 2 Front: Pages 6, 3  |  Back: Pages 4, 5"),
+          t("bookletImposition.tooltip.example.bullet3", "When folded & stacked: Reads 1→2→3→4→5→6→7→8")
         ]
       },
       {
-        title: t("bookletImposition.tooltip.bookletTypes.title", "Booklet Types"),
+        title: t("bookletImposition.tooltip.printing.title", "How to Print & Assemble"),
+        description: t("bookletImposition.tooltip.printing.text", "Follow these steps for perfect booklets:"),
         bullets: [
-          t("bookletImposition.tooltip.bookletTypes.standard", "Standard: Saddle-stitched binding (staples along fold)"),
-          t("bookletImposition.tooltip.bookletTypes.sideStitch", "Side-Stitch: Binding along edge (spiral, ring, perfect)")
+          t("bookletImposition.tooltip.printing.bullet1", "Print double-sided with 'Flip on long edge'"),
+          t("bookletImposition.tooltip.printing.bullet2", "Stack sheets in order, fold in half"),
+          t("bookletImposition.tooltip.printing.bullet3", "Staple or bind along the folded spine"),
+          t("bookletImposition.tooltip.printing.bullet4", "For short-edge printers: Enable 'Flip on short edge' option")
         ]
       },
       {
-        title: t("bookletImposition.tooltip.pagesPerSheet.title", "Pages Per Sheet"),
+        title: t("bookletImposition.tooltip.manualDuplex.title", "Manual Duplex (Single-sided Printers)"),
+        description: t("bookletImposition.tooltip.manualDuplex.text", "For printers without automatic duplex:"),
         bullets: [
-          t("bookletImposition.tooltip.pagesPerSheet.two", "2 Pages: Standard layout (most common)"),
-          t("bookletImposition.tooltip.pagesPerSheet.four", "4 Pages: Compact layout")
+          t("bookletImposition.tooltip.manualDuplex.bullet1", "Turn OFF 'Double-sided printing'"),
+          t("bookletImposition.tooltip.manualDuplex.bullet2", "Select '1st Pass' → Print → Stack face-down"),
+          t("bookletImposition.tooltip.manualDuplex.bullet3", "Select '2nd Pass' → Load stack → Print backs"),
+          t("bookletImposition.tooltip.manualDuplex.bullet4", "Fold and assemble as normal")
         ]
       },
       {
-        title: t("bookletImposition.tooltip.orientation.title", "Page Orientation"),
+        title: t("bookletImposition.tooltip.advanced.title", "Advanced Options"),
+        description: t("bookletImposition.tooltip.advanced.text", "Fine-tune your booklet:"),
         bullets: [
-          t("bookletImposition.tooltip.orientation.landscape", "Landscape: A4 → A5 booklet (recommended)"),
-          t("bookletImposition.tooltip.orientation.portrait", "Portrait: A4 → A6 booklet (compact)")
+          t("bookletImposition.tooltip.advanced.bullet1", "Right-to-Left Binding: For Arabic, Hebrew, or RTL languages"),
+          t("bookletImposition.tooltip.advanced.bullet2", "Borders: Shows cut lines for trimming"),
+          t("bookletImposition.tooltip.advanced.bullet3", "Gutter Margin: Adds space for binding/stapling"),
+          t("bookletImposition.tooltip.advanced.bullet4", "Short-edge Flip: Only for automatic duplex printers")
         ]
       }
     ]

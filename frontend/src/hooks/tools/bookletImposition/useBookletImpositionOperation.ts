@@ -7,10 +7,14 @@ import { BookletImpositionParameters, defaultParameters } from './useBookletImpo
 export const buildBookletImpositionFormData = (parameters: BookletImpositionParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
-  formData.append("bookletType", parameters.bookletType);
   formData.append("pagesPerSheet", parameters.pagesPerSheet.toString());
   formData.append("addBorder", parameters.addBorder.toString());
-  formData.append("pageOrientation", parameters.pageOrientation);
+  formData.append("spineLocation", parameters.spineLocation);
+  formData.append("addGutter", parameters.addGutter.toString());
+  formData.append("gutterSize", parameters.gutterSize.toString());
+  formData.append("doubleSided", parameters.doubleSided.toString());
+  formData.append("duplexPass", parameters.duplexPass);
+  formData.append("flipOnShortEdge", parameters.flipOnShortEdge.toString());
   return formData;
 };
 

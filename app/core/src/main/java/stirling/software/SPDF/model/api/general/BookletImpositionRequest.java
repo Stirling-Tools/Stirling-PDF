@@ -12,29 +12,43 @@ import stirling.software.common.model.api.PDFFile;
 public class BookletImpositionRequest extends PDFFile {
 
     @Schema(
-            description = "The booklet type to create.",
-            type = "string",
-            defaultValue = "BOOKLET",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            allowableValues = {"BOOKLET", "SIDE_STITCH_BOOKLET"})
-    private String bookletType = "BOOKLET";
-
-    @Schema(
-            description = "The number of pages to fit onto a single sheet in the output PDF.",
+            description =
+                    "The number of pages per side for booklet printing (always 2 for proper booklet).",
             type = "number",
             defaultValue = "2",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            allowableValues = {"2", "4"})
+            allowableValues = {"2"})
     private int pagesPerSheet = 2;
 
     @Schema(description = "Boolean for if you wish to add border around the pages")
     private Boolean addBorder = false;
 
     @Schema(
-            description = "The page orientation for the output booklet sheets.",
+            description = "The spine location for the booklet.",
             type = "string",
-            defaultValue = "LANDSCAPE",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            allowableValues = {"LANDSCAPE", "PORTRAIT"})
-    private String pageOrientation = "LANDSCAPE";
+            defaultValue = "LEFT",
+            allowableValues = {"LEFT", "RIGHT"})
+    private String spineLocation = "LEFT";
+
+    @Schema(description = "Add gutter margin (inner margin for binding)")
+    private Boolean addGutter = false;
+
+    @Schema(
+            description = "Gutter margin size in points (used when addGutter is true)",
+            type = "number",
+            defaultValue = "12")
+    private float gutterSize = 12f;
+
+    @Schema(description = "Generate both front and back sides (double-sided printing)")
+    private Boolean doubleSided = true;
+
+    @Schema(
+            description = "For manual duplex: which pass to generate",
+            type = "string",
+            defaultValue = "BOTH",
+            allowableValues = {"BOTH", "FIRST", "SECOND"})
+    private String duplexPass = "BOTH";
+
+    @Schema(description = "Flip back sides for short-edge duplex printing (default is long-edge)")
+    private Boolean flipOnShortEdge = false;
 }

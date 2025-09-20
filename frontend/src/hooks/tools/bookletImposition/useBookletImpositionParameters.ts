@@ -2,17 +2,25 @@ import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
 export interface BookletImpositionParameters extends BaseParameters {
-  bookletType: 'BOOKLET' | 'SIDE_STITCH_BOOKLET';
-  pagesPerSheet: 2 | 4;
+  pagesPerSheet: 2;
   addBorder: boolean;
-  pageOrientation: 'LANDSCAPE' | 'PORTRAIT';
+  spineLocation: 'LEFT' | 'RIGHT';
+  addGutter: boolean;
+  gutterSize: number;
+  doubleSided: boolean;
+  duplexPass: 'BOTH' | 'FIRST' | 'SECOND';
+  flipOnShortEdge: boolean;
 }
 
 export const defaultParameters: BookletImpositionParameters = {
-  bookletType: 'BOOKLET',
   pagesPerSheet: 2,
   addBorder: false,
-  pageOrientation: 'LANDSCAPE',
+  spineLocation: 'LEFT',
+  addGutter: false,
+  gutterSize: 12,
+  doubleSided: true,
+  duplexPass: 'BOTH',
+  flipOnShortEdge: false,
 };
 
 export type BookletImpositionParametersHook = BaseParametersHook<BookletImpositionParameters>;
@@ -22,7 +30,7 @@ export const useBookletImpositionParameters = (): BookletImpositionParametersHoo
     defaultParameters,
     endpointName: 'booklet-imposition',
     validateFn: (params) => {
-      return params.pagesPerSheet === 2 || params.pagesPerSheet === 4;
+      return params.pagesPerSheet === 2;
     },
   });
 };
