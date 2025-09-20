@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
@@ -40,7 +39,6 @@ public class CbzUtils {
 
         validateCbzFile(cbzFile);
 
-        // Stream images directly to PDF to avoid building a large in-memory list
         try (TempFile tempFile = new TempFile(tempFileManager, ".cbz")) {
             cbzFile.transferTo(tempFile.getFile());
 
@@ -74,10 +72,8 @@ public class CbzUtils {
                     }
                 }
 
-                Collections.sort(
-                        imageEntries,
-                        Comparator.comparing(
-                                ImageEntryData::getName, new NaturalOrderComparator()));
+                imageEntries.sort(Comparator.comparing(
+                    ImageEntryData::name, new NaturalOrderComparator()));
 
                 if (imageEntries.isEmpty()) {
                     throw new IllegalArgumentException("No valid images found in the CBZ file");
@@ -87,7 +83,7 @@ public class CbzUtils {
                     try {
                         PDImageXObject pdImage =
                                 PDImageXObject.createFromByteArray(
-                                        document, imageEntry.getData(), imageEntry.getName());
+                                        document, imageEntry.data(), imageEntry.name());
                         PDPage page =
                                 new PDPage(
                                         new PDRectangle(pdImage.getWidth(), pdImage.getHeight()));
@@ -99,7 +95,7 @@ public class CbzUtils {
                     } catch (IOException e) {
                         log.warn(
                                 "Error processing image {}: {}",
-                                imageEntry.getName(),
+                                imageEntry.name(),
                                 e.getMessage());
                     }
                 }
@@ -115,7 +111,7 @@ public class CbzUtils {
         }
     }
 
-    private static void validateCbzFile(MultipartFile file) throws IOException {
+    private static void validateCbzFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File cannot be null or empty");
         }
@@ -131,8 +127,6 @@ public class CbzUtils {
         }
     }
 
-    // Removed extractImageEntries and createPdfFromImages in favor of single-pass approach
-
     public static boolean isCbzFile(MultipartFile file) {
         String filename = file.getOriginalFilename();
         if (filename == null) {
@@ -147,23 +141,7 @@ public class CbzUtils {
         return IMAGE_PATTERN.matcher(filename).matches();
     }
 
-    private static class ImageEntryData {
-        private final String name;
-        private final byte[] data;
-
-        public ImageEntryData(String name, byte[] data) {
-            this.name = name;
-            this.data = data;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public byte[] getData() {
-            return data;
-        }
-    }
+    private record ImageEntryData(String name, byte[] data) { }
 
     private static class NaturalOrderComparator implements Comparator<String> {
         @Override
@@ -196,7 +174,7 @@ public class CbzUtils {
             return Integer.compare(len1, len2);
         }
 
-        private String getChunk(String s, int length, int marker) {
+        private static String getChunk(String s, int length, int marker) {
             StringBuilder chunk = new StringBuilder();
             char c = s.charAt(marker);
             chunk.append(c);
@@ -216,7 +194,7 @@ public class CbzUtils {
             return chunk.toString();
         }
 
-        private boolean isDigit(char ch) {
+        private static boolean isDigit(char ch) {
             return ch >= '0' && ch <= '9';
         }
     }
