@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
@@ -32,10 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.FileInfo;
+import stirling.software.proprietary.security.database.H2SQLCondition;
+import stirling.software.proprietary.security.database.migration.H2DataOnly_0331_to_0340;
+import stirling.software.proprietary.security.database.migration.MigrationStep;
+import stirling.software.proprietary.security.database.repository.DatabaseVersionRepository;
+import stirling.software.proprietary.security.model.DatabaseVersion;
 import stirling.software.proprietary.security.model.exception.BackupNotFoundException;
 
 @Slf4j
 @Service
+@Conditional(H2SQLCondition.class)
 public class DatabaseService implements DatabaseServiceInterface {
 
     public static final String BACKUP_PREFIX = "backup_";
@@ -44,17 +52,23 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
+    private final DatabaseVersionRepository databaseVersion;
+    private String appVersion;
 
     public DatabaseService(
-            ApplicationProperties.Datasource datasourceProps, DataSource dataSource) {
+            ApplicationProperties.Datasource datasourceProps,
+            DataSource dataSource,
+            DatabaseVersionRepository databaseVersion,
+            @Qualifier("appVersion") String appVersion) {
         this.BACKUP_DIR = Paths.get(InstallationPathConfig.getBackupPath()).normalize();
         this.datasourceProps = datasourceProps;
         this.dataSource = dataSource;
+        this.databaseVersion = databaseVersion;
+        this.appVersion = appVersion;
         moveBackupFiles();
     }
 
     /** Move all backup files from db/backup to backup/db */
-    @Deprecated(since = "2.0.0", forRemoval = true)
     private void moveBackupFiles() {
         Path sourceDir =
                 Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
@@ -169,6 +183,7 @@ public class DatabaseService implements DatabaseServiceInterface {
     }
 
     /** Imports a database backup from the specified file. */
+    @Override
     public boolean importDatabaseFromUI(String fileName) {
         try {
             importDatabaseFromUI(getBackupFilePath(fileName));
@@ -184,6 +199,7 @@ public class DatabaseService implements DatabaseServiceInterface {
     }
 
     /** Imports a database backup from the specified path. */
+    @Override
     public boolean importDatabaseFromUI(Path tempTemplatePath) throws IOException {
         executeDatabaseScript(tempTemplatePath);
         LocalDateTime dateNow = LocalDateTime.now();
@@ -417,5 +433,30 @@ public class DatabaseService implements DatabaseServiceInterface {
                 && !fileName.contains("<")
                 && !fileName.contains(">")
                 && !fileName.contains("|");
+    }
+
+    @Override
+    public void migrateDatabase() {
+        if (!isH2Database()) {
+            log.info("Not an H2 database, no migration necessary.");
+            return;
+        }
+        DatabaseVersion v = databaseVersion.findLastByOrderByIdDesc().orElse(null);
+        if (v != null) {
+            if (v.getVersion() == null) {
+                try {
+                    MigrationStep h2Migration_0331_0340 =
+                            new H2DataOnly_0331_to_0340(this, dataSource);
+                    h2Migration_0331_0340.run();
+                } catch (Exception e) {
+                    log.error("Database migration failed: {}", e.getMessage(), e);
+                    return;
+                }
+            }
+        } else {
+            v = new DatabaseVersion();
+        }
+        v.setVersion(appVersion);
+        databaseVersion.save(v);
     }
 }
