@@ -11,7 +11,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class EmlToPdf {
 
-    public static String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request)
+    public String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request)
             throws IOException {
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
@@ -20,14 +20,14 @@ public class EmlToPdf {
         return EmlProcessingUtils.generateEnhancedEmailHtml(emailContent, request, null);
     }
 
-    public static byte[] convertEmlToPdf(
-            String weasyprintPath,
-            EmlToPdfRequest request,
-            byte[] emlBytes,
-            String fileName,
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            TempFileManager tempFileManager,
-            CustomHtmlSanitizer customHtmlSanitizer)
+    public byte[] convertEmlToPdf(
+        String weasyprintPath,
+        EmlToPdfRequest request,
+        byte[] emlBytes,
+        String fileName,
+        CustomPDFDocumentFactory pdfDocumentFactory,
+        TempFileManager tempFileManager,
+        CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException, InterruptedException {
 
         EmlProcessingUtils.validateEmlInput(emlBytes);
@@ -63,20 +63,20 @@ public class EmlToPdf {
         }
     }
 
-    private static boolean shouldAttachFiles(
-            EmlParser.EmailContent emailContent, EmlToPdfRequest request) {
+    private boolean shouldAttachFiles(
+        EmlParser.EmailContent emailContent, EmlToPdfRequest request) {
         return emailContent != null
                 && request != null
                 && request.isIncludeAttachments()
                 && !emailContent.getAttachments().isEmpty();
     }
 
-    private static byte[] convertHtmlToPdf(
-            String weasyprintPath,
-            EmlToPdfRequest request,
-            String htmlContent,
-            TempFileManager tempFileManager,
-            CustomHtmlSanitizer customHtmlSanitizer)
+    private byte[] convertHtmlToPdf(
+        String weasyprintPath,
+        EmlToPdfRequest request,
+        String htmlContent,
+        TempFileManager tempFileManager,
+        CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException, InterruptedException {
 
         var htmlRequest = EmlProcessingUtils.createHtmlRequest(request);

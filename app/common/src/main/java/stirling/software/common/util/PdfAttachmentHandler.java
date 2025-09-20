@@ -50,16 +50,16 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 public class PdfAttachmentHandler {
     // Note: This class is designed for EML attachments, not general PDF attachments.
 
-    private static final String ATTACHMENT_MARKER = "@";
-    private static final float ATTACHMENT_ICON_WIDTH = 12f;
-    private static final float ATTACHMENT_ICON_HEIGHT = 14f;
-    private static final float ANNOTATION_X_OFFSET = 2f;
-    private static final float ANNOTATION_Y_OFFSET = 10f;
+    private final String ATTACHMENT_MARKER = "@";
+    private final float ATTACHMENT_ICON_WIDTH = 12f;
+    private final float ATTACHMENT_ICON_HEIGHT = 14f;
+    private final float ANNOTATION_X_OFFSET = 2f;
+    private final float ANNOTATION_Y_OFFSET = 10f;
 
-    public static byte[] attachFilesToPdf(
-            byte[] pdfBytes,
-            List<EmlParser.EmailAttachment> attachments,
-            CustomPDFDocumentFactory pdfDocumentFactory)
+    public byte[] attachFilesToPdf(
+        byte[] pdfBytes,
+        List<EmlParser.EmailAttachment> attachments,
+        CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
 
         if (attachments == null || attachments.isEmpty()) {
@@ -101,7 +101,7 @@ public class PdfAttachmentHandler {
         }
     }
 
-    private static MultipartFile createMultipartFile(EmlParser.EmailAttachment attachment) {
+    private MultipartFile createMultipartFile(EmlParser.EmailAttachment attachment) {
         return new MultipartFile() {
             @Override
             public @NotNull String getName() {
@@ -155,7 +155,7 @@ public class PdfAttachmentHandler {
         };
     }
 
-    private static String ensureUniqueFilename(String filename, Set<String> existingNames) {
+    private String ensureUniqueFilename(String filename, Set<String> existingNames) {
         if (!existingNames.contains(filename)) {
             return filename;
         }
@@ -180,8 +180,8 @@ public class PdfAttachmentHandler {
         return uniqueName;
     }
 
-    private static @NotNull PDRectangle calculateAnnotationRectangle(
-            PDPage page, float x, float y) {
+    private @NotNull PDRectangle calculateAnnotationRectangle(
+        PDPage page, float x, float y) {
         PDRectangle cropBox = page.getCropBox();
 
         // ISO 32000-1:2008 Section 8.3: PDF coordinate system transforms
@@ -242,8 +242,8 @@ public class PdfAttachmentHandler {
         return rect;
     }
 
-    public static String processInlineImages(
-            String htmlContent, EmlParser.EmailContent emailContent) {
+    public String processInlineImages(
+        String htmlContent, EmlParser.EmailContent emailContent) {
         if (htmlContent == null || emailContent == null) return htmlContent;
 
         Map<String, EmlParser.EmailAttachment> contentIdMap = new HashMap<>();
@@ -288,7 +288,7 @@ public class PdfAttachmentHandler {
         return result.toString();
     }
 
-    public static String formatEmailDate(Date date) {
+    public String formatEmailDate(Date date) {
         if (date == null) return "";
 
         SimpleDateFormat formatter =
@@ -297,8 +297,256 @@ public class PdfAttachmentHandler {
         return formatter.format(date);
     }
 
+    private Map<Integer, String> addAttachmentsToDocumentWithMapping(
+        PDDocument document,
+        List<MultipartFile> attachments,
+        List<EmlParser.EmailAttachment> originalAttachments)
+            throws IOException {
+
+        PDDocumentCatalog catalog = document.getDocumentCatalog();
+
+        if (catalog == null) {
+            throw new IOException("PDF document catalog is not accessible");
+        }
+
+        PDDocumentNameDictionary documentNames = catalog.getNames();
+        if (documentNames == null) {
+            documentNames = new PDDocumentNameDictionary(catalog);
+            catalog.setNames(documentNames);
+        }
+
+        PDEmbeddedFilesNameTreeNode embeddedFilesTree = documentNames.getEmbeddedFiles();
+        if (embeddedFilesTree == null) {
+            embeddedFilesTree = new PDEmbeddedFilesNameTreeNode();
+            documentNames.setEmbeddedFiles(embeddedFilesTree);
+        }
+
+        Map<String, PDComplexFileSpecification> existingNames = embeddedFilesTree.getNames();
+        if (existingNames == null) {
+            existingNames = new HashMap<>();
+        }
+
+        Map<Integer, String> indexToFilenameMap = new HashMap<>();
+
+        for (int i = 0; i < attachments.size(); i++) {
+            MultipartFile attachment = attachments.get(i);
+            String filename = attachment.getOriginalFilename();
+            if (filename == null || filename.trim().isEmpty()) {
+                filename = "attachment_" + i;
+            }
+
+            String normalizedFilename =
+                    isAscii(filename)
+                            ? filename
+                            : java.text.Normalizer.normalize(
+                                    filename, java.text.Normalizer.Form.NFC);
+            String uniqueFilename =
+                    ensureUniqueFilename(normalizedFilename, existingNames.keySet());
+
+            indexToFilenameMap.put(i, uniqueFilename);
+
+            PDEmbeddedFile embeddedFile = new PDEmbeddedFile(document, attachment.getInputStream());
+            embeddedFile.setSize((int) attachment.getSize());
+
+            GregorianCalendar currentTime = new GregorianCalendar();
+            embeddedFile.setCreationDate(currentTime);
+            embeddedFile.setModDate(currentTime);
+
+            String contentType = attachment.getContentType();
+            if (contentType != null && !contentType.trim().isEmpty()) {
+                embeddedFile.setSubtype(contentType);
+            }
+
+            PDComplexFileSpecification fileSpecification = new PDComplexFileSpecification();
+            fileSpecification.setFile(uniqueFilename);
+            fileSpecification.setFileUnicode(uniqueFilename);
+            fileSpecification.setEmbeddedFile(embeddedFile);
+            fileSpecification.setEmbeddedFileUnicode(embeddedFile);
+
+            existingNames.put(uniqueFilename, fileSpecification);
+        }
+
+        embeddedFilesTree.setNames(existingNames);
+        documentNames.setEmbeddedFiles(embeddedFilesTree);
+        catalog.setNames(documentNames);
+
+        return indexToFilenameMap;
+    }
+
+    private void addAttachmentAnnotationsToDocumentWithMapping(
+        PDDocument document,
+        List<EmlParser.EmailAttachment> attachments,
+        Map<Integer, String> indexToFilenameMap)
+            throws IOException {
+
+        if (document.getNumberOfPages() == 0 || attachments == null || attachments.isEmpty()) {
+            return;
+        }
+
+        AttachmentMarkerPositionFinder finder = new AttachmentMarkerPositionFinder();
+        finder.setSortByPosition(false); // Keep document order to maintain pairing
+        finder.getText(document);
+        List<MarkerPosition> markerPositions = finder.getPositions();
+
+        int annotationsToAdd = Math.min(markerPositions.size(), attachments.size());
+
+        for (int i = 0; i < annotationsToAdd; i++) {
+            MarkerPosition position = markerPositions.get(i);
+
+            String filenameNearMarker = position.getFilename();
+
+            EmlParser.EmailAttachment matchingAttachment =
+                    findAttachmentByFilename(attachments, filenameNearMarker);
+
+            if (matchingAttachment != null) {
+                String embeddedFilename =
+                        findEmbeddedFilenameForAttachment(matchingAttachment, indexToFilenameMap);
+
+                if (embeddedFilename != null) {
+                    PDPage page = document.getPage(position.getPageIndex());
+                    addAttachmentAnnotationToPageWithMapping(
+                            document,
+                            page,
+                            matchingAttachment,
+                            embeddedFilename,
+                            position.getX(),
+                            position.getY(),
+                            i);
+                } else {
+                    // No embedded filename found for attachment
+                }
+            } else {
+                // No matching attachment found for filename near marker
+            }
+        }
+    }
+
+    private EmlParser.EmailAttachment findAttachmentByFilename(
+        List<EmlParser.EmailAttachment> attachments, String targetFilename) {
+        if (targetFilename == null || targetFilename.trim().isEmpty()) {
+            return null;
+        }
+
+        String normalizedTarget = normalizeFilename(targetFilename);
+
+        // First try exact match
+        for (EmlParser.EmailAttachment attachment : attachments) {
+            if (attachment.getFilename() != null) {
+                String normalizedAttachment = normalizeFilename(attachment.getFilename());
+                if (normalizedAttachment.equals(normalizedTarget)) {
+                    return attachment;
+                }
+            }
+        }
+
+        // Then try contains match
+        for (EmlParser.EmailAttachment attachment : attachments) {
+            if (attachment.getFilename() != null) {
+                String normalizedAttachment = normalizeFilename(attachment.getFilename());
+                if (normalizedAttachment.contains(normalizedTarget)
+                        || normalizedTarget.contains(normalizedAttachment)) {
+                    return attachment;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private String findEmbeddedFilenameForAttachment(
+        EmlParser.EmailAttachment attachment, Map<Integer, String> indexToFilenameMap) {
+
+        String attachmentFilename = attachment.getFilename();
+        if (attachmentFilename == null) {
+            return null;
+        }
+
+        for (Map.Entry<Integer, String> entry : indexToFilenameMap.entrySet()) {
+            String embeddedFilename = entry.getValue();
+            if (embeddedFilename != null
+                    && (embeddedFilename.equals(attachmentFilename)
+                            || embeddedFilename.contains(attachmentFilename)
+                            || attachmentFilename.contains(embeddedFilename))) {
+                return embeddedFilename;
+            }
+        }
+
+        return null;
+    }
+
+    private String normalizeFilename(String filename) {
+        if (filename == null) return "";
+        return filename.toLowerCase()
+                .trim()
+                .replaceAll("\\s+", " ")
+                .replaceAll("[^a-zA-Z0-9._-]", "");
+    }
+
+    private void addAttachmentAnnotationToPageWithMapping(
+        PDDocument document,
+        PDPage page,
+        EmlParser.EmailAttachment attachment,
+        String embeddedFilename,
+        float x,
+        float y,
+        int attachmentIndex)
+            throws IOException {
+
+        PDAnnotationFileAttachment fileAnnotation = new PDAnnotationFileAttachment();
+
+        PDRectangle rect = calculateAnnotationRectangle(page, x, y);
+        fileAnnotation.setRectangle(rect);
+
+        fileAnnotation.setPrinted(false);
+        fileAnnotation.setHidden(false);
+        fileAnnotation.setNoView(false);
+        fileAnnotation.setNoZoom(true);
+        fileAnnotation.setNoRotate(true);
+
+        try {
+            PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+            PDAppearanceStream normalAppearance = new PDAppearanceStream(document);
+            normalAppearance.setBBox(new PDRectangle(0, 0, rect.getWidth(), rect.getHeight()));
+            appearance.setNormalAppearance(normalAppearance);
+            fileAnnotation.setAppearance(appearance);
+        } catch (RuntimeException e) {
+            fileAnnotation.setAppearance(null);
+        }
+
+        PDEmbeddedFilesNameTreeNode efTree =
+                document.getDocumentCatalog().getNames().getEmbeddedFiles();
+        if (efTree != null) {
+            Map<String, PDComplexFileSpecification> efMap = efTree.getNames();
+            if (efMap != null) {
+                PDComplexFileSpecification fileSpec = efMap.get(embeddedFilename);
+                if (fileSpec != null) {
+                    fileAnnotation.setFile(fileSpec);
+                } else {
+                    // Could not find embedded file
+                }
+            }
+        }
+
+        fileAnnotation.setContents(
+                "Attachment " + (attachmentIndex + 1) + ": " + attachment.getFilename());
+        fileAnnotation.setAnnotationName(
+                "EmbeddedFile_" + attachmentIndex + "_" + embeddedFilename);
+
+        page.getAnnotations().add(fileAnnotation);
+    }
+
+    private boolean isAscii(String str) {
+        if (str == null) return true;
+        for (int i = 0; i < str.length(); i++) {
+            if (str.charAt(i) > 127) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Data
-    public static class MarkerPosition {
+    public class MarkerPosition {
         private int pageIndex;
         private float x;
         private float y;
@@ -314,7 +562,7 @@ public class PdfAttachmentHandler {
         }
     }
 
-    public static class AttachmentMarkerPositionFinder extends PDFTextStripper {
+    public class AttachmentMarkerPositionFinder extends PDFTextStripper {
         @Getter private final List<MarkerPosition> positions = new ArrayList<>();
         private int currentPageIndex;
         protected boolean sortByPosition;
@@ -429,253 +677,5 @@ public class PdfAttachmentHandler {
 
             return null;
         }
-    }
-
-    private static Map<Integer, String> addAttachmentsToDocumentWithMapping(
-            PDDocument document,
-            List<MultipartFile> attachments,
-            List<EmlParser.EmailAttachment> originalAttachments)
-            throws IOException {
-
-        PDDocumentCatalog catalog = document.getDocumentCatalog();
-
-        if (catalog == null) {
-            throw new IOException("PDF document catalog is not accessible");
-        }
-
-        PDDocumentNameDictionary documentNames = catalog.getNames();
-        if (documentNames == null) {
-            documentNames = new PDDocumentNameDictionary(catalog);
-            catalog.setNames(documentNames);
-        }
-
-        PDEmbeddedFilesNameTreeNode embeddedFilesTree = documentNames.getEmbeddedFiles();
-        if (embeddedFilesTree == null) {
-            embeddedFilesTree = new PDEmbeddedFilesNameTreeNode();
-            documentNames.setEmbeddedFiles(embeddedFilesTree);
-        }
-
-        Map<String, PDComplexFileSpecification> existingNames = embeddedFilesTree.getNames();
-        if (existingNames == null) {
-            existingNames = new HashMap<>();
-        }
-
-        Map<Integer, String> indexToFilenameMap = new HashMap<>();
-
-        for (int i = 0; i < attachments.size(); i++) {
-            MultipartFile attachment = attachments.get(i);
-            String filename = attachment.getOriginalFilename();
-            if (filename == null || filename.trim().isEmpty()) {
-                filename = "attachment_" + i;
-            }
-
-            String normalizedFilename =
-                    isAscii(filename)
-                            ? filename
-                            : java.text.Normalizer.normalize(
-                                    filename, java.text.Normalizer.Form.NFC);
-            String uniqueFilename =
-                    ensureUniqueFilename(normalizedFilename, existingNames.keySet());
-
-            indexToFilenameMap.put(i, uniqueFilename);
-
-            PDEmbeddedFile embeddedFile = new PDEmbeddedFile(document, attachment.getInputStream());
-            embeddedFile.setSize((int) attachment.getSize());
-
-            GregorianCalendar currentTime = new GregorianCalendar();
-            embeddedFile.setCreationDate(currentTime);
-            embeddedFile.setModDate(currentTime);
-
-            String contentType = attachment.getContentType();
-            if (contentType != null && !contentType.trim().isEmpty()) {
-                embeddedFile.setSubtype(contentType);
-            }
-
-            PDComplexFileSpecification fileSpecification = new PDComplexFileSpecification();
-            fileSpecification.setFile(uniqueFilename);
-            fileSpecification.setFileUnicode(uniqueFilename);
-            fileSpecification.setEmbeddedFile(embeddedFile);
-            fileSpecification.setEmbeddedFileUnicode(embeddedFile);
-
-            existingNames.put(uniqueFilename, fileSpecification);
-        }
-
-        embeddedFilesTree.setNames(existingNames);
-        documentNames.setEmbeddedFiles(embeddedFilesTree);
-        catalog.setNames(documentNames);
-
-        return indexToFilenameMap;
-    }
-
-    private static void addAttachmentAnnotationsToDocumentWithMapping(
-            PDDocument document,
-            List<EmlParser.EmailAttachment> attachments,
-            Map<Integer, String> indexToFilenameMap)
-            throws IOException {
-
-        if (document.getNumberOfPages() == 0 || attachments == null || attachments.isEmpty()) {
-            return;
-        }
-
-        AttachmentMarkerPositionFinder finder = new AttachmentMarkerPositionFinder();
-        finder.setSortByPosition(false); // Keep document order to maintain pairing
-        finder.getText(document);
-        List<MarkerPosition> markerPositions = finder.getPositions();
-
-        int annotationsToAdd = Math.min(markerPositions.size(), attachments.size());
-
-        for (int i = 0; i < annotationsToAdd; i++) {
-            MarkerPosition position = markerPositions.get(i);
-
-            String filenameNearMarker = position.getFilename();
-
-            EmlParser.EmailAttachment matchingAttachment =
-                    findAttachmentByFilename(attachments, filenameNearMarker);
-
-            if (matchingAttachment != null) {
-                String embeddedFilename =
-                        findEmbeddedFilenameForAttachment(matchingAttachment, indexToFilenameMap);
-
-                if (embeddedFilename != null) {
-                    PDPage page = document.getPage(position.getPageIndex());
-                    addAttachmentAnnotationToPageWithMapping(
-                            document,
-                            page,
-                            matchingAttachment,
-                            embeddedFilename,
-                            position.getX(),
-                            position.getY(),
-                            i);
-                } else {
-                    // No embedded filename found for attachment
-                }
-            } else {
-                // No matching attachment found for filename near marker
-            }
-        }
-    }
-
-    private static EmlParser.EmailAttachment findAttachmentByFilename(
-            List<EmlParser.EmailAttachment> attachments, String targetFilename) {
-        if (targetFilename == null || targetFilename.trim().isEmpty()) {
-            return null;
-        }
-
-        String normalizedTarget = normalizeFilename(targetFilename);
-
-        // First try exact match
-        for (EmlParser.EmailAttachment attachment : attachments) {
-            if (attachment.getFilename() != null) {
-                String normalizedAttachment = normalizeFilename(attachment.getFilename());
-                if (normalizedAttachment.equals(normalizedTarget)) {
-                    return attachment;
-                }
-            }
-        }
-
-        // Then try contains match
-        for (EmlParser.EmailAttachment attachment : attachments) {
-            if (attachment.getFilename() != null) {
-                String normalizedAttachment = normalizeFilename(attachment.getFilename());
-                if (normalizedAttachment.contains(normalizedTarget)
-                        || normalizedTarget.contains(normalizedAttachment)) {
-                    return attachment;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private static String findEmbeddedFilenameForAttachment(
-            EmlParser.EmailAttachment attachment, Map<Integer, String> indexToFilenameMap) {
-
-        String attachmentFilename = attachment.getFilename();
-        if (attachmentFilename == null) {
-            return null;
-        }
-
-        for (Map.Entry<Integer, String> entry : indexToFilenameMap.entrySet()) {
-            String embeddedFilename = entry.getValue();
-            if (embeddedFilename != null
-                    && (embeddedFilename.equals(attachmentFilename)
-                            || embeddedFilename.contains(attachmentFilename)
-                            || attachmentFilename.contains(embeddedFilename))) {
-                return embeddedFilename;
-            }
-        }
-
-        return null;
-    }
-
-    private static String normalizeFilename(String filename) {
-        if (filename == null) return "";
-        return filename.toLowerCase()
-                .trim()
-                .replaceAll("\\s+", " ")
-                .replaceAll("[^a-zA-Z0-9._-]", "");
-    }
-
-    private static void addAttachmentAnnotationToPageWithMapping(
-            PDDocument document,
-            PDPage page,
-            EmlParser.EmailAttachment attachment,
-            String embeddedFilename,
-            float x,
-            float y,
-            int attachmentIndex)
-            throws IOException {
-
-        PDAnnotationFileAttachment fileAnnotation = new PDAnnotationFileAttachment();
-
-        PDRectangle rect = calculateAnnotationRectangle(page, x, y);
-        fileAnnotation.setRectangle(rect);
-
-        fileAnnotation.setPrinted(false);
-        fileAnnotation.setHidden(false);
-        fileAnnotation.setNoView(false);
-        fileAnnotation.setNoZoom(true);
-        fileAnnotation.setNoRotate(true);
-
-        try {
-            PDAppearanceDictionary appearance = new PDAppearanceDictionary();
-            PDAppearanceStream normalAppearance = new PDAppearanceStream(document);
-            normalAppearance.setBBox(new PDRectangle(0, 0, rect.getWidth(), rect.getHeight()));
-            appearance.setNormalAppearance(normalAppearance);
-            fileAnnotation.setAppearance(appearance);
-        } catch (RuntimeException e) {
-            fileAnnotation.setAppearance(null);
-        }
-
-        PDEmbeddedFilesNameTreeNode efTree =
-                document.getDocumentCatalog().getNames().getEmbeddedFiles();
-        if (efTree != null) {
-            Map<String, PDComplexFileSpecification> efMap = efTree.getNames();
-            if (efMap != null) {
-                PDComplexFileSpecification fileSpec = efMap.get(embeddedFilename);
-                if (fileSpec != null) {
-                    fileAnnotation.setFile(fileSpec);
-                } else {
-                    // Could not find embedded file
-                }
-            }
-        }
-
-        fileAnnotation.setContents(
-                "Attachment " + (attachmentIndex + 1) + ": " + attachment.getFilename());
-        fileAnnotation.setAnnotationName(
-                "EmbeddedFile_" + attachmentIndex + "_" + embeddedFilename);
-
-        page.getAnnotations().add(fileAnnotation);
-    }
-
-    private static boolean isAscii(String str) {
-        if (str == null) return true;
-        for (int i = 0; i < str.length(); i++) {
-            if (str.charAt(i) > 127) {
-                return false;
-            }
-        }
-        return true;
     }
 }

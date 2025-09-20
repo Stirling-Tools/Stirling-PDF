@@ -22,30 +22,27 @@ import stirling.software.common.model.api.converters.EmlToPdfRequest;
 @UtilityClass
 public class EmlParser {
 
-    private static volatile Boolean jakartaMailAvailable = null;
-    private static volatile Method mimeUtilityDecodeTextMethod = null;
-    private static volatile boolean mimeUtilityChecked = false;
-
-    private static final Pattern MIME_ENCODED_PATTERN =
+    private final Pattern MIME_ENCODED_PATTERN =
             Pattern.compile("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
+    private final String DISPOSITION_ATTACHMENT = "attachment";
+    private final String TEXT_PLAIN = MediaType.TEXT_PLAIN_VALUE;
+    private final String TEXT_HTML = MediaType.TEXT_HTML_VALUE;
+    private final String MULTIPART_PREFIX = "multipart/";
+    private final String HEADER_CONTENT_TYPE = "content-type:";
+    private final String HEADER_CONTENT_DISPOSITION = "content-disposition:";
+    private final String HEADER_CONTENT_TRANSFER_ENCODING = "content-transfer-encoding:";
+    private final String HEADER_CONTENT_ID = "Content-ID";
+    private final String HEADER_SUBJECT = "Subject:";
+    private final String HEADER_FROM = "From:";
+    private final String HEADER_TO = "To:";
+    private final String HEADER_CC = "Cc:";
+    private final String HEADER_BCC = "Bcc:";
+    private final String HEADER_DATE = "Date:";
+    private volatile Boolean jakartaMailAvailable = null;
+    private volatile Method mimeUtilityDecodeTextMethod = null;
+    private volatile boolean mimeUtilityChecked = false;
 
-    private static final String DISPOSITION_ATTACHMENT = "attachment";
-    private static final String TEXT_PLAIN = MediaType.TEXT_PLAIN_VALUE;
-    private static final String TEXT_HTML = MediaType.TEXT_HTML_VALUE;
-    private static final String MULTIPART_PREFIX = "multipart/";
-
-    private static final String HEADER_CONTENT_TYPE = "content-type:";
-    private static final String HEADER_CONTENT_DISPOSITION = "content-disposition:";
-    private static final String HEADER_CONTENT_TRANSFER_ENCODING = "content-transfer-encoding:";
-    private static final String HEADER_CONTENT_ID = "Content-ID";
-    private static final String HEADER_SUBJECT = "Subject:";
-    private static final String HEADER_FROM = "From:";
-    private static final String HEADER_TO = "To:";
-    private static final String HEADER_CC = "Cc:";
-    private static final String HEADER_BCC = "Bcc:";
-    private static final String HEADER_DATE = "Date:";
-
-    private static synchronized boolean isJakartaMailAvailable() {
+    private synchronized boolean isJakartaMailAvailable() {
         if (jakartaMailAvailable == null) {
             try {
                 Class.forName("jakarta.mail.internet.MimeMessage");
@@ -63,8 +60,8 @@ public class EmlParser {
         return jakartaMailAvailable;
     }
 
-    public static EmailContent extractEmailContent(
-            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
+    public EmailContent extractEmailContent(
+        byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException {
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
@@ -75,8 +72,8 @@ public class EmlParser {
         }
     }
 
-    private static EmailContent extractEmailContentBasic(
-            byte[] emlBytes, CustomHtmlSanitizer customHtmlSanitizer) {
+    private EmailContent extractEmailContentBasic(
+        byte[] emlBytes, CustomHtmlSanitizer customHtmlSanitizer) {
         String emlContent = new String(emlBytes, StandardCharsets.UTF_8);
         EmailContent content = new EmailContent();
 
@@ -104,8 +101,8 @@ public class EmlParser {
         return content;
     }
 
-    private static EmailContent extractEmailContentAdvanced(
-            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
+    private EmailContent extractEmailContentAdvanced(
+        byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
         try {
             Class<?> sessionClass = Class.forName("jakarta.mail.Session");
             Class<?> mimeMessageClass = Class.forName("jakarta.mail.internet.MimeMessage");
@@ -127,8 +124,8 @@ public class EmlParser {
         }
     }
 
-    private static EmailContent extractFromMimeMessage(
-            Object message, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
+    private EmailContent extractFromMimeMessage(
+        Object message, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
         EmailContent content = new EmailContent();
 
         try {
@@ -164,8 +161,8 @@ public class EmlParser {
         return content;
     }
 
-    private static void extractRecipients(
-            Object message, Class<?> messageClass, EmailContent content) {
+    private void extractRecipients(
+        Object message, Class<?> messageClass, EmailContent content) {
         try {
             Method getRecipients =
                     messageClass.getMethod(
@@ -199,7 +196,7 @@ public class EmlParser {
         }
     }
 
-    private static String buildAddressString(Object[] addresses) {
+    private String buildAddressString(Object[] addresses) {
         if (addresses == null || addresses.length == 0) {
             return "";
         }
@@ -212,12 +209,12 @@ public class EmlParser {
         return builder.toString();
     }
 
-    private static void processMessageContent(
-            Object message,
-            Object messageContent,
-            EmailContent content,
-            EmlToPdfRequest request,
-            CustomHtmlSanitizer customHtmlSanitizer) {
+    private void processMessageContent(
+        Object message,
+        Object messageContent,
+        EmailContent content,
+        EmlToPdfRequest request,
+        CustomHtmlSanitizer customHtmlSanitizer) {
         try {
             if (messageContent instanceof String stringContent) {
                 Method getContentType = message.getClass().getMethod("getContentType");
@@ -239,12 +236,12 @@ public class EmlParser {
         }
     }
 
-    private static void processMultipart(
-            Object multipart,
-            EmailContent content,
-            EmlToPdfRequest request,
-            CustomHtmlSanitizer customHtmlSanitizer,
-            int depth) {
+    private void processMultipart(
+        Object multipart,
+        EmailContent content,
+        EmlToPdfRequest request,
+        CustomHtmlSanitizer customHtmlSanitizer,
+        int depth) {
 
         final int MAX_MULTIPART_DEPTH = 10;
         if (depth > MAX_MULTIPART_DEPTH) {
@@ -269,12 +266,12 @@ public class EmlParser {
         }
     }
 
-    private static void processPart(
-            Object part,
-            EmailContent content,
-            EmlToPdfRequest request,
-            CustomHtmlSanitizer customHtmlSanitizer,
-            int depth) {
+    private void processPart(
+        Object part,
+        EmailContent content,
+        EmlToPdfRequest request,
+        CustomHtmlSanitizer customHtmlSanitizer,
+        int depth) {
         try {
             Class<?> partClass = part.getClass();
 
@@ -329,14 +326,14 @@ public class EmlParser {
         }
     }
 
-    private static void processAttachment(
-            Object part,
-            EmailContent content,
-            EmlToPdfRequest request,
-            Method getHeader,
-            Method getContent,
-            String filename,
-            String contentType) {
+    private void processAttachment(
+        Object part,
+        EmailContent content,
+        EmlToPdfRequest request,
+        Method getHeader,
+        Method getContent,
+        String filename,
+        String contentType) {
 
         content.setAttachmentCount(content.getAttachmentCount() + 1);
 
@@ -368,8 +365,8 @@ public class EmlParser {
         }
     }
 
-    private static void extractAttachmentData(
-            Object part, EmailAttachment attachment, Method getContent, EmlToPdfRequest request) {
+    private void extractAttachmentData(
+        Object part, EmailAttachment attachment, Method getContent, EmlToPdfRequest request) {
         try {
             Object attachmentContent = getContent.invoke(part);
             byte[] attachmentData = null;
@@ -406,7 +403,7 @@ public class EmlParser {
         }
     }
 
-    private static String extractBasicHeader(String emlContent, String headerName) {
+    private String extractBasicHeader(String emlContent, String headerName) {
         try {
             String[] lines = emlContent.split("\r?\n");
             for (int i = 0; i < lines.length; i++) {
@@ -431,7 +428,7 @@ public class EmlParser {
         return "";
     }
 
-    private static String extractHtmlBody(String emlContent) {
+    private String extractHtmlBody(String emlContent) {
         try {
             String lowerContent = emlContent.toLowerCase();
             int htmlStart = lowerContent.indexOf(HEADER_CONTENT_TYPE + " " + TEXT_HTML);
@@ -450,7 +447,7 @@ public class EmlParser {
         }
     }
 
-    private static String extractTextBody(String emlContent) {
+    private String extractTextBody(String emlContent) {
         try {
             String lowerContent = emlContent.toLowerCase();
             int textStart = lowerContent.indexOf(HEADER_CONTENT_TYPE + " " + TEXT_PLAIN);
@@ -478,7 +475,7 @@ public class EmlParser {
         }
     }
 
-    private static int findPartEnd(String content, int start) {
+    private int findPartEnd(String content, int start) {
         String[] lines = content.substring(start).split("\r?\n");
         StringBuilder result = new StringBuilder();
 
@@ -490,7 +487,7 @@ public class EmlParser {
         return start + result.length();
     }
 
-    private static List<EmailAttachment> extractAttachmentsBasic(String emlContent) {
+    private List<EmailAttachment> extractAttachmentsBasic(String emlContent) {
         List<EmailAttachment> attachments = new ArrayList<>();
         try {
             String[] lines = emlContent.split("\r?\n");
@@ -538,13 +535,13 @@ public class EmlParser {
         return attachments;
     }
 
-    private static boolean isAttachment(String disposition, String filename, String contentType) {
+    private boolean isAttachment(String disposition, String filename, String contentType) {
         return (disposition.toLowerCase().contains(DISPOSITION_ATTACHMENT) && !filename.isEmpty())
                 || (!filename.isEmpty() && !contentType.toLowerCase().startsWith("text/"))
                 || (contentType.toLowerCase().contains("application/") && !filename.isEmpty());
     }
 
-    private static String extractFilenameFromDisposition(String disposition) {
+    private String extractFilenameFromDisposition(String disposition) {
         if (disposition == null || !disposition.contains("filename=")) {
             return "";
         }
@@ -575,7 +572,7 @@ public class EmlParser {
         return safeMimeDecode(filename);
     }
 
-    public static String safeMimeDecode(String headerValue) {
+    public String safeMimeDecode(String headerValue) {
         if (headerValue == null || headerValue.trim().isEmpty()) {
             return "";
         }
@@ -599,7 +596,7 @@ public class EmlParser {
         return EmlProcessingUtils.decodeMimeHeader(headerValue.trim());
     }
 
-    private static void initializeMimeUtilityDecoding() {
+    private void initializeMimeUtilityDecoding() {
         try {
             Class<?> mimeUtilityClass = Class.forName("jakarta.mail.internet.MimeUtility");
             mimeUtilityDecodeTextMethod = mimeUtilityClass.getMethod("decodeText", String.class);
@@ -610,7 +607,7 @@ public class EmlParser {
     }
 
     @Data
-    public static class EmailContent {
+    public class EmailContent {
         private String subject;
         private String from;
         private String to;
@@ -633,7 +630,7 @@ public class EmlParser {
     }
 
     @Data
-    public static class EmailAttachment {
+    public class EmailAttachment {
         private String filename;
         private String contentType;
         private byte[] data;
