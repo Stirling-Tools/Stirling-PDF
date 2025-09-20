@@ -23,6 +23,7 @@ import { Rotation } from '@embedpdf/models';
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage, useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
+
 import { CustomSearchLayer } from './CustomSearchLayer';
 import { ZoomAPIBridge } from './ZoomAPIBridge';
 import ToolLoadingFallback from '../tools/ToolLoadingFallback';
@@ -34,17 +35,18 @@ import { SpreadAPIBridge } from './SpreadAPIBridge';
 import { SearchAPIBridge } from './SearchAPIBridge';
 import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 import { RotateAPIBridge } from './RotateAPIBridge';
-import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
 
-interface LocalEmbedPDFProps {
+interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;
   url?: string | null;
-  enableSignature?: boolean;
-  onSignatureAdded?: (annotation: any) => void;
-  signatureApiRef?: React.RefObject<SignatureAPI>;
+  onAnnotationChange?: (annotations: any[]) => void;
 }
 
-export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureAdded, signatureApiRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDFWithAnnotations({
+  file,
+  url,
+  onAnnotationChange
+}: LocalEmbedPDFWithAnnotationsProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   // Convert File to URL if needed
@@ -58,7 +60,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
     }
   }, [file, url]);
 
-  // Create plugins configuration
+  // Create plugins configuration with annotation support
   const plugins = useMemo(() => {
     if (!pdfUrl) return [];
 
@@ -67,7 +69,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
         loadingOptions: {
           type: 'url',
           pdfFile: {
-            id: 'stirling-pdf-viewer',
+            id: 'stirling-pdf-signing-viewer',
             url: pdfUrl,
           },
         },
@@ -81,63 +83,62 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
       }),
       createPluginRegistration(RenderPluginPackage),
 
-      // Register interaction manager (required for zoom and selection features)
+      // Register interaction manager (required for annotations)
       createPluginRegistration(InteractionManagerPluginPackage),
 
       // Register selection plugin (depends on InteractionManager)
       createPluginRegistration(SelectionPluginPackage),
 
       // Register history plugin for undo/redo (recommended for annotations)
-      ...(enableSignature ? [createPluginRegistration(HistoryPluginPackage)] : []),
+      createPluginRegistration(HistoryPluginPackage),
 
       // Register annotation plugin (depends on InteractionManager, Selection, History)
-      ...(enableSignature ? [createPluginRegistration(AnnotationPluginPackage, {
+      createPluginRegistration(AnnotationPluginPackage, {
         annotationAuthor: 'Digital Signature',
         autoCommit: true,
         deactivateToolAfterCreate: false,
         selectAfterCreate: true,
-      })] : []),
-
-      // Register pan plugin (depends on Viewport, InteractionManager)
-      createPluginRegistration(PanPluginPackage, {
-        defaultMode: 'mobile', // Try mobile mode which might be more permissive
       }),
 
-      // Register zoom plugin with configuration
+      // Register pan plugin
+      createPluginRegistration(PanPluginPackage, {
+        defaultMode: 'mobile',
+      }),
+
+      // Register zoom plugin
       createPluginRegistration(ZoomPluginPackage, {
-        defaultZoomLevel: 1.4, // Start at 140% zoom for better readability
+        defaultZoomLevel: 1.4,
         minZoom: 0.2,
         maxZoom: 3.0,
       }),
 
-      // Register tiling plugin (depends on Render, Scroll, Viewport)
+      // Register tiling plugin
       createPluginRegistration(TilingPluginPackage, {
         tileSize: 768,
         overlapPx: 5,
         extraRings: 1,
       }),
 
-      // Register spread plugin for dual page layout
+      // Register spread plugin
       createPluginRegistration(SpreadPluginPackage, {
-        defaultSpreadMode: SpreadMode.None, // Start with single page view
+        defaultSpreadMode: SpreadMode.None,
       }),
 
-      // Register search plugin for text search
+      // Register search plugin
       createPluginRegistration(SearchPluginPackage),
 
-      // Register thumbnail plugin for page thumbnails
+      // Register thumbnail plugin
       createPluginRegistration(ThumbnailPluginPackage),
 
       // Register rotate plugin
       createPluginRegistration(RotatePluginPackage, {
-        defaultRotation: Rotation.Degree0, // Start with no rotation
+        defaultRotation: Rotation.Degree0,
       }),
     ];
   }, [pdfUrl]);
 
-  // Initialize the engine with the React hook
+  // Initialize the engine
   const { engine, isLoading, error } = usePdfiumEngine();
-
 
   // Early return if no file or URL provided
   if (!file && !url) {
@@ -170,7 +171,6 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
     );
   }
 
-  // Wrap your UI with the <EmbedPDF> provider
   return (
     <div style={{
       height: '100%',
@@ -184,14 +184,14 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
       <EmbedPDF
         engine={engine}
         plugins={plugins}
-        onInitialized={enableSignature ? async (registry) => {
+        onInitialized={async (registry) => {
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 
           const annotationApi = annotationPlugin.provides();
           if (!annotationApi) return;
 
-          // Add custom signature stamp tool for image signatures
+          // Add custom signature stamp tool
           annotationApi.addTool({
             id: 'signatureStamp',
             name: 'Digital Signature',
@@ -199,11 +199,11 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
             matchScore: () => 0,
             defaults: {
               type: PdfAnnotationSubtype.STAMP,
-              // Image will be set dynamically when signature is created
+              // Will be set dynamically when user creates signature
             },
           });
 
-          // Add custom ink signature tool for drawn signatures
+          // Add custom ink signature tool
           annotationApi.addTool({
             id: 'signatureInk',
             name: 'Signature Draw',
@@ -217,15 +217,17 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
             },
           });
 
-          // Listen for annotation events to notify parent component
-          if (onSignatureAdded) {
+          // Listen for annotation events to notify parent
+          if (onAnnotationChange) {
             annotationApi.onAnnotationEvent((event: any) => {
-              if (event.type === 'create' && event.committed) {
-                onSignatureAdded(event.annotation);
+              if (event.committed) {
+                // Get all annotations and notify parent
+                // This is a simplified approach - in reality you'd need to get all annotations
+                onAnnotationChange([event.annotation]);
               }
             });
           }
-        } : undefined}
+        }}
       >
         <ZoomAPIBridge />
         <ScrollAPIBridge />
@@ -235,7 +237,6 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
         <SearchAPIBridge />
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
-        {enableSignature && <SignatureAPIBridge ref={signatureApiRef} />}
         <GlobalPointerProvider>
           <Viewport
             style={{
@@ -252,36 +253,47 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
               contain: 'strict',
             }}
           >
-          <Scroller
-            renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
-              <Rotate pageSize={{ width, height }}>
-                <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
-                  <div
-                    style={{
-                      width,
-                      height,
-                      position: 'relative',
-                      userSelect: 'none',
-                      WebkitUserSelect: 'none',
-                      MozUserSelect: 'none',
-                      msUserSelect: 'none'
-                    }}
-                    draggable={false}
-                    onDragStart={(e) => e.preventDefault()}
-                    onDrop={(e) => e.preventDefault()}
-                    onDragOver={(e) => e.preventDefault()}
-                  >
-                    {/* High-resolution tile layer */}
-                    <TilingLayer pageIndex={pageIndex} scale={scale} />
+            <Scroller
+              renderPage={({ width, height, pageIndex, scale, rotation }: {
+                width: number;
+                height: number;
+                pageIndex: number;
+                scale: number;
+                rotation?: number;
+              }) => (
+                <Rotate pageSize={{ width, height }}>
+                  <PagePointerProvider {...{
+                    pageWidth: width,
+                    pageHeight: height,
+                    pageIndex,
+                    scale,
+                    rotation: rotation || 0
+                  }}>
+                    <div
+                      style={{
+                        width,
+                        height,
+                        position: 'relative',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        MozUserSelect: 'none',
+                        msUserSelect: 'none'
+                      }}
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      onDrop={(e) => e.preventDefault()}
+                      onDragOver={(e) => e.preventDefault()}
+                    >
+                      {/* High-resolution tile layer */}
+                      <TilingLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* Search highlight layer */}
-                    <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
+                      {/* Search highlight layer */}
+                      <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* Selection layer for text interaction */}
-                    <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                      {/* Selection layer for text interaction */}
+                      <SelectionLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* Annotation layer for signatures (only when enabled) */}
-                    {enableSignature && (
+                      {/* Annotation layer for signatures */}
                       <AnnotationLayer
                         pageIndex={pageIndex}
                         scale={scale}
@@ -290,12 +302,11 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
                         rotation={rotation || 0}
                         selectionOutlineColor="#007ACC"
                       />
-                    )}
-                  </div>
-                </PagePointerProvider>
-              </Rotate>
-            )}
-          />
+                    </div>
+                  </PagePointerProvider>
+                </Rotate>
+              )}
+            />
           </Viewport>
         </GlobalPointerProvider>
       </EmbedPDF>

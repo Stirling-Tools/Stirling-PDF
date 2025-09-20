@@ -9,6 +9,8 @@ import { useViewer } from "../../contexts/ViewerContext";
 import { LocalEmbedPDF } from './LocalEmbedPDF';
 import { PdfViewerToolbar } from './PdfViewerToolbar';
 import { ThumbnailSidebar } from './ThumbnailSidebar';
+import { useNavigationState } from '../../contexts/NavigationContext';
+import { useSignature } from '../../contexts/SignatureContext';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -32,6 +34,13 @@ const EmbedPdfViewerContent = ({
   const scrollState = getScrollState();
   const zoomState = getZoomState();
   const spreadState = getSpreadState();
+
+  // Check if we're in signature mode
+  const { selectedTool } = useNavigationState();
+  const isSignatureMode = selectedTool === 'sign';
+
+  // Get signature context
+  const { signatureApiRef } = useSignature();
 
 
   // Get current file from FileContext
@@ -178,6 +187,12 @@ const EmbedPdfViewerContent = ({
             <LocalEmbedPDF
               file={effectiveFile.file}
               url={effectiveFile.url}
+              enableSignature={isSignatureMode}
+              signatureApiRef={signatureApiRef as React.RefObject<any>}
+              onSignatureAdded={(annotation) => {
+                console.log('Signature added:', annotation);
+                // Future: Handle signature completion
+              }}
             />
           </Box>
         </>

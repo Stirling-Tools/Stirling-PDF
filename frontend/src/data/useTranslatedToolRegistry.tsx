@@ -22,6 +22,7 @@ import RemoveCertificateSign from "../tools/RemoveCertificateSign";
 import Flatten from "../tools/Flatten";
 import Rotate from "../tools/Rotate";
 import ChangeMetadata from "../tools/ChangeMetadata";
+import Sign from "../tools/Sign";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -41,6 +42,7 @@ import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperati
 import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
+import { signOperationConfig } from "../hooks/tools/sign/useSignOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -62,6 +64,7 @@ import MergeSettings from '../components/tools/merge/MergeSettings';
 import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
+import SignSettings from "../components/tools/sign/SignSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -165,10 +168,12 @@ export function useFlatToolRegistry(): ToolRegistry {
       sign: {
         icon: <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.sign.title", "Sign"),
-        component: null,
+        component: Sign,
         description: t("home.sign.desc", "Adds signature to PDF by drawing, text or image"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
+        operationConfig: signOperationConfig,
+        settingsComponent: SignSettings,
       },
 
       // Document Security

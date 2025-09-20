@@ -14,6 +14,7 @@ import "./styles/cookieconsent.css";
 import "./index.css";
 import { RightRailProvider } from "./contexts/RightRailContext";
 import { ViewerProvider } from "./contexts/ViewerContext";
+import { SignatureProvider } from "./contexts/SignatureContext";
 
 // Import file ID debugging helpers (development only)
 import "./utils/fileIdSafety";
@@ -45,9 +46,11 @@ export default function App() {
                 <ToolWorkflowProvider>
                   <SidebarProvider>
                     <ViewerProvider>
-                      <RightRailProvider>
-                        <HomePage />
-                      </RightRailProvider>
+                      <SignatureProvider>
+                        <RightRailProvider>
+                          <HomePage />
+                        </RightRailProvider>
+                      </SignatureProvider>
                     </ViewerProvider>
                   </SidebarProvider>
                 </ToolWorkflowProvider>
