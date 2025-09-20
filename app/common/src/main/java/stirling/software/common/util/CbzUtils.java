@@ -72,8 +72,8 @@ public class CbzUtils {
                     }
                 }
 
-                imageEntries.sort(Comparator.comparing(
-                    ImageEntryData::name, new NaturalOrderComparator()));
+                imageEntries.sort(
+                        Comparator.comparing(ImageEntryData::name, new NaturalOrderComparator()));
 
                 if (imageEntries.isEmpty()) {
                     throw new IllegalArgumentException("No valid images found in the CBZ file");
@@ -94,9 +94,7 @@ public class CbzUtils {
                         }
                     } catch (IOException e) {
                         log.warn(
-                                "Error processing image {}: {}",
-                                imageEntry.name(),
-                                e.getMessage());
+                                "Error processing image {}: {}", imageEntry.name(), e.getMessage());
                     }
                 }
 
@@ -141,7 +139,7 @@ public class CbzUtils {
         return IMAGE_PATTERN.matcher(filename).matches();
     }
 
-    private record ImageEntryData(String name, byte[] data) { }
+    private record ImageEntryData(String name, byte[] data) {}
 
     private static class NaturalOrderComparator implements Comparator<String> {
         @Override
