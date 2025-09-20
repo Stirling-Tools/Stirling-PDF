@@ -11,8 +11,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class EmlToPdf {
 
-    public String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request)
-            throws IOException {
+    public String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request) throws IOException {
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
         EmlParser.EmailContent emailContent =
@@ -21,13 +20,13 @@ public class EmlToPdf {
     }
 
     public byte[] convertEmlToPdf(
-        String weasyprintPath,
-        EmlToPdfRequest request,
-        byte[] emlBytes,
-        String fileName,
-        CustomPDFDocumentFactory pdfDocumentFactory,
-        TempFileManager tempFileManager,
-        CustomHtmlSanitizer customHtmlSanitizer)
+            String weasyprintPath,
+            EmlToPdfRequest request,
+            byte[] emlBytes,
+            String fileName,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            TempFileManager tempFileManager,
+            CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException, InterruptedException {
 
         EmlProcessingUtils.validateEmlInput(emlBytes);
@@ -64,7 +63,7 @@ public class EmlToPdf {
     }
 
     private boolean shouldAttachFiles(
-        EmlParser.EmailContent emailContent, EmlToPdfRequest request) {
+            EmlParser.EmailContent emailContent, EmlToPdfRequest request) {
         return emailContent != null
                 && request != null
                 && request.isIncludeAttachments()
@@ -72,11 +71,11 @@ public class EmlToPdf {
     }
 
     private byte[] convertHtmlToPdf(
-        String weasyprintPath,
-        EmlToPdfRequest request,
-        String htmlContent,
-        TempFileManager tempFileManager,
-        CustomHtmlSanitizer customHtmlSanitizer)
+            String weasyprintPath,
+            EmlToPdfRequest request,
+            String htmlContent,
+            TempFileManager tempFileManager,
+            CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException, InterruptedException {
 
         var htmlRequest = EmlProcessingUtils.createHtmlRequest(request);
