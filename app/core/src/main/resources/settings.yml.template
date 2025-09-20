@@ -60,9 +60,9 @@ security:
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
   jwt: # This feature is currently under development and not yet fully supported. Do not use in production.
-    persistence: true # Set to 'true' to enable JWT key store
-    enableKeyRotation: true # Set to 'true' to enable key pair rotation
-    enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
+    persistence: false # Set to 'true' to enable JWT key store
+    enableKeyRotation: false # Set to 'true' to enable key pair rotation
+    enableKeyCleanup: false # Set to 'true' to enable key pair cleanup
     keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
     secureCookie: false # Set to 'true' to use secure cookies for JWTs
 
