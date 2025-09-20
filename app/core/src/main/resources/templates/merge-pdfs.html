@@ -28,13 +28,13 @@
                   th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=true, accept='application/pdf')}">
                 </div>
               </div>
-              <div class="mb-3">
-                <input type="checkbox" name="removeCertSign" id="removeCertSign">
+              <div class="form-check mb-3">
+                <input id="removeCertSign" name="removeCertSign" type="checkbox">
                 <label for="removeCertSign" th:text="#{merge.removeCertSign}">Remove digital signature in the merged
                   file?</label>
               </div>
-              <div class="mb-3">
-                <input type="checkbox" name="generateToc" id="generateToc">
+              <div class="form-check mb-3">
+                <input id="generateToc" name="generateToc" type="checkbox">
                 <label for="generateToc" th:text="#{merge.generateToc}">Generate table of contents in the merged file?</label>
               </div>
               <div class="mb-3">
