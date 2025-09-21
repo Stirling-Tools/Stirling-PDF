@@ -173,6 +173,7 @@ export function computeStampPreviewStyle(
       yPx += offsetRem * rootFontSizePx;
     } catch (e) {
       // no-op
+      console.error(e);
     }
   }
   const widthPx = widthPtsContent * scaleX;
