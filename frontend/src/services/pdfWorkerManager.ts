@@ -5,8 +5,7 @@
  * and ensuring proper cleanup when operations complete.
  */
 
-import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
+import { GlobalWorkerOptions, getDocument, PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
