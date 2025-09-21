@@ -1,6 +1,8 @@
 package stirling.software.SPDF.config;
 
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,7 +10,8 @@ import org.springframework.context.annotation.Configuration;
 public class SpringDocConfig {
 
     @Bean
-    public GroupedOpenApi pdfProcessingApi() {
+    public GroupedOpenApi pdfProcessingApi(
+            @Qualifier("pdfFileOneOfCustomizer") OpenApiCustomizer pdfFileOneOfCustomizer) {
         return GroupedOpenApi.builder()
                 .group("file-processing")
                 .displayName("File Processing")
@@ -23,6 +26,7 @@ public class SpringDocConfig {
                         "/api/v1/info/**",
                         "/api/v1/general/job/**",
                         "/api/v1/general/files/**")
+                .addOpenApiCustomizer(pdfFileOneOfCustomizer)
                 .addOpenApiCustomizer(
                         openApi -> {
                             openApi.info(
