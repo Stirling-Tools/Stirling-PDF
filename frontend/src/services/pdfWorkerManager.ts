@@ -6,11 +6,12 @@
  */
 
 import * as pdfjsLib from 'pdfjs-dist';
+import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 const { getDocument, GlobalWorkerOptions } = pdfjsLib;
 
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
-  private activeDocuments = new Set<any>();
+  private activeDocuments = new Set<PDFDocumentProxy>();
   private workerCount = 0;
   private maxWorkers = 10; // Limit concurrent workers
   private isInitialized = false;
@@ -48,7 +49,7 @@ class PDFWorkerManager {
       stopAtErrors?: boolean;
       verbosity?: number;
     } = {}
-  ): Promise<any> {
+  ): Promise<PDFDocumentProxy> {
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
       await this.waitForAvailableWorker();
@@ -104,7 +105,7 @@ class PDFWorkerManager {
   /**
    * Properly destroy a PDF document and clean up resources
    */
-  destroyDocument(pdf: any): void {
+  destroyDocument(pdf: PDFDocumentProxy): void {
     if (this.activeDocuments.has(pdf)) {
       try {
         pdf.destroy();
