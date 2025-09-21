@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AddStampParameters } from './useAddStampParameters';
 import { pdfWorkerManager } from '../../../services/pdfWorkerManager';
 import { useThumbnailGeneration } from '../../../hooks/useThumbnailGeneration';
-import { A4_ASPECT_RATIO, getFirstSelectedPage, getFontFamily, computeStampPreviewStyle } from './StampPreviewUtils';
+import { A4_ASPECT_RATIO, getFirstSelectedPage, getFontFamily, computeStampPreviewStyle, getAlphabetPreviewScale } from './StampPreviewUtils';
 import styles from './StampPreview.module.css';
 
 type Props = {
@@ -281,7 +281,7 @@ export default function StampPreview({ parameters, onParameterChange, file, show
                 className={styles.textLine}
                 style={{
                   fontFamily: getFontFamily(parameters.alphabet),
-                  fontSize: `${Math.max(1, parameters.fontSize / 2)}px`,
+                  fontSize: `${Math.max(1, (parameters.fontSize * getAlphabetPreviewScale(parameters.alphabet)) / 2)}px`,
                   whiteSpace: 'nowrap',
                 }}
               >

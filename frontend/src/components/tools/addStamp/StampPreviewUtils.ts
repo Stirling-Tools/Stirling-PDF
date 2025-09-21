@@ -50,6 +50,20 @@ export const getFirstSelectedPage = (input: string): number => {
 
 export type StampPreviewStyle = { container: any; item: any };
 
+// Unified per-alphabet preview adjustments
+export type Alphabet = 'roman' | 'arabic' | 'japanese' | 'korean' | 'chinese' | 'thai';
+export type AlphabetTweaks = { scale: number; rowOffsetRem: [number, number, number]; lineHeight: number; capHeightRatio: number };
+export const ALPHABET_PREVIEW_TWEAKS: Record<Alphabet, AlphabetTweaks> = {
+  // [top, middle, bottom] row offsets in rem
+  roman: { scale: 1.0/1.18, rowOffsetRem: [0, 1, 2.2], lineHeight: 1.28, capHeightRatio: 0.70 },
+  arabic: { scale: 1.2, rowOffsetRem: [0, 1.5, 2.5], lineHeight: 1, capHeightRatio: 0.68 },
+  japanese: { scale: 1/1.2, rowOffsetRem: [-0.1, 1, 2], lineHeight: 1, capHeightRatio: 0.72 },
+  korean: { scale: 1.0/1.05, rowOffsetRem: [-0.2, 0.5, 1.4], lineHeight: 1, capHeightRatio: 0.72 },
+  chinese: { scale: 1/1.2, rowOffsetRem: [0, 2, 2.8], lineHeight: 1, capHeightRatio: 0.72 },
+  thai: { scale: 1/1.2, rowOffsetRem: [-1, 0, .8], lineHeight: 1, capHeightRatio: 0.66 },
+};
+export const getAlphabetPreviewScale = (alphabet: string): number => (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.scale ?? 1.0;
+
 export function computeStampPreviewStyle(
   parameters: AddStampParameters,
   imageMeta: ImageMeta,
@@ -70,26 +84,9 @@ export function computeStampPreviewStyle(
   const marginPts = (widthPts + heightPts) / 2 * (marginFactorMap[parameters.customMargin] ?? 0.035);
 
   // Compute content dimensions
-  const heightPtsContent = parameters.fontSize; // UI size in points
+  const heightPtsContent = parameters.fontSize * getAlphabetPreviewScale(parameters.alphabet);
   let widthPtsContent = heightPtsContent;
 
-  // Approximate PDF cap height ratio per alphabet to mirror backend's calculateTextCapHeight usage
-  const getCapHeightRatio = (alphabet: string): number => {
-    switch (alphabet) {
-      case 'roman':
-        return 0.70; // Noto Sans/Helvetica ~0.7 em
-      case 'arabic':
-        return 0.68;
-      case 'thai':
-        return 0.66;
-      case 'japanese':
-      case 'korean':
-      case 'chinese':
-        return 0.72; // CJK glyph boxes
-      default:
-        return 0.70;
-    }
-  };
 
   if (parameters.stampType === 'image' && imageMeta) {
     const aspect = imageMeta.width / imageMeta.height;
@@ -109,8 +106,6 @@ export function computeStampPreviewStyle(
       // Convert measured px width back to PDF points using horizontal scale
       widthPtsContent = measuredWidthPx / scaleX;
 
-      // Empirical tweak to better match PDFBox string width for Roman fonts
-      // PDFBox often yields ~8-12% narrower widths than browser canvas for the same font family
       let adjustmentFactor = 1.0;
       switch (parameters.alphabet) {
         case 'roman':
@@ -151,7 +146,7 @@ export function computeStampPreviewStyle(
     if (parameters.overrideX >= 0 && parameters.overrideY >= 0) return parameters.overrideY;
     // For text, backend positions using cap height, not full font size
     const heightForY = parameters.stampType === 'text'
-      ? heightPtsContent * getCapHeightRatio(parameters.alphabet)
+      ? heightPtsContent * ((ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.capHeightRatio ?? 0.70)
       : heightPtsContent;
     switch (Math.floor((position - 1) / 3)) {
       case 0: // Top
@@ -167,31 +162,28 @@ export function computeStampPreviewStyle(
 
   const xPts = calcX();
   const yPts = calcY();
-  const xPx = xPts * scaleX;
+  let xPx = xPts * scaleX;
   let yPx = yPts * scaleY;
-  // Vertical correction: text appears lower in preview vs output for middle/bottom rows
   if (parameters.stampType === 'text') {
     try {
       const rootFontSizePx = parseFloat(getComputedStyle(document.documentElement).fontSize || '16') || 16;
-      const middleRowOffsetPx = 1 * rootFontSizePx; 
-      const bottomRowOffsetPx = 1.25 * rootFontSizePx; 
-      const rowIndex = Math.floor((position - 1) / 3); 
-      if (rowIndex === 1) {
-        yPx += middleRowOffsetPx;
-      } else if (rowIndex === 2) {
-        yPx += bottomRowOffsetPx;
-      }
+      const rowIndex = Math.floor((position - 1) / 3); // 0 top, 1 middle, 2 bottom
+      const offsets = (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.rowOffsetRem ?? [0, 0, 0];
+      const offsetRem = offsets[rowIndex] ?? 0;
+      yPx += offsetRem * rootFontSizePx;
     } catch (e) {
-      console.error(e);
+      // no-op
     }
   }
   const widthPx = widthPtsContent * scaleX;
   const heightPx = heightPtsContent * scaleY;
 
+  xPx = Math.max(0, Math.min(xPx, pageWidthPx - widthPx));
+  yPx = Math.max(0, Math.min(yPx, pageHeightPx - heightPx));
+
   const opacity = Math.max(0, Math.min(1, parameters.opacity / 100));
   const displayOpacity = opacity;
 
-  // Horizontal alignment inside the preview item for text stamps
   let alignItems: 'flex-start' | 'center' | 'flex-end' = 'flex-start';
   if (parameters.stampType === 'text') {
     const colIndex = position % 3; // 1: left, 2: center, 0: right
@@ -229,7 +221,7 @@ export function computeStampPreviewStyle(
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'flex-start',
-      lineHeight: 1,
+      lineHeight: (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.lineHeight ?? 1,
       alignItems,
       cursor: showQuickGrid ? 'default' : 'move',
       pointerEvents: showQuickGrid ? 'none' : 'auto',
