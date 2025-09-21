@@ -25,6 +25,6 @@ public class ErrorResponse {
 
     @Schema(
             description = "Request path where the error occurred",
-            example = "/api/v1/general/rotate-pdf")
+            example = "/api/v1/{endpoint-path}")
     private String path;
 }

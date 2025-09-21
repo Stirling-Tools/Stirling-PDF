@@ -495,10 +495,6 @@
       "title": "Multi-Page Layout",
       "desc": "Merge multiple pages of a PDF document into a single page"
     },
-    "bookletImposition": {
-      "title": "Booklet Imposition",
-      "desc": "Create booklets with proper page ordering and multi-page layout for printing and binding"
-    },
     "scalePages": {
       "title": "Adjust page size/scale",
       "desc": "Change the size/scale of a page and/or its contents."
@@ -1100,18 +1096,6 @@
     "pagesPerSheet": "Pages per sheet:",
     "addBorder": "Add Borders",
     "submit": "Submit"
-  },
-  "bookletImposition": {
-    "tags": "booklet,imposition,printing,binding,folding,signature",
-    "title": "Booklet Imposition",
-    "header": "Booklet Imposition",
-    "submit": "Create Booklet",
-    "files": {
-      "placeholder": "Select PDF files to create booklet impositions from"
-    },
-    "error": {
-      "failed": "An error occurred while creating the booklet imposition."
-    }
   },
   "scalePages": {
     "tags": "resize,modify,dimension,adapt",

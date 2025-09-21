@@ -28,6 +28,20 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                             @Schema(
                                                     type = "object",
                                                     description =
-                                                            "JSON object containing the requested data or analysis results")))
+                                                            "JSON object containing the requested data or analysis results"))),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid PDF file or request parameters",
+                    content =
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error during processing",
+                    content =
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)))
         })
 public @interface JsonDataResponse {}

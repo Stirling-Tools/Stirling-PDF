@@ -15,7 +15,7 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description = "The type of the digital certificate",
-            allowableValues = {"PEM", "PKCS12", "JKS", "SERVER"},
+            allowableValues = {"PEM", "PKCS12", "JKS"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String certType;
 

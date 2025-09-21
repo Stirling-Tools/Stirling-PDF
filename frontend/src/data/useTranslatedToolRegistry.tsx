@@ -17,8 +17,6 @@ import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
-import ManageSignatures from "../tools/ManageSignatures";
-import BookletImposition from "../tools/BookletImposition";
 import Flatten from "../tools/Flatten";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
@@ -33,8 +31,6 @@ import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
-import { manageSignaturesOperationConfig } from "../hooks/tools/manageSignatures/useManageSignaturesOperation";
-import { bookletImpositionOperationConfig } from "../hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
 import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
 import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
@@ -50,8 +46,6 @@ import AddWatermarkSingleStepSettings from "../components/tools/addWatermark/Add
 import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
-import CertificateTypeSettings from "../components/tools/manageSignatures/CertificateTypeSettings";
-import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
 import Redact from "../tools/Redact";
@@ -154,15 +148,11 @@ export function useFlatToolRegistry(): ToolRegistry {
 
       certSign: {
         icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.certSign.title", "Certificate Sign"),
-        component: ManageSignatures,
-        description: t("home.certSign.desc", "Sign PDF documents using digital certificates"),
+        name: t("home.certSign.title", "Sign with Certificate"),
+        component: null,
+        description: t("home.certSign.desc", "Signs a PDF with a Certificate/Key (PEM/P12)"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
-        maxFiles: -1,
-        endpoints: ["cert-sign"],
-        operationConfig: manageSignaturesOperationConfig,
-        settingsComponent: CertificateTypeSettings,
       },
       sign: {
         icon: <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />,
@@ -268,19 +258,19 @@ export function useFlatToolRegistry(): ToolRegistry {
       },
       // Verification
 
-      "validate-pdf-signature": {
-        icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.validateSignature.title", "Validate PDF Signature"),
-        component: null,
-        description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.VERIFICATION,
-      },
       "get-all-info-on-pdf": {
         icon: <LocalIcon icon="fact-check-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
         component: null,
         description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.VERIFICATION,
+      },
+      "validate-pdf-signature": {
+        icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.validateSignature.title", "Validate PDF Signature"),
+        component: null,
+        description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
       },
@@ -374,16 +364,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         component: null,
 
         description: t("home.pageLayout.desc", "Merge multiple pages of a PDF document into a single page"),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.PAGE_FORMATTING,
-      },
-      "booklet-imposition": {
-        icon: <LocalIcon icon="menu-book-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.bookletImposition.title", "Booklet Imposition"),
-        component: BookletImposition,
-        operationConfig: bookletImpositionOperationConfig,
-        settingsComponent: BookletImpositionSettings,
-        description: t("home.bookletImposition.desc", "Create booklets with proper page ordering and multi-page layout for printing and binding"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },

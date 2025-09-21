@@ -114,11 +114,6 @@ system:
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
-  serverCertificate:
-    enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
-    organizationName: Stirling-PDF # Organization name for generated certificates
-    validity: 365 # Certificate validity in days
-    regenerateOnStartup: false # Generate new certificate on each startup
   html:
     urlSecurity:
       enabled: true # Enable URL security restrictions for HTML processing

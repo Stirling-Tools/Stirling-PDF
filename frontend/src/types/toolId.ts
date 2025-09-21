@@ -7,13 +7,13 @@ const TOOL_IDS = [
   'detect-split-scanned-photos',
   'edit-table-of-contents',
   'scanner-effect',
-  'auto-rename-pdf-file', 'multi-page-layout', 'booklet-imposition', 'adjust-page-size-scale', 'adjust-contrast', 'cropPdf', 'single-large-page', 'multi-tool',
+  'auto-rename-pdf-file', 'multi-page-layout', 'adjust-page-size-scale', 'adjust-contrast', 'cropPdf', 'single-large-page', 'multi-tool',
   'repair', 'compare', 'addPageNumbers', 'redact',
   'flatten', 'remove-certificate-sign',
   'unlock-pdf-forms', 'compress', 'extract-page', 'reorganize-pages', 'extract-images',
   'add-stamp', 'add-attachments', 'change-metadata', 'overlay-pdfs',
-  'manage-certificates', 'get-all-info-on-pdf', 'read', 'automate', 'replace-and-invert-color',
-  'show-javascript', 'dev-api', 'dev-folder-scanning', 'dev-sso-guide', 'dev-airgapped', 'validate-pdf-signature'
+  'manage-certificates', 'get-all-info-on-pdf', 'validate-pdf-signature', 'read', 'automate', 'replace-and-invert-color',
+  'show-javascript', 'dev-api', 'dev-folder-scanning', 'dev-sso-guide', 'dev-airgapped'
 ] as const;
 
 // Tool identity - what PDF operation we're performing (type-safe)

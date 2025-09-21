@@ -28,6 +28,20 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                             @Schema(
                                                     type = "string",
                                                     format = "binary",
-                                                    description = "The processed PDF file")))
+                                                    description = "The processed PDF file"))),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid PDF file or request parameters",
+                    content =
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error during processing",
+                    content =
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)))
         })
 public @interface StandardPdfResponse {}
