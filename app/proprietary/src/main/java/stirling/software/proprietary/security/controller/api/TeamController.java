@@ -3,17 +3,15 @@ package stirling.software.proprietary.security.controller.api;
 import java.util.Optional;
 
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.api.TeamApi;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -21,9 +19,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
-@Controller
-@RequestMapping("/api/v1/team")
-@Tag(name = "Team", description = "Team Management APIs")
+@TeamApi
 @Slf4j
 @RequiredArgsConstructor
 @PremiumEndpoint
