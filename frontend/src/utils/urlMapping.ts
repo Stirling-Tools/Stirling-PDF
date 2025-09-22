@@ -31,4 +31,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/unlock-pdf-forms': 'unlockPDFForms',
   '/remove-certificate-sign': 'removeCertSign',
   '/remove-cert-sign': 'removeCertSign',
+  '/cert-sign': 'manageSignatures',
+  '/manage-signatures': 'manageSignatures',
+  '/booklet-imposition': 'bookletImposition',
 };

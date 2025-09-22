@@ -160,7 +160,7 @@ export function useFlatToolRegistry(): ToolRegistry {
     const allTools: ToolRegistry = {
       // Signing
 
-      certSign: {
+      manageSignatures: {
         icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.certSign.title", "Certificate Sign"),
         component: ManageSignatures,
@@ -399,7 +399,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },
-      "booklet-imposition": {
+      bookletImposition: {
         icon: <LocalIcon icon="menu-book-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.bookletImposition.title", "Booklet Imposition"),
         component: BookletImposition,
