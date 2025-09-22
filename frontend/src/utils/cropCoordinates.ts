@@ -19,26 +19,33 @@ export interface PDFBounds {
   scale: number;
 }
 
-export interface CropArea {
-  /** X coordinate in PDF points (0 = left edge) */
+export interface Rectangle {
+  /** X coordinate  */
   x: number;
-  /** Y coordinate in PDF points (0 = bottom edge, PDF coordinate system) */
+  /** Y coordinate */
   y: number;
-  /** Width in PDF points */
+  /** Width  */
   width: number;
-  /** Height in PDF points */
+  /** Height */
   height: number;
 }
 
-export interface DOMRect {
-  /** X coordinate in DOM pixels relative to thumbnail container */
-  x: number;
-  /** Y coordinate in DOM pixels relative to thumbnail container */
-  y: number;
-  /** Width in DOM pixels */
-  width: number;
-  /** Height in DOM pixels */
-  height: number;
+/** Runtime type guard */
+export function isRectangle(value: unknown): value is Rectangle {
+  if (value === null || typeof value !== "object") return false;
+
+  const r = value as Record<string, unknown>;
+  const isNum = (n: unknown): n is number =>
+    typeof n === "number" && Number.isFinite(n);
+
+  return (
+    isNum(r.x) &&
+    isNum(r.y) &&
+    isNum(r.width) &&
+    isNum(r.height) &&
+    r.width >= 0 &&
+    r.height >= 0
+  );
 }
 
 /**
@@ -79,9 +86,9 @@ export const calculatePDFBounds = (
  * Handles coordinate system conversion (DOM uses top-left, PDF uses bottom-left origin)
  */
 export const domToPDFCoordinates = (
-  domRect: DOMRect,
+  domRect: Rectangle,
   pdfBounds: PDFBounds
-): CropArea => {
+): Rectangle => {
   // Convert DOM coordinates to thumbnail-relative coordinates
   const thumbX = domRect.x - pdfBounds.offsetX;
   const thumbY = domRect.y - pdfBounds.offsetY;
@@ -104,9 +111,9 @@ export const domToPDFCoordinates = (
  * Convert PDF coordinates to DOM coordinates (relative to container)
  */
 export const pdfToDOMCoordinates = (
-  cropArea: CropArea,
+  cropArea: Rectangle,
   pdfBounds: PDFBounds
-): DOMRect => {
+): Rectangle => {
   // Convert PDF coordinates to thumbnail coordinates (scale and flip Y-axis)
   const thumbX = cropArea.x * pdfBounds.scale;
   const thumbY = (pdfBounds.actualHeight - cropArea.y - cropArea.height) * pdfBounds.scale;
@@ -126,9 +133,9 @@ export const pdfToDOMCoordinates = (
  * Constrain a crop area to stay within PDF bounds
  */
 export const constrainCropAreaToPDF = (
-  cropArea: CropArea,
+  cropArea: Rectangle,
   pdfBounds: PDFBounds
-): CropArea => {
+): Rectangle => {
   // Ensure crop area doesn't extend beyond PDF boundaries
   const maxX = Math.max(0, pdfBounds.actualWidth - cropArea.width);
   const maxY = Math.max(0, pdfBounds.actualHeight - cropArea.height);
@@ -145,9 +152,9 @@ export const constrainCropAreaToPDF = (
  * Constrain DOM coordinates to stay within thumbnail bounds
  */
 export const constrainDOMRectToThumbnail = (
-  domRect: DOMRect,
+  domRect: Rectangle,
   pdfBounds: PDFBounds
-): DOMRect => {
+): Rectangle => {
   const thumbnailLeft = pdfBounds.offsetX;
   const thumbnailTop = pdfBounds.offsetY;
   const thumbnailRight = pdfBounds.offsetX + pdfBounds.thumbnailWidth;
@@ -189,7 +196,7 @@ export const isPointInThumbnail = (
 /**
  * Create a default crop area that covers the entire PDF
  */
-export const createFullPDFCropArea = (pdfBounds: PDFBounds): CropArea => {
+export const createFullPDFCropArea = (pdfBounds: PDFBounds): Rectangle => {
   return {
     x: 0,
     y: 0,
@@ -201,7 +208,7 @@ export const createFullPDFCropArea = (pdfBounds: PDFBounds): CropArea => {
 /**
  * Round crop coordinates to reasonable precision (0.1 point)
  */
-export const roundCropArea = (cropArea: CropArea): CropArea => {
+export const roundCropArea = (cropArea: Rectangle): Rectangle => {
   return {
     x: Math.round(cropArea.x * 10) / 10,
     y: Math.round(cropArea.y * 10) / 10,

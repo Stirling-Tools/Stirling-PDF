@@ -1,31 +1,22 @@
 import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 import { useCallback } from 'react';
-import { CropArea, PDFBounds, constrainCropAreaToPDF, createFullPDFCropArea, roundCropArea } from '../../../utils/cropCoordinates';
+import { Rectangle, PDFBounds, constrainCropAreaToPDF, createFullPDFCropArea, roundCropArea, isRectangle } from '../../../utils/cropCoordinates';
+import { DEFAULT_CROP_AREA } from 'src/constants/cropConstants';
 
 export interface CropParameters extends BaseParameters {
-  /** X coordinate of crop area (PDF points, left edge) */
-  x: number;
-  /** Y coordinate of crop area (PDF points, bottom edge in PDF coordinate system) */
-  y: number;
-  /** Width of crop area (PDF points) */
-  width: number;
-  /** Height of crop area (PDF points) */
-  height: number;
+  cropArea: Rectangle;
 }
 
 export const defaultParameters: CropParameters = {
-  x: 0,
-  y: 0,
-  width: 595, // Default A4 width in points
-  height: 842, // Default A4 height in points
+  cropArea: DEFAULT_CROP_AREA,
 };
 
 export type CropParametersHook = BaseParametersHook<CropParameters> & {
   /** Set crop area with PDF bounds validation */
-  setCropArea: (cropArea: CropArea, pdfBounds?: PDFBounds) => void;
+  setCropArea: (cropArea: Rectangle, pdfBounds?: PDFBounds) => void;
   /** Get current crop area as CropArea object */
-  getCropArea: () => CropArea;
+  getCropArea: () => Rectangle;
   /** Reset to full PDF dimensions */
   resetToFullPDF: (pdfBounds: PDFBounds) => void;
   /** Check if current crop area is valid for the PDF */
@@ -33,7 +24,7 @@ export type CropParametersHook = BaseParametersHook<CropParameters> & {
   /** Check if crop area covers the entire PDF */
   isFullPDFCrop: (pdfBounds?: PDFBounds) => boolean;
   /** Update crop area with constraints applied */
-  updateCropAreaConstrained: (cropArea: Partial<CropArea>, pdfBounds?: PDFBounds) => void;
+  updateCropAreaConstrained: (cropArea: Partial<Rectangle>, pdfBounds?: PDFBounds) => void;
 };
 
 export const useCropParameters = (): CropParametersHook => {
@@ -41,37 +32,29 @@ export const useCropParameters = (): CropParametersHook => {
     defaultParameters,
     endpointName: 'crop',
     validateFn: (params) => {
+      const rect = params.cropArea;
       // Basic validation - coordinates and dimensions must be positive
-      return params.x >= 0 &&
-             params.y >= 0 &&
-             params.width > 0 &&
-             params.height > 0;
+      return rect.x >= 0 &&
+             rect.y >= 0 &&
+             rect.width > 0 &&
+             rect.height > 0;
     },
   });
 
   // Get current crop area as CropArea object
-  const getCropArea = useCallback((): CropArea => {
-    return {
-      x: baseHook.parameters.x,
-      y: baseHook.parameters.y,
-      width: baseHook.parameters.width,
-      height: baseHook.parameters.height,
-    };
+  const getCropArea = useCallback((): Rectangle => {
+    return baseHook.parameters.cropArea;
   }, [baseHook.parameters]);
 
   // Set crop area with optional PDF bounds validation
-  const setCropArea = useCallback((cropArea: CropArea, pdfBounds?: PDFBounds) => {
+  const setCropArea = useCallback((cropArea: Rectangle, pdfBounds?: PDFBounds) => {
     let finalCropArea = roundCropArea(cropArea);
 
     // Apply PDF bounds constraints if provided
     if (pdfBounds) {
       finalCropArea = constrainCropAreaToPDF(finalCropArea, pdfBounds);
     }
-
-    baseHook.updateParameter('x', finalCropArea.x);
-    baseHook.updateParameter('y', finalCropArea.y);
-    baseHook.updateParameter('width', finalCropArea.width);
-    baseHook.updateParameter('height', finalCropArea.height);
+    baseHook.updateParameter('cropArea', finalCropArea);
   }, [baseHook]);
 
   // Reset to cover entire PDF
@@ -114,7 +97,7 @@ export const useCropParameters = (): CropParametersHook => {
 
   // Update crop area with constraints applied
   const updateCropAreaConstrained = useCallback((
-    partialCropArea: Partial<CropArea>,
+    partialCropArea: Partial<Rectangle>,
     pdfBounds?: PDFBounds
   ) => {
     const currentCropArea = getCropArea();
@@ -132,11 +115,12 @@ export const useCropParameters = (): CropParametersHook => {
     parameter: K,
     value: CropParameters[K]
   ) => {
-    // Ensure numeric parameters are positive
-    if (typeof value === 'number' && parameter !== 'x' && parameter !== 'y') {
-      value = Math.max(0.1, value) as CropParameters[K]; // Minimum 0.1 point
-    } else if (typeof value === 'number') {
-      value = Math.max(0, value) as CropParameters[K]; // x,y can be 0
+
+    if(isRectangle(value)) {
+      value.x = Math.max(0.1, value.x); // Minimum 0.1 point
+      value.x = Math.max(0.1, value.y); // Minimum 0.1 point
+      value.width = Math.max(0, value.width); // Minimum 0 point
+      value.height = Math.max(0, value.height); // Minimum 0 point
     }
 
     baseHook.updateParameter(parameter, value);

@@ -7,12 +7,13 @@ import { CropParameters, defaultParameters } from './useCropParameters';
 export const buildCropFormData = (parameters: CropParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
+  const cropArea = parameters.cropArea;
 
   // Backend expects precise float values for PDF coordinates
-  formData.append("x", parameters.x.toString());
-  formData.append("y", parameters.y.toString());
-  formData.append("width", parameters.width.toString());
-  formData.append("height", parameters.height.toString());
+  formData.append("x", cropArea.x.toString());
+  formData.append("y", cropArea.y.toString());
+  formData.append("width", cropArea.width.toString());
+  formData.append("height", cropArea.height.toString());
 
   return formData;
 };

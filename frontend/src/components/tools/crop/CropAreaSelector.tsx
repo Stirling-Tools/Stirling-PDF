@@ -2,28 +2,26 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Box, useMantineTheme, MantineTheme } from '@mantine/core';
 import {
   PDFBounds,
-  CropArea,
-  DOMRect,
+  Rectangle,
   domToPDFCoordinates,
   pdfToDOMCoordinates,
   constrainDOMRectToThumbnail,
   isPointInThumbnail
 } from '../../../utils/cropCoordinates';
+import { type ResizeHandle } from '../../../constants/cropConstants';
 
 interface CropAreaSelectorProps {
   /** PDF bounds for coordinate conversion */
   pdfBounds: PDFBounds;
   /** Current crop area in PDF coordinates */
-  cropArea: CropArea;
+  cropArea: Rectangle;
   /** Callback when crop area changes */
-  onCropAreaChange: (cropArea: CropArea) => void;
+  onCropAreaChange: (cropArea: Rectangle) => void;
   /** Whether the selector is disabled */
   disabled?: boolean;
   /** Child content (typically the PDF thumbnail) */
   children: React.ReactNode;
 }
-
-type ResizeHandle = 'nw' | 'ne' | 'sw' | 'se' | 'n' | 'e' | 's' | 'w' | null;
 
 const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
   pdfBounds,
@@ -39,7 +37,7 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState<ResizeHandle>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [initialCropArea, setInitialCropArea] = useState<CropArea>(cropArea);
+  const [initialCropArea, setInitialCropArea] = useState<Rectangle>(cropArea);
 
   // Convert PDF crop area to DOM coordinates for display
   const domRect = pdfToDOMCoordinates(cropArea, pdfBounds);
@@ -85,7 +83,7 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
     e.stopPropagation();
 
     // Start new crop selection
-    const newDomRect: DOMRect = { x, y, width: 20, height: 20 };
+    const newDomRect: Rectangle = { x, y, width: 20, height: 20 };
     const constrainedRect = constrainDOMRectToThumbnail(newDomRect, pdfBounds);
     const newCropArea = domToPDFCoordinates(constrainedRect, pdfBounds);
 
@@ -107,7 +105,7 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
       const newX = x - dragStart.x;
       const newY = y - dragStart.y;
 
-      const newDomRect: DOMRect = {
+      const newDomRect: Rectangle = {
         x: newX,
         y: newY,
         width: domRect.width,
@@ -188,7 +186,7 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
 
 // Helper functions
 
-function getResizeHandle(x: number, y: number, domRect: DOMRect): ResizeHandle {
+function getResizeHandle(x: number, y: number, domRect: Rectangle): ResizeHandle {
   const handleSize = 8;
   const tolerance = handleSize;
 
@@ -211,17 +209,17 @@ function isNear(a: number, b: number, tolerance: number): boolean {
   return Math.abs(a - b) <= tolerance;
 }
 
-function isPointInCropArea(x: number, y: number, domRect: DOMRect): boolean {
+function isPointInCropArea(x: number, y: number, domRect: Rectangle): boolean {
   return x >= domRect.x && x <= domRect.x + domRect.width &&
          y >= domRect.y && y <= domRect.y + domRect.height;
 }
 
 function calculateResizedRect(
   handle: ResizeHandle,
-  currentRect: DOMRect,
+  currentRect: Rectangle,
   mouseX: number,
   mouseY: number,
-): DOMRect {
+): Rectangle {
   let { x, y, width, height } = currentRect;
 
   switch (handle) {

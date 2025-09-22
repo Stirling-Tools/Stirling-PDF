@@ -5,10 +5,12 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { CropParametersHook } from "../../../hooks/tools/crop/useCropParameters";
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
 import CropAreaSelector from "./CropAreaSelector";
+import { DEFAULT_CROP_AREA } from "../../../constants/cropConstants";
+import { PAGE_SIZES } from "src/constants/pageSizeConstants";
 import {
   calculatePDFBounds,
   PDFBounds,
-  CropArea
+  Rectangle
 } from "../../../utils/cropCoordinates";
 import { pdfWorkerManager } from "../../../services/pdfWorkerManager";
 import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
@@ -69,12 +71,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         setPdfBounds(bounds);
 
         // Initialize crop area to full PDF if parameters are still default
-        const isDefault = parameters.parameters.width === 595 &&
-                         parameters.parameters.height === 842 &&
-                         parameters.parameters.x === 0 &&
-                         parameters.parameters.y === 0;
-
-        if (isDefault) {
+        if (parameters.parameters.cropArea === DEFAULT_CROP_AREA) {
           parameters.resetToFullPDF(bounds);
         }
 
@@ -83,10 +80,10 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       } catch (error) {
         console.error('Failed to load PDF dimensions:', error);
         // Fallback to A4 dimensions if PDF loading fails
-        const bounds = calculatePDFBounds(595, 842, CONTAINER_SIZE, CONTAINER_SIZE);
+        const bounds = calculatePDFBounds(PAGE_SIZES.A4.width, PAGE_SIZES.A4.height, CONTAINER_SIZE, CONTAINER_SIZE);
         setPdfBounds(bounds);
 
-        if (parameters.parameters.width === 595 && parameters.parameters.height === 842) {
+        if (parameters.parameters.cropArea.width === PAGE_SIZES.A4.width && parameters.parameters.cropArea.height === PAGE_SIZES.A4.height) {
           parameters.resetToFullPDF(bounds);
         }
       }
@@ -100,14 +97,14 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
 
 
   // Handle crop area changes from the selector
-  const handleCropAreaChange = (newCropArea: CropArea) => {
+  const handleCropAreaChange = (newCropArea: Rectangle) => {
     if (pdfBounds) {
       parameters.setCropArea(newCropArea, pdfBounds);
     }
   };
 
   // Handle manual coordinate input changes
-  const handleCoordinateChange = (field: keyof CropArea, value: number | string) => {
+  const handleCoordinateChange = (field: keyof Rectangle, value: number | string) => {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     if (isNaN(numValue)) return;
 
