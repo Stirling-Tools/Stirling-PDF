@@ -13,6 +13,7 @@ import "./styles/tailwind.css";
 import "./styles/cookieconsent.css";
 import "./index.css";
 import { RightRailProvider } from "./contexts/RightRailContext";
+import { ViewerProvider } from "./contexts/ViewerContext";
 
 // Import file ID debugging helpers (development only)
 import "./utils/fileIdSafety";
@@ -43,9 +44,11 @@ export default function App() {
               <FilesModalProvider>
                 <ToolWorkflowProvider>
                   <SidebarProvider>
-                    <RightRailProvider>
-                      <HomePage />
-                    </RightRailProvider>
+                    <ViewerProvider>
+                      <RightRailProvider>
+                        <HomePage />
+                      </RightRailProvider>
+                    </ViewerProvider>
                   </SidebarProvider>
                 </ToolWorkflowProvider>
               </FilesModalProvider>
