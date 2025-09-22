@@ -17,6 +17,7 @@ interface SignatureActions {
   activateDrawMode: () => void;
   deactivateDrawMode: () => void;
   activateSignaturePlacementMode: () => void;
+  updateDrawSettings: (color: string, size: number) => void;
 }
 
 // Combined context interface
@@ -60,9 +61,14 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, []);
 
   const activateDrawMode = useCallback(() => {
+    console.log('SignatureContext.activateDrawMode called, apiRef:', !!signatureApiRef.current);
     if (signatureApiRef.current) {
+      console.log('Calling signatureApiRef.current.activateDrawMode()');
       signatureApiRef.current.activateDrawMode();
       setPlacementMode(true);
+      console.log('Draw mode activated successfully');
+    } else {
+      console.log('signatureApiRef.current is null - cannot activate draw mode');
     }
   }, [setPlacementMode]);
 
@@ -84,6 +90,16 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [state.signatureConfig, setPlacementMode]);
 
+  const updateDrawSettings = useCallback((color: string, size: number) => {
+    console.log('SignatureContext.updateDrawSettings called with color:', color, 'size:', size);
+    console.log('signatureApiRef.current available:', !!signatureApiRef.current);
+    if (signatureApiRef.current) {
+      signatureApiRef.current.updateDrawSettings(color, size);
+    } else {
+      console.log('signatureApiRef.current is null - cannot update draw settings');
+    }
+  }, []);
+
 
   // No auto-activation - all modes use manual buttons
 
@@ -95,6 +111,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     activateDrawMode,
     deactivateDrawMode,
     activateSignaturePlacementMode,
+    updateDrawSettings,
   };
 
   return (

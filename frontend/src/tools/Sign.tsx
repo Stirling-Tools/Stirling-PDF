@@ -12,7 +12,7 @@ import { useSignature } from "../contexts/SignatureContext";
 const Sign = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const { setWorkbench } = useNavigation();
-  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode } = useSignature();
+  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings } = useSignature();
 
   // Manual sync function
   const syncSignatureConfig = () => {
@@ -41,6 +41,16 @@ const Sign = (props: BaseToolProps) => {
     }
   }, [base.selectedFiles.length, setWorkbench]);
 
+  // Auto-activate draw mode when files are loaded and draw type is selected
+  useEffect(() => {
+    if (base.selectedFiles.length > 0 && base.params.parameters.signatureType === 'draw') {
+      console.log('Sign: Files loaded with draw mode, activating after delay');
+      setTimeout(() => {
+        activateDrawMode();
+      }, 1000); // Give viewer time to initialize
+    }
+  }, [base.selectedFiles.length, base.params.parameters.signatureType, activateDrawMode]);
+
   // Sync signature configuration with context
   useEffect(() => {
     setSignatureConfig(base.params.parameters);
@@ -60,9 +70,10 @@ const Sign = (props: BaseToolProps) => {
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}
-            onActivateDrawMode={activateDrawMode}
+            onActivateDrawMode={() => activateDrawMode()}
             onActivateSignaturePlacement={handleSignaturePlacement}
             onDeactivateSignature={deactivateDrawMode}
+            onUpdateDrawSettings={updateDrawSettings}
           />
         ),
       });
@@ -79,7 +90,7 @@ const Sign = (props: BaseToolProps) => {
     steps: getSteps(),
     executeButton: {
       text: t('sign.submit', 'Sign Document'),
-      isVisible: base.operation.files.length === 0,
+      isVisible: false, // Hide the execute button - signatures are placed directly
       loadingText: t('loading'),
       onClick: base.handleExecute,
       disabled: !base.params.validateParameters() || base.selectedFiles.length === 0 || !base.endpointEnabled,

@@ -9,6 +9,7 @@ export interface SignatureAPI {
   addTextSignature: (text: string, x: number, y: number, pageIndex: number) => void;
   activateDrawMode: () => void;
   activateSignaturePlacementMode: () => void;
+  updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
   applySignatureFromParameters: (params: SignParameters) => void;
 }
@@ -63,9 +64,26 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
     },
 
     activateDrawMode: () => {
-      if (!annotationApi) return;
+      console.log('SignatureAPIBridge.activateDrawMode called, annotationApi:', !!annotationApi);
+      if (!annotationApi) {
+        console.log('No annotationApi available');
+        return;
+      }
+
+      console.log('Setting active tool to ink');
       // Activate the built-in ink tool for drawing
       annotationApi.setActiveTool('ink');
+
+      // Set default ink tool properties (black color, 2px width)
+      const activeTool = annotationApi.getActiveTool();
+      console.log('Active tool after setting ink:', activeTool);
+      if (activeTool && activeTool.id === 'ink') {
+        console.log('Setting ink tool defaults');
+        annotationApi.setToolDefaults('ink', {
+          color: '#000000',
+          thickness: 2
+        });
+      }
     },
 
     activateSignaturePlacementMode: () => {
@@ -107,6 +125,28 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
       }
     },
 
+    updateDrawSettings: (color: string, size: number) => {
+      console.log('SignatureAPIBridge.updateDrawSettings called with color:', color, 'size:', size);
+      if (!annotationApi) {
+        console.log('No annotationApi available for updateDrawSettings');
+        return;
+      }
+
+      // Always update ink tool defaults regardless of current tool
+      console.log('Setting ink tool defaults');
+      annotationApi.setToolDefaults('ink', {
+        color: color,
+        thickness: size
+      });
+
+      // If ink tool is currently active, reactivate it to apply settings immediately
+      const activeTool = annotationApi.getActiveTool();
+      console.log('Current active tool:', activeTool);
+      if (activeTool && activeTool.id === 'ink') {
+        console.log('Reactivating ink tool to apply new settings');
+        annotationApi.setActiveTool('ink');
+      }
+    },
 
     deactivateTools: () => {
       if (!annotationApi) return;

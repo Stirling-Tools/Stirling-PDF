@@ -9,7 +9,7 @@ export interface SignaturePosition {
 }
 
 export interface SignParameters {
-  signatureType: 'image' | 'text' | 'draw';
+  signatureType: 'image' | 'text' | 'draw' | 'canvas';
   signatureData?: string; // Base64 encoded image or text content
   signaturePosition?: SignaturePosition;
   reason?: string;
@@ -38,6 +38,11 @@ const validateSignParameters = (parameters: SignParameters): boolean => {
 
   // For image signatures, require signature data
   if (parameters.signatureType === 'image' && !parameters.signatureData) {
+    return false;
+  }
+
+  // For canvas signatures, require signature data
+  if (parameters.signatureType === 'canvas' && !parameters.signatureData) {
     return false;
   }
 
