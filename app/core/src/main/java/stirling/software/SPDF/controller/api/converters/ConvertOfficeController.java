@@ -171,9 +171,9 @@ public class ConvertOfficeController {
 
     private boolean isValidFileExtension(String fileExtension) {
         return RegexPatternUtils.getInstance()
-            .getFileExtensionValidationPattern()
-            .matcher(fileExtension)
-            .matches();
+                .getFileExtensionValidationPattern()
+                .matcher(fileExtension)
+                .matches();
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/file/pdf")

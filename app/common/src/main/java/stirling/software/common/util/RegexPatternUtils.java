@@ -208,6 +208,29 @@ public final class RegexPatternUtils {
         return getPattern("[^a-zA-Z0-9]");
     }
 
+    /**
+     * Pattern for replacing non-alphanumeric characters with underscore (explicit underscore
+     * variant)
+     */
+    public Pattern getNonAlnumUnderscorePattern() {
+        return getPattern("[^A-Za-z0-9_]");
+    }
+
+    /** Pattern for collapsing multiple underscores */
+    public Pattern getMultipleUnderscoresPattern() {
+        return getPattern("_+");
+    }
+
+    /** Pattern for trimming leading underscores */
+    public Pattern getLeadingUnderscoresPattern() {
+        return getPattern("^_+");
+    }
+
+    /** Pattern for trimming trailing underscores */
+    public Pattern getTrailingUnderscoresPattern() {
+        return getPattern("_+$");
+    }
+
     /** Pattern for matching upload/download paths (case insensitive) */
     public Pattern getUploadDownloadPathPattern() {
         return getPattern("(?i).*/(upload|download)/.*");
@@ -452,19 +475,15 @@ public final class RegexPatternUtils {
     /** Pattern for email validation */
     public Pattern getEmailValidationPattern() {
         return getPattern(
-            "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-ZaZ0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(?:\\.[A-Za-z]{2,})$");
+                "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-ZaZ0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(?:\\.[A-Za-z]{2,})$");
     }
 
-    /**
-     * Pattern for matching Output:<TYPE> in API descriptions
-     */
+    /* Pattern for matching Output:<TYPE> in API descriptions */
     public Pattern getApiDocOutputTypePattern() {
         return getPattern("Output:(\\w+)");
     }
 
-    /**
-     * Pattern for matching Input:<TYPE> in API descriptions
-     */
+    /* Pattern for matching Input:<TYPE> in API descriptions */
     public Pattern getApiDocInputTypePattern() {
         return getPattern("Input:(\\w+)");
     }
@@ -476,9 +495,7 @@ public final class RegexPatternUtils {
         return getPattern("Type:(\\w+)");
     }
 
-    /**
-     * Pattern for validating file extensions (2-4 alphanumeric, case-insensitive)
-     */
+    /* Pattern for validating file extensions (2-4 alphanumeric, case-insensitive) */
     public Pattern getFileExtensionValidationPattern() {
         return getPattern("^[a-zA-Z0-9]{2,4}$", Pattern.CASE_INSENSITIVE);
     }

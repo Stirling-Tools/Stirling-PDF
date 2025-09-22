@@ -83,10 +83,10 @@ public class ApiDocService {
         ApiEndpoint endpoint = apiDocumentation.get(operationName);
         String description = endpoint.getDescription();
         Matcher matcher =
-            (output
-                ? RegexPatternUtils.getInstance().getApiDocOutputTypePattern()
-                : RegexPatternUtils.getInstance().getApiDocInputTypePattern())
-                .matcher(description);
+                (output
+                                ? RegexPatternUtils.getInstance().getApiDocOutputTypePattern()
+                                : RegexPatternUtils.getInstance().getApiDocInputTypePattern())
+                        .matcher(description);
         while (matcher.find()) {
             String type = matcher.group(1).toUpperCase();
             if (outputToFileTypes.containsKey(type)) {
@@ -156,7 +156,7 @@ public class ApiDocService {
         ApiEndpoint endpoint = apiDocumentation.get(operationName);
         String description = endpoint.getDescription();
         Matcher matcher =
-            RegexPatternUtils.getInstance().getApiDocTypePattern().matcher(description);
+                RegexPatternUtils.getInstance().getApiDocTypePattern().matcher(description);
         if (matcher.find()) {
             String type = matcher.group(1);
             return type.startsWith("MI");

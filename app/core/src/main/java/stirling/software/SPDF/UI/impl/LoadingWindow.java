@@ -22,7 +22,7 @@ import stirling.software.common.util.UIScaling;
 @Slf4j
 public class LoadingWindow extends JDialog {
     private static final Pattern PATTERN =
-        RegexPatternUtils.getInstance().getContainsDigitsPattern();
+            RegexPatternUtils.getInstance().getContainsDigitsPattern();
     private final JProgressBar progressBar;
     private final JLabel statusLabel;
     private final JPanel mainPanel;

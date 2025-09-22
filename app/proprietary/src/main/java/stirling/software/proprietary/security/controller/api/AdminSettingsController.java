@@ -446,7 +446,7 @@ public class AdminSettingsController {
 
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
     private static final Pattern SAFE_KEY_PATTERN =
-        RegexPatternUtils.getInstance().getPattern("^[a-zA-Z0-9._]+$");
+            RegexPatternUtils.getInstance().getPattern("^[a-zA-Z0-9._]+$");
     private static final int MAX_NESTING_DEPTH = 10;
 
     // Security: Generic error messages to prevent information disclosure

@@ -594,7 +594,7 @@ public class PdfUtils {
         } else {
             // remove whitespaces using cached pattern
             Pattern whitespacePattern =
-                patternCache.getPattern(RegexPatternUtils.getWhitespaceRegex());
+                    patternCache.getPattern(RegexPatternUtils.getWhitespaceRegex());
             Matcher whitespaceMatcher = whitespacePattern.matcher(pagesToCheck);
             pagesToCheck = whitespaceMatcher.replaceAll("");
 

@@ -14,9 +14,9 @@ import stirling.software.common.util.RegexPatternUtils;
 public final class SecretMasker {
 
     private static final Pattern SENSITIVE =
-        RegexPatternUtils.getInstance()
-            .getPattern(
-                "(?i)(password|token|secret|api[_-]?key|authorization|auth|jwt|cred|cert)");
+            RegexPatternUtils.getInstance()
+                    .getPattern(
+                            "(?i)(password|token|secret|api[_-]?key|authorization|auth|jwt|cred|cert)");
 
     private SecretMasker() {}
 

@@ -23,9 +23,9 @@ public class SsrfProtectionService {
     private final ApplicationProperties applicationProperties;
 
     private static final Pattern DATA_URL_PATTERN =
-        RegexPatternUtils.getInstance().getPattern("^data:.*", Pattern.CASE_INSENSITIVE);
+            RegexPatternUtils.getInstance().getPattern("^data:.*", Pattern.CASE_INSENSITIVE);
     private static final Pattern FRAGMENT_PATTERN =
-        RegexPatternUtils.getInstance().getPattern("^#.*");
+            RegexPatternUtils.getInstance().getPattern("^#.*");
 
     public enum SsrfProtectionLevel {
         OFF, // No SSRF protection - allows all URLs
