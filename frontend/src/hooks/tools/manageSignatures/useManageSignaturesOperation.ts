@@ -66,7 +66,6 @@ export const useManageSignaturesOperation = () => {
 
   return useToolOperation<ManageSignaturesParameters>({
     ...manageSignaturesOperationConfig,
-    filePrefix: t('manageSignatures.filenamePrefix', 'signed') + '_',
     getErrorMessage: createStandardErrorHandler(t('manageSignatures.error.failed', 'An error occurred while processing signatures.'))
   });
 };
