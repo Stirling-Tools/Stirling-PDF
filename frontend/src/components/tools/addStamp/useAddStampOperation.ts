@@ -32,7 +32,7 @@ export const buildAddStampFormData = (parameters: AddStampParameters, file: File
 export const addStampOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildAddStampFormData,
-  operationType: 'stamp',
+  operationType: 'addStamp',
   endpoint: '/api/v1/misc/add-stamp',
   defaultParameters,
 } as const;
