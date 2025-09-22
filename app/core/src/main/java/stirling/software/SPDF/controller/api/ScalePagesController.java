@@ -97,8 +97,9 @@ public class ScalePagesController {
         outputDocument.close();
         sourceDocument.close();
 
-        return WebResponseUtils.baosToWebResponse(
-                baos, GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"));
+        return WebResponseUtils.bytesToWebResponse(
+                baos.toByteArray(),
+                GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"));
     }
 
     private PDRectangle getTargetSize(String targetPDRectangle, PDDocument sourceDocument) {
