@@ -52,28 +52,38 @@ public class GeneralUtils {
      * @throws IOException if I/O error occurs during conversion
      * @throws IllegalArgumentException if file exceeds maximum allowed size
      */
-    public File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
-        if (multipartFile == null || multipartFile.isEmpty()) {
-            throw new IllegalArgumentException("MultipartFile cannot be null or empty");
+    public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
+        String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
+        if (customTempDir == null || customTempDir.isEmpty()) {
+            customTempDir = System.getProperty("stirling.tempfiles.directory");
         }
 
-        // Security: Check file size to prevent DoS attacks (100MB limit)
-        long maxFileSize = 100 * 1024 * 1024; // 100MB
-        if (multipartFile.getSize() > maxFileSize) {
-            throw new IllegalArgumentException(
-                    "File size exceeds maximum allowed size of " + formatBytes(maxFileSize));
-        }
+        File tempFile;
 
-        Path tempDir = getTempDirectory();
-        File tempFile = Files.createTempFile(tempDir, "stirling-pdf-", null).toFile();
+        if (customTempDir != null && !customTempDir.isEmpty()) {
+            Path tempDir = Path.of(customTempDir);
+            if (!Files.exists(tempDir)) {
+                Files.createDirectories(tempDir);
+            }
+            tempFile = Files.createTempFile(tempDir, "stirling-pdf-", null).toFile();
+        } else {
+            Path tempDir = Path.of(System.getProperty("java.io.tmpdir"), "stirling-pdf");
+            if (!Files.exists(tempDir)) {
+                Files.createDirectories(tempDir);
+            }
+            tempFile = Files.createTempFile(tempDir, "stirling-pdf-", null).toFile();
+        }
 
         try (InputStream inputStream = multipartFile.getInputStream();
                 FileOutputStream outputStream = new FileOutputStream(tempFile)) {
 
-            // Use Java 9+ transferTo for efficient copying
-            inputStream.transferTo(outputStream);
-        }
+            byte[] buffer = new byte[8192];
+            int bytesRead;
 
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+        }
         return tempFile;
     }
 
@@ -343,9 +353,17 @@ public class GeneralUtils {
      * @return temporary File containing the multipart file data
      * @throws IOException if I/O error occurs during conversion
      */
-    public File multipartToFile(MultipartFile multipart) throws IOException {
-        // Delegate to the improved method with size validation
-        return convertMultipartFileToFile(multipart);
+    public static File multipartToFile(MultipartFile multipart) throws IOException {
+        Path tempFile = Files.createTempFile("overlay-", ".pdf");
+        try (InputStream in = multipart.getInputStream();
+                FileOutputStream out = new FileOutputStream(tempFile.toFile())) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+        }
+        return tempFile.toFile();
     }
 
     /**
@@ -673,6 +691,9 @@ public class GeneralUtils {
         }
     }
 
+    /*------------------------------------------------------------------------*
+     *                  Internal Implementation Details                       *
+     *------------------------------------------------------------------------*/
     public void saveKeyToSettings(String key, Object newValue) throws IOException {
         String[] keyArray = key.split("\\.");
         Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
