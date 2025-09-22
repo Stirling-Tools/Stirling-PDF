@@ -41,29 +41,29 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {/* Small preview */}
         <Box style={{ width: '7.5rem', height: '9.375rem', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {currentFile && thumbnail ? (
-            <img 
-              src={thumbnail} 
+            <img
+              src={thumbnail}
               alt={currentFile.name}
-              style={{ 
-                maxWidth: '100%', 
-                maxHeight: '100%', 
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
                 objectFit: 'contain',
                 borderRadius: '0.25rem',
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
               }}
             />
           ) : currentFile ? (
-            <Center style={{ 
-              width: '100%', 
-              height: '100%', 
-              backgroundColor: 'var(--mantine-color-gray-1)', 
+            <Center style={{
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'var(--mantine-color-gray-1)',
               borderRadius: 4
             }}>
               <PictureAsPdfIcon style={{ fontSize: 20, color: 'var(--mantine-color-gray-6)' }} />
             </Center>
           ) : null}
         </Box>
-        
+
         {/* File info */}
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Text size="sm" fw={500} truncate>
@@ -82,11 +82,11 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
           {/* Compact tool chain for mobile */}
           {currentFile?.toolHistory && currentFile.toolHistory.length > 0 && (
             <Text size="xs" c="dimmed">
-              {currentFile.toolHistory.map((tool: any) => tool.toolName).join(' → ')}
+              {currentFile.toolHistory.map((tool) => t(`home.${tool.toolId}.title`, tool.toolId)).join(' → ')}
             </Text>
           )}
         </Box>
-        
+
         {/* Navigation arrows for multiple files */}
         {hasMultipleFiles && (
           <Box style={{ display: 'flex', gap: '0.25rem' }}>
@@ -109,19 +109,19 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
           </Box>
         )}
       </Box>
-      
+
       {/* Action Button */}
-      <Button 
-        size="sm" 
+      <Button
+        size="sm"
         onClick={onOpenFiles}
         disabled={!hasSelection}
         fullWidth
-        style={{ 
-          backgroundColor: hasSelection ? 'var(--btn-open-file)' : 'var(--mantine-color-gray-4)', 
-          color: 'white' 
+        style={{
+          backgroundColor: hasSelection ? 'var(--btn-open-file)' : 'var(--mantine-color-gray-4)',
+          color: 'white'
         }}
       >
-        {selectedFiles.length > 1 
+        {selectedFiles.length > 1
           ? t('fileManager.openFiles', `Open ${selectedFiles.length} Files`)
           : t('fileManager.openFile', 'Open File')
         }

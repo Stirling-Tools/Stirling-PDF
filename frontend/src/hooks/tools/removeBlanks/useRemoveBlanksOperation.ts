@@ -17,7 +17,7 @@ export const buildRemoveBlanksFormData = (parameters: RemoveBlanksParameters, fi
 export const removeBlanksOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildRemoveBlanksFormData,
-  operationType: 'remove-blanks',
+  operationType: 'removeBlanks',
   endpoint: '/api/v1/misc/remove-blanks',
   defaultParameters,
 } as const satisfies ToolOperationConfig<RemoveBlanksParameters>;

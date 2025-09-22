@@ -9,6 +9,8 @@ import { extractErrorMessage } from '../../../utils/toolErrorHandler';
 import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '../../../contexts/file/fileActions';
+import { ToolOperation } from '../../../types/file';
+import { ToolId } from '../../../types/toolId';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -29,7 +31,7 @@ export enum ToolType {
  */
 interface BaseToolOperationConfig<TParams> {
   /** Operation identifier for tracking and logging */
-  operationType: string;
+  operationType: ToolId;
 
   /**
    * Prefix added to processed filenames (e.g., 'compressed_', 'split_').
@@ -274,8 +276,8 @@ export const useToolOperation = <TParams>(
         }
 
         // Create new tool operation
-        const newToolOperation = {
-          toolName: config.operationType,
+        const newToolOperation: ToolOperation = {
+          toolId: config.operationType,
           timestamp: Date.now()
         };
 

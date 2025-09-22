@@ -15,7 +15,7 @@ export const buildRemovePagesFormData = (parameters: RemovePagesParameters, file
 export const removePagesOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildRemovePagesFormData,
-  operationType: 'remove-pages',
+  operationType: 'removePages',
   endpoint: '/api/v1/general/remove-pages',
   defaultParameters,
 } as const satisfies ToolOperationConfig<RemovePagesParameters>;
