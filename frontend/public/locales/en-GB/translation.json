@@ -383,7 +383,7 @@
       "title": "Add image",
       "desc": "Adds a image onto a set location on the PDF"
     },
-    "attachments": {
+    "addAttachments": {
       "title": "Add Attachments",
       "desc": "Add or remove embedded files (attachments) to/from a PDF"
     },
@@ -415,7 +415,7 @@
       "title": "Extract Images",
       "desc": "Extracts all images from a PDF and saves them to zip"
     },
-    "ScannerImageSplit": {
+    "scannerImageSplit": {
       "title": "Detect/Split Scanned photos",
       "desc": "Splits multiple photos from within a photo/PDF"
     },
@@ -459,15 +459,11 @@
       "title": "Adjust page size/scale",
       "desc": "Change the size/scale of a page and/or its contents."
     },
-    "pipeline": {
-      "title": "Pipeline",
-      "desc": "Run multiple actions on PDFs by defining pipeline scripts"
-    },
     "addPageNumbers": {
       "title": "Add Page Numbers",
       "desc": "Add Page numbers throughout a document in a set location"
     },
-    "auto-rename": {
+    "autoRename": {
       "title": "Auto Rename PDF File",
       "desc": "Auto renames a PDF file based on its detected header"
     },
@@ -503,15 +499,15 @@
       "title": "Redact",
       "desc": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "overlay-pdfs": {
+    "overlayPdfs": {
       "title": "Overlay PDFs",
       "desc": "Overlays PDFs on-top of another PDF"
     },
-    "split-by-sections": {
+    "splitBySections": {
       "title": "Split PDF by Sections",
       "desc": "Divide each page of a PDF into smaller horizontal and vertical sections"
     },
-    "AddStampRequest": {
+    "addStamp": {
       "title": "Add Stamp to PDF",
       "desc": "Add text or add image stamps at set locations"
     },
@@ -530,10 +526,6 @@
     "swagger": {
       "title": "API Documentation",
       "desc": "View API documentation and test endpoints"
-    },
-    "replace-color": {
-      "title": "Advanced Colour options",
-      "desc": "Replace colour for text and background in PDF and invert full colour of pdf to reduce file size"
     },
     "fakeScan": {
       "title": "Fake Scan",
@@ -563,17 +555,9 @@
       "title": "Remove Pages",
       "desc": "Remove specific pages from a PDF document"
     },
-    "removeImagePdf": {
-      "title": "Remove Image",
-      "desc": "Remove images from PDF documents"
-    },
     "autoSizeSplitPDF": {
       "title": "Auto Split by Size/Count",
       "desc": "Automatically split PDFs by file size or page count"
-    },
-    "adjust-contrast": {
-      "title": "Adjust Colours/Contrast",
-      "desc": "Adjust colours and contrast of PDF documents"
     },
     "replaceColorPdf": {
       "title": "Replace & Invert Colour",

@@ -14,7 +14,7 @@ export const buildSingleLargePageFormData = (_parameters: SingleLargePageParamet
 export const singleLargePageOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildSingleLargePageFormData,
-  operationType: 'single-large-page',
+  operationType: 'pdfToSinglePage',
   endpoint: '/api/v1/general/pdf-to-single-page',
   defaultParameters,
 } as const;
