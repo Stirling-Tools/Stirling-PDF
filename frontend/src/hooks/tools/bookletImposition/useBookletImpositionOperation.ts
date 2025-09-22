@@ -24,7 +24,6 @@ export const bookletImpositionOperationConfig = {
   buildFormData: buildBookletImpositionFormData,
   operationType: 'bookletImposition',
   endpoint: '/api/v1/general/booklet-imposition',
-  filePrefix: 'booklet_',
   defaultParameters,
 } as const;
 
