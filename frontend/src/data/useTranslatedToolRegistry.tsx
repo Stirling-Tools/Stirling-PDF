@@ -290,14 +290,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
       },
-      "get-all-info-on-pdf": {
-        icon: <LocalIcon icon="fact-check-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
-        component: null,
-        description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.VERIFICATION,
-      },
 
       // Document Review
 
