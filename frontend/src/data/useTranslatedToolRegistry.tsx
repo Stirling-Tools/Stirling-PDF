@@ -23,6 +23,7 @@ import RemoveCertificateSign from "../tools/RemoveCertificateSign";
 import Flatten from "../tools/Flatten";
 import Rotate from "../tools/Rotate";
 import ChangeMetadata from "../tools/ChangeMetadata";
+import Crop from "../tools/Crop";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -43,6 +44,7 @@ import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperati
 import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
+import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -64,6 +66,7 @@ import MergeSettings from '../components/tools/merge/MergeSettings';
 import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
+import CropSettings from "../components/tools/crop/CropSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -319,10 +322,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       crop: {
         icon: <LocalIcon icon="crop-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.crop.title", "Crop PDF"),
-        component: null,
+        component: Crop,
         description: t("home.crop.desc", "Crop a PDF to reduce its size (maintains text!)"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["crop"],
+        operationConfig: cropOperationConfig,
+        settingsComponent: CropSettings,
       },
       rotate: {
         icon: <LocalIcon icon="rotate-right-rounded" width="1.5rem" height="1.5rem" />,
