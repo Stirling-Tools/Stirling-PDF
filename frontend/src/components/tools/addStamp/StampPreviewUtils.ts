@@ -52,17 +52,21 @@ export type StampPreviewStyle = { container: any; item: any };
 
 // Unified per-alphabet preview adjustments
 export type Alphabet = 'roman' | 'arabic' | 'japanese' | 'korean' | 'chinese' | 'thai';
-export type AlphabetTweaks = { scale: number; rowOffsetRem: [number, number, number]; lineHeight: number; capHeightRatio: number };
+export type AlphabetTweaks = { scale: number; rowOffsetRem: [number, number, number]; lineHeight: number; capHeightRatio: number; defaultFontSize: number };
 export const ALPHABET_PREVIEW_TWEAKS: Record<Alphabet, AlphabetTweaks> = {
   // [top, middle, bottom] row offsets in rem
-  roman: { scale: 1.0/1.18, rowOffsetRem: [0, 1, 2.2], lineHeight: 1.28, capHeightRatio: 0.70 },
-  arabic: { scale: 1.2, rowOffsetRem: [0, 1.5, 2.5], lineHeight: 1, capHeightRatio: 0.68 },
-  japanese: { scale: 1/1.2, rowOffsetRem: [-0.1, 1, 2], lineHeight: 1, capHeightRatio: 0.72 },
-  korean: { scale: 1.0/1.05, rowOffsetRem: [-0.2, 0.5, 1.4], lineHeight: 1, capHeightRatio: 0.72 },
-  chinese: { scale: 1/1.2, rowOffsetRem: [0, 2, 2.8], lineHeight: 1, capHeightRatio: 0.72 },
-  thai: { scale: 1/1.2, rowOffsetRem: [-1, 0, .8], lineHeight: 1, capHeightRatio: 0.66 },
+  roman: { scale: 1.0/1.18, rowOffsetRem: [0, 1, 2.2], lineHeight: 1.28, capHeightRatio: 0.70, defaultFontSize: 80 },
+  arabic: { scale: 1.2, rowOffsetRem: [0, 1.5, 2.5], lineHeight: 1, capHeightRatio: 0.68, defaultFontSize: 80 },
+  japanese: { scale: 1/1.2, rowOffsetRem: [-0.1, 1, 2], lineHeight: 1, capHeightRatio: 0.72, defaultFontSize: 80 },
+  korean: { scale: 1.0/1.05, rowOffsetRem: [-0.2, 0.5, 1.4], lineHeight: 1, capHeightRatio: 0.72, defaultFontSize: 80 },
+  chinese: { scale: 1/1.2, rowOffsetRem: [0, 2, 2.8], lineHeight: 1, capHeightRatio: 0.72, defaultFontSize: 30 }, // temporary default font size so that it fits on the PDF
+  thai: { scale: 1/1.2, rowOffsetRem: [-1, 0, .8], lineHeight: 1, capHeightRatio: 0.66, defaultFontSize: 80 },
 };
 export const getAlphabetPreviewScale = (alphabet: string): number => (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.scale ?? 1.0;
+
+export const getDefaultFontSizeForAlphabet = (alphabet: string): number => {
+  return (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.defaultFontSize ?? 80;
+};
 
 export function computeStampPreviewStyle(
   parameters: AddStampParameters,

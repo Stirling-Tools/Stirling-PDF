@@ -14,6 +14,7 @@ import { Tooltip } from "../components/shared/Tooltip";
 import ButtonSelector from "../components/shared/ButtonSelector";
 import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
 import ObscuredOverlay from "../components/shared/ObscuredOverlay";
+import { getDefaultFontSizeForAlphabet } from "../components/tools/addStamp/StampPreviewUtils";
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -124,7 +125,12 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               <Select
                 label={t('AddStampRequest.alphabet', 'Alphabet')}
                 value={params.parameters.alphabet}
-                onChange={(v) => params.updateParameter('alphabet', (v as any) || 'roman')}
+                onChange={(v) => {
+                  const nextAlphabet = (v as any) || 'roman';
+                  params.updateParameter('alphabet', nextAlphabet);
+                  const nextDefault = getDefaultFontSizeForAlphabet(nextAlphabet);
+                  params.updateParameter('fontSize', nextDefault);
+                }}
                 data={[
                   { value: 'roman', label: 'Roman' },
                   { value: 'arabic', label: 'العربية' },
