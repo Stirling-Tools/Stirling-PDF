@@ -41,15 +41,6 @@ const Sign = (props: BaseToolProps) => {
     }
   }, [base.selectedFiles.length, setWorkbench]);
 
-  // Auto-activate draw mode when files are loaded and draw type is selected
-  useEffect(() => {
-    if (base.selectedFiles.length > 0 && base.params.parameters.signatureType === 'draw') {
-      console.log('Sign: Files loaded with draw mode, activating after delay');
-      setTimeout(() => {
-        activateDrawMode();
-      }, 1000); // Give viewer time to initialize
-    }
-  }, [base.selectedFiles.length, base.params.parameters.signatureType, activateDrawMode]);
 
   // Sync signature configuration with context
   useEffect(() => {

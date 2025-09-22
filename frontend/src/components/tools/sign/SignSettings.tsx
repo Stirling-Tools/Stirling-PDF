@@ -232,33 +232,18 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     }
   }, [parameters.signatureType, canvasSignatureData, imageSignatureData, onParameterChange]);
 
-  // Initialize draw mode on mount if draw type is selected
+  // Auto-activate draw mode when draw type is selected (only trigger on signatureType change)
   React.useEffect(() => {
-    console.log('SignSettings: Component mounted, initial signatureType:', parameters.signatureType);
-    if (parameters.signatureType === 'draw' && onActivateDrawMode) {
-      console.log('SignSettings: Initial activation of draw mode with delay');
-      // Add a delay to ensure the API bridge is ready
-      setTimeout(() => {
-        onActivateDrawMode();
-      }, 500);
-    }
-  }, [onActivateDrawMode]); // Only run on mount/when callback changes
-
-  // Auto-activate draw mode when draw type is selected
-  React.useEffect(() => {
-    console.log('SignSettings: signatureType changed to:', parameters.signatureType);
     if (parameters.signatureType === 'draw') {
-      console.log('SignSettings: Activating draw mode, onActivateDrawMode:', !!onActivateDrawMode);
       if (onActivateDrawMode) {
         onActivateDrawMode();
       }
     } else if (parameters.signatureType !== 'draw') {
-      console.log('SignSettings: Deactivating draw mode, onDeactivateSignature:', !!onDeactivateSignature);
       if (onDeactivateSignature) {
         onDeactivateSignature();
       }
     }
-  }, [parameters.signatureType, onActivateDrawMode, onDeactivateSignature]);
+  }, [parameters.signatureType]); // Only depend on signatureType to avoid loops
 
   // Update draw settings when color or pen size changes
   React.useEffect(() => {

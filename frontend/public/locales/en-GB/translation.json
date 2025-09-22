@@ -1638,7 +1638,42 @@
     "previous": "Previous page",
     "maintainRatio": "Toggle maintain aspect ratio",
     "undo": "Undo",
-    "redo": "Redo"
+    "redo": "Redo",
+    "submit": "Sign Document",
+    "steps": {
+      "configure": "Configure Signature"
+    },
+    "type": {
+      "title": "Signature Type",
+      "draw": "Draw",
+      "canvas": "Canvas",
+      "image": "Image",
+      "text": "Text"
+    },
+    "draw": {
+      "title": "Draw your signature",
+      "clear": "Clear"
+    },
+    "image": {
+      "label": "Upload signature image",
+      "placeholder": "Select image file",
+      "hint": "Upload a PNG or JPG image of your signature"
+    },
+    "text": {
+      "name": "Signer Name",
+      "placeholder": "Enter your full name"
+    },
+    "instructions": {
+      "title": "How to add signature"
+    },
+    "activate": "Activate Signature Placement",
+    "deactivate": "Stop Placing Signatures",
+    "results": {
+      "title": "Signature Results"
+    },
+    "error": {
+      "failed": "An error occurred while signing the PDF."
+    }
   },
   "flatten": {
     "tags": "static,deactivate,non-interactive,streamline",

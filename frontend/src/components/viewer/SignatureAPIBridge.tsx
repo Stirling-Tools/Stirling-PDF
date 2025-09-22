@@ -64,21 +64,14 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
     },
 
     activateDrawMode: () => {
-      console.log('SignatureAPIBridge.activateDrawMode called, annotationApi:', !!annotationApi);
-      if (!annotationApi) {
-        console.log('No annotationApi available');
-        return;
-      }
+      if (!annotationApi) return;
 
-      console.log('Setting active tool to ink');
       // Activate the built-in ink tool for drawing
       annotationApi.setActiveTool('ink');
 
       // Set default ink tool properties (black color, 2px width)
       const activeTool = annotationApi.getActiveTool();
-      console.log('Active tool after setting ink:', activeTool);
       if (activeTool && activeTool.id === 'ink') {
-        console.log('Setting ink tool defaults');
         annotationApi.setToolDefaults('ink', {
           color: '#000000',
           thickness: 2

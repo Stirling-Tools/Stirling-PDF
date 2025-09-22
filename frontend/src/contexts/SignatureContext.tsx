@@ -61,14 +61,9 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, []);
 
   const activateDrawMode = useCallback(() => {
-    console.log('SignatureContext.activateDrawMode called, apiRef:', !!signatureApiRef.current);
     if (signatureApiRef.current) {
-      console.log('Calling signatureApiRef.current.activateDrawMode()');
       signatureApiRef.current.activateDrawMode();
       setPlacementMode(true);
-      console.log('Draw mode activated successfully');
-    } else {
-      console.log('signatureApiRef.current is null - cannot activate draw mode');
     }
   }, [setPlacementMode]);
 
