@@ -46,7 +46,7 @@ public class GeneralUtils {
     // Valid size units used for convertSizeToBytes validation and parsing
     private final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
 
-    /**
+    /*
      * Converts a MultipartFile to a regular File with improved performance and security.
      *
      * @param multipartFile the multipart file to convert
@@ -89,7 +89,7 @@ public class GeneralUtils {
         return tempFile;
     }
 
-    /**
+    /*
      * Gets the configured temporary directory, creating it if necessary.
      *
      * @return Path to the temporary directory
@@ -115,7 +115,7 @@ public class GeneralUtils {
         return tempDir;
     }
 
-    /**
+    /*
      * Remove file extension
      *
      * <p>Uses fast string operations for common cases (valid extensions) and falls back to
@@ -153,7 +153,7 @@ public class GeneralUtils {
         return matcher.find() ? matcher.replaceFirst("") : filename;
     }
 
-    /**
+    /*
      * Append suffix to base name with null safety.
      *
      * @param baseName the base filename, null becomes "default"
@@ -164,7 +164,7 @@ public class GeneralUtils {
         return (baseName == null ? "default" : baseName) + (suffix != null ? suffix : "");
     }
 
-    /**
+    /*
      * Generate a PDF filename by removing extension from first file and adding suffix.
      *
      * <p>High-level utility method for common PDF naming scenarios. Handles null safety and uses
@@ -179,7 +179,7 @@ public class GeneralUtils {
         return appendSuffix(baseName, suffix);
     }
 
-    /**
+    /*
      * Process a list of filenames by removing extensions and adding suffix.
      *
      * <p>Efficiently processes multiple filenames using streaming operations and bulk operations
@@ -200,7 +200,7 @@ public class GeneralUtils {
                 .forEach(processor);
     }
 
-    /**
+    /*
      * Extract title from filename by removing extension, with fallback handling.
      *
      * <p>Returns "Untitled" for null or empty filenames, otherwise removes the extension using the
@@ -278,7 +278,7 @@ public class GeneralUtils {
         }
     }
 
-    /**
+    /*
      * Checks if a URL is reachable with proper timeout configuration and error handling.
      *
      * @param urlStr the URL string to check
@@ -288,7 +288,7 @@ public class GeneralUtils {
         return isURLReachable(urlStr, 5000, 5000);
     }
 
-    /**
+    /*
      * Checks if a URL is reachable with configurable timeouts.
      *
      * @param urlStr the URL string to check
@@ -348,7 +348,7 @@ public class GeneralUtils {
         }
     }
 
-    /**
+    /*
      * Improved multipart file conversion using the shared helper method.
      *
      * @param multipart the multipart file to convert
@@ -368,7 +368,7 @@ public class GeneralUtils {
         return tempFile.toFile();
     }
 
-    /**
+    /*
      * Supports TB/PB units and provides detailed error messages.
      *
      * @param sizeStr the size string to convert (e.g., "100MB", "1.5GB")
@@ -431,7 +431,7 @@ public class GeneralUtils {
         }
     }
 
-    /**
+    /*
      * Converts size string to bytes using MB as default unit.
      *
      * @param sizeStr the size string to convert
@@ -441,13 +441,13 @@ public class GeneralUtils {
         return convertSizeToBytes(sizeStr, "MB");
     }
 
-    /** Validates if a string represents a valid size unit. */
+    /* Validates if a string represents a valid size unit. */
     private boolean isValidSizeUnit(String unit) {
         // Use a precomputed Set for O(1) lookup, normalize using a locale-safe toUpperCase
         return unit != null && VALID_SIZE_UNITS.contains(unit.toUpperCase(Locale.ROOT));
     }
 
-    /** Enhanced byte formatting with TB/PB support and better precision. */
+    /* Enhanced byte formatting with TB/PB support and better precision. */
     public String formatBytes(long bytes) {
         if (bytes < 0) {
             return "Invalid size";
@@ -503,7 +503,7 @@ public class GeneralUtils {
         return result;
     }
 
-    /**
+    /*
      * Enhanced mathematical expression evaluation with bounds checking and timeout protection.
      *
      * @param expression the mathematical expression containing 'n'
@@ -647,7 +647,7 @@ public class GeneralUtils {
                     }
                 }
             } catch (NumberFormatException e) {
-                // Range is invalid, ignore this part
+                log.debug("Invalid range: {}", part);
             }
         } else {
             // This is a single page number
@@ -656,8 +656,8 @@ public class GeneralUtils {
                 if (pageNum >= 1 && pageNum <= totalPages) {
                     partResult.add(pageNum - 1 + offset);
                 }
-            } catch (NumberFormatException ignored) {
-                // Ignore invalid numbers
+            } catch (NumberFormatException e) {
+                log.debug("Invalid page number: {}", part);
             }
         }
         return partResult;
@@ -691,6 +691,7 @@ public class GeneralUtils {
     /*------------------------------------------------------------------------*
      *                  Internal Implementation Details                       *
      *------------------------------------------------------------------------*/
+
     public void saveKeyToSettings(String key, Object newValue) throws IOException {
         String[] keyArray = key.split("\\.");
         Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
@@ -699,7 +700,7 @@ public class GeneralUtils {
         settingsYaml.saveOverride(settingsPath);
     }
 
-    /**
+    /*
      * Machine fingerprint generation with better error logging and fallbacks.
      *
      * @return unique machine fingerprint or "GenericID" if generation fails
@@ -759,7 +760,7 @@ public class GeneralUtils {
         }
     }
 
-    /**
+    /*
      * Extracts the default pipeline configurations from the classpath to the installation path.
      * Creates directories if needed and copies default JSON files.
      *
@@ -790,7 +791,7 @@ public class GeneralUtils {
         }
     }
 
-    /**
+    /*
      * Extracts the specified Python script from the classpath to the installation path. Validates
      * name and copies file atomically when possible, overwriting existing.
      *
@@ -834,7 +835,7 @@ public class GeneralUtils {
         return target;
     }
 
-    /**
+    /*
      * Copies a resource from the classpath to a specified target file.
      *
      * @param resource the ClassPathResource to copy
