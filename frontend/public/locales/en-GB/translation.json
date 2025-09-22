@@ -2101,7 +2101,36 @@
     "tags": "trim,shrink,edit,shape",
     "title": "Crop",
     "header": "Crop PDF",
-    "submit": "Submit"
+    "submit": "Apply Crop",
+    "noFileSelected": "Select a PDF file to begin cropping",
+    "preview": {
+      "title": "Crop Area Selection"
+    },
+    "reset": "Reset to full PDF",
+    "coordinates": {
+      "title": "Position and Size",
+      "x": "X Position",
+      "y": "Y Position",
+      "width": "Width",
+      "height": "Height"
+    },
+    "error": {
+      "invalidArea": "Crop area extends beyond PDF boundaries",
+      "failed": "Failed to crop PDF"
+    },
+    "steps": {
+      "selectArea": "Select Crop Area"
+    },
+    "tooltip": {
+      "title": "How to Crop PDFs",
+      "description": "Select the area to crop from your PDF by dragging and resizing the blue overlay on the thumbnail.",
+      "drag": "Drag the overlay to move the crop area",
+      "resize": "Drag the corner and edge handles to resize",
+      "precision": "Use coordinate inputs for precise positioning"
+    },
+    "results": {
+      "title": "Crop Results"
+    }
   },
   "autoSplitPDF": {
     "tags": "QR-based,separate,scan-segment,organize",

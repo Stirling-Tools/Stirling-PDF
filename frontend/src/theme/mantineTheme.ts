@@ -64,6 +64,16 @@ export const mantineTheme = createTheme({
     xl: 'var(--shadow-xl)',
   },
 
+  // Custom variables for specific components
+  other: {
+    crop: {
+      overlayBorder: 'var(--color-primary-500)',
+      overlayBackground: 'rgba(59, 130, 246, 0.1)', // Blue with 10% opacity
+      handleColor: 'var(--color-primary-500)',
+      handleBorder: 'var(--bg-surface)',
+    },
+  },
+
   // Component customizations
   components: {
     Button: {
