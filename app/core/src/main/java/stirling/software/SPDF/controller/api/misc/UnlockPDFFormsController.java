@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -69,7 +68,7 @@ public class UnlockPDFFormsController {
                 COSBase xfaBase = acroForm.getCOSObject().getDictionaryObject(COSName.XFA);
                 if (xfaBase != null) {
                     try {
-                        Pattern accessReadOnlyPattern =
+                        var accessReadOnlyPattern =
                                 RegexPatternUtils.getInstance().getAccessReadOnlyPattern();
                         if (xfaBase instanceof COSStream xfaStream) {
                             InputStream is = xfaStream.createInputStream();

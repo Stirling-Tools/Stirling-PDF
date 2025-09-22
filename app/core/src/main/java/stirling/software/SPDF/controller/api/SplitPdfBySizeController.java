@@ -56,22 +56,20 @@ public class SplitPdfBySizeController {
         log.debug("Starting PDF split process with request: {}", request);
         MultipartFile file = request.getFileInput();
 
-        Path zipFile = Files.createTempFile("split_documents", ".zip");
-        log.debug("Created temporary zip file: {}", zipFile);
-
         String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
         log.debug("Base filename for output: {}", filename);
 
         try (TempFile zipTempFile = new TempFile(tempFileManager, ".zip")) {
-            Path zipFile = zipTempFile.getPath();
-            log.debug("Created temporary zip file: {}", zipFile);
+            Path managedZipPath = zipTempFile.getPath();
+            log.debug("Created temporary managed zip file: {}", managedZipPath);
             try {
                 log.debug("Reading input file bytes");
                 byte[] pdfBytes = file.getBytes();
                 log.debug("Successfully read {} bytes from input file", pdfBytes.length);
 
                 log.debug("Creating ZIP output stream");
-                try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+                try (ZipOutputStream zipOut =
+                        new ZipOutputStream(Files.newOutputStream(managedZipPath))) {
                     log.debug("Loading PDF document");
                     try (PDDocument sourceDocument = pdfDocumentFactory.load(pdfBytes)) {
                         log.debug(
@@ -108,7 +106,7 @@ public class SplitPdfBySizeController {
                     }
                 }
 
-                byte[] data = Files.readAllBytes(zipFile);
+                byte[] data = Files.readAllBytes(managedZipPath);
                 log.debug("Successfully read {} bytes from ZIP file", data.length);
 
                 log.debug("Returning response with {} bytes of data", data.length);

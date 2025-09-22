@@ -466,16 +466,16 @@ public final class RegexPatternUtils {
         getPattern("[^a-zA-Z0-9 ]"); // Input sanitization
         getPattern("[^a-zA-Z0-9]"); // Filename sanitization
         // API doc patterns
-        getPattern("Output:(\\\\w+)");
-        getPattern("Input:(\\\\w+)");
-        getPattern("Type:(\\\\w+)");
+        getPattern("Output:(\\w+)"); // precompiled single-escaped for runtime regex \w
+        getPattern("Input:(\\w+)");
+        getPattern("Type:(\\w+)");
         log.debug("Pre-compiled {} common regex patterns", patternCache.size());
     }
 
     /** Pattern for email validation */
     public Pattern getEmailValidationPattern() {
         return getPattern(
-                "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-ZaZ0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(?:\\.[A-Za-z]{2,})$");
+                "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(?:\\.[A-Za-z]{2,})$");
     }
 
     /* Pattern for matching Output:<TYPE> in API descriptions */

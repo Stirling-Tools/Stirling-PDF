@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,9 +55,7 @@ public class SplitPDFController {
             throws IOException {
 
         PDDocument document = null;
-        Path zipFile = null;
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
-        String filename;
         TempFile outputTempFile = null;
 
         try {
@@ -105,10 +102,10 @@ public class SplitPDFController {
 
             document.close();
 
-            zipFile = Files.createTempFile("split_documents", ".zip");
             String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
 
-            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            try (ZipOutputStream zipOut =
+                    new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
                 int splitDocumentsSize = splitDocumentsBoas.size();
                 for (int i = 0; i < splitDocumentsSize; i++) {
                     StringBuilder sb = new StringBuilder(baseFilename.length() + 10);
@@ -127,9 +124,10 @@ public class SplitPDFController {
                 }
             }
 
-            log.debug("Successfully created zip file with split documents: {}", zipFile.toString());
-            byte[] data = Files.readAllBytes(zipFile);
-            Files.deleteIfExists(zipFile);
+            log.debug(
+                    "Successfully created zip file with split documents: {}",
+                    outputTempFile.getPath().toString());
+            byte[] data = Files.readAllBytes(outputTempFile.getPath());
 
             String zipFilename =
                     GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.zip");
