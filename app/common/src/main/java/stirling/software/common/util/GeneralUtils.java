@@ -33,18 +33,18 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @UtilityClass
 public class GeneralUtils {
 
-    private static final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
-    private static final Set<String> DEFAULT_VALID_PIPELINE =
+    private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
+    private final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
                     "OCR images.json",
                     "Prepare-pdfs-for-email.json",
                     "split-rotate-auto-rename.json");
 
-    private static final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
-    private static final String PYTHON_SCRIPTS_DIR = "python";
-    private static final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
+    private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
+    private final String PYTHON_SCRIPTS_DIR = "python";
+    private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
     // Valid size units used for convertSizeToBytes validation and parsing
-    private static final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
+    private final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
 
     /**
      * Converts a MultipartFile to a regular File with improved performance and security.
@@ -54,7 +54,7 @@ public class GeneralUtils {
      * @throws IOException if I/O error occurs during conversion
      * @throws IllegalArgumentException if file exceeds maximum allowed size
      */
-    public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
+    public File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
         if (customTempDir == null || customTempDir.isEmpty()) {
             customTempDir = System.getProperty("stirling.tempfiles.directory");
@@ -355,7 +355,7 @@ public class GeneralUtils {
      * @return temporary File containing the multipart file data
      * @throws IOException if I/O error occurs during conversion
      */
-    public static File multipartToFile(MultipartFile multipart) throws IOException {
+    public File multipartToFile(MultipartFile multipart) throws IOException {
         Path tempFile = Files.createTempFile("overlay-", ".pdf");
         try (InputStream in = multipart.getInputStream();
                 FileOutputStream out = new FileOutputStream(tempFile.toFile())) {
