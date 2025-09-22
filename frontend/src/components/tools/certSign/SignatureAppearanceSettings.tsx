@@ -1,10 +1,10 @@
 import { Stack, Text, Button, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ManageSignaturesParameters } from "../../../hooks/tools/manageSignatures/useManageSignaturesParameters";
+import { CertSignParameters } from "../../../hooks/tools/certSign/useCertSignParameters";
 
 interface SignatureAppearanceSettingsProps {
-  parameters: ManageSignaturesParameters;
-  onParameterChange: (key: keyof ManageSignaturesParameters, value: any) => void;
+  parameters: CertSignParameters;
+  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
   disabled?: boolean;
 }
 

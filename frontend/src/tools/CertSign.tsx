@@ -1,24 +1,24 @@
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import CertificateTypeSettings from "../components/tools/manageSignatures/CertificateTypeSettings";
-import CertificateFormatSettings from "../components/tools/manageSignatures/CertificateFormatSettings";
-import CertificateFilesSettings from "../components/tools/manageSignatures/CertificateFilesSettings";
-import SignatureAppearanceSettings from "../components/tools/manageSignatures/SignatureAppearanceSettings";
-import { useManageSignaturesParameters } from "../hooks/tools/manageSignatures/useManageSignaturesParameters";
-import { useManageSignaturesOperation } from "../hooks/tools/manageSignatures/useManageSignaturesOperation";
+import CertificateTypeSettings from "../components/tools/certSign/CertificateTypeSettings";
+import CertificateFormatSettings from "../components/tools/certSign/CertificateFormatSettings";
+import CertificateFilesSettings from "../components/tools/certSign/CertificateFilesSettings";
+import SignatureAppearanceSettings from "../components/tools/certSign/SignatureAppearanceSettings";
+import { useCertSignParameters } from "../hooks/tools/certSign/useCertSignParameters";
+import { useCertSignOperation } from "../hooks/tools/certSign/useCertSignOperation";
 import { useCertificateTypeTips } from "../components/tooltips/useCertificateTypeTips";
 import { useSignatureAppearanceTips } from "../components/tooltips/useSignatureAppearanceTips";
 import { useSignModeTips } from "../components/tooltips/useSignModeTips";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "../types/tool";
 
-const ManageSignatures = (props: BaseToolProps) => {
+const CertSign = (props: BaseToolProps) => {
   const { t } = useTranslation();
   
   const base = useBaseTool(
-    'manageSignatures',
-    useManageSignaturesParameters,
-    useManageSignaturesOperation,
+    'certSign',
+    useCertSignParameters,
+    useCertSignOperation,
     props
   );
   
@@ -126,6 +126,6 @@ const ManageSignatures = (props: BaseToolProps) => {
 };
 
 // Static method to get the operation hook for automation
-ManageSignatures.tool = () => useManageSignaturesOperation;
+CertSign.tool = () => useCertSignOperation;
 
-export default ManageSignatures as ToolComponent;
+export default CertSign as ToolComponent;

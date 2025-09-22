@@ -56,7 +56,6 @@ const TOOL_IDS = [
   'devSsoGuide',
   'devAirgapped',
   'bookletImposition',
-  'manageSignatures',
 ] as const;
 
 // Tool identity - what PDF operation we're performing (type-safe)

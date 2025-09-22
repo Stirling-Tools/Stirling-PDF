@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { ManageSignaturesParameters, defaultParameters } from './useManageSignaturesParameters';
+import { CertSignParameters, defaultParameters } from './useCertSignParameters';
 
 // Build form data for signing
-export const buildManageSignaturesFormData = (parameters: ManageSignaturesParameters, file: File): FormData => {
+export const buildCertSignFormData = (parameters: CertSignParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
   
@@ -52,20 +52,20 @@ export const buildManageSignaturesFormData = (parameters: ManageSignaturesParame
 };
 
 // Static configuration object
-export const manageSignaturesOperationConfig = {
+export const certSignOperationConfig = {
   toolType: ToolType.singleFile,
-  buildFormData: buildManageSignaturesFormData,
-  operationType: 'manageSignatures',
+  buildFormData: buildCertSignFormData,
+  operationType: 'certSign',
   endpoint: '/api/v1/security/cert-sign',
   multiFileEndpoint: false,
   defaultParameters,
 } as const;
 
-export const useManageSignaturesOperation = () => {
+export const useCertSignOperation = () => {
   const { t } = useTranslation();
 
-  return useToolOperation<ManageSignaturesParameters>({
-    ...manageSignaturesOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t('manageSignatures.error.failed', 'An error occurred while processing signatures.'))
+  return useToolOperation<CertSignParameters>({
+    ...certSignOperationConfig,
+    getErrorMessage: createStandardErrorHandler(t('certSign.error.failed', 'An error occurred while processing signatures.'))
   });
 };

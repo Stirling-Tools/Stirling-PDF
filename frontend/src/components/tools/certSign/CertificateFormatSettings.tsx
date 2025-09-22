@@ -1,9 +1,9 @@
 import { Stack, Button } from "@mantine/core";
-import { ManageSignaturesParameters } from "../../../hooks/tools/manageSignatures/useManageSignaturesParameters";
+import { CertSignParameters } from "../../../hooks/tools/certSign/useCertSignParameters";
 
 interface CertificateFormatSettingsProps {
-  parameters: ManageSignaturesParameters;
-  onParameterChange: (key: keyof ManageSignaturesParameters, value: any) => void;
+  parameters: CertSignParameters;
+  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
   disabled?: boolean;
 }
 

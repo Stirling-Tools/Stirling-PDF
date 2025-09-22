@@ -19,7 +19,7 @@ import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
-import ManageSignatures from "../tools/ManageSignatures";
+import CertSign from "../tools/CertSign";
 import BookletImposition from "../tools/BookletImposition";
 import Flatten from "../tools/Flatten";
 import Rotate from "../tools/Rotate";
@@ -37,7 +37,7 @@ import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
-import { manageSignaturesOperationConfig } from "../hooks/tools/manageSignatures/useManageSignaturesOperation";
+import { certSignOperationConfig } from "../hooks/tools/certSign/useCertSignOperation";
 import { bookletImpositionOperationConfig } from "../hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
 import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
@@ -56,7 +56,7 @@ import AddWatermarkSingleStepSettings from "../components/tools/addWatermark/Add
 import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
-import CertificateTypeSettings from "../components/tools/manageSignatures/CertificateTypeSettings";
+import CertificateTypeSettings from "../components/tools/certSign/CertificateTypeSettings";
 import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
@@ -160,16 +160,16 @@ export function useFlatToolRegistry(): ToolRegistry {
     const allTools: ToolRegistry = {
       // Signing
 
-      manageSignatures: {
+      certSign: {
         icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.certSign.title", "Certificate Sign"),
-        component: ManageSignatures,
+        component: CertSign,
         description: t("home.certSign.desc", "Sign PDF documents using digital certificates"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
         maxFiles: -1,
         endpoints: ["cert-sign"],
-        operationConfig: manageSignaturesOperationConfig,
+        operationConfig: certSignOperationConfig,
         settingsComponent: CertificateTypeSettings,
       },
       sign: {

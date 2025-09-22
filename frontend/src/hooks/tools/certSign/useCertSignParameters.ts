@@ -1,7 +1,7 @@
 import { BaseParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface ManageSignaturesParameters extends BaseParameters {
+export interface CertSignParameters extends BaseParameters {
   // Sign mode selection
   signMode: 'MANUAL' | 'AUTO';
   // Certificate signing options (only for manual mode)
@@ -21,7 +21,7 @@ export interface ManageSignaturesParameters extends BaseParameters {
   showLogo: boolean;
 }
 
-export const defaultParameters: ManageSignaturesParameters = {
+export const defaultParameters: CertSignParameters = {
   signMode: 'MANUAL',
   certType: '',
   password: '',
@@ -33,12 +33,12 @@ export const defaultParameters: ManageSignaturesParameters = {
   showLogo: true,
 };
 
-export type ManageSignaturesParametersHook = BaseParametersHook<ManageSignaturesParameters>;
+export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
 
-export const useManageSignaturesParameters = (): ManageSignaturesParametersHook => {
+export const useCertSignParameters = (): CertSignParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: 'manage-signatures',
+    endpointName: 'cert-sign',
     validateFn: (params) => {
       // Auto mode (server certificate) - no additional validation needed
       if (params.signMode === 'AUTO') {
