@@ -14,7 +14,7 @@ export const buildUnlockPdfFormsFormData = (_parameters: UnlockPdfFormsParameter
 export const unlockPdfFormsOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildUnlockPdfFormsFormData,
-  operationType: 'unlock-pdf-forms',
+  operationType: 'unlockPDFForms',
   endpoint: '/api/v1/misc/unlock-pdf-forms',
   defaultParameters,
 } as const;

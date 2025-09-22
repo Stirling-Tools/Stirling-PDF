@@ -17,21 +17,20 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
 
-@RestController
-@RequestMapping("/api/v1/misc")
+@MiscApi
 @Slf4j
-@Tag(name = "Misc", description = "Miscellaneous APIs")
 @RequiredArgsConstructor
 public class MetadataController {
 
@@ -53,6 +52,7 @@ public class MetadataController {
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/update-metadata")
+    @StandardPdfResponse
     @Operation(
             summary = "Update metadata of a PDF file",
             description =
