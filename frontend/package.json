@@ -44,7 +44,7 @@
     "jszip": "^3.10.1",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^3.11.174",
-    "posthog-js": "^1.261.0",
+    "posthog-js": "^1.268.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-i18next": "^15.5.2",
@@ -72,12 +72,6 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -101,6 +95,9 @@
     "@vitejs/plugin-react": "^4.5.0",
     "@vitest/coverage-v8": "^1.0.0",
     "eslint": "^9.34.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.4.0",
     "jsdom": "^23.0.0",
     "license-checker": "^25.0.1",
     "madge": "^8.0.0",
