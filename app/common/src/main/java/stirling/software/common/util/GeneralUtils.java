@@ -43,6 +43,8 @@ public class GeneralUtils {
     private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
     private final String PYTHON_SCRIPTS_DIR = "python";
     private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
+    // Valid size units used for convertSizeToBytes validation and parsing
+    private static final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
 
     /**
      * Converts a MultipartFile to a regular File with improved performance and security.
@@ -236,7 +238,7 @@ public class GeneralUtils {
 
     public String convertToFileName(String name) {
         if (name == null) return "_";
-        StringBuilder safeNameBuilder = new StringBuilder();
+        StringBuilder safeNameBuilder = new StringBuilder(name.length());
         for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
             if (Character.isLetterOrDigit(c)) {
@@ -441,13 +443,8 @@ public class GeneralUtils {
 
     /** Validates if a string represents a valid size unit. */
     private boolean isValidSizeUnit(String unit) {
-        if (unit == null) return false;
-        String upperUnit = unit.toUpperCase();
-        return "B".equals(upperUnit)
-                || "KB".equals(upperUnit)
-                || "MB".equals(upperUnit)
-                || "GB".equals(upperUnit)
-                || "TB".equals(upperUnit);
+        // Use a precomputed Set for O(1) lookup, normalize using a locale-safe toUpperCase
+        return unit != null && VALID_SIZE_UNITS.contains(unit.toUpperCase(Locale.ROOT));
     }
 
     /** Enhanced byte formatting with TB/PB support and better precision. */
