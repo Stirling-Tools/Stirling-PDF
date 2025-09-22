@@ -6,7 +6,7 @@ import { CropParametersHook } from "../../../hooks/tools/crop/useCropParameters"
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
 import CropAreaSelector from "./CropAreaSelector";
 import { DEFAULT_CROP_AREA } from "../../../constants/cropConstants";
-import { PAGE_SIZES } from "src/constants/pageSizeConstants";
+import { PAGE_SIZES } from "../../../constants/pageSizeConstants";
 import {
   calculatePDFBounds,
   PDFBounds,
