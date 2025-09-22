@@ -57,7 +57,6 @@ export const manageSignaturesOperationConfig = {
   buildFormData: buildManageSignaturesFormData,
   operationType: 'manageSignatures',
   endpoint: '/api/v1/security/cert-sign',
-  filePrefix: 'signed_', // Will be overridden in hook with translation
   multiFileEndpoint: false,
   defaultParameters,
 } as const;
