@@ -6,6 +6,8 @@
 import React from 'react';
 import { Text, Tooltip, Badge, Group } from '@mantine/core';
 import { ToolOperation } from '../../types/file';
+import { useTranslation } from 'react-i18next';
+import { ToolId } from '../../types/toolId';
 
 interface ToolChainProps {
   toolChain: ToolOperation[];
@@ -24,15 +26,21 @@ const ToolChain: React.FC<ToolChainProps> = ({
 }) => {
   if (!toolChain || toolChain.length === 0) return null;
 
-  const toolNames = toolChain.map(tool => tool.toolName);
+  const { t } = useTranslation();
+
+  const toolIds = toolChain.map(tool => tool.toolId);
+
+  const getToolName = (toolId: ToolId) => {
+    return t(`home.${toolId}.title`, toolId);
+  }
 
   // Create full tool chain for tooltip
   const fullChainDisplay = displayStyle === 'badges' ? (
     <Group gap="xs" wrap="wrap">
       {toolChain.map((tool, index) => (
-        <React.Fragment key={`${tool.toolName}-${index}`}>
+        <React.Fragment key={`${tool.toolId}-${index}`}>
           <Badge size="sm" variant="light" color="blue">
-            {tool.toolName}
+            {getToolName(tool.toolId)}
           </Badge>
           {index < toolChain.length - 1 && (
             <Text size="sm" c="dimmed">→</Text>
@@ -41,19 +49,19 @@ const ToolChain: React.FC<ToolChainProps> = ({
       ))}
     </Group>
   ) : (
-    <Text size="sm">{toolNames.join(' → ')}</Text>
+    <Text size="sm">{toolIds.map(getToolName).join(' → ')}</Text>
   );
 
   // Create truncated display based on available space
   const getTruncatedDisplay = () => {
-    if (toolNames.length <= 2) {
+    if (toolIds.length <= 2) {
       // Show all tools if 2 or fewer
-      return { text: toolNames.join(' → '), isTruncated: false };
+      return { text: toolIds.map(getToolName).join(' → '), isTruncated: false };
     } else {
       // Show first tool ... last tool for longer chains
       return {
-        text: `${toolNames[0]} → +${toolNames.length-2} → ${toolNames[toolNames.length - 1]}`,
-        isTruncated: true
+        text: `${getToolName(toolIds[0])} → +${toolIds.length-2} → ${getToolName(toolIds[toolIds.length - 1])}`,
+        isTruncated: true,
       };
     }
   };
@@ -62,8 +70,8 @@ const ToolChain: React.FC<ToolChainProps> = ({
 
   // Compact style for very small spaces
   if (displayStyle === 'compact') {
-    const compactText = toolNames.length === 1 ? toolNames[0] : `${toolNames.length} tools`;
-    const isCompactTruncated = toolNames.length > 1;
+    const compactText = toolIds.length === 1 ? getToolName(toolIds[0]) : `${toolIds.length} tools`;
+    const isCompactTruncated = toolIds.length > 1;
 
     const compactElement = (
       <Text
@@ -97,9 +105,9 @@ const ToolChain: React.FC<ToolChainProps> = ({
       <div style={{ maxWidth: `${maxWidth}`, overflow: 'hidden' }}>
         <Group gap="2px" wrap="nowrap">
           {toolChain.slice(0, 3).map((tool, index) => (
-            <React.Fragment key={`${tool.toolName}-${index}`}>
+            <React.Fragment key={`${tool.toolId}-${index}`}>
               <Badge size={size} variant="light" color="blue">
-                {tool.toolName}
+                {getToolName(tool.toolId)}
               </Badge>
               {index < Math.min(toolChain.length - 1, 2) && (
                 <Text size="xs" c="dimmed">→</Text>
@@ -110,7 +118,7 @@ const ToolChain: React.FC<ToolChainProps> = ({
             <>
               <Text size="xs" c="dimmed">...</Text>
               <Badge size={size} variant="light" color="blue">
-                {toolChain[toolChain.length - 1].toolName}
+                {getToolName(toolChain[toolChain.length - 1].toolId)}
               </Badge>
             </>
           )}
@@ -119,7 +127,7 @@ const ToolChain: React.FC<ToolChainProps> = ({
     );
 
     return isBadgesTruncated ? (
-      <Tooltip label={`${toolNames.join(' → ')}`} withinPortal>
+      <Tooltip label={`${toolIds.map(getToolName).join(' → ')}`} withinPortal>
         {badgesElement}
       </Tooltip>
     ) : badgesElement;
