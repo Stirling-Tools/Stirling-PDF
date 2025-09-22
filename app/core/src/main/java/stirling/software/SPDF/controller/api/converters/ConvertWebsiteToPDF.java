@@ -1,17 +1,22 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,8 +28,11 @@ import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.*;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
@@ -37,31 +45,50 @@ public class ConvertWebsiteToPDF {
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/url/pdf")
     @Operation(
             summary = "Convert a URL to a PDF",
             description =
                     "This endpoint fetches content from a URL and converts it to a PDF format."
                             + " Input:N/A Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> urlToPdf(@ModelAttribute UrlToPdfRequest request)
+    public ResponseEntity<?> urlToPdf(@ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
+        UriComponentsBuilder uriComponentsBuilder =
+                ServletUriComponentsBuilder.fromCurrentContextPath().path("/url-to-pdf");
+        URI location = null;
+        HttpStatus status = HttpStatus.SEE_OTHER;
 
         if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.endpointDisabled", "This endpoint has been disabled by the admin");
-        }
+            location =
+                    uriComponentsBuilder
+                            .queryParam("error", "error.endpointDisabled")
+                            .build()
+                            .toUri();
+        } else
+
         // Validate the URL format
         if (!RegexPatternUtils.getInstance().getHttpUrlPattern().matcher(URL).matches()
                 || !GeneralUtils.isValidURL(URL)) {
-            throw ExceptionUtils.createInvalidArgumentException(
-                    "URL", "provided format is invalid");
-        }
+            location =
+                    uriComponentsBuilder
+                            .queryParam("error", "error.invalidUrlFormat")
+                            .build()
+                            .toUri();
+        } else
 
         // validate the URL is reachable
         if (!GeneralUtils.isURLReachable(URL)) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.urlNotReachable", "URL is not reachable, please provide a valid URL");
+            location =
+                    uriComponentsBuilder
+                            .queryParam("error", "error.urlNotReachable")
+                            .build()
+                            .toUri();
+        }
+
+        if (location != null) {
+            log.info("Redirecting to: {}", location.toString());
+            return ResponseEntity.status(status).location(location).build();
         }
 
         Path tempOutputFile = null;

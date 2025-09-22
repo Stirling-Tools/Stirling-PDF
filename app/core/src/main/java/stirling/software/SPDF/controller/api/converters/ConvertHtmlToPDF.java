@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,7 @@ public class ConvertHtmlToPDF {
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/html/pdf")
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =

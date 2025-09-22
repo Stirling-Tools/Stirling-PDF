@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +54,7 @@ public class MetadataController {
         binder.registerCustomEditor(Map.class, "allRequestParams", new StringToMapPropertyEditor());
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/update-metadata")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/update-metadata")
     @Operation(
             summary = "Update metadata of a PDF file",
             description =

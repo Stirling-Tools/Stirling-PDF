@@ -228,7 +228,8 @@ public class JobExecutorService {
             if (result instanceof byte[]) {
                 // Store byte array directly to disk to avoid double memory consumption
                 String fileId = fileStorage.storeBytes((byte[]) result, "result.pdf");
-                taskManager.setFileResult(jobId, fileId, "result.pdf", "application/pdf");
+                taskManager.setFileResult(
+                        jobId, fileId, "result.pdf", MediaType.APPLICATION_PDF_VALUE);
                 log.debug("Stored byte[] result with fileId: {}", fileId);
 
                 // Let the byte array get collected naturally in the next GC cycle
@@ -240,7 +241,7 @@ public class JobExecutorService {
                 if (body instanceof byte[]) {
                     // Extract filename from content-disposition header if available
                     String filename = "result.pdf";
-                    String contentType = "application/pdf";
+                    String contentType = MediaType.APPLICATION_PDF_VALUE;
 
                     if (response.getHeaders().getContentDisposition() != null) {
                         String disposition =
@@ -253,8 +254,10 @@ public class JobExecutorService {
                         }
                     }
 
-                    if (response.getHeaders().getContentType() != null) {
-                        contentType = response.getHeaders().getContentType().toString();
+                    MediaType mediaType = response.getHeaders().getContentType();
+
+                    if (mediaType != null) {
+                        contentType = mediaType.toString();
                     }
 
                     // Store byte array directly to disk
@@ -275,7 +278,7 @@ public class JobExecutorService {
                             if (fileId != null && !fileId.isEmpty()) {
                                 // Try to get filename and content type
                                 String filename = "result.pdf";
-                                String contentType = "application/pdf";
+                                String contentType = MediaType.APPLICATION_PDF_VALUE;
 
                                 try {
                                     java.lang.reflect.Method getOriginalFileName =
@@ -333,7 +336,7 @@ public class JobExecutorService {
                         if (fileId != null && !fileId.isEmpty()) {
                             // Try to get filename and content type
                             String filename = "result.pdf";
-                            String contentType = "application/pdf";
+                            String contentType = MediaType.APPLICATION_PDF_VALUE;
 
                             try {
                                 java.lang.reflect.Method getOriginalFileName =

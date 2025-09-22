@@ -29,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -40,8 +42,9 @@ import stirling.software.common.util.WebResponseUtils;
 public class SplitPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/split-pages")
     @Operation(
             summary = "Split a PDF file into separate documents",
             description =
@@ -55,8 +58,11 @@ public class SplitPDFController {
         PDDocument document = null;
         Path zipFile = null;
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
+        String filename;
+        TempFile outputTempFile = null;
 
         try {
+            outputTempFile = new TempFile(tempFileManager, ".zip");
 
             MultipartFile file = request.getFileInput();
             document = pdfDocumentFactory.load(file);
@@ -119,9 +125,6 @@ public class SplitPDFController {
 
                     log.debug("Wrote split document {} to zip file", fileName);
                 }
-            } catch (Exception e) {
-                log.error("Failed writing to zip", e);
-                throw e;
             }
 
             log.debug("Successfully created zip file with split documents: {}", zipFile.toString());
@@ -147,9 +150,9 @@ public class SplitPDFController {
                     }
                 }
 
-                // Delete temporary zip file
-                if (zipFile != null) {
-                    Files.deleteIfExists(zipFile);
+                // Close the output temporary file
+                if (outputTempFile != null) {
+                    outputTempFile.close();
                 }
             } catch (Exception e) {
                 log.error("Error while cleaning up resources", e);

@@ -189,7 +189,7 @@ public class GetInfoOnPDF {
         return false;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/get-info-on-pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
     @Operation(summary = "Summary here", description = "desc. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();

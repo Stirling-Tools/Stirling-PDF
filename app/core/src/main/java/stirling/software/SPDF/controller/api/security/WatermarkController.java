@@ -24,6 +24,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -65,7 +66,7 @@ public class WatermarkController {
                 });
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-watermark")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-watermark")
     @Operation(
             summary = "Add watermark to a PDF file",
             description =

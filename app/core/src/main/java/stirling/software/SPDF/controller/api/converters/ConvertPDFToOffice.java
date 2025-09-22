@@ -34,7 +34,7 @@ public class ConvertPDFToOffice {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/presentation")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/presentation")
     @Operation(
             summary = "Convert PDF to Presentation format",
             description =
@@ -49,7 +49,7 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/text")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/text")
     @Operation(
             summary = "Convert PDF to Text or RTF format",
             description =
@@ -75,7 +75,7 @@ public class ConvertPDFToOffice {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/word")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/word")
     @Operation(
             summary = "Convert PDF to Word document",
             description =
@@ -89,7 +89,7 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/xml")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/xml")
     @Operation(
             summary = "Convert PDF to XML",
             description =

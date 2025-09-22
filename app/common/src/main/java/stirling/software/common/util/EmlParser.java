@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+import org.springframework.http.MediaType;
+
 import lombok.Data;
 import lombok.experimental.UtilityClass;
 
@@ -28,8 +30,8 @@ public class EmlParser {
             RegexPatternUtils.getInstance().getMimeEncodedWordPattern();
 
     private static final String DISPOSITION_ATTACHMENT = "attachment";
-    private static final String TEXT_PLAIN = "text/plain";
-    private static final String TEXT_HTML = "text/html";
+    private static final String TEXT_PLAIN = MediaType.TEXT_PLAIN_VALUE;
+    private static final String TEXT_HTML = MediaType.TEXT_HTML_VALUE;
     private static final String MULTIPART_PREFIX = "multipart/";
 
     private static final String HEADER_CONTENT_TYPE = "content-type:";
@@ -69,12 +71,12 @@ public class EmlParser {
         if (isJakartaMailAvailable()) {
             return extractEmailContentAdvanced(emlBytes, request, customHtmlSanitizer);
         } else {
-            return extractEmailContentBasic(emlBytes, request, customHtmlSanitizer);
+            return extractEmailContentBasic(emlBytes, customHtmlSanitizer);
         }
     }
 
     private static EmailContent extractEmailContentBasic(
-            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
+            byte[] emlBytes, CustomHtmlSanitizer customHtmlSanitizer) {
         String emlContent = new String(emlBytes, StandardCharsets.UTF_8);
         EmailContent content = new EmailContent();
 
@@ -121,7 +123,7 @@ public class EmlParser {
             return extractFromMimeMessage(message, request, customHtmlSanitizer);
 
         } catch (ReflectiveOperationException e) {
-            return extractEmailContentBasic(emlBytes, request, customHtmlSanitizer);
+            return extractEmailContentBasic(emlBytes, customHtmlSanitizer);
         }
     }
 

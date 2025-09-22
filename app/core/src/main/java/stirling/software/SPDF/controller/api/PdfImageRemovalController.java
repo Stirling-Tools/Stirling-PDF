@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,7 +48,7 @@ public class PdfImageRemovalController {
      *     content type and filename.
      * @throws IOException If an error occurs while processing the PDF file.
      */
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-image-pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-image-pdf")
     @Operation(
             summary = "Remove images from file to reduce the file size.",
             description =

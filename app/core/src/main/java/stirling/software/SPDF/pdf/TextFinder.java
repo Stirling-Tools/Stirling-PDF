@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
@@ -21,14 +22,13 @@ public class TextFinder extends PDFTextStripper {
     private final String searchTerm;
     private final boolean useRegex;
     private final boolean wholeWordSearch;
-    private final List<PDFText> foundTexts = new ArrayList<>();
+    @Getter private final List<PDFText> foundTexts = new ArrayList<>();
 
     private final List<TextPosition> pageTextPositions = new ArrayList<>();
     private final StringBuilder pageTextBuilder = new StringBuilder();
 
     public TextFinder(String searchTerm, boolean useRegex, boolean wholeWordSearch)
             throws IOException {
-        super();
         this.searchTerm = searchTerm;
         this.useRegex = useRegex;
         this.wholeWordSearch = wholeWordSearch;
@@ -69,11 +69,15 @@ public class TextFinder extends PDFTextStripper {
         }
 
         String processedSearchTerm = this.searchTerm.trim();
+        if (processedSearchTerm.isEmpty()) {
+            super.endPage(page);
+            return;
+        }
         String regex = this.useRegex ? processedSearchTerm : "\\Q" + processedSearchTerm + "\\E";
         if (this.wholeWordSearch) {
             if (processedSearchTerm.length() == 1
                     && Character.isDigit(processedSearchTerm.charAt(0))) {
-                regex = "(?<![\\w])" + regex + "(?![\\w])";
+                regex = "(?<![\\w])(?<!\\d[\\.,])" + regex + "(?![\\w])(?![\\.,]\\d)";
             } else if (processedSearchTerm.length() == 1) {
                 regex = "(?<![\\w])" + regex + "(?![\\w])";
             } else {
@@ -184,10 +188,6 @@ public class TextFinder extends PDFTextStripper {
                 processedSearchTerm);
 
         super.endPage(page);
-    }
-
-    public List<PDFText> getFoundTexts() {
-        return foundTexts;
     }
 
     public String getDebugInfo() {

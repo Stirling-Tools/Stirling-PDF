@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -113,8 +114,8 @@ public class AuditUtils {
                     && req.getContentType() != null) {
 
                 String contentType = req.getContentType();
-                if (contentType.contains("application/x-www-form-urlencoded")
-                        || contentType.contains("multipart/form-data")) {
+                if (contentType.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                        || contentType.contains(MediaType.MULTIPART_FORM_DATA_VALUE)) {
 
                     Map<String, String[]> params = new HashMap<>(req.getParameterMap());
                     // Remove CSRF token from logged parameters

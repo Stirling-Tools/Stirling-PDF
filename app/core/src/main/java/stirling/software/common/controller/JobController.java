@@ -10,7 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -28,6 +32,8 @@ import stirling.software.common.util.RegexPatternUtils;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@RequestMapping("/api/v1/general")
+@Tag(name = "Job Management", description = "Job Management API")
 public class JobController {
 
     private final TaskManager taskManager;
@@ -41,7 +47,8 @@ public class JobController {
      * @param jobId The job ID
      * @return The job result
      */
-    @GetMapping("/api/v1/general/job/{jobId}")
+    @GetMapping("/job/{jobId}")
+    @Operation(summary = "Get job status")
     public ResponseEntity<?> getJobStatus(@PathVariable("jobId") String jobId) {
         JobResult result = taskManager.getJobResult(jobId);
         if (result == null) {
@@ -69,7 +76,8 @@ public class JobController {
      * @param jobId The job ID
      * @return The job result
      */
-    @GetMapping("/api/v1/general/job/{jobId}/result")
+    @GetMapping("/job/{jobId}/result")
+    @Operation(summary = "Get job result")
     public ResponseEntity<?> getJobResult(@PathVariable("jobId") String jobId) {
         JobResult result = taskManager.getJobResult(jobId);
         if (result == null) {
@@ -131,7 +139,8 @@ public class JobController {
      * @param jobId The job ID
      * @return Response indicating whether the job was cancelled
      */
-    @DeleteMapping("/api/v1/general/job/{jobId}")
+    @DeleteMapping("/job/{jobId}")
+    @Operation(summary = "Cancel a job")
     public ResponseEntity<?> cancelJob(@PathVariable("jobId") String jobId) {
         log.debug("Request to cancel job: {}", jobId);
 
@@ -198,7 +207,8 @@ public class JobController {
      * @param jobId The job ID
      * @return List of files for the job
      */
-    @GetMapping("/api/v1/general/job/{jobId}/result/files")
+    @GetMapping("/job/{jobId}/result/files")
+    @Operation(summary = "Get job result files")
     public ResponseEntity<?> getJobFiles(@PathVariable("jobId") String jobId) {
         JobResult result = taskManager.getJobResult(jobId);
         if (result == null) {
@@ -227,7 +237,8 @@ public class JobController {
      * @param fileId The file ID
      * @return The file metadata
      */
-    @GetMapping("/api/v1/general/files/{fileId}/metadata")
+    @GetMapping("/files/{fileId}/metadata")
+    @Operation(summary = "Get file metadata")
     public ResponseEntity<?> getFileMetadata(@PathVariable("fileId") String fileId) {
         try {
             // Verify file exists
@@ -250,7 +261,7 @@ public class JobController {
                                 "fileName",
                                 "unknown",
                                 "contentType",
-                                "application/octet-stream",
+                                MediaType.APPLICATION_OCTET_STREAM_VALUE,
                                 "fileSize",
                                 fileSize));
             }
@@ -267,7 +278,8 @@ public class JobController {
      * @param fileId The file ID
      * @return The file content
      */
-    @GetMapping("/api/v1/general/files/{fileId}")
+    @GetMapping("/files/{fileId}")
+    @Operation(summary = "Download a file")
     public ResponseEntity<?> downloadFile(@PathVariable("fileId") String fileId) {
         try {
             // Verify file exists
@@ -284,7 +296,9 @@ public class JobController {
 
             String fileName = resultFile != null ? resultFile.getFileName() : "download";
             String contentType =
-                    resultFile != null ? resultFile.getContentType() : "application/octet-stream";
+                    resultFile != null
+                            ? resultFile.getContentType()
+                            : MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
             return ResponseEntity.ok()
                     .header("Content-Type", contentType)

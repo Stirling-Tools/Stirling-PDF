@@ -47,7 +47,7 @@ public class ExtractCSVController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
+    @PostMapping(value = "/pdf/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Extracts a CSV document from a PDF",
             description =

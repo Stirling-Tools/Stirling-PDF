@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.http.MediaType;
+
 import lombok.experimental.UtilityClass;
 
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
@@ -33,10 +35,10 @@ public class EmlProcessingUtils {
     // MIME type detection
     private static final Map<String, String> EXTENSION_TO_MIME_TYPE =
             Map.of(
-                    ".png", "image/png",
-                    ".jpg", "image/jpeg",
-                    ".jpeg", "image/jpeg",
-                    ".gif", "image/gif",
+                    ".png", MediaType.IMAGE_PNG_VALUE,
+                    ".jpg", MediaType.IMAGE_JPEG_VALUE,
+                    ".jpeg", MediaType.IMAGE_JPEG_VALUE,
+                    ".gif", MediaType.IMAGE_GIF_VALUE,
                     ".bmp", "image/bmp",
                     ".webp", "image/webp",
                     ".svg", "image/svg+xml",
@@ -81,8 +83,8 @@ public class EmlProcessingUtils {
                             || lowerContent.contains("bcc:");
             boolean hasMimeStructure =
                     lowerContent.contains("multipart/")
-                            || lowerContent.contains("text/plain")
-                            || lowerContent.contains("text/html")
+                            || lowerContent.contains(MediaType.TEXT_PLAIN_VALUE)
+                            || lowerContent.contains(MediaType.TEXT_HTML_VALUE)
                             || lowerContent.contains("boundary=");
 
             int headerCount = 0;
@@ -476,7 +478,7 @@ public class EmlProcessingUtils {
             }
         }
 
-        return "image/png";
+        return MediaType.IMAGE_PNG_VALUE; // Default MIME type
     }
 
     public static String decodeUrlEncoded(String encoded) {

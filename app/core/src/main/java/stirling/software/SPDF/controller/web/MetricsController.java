@@ -19,7 +19,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.annotation.PostConstruct;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointInspector;
@@ -362,6 +364,8 @@ public class MetricsController {
         return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
     }
 
+    @Setter
+    @Getter
     public static class EndpointCount {
 
         private String endpoint;
@@ -370,22 +374,6 @@ public class MetricsController {
 
         public EndpointCount(String endpoint, double count) {
             this.endpoint = endpoint;
-            this.count = count;
-        }
-
-        public String getEndpoint() {
-            return endpoint;
-        }
-
-        public void setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
-        }
-
-        public double getCount() {
-            return count;
-        }
-
-        public void setCount(double count) {
             this.count = count;
         }
     }

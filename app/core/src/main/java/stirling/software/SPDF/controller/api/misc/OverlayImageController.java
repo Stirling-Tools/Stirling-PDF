@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.misc;
 import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,7 +32,7 @@ public class OverlayImageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-image")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-image")
     @Operation(
             summary = "Overlay image onto a PDF file",
             description =
