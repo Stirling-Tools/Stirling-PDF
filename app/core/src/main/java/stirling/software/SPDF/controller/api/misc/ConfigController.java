@@ -6,22 +6,18 @@ import java.util.Map;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 
-@RestController
-@Tag(name = "Config", description = "Configuration APIs")
-@RequestMapping("/api/v1/config")
+@ConfigApi
 @RequiredArgsConstructor
 @Hidden
 public class ConfigController {

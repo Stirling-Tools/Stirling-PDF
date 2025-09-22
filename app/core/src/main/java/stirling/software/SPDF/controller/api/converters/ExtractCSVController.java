@@ -18,18 +18,17 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.CsvConversionResponse;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.FlexibleCSVWriter;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 import technology.tabula.ObjectExtractor;
@@ -37,9 +36,7 @@ import technology.tabula.Page;
 import technology.tabula.Table;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
-@RestController
-@RequestMapping("/api/v1/convert")
-@Tag(name = "Convert", description = "Convert APIs")
+@ConvertApi
 @Slf4j
 @RequiredArgsConstructor
 public class ExtractCSVController {
@@ -47,6 +44,7 @@ public class ExtractCSVController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
+    @CsvConversionResponse
     @Operation(
             summary = "Extracts a CSV document from a PDF",
             description =
