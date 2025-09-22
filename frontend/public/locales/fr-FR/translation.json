@@ -25,9 +25,9 @@
   "multiPdfDropPrompt": "Sélectionnez (ou glissez-déposez) tous les PDF dont vous avez besoin",
   "imgPrompt": "Choisir une image",
   "genericSubmit": "Envoyer",
-  "uploadLimit": "Maximum file size:",
-  "uploadLimitExceededSingular": "is too large. Maximum allowed size is",
-  "uploadLimitExceededPlural": "are too large. Maximum allowed size is",
+  "uploadLimit": "Taille maximale du fichier :",
+  "uploadLimitExceededSingular": "est trop grand. La taille maximale autorisée est de",
+  "uploadLimitExceededPlural": "sont trop grands. La taille maximale autorisée est de",
   "processTimeWarning": "Attention, ce processus peut prendre jusqu'à une minute en fonction de la taille du fichier.",
   "pageOrderPrompt": "Ordre des pages (entrez une liste de numéros de page séparés par des virgules ou des fonctions telles que 2n+1) :",
   "pageSelectionPrompt": "Sélection des pages (entrez une liste de numéros de page séparés par des virgules ou des fonctions telles que 2n+1) :",
@@ -118,14 +118,14 @@
   "addToDoc": "Ajouter au Document",
   "reset": "Réinitialiser",
   "apply": "Appliquer",
-  "noFileSelected": "No file selected. Please upload one.",
+  "noFileSelected": "Aucun fichier sélectionné. Veuillez en télécharger un.",
   "legal": {
     "privacy": "Politique de Confidentialité",
     "terms": "Conditions Générales",
     "accessibility": "Accessibilité",
     "cookie": "Politique des Cookies",
     "impressum": "Mentions Légales",
-    "showCookieBanner": "Cookie Preferences"
+    "showCookieBanner": "Préférences pour les cookies"
   },
   "pipeline": {
     "header": "Menu Pipeline (Beta)",
@@ -265,32 +265,32 @@
     "disabledUsers": "Utilisateurs désactivés :",
     "totalUsers": "Utilisateurs au total :",
     "lastRequest": "Dernière requête",
-    "usage": "View Usage"
+    "usage": "Voir l'utilisation"
   },
   "endpointStatistics": {
-    "title": "Endpoint Statistics",
-    "header": "Endpoint Statistics",
+    "title": "Statistiques des points de terminaison",
+    "header": "Statistiques des points de terminaison",
     "top10": "Top 10",
     "top20": "Top 20",
-    "all": "All",
-    "refresh": "Refresh",
-    "includeHomepage": "Include Homepage ('/')",
-    "includeLoginPage": "Include Login Page ('/login')",
-    "totalEndpoints": "Total Endpoints",
-    "totalVisits": "Total Visits",
-    "showing": "Showing",
-    "selectedVisits": "Selected Visits",
-    "endpoint": "Endpoint",
-    "visits": "Visits",
-    "percentage": "Percentage",
-    "loading": "Loading...",
-    "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
-    "home": "Home",
-    "login": "Login",
+    "all": "Tout",
+    "refresh": "Rafraîchir",
+    "includeHomepage": "Inclure la page d'accueil ('/')",
+    "includeLoginPage": "Inclure la page de connexion ('/login')",
+    "totalEndpoints": "Nombre total de points de terminaison",
+    "totalVisits": "Nombre total de visites",
+    "showing": "Affichage",
+    "selectedVisits": "Visites sélectionnées",
+    "endpoint": "Point de terminaison",
+    "visits": "Visites",
+    "percentage": "Pourcentage",
+    "loading": "Chargement...",
+    "failedToLoad": "Échec du chargement des données des points de terminaisons. Veuillez réessayer.",
+    "home": "Accueil",
+    "login": "Connexion",
     "top": "Top",
-    "numberOfVisits": "Number of Visits",
-    "visitsTooltip": "Visits: {0} ({1}% of total)",
-    "retry": "Retry"
+    "numberOfVisits": "Nombre de visites",
+    "visitsTooltip": "Visites : {0} ({1}% du total)",
+    "retry": "Réessayer"
   },
   "database": {
     "title": "Import/Export de la Base de Données",
@@ -388,8 +388,8 @@
       "desc": "Compressez les PDF pour réduire leur tailles."
     },
     "unlockPDFForms": {
-      "title": "Unlock PDF Forms",
-      "desc": "Remove read-only property of form fields in a PDF document."
+      "title": "Déverrouiller les formulaires PDF",
+      "desc": "Supprimer la propriété lecture seule des champs de formulaire dans un document PDF"
     },
     "changeMetadata": {
       "title": "Modifier les métadonnées",
@@ -578,11 +578,48 @@
     "replace-color": {
       "title": "Remplacer et Inverser Couleur",
       "desc": "Remplacer la couleur pour le texte et l'arrière-plan dans le PDF et inverser la couleur complète du PDF pour réduire la taille du fichier"
+    },
+    "convert": {
+      "title": "Convertir"
+    },
+    "attachments": {
+      "title": "Ajouter des pièces jointes",
+      "desc": "Ajouter ou supprimer des fichiers intégrés (pièces jointes) dans un PDF"
+    },
+    "editTableOfContents": {
+      "title": "Modifier la table des matières",
+      "desc": "Ajouter ou modifier les signets et la table des matières dans les documents PDF"
+    },
+    "extractPages": {
+      "title": "Extraire des pages"
+    },
+    "removePages": {
+      "title": "Supprimer",
+      "desc": "Supprimez les pages inutiles de votre PDF."
+    },
+    "removeImagePdf": {
+      "title": "Supprimer les images",
+      "desc": "Supprimez les images d'un PDF pour réduire sa taille"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Séparer automatiquement par taille/nombre",
+      "desc": "Séparer un PDF unique en plusieurs documents en fonction de la taille, du nombre de pages ou du nombre de documents."
+    },
+    "adjust-contrast": {
+      "title": "Ajuster les couleurs",
+      "desc": "Ajustez le contraste, la saturation et la luminosité d'un PDF."
+    },
+    "replaceColorPdf": {
+      "title": "Remplacer et Inverser Couleur",
+      "desc": "Remplacer la couleur pour le texte et l'arrière-plan dans le PDF et inverser la couleur complète du PDF pour réduire la taille du fichier"
+    },
+    "changePermissions": {
+      "title": "Modifier les permissions"
     }
   },
   "viewPdf": {
     "tags": "visualiser,lire,annoter,texte,image",
-    "title": "View/Edit PDF",
+    "title": "Afficher/modifier un PDF",
     "header": "Visualiser un PDF"
   },
   "multiTool": {
@@ -617,7 +654,10 @@
     "sortByName": "Trier par nom",
     "sortByDate": "Trier par date",
     "removeCertSign": "Supprimer la signature numérique dans le fichier fusionné ?",
-    "submit": "Fusionner"
+    "submit": "Fusionner",
+    "sortBy": {
+      "filename": "Nom du Fichier"
+    }
   },
   "split": {
     "tags": "opérations sur les pages,diviser,plusieurs pages,cut,server side,divide",
@@ -634,7 +674,20 @@
       "8": "Document #6: Page 10"
     },
     "splitPages": "Pages sur lesquelles diviser",
-    "submit": "Diviser"
+    "submit": "Diviser",
+    "steps": {
+      "settings": "Paramètres"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Taille du Fichier"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Taille du Fichier"
+      }
+    }
   },
   "rotate": {
     "tags": "pivoter,server side,rotate",
@@ -679,7 +732,7 @@
       "8": "Supprimer le dernier",
       "9": "Supprimer le premier et le dernier",
       "10": "Méger Impair-Pair",
-      "11": "Duplicate all pages"
+      "11": "Dupliquer toutes les pages"
     },
     "placeholder": "(par exemple 1,3,2 ou 4-8,2,10-12 ou 2n-1)"
   },
@@ -712,6 +765,12 @@
     "type": {
       "1": "Texte",
       "2": "Image"
+    },
+    "watermarkType": {
+      "text": "Texte"
+    },
+    "settings": {
+      "fontSize": "Taille de Police"
     }
   },
   "permissions": {
@@ -734,7 +793,9 @@
     "submit": "Modifier"
   },
   "removePages": {
-    "tags": "supprimer,remove,delete"
+    "tags": "supprimer,remove,delete",
+    "title": "Supprimer",
+    "submit": "Supprimer"
   },
   "addPassword": {
     "tags": "ajouter,sécurité,mot de passe,secure,security",
@@ -758,7 +819,12 @@
       "15": "Restreint ce qui peut être fait avec le document une fois qu'il est ouvert (non pris en charge par tous les lecteurs).",
       "16": "Restreint l'ouverture du document lui-même."
     },
-    "submit": "Chiffrer"
+    "submit": "Chiffrer",
+    "tooltip": {
+      "permissions": {
+        "title": "Modifier les permissions"
+      }
+    }
   },
   "removePassword": {
     "tags": "supprimer,sécurité,mot de passe,secure,decrypt,security,unpassword,delete password",
@@ -768,15 +834,20 @@
       "1": "Sélectionnez le PDF",
       "2": "Mot de passe"
     },
-    "submit": "Supprimer"
+    "submit": "Supprimer",
+    "desc": "Supprimez la protection par mot de passe de votre PDF.",
+    "password": {
+      "stepTitle": "Supprimer le mot de passe",
+      "label": "Mot de passe actuel"
+    }
   },
   "compressPdfs": {
     "tags": "compresser,réduire,taille,squish,small,tiny"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
-    "title": "Remove Read-Only from Form Fields",
-    "header": "Unlock PDF Forms",
+    "tags": "supprimer,propriété,déverrouiller,formulaire,champs,lecture,remove,delete,form,field,readonly",
+    "title": "Supprimer la lecture seule des champs de formulaire",
+    "header": "Déverrouiller les formulaires PDF",
     "submit": "Remove"
   },
   "changeMetadata": {
@@ -829,7 +900,25 @@
     },
     "help": "Veuillez lire cette documentation pour savoir comment utiliser l'OCR pour d'autres langues ou une utilisation hors Docker :",
     "credit": "Ce service utilise qpdf et Tesseract pour l'OCR.",
-    "submit": "Traiter"
+    "submit": "Traiter",
+    "desc": "Utilisez l'OCR pour analyser et détecter le texte des images d'un PDF et le rajouter en tant que tel.",
+    "settings": {
+      "title": "Paramètres",
+      "ocrMode": {
+        "label": "Mode OCR"
+      },
+      "languages": {
+        "label": "Langues"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Mode OCR"
+      },
+      "languages": {
+        "title": "Langues"
+      }
+    }
   },
   "extractImages": {
     "tags": "image,photo,save,archive,zip,capture,grab",
@@ -938,7 +1027,13 @@
     "title": "Rendre inerte",
     "header": "Rendre inerte",
     "flattenOnlyForms": "Aplatir uniquement les formulaires",
-    "submit": "Rendre inerte"
+    "submit": "Rendre inerte",
+    "steps": {
+      "settings": "Paramètres"
+    },
+    "options": {
+      "flattenOnlyForms": "Aplatir uniquement les formulaires"
+    }
   },
   "repair": {
     "tags": "réparer,restaurer,corriger,récupérer,fix,restore,correction,recover",
@@ -1106,10 +1201,10 @@
     "credit": "Utilise WeasyPrint."
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
-    "title": "PDF To Markdown",
-    "header": "PDF To Markdown",
-    "submit": "Convert"
+    "tags": "markdown,markup,contenu Web,transformation,convert",
+    "title": "PDF en Markdown",
+    "header": "PDF en Markdown",
+    "submit": "Convertir"
   },
   "getPdfInfo": {
     "tags": "récupérer,infomation,data,stats,statistics",
@@ -1174,7 +1269,21 @@
     "showLayers": "Montrer les calques (double-click pour réinitialiser tous les calques à l'état par défaut)",
     "colourPicker": "Sélection de couleur",
     "findCurrentOutlineItem": "Trouver l'élément de contour courrant",
-    "applyChanges": "Appliquer les changements"
+    "applyChanges": "Appliquer les changements",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Mode avancé"
+      },
+      "wordsToRedact": {
+        "add": "Ajouter"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "placeholder": "(par exemple : 1,2,8 ou 4,7,12-16 ou 2n-1)"
+      },
+      "export": "Exporter"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV, Extraction de table, extraction, conversion"
@@ -1331,12 +1440,12 @@
     "oauth2AccessDenied": "Accès refusé",
     "oauth2InvalidTokenResponse": "Réponse contenant le jeton est invalide",
     "oauth2InvalidIdToken": "Jeton d'identification invalide",
-    "relyingPartyRegistrationNotFound": "No relying party registration found",
+    "relyingPartyRegistrationNotFound": "Aucun enregistrement de partie de confiance trouvé",
     "userIsDisabled": "L'utilisateur est désactivé, la connexion est actuellement bloquée avec ce nom d'utilisateur. Veuillez contacter l'administrateur.",
     "alreadyLoggedIn": "Vous êtes déjà connecté sur",
     "alreadyLoggedIn2": "appareils. Veuillez vous déconnecter des appareils et réessayer.",
     "toManySessions": "Vous avez trop de sessions actives.",
-    "logoutMessage": "You have been logged out."
+    "logoutMessage": "Vous avez été déconnecté."
   },
   "pdfToSinglePage": {
     "title": "Fusionner les pages",
@@ -1355,10 +1464,10 @@
     "selectText": {
       "1": "Supprimer les actions JavaScript",
       "2": "Supprimer les fichiers intégrés",
-      "3": "Remove XMP metadata",
+      "3": "Supprimer les métadonnées XMP",
       "4": "Supprimer les liens",
       "5": "Supprimer les polices",
-      "6": "Remove Document Info Metadata"
+      "6": "Supprimer les métadonnées d'information du document"
     },
     "submit": "Assainir"
   },
@@ -1380,13 +1489,16 @@
     "selectText": {
       "1": {
         "_value": "Compression Settings",
-        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+        "1": "1-3 compression PDF,</br> 4-6 compression d'image légère,</br> 7-9 compression d'image intense qui réduira considérablement la qualité de l'image"
       },
       "2": "Niveau d'optimisation",
       "4": "Mode automatique – ajuste automatiquement la qualité pour obtenir le PDF à la taille exacte",
       "5": "Taille PDF attendue (par exemple, 25 MB, 10,8 MB, 25 KB)"
     },
-    "submit": "Compresser"
+    "submit": "Compresser",
+    "method": {
+      "filesize": "Taille du Fichier"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Ce fichier est protégé par un mot de passe. Veuillez saisir le mot de passe :",
@@ -1507,8 +1619,8 @@
     "click": "Cliquez",
     "or": "ou",
     "dragAndDrop": "Glisser & Déposer",
-    "dragAndDropPDF": "Drag & Drop PDF file",
-    "dragAndDropImage": "Drag & Drop Image file",
+    "dragAndDropPDF": "Glisser & Déposer un PDF",
+    "dragAndDropImage": "Glisser & Déposer une image",
     "hoveredDragAndDrop": "Glisser & Déposer le(s) fichier(s) ici",
     "extractPDF": "Extraction en cours..."
   },
@@ -1523,38 +1635,115 @@
   },
   "cookieBanner": {
     "popUp": {
-      "title": "How we use Cookies",
+      "title": "Comment nous utilisons les cookies",
       "description": {
-        "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
+        "1": "Nous utilisons des cookies et d'autres technologies pour améliorer Stirling PDF pour vous — cela nous aide à perfectionner nos outils et à créer des fonctionnalités que vous allez adorer.",
         "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
       },
-      "acceptAllBtn": "Okay",
-      "acceptNecessaryBtn": "No Thanks",
-      "showPreferencesBtn": "Manage preferences"
+      "acceptAllBtn": "D'accord",
+      "acceptNecessaryBtn": "Non merci",
+      "showPreferencesBtn": "Gérer les préférences"
     },
     "preferencesModal": {
-      "title": "Consent Preferences Center",
-      "acceptAllBtn": "Accept all",
-      "acceptNecessaryBtn": "Reject all",
-      "savePreferencesBtn": "Save preferences",
-      "closeIconLabel": "Close modal",
+      "title": "Centre de préférences de consentement",
+      "acceptAllBtn": "Tout accepter",
+      "acceptNecessaryBtn": "Tout refuser",
+      "savePreferencesBtn": "Enregistrer les préférences",
+      "closeIconLabel": "Fermer la fenêtre",
       "serviceCounterLabel": "Service|Services",
-      "subtitle": "Cookie Usage",
+      "subtitle": "Utilisation des cookies",
       "description": {
-        "1": "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.",
-        "2": "Stirling PDF cannot—and will never—track or access the content of the documents you use.",
-        "3": "Your privacy and trust are at the core of what we do."
+        "1": "Stirling PDF utilise des cookies et des technologies similaires pour améliorer votre expérience et comprendre comment nos outils sont utilisés. Cela nous aide à améliorer les performances, développer les fonctionnalités qui vous tiennent à cœur et offrir un support continu.",
+        "2": "Stirling PDF ne peut pas — et ne pourra jamais — suivre ou accéder au contenu des documents que vous utilisez.",
+        "3": "Votre vie privée et votre confiance sont au cœur de notre démarche."
       },
       "necessary": {
         "title": {
-          "1": "Strictly Necessary Cookies",
-          "2": "Always Enabled"
+          "1": "Cookies strictement nécessaires",
+          "2": "Toujours activés"
         },
         "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
       },
       "analytics": {
-        "title": "Analytics",
-        "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+        "title": "Analyse",
+        "description": "Ces cookies nous aident à comprendre comment nos outils sont utilisés, afin que nous puissions nous concentrer sur les fonctionnalités les plus appréciées par notre communauté. Soyez rassuré — Stirling PDF ne peut pas et ne suivra jamais le contenu des documents que vous utilisez."
+      }
+    }
+  },
+  "download": "Télécharger",
+  "undo": "Défaire",
+  "convert": {
+    "title": "Convertir",
+    "settings": "Paramètres",
+    "color": "Couleur",
+    "greyscale": "Niveaux de gris",
+    "fillPage": "Remplir la page",
+    "pdfaDigitalSignatureWarning": "Le PDF contient une signature numérique. Elle sera supprimée dans l'étape suivante.",
+    "grayscale": "Niveaux de gris"
+  },
+  "attachments": {
+    "tags": "intégrer,joindre,fichier,pièce,jointe,embed,attach,file,attachment,attachments",
+    "title": "Ajouter des pièces jointes",
+    "header": "Ajouter des pièces jointes",
+    "submit": "Ajouter des pièces jointes"
+  },
+  "rightRail": {
+    "selectAll": "Tout sélectionner",
+    "deselectAll": "Tout déselectionner"
+  },
+  "quickAccess": {
+    "sign": "Signer"
+  },
+  "fileUpload": {
+    "loading": "Chargement...",
+    "or": "ou"
+  },
+  "fileManager": {
+    "fileName": "Nom",
+    "selectAll": "Tout sélectionner",
+    "deselectAll": "Tout déselectionner",
+    "deleteSelected": "Supprimer la sélection",
+    "download": "Télécharger",
+    "delete": "Supprimer"
+  },
+  "sanitize": {
+    "submit": "Assainir",
+    "steps": {
+      "settings": "Paramètres"
+    }
+  },
+  "changePermissions": {
+    "title": "Modifier les permissions",
+    "submit": "Modifier les permissions",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Empêcher l'assemblage du document"
+      },
+      "preventExtractContent": {
+        "label": "Empêcher l'extraction de contenu"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Empêcher l'extraction pour l'accessibilité"
+      },
+      "preventFillInForm": {
+        "label": "Empêcher de remplir les formulaires"
+      },
+      "preventModify": {
+        "label": "Empêcher la modification"
+      },
+      "preventModifyAnnotations": {
+        "label": "Empêcher la modification des annotations"
+      },
+      "preventPrinting": {
+        "label": "Empêcher l'impression"
+      },
+      "preventPrintingFaithful": {
+        "label": "Empêcher l'impression des différents formats"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Modifier les permissions"
       }
     }
   }

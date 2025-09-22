@@ -2579,7 +2579,12 @@
     "downloadSelected": "Download Selected Files",
     "downloadAll": "Download All",
     "toggleTheme": "Toggle Theme",
-    "language": "Language"
+    "language": "Language",
+    "search": "Search PDF",
+    "panMode": "Pan Mode",
+    "rotateLeft": "Rotate Left",
+    "rotateRight": "Rotate Right",
+    "toggleSidebar": "Toggle Sidebar"
   },
   "toolPicker": {
     "searchPlaceholder": "Search tools...",
@@ -2945,5 +2950,15 @@
       "processImages": "Process Images",
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
+  },
+  "viewer": {
+    "firstPage": "First Page",
+    "lastPage": "Last Page",
+    "previousPage": "Previous Page",
+    "nextPage": "Next Page",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "singlePageView": "Single Page View",
+    "dualPageView": "Dual Page View"
   }
 }

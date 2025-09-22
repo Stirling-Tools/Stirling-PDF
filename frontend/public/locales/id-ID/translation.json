@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "Mengambil data...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Ganti dan Inversi Warna",
       "desc": "Ganti warna untuk teks dan latar belakang dalam PDF dan inversi seluruh warna PDF untuk mengurangi ukuran file"
+    },
+    "convert": {
+      "title": "Konversi"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Ekstrak Halaman"
+    },
+    "removePages": {
+      "title": "Menghapus",
+      "desc": "Menghapus halaman yang tidak diinginkan dari dokumen PDF Anda."
+    },
+    "removeImagePdf": {
+      "title": "Hapus Gambar",
+      "desc": "Hapus gambar dari PDF untuk mengurangi ukuran file"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Pemisahan Otomatis berdasarkan Ukuran/Hitungan",
+      "desc": "Membagi satu PDF menjadi beberapa dokumen berdasarkan ukuran, jumlah halaman, atau jumlah dokumen"
+    },
+    "adjust-contrast": {
+      "title": "Menyesuaikan Warna/Kontras",
+      "desc": "Sesuaikan Kontras, Saturasi, dan Kecerahan PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Ganti dan Inversi Warna",
+      "desc": "Ganti warna untuk teks dan latar belakang dalam PDF dan inversi seluruh warna PDF untuk mengurangi ukuran file"
+    },
+    "changePermissions": {
+      "title": "Ganti Perizinan"
     }
   },
   "viewPdf": {
@@ -594,7 +626,7 @@
     "deselectAll": "Deselect All",
     "selectPages": "Page Select",
     "selectedPages": "Selected Pages",
-    "page": "Page",
+    "page": "Halaman",
     "deleteSelected": "Delete Selected",
     "downloadAll": "Export",
     "downloadSelected": "Export Selected",
@@ -602,10 +634,10 @@
     "addFile": "Add File",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "split": "Split",
+    "split": "Membagi",
     "moveLeft": "Move Left",
     "moveRight": "Move Right",
-    "delete": "Delete",
+    "delete": "Hapus",
     "dragDropMessage": "Page(s) Selected",
     "undo": "Undo",
     "redo": "Redo"
@@ -617,7 +649,10 @@
     "sortByName": "Sortir berdasarkan nama",
     "sortByDate": "Sortir berdasrkan tanggal",
     "removeCertSign": "Hapus tanda tangan digital dalam file yang dicampur?",
-    "submit": "Gabungkan"
+    "submit": "Gabungkan",
+    "sortBy": {
+      "filename": "Nama Berkas"
+    }
   },
   "split": {
     "tags": "Pengoperasian halaman,membagi,Multi Halaman,memotong,sisi server",
@@ -634,7 +669,20 @@
       "8": "Dokumen #6: Halaman 10"
     },
     "splitPages": "Masukkan halaman yang akan dipisah:",
-    "submit": "Pisahkan"
+    "submit": "Pisahkan",
+    "steps": {
+      "settings": "Pengaturan"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Ukuran Berkas"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Ukuran Berkas"
+      }
+    }
   },
   "rotate": {
     "tags": "sisi server",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Teks",
       "2": "Gambar"
+    },
+    "watermarkType": {
+      "text": "Teks"
+    },
+    "settings": {
+      "fontSize": "Ukuran Fonta"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Ganti"
   },
   "removePages": {
-    "tags": "Menghapus halaman,menghapus halaman"
+    "tags": "Menghapus halaman,menghapus halaman",
+    "title": "Menghapus",
+    "submit": "Menghapus"
   },
   "addPassword": {
     "tags": "aman,Keamanan",
@@ -758,7 +814,12 @@
       "15": "Membatasi apa yang dapat dilakukan dengan dokumen setelah dibuka (Tidak didukung oleh semua pembaca)",
       "16": "Membatasi pembukaan dokumen itu sendiri"
     },
-    "submit": "Enkripsi"
+    "submit": "Enkripsi",
+    "tooltip": {
+      "permissions": {
+        "title": "Ganti Perizinan"
+      }
+    }
   },
   "removePassword": {
     "tags": "aman,Dekripsi,keamanan,buka kata sandi,hapus kata sandi",
@@ -768,7 +829,12 @@
       "1": "Pilih PDF  yang akan di Dekrip",
       "2": "Kata Sandi"
     },
-    "submit": "Hapus"
+    "submit": "Hapus",
+    "desc": "Menghapus perlindungan kata sandi dari dokumen PDF Anda.",
+    "password": {
+      "stepTitle": "Hapus Kata Sandi",
+      "label": "Kata Sandi Saat Ini"
+    }
   },
   "compressPdfs": {
     "tags": "remas, kecil, mini"
@@ -829,7 +895,25 @@
     },
     "help": "Silakan baca dokumentasi ini tentang cara menggunakan ini untuk bahasa lain dan/atau penggunaan yang tidak ada di docker",
     "credit": "Layanan ini menggunakan qpdf dan Tesseract untuk OCR.",
-    "submit": "Memproses PDF dengan OCR"
+    "submit": "Memproses PDF dengan OCR",
+    "desc": "Memindai dan mendeteksi teks dari gambar di dalam PDF dan menambahkannya kembali sebagai teks.",
+    "settings": {
+      "title": "Pengaturan",
+      "ocrMode": {
+        "label": "Mode OCR"
+      },
+      "languages": {
+        "label": "Bahasa"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Mode OCR"
+      },
+      "languages": {
+        "title": "Bahasa"
+      }
+    }
   },
   "extractImages": {
     "tags": "gambar, foto, simpan, arsip, zip, tangkap, ambil",
@@ -924,7 +1008,7 @@
     "sharedSigs": "Tanda Tangan Berbagi",
     "noSavedSigs": "Tidak ditemukan tanda tangan yang disimpan",
     "addToAll": "Add to all pages",
-    "delete": "Delete",
+    "delete": "Hapus",
     "first": "First page",
     "last": "Last page",
     "next": "Next page",
@@ -938,7 +1022,13 @@
     "title": "Ratakan",
     "header": "Ratakan PDF",
     "flattenOnlyForms": "Ratakan hanya formulir",
-    "submit": "Ratakan"
+    "submit": "Ratakan",
+    "steps": {
+      "settings": "Pengaturan"
+    },
+    "options": {
+      "flattenOnlyForms": "Ratakan hanya formulir"
+    }
   },
   "repair": {
     "tags": "perbaiki, pulihkan, koreksi, pulihkan",
@@ -1106,10 +1196,10 @@
     "credit": "Menggunakan WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "markup, konten web, transformasi, konversi",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Konversi"
   },
   "getPdfInfo": {
     "tags": "informasi, data, statistik, statistik",
@@ -1148,7 +1238,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1264,21 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Langkah Lanjut"
+      },
+      "wordsToRedact": {
+        "add": "Tambah"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Halaman-halaman",
+        "placeholder": "(misalnya 1,2,8 atau 4,7,12-16 atau 2n-1)"
+      }
+    }
   },
   "tableExtraxt": {
     "tags": "CSV, Ekstraksi Tabel, ekstrak, konversi"
@@ -1261,8 +1365,8 @@
     },
     "signer": "Signer",
     "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
+    "reason": "Alasan",
+    "location": "Lokasi",
     "noSignatures": "No digital signatures found in this document",
     "chain": {
       "invalid": "Certificate chain validation failed - cannot verify signer's identity"
@@ -1281,7 +1385,7 @@
       "validUntil": "Valid Until",
       "algorithm": "Algorithm",
       "keySize": "Key Size",
-      "version": "Version",
+      "version": "Versi",
       "keyUsage": "Key Usage",
       "selfSigned": "Self-Signed",
       "bits": "bits"
@@ -1386,7 +1490,10 @@
       "4": "Mode Otomatis - Menyesuaikan kualitas secara otomatis untuk mendapatkan PDF dengan ukuran yang tepat",
       "5": "Ukuran PDF yang diharapkan (mis. 25MB, 10,8MB, 25KB)"
     },
-    "submit": "Kompres"
+    "submit": "Kompres",
+    "method": {
+      "filesize": "Ukuran Berkas"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1555,6 +1662,75 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Unduh",
+  "convert": {
+    "title": "Konversi",
+    "settings": "Pengaturan",
+    "color": "Warna",
+    "greyscale": "Skala abu-abu",
+    "fillPage": "Isi Halaman",
+    "pdfaDigitalSignatureWarning": "PDF ini mengandung tanda tangan digital. Ini akan dihapus pada langkah berikutnya.",
+    "grayscale": "Skala abu-abu"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "quickAccess": {
+    "sign": "Tanda Tangan"
+  },
+  "fileUpload": {
+    "loading": "Mengambil data..."
+  },
+  "fileManager": {
+    "fileName": "Nama",
+    "fileVersion": "Versi",
+    "download": "Unduh",
+    "delete": "Hapus"
+  },
+  "sanitize": {
+    "submit": "Bersihkan PDF",
+    "steps": {
+      "settings": "Pengaturan"
+    }
+  },
+  "changePermissions": {
+    "title": "Ganti Perizinan",
+    "submit": "Ganti Perizinan",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Pencegahan untuk penyusunan dokumen"
+      },
+      "preventExtractContent": {
+        "label": "Pencegahan untuk ekstraksi konten"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Pencegahan ekstraksi untuk aksesibilitas"
+      },
+      "preventFillInForm": {
+        "label": "Pencegahan untuk mengisi formulir"
+      },
+      "preventModify": {
+        "label": "Pencegahan untuk pengubahan"
+      },
+      "preventModifyAnnotations": {
+        "label": "Pencegahan untuk perubahan anotasi"
+      },
+      "preventPrinting": {
+        "label": "Pencegahan untuk mencetak"
+      },
+      "preventPrintingFaithful": {
+        "label": "Pencegahan untuk mencetak format yang berbeda"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Ganti Perizinan"
       }
     }
   }

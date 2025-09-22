@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
+import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
 import DeleteAllStep from "../components/tools/changeMetadata/steps/DeleteAllStep";
 import StandardMetadataStep from "../components/tools/changeMetadata/steps/StandardMetadataStep";
 import DocumentDatesStep from "../components/tools/changeMetadata/steps/DocumentDatesStep";
@@ -34,9 +34,6 @@ const ChangeMetadata = (props: BaseToolProps) => {
   const documentDatesTips = useDocumentDatesTips();
   const advancedOptionsTips = useAdvancedOptionsTips();
 
-  // Individual step collapse states - only one can be open at a time
-  const [openStep, setOpenStep] = useState<MetadataStep>(MetadataStep.DELETE_ALL);
-
   const base = useBaseTool(
     'changeMetadata',
     useChangeMetadataParameters,
@@ -47,27 +44,22 @@ const ChangeMetadata = (props: BaseToolProps) => {
   // Extract metadata from uploaded files
   const { isExtractingMetadata } = useMetadataExtraction(base.params);
 
-  // Compute actual collapsed state based on results and accordion behavior
-  const getActualCollapsedState = (stepName: MetadataStep) => {
-    return (!base.hasFiles || base.hasResults) ? true : openStep !== stepName;
-  };
-
-  // Handle step toggle for accordion behavior
-  const handleStepToggle = (stepName: MetadataStep) => {
-    if (base.hasResults) {
-      if (base.settingsCollapsed) {
-        base.handleSettingsReset();
-      }
-      return;
-    }
-    setOpenStep(openStep === stepName ? MetadataStep.NONE : stepName);
-  };
+  // Accordion step management
+  const accordion = useAccordionSteps<MetadataStep>({
+    noneValue: MetadataStep.NONE,
+    initialStep: MetadataStep.DELETE_ALL,
+    stateConditions: {
+      hasFiles: base.hasFiles,
+      hasResults: base.hasResults
+    },
+    afterResults: base.handleSettingsReset,
+  });
 
   // Create step objects
   const createStandardMetadataStep = () => ({
     title: t("changeMetadata.standardFields.title", "Standard Fields"),
-    isCollapsed: getActualCollapsedState(MetadataStep.STANDARD_METADATA),
-    onCollapsedClick: () => handleStepToggle(MetadataStep.STANDARD_METADATA),
+    isCollapsed: accordion.getCollapsedState(MetadataStep.STANDARD_METADATA),
+    onCollapsedClick: () => accordion.handleStepToggle(MetadataStep.STANDARD_METADATA),
     tooltip: standardMetadataTips,
     content: (
       <StandardMetadataStep
@@ -80,8 +72,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
 
   const createDocumentDatesStep = () => ({
     title: t("changeMetadata.dates.title", "Date Fields"),
-    isCollapsed: getActualCollapsedState(MetadataStep.DOCUMENT_DATES),
-    onCollapsedClick: () => handleStepToggle(MetadataStep.DOCUMENT_DATES),
+    isCollapsed: accordion.getCollapsedState(MetadataStep.DOCUMENT_DATES),
+    onCollapsedClick: () => accordion.handleStepToggle(MetadataStep.DOCUMENT_DATES),
     tooltip: documentDatesTips,
     content: (
       <DocumentDatesStep
@@ -94,8 +86,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
 
   const createAdvancedOptionsStep = () => ({
     title: t("changeMetadata.advanced.title", "Advanced Options"),
-    isCollapsed: getActualCollapsedState(MetadataStep.ADVANCED_OPTIONS),
-    onCollapsedClick: () => handleStepToggle(MetadataStep.ADVANCED_OPTIONS),
+    isCollapsed: accordion.getCollapsedState(MetadataStep.ADVANCED_OPTIONS),
+    onCollapsedClick: () => accordion.handleStepToggle(MetadataStep.ADVANCED_OPTIONS),
     tooltip: advancedOptionsTips,
     content: (
       <AdvancedOptionsStep
@@ -114,8 +106,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
     const steps = [
       {
         title: t("changeMetadata.deleteAll.label", "Remove Existing Metadata"),
-        isCollapsed: getActualCollapsedState(MetadataStep.DELETE_ALL),
-        onCollapsedClick: () => handleStepToggle(MetadataStep.DELETE_ALL),
+        isCollapsed: accordion.getCollapsedState(MetadataStep.DELETE_ALL),
+        onCollapsedClick: () => accordion.handleStepToggle(MetadataStep.DELETE_ALL),
         tooltip: deleteAllTips,
         content: (
           <DeleteAllStep

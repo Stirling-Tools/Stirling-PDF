@@ -578,6 +578,38 @@
     "replace-color": {
       "title": "Заміна та інверсія кольору",
       "desc": "Замінює колір тексту та фону у PDF та інвертує всі кольори PDF для зменшення розміру файлу"
+    },
+    "convert": {
+      "title": "Конвертувати"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Видобути сторінки"
+    },
+    "removePages": {
+      "title": "Видалення",
+      "desc": "Видаліть непотрібні сторінки з документа PDF."
+    },
+    "removeImagePdf": {
+      "title": "Видалити зображення",
+      "desc": "Видаляє зображення з PDF для зменшення розміру файлу"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Автоматичне розділення за розміром/кількістю",
+      "desc": "Розділяє один PDF на кілька документів на основі розміру, кількості сторінок або кількості документів"
+    },
+    "adjust-contrast": {
+      "title": "Налаштування кольорів/контрастності",
+      "desc": "Налаштування контрастності, насиченості та яскравості файлу PDF"
+    },
+    "replaceColorPdf": {
+      "title": "Заміна та інверсія кольору",
+      "desc": "Замінює колір тексту та фону у PDF та інвертує всі кольори PDF для зменшення розміру файлу"
+    },
+    "changePermissions": {
+      "title": "Змінити дозволи"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "Сортування за ім'ям",
     "sortByDate": "Сортування за датою",
     "removeCertSign": "Видалити цифровий підпис у об’єднаному файлі?",
-    "submit": "Об'єднати"
+    "submit": "Об'єднати",
+    "sortBy": {
+      "filename": "Ім'я файлу"
+    }
   },
   "split": {
     "tags": "операції зі сторінками,розділення,багатосторінковий,вирізання,серверна частина",
@@ -634,7 +669,20 @@
       "8": "Документ #6: Сторінки 9 і 10"
     },
     "splitPages": "Введіть сторінки для розділення:",
-    "submit": "Розділити"
+    "submit": "Розділити",
+    "steps": {
+      "settings": "Налаштування"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Розмір файлу"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Розмір файлу"
+      }
+    }
   },
   "rotate": {
     "tags": "серверна частина",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Текст",
       "2": "Зображення"
+    },
+    "watermarkType": {
+      "text": "Текст"
+    },
+    "settings": {
+      "fontSize": "Розмір шрифту"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Змінити"
   },
   "removePages": {
-    "tags": "видалити сторінки,видалення сторінок"
+    "tags": "видалити сторінки,видалення сторінок",
+    "title": "Видалення",
+    "submit": "Видалення"
   },
   "addPassword": {
     "tags": "безпека,захист",
@@ -758,7 +814,12 @@
       "15": "Обмежує, що можна робити з документом після його відкриття (не підтримується всіма програмами читання)",
       "16": "Обмежує відкриття самого документа"
     },
-    "submit": "Шифрувати"
+    "submit": "Шифрувати",
+    "tooltip": {
+      "permissions": {
+        "title": "Змінити дозволи"
+      }
+    }
   },
   "removePassword": {
     "tags": "безпека,розшифровка,захист,видалення пароля",
@@ -768,7 +829,12 @@
       "1": "Виберіть PDF для розшифрування",
       "2": "Пароль"
     },
-    "submit": "Видалити"
+    "submit": "Видалити",
+    "desc": "Зніміть захист паролем з вашого документа PDF.",
+    "password": {
+      "stepTitle": "Видалити пароль",
+      "label": "Поточний пароль"
+    }
   },
   "compressPdfs": {
     "tags": "стиск,маленький,крихітний"
@@ -829,7 +895,25 @@
     },
     "help": "Прочитайте цю документацію про те, як використовувати це для інших мов і/або використовувати не в докері.",
     "credit": "Цей сервіс використовує qpdf та Tesseract для OCR.",
-    "submit": "Обробка PDF з OCR"
+    "submit": "Обробка PDF з OCR",
+    "desc": "Очищення сканування та виявлення тексту на зображеннях у файлі PDF та повторне додавання його як текст.",
+    "settings": {
+      "title": "Налаштування",
+      "ocrMode": {
+        "label": "Режим OCR"
+      },
+      "languages": {
+        "label": "Мови"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Режим OCR"
+      },
+      "languages": {
+        "title": "Мови"
+      }
+    }
   },
   "extractImages": {
     "tags": "зображення,фото,збереження,архів,zip,захоплення,захоплення",
@@ -938,7 +1022,13 @@
     "title": "Згладжування",
     "header": "Згладжування PDF",
     "flattenOnlyForms": "Згладити тільки форми",
-    "submit": "Згладити"
+    "submit": "Згладити",
+    "steps": {
+      "settings": "Налаштування"
+    },
+    "options": {
+      "flattenOnlyForms": "Згладити тільки форми"
+    }
   },
   "repair": {
     "tags": "виправити,відновити,виправити,відновити",
@@ -1174,7 +1264,22 @@
     "showLayers": "Показати шари (подвійне клацання для скидання всіх шарів до стану за умовчанням)",
     "colourPicker": "Вибір кольору",
     "findCurrentOutlineItem": "Знайти поточний елемент структури",
-    "applyChanges": "Застосувати зміни"
+    "applyChanges": "Застосувати зміни",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Додаткове"
+      },
+      "wordsToRedact": {
+        "add": "Додати"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Сторінки",
+        "placeholder": "(наприклад 1,2,8 або 4,7,12-16 або 2n-1)"
+      },
+      "export": "Експорт"
+    }
   },
   "tableExtraxt": {
     "tags": "csv,видобуток таблиці,вилучення,конвертація"
@@ -1386,7 +1491,10 @@
       "4": "Автоматичний режим - автоматично налаштовує якість для отримання PDF точного розміру",
       "5": "Очікуваний розмір PDF (наприклад, 25 МБ, 10,8 МБ, 25 КБ)"
     },
-    "submit": "Стиснути"
+    "submit": "Стиснути",
+    "method": {
+      "filesize": "Розмір файлу"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Цей файл захищений паролем. Будь ласка, введіть пароль:",
@@ -1555,6 +1663,84 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Завантажити",
+  "undo": "Скасувати",
+  "convert": {
+    "title": "Конвертувати",
+    "settings": "Налаштування",
+    "color": "Колір",
+    "greyscale": "Відтінки сірого",
+    "fillPage": "Заповнення сторінки",
+    "pdfaDigitalSignatureWarning": "Цей PDF документ має цифровий підпис. Цей підпис буде видалений у наступному кроці.",
+    "grayscale": "Відтінки сірого"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Вибрати все",
+    "deselectAll": "Скасувати вибір усіх"
+  },
+  "quickAccess": {
+    "sign": "Підпис"
+  },
+  "fileUpload": {
+    "loading": "Завантаження...",
+    "or": "або"
+  },
+  "fileManager": {
+    "fileName": "Ім'я",
+    "fileVersion": "Версія",
+    "selectAll": "Вибрати все",
+    "deselectAll": "Скасувати вибір усіх",
+    "deleteSelected": "Видалити вибрані",
+    "download": "Завантажити",
+    "delete": "Видалити"
+  },
+  "sanitize": {
+    "submit": "Дезінфекція PDF",
+    "steps": {
+      "settings": "Налаштування"
+    }
+  },
+  "changePermissions": {
+    "title": "Змінити дозволи",
+    "submit": "Змінити дозволи",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Запобігти збірці документа"
+      },
+      "preventExtractContent": {
+        "label": "Запобігти вилученню контенту"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Запобігти вилученню для доступності"
+      },
+      "preventFillInForm": {
+        "label": "Заборонити заповнення форм"
+      },
+      "preventModify": {
+        "label": "Запобігти модифікації"
+      },
+      "preventModifyAnnotations": {
+        "label": "Заборонити модифікацію анотацій"
+      },
+      "preventPrinting": {
+        "label": "Заборонити друк"
+      },
+      "preventPrintingFaithful": {
+        "label": "Заборонити друк різних форматів"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Змінити дозволи"
       }
     }
   }
