@@ -15,14 +15,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.Dependency;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SignatureService;
+import stirling.software.common.annotations.api.UiDataApi;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -38,9 +36,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/ui-data")
-@Tag(name = "UI Data", description = "APIs for React UI data")
+@UiDataApi
 public class UIDataController {
 
     private final ApplicationProperties applicationProperties;

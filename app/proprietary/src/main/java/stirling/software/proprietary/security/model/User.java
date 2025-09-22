@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 import lombok.EqualsAndHashCode;
@@ -62,6 +64,7 @@ public class User implements UserDetails, Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "team_id")
+    @JsonIgnore
     private Team team;
 
     @ElementCollection

@@ -71,6 +71,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -144,6 +145,7 @@ public class CertSignController {
                 MediaType.APPLICATION_FORM_URLENCODED_VALUE
             },
             value = "/cert-sign")
+    @StandardPdfResponse
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =

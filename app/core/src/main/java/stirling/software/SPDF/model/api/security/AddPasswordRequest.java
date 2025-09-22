@@ -27,8 +27,8 @@ public class AddPasswordRequest extends PDFFile {
 
     @Schema(
             description = "The length of the encryption key",
+            type = "integer",
             allowableValues = {"40", "128", "256"},
-            defaultValue = "256",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private int keyLength = 256;
 

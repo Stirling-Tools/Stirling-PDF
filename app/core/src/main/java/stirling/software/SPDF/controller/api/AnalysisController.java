@@ -14,23 +14,23 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.AnalysisApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
-@RestController
-@RequestMapping("/api/v1/analysis")
-@Tag(name = "Analysis", description = "Analysis APIs")
+@AnalysisApi
 @RequiredArgsConstructor
 public class AnalysisController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(value = "/page-count", consumes = "multipart/form-data")
+    @JsonDataResponse
     @Operation(
             summary = "Get PDF page count",
             description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
@@ -41,6 +41,7 @@ public class AnalysisController {
     }
 
     @AutoJobPostMapping(value = "/basic-info", consumes = "multipart/form-data")
+    @JsonDataResponse
     @Operation(
             summary = "Get basic PDF information",
             description = "Returns page count, version, file size. Input:PDF Output:JSON Type:SISO")
@@ -55,6 +56,7 @@ public class AnalysisController {
     }
 
     @AutoJobPostMapping(value = "/document-properties", consumes = "multipart/form-data")
+    @JsonDataResponse
     @Operation(
             summary = "Get PDF document properties",
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
@@ -78,6 +80,7 @@ public class AnalysisController {
     }
 
     @AutoJobPostMapping(value = "/page-dimensions", consumes = "multipart/form-data")
+    @JsonDataResponse
     @Operation(
             summary = "Get page dimensions for all pages",
             description = "Returns width and height of each page. Input:PDF Output:JSON Type:SISO")
@@ -98,6 +101,7 @@ public class AnalysisController {
     }
 
     @AutoJobPostMapping(value = "/form-fields", consumes = "multipart/form-data")
+    @JsonDataResponse
     @Operation(
             summary = "Get form field information",
             description =
@@ -121,6 +125,7 @@ public class AnalysisController {
     }
 
     @AutoJobPostMapping(value = "/annotation-info", consumes = "multipart/form-data")
+    @JsonDataResponse
     @Operation(
             summary = "Get annotation information",
             description = "Returns count and types of annotations. Input:PDF Output:JSON Type:SISO")
@@ -145,6 +150,7 @@ public class AnalysisController {
     }
 
     @AutoJobPostMapping(value = "/font-info", consumes = "multipart/form-data")
+    @JsonDataResponse
     @Operation(
             summary = "Get font information",
             description =
@@ -167,6 +173,7 @@ public class AnalysisController {
     }
 
     @AutoJobPostMapping(value = "/security-info", consumes = "multipart/form-data")
+    @JsonDataResponse
     @Operation(
             summary = "Get security information",
             description =
