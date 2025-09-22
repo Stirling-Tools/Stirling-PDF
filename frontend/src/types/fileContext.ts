@@ -8,26 +8,6 @@ import { FileId, BaseFileMetadata } from './file';
 // Re-export FileId for convenience
 export type { FileId };
 
-export type ModeType =
-  | 'viewer'
-  | 'pageEditor'
-  | 'fileEditor'
-  | 'merge'
-  | 'split'
-  | 'compress'
-  | 'ocr'
-  | 'convert'
-  | 'sanitize'
-  | 'addPassword'
-  | 'changePermissions'
-  | 'addWatermark'
-  | 'removePassword'
-  | 'single-large-page'
-  | 'repair'
-  | 'unlockPdfForms'
-  | 'removeCertificateSign'
-  | 'auto-rename-pdf-file';
-
 // Normalized state types
 export interface ProcessedFilePage {
   thumbnail?: string;
@@ -207,32 +187,6 @@ export function revokeFileResources(record: StirlingFileStub): void {
       }
     });
   }
-}
-
-export type OperationType = 'merge' | 'split' | 'compress' | 'add' | 'remove' | 'replace' | 'convert' | 'upload' | 'ocr' | 'sanitize';
-
-export interface FileOperation {
-  id: string;
-  type: OperationType;
-  timestamp: number;
-  fileIds: FileId[];
-  status: 'pending' | 'applied' | 'failed';
-  data?: any;
-  metadata?: {
-    originalFileName?: string;
-    outputFileNames?: string[];
-    fileSize?: number;
-    pageCount?: number;
-    error?: string;
-  };
-}
-
-export interface FileOperationHistory {
-  fileId: FileId;
-  fileName: string;
-  operations: (FileOperation | PageOperation)[];
-  createdAt: number;
-  lastModified: number;
 }
 
 export interface ViewerConfig {

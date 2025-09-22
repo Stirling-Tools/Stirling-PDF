@@ -19,8 +19,8 @@ const viewOptionStyle = {
 
 
 // Build view options showing text always
-const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchType | null) => [
-  {
+const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchType | null, isToolSelected: boolean) => {
+  const viewerOption = {
     label: (
       <div style={viewOptionStyle as React.CSSProperties}>
         {switchingTo === "viewer" ? (
@@ -32,8 +32,9 @@ const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchTyp
       </div>
     ),
     value: "viewer",
-  },
-  {
+  };
+
+  const pageEditorOption = {
     label: (
       <div style={viewOptionStyle as React.CSSProperties}>
         {currentView === "pageEditor" ? (
@@ -50,8 +51,9 @@ const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchTyp
       </div>
     ),
     value: "pageEditor",
-  },
-  {
+  };
+
+  const fileEditorOption = {
     label: (
       <div style={viewOptionStyle as React.CSSProperties}>
         {currentView === "fileEditor" ? (
@@ -68,8 +70,15 @@ const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchTyp
       </div>
     ),
     value: "fileEditor",
-  },
-];
+  };
+
+  // Build options array conditionally
+  return [
+    viewerOption,
+    ...(isToolSelected ? [] : [pageEditorOption]),
+    fileEditorOption,
+  ];
+};
 
 interface TopControlsProps {
   currentView: WorkbenchType;
@@ -91,7 +100,7 @@ const TopControls = ({
     if (!isValidWorkbench(view)) {
       return;
     }
-    
+
     const workbench = view;
 
     // Show immediate feedback
@@ -111,39 +120,37 @@ const TopControls = ({
 
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
-      {!isToolSelected && (
-        <div className="flex justify-center mt-[0.5rem]">
-            <SegmentedControl
-              data={createViewOptions(currentView, switchingTo)}
-              value={currentView}
-              onChange={handleViewChange}
-              color="blue"
-              fullWidth
-              className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
-              style={{
-                transition: 'all 0.2s ease',
-                opacity: switchingTo ? 0.8 : 1,
-                pointerEvents: 'auto'
-              }}
-              styles={{
-                root: {
-                  borderRadius: 9999,
-                  maxHeight: '2.6rem',
-                },
-                control: {
-                  borderRadius: 9999,
-                },
-                indicator: {
-                  borderRadius: 9999,
-                  maxHeight: '2rem',
-                },
-                label: {
-                  paddingTop: '0rem',
-                }
-              }}
-            />
-        </div>
-      )}
+      <div className="flex justify-center mt-[0.5rem]">
+        <SegmentedControl
+          data={createViewOptions(currentView, switchingTo, isToolSelected)}
+          value={currentView}
+          onChange={handleViewChange}
+          color="blue"
+          fullWidth
+          className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
+          style={{
+            transition: 'all 0.2s ease',
+            opacity: switchingTo ? 0.8 : 1,
+            pointerEvents: 'auto'
+          }}
+          styles={{
+            root: {
+              borderRadius: 9999,
+              maxHeight: '2.6rem',
+            },
+            control: {
+              borderRadius: 9999,
+            },
+            indicator: {
+              borderRadius: 9999,
+              maxHeight: '2rem',
+            },
+            label: {
+              paddingTop: '0rem',
+            }
+          }}
+        />
+      </div>
     </div>
   );
 };
