@@ -195,7 +195,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: addPasswordOperationConfig,
         settingsComponent: AddPasswordSettings,
       },
-      addWatermark: {
+      watermark: {
         icon: <LocalIcon icon="branding-watermark-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.watermark.title", "Add Watermark"),
         component: AddWatermark,
@@ -207,11 +207,11 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: addWatermarkOperationConfig,
         settingsComponent: AddWatermarkSingleStepSettings,
       },
-      "add-stamp": {
+      addStamp: {
         icon: <LocalIcon icon="approval-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.AddStampRequest.title", "Add Stamp to PDF"),
+        name: t("home.addStamp.title", "Add Stamp to PDF"),
         component: null,
-        description: t("home.AddStampRequest.desc", "Add text or add image stamps at set locations"),
+        description: t("home.addStamp.desc", "Add text or add image stamps at set locations"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
       },
@@ -239,7 +239,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: flattenOperationConfig,
         settingsComponent: FlattenSettings,
       },
-      "unlock-pdf-forms": {
+      unlockPDFForms: {
         icon: <LocalIcon icon="preview-off-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
         component: UnlockPdfForms,
@@ -251,7 +251,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: unlockPdfFormsOperationConfig,
         settingsComponent: UnlockPdfFormsSettings,
       },
-      "manage-certificates": {
+      manageCertificates: {
         icon: <LocalIcon icon="license-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.manageCertificates.title", "Manage Certificates"),
         component: null,
@@ -262,7 +262,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
       },
-      "change-permissions": {
+      changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.changePermissions.title", "Change Permissions"),
         component: ChangePermissions,
@@ -274,9 +274,15 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: changePermissionsOperationConfig,
         settingsComponent: ChangePermissionsSettings,
       },
-      // Verification
-
-      "validate-pdf-signature": {
+      getPdfInfo: {
+        icon: <LocalIcon icon="fact-check-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
+        component: null,
+        description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.VERIFICATION,
+      },
+      validateSignature: {
         icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.validateSignature.title", "Validate PDF Signature"),
         component: null,
@@ -307,7 +313,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
       },
-      "change-metadata": {
+      changeMetadata: {
         icon: <LocalIcon icon="assignment-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.changeMetadata.title", "Change Metadata"),
         component: ChangeMetadata,
@@ -321,7 +327,7 @@ export function useFlatToolRegistry(): ToolRegistry {
       },
       // Page Formatting
 
-      cropPdf: {
+      crop: {
         icon: <LocalIcon icon="crop-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.crop.title", "Crop PDF"),
         component: null,
@@ -351,7 +357,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: splitOperationConfig,
         settingsComponent: SplitSettings,
       },
-      "reorganize-pages": {
+      reorganizePages: {
         icon: <LocalIcon icon="move-down-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.reorganizePages.title", "Reorganize Pages"),
         component: null,
@@ -363,7 +369,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },
-      "adjust-page-size-scale": {
+      scalePages: {
         icon: <LocalIcon icon="crop-free-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.scalePages.title", "Adjust page size/scale"),
         component: AdjustPageScale,
@@ -384,7 +390,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },
-      "multi-page-layout": {
+      pageLayout: {
         icon: <LocalIcon icon="dashboard-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.pageLayout.title", "Multi-Page Layout"),
         component: null,
@@ -403,7 +409,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },
-      "single-large-page": {
+      pdfToSinglePage: {
+
         icon: <LocalIcon icon="looks-one-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.pdfToSinglePage.title", "PDF to Single Large Page"),
         component: SingleLargePage,
@@ -416,19 +423,19 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["pdf-to-single-page"],
         operationConfig: singleLargePageOperationConfig,
       },
-      "add-attachments": {
+      addAttachments: {
         icon: <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.attachments.title", "Add Attachments"),
+        name: t("home.addAttachments.title", "Add Attachments"),
         component: null,
 
-        description: t("home.attachments.desc", "Add or remove embedded files (attachments) to/from a PDF"),
+        description: t("home.addAttachments.desc", "Add or remove embedded files (attachments) to/from a PDF"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },
 
       // Extraction
 
-      "extract-page": {
+      extractPages: {
         icon: <LocalIcon icon="upload-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.extractPages.title", "Extract Pages"),
         component: null,
@@ -436,7 +443,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
       },
-      "extract-images": {
+      extractImages: {
         icon: <LocalIcon icon="filter-alt" width="1.5rem" height="1.5rem" />,
         name: t("home.extractImages.title", "Extract Images"),
         component: null,
@@ -457,7 +464,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: 1,
         endpoints: ["remove-pages"],
       },
-      "remove-blank-pages": {
+      removeBlanks: {
         icon: <LocalIcon icon="scan-delete-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeBlanks.title", "Remove Blank Pages"),
         component: RemoveBlanks,
@@ -467,7 +474,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: 1,
         endpoints: ["remove-blanks"],
       },
-      "remove-annotations": {
+      removeAnnotations: {
         icon: <LocalIcon icon="thread-unread-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeAnnotations.title", "Remove Annotations"),
         component: null,
@@ -475,15 +482,15 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
       },
-      "remove-image": {
+      removeImage: {
         icon: <LocalIcon icon="remove-selection-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.removeImagePdf.title", "Remove Image"),
+        name: t("home.removeImage.title", "Remove Image"),
         component: null,
-        description: t("home.removeImagePdf.desc", "Remove images from PDF documents"),
+        description: t("home.removeImage.desc", "Remove images from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
       },
-      "remove-password": {
+      removePassword: {
         icon: <LocalIcon icon="lock-open-right-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removePassword.title", "Remove Password"),
         component: RemovePassword,
@@ -495,7 +502,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: removePasswordOperationConfig,
         settingsComponent: RemovePasswordSettings,
       },
-      "remove-certificate-sign": {
+      removeCertSign: {
         icon: <LocalIcon icon="remove-moderator-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeCertSign.title", "Remove Certificate Sign"),
         component: RemoveCertificateSign,
@@ -523,18 +530,18 @@ export function useFlatToolRegistry(): ToolRegistry {
         supportedFormats: CONVERT_SUPPORTED_FORMATS,
         endpoints: ["handleData"],
       },
-      "auto-rename-pdf-file": {
+      autoRename: {
         icon: <LocalIcon icon="match-word-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.auto-rename.title", "Auto Rename PDF File"),
+        name: t("home.autoRename.title", "Auto Rename PDF File"),
         component: AutoRename,
         maxFiles: -1,
         endpoints: ["remove-certificate-sign"],
         operationConfig: autoRenameOperationConfig,
-        description: t("home.auto-rename.desc", "Automatically rename PDF files based on their content"),
+        description: t("home.autoRename.desc", "Automatically rename PDF files based on their content"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION,
       },
-      "auto-split-pages": {
+      autoSplitPDF: {
         icon: <LocalIcon icon="split-scene-right-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.autoSplitPDF.title", "Auto Split Pages"),
         component: null,
@@ -542,7 +549,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION,
       },
-      "auto-split-by-size-count": {
+      autoSizeSplitPDF: {
         icon: <LocalIcon icon="content-cut-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.autoSizeSplitPDF.title", "Auto Split by Size/Count"),
         component: null,
@@ -553,7 +560,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
       // Advanced Formatting
 
-      "adjust-contrast": {
+      adjustContrast: {
         icon: <LocalIcon icon="palette" width="1.5rem" height="1.5rem" />,
         name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
         component: null,
@@ -573,23 +580,23 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: repairOperationConfig,
         settingsComponent: RepairSettings,
       },
-      "detect-split-scanned-photos": {
+      scannerImageSplit: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.ScannerImageSplit.title", "Detect & Split Scanned Photos"),
+        name: t("home.scannerImageSplit.title", "Detect & Split Scanned Photos"),
         component: null,
-        description: t("home.ScannerImageSplit.desc", "Detect and split scanned photos into separate pages"),
+        description: t("home.scannerImageSplit.desc", "Detect and split scanned photos into separate pages"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
       },
-      "overlay-pdfs": {
+      overlayPdfs: {
         icon: <LocalIcon icon="layers-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.overlay-pdfs.title", "Overlay PDFs"),
+        name: t("home.overlayPdfs.title", "Overlay PDFs"),
         component: null,
-        description: t("home.overlay-pdfs.desc", "Overlay one PDF on top of another"),
+        description: t("home.overlayPdfs.desc", "Overlay one PDF on top of another"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
       },
-      "replace-and-invert-color": {
+      replaceColorPdf: {
         icon: <LocalIcon icon="format-color-fill-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.replaceColorPdf.title", "Replace & Invert Color"),
         component: null,
@@ -597,7 +604,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
       },
-      "add-image": {
+      addImage: {
         icon: <LocalIcon icon="image-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.addImage.title", "Add Image"),
         component: null,
@@ -605,7 +612,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
       },
-      "edit-table-of-contents": {
+      editTableOfContents: {
         icon: <LocalIcon icon="bookmark-add-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.editTableOfContents.title", "Edit Table of Contents"),
         component: null,
@@ -613,7 +620,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
       },
-      "scanner-effect": {
+      fakeScan: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.fakeScan.title", "Scanner Effect"),
         component: null,
@@ -624,7 +631,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
       // Developer Tools
 
-      "show-javascript": {
+      showJS: {
         icon: <LocalIcon icon="javascript-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.showJS.title", "Show JavaScript"),
         component: null,
@@ -632,7 +639,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
       },
-      "dev-api": {
+      devApi: {
         icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
         name: t("home.devApi.title", "API"),
         component: null,
@@ -641,7 +648,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html",
       },
-      "dev-folder-scanning": {
+      devFolderScanning: {
         icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
         name: t("home.devFolderScanning.title", "Automated Folder Scanning"),
         component: null,
@@ -650,7 +657,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/",
       },
-      "dev-sso-guide": {
+      devSsoGuide: {
         icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
         name: t("home.devSsoGuide.title", "SSO Guide"),
         component: null,
@@ -659,7 +666,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
       },
-      "dev-airgapped": {
+      devAirgapped: {
         icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
         name: t("home.devAirgapped.title", "Air-gapped Setup"),
         component: null,
@@ -718,7 +725,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: convertOperationConfig,
         settingsComponent: ConvertSettings,
       },
-      mergePdfs: {
+      merge: {
         icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.merge.title", "Merge"),
         component: Merge,
@@ -730,7 +737,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: mergeOperationConfig,
         settingsComponent: MergeSettings
       },
-      "multi-tool": {
+      multiTool: {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,

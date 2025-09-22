@@ -9,7 +9,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.servlet.ModelAndView;
 
 import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +16,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.CheckProgramInstall;
 
 // @Controller // Disabled - Backend-only mode, no Thymeleaf UI
-@Tag(name = "Misc", description = "Miscellaneous APIs")
 @RequiredArgsConstructor
 public class OtherWebController {
 

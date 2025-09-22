@@ -14,18 +14,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.api.ProprietaryUiDataApi;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
@@ -54,9 +52,7 @@ import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/proprietary/ui-data")
-@Tag(name = "Proprietary UI Data", description = "APIs for React UI data (Proprietary features)")
+@ProprietaryUiDataApi
 @EnterpriseEndpoint
 public class ProprietaryUIDataController {
 
