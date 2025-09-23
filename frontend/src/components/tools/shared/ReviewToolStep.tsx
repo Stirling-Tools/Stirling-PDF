@@ -15,6 +15,8 @@ export interface ReviewToolStepProps<TParams = unknown> {
   title?: string;
   onFileClick?: (file: File) => void;
   onUndo: () => void;
+  isCollapsed?: boolean;
+  onCollapsedClick?: () => void;
 }
 
 function ReviewStepContent<TParams = unknown>({
@@ -111,6 +113,8 @@ export function createReviewToolStep<TParams = unknown>(
     t("review", "Review"),
     {
       isVisible: props.isVisible,
+      isCollapsed: props.isCollapsed,
+      onCollapsedClick: props.onCollapsedClick,
       _excludeFromCount: true,
       _noPadding: true,
     },

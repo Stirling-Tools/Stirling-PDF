@@ -2382,6 +2382,7 @@
     "tags": "Stamp, Add image, center image, Watermark, PDF, Embed, Customize,Customise",
     "header": "Stamp PDF",
     "title": "Stamp PDF",
+    "stampSetup": "Stamp Setup",
     "stampType": "Stamp Type",
     "stampText": "Stamp Text",
     "stampImage": "Stamp Image",
@@ -2394,7 +2395,8 @@
     "overrideY": "Override Y Coordinate",
     "customMargin": "Custom Margin",
     "customColor": "Custom Text Colour",
-    "submit": "Submit"
+    "submit": "Submit",
+    "noStampSelected": "No stamp selected. Return to Step 1."
   },
   "removeImagePdf": {
     "tags": "Remove Image,Page operations,Back end,server side"
