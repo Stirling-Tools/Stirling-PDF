@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from "react-i18next";
-import { Stack, TextInput, FileInput, Paper, Group, Button, Text, Alert, Modal, ColorSwatch, Menu, ActionIcon, Slider } from '@mantine/core';
+import { Stack, TextInput, FileInput, Paper, Group, Button, Text, Alert, Modal, ColorSwatch, Menu, ActionIcon, Slider, Select, Combobox, useCombobox } from '@mantine/core';
 import ButtonSelector from "../../shared/ButtonSelector";
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
 
@@ -23,9 +23,14 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
   const [imageSignatureData, setImageSignatureData] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
+  const visibleModalCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isModalDrawing, setIsModalDrawing] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [penSize, setPenSize] = useState(2);
+  const [penSizeInput, setPenSizeInput] = useState('2');
+  const [fontSizeInput, setFontSizeInput] = useState((parameters.fontSize || 16).toString());
+  const fontSizeCombobox = useCombobox();
+  const penSizeCombobox = useCombobox();
 
   // Drawing functions for signature canvas
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -41,6 +46,9 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     const ctx = canvasRef.current.getContext('2d');
     if (ctx) {
       ctx.strokeStyle = selectedColor;
+      ctx.lineWidth = penSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
       ctx.beginPath();
       ctx.moveTo(x, y);
     }
@@ -59,6 +67,11 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     if (ctx) {
       ctx.lineTo(x, y);
       ctx.stroke();
+
+      // Update signature data immediately after each stroke
+      const dataURL = canvasRef.current.toDataURL('image/png');
+      setCanvasSignatureData(dataURL);
+      onParameterChange('signatureData', dataURL);
     }
   };
 
@@ -70,7 +83,6 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     // Save canvas as signature data
     if (canvasRef.current) {
       const dataURL = canvasRef.current.toDataURL('image/png');
-      console.log('Saving canvas signature data:', dataURL.substring(0, 50) + '...');
       setCanvasSignatureData(dataURL);
       onParameterChange('signatureData', dataURL);
 
@@ -89,43 +101,88 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     const ctx = canvasRef.current.getContext('2d');
     if (ctx) {
       ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+      // Also clear the modal canvas if it exists
+      if (modalCanvasRef.current) {
+        const modalCtx = modalCanvasRef.current.getContext('2d');
+        if (modalCtx) {
+          modalCtx.clearRect(0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
+        }
+      }
+
       setCanvasSignatureData(null);
       onParameterChange('signatureData', undefined);
+
+      // Deactivate signature placement when cleared
+      if (onDeactivateSignature) {
+        onDeactivateSignature();
+      }
     }
   };
 
   // Modal canvas drawing functions
   const startModalDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!modalCanvasRef.current) return;
+    if (!visibleModalCanvasRef.current || !modalCanvasRef.current) return;
 
     setIsModalDrawing(true);
-    const rect = modalCanvasRef.current.getBoundingClientRect();
-    const scaleX = modalCanvasRef.current.width / rect.width;
-    const scaleY = modalCanvasRef.current.height / rect.height;
+    const rect = visibleModalCanvasRef.current.getBoundingClientRect();
+    const scaleX = visibleModalCanvasRef.current.width / rect.width;
+    const scaleY = visibleModalCanvasRef.current.height / rect.height;
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
 
-    const ctx = modalCanvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.strokeStyle = selectedColor;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    }
+    // Draw on both the visible modal canvas and hidden canvas
+    const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
+    const hiddenCtx = modalCanvasRef.current.getContext('2d');
+
+    [visibleCtx, hiddenCtx].forEach(ctx => {
+      if (ctx) {
+        ctx.strokeStyle = selectedColor;
+        ctx.lineWidth = penSize;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      }
+    });
   };
 
   const drawModal = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isModalDrawing || !modalCanvasRef.current) return;
+    if (!isModalDrawing || !visibleModalCanvasRef.current || !modalCanvasRef.current) return;
 
-    const rect = modalCanvasRef.current.getBoundingClientRect();
-    const scaleX = modalCanvasRef.current.width / rect.width;
-    const scaleY = modalCanvasRef.current.height / rect.height;
+    const rect = visibleModalCanvasRef.current.getBoundingClientRect();
+    const scaleX = visibleModalCanvasRef.current.width / rect.width;
+    const scaleY = visibleModalCanvasRef.current.height / rect.height;
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
 
-    const ctx = modalCanvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.lineTo(x, y);
-      ctx.stroke();
+    // Draw on both canvases
+    const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
+    const hiddenCtx = modalCanvasRef.current.getContext('2d');
+
+    [visibleCtx, hiddenCtx].forEach(ctx => {
+      if (ctx) {
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+    });
+
+    // Update signature data from hidden canvas (consistent size)
+    const dataURL = modalCanvasRef.current.toDataURL('image/png');
+    setCanvasSignatureData(dataURL);
+    onParameterChange('signatureData', dataURL);
+
+    // Also update the small canvas display
+    if (canvasRef.current) {
+      const smallCtx = canvasRef.current.getContext('2d');
+      if (smallCtx) {
+        const img = new Image();
+        img.onload = () => {
+          smallCtx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+          smallCtx.drawImage(img, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
+        };
+        img.src = dataURL;
+      }
     }
   };
 
@@ -140,6 +197,22 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     const ctx = modalCanvasRef.current.getContext('2d');
     if (ctx) {
       ctx.clearRect(0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
+
+      // Also clear the main canvas and signature data
+      if (canvasRef.current) {
+        const mainCtx = canvasRef.current.getContext('2d');
+        if (mainCtx) {
+          mainCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
+      }
+
+      setCanvasSignatureData(null);
+      onParameterChange('signatureData', undefined);
+
+      // Deactivate signature placement when cleared
+      if (onDeactivateSignature) {
+        onDeactivateSignature();
+      }
     }
   };
 
@@ -181,6 +254,11 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
       reader.onload = (e) => {
         if (e.target?.result) {
           console.log('Image loaded, saving to signatureData, length:', (e.target.result as string).length);
+
+          // Clear any existing canvas signatures when uploading image
+          setCanvasSignatureData(null);
+
+          // Set the new image as the active signature
           setImageSignatureData(e.target.result as string);
           onParameterChange('signatureData', e.target.result as string);
 
@@ -194,6 +272,16 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
       };
       reader.readAsDataURL(file);
       setSignatureImage(file);
+    } else if (!file) {
+      // Clear image signature when no file is selected
+      setImageSignatureData(null);
+      if (parameters.signatureType === 'image') {
+        onParameterChange('signatureData', undefined);
+        // Deactivate signature placement when image is removed
+        if (onDeactivateSignature) {
+          onDeactivateSignature();
+        }
+      }
     }
   };
 
@@ -203,58 +291,140 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
         ctx.strokeStyle = selectedColor;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = penSize;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
       }
     }
-  }, [parameters.signatureType, selectedColor]);
+  }, [parameters.signatureType, selectedColor, penSize]);
 
-  // Initialize modal canvas when opened
+  // Initialize both canvases - hidden one always exists, main one when in canvas mode
   React.useEffect(() => {
-    if (modalCanvasRef.current && isModalOpen) {
-      const ctx = modalCanvasRef.current.getContext('2d');
+    const initCanvas = (canvas: HTMLCanvasElement | null) => {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.strokeStyle = selectedColor;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = penSize;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
       }
+    };
+
+    if (parameters.signatureType === 'canvas') {
+      initCanvas(canvasRef.current);
+      initCanvas(modalCanvasRef.current); // Hidden canvas always available
     }
-  }, [isModalOpen, selectedColor]);
+  }, [parameters.signatureType, selectedColor, penSize]);
+
+  // Copy main canvas content to hidden modal canvas whenever signature data changes
+  React.useEffect(() => {
+    if (modalCanvasRef.current && canvasSignatureData) {
+      const hiddenCtx = modalCanvasRef.current.getContext('2d');
+      if (hiddenCtx) {
+        const img = new Image();
+        img.onload = () => {
+          if (modalCanvasRef.current) {
+            hiddenCtx.clearRect(0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
+            hiddenCtx.drawImage(img, 0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
+          }
+        };
+        img.src = canvasSignatureData;
+      }
+    }
+  }, [canvasSignatureData]);
+
 
   // Switch signature data based on mode
   React.useEffect(() => {
-    if (parameters.signatureType === 'canvas' && canvasSignatureData) {
-      onParameterChange('signatureData', canvasSignatureData);
-    } else if (parameters.signatureType === 'image' && imageSignatureData) {
-      onParameterChange('signatureData', imageSignatureData);
+    if (parameters.signatureType === 'canvas') {
+      if (canvasSignatureData) {
+        onParameterChange('signatureData', canvasSignatureData);
+      } else {
+        onParameterChange('signatureData', undefined);
+      }
+    } else if (parameters.signatureType === 'image') {
+      if (imageSignatureData) {
+        onParameterChange('signatureData', imageSignatureData);
+      } else {
+        onParameterChange('signatureData', undefined);
+      }
+    } else if (parameters.signatureType === 'text') {
+      // For text mode, we don't use signatureData - we use signerName directly
+      onParameterChange('signatureData', undefined);
+    } else {
+      // For draw mode, clear signature data
+      onParameterChange('signatureData', undefined);
     }
   }, [parameters.signatureType, canvasSignatureData, imageSignatureData, onParameterChange]);
 
-  // Auto-activate draw mode when draw type is selected (only trigger on signatureType change)
+  // Initialize draw mode on mount
+  React.useEffect(() => {
+    // Use a ref to track if we've already initialized
+    let isInitialized = false;
+
+    if (parameters.signatureType === 'draw' && onActivateDrawMode && !isInitialized) {
+      // Delay to ensure viewer is ready
+      const timer = setTimeout(() => {
+        onActivateDrawMode();
+        isInitialized = true;
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []); // Empty dependency - only run on mount
+
+  // Auto-activate draw mode when draw type is selected
   React.useEffect(() => {
     if (parameters.signatureType === 'draw') {
       if (onActivateDrawMode) {
         onActivateDrawMode();
       }
-    } else if (parameters.signatureType !== 'draw') {
+    } else {
       if (onDeactivateSignature) {
         onDeactivateSignature();
       }
     }
   }, [parameters.signatureType]); // Only depend on signatureType to avoid loops
 
+  // Auto-activate text signature placement when signer name is entered
+  React.useEffect(() => {
+    if (parameters.signatureType === 'text' && parameters.signerName && parameters.signerName.trim() !== '') {
+      if (onActivateSignaturePlacement) {
+        setTimeout(() => {
+          onActivateSignaturePlacement();
+        }, 100);
+      }
+    } else if (parameters.signatureType === 'text' && (!parameters.signerName || parameters.signerName.trim() === '')) {
+      if (onDeactivateSignature) {
+        onDeactivateSignature();
+      }
+    }
+  }, [parameters.signatureType, parameters.signerName]); // Remove function dependencies to prevent loops
+
   // Update draw settings when color or pen size changes
   React.useEffect(() => {
-    console.log('SignSettings: Draw settings changed - color:', selectedColor, 'penSize:', penSize, 'signatureType:', parameters.signatureType);
     if (parameters.signatureType === 'draw' && onUpdateDrawSettings) {
-      console.log('SignSettings: Calling onUpdateDrawSettings');
       onUpdateDrawSettings(selectedColor, penSize);
-    } else {
-      console.log('SignSettings: Not calling onUpdateDrawSettings - signatureType not draw or function not available');
     }
-  }, [selectedColor, penSize, parameters.signatureType, onUpdateDrawSettings]);
+  }, [selectedColor, penSize, parameters.signatureType]); // Remove function dependency to prevent loops
+
+  // Sync font size input with parameter changes
+  React.useEffect(() => {
+    setFontSizeInput((parameters.fontSize || 16).toString());
+  }, [parameters.fontSize]);
+
+  // Update signature config when font settings change
+  React.useEffect(() => {
+    if (parameters.signatureType === 'text' && (parameters.fontFamily || parameters.fontSize)) {
+      // Trigger re-activation of signature placement to apply new font settings
+      if (parameters.signerName && parameters.signerName.trim() !== '' && onActivateSignaturePlacement) {
+        setTimeout(() => {
+          onActivateSignaturePlacement();
+        }, 100);
+      }
+    }
+  }, [parameters.fontFamily, parameters.fontSize, parameters.signatureType, parameters.signerName]); // Remove function dependency to prevent loops
 
   return (
     <Stack gap="md">
@@ -301,7 +471,23 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
               right: 8,
               zIndex: 10,
             }}
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setIsModalOpen(true);
+              // Copy content to modal canvas after a brief delay
+              setTimeout(() => {
+                if (visibleModalCanvasRef.current && modalCanvasRef.current) {
+                  const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
+                  if (visibleCtx) {
+                    visibleCtx.strokeStyle = selectedColor;
+                    visibleCtx.lineWidth = penSize;
+                    visibleCtx.lineCap = 'round';
+                    visibleCtx.lineJoin = 'round';
+                    visibleCtx.clearRect(0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
+                    visibleCtx.drawImage(modalCanvasRef.current, 0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
+                  }
+                }
+              }, 300);
+            }}
             disabled={disabled}
             title="Expand Canvas"
           >
@@ -345,6 +531,60 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
                     </Group>
                   </Menu.Dropdown>
                 </Menu>
+                <Combobox
+                  onOptionSubmit={(optionValue) => {
+                    const size = parseInt(optionValue);
+                    if (!isNaN(size)) {
+                      setPenSize(size);
+                      setPenSizeInput(optionValue);
+                    }
+                    penSizeCombobox.closeDropdown();
+                  }}
+                  store={penSizeCombobox}
+                  withinPortal={false}
+                >
+                  <Combobox.Target>
+                    <TextInput
+                      placeholder="Pen size"
+                      size="compact-sm"
+                      value={penSizeInput}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        setPenSizeInput(value);
+
+                        const size = parseInt(value);
+                        if (!isNaN(size) && size >= 1 && size <= 200) {
+                          setPenSize(size);
+                        }
+
+                        penSizeCombobox.openDropdown();
+                        penSizeCombobox.updateSelectedOptionIndex();
+                      }}
+                      onClick={() => penSizeCombobox.openDropdown()}
+                      onFocus={() => penSizeCombobox.openDropdown()}
+                      onBlur={() => {
+                        penSizeCombobox.closeDropdown();
+                        const size = parseInt(penSizeInput);
+                        if (isNaN(size) || size < 1 || size > 200) {
+                          setPenSizeInput(penSize.toString());
+                        }
+                      }}
+                      disabled={disabled}
+                      style={{ width: '80px' }}
+                    />
+                  </Combobox.Target>
+
+                  <Combobox.Dropdown>
+                    <Combobox.Options>
+                      {['1', '2', '3', '4', '5', '8', '10', '12', '15', '20', '25', '30', '40', '50'].map((size) => (
+                        <Combobox.Option value={size} key={size}>
+                          {size}px
+                        </Combobox.Option>
+                      ))}
+                    </Combobox.Options>
+                  </Combobox.Dropdown>
+                </Combobox>
+
                 <Button
                   variant="subtle"
                   color="red"
@@ -405,6 +645,79 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
             disabled={disabled}
             required
           />
+
+          {/* Font Selection */}
+          <Select
+            label="Font"
+            value={parameters.fontFamily || 'Helvetica'}
+            onChange={(value) => onParameterChange('fontFamily', value || 'Helvetica')}
+            data={[
+              { value: 'Helvetica', label: 'Helvetica' },
+              { value: 'Times-Roman', label: 'Times' },
+              { value: 'Courier', label: 'Courier' },
+              { value: 'Arial', label: 'Arial' },
+              { value: 'Georgia', label: 'Georgia' },
+            ]}
+            disabled={disabled}
+            searchable
+            allowDeselect={false}
+          />
+
+          {/* Font Size */}
+          <Combobox
+            onOptionSubmit={(optionValue) => {
+              setFontSizeInput(optionValue);
+              const size = parseInt(optionValue);
+              if (!isNaN(size)) {
+                onParameterChange('fontSize', size);
+              }
+              fontSizeCombobox.closeDropdown();
+            }}
+            store={fontSizeCombobox}
+            withinPortal={false}
+          >
+            <Combobox.Target>
+              <TextInput
+                label="Font Size"
+                placeholder="Type or select font size (8-72)"
+                value={fontSizeInput}
+                onChange={(event) => {
+                  const value = event.currentTarget.value;
+                  setFontSizeInput(value);
+
+                  // Parse and validate the typed value in real-time
+                  const size = parseInt(value);
+                  if (!isNaN(size) && size >= 8 && size <= 72) {
+                    onParameterChange('fontSize', size);
+                  }
+
+                  fontSizeCombobox.openDropdown();
+                  fontSizeCombobox.updateSelectedOptionIndex();
+                }}
+                onClick={() => fontSizeCombobox.openDropdown()}
+                onFocus={() => fontSizeCombobox.openDropdown()}
+                onBlur={() => {
+                  fontSizeCombobox.closeDropdown();
+                  // Clean up invalid values on blur
+                  const size = parseInt(fontSizeInput);
+                  if (isNaN(size) || size < 8 || size > 72) {
+                    setFontSizeInput((parameters.fontSize || 16).toString());
+                  }
+                }}
+                disabled={disabled}
+              />
+            </Combobox.Target>
+
+            <Combobox.Dropdown>
+              <Combobox.Options>
+                {['8', '12', '16', '20', '24', '28', '32', '36', '40', '48'].map((size) => (
+                  <Combobox.Option value={size} key={size}>
+                    {size}px
+                  </Combobox.Option>
+                ))}
+              </Combobox.Options>
+            </Combobox.Dropdown>
+          </Combobox>
         </Stack>
       )}
 
@@ -414,7 +727,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
           <Stack gap="md">
             <Text fw={500}>Direct PDF Drawing</Text>
             <Text size="sm" c="dimmed">
-              Draw signatures and annotations directly on the PDF document. Drawing mode will be activated automatically when you go to the PDF viewer.
+              Draw signatures and annotations directly on the PDF document.
             </Text>
 
             {/* Drawing Controls */}
@@ -440,19 +753,58 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
 
               {/* Pen Size */}
               <div style={{ flexGrow: 1, maxWidth: '200px' }}>
-                <Text size="sm" fw={500} mb="xs">Pen Size: {penSize}px</Text>
-                <Slider
-                  value={penSize}
-                  onChange={setPenSize}
-                  min={1}
-                  max={10}
-                  step={1}
-                  marks={[
-                    { value: 1, label: '1' },
-                    { value: 5, label: '5' },
-                    { value: 10, label: '10' }
-                  ]}
-                />
+                <Text size="sm" fw={500} mb="xs">Pen Size</Text>
+                <Combobox
+                  onOptionSubmit={(optionValue) => {
+                    const size = parseInt(optionValue);
+                    if (!isNaN(size)) {
+                      setPenSize(size);
+                      setPenSizeInput(optionValue);
+                    }
+                    penSizeCombobox.closeDropdown();
+                  }}
+                  store={penSizeCombobox}
+                  withinPortal={false}
+                >
+                  <Combobox.Target>
+                    <TextInput
+                      placeholder="Type or select pen size (1-200)"
+                      value={penSizeInput}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        setPenSizeInput(value);
+
+                        const size = parseInt(value);
+                        if (!isNaN(size) && size >= 1 && size <= 200) {
+                          setPenSize(size);
+                        }
+
+                        penSizeCombobox.openDropdown();
+                        penSizeCombobox.updateSelectedOptionIndex();
+                      }}
+                      onClick={() => penSizeCombobox.openDropdown()}
+                      onFocus={() => penSizeCombobox.openDropdown()}
+                      onBlur={() => {
+                        penSizeCombobox.closeDropdown();
+                        const size = parseInt(penSizeInput);
+                        if (isNaN(size) || size < 1 || size > 200) {
+                          setPenSizeInput(penSize.toString());
+                        }
+                      }}
+                      disabled={disabled}
+                    />
+                  </Combobox.Target>
+
+                  <Combobox.Dropdown>
+                    <Combobox.Options>
+                      {['1', '2', '3', '4', '5', '8', '10', '12', '15', '20', '25', '30', '40', '50'].map((size) => (
+                        <Combobox.Option value={size} key={size}>
+                          {size}px
+                        </Combobox.Option>
+                      ))}
+                    </Combobox.Options>
+                  </Combobox.Dropdown>
+                </Combobox>
               </div>
             </Group>
           </Stack>
@@ -464,45 +816,20 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
       {(parameters.signatureType === 'canvas' || parameters.signatureType === 'image' || parameters.signatureType === 'text') && (
         <Alert color="blue" title={t('sign.instructions.title', 'How to add signature')}>
           <Text size="sm">
-            {parameters.signatureType === 'canvas' && 'Draw your signature in the canvas above. Placement mode will activate automatically, or click the buttons below to control placement.'}
-            {parameters.signatureType === 'image' && 'Upload your signature image above. Placement mode will activate automatically, or click the buttons below to control placement.'}
-            {parameters.signatureType === 'text' && 'Enter your name above. Placement mode will activate automatically, or click the buttons below to control placement.'}
+            {parameters.signatureType === 'canvas' && 'Draw your signature in the canvas above. Placement mode will activate automatically when you finish drawing.'}
+            {parameters.signatureType === 'image' && 'Upload your signature image above. Placement mode will activate automatically when the image is loaded.'}
+            {parameters.signatureType === 'text' && 'Enter your name above. Placement mode will activate automatically when you type your name.'}
           </Text>
-
-          <Group mt="sm" gap="sm">
-            {/* Universal activation button */}
-            {((parameters.signatureType === 'canvas' && parameters.signatureData) ||
-              (parameters.signatureType === 'image' && parameters.signatureData) ||
-              (parameters.signatureType === 'text' && parameters.signerName)) && (
-              <Button
-                onClick={() => {
-                  if (onActivateSignaturePlacement) {
-                    onActivateSignaturePlacement();
-                  }
-                }}
-                disabled={disabled}
-              >
-                {t('sign.activate', 'Activate Signature Placement')}
-              </Button>
-            )}
-
-            {/* Universal deactivate button */}
-            <Button
-              variant="subtle"
-              color="red"
-              onClick={() => {
-                if (onDeactivateSignature) {
-                  onDeactivateSignature();
-                }
-              }}
-              disabled={disabled}
-            >
-              {t('sign.deactivate', 'Stop Placing Signatures')}
-            </Button>
-          </Group>
-
         </Alert>
       )}
+
+      {/* Hidden canvas for modal synchronization - always exists */}
+      <canvas
+        ref={modalCanvasRef}
+        width={800}
+        height={400}
+        style={{ display: 'none' }}
+      />
 
       {/* Modal for larger signature canvas */}
       <Modal
@@ -513,25 +840,85 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
         centered
       >
         <Stack gap="md">
-          {/* Color picker */}
+          {/* Color and Pen Size picker */}
           <Paper withBorder p="sm">
-            <Group gap="sm" align="center">
-              <Text size="sm" fw={500}>Color:</Text>
-              {['#000000', '#0066cc', '#cc0000', '#cc6600', '#009900', '#6600cc'].map((color) => (
-                <ColorSwatch
-                  key={color}
-                  color={color}
-                  size={24}
-                  style={{ cursor: 'pointer', border: selectedColor === color ? '2px solid #333' : 'none' }}
-                  onClick={() => setSelectedColor(color)}
-                />
-              ))}
+            <Group gap="lg" align="flex-end">
+              <div>
+                <Text size="sm" fw={500} mb="xs">Color:</Text>
+                <Group gap="xs">
+                  {['#000000', '#0066cc', '#cc0000', '#cc6600', '#009900', '#6600cc'].map((color) => (
+                    <ColorSwatch
+                      key={color}
+                      color={color}
+                      size={24}
+                      style={{ cursor: 'pointer', border: selectedColor === color ? '2px solid #333' : 'none' }}
+                      onClick={() => setSelectedColor(color)}
+                    />
+                  ))}
+                </Group>
+              </div>
+
+              <div>
+                <Text size="sm" fw={500} mb="xs">Pen Size:</Text>
+                <Combobox
+                  onOptionSubmit={(optionValue) => {
+                    const size = parseInt(optionValue);
+                    if (!isNaN(size)) {
+                      setPenSize(size);
+                      setPenSizeInput(optionValue);
+                    }
+                    penSizeCombobox.closeDropdown();
+                  }}
+                  store={penSizeCombobox}
+                  withinPortal={false}
+                >
+                  <Combobox.Target>
+                    <TextInput
+                      placeholder="Pen size"
+                      size="sm"
+                      value={penSizeInput}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        setPenSizeInput(value);
+
+                        const size = parseInt(value);
+                        if (!isNaN(size) && size >= 1 && size <= 200) {
+                          setPenSize(size);
+                        }
+
+                        penSizeCombobox.openDropdown();
+                        penSizeCombobox.updateSelectedOptionIndex();
+                      }}
+                      onClick={() => penSizeCombobox.openDropdown()}
+                      onFocus={() => penSizeCombobox.openDropdown()}
+                      onBlur={() => {
+                        penSizeCombobox.closeDropdown();
+                        const size = parseInt(penSizeInput);
+                        if (isNaN(size) || size < 1 || size > 200) {
+                          setPenSizeInput(penSize.toString());
+                        }
+                      }}
+                      style={{ width: '100px' }}
+                    />
+                  </Combobox.Target>
+
+                  <Combobox.Dropdown>
+                    <Combobox.Options>
+                      {['1', '2', '3', '4', '5', '8', '10', '12', '15', '20', '25', '30', '40', '50'].map((size) => (
+                        <Combobox.Option value={size} key={size}>
+                          {size}px
+                        </Combobox.Option>
+                      ))}
+                    </Combobox.Options>
+                  </Combobox.Dropdown>
+                </Combobox>
+              </div>
             </Group>
           </Paper>
 
           <Paper withBorder p="md">
             <canvas
-              ref={modalCanvasRef}
+              ref={visibleModalCanvasRef}
               width={800}
               height={400}
               style={{

@@ -76,6 +76,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const activateSignaturePlacementMode = useCallback(() => {
     console.log('SignatureContext.activateSignaturePlacementMode called');
+    console.log('Current signature config:', state.signatureConfig);
     if (signatureApiRef.current) {
       console.log('Calling signatureApiRef.current.activateSignaturePlacementMode()');
       signatureApiRef.current.activateSignaturePlacementMode();
@@ -86,12 +87,8 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [state.signatureConfig, setPlacementMode]);
 
   const updateDrawSettings = useCallback((color: string, size: number) => {
-    console.log('SignatureContext.updateDrawSettings called with color:', color, 'size:', size);
-    console.log('signatureApiRef.current available:', !!signatureApiRef.current);
     if (signatureApiRef.current) {
       signatureApiRef.current.updateDrawSettings(color, size);
-    } else {
-      console.log('signatureApiRef.current is null - cannot update draw settings');
     }
   }, []);
 

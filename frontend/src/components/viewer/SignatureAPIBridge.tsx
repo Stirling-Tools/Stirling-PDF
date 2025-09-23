@@ -74,7 +74,10 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
       if (activeTool && activeTool.id === 'ink') {
         annotationApi.setToolDefaults('ink', {
           color: '#000000',
-          thickness: 2
+          thickness: 2,
+          lineWidth: 2,
+          strokeWidth: 2,
+          width: 2
         });
       }
     },
@@ -86,19 +89,62 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
 
       try {
         console.log('Signature type:', signatureConfig.signatureType);
+        console.log('Font settings:', { fontFamily: signatureConfig.fontFamily, fontSize: signatureConfig.fontSize });
         if (signatureConfig.signatureType === 'text' && signatureConfig.signerName) {
-          console.log('Activating freetext tool');
-          // Use freetext tool for text signatures
-          annotationApi.setActiveTool('freetext');
-          const activeTool = annotationApi.getActiveTool();
-          console.log('Freetext tool activated:', activeTool);
-          if (activeTool && activeTool.id === 'freetext') {
-            annotationApi.setToolDefaults('freetext', {
-              contents: signatureConfig.signerName,
-              fontSize: 16,
-              fontFamily: PdfStandardFont.Helvetica,
-              fontColor: '#000000',
-            });
+          console.log('Trying different text tool names');
+
+          // Try different tool names for text annotations
+          const textToolNames = ['freetext', 'text', 'textbox', 'annotation-text'];
+          let activatedTool = null;
+
+          for (const toolName of textToolNames) {
+            console.log(`Trying tool: ${toolName}`);
+            annotationApi.setActiveTool(toolName);
+            const tool = annotationApi.getActiveTool();
+            console.log(`Tool result for ${toolName}:`, tool);
+
+            if (tool && tool.id === toolName) {
+              activatedTool = tool;
+              console.log(`Successfully activated ${toolName}`);
+              annotationApi.setToolDefaults(toolName, {
+                contents: signatureConfig.signerName,
+                fontSize: signatureConfig.fontSize || 16,
+                fontFamily: signatureConfig.fontFamily === 'Times-Roman' ? PdfStandardFont.Times_Roman :
+                          signatureConfig.fontFamily === 'Courier' ? PdfStandardFont.Courier :
+                          PdfStandardFont.Helvetica,
+                fontColor: '#000000',
+              });
+              break;
+            }
+          }
+
+          if (!activatedTool) {
+            console.log('No text tool could be activated, trying stamp as fallback');
+            // Fallback: create a simple text image as stamp
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              const fontSize = signatureConfig.fontSize || 16;
+              const fontFamily = signatureConfig.fontFamily || 'Helvetica';
+
+              canvas.width = Math.max(200, signatureConfig.signerName.length * fontSize * 0.6);
+              canvas.height = fontSize + 20;
+              ctx.fillStyle = '#000000';
+              ctx.font = `${fontSize}px ${fontFamily}`;
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(signatureConfig.signerName, 10, canvas.height / 2);
+              const dataURL = canvas.toDataURL();
+
+              annotationApi.setActiveTool('stamp');
+              const stampTool = annotationApi.getActiveTool();
+              if (stampTool && stampTool.id === 'stamp') {
+                annotationApi.setToolDefaults('stamp', {
+                  imageSrc: dataURL,
+                  subject: `Text Signature - ${signatureConfig.signerName}`,
+                });
+              }
+            }
           }
         } else if (signatureConfig.signatureData) {
           console.log('Activating stamp tool');
@@ -119,26 +165,22 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
     },
 
     updateDrawSettings: (color: string, size: number) => {
-      console.log('SignatureAPIBridge.updateDrawSettings called with color:', color, 'size:', size);
-      if (!annotationApi) {
-        console.log('No annotationApi available for updateDrawSettings');
-        return;
-      }
+      if (!annotationApi) return;
 
-      // Always update ink tool defaults regardless of current tool
-      console.log('Setting ink tool defaults');
+      // Always update ink tool defaults - use multiple property names for compatibility
       annotationApi.setToolDefaults('ink', {
         color: color,
-        thickness: size
+        thickness: size,
+        lineWidth: size,
+        strokeWidth: size,
+        width: size
       });
 
-      // If ink tool is currently active, reactivate it to apply settings immediately
-      const activeTool = annotationApi.getActiveTool();
-      console.log('Current active tool:', activeTool);
-      if (activeTool && activeTool.id === 'ink') {
-        console.log('Reactivating ink tool to apply new settings');
-        annotationApi.setActiveTool('ink');
-      }
+      // Force reactivate ink tool to ensure new settings take effect
+      annotationApi.setActiveTool(null); // Deactivate first
+      setTimeout(() => {
+        annotationApi.setActiveTool('ink'); // Reactivate with new settings
+      }, 50);
     },
 
     deactivateTools: () => {

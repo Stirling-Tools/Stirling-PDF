@@ -15,6 +15,8 @@ export interface SignParameters {
   reason?: string;
   location?: string;
   signerName?: string;
+  fontFamily?: string;
+  fontSize?: number;
 }
 
 export const DEFAULT_PARAMETERS: SignParameters = {
@@ -22,6 +24,8 @@ export const DEFAULT_PARAMETERS: SignParameters = {
   reason: 'Document signing',
   location: 'Digital',
   signerName: '',
+  fontFamily: 'Helvetica',
+  fontSize: 16,
 };
 
 const validateSignParameters = (parameters: SignParameters): boolean => {
