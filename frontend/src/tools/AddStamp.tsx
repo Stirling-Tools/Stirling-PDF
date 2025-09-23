@@ -6,7 +6,7 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useAddStampParameters } from "../components/tools/addStamp/useAddStampParameters";
 import { useAddStampOperation } from "../components/tools/addStamp/useAddStampOperation";
-import { Group, Select, Stack, Textarea, TextInput, ColorInput, Button, Slider, Text, NumberInput } from "@mantine/core";
+import { Group, Select, Stack, Textarea, TextInput, ColorInput, Button, Slider, Text, NumberInput, Divider } from "@mantine/core";
 import StampPreview from "../components/tools/addStamp/StampPreview";
 import LocalIcon from "../components/shared/LocalIcon";
 import styles from "../components/tools/addStamp/StampPreview.module.css";
@@ -50,14 +50,13 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   enum AddStampStep {
     NONE = 'none',
-    PAGE_SELECTION = 'pageSelection',
-    STAMP_TYPE = 'stampType',
+    STAMP_SETUP = 'stampSetup',
     POSITION_FORMATTING = 'positionFormatting'
   }
 
   const accordion = useAccordionSteps<AddStampStep>({
     noneValue: AddStampStep.NONE,
-    initialStep: AddStampStep.PAGE_SELECTION,
+    initialStep: AddStampStep.STAMP_SETUP,
     stateConditions: {
       hasFiles,
       hasResults
@@ -71,11 +70,11 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const getSteps = () => {
     const steps: any[] = [];
 
-    // Step 1: File settings (page selection)
+    // Step 1: Stamp Setup 
     steps.push({
-      title: t("AddStampRequest.pageSelection", "Page Selection"),
-      isCollapsed: accordion.getCollapsedState(AddStampStep.PAGE_SELECTION),
-      onCollapsedClick: () => accordion.handleStepToggle(AddStampStep.PAGE_SELECTION),
+      title: t("AddStampRequest.stampSetup", "Stamp Setup"),
+      isCollapsed: accordion.getCollapsedState(AddStampStep.STAMP_SETUP),
+      onCollapsedClick: () => accordion.handleStepToggle(AddStampStep.STAMP_SETUP),
       isVisible: hasFiles || hasResults,
       content: (
         <Stack gap="md">
@@ -85,18 +84,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             onChange={(e) => params.updateParameter('pageNumbers', e.currentTarget.value)}
             disabled={endpointLoading}
           />
-        </Stack>
-      ),
-    });
-
-    // Step 2: Type & Content
-    steps.push({
-      title: t("AddStampRequest.stampType", "Stamp Type"),
-      isCollapsed: accordion.getCollapsedState(AddStampStep.STAMP_TYPE),
-      onCollapsedClick: () => accordion.handleStepToggle(AddStampStep.STAMP_TYPE),
-      isVisible: hasFiles || hasResults,
-      content: (
-        <Stack gap="md" justify="space-between" flex={1}>
+          <Divider/>
           <div>
             <Text size="sm" fw={500} mb="xs">{t('AddStampRequest.stampType', 'Stamp Type')}</Text>
             <ButtonSelector
@@ -374,7 +362,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             }
             overlayMessage={
               <Text size="sm" c="white" fw={600}>
-                {t('AddStampRequest.noStampSelected', 'No stamp selected. Return to Step 3.')}
+                {t('AddStampRequest.noStampSelected', 'No stamp selected. Return to Step 1.')}
               </Text>
             }
           >
