@@ -11,6 +11,7 @@ import { useNavigationActions, useNavigationState } from './NavigationContext';
 import { ToolId, isValidToolId } from '../types/toolId';
 import { useNavigationUrlSync } from '../hooks/useUrlSync';
 import { getDefaultWorkbench } from '../types/workbench';
+import { rankByFuzzy, idToWords } from '../utils/fuzzySearch';
 
 // State interface
 interface ToolWorkflowState {
@@ -99,7 +100,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: [string, ToolRegistryEntry][]; // Filtered by search
+  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
   isPanelVisible: boolean;
 }
 
@@ -218,12 +219,25 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setReaderMode(true);
   }, [setReaderMode]);
 
-  // Filter tools based on search query
+  // Filter tools based on search query with fuzzy matching (name and description)
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    return Object.entries(toolRegistry).filter(([_, { name }]) =>
-      name.toLowerCase().includes(state.searchQuery.toLowerCase())
-    );
+    const entries = Object.entries(toolRegistry);
+    if (!state.searchQuery.trim()) {
+      // Return in the new format even when not searching
+      return entries.map(([id, tool]) => ({ item: [id, tool] as [string, ToolRegistryEntry] }));
+    }
+    const ranked = rankByFuzzy(entries, state.searchQuery, [
+      ([key]) => idToWords(key),
+      ([, v]) => v.name,
+      ([, v]) => v.description,
+      ([, v]) => v.synonyms?.join(' ') || '',
+    ]);
+    // Keep reasonable number in search view? Return all ranked to preserve grouping downstream
+    return ranked.map(r => ({ 
+      item: r.item as [string, ToolRegistryEntry], 
+      matchedText: r.matchedText 
+    }));
   }, [toolRegistry, state.searchQuery]);
 
   const isPanelVisible = useMemo(() =>

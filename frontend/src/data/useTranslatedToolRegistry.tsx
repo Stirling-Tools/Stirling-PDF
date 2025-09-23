@@ -169,6 +169,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.sign.desc", "Adds signature to PDF by drawing, text or image"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
+        synonyms: ["signature", "autograph"]
       },
 
       // Document Security
@@ -184,7 +185,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["add-password"],
         operationConfig: addPasswordOperationConfig,
         settingsComponent: AddPasswordSettings,
-      },
+        synonyms: ["lock", "secure"]
+     },
       watermark: {
         icon: <LocalIcon icon="branding-watermark-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.watermark.title", "Add Watermark"),
@@ -196,6 +198,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["add-watermark"],
         operationConfig: addWatermarkOperationConfig,
         settingsComponent: AddWatermarkSingleStepSettings,
+        synonyms: ["brand", "logo", "stamp"]
       },
       addStamp: {
         icon: <LocalIcon icon="approval-rounded" width="1.5rem" height="1.5rem" />,
@@ -216,6 +219,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["sanitize-pdf"],
         operationConfig: sanitizeOperationConfig,
         settingsComponent: SanitizeSettings,
+        synonyms: ["clean", "purge", "remove"]
       },
       flatten: {
         icon: <LocalIcon icon="layers-clear-rounded" width="1.5rem" height="1.5rem" />,
@@ -228,6 +232,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["flatten"],
         operationConfig: flattenOperationConfig,
         settingsComponent: FlattenSettings,
+        synonyms: ["simplify", "flatten", "static"]
       },
       unlockPDFForms: {
         icon: <LocalIcon icon="preview-off-rounded" width="1.5rem" height="1.5rem" />,
@@ -285,7 +290,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
       // Document Review
 
-     read: {
+      read: {
         icon: <LocalIcon icon="article-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.read.title", "Read"),
         component: null,
@@ -296,6 +301,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
+        synonyms: ["view", "open", "display"]
       },
       changeMetadata: {
         icon: <LocalIcon icon="assignment-rounded" width="1.5rem" height="1.5rem" />,
@@ -308,6 +314,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["update-metadata"],
         operationConfig: changeMetadataOperationConfig,
         settingsComponent: ChangeMetadataSingleStep,
+        synonyms: ["edit", "modify", "update"]
       },
       // Page Formatting
 
@@ -318,6 +325,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.crop.desc", "Crop a PDF to reduce its size (maintains text!)"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        synonyms: ["trim", "cut", "resize"]
       },
       rotate: {
         icon: <LocalIcon icon="rotate-right-rounded" width="1.5rem" height="1.5rem" />,
@@ -330,6 +338,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["rotate-pdf"],
         operationConfig: rotateOperationConfig,
         settingsComponent: RotateSettings,
+        synonyms: ["turn", "flip", "orient"]
       },
       split: {
         icon: <LocalIcon icon="content-cut-rounded" width="1.5rem" height="1.5rem" />,
@@ -340,6 +349,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         operationConfig: splitOperationConfig,
         settingsComponent: SplitSettings,
+        synonyms: ["divide", "separate", "cut"]
       },
       reorganizePages: {
         icon: <LocalIcon icon="move-down-rounded" width="1.5rem" height="1.5rem" />,
@@ -352,6 +362,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        synonyms: ["rearrange", "reorder", "organize"]
       },
       scalePages: {
         icon: <LocalIcon icon="crop-free-rounded" width="1.5rem" height="1.5rem" />,
@@ -364,6 +375,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["scale-pages"],
         operationConfig: adjustPageScaleOperationConfig,
         settingsComponent: AdjustPageScaleSettings,
+        synonyms: ["resize", "adjust", "scale"]
       },
       addPageNumbers: {
         icon: <LocalIcon icon="123-rounded" width="1.5rem" height="1.5rem" />,
@@ -373,6 +385,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.addPageNumbers.desc", "Add Page numbers throughout a document in a set location"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        synonyms: ["number", "pagination", "count"]
       },
       pageLayout: {
         icon: <LocalIcon icon="dashboard-rounded" width="1.5rem" height="1.5rem" />,
@@ -382,6 +395,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.pageLayout.desc", "Merge multiple pages of a PDF document into a single page"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        synonyms: ["layout", "arrange", "combine"]
       },
       pdfToSinglePage: {
         icon: <LocalIcon icon="looks-one-outline-rounded" width="1.5rem" height="1.5rem" />,
@@ -395,6 +409,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         urlPath: '/pdf-to-single-page',
         endpoints: ["pdf-to-single-page"],
         operationConfig: singleLargePageOperationConfig,
+        synonyms: ["combine", "merge", "single"]
       },
       addAttachments: {
         icon: <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />,
@@ -404,6 +419,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.addAttachments.desc", "Add or remove embedded files (attachments) to/from a PDF"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        synonyms: ["embed", "attach", "include"]
       },
 
       // Extraction
@@ -415,6 +431,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.extractPages.desc", "Extract specific pages from a PDF document"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
+        synonyms: ["pull", "select", "copy"]
       },
       extractImages: {
         icon: <LocalIcon icon="filter-alt" width="1.5rem" height="1.5rem" />,
@@ -423,6 +440,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.extractImages.desc", "Extract images from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
+        synonyms: ["pull", "save", "export"]
       },
 
       // Removal
@@ -436,6 +454,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: 1,
         endpoints: ["remove-pages"],
+        synonyms: ["delete", "extract", "exclude"]
       },
       removeBlanks: {
         icon: <LocalIcon icon="scan-delete-rounded" width="1.5rem" height="1.5rem" />,
@@ -446,6 +465,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: 1,
         endpoints: ["remove-blanks"],
+        synonyms: ["delete", "clean", "empty"]
       },
       removeAnnotations: {
         icon: <LocalIcon icon="thread-unread-rounded" width="1.5rem" height="1.5rem" />,
@@ -454,6 +474,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.removeAnnotations.desc", "Remove annotations and comments from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        synonyms: ["delete", "clean", "strip"]
       },
       removeImage: {
         icon: <LocalIcon icon="remove-selection-rounded" width="1.5rem" height="1.5rem" />,
@@ -474,6 +495,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         operationConfig: removePasswordOperationConfig,
         settingsComponent: RemovePasswordSettings,
+        synonyms: ["unlock"]
       },
       removeCertSign: {
         icon: <LocalIcon icon="remove-moderator-outline-rounded" width="1.5rem" height="1.5rem" />,
@@ -552,6 +574,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["repair"],
         operationConfig: repairOperationConfig,
         settingsComponent: RepairSettings,
+        synonyms: ["fix", "restore"]
       },
       scannerImageSplit: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
@@ -657,6 +680,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.compare.desc", "Compare two PDF documents and highlight differences"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
+        synonyms: ["difference"]
       },
       compress: {
         icon: <LocalIcon icon="zoom-in-map-rounded" width="1.5rem" height="1.5rem" />,
@@ -668,6 +692,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         operationConfig: compressOperationConfig,
         settingsComponent: CompressSettings,
+        synonyms: ["shrink", "reduce", "optimize"]
       },
       convert: {
         icon: <LocalIcon icon="sync-alt-rounded" width="1.5rem" height="1.5rem" />,
@@ -697,6 +722,7 @@ export function useFlatToolRegistry(): ToolRegistry {
 
         operationConfig: convertOperationConfig,
         settingsComponent: ConvertSettings,
+        synonyms: ["transform", "change"]
       },
       merge: {
         icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
@@ -708,7 +734,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["merge-pdfs"],
         operationConfig: mergeOperationConfig,
-        settingsComponent: MergeSettings
+        settingsComponent: MergeSettings,
+        synonyms: ["combine", "join", "unite"]
       },
       multiTool: {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
@@ -731,6 +758,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         urlPath: '/ocr-pdf',
         operationConfig: ocrOperationConfig,
         settingsComponent: OCRSettings,
+        synonyms: ["extract", "scan"]
       },
       redact: {
         icon: <LocalIcon icon="visibility-off-rounded" width="1.5rem" height="1.5rem" />,
@@ -743,6 +771,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["auto-redact"],
         operationConfig: redactOperationConfig,
         settingsComponent: RedactSingleStepSettings,
+        synonyms: ["censor", "blackout", "hide"]
       },
     };
 

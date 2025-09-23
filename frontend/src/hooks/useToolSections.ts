@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { idToWords, normalizeForSearch } from '../utils/fuzzySearch';
 import { useTranslation } from 'react-i18next';
 
 type SubcategoryIdMap = {
@@ -27,12 +28,19 @@ export interface ToolSection {
   subcategories: SubcategoryGroup[];
 };
 
-export function useToolSections(filteredTools: [string /* FIX ME: Should be ToolId */, ToolRegistryEntry][]) {
+export function useToolSections(
+  filteredTools: Array<{ item: [string /* FIX ME: Should be ToolId */, ToolRegistryEntry]; matchedText?: string }>,
+  searchQuery?: string
+) {
   const { t } = useTranslation();
 
   const groupedTools = useMemo(() => {
+    if (!filteredTools || !Array.isArray(filteredTools)) {
+      return {} as GroupedTools;
+    }
+    
     const grouped = {} as GroupedTools;
-    filteredTools.forEach(([id, tool]) => {
+    filteredTools.forEach(({ item: [id, tool] }) => {
       const categoryId = tool.categoryId;
       const subcategoryId = tool.subcategoryId;
       if (!grouped[categoryId]) grouped[categoryId] = {} as SubcategoryIdMap;
@@ -92,9 +100,13 @@ export function useToolSections(filteredTools: [string /* FIX ME: Should be Tool
   }, [groupedTools]);
 
   const searchGroups: SubcategoryGroup[] = useMemo(() => {
+    if (!filteredTools || !Array.isArray(filteredTools)) {
+      return [];
+    }
+    
     const subMap = {} as SubcategoryIdMap;
     const seen = new Set<string /* FIX ME: Should be ToolId */>();
-    filteredTools.forEach(([id, tool]) => {
+    filteredTools.forEach(({ item: [id, tool] }) => {
       const toolId = id as string /* FIX ME: Should be ToolId */;
       if (seen.has(toolId)) return;
       seen.add(toolId);
@@ -102,10 +114,37 @@ export function useToolSections(filteredTools: [string /* FIX ME: Should be Tool
       if (!subMap[sub]) subMap[sub] = [];
       subMap[sub].push({ id: toolId, tool });
     });
-    return Object.entries(subMap)
+    const entries = Object.entries(subMap);
+
+    // If a search query is provided, and there are no exact/substring matches across any field,
+    // preserve the encounter order of subcategories (best matches first) instead of alphabetical.
+    if (searchQuery && searchQuery.trim()) {
+      const nq = normalizeForSearch(searchQuery);
+      const hasExact = filteredTools.some(({ item: [id, tool] }) => {
+        const idWords = idToWords(id);
+        return (
+          idWords.includes(nq) ||
+          normalizeForSearch(tool.name).includes(nq) ||
+          normalizeForSearch(tool.description).includes(nq)
+        );
+      });
+      if (!hasExact) {
+        // Keep original appearance order of subcategories as they occur in filteredTools
+        const order: SubcategoryId[] = [];
+        filteredTools.forEach(({ item: [_, tool] }) => {
+          const sc = tool.subcategoryId;
+          if (!order.includes(sc)) order.push(sc);
+        });
+        return entries
+          .sort(([a], [b]) => order.indexOf(a as SubcategoryId) - order.indexOf(b as SubcategoryId))
+          .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
+      }
+    }
+
+    return entries
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
-  }, [filteredTools]);
+  }, [filteredTools, searchQuery]);
 
   return { sections, searchGroups };
 }
