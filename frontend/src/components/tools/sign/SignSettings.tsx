@@ -18,7 +18,6 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [signatureImage, setSignatureImage] = useState<File | null>(null);
   const [canvasSignatureData, setCanvasSignatureData] = useState<string | null>(null);
   const [imageSignatureData, setImageSignatureData] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -249,35 +248,35 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
   };
 
   // Handle signature image upload
-  const handleSignatureImageChange = (file: File | null) => {
+  const handleSignatureImageChange = async (file: File | null) => {
     console.log('Image file selected:', file);
     if (file && !disabled) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          console.log('Image loaded, saving to signatureData, length:', (e.target.result as string).length);
-
-          // Clear any existing canvas signatures when uploading image
-          setCanvasSignatureData(null);
-
-          // Set the new image as the active signature
-          setImageSignatureData(e.target.result as string);
-          // Don't call onParameterChange here - let the useEffect handle it
-
-          // Auto-activate placement mode after image upload
-          setTimeout(() => {
-            if (onActivateSignaturePlacement) {
-              onActivateSignaturePlacement();
+      try {
+        const result = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              resolve(e.target.result as string);
+            } else {
+              reject(new Error('Failed to read file'));
             }
-          }, 100);
-        }
-      };
-      reader.readAsDataURL(file);
-      setSignatureImage(file);
+          };
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(file);
+        });
+
+        // Clear any existing canvas signatures when uploading image
+        setCanvasSignatureData(null);
+
+        // Set as active signature immediately
+        setImageSignatureData(result);
+
+      } catch (error) {
+        console.error('Error reading file:', error);
+      }
     } else if (!file) {
-      // Clear image signature when no file is selected
+      // Clear image data when no file is selected
       setImageSignatureData(null);
-      // Don't call onParameterChange here - let the useEffect handle it
       // Deactivate signature placement when image is removed
       if (onDeactivateSignature) {
         onDeactivateSignature();
@@ -346,6 +345,10 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     } else if (parameters.signatureType === 'image') {
       if (imageSignatureData) {
         onParameterChange('signatureData', imageSignatureData);
+        // Activate signature placement mode when image is ready
+        if (onActivateSignaturePlacement) {
+          onActivateSignaturePlacement();
+        }
       } else {
         onParameterChange('signatureData', undefined);
       }
@@ -356,7 +359,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
       // For draw mode, clear signature data
       onParameterChange('signatureData', undefined);
     }
-  }, [parameters.signatureType, canvasSignatureData, imageSignatureData, onParameterChange]);
+  }, [parameters.signatureType, canvasSignatureData, imageSignatureData]);
 
   // Initialize draw mode on mount
   React.useEffect(() => {
@@ -598,11 +601,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
             label={t('sign.image.label', 'Upload signature image')}
             placeholder={t('sign.image.placeholder', 'Select image file')}
             accept="image/*"
-            value={signatureImage}
-            onChange={(file) => {
-              console.log('FileInput onChange triggered with file:', file);
-              handleSignatureImageChange(file);
-            }}
+            onChange={handleSignatureImageChange}
             disabled={disabled}
           />
           <Text size="sm" c="dimmed">
