@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from "react-i18next";
-import { Stack, TextInput, FileInput, Paper, Group, Button, Text, Alert, Modal, ColorSwatch, Menu, ActionIcon, Slider, Select, Combobox, useCombobox } from '@mantine/core';
+import { Stack, TextInput, FileInput, Paper, Group, Button, Text, Alert, Modal, ColorSwatch, Menu, ActionIcon, Slider, Select, Combobox, useCombobox, ColorPicker } from '@mantine/core';
 import ButtonSelector from "../../shared/ButtonSelector";
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
 
@@ -22,6 +22,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
   const [canvasSignatureData, setCanvasSignatureData] = useState<string | null>(null);
   const [imageSignatureData, setImageSignatureData] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
   const visibleModalCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isModalDrawing, setIsModalDrawing] = useState(false);
@@ -31,6 +32,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
   const [fontSizeInput, setFontSizeInput] = useState((parameters.fontSize || 16).toString());
   const fontSizeCombobox = useCombobox();
   const penSizeCombobox = useCombobox();
+  const modalPenSizeCombobox = useCombobox();
 
   // Drawing functions for signature canvas
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -260,7 +262,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
 
           // Set the new image as the active signature
           setImageSignatureData(e.target.result as string);
-          onParameterChange('signatureData', e.target.result as string);
+          // Don't call onParameterChange here - let the useEffect handle it
 
           // Auto-activate placement mode after image upload
           setTimeout(() => {
@@ -275,12 +277,10 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     } else if (!file) {
       // Clear image signature when no file is selected
       setImageSignatureData(null);
-      if (parameters.signatureType === 'image') {
-        onParameterChange('signatureData', undefined);
-        // Deactivate signature placement when image is removed
-        if (onDeactivateSignature) {
-          onDeactivateSignature();
-        }
+      // Don't call onParameterChange here - let the useEffect handle it
+      // Deactivate signature placement when image is removed
+      if (onDeactivateSignature) {
+        onDeactivateSignature();
       }
     }
   };
@@ -460,140 +460,105 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
 
       {/* Signature Creation based on type */}
       {parameters.signatureType === 'canvas' && (
-        <Paper withBorder p="md" style={{ position: 'relative' }}>
-          <ActionIcon
-            variant="filled"
-            color="blue"
-            size="sm"
-            style={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              zIndex: 10,
-            }}
-            onClick={() => {
-              setIsModalOpen(true);
-              // Copy content to modal canvas after a brief delay
-              setTimeout(() => {
-                if (visibleModalCanvasRef.current && modalCanvasRef.current) {
-                  const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
-                  if (visibleCtx) {
-                    visibleCtx.strokeStyle = selectedColor;
-                    visibleCtx.lineWidth = penSize;
-                    visibleCtx.lineCap = 'round';
-                    visibleCtx.lineJoin = 'round';
-                    visibleCtx.clearRect(0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
-                    visibleCtx.drawImage(modalCanvasRef.current, 0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
-                  }
-                }
-              }, 300);
-            }}
-            disabled={disabled}
-            title="Expand Canvas"
-          >
-            +
-          </ActionIcon>
+        <Paper withBorder p="md">
           <Stack gap="sm">
             <Group justify="space-between">
               <Text fw={500}>{t('sign.draw.title', 'Draw your signature')}</Text>
-              <Group gap="sm">
-                <Menu shadow="md" width={200}>
-                  <Menu.Target>
-                    <Button
-                      variant="subtle"
-                      size="compact-sm"
-                      disabled={disabled}
-                      rightSection={
-                        <ColorSwatch
-                          color={selectedColor}
-                          size={12}
-                        />
-                      }
-                    >
-                      Color
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Label>Select Color</Menu.Label>
-                    <Group gap="xs" p="xs">
-                      {['#000000', '#0066cc', '#cc0000', '#cc6600', '#009900', '#6600cc'].map((color) => (
-                        <ColorSwatch
-                          key={color}
-                          color={color}
-                          size={24}
-                          style={{
-                            cursor: 'pointer',
-                            border: selectedColor === color ? '2px solid #333' : '1px solid #ddd'
-                          }}
-                          onClick={() => setSelectedColor(color)}
-                        />
-                      ))}
-                    </Group>
-                  </Menu.Dropdown>
-                </Menu>
-                <Combobox
-                  onOptionSubmit={(optionValue) => {
-                    const size = parseInt(optionValue);
-                    if (!isNaN(size)) {
-                      setPenSize(size);
-                      setPenSizeInput(optionValue);
-                    }
-                    penSizeCombobox.closeDropdown();
-                  }}
-                  store={penSizeCombobox}
-                  withinPortal={false}
-                >
-                  <Combobox.Target>
-                    <TextInput
-                      placeholder="Pen size"
-                      size="compact-sm"
-                      value={penSizeInput}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value;
-                        setPenSizeInput(value);
-
-                        const size = parseInt(value);
-                        if (!isNaN(size) && size >= 1 && size <= 200) {
-                          setPenSize(size);
-                        }
-
-                        penSizeCombobox.openDropdown();
-                        penSizeCombobox.updateSelectedOptionIndex();
-                      }}
-                      onClick={() => penSizeCombobox.openDropdown()}
-                      onFocus={() => penSizeCombobox.openDropdown()}
-                      onBlur={() => {
-                        penSizeCombobox.closeDropdown();
-                        const size = parseInt(penSizeInput);
-                        if (isNaN(size) || size < 1 || size > 200) {
-                          setPenSizeInput(penSize.toString());
-                        }
-                      }}
-                      disabled={disabled}
-                      style={{ width: '80px' }}
+              <Group gap="lg">
+                <div>
+                  <Text size="sm" fw={500} mb="xs" ta="center">Color</Text>
+                  <Group justify="center">
+                    <ColorSwatch
+                      color={selectedColor}
+                      size={24}
+                      radius={0}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setIsColorPickerOpen(true)}
                     />
-                  </Combobox.Target>
+                  </Group>
+                </div>
+                <div>
+                  <Text size="sm" fw={500} mb="xs">Pen Size</Text>
+                  <Combobox
+                    onOptionSubmit={(optionValue) => {
+                      const size = parseInt(optionValue);
+                      if (!isNaN(size)) {
+                        setPenSize(size);
+                        setPenSizeInput(optionValue);
+                      }
+                      penSizeCombobox.closeDropdown();
+                    }}
+                    store={penSizeCombobox}
+                    withinPortal={false}
+                  >
+                    <Combobox.Target>
+                      <TextInput
+                        placeholder="Size"
+                        size="compact-sm"
+                        value={penSizeInput}
+                        onChange={(event) => {
+                          const value = event.currentTarget.value;
+                          setPenSizeInput(value);
 
-                  <Combobox.Dropdown>
-                    <Combobox.Options>
-                      {['1', '2', '3', '4', '5', '8', '10', '12', '15', '20', '25', '30', '40', '50'].map((size) => (
-                        <Combobox.Option value={size} key={size}>
-                          {size}px
-                        </Combobox.Option>
-                      ))}
-                    </Combobox.Options>
-                  </Combobox.Dropdown>
-                </Combobox>
+                          const size = parseInt(value);
+                          if (!isNaN(size) && size >= 1 && size <= 200) {
+                            setPenSize(size);
+                          }
 
-                <Button
-                  variant="subtle"
-                  color="red"
-                  size="compact-sm"
-                  onClick={clearCanvas}
+                          penSizeCombobox.openDropdown();
+                          penSizeCombobox.updateSelectedOptionIndex();
+                        }}
+                        onClick={() => penSizeCombobox.openDropdown()}
+                        onFocus={() => penSizeCombobox.openDropdown()}
+                        onBlur={() => {
+                          penSizeCombobox.closeDropdown();
+                          const size = parseInt(penSizeInput);
+                          if (isNaN(size) || size < 1 || size > 200) {
+                            setPenSizeInput(penSize.toString());
+                          }
+                        }}
+                        disabled={disabled}
+                        style={{ width: '60px' }}
+                      />
+                    </Combobox.Target>
+
+                    <Combobox.Dropdown>
+                      <Combobox.Options>
+                        {['1', '2', '3', '4', '5', '8', '10', '12', '15', '20', '25', '30', '40', '50'].map((size) => (
+                          <Combobox.Option value={size} key={size}>
+                            {size}px
+                          </Combobox.Option>
+                        ))}
+                      </Combobox.Options>
+                    </Combobox.Dropdown>
+                  </Combobox>
+                </div>
+                <div style={{ paddingTop: '24px' }}>
+                  <Button
+                    variant="light"
+                    size="compact-sm"
+                    onClick={() => {
+                    setIsModalOpen(true);
+                    // Copy content to modal canvas after a brief delay
+                    setTimeout(() => {
+                      if (visibleModalCanvasRef.current && modalCanvasRef.current) {
+                        const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
+                        if (visibleCtx) {
+                          visibleCtx.strokeStyle = selectedColor;
+                          visibleCtx.lineWidth = penSize;
+                          visibleCtx.lineCap = 'round';
+                          visibleCtx.lineJoin = 'round';
+                          visibleCtx.clearRect(0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
+                          visibleCtx.drawImage(modalCanvasRef.current, 0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
+                        }
+                      }
+                    }, 300);
+                  }}
                   disabled={disabled}
                 >
-                  {t('sign.draw.clear', 'Clear')}
+                  Expand
                 </Button>
+                </div>
               </Group>
             </Group>
             <canvas
@@ -612,6 +577,17 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
             />
+            <Group justify="flex-end">
+              <Button
+                variant="subtle"
+                color="red"
+                size="compact-sm"
+                onClick={clearCanvas}
+                disabled={disabled}
+              >
+                {t('sign.draw.clear', 'Clear')}
+              </Button>
+            </Group>
           </Stack>
         </Paper>
       )}
@@ -733,23 +709,13 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
             {/* Drawing Controls */}
             <Group gap="md" align="flex-end">
               {/* Color Picker */}
-              <div>
-                <Text size="sm" fw={500} mb="xs">Color</Text>
-                <Group gap="xs">
-                  {['#000000', '#0066cc', '#cc0000', '#cc6600', '#009900', '#6600cc'].map((color) => (
-                    <ColorSwatch
-                      key={color}
-                      color={color}
-                      size={24}
-                      style={{
-                        cursor: 'pointer',
-                        border: selectedColor === color ? '2px solid #333' : '1px solid #ddd'
-                      }}
-                      onClick={() => setSelectedColor(color)}
-                    />
-                  ))}
-                </Group>
-              </div>
+              <ColorSwatch
+                color={selectedColor}
+                size={24}
+                radius={0}
+                style={{ cursor: 'pointer' }}
+                onClick={() => setIsColorPickerOpen(true)}
+              />
 
               {/* Pen Size */}
               <div style={{ flexGrow: 1, maxWidth: '200px' }}>
@@ -844,22 +810,17 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
           <Paper withBorder p="sm">
             <Group gap="lg" align="flex-end">
               <div>
-                <Text size="sm" fw={500} mb="xs">Color:</Text>
-                <Group gap="xs">
-                  {['#000000', '#0066cc', '#cc0000', '#cc6600', '#009900', '#6600cc'].map((color) => (
-                    <ColorSwatch
-                      key={color}
-                      color={color}
-                      size={24}
-                      style={{ cursor: 'pointer', border: selectedColor === color ? '2px solid #333' : 'none' }}
-                      onClick={() => setSelectedColor(color)}
-                    />
-                  ))}
-                </Group>
+                <Text size="sm" fw={500} mb="xs">Color</Text>
+                <ColorSwatch
+                  color={selectedColor}
+                  size={24}
+                  radius={0}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setIsColorPickerOpen(true)}
+                />
               </div>
-
               <div>
-                <Text size="sm" fw={500} mb="xs">Pen Size:</Text>
+                <Text size="sm" fw={500} mb="xs">Pen Size</Text>
                 <Combobox
                   onOptionSubmit={(optionValue) => {
                     const size = parseInt(optionValue);
@@ -867,15 +828,15 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
                       setPenSize(size);
                       setPenSizeInput(optionValue);
                     }
-                    penSizeCombobox.closeDropdown();
+                    modalPenSizeCombobox.closeDropdown();
                   }}
-                  store={penSizeCombobox}
+                  store={modalPenSizeCombobox}
                   withinPortal={false}
                 >
                   <Combobox.Target>
                     <TextInput
-                      placeholder="Pen size"
-                      size="sm"
+                      placeholder="Size"
+                      size="compact-sm"
                       value={penSizeInput}
                       onChange={(event) => {
                         const value = event.currentTarget.value;
@@ -886,19 +847,19 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
                           setPenSize(size);
                         }
 
-                        penSizeCombobox.openDropdown();
-                        penSizeCombobox.updateSelectedOptionIndex();
+                        modalPenSizeCombobox.openDropdown();
+                        modalPenSizeCombobox.updateSelectedOptionIndex();
                       }}
-                      onClick={() => penSizeCombobox.openDropdown()}
-                      onFocus={() => penSizeCombobox.openDropdown()}
+                      onClick={() => modalPenSizeCombobox.openDropdown()}
+                      onFocus={() => modalPenSizeCombobox.openDropdown()}
                       onBlur={() => {
-                        penSizeCombobox.closeDropdown();
+                        modalPenSizeCombobox.closeDropdown();
                         const size = parseInt(penSizeInput);
                         if (isNaN(size) || size < 1 || size > 200) {
                           setPenSizeInput(penSize.toString());
                         }
                       }}
-                      style={{ width: '100px' }}
+                      style={{ width: '60px' }}
                     />
                   </Combobox.Target>
 
@@ -958,6 +919,32 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
                 Save Signature
               </Button>
             </Group>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Color Picker Modal */}
+      <Modal
+        opened={isColorPickerOpen}
+        onClose={() => setIsColorPickerOpen(false)}
+        title="Choose Color"
+        size="sm"
+        centered
+      >
+        <Stack gap="md">
+          <ColorPicker
+            format="hex"
+            value={selectedColor}
+            onChange={setSelectedColor}
+            swatches={['#000000', '#0066cc', '#cc0000', '#cc6600', '#009900', '#6600cc']}
+            swatchesPerRow={6}
+            size="lg"
+            fullWidth
+          />
+          <Group justify="flex-end">
+            <Button onClick={() => setIsColorPickerOpen(false)}>
+              Done
+            </Button>
           </Group>
         </Stack>
       </Modal>
