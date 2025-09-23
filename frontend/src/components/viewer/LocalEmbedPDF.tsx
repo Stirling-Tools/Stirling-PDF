@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
@@ -46,6 +46,7 @@ interface LocalEmbedPDFProps {
 
 export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureAdded, signatureApiRef }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [annotations, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
   // Convert File to URL if needed
   useEffect(() => {
@@ -217,14 +218,34 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
             },
           });
 
-          // Listen for annotation events to notify parent component
-          if (onSignatureAdded) {
-            annotationApi.onAnnotationEvent((event: any) => {
-              if (event.type === 'create' && event.committed) {
+          // Listen for annotation events to track annotations and notify parent
+          annotationApi.onAnnotationEvent((event: any) => {
+            if (event.type === 'create' && event.committed) {
+              // Add to annotations list
+              setAnnotations(prev => [...prev, {
+                id: event.annotation.id,
+                pageIndex: event.pageIndex,
+                rect: event.annotation.rect
+              }]);
+
+
+              // Notify parent if callback provided
+              if (onSignatureAdded) {
                 onSignatureAdded(event.annotation);
               }
-            });
-          }
+            } else if (event.type === 'delete' && event.committed) {
+              // Remove from annotations list
+              setAnnotations(prev => prev.filter(ann => ann.id !== event.annotation.id));
+            } else if (event.type === 'loaded') {
+              // Handle initial load of annotations
+              const loadedAnnotations = event.annotations || [];
+              setAnnotations(loadedAnnotations.map((ann: any) => ({
+                id: ann.id,
+                pageIndex: ann.pageIndex || 0,
+                rect: ann.rect
+              })));
+            }
+          });
         } : undefined}
       >
         <ZoomAPIBridge />
@@ -297,6 +318,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
             )}
           />
           </Viewport>
+
         </GlobalPointerProvider>
       </EmbedPDF>
     </div>

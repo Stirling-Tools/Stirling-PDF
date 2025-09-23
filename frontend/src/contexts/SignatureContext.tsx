@@ -17,6 +17,7 @@ interface SignatureActions {
   activateDrawMode: () => void;
   deactivateDrawMode: () => void;
   activateSignaturePlacementMode: () => void;
+  activateDeleteMode: () => void;
   updateDrawSettings: (color: string, size: number) => void;
 }
 
@@ -86,6 +87,13 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [state.signatureConfig, setPlacementMode]);
 
+  const activateDeleteMode = useCallback(() => {
+    if (signatureApiRef.current) {
+      signatureApiRef.current.activateDeleteMode();
+      setPlacementMode(true);
+    }
+  }, [setPlacementMode]);
+
   const updateDrawSettings = useCallback((color: string, size: number) => {
     if (signatureApiRef.current) {
       signatureApiRef.current.updateDrawSettings(color, size);
@@ -103,6 +111,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     activateDrawMode,
     deactivateDrawMode,
     activateSignaturePlacementMode,
+    activateDeleteMode,
     updateDrawSettings,
   };
 

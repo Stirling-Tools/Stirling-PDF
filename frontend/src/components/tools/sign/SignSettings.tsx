@@ -461,6 +461,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
         />
       </div>
 
+
       {/* Signature Creation based on type */}
       {parameters.signatureType === 'canvas' && (
         <Paper withBorder p="md">

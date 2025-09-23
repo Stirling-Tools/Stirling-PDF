@@ -9,6 +9,8 @@ export interface SignatureAPI {
   addTextSignature: (text: string, x: number, y: number, pageIndex: number) => void;
   activateDrawMode: () => void;
   activateSignaturePlacementMode: () => void;
+  activateDeleteMode: () => void;
+  deleteAnnotation: (annotationId: string, pageIndex: number) => void;
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
   applySignatureFromParameters: (params: SignParameters) => void;
@@ -19,6 +21,30 @@ export interface SignatureAPIBridgeProps {}
 export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgeProps>((props, ref) => {
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig } = useSignature();
+
+  // Enable keyboard deletion of selected annotations
+  useEffect(() => {
+    if (!annotationApi) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
+
+        if (selectedAnnotation) {
+          const annotation = selectedAnnotation as any;
+          const pageIndex = annotation.object?.pageIndex || 0;
+          const id = annotation.object?.id;
+
+          if (id) {
+            annotationApi.deleteAnnotation(pageIndex, id);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [annotationApi]);
 
   useImperativeHandle(ref, () => ({
     addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => {
@@ -183,6 +209,19 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
       }, 50);
     },
 
+    activateDeleteMode: () => {
+      if (!annotationApi) return;
+      // Activate selection tool to allow selecting and deleting annotations
+      // Users can click annotations to select them, then press Delete key or right-click to delete
+      annotationApi.setActiveTool('select');
+    },
+
+    deleteAnnotation: (annotationId: string, pageIndex: number) => {
+      if (!annotationApi) return;
+      // Delete specific annotation by ID
+      annotationApi.deleteAnnotation(pageIndex, annotationId);
+    },
+
     deactivateTools: () => {
       if (!annotationApi) return;
       annotationApi.setActiveTool(null);
@@ -208,6 +247,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
               id: uuidV4(),
               created: new Date(),
             });
+
+            // Switch to select mode after placing signature so it can be easily deleted
+            setTimeout(() => {
+              annotationApi.setActiveTool('select');
+            }, 100);
           }
           break;
 
@@ -231,6 +275,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
               id: uuidV4(),
               created: new Date(),
             });
+
+            // Switch to select mode after placing signature so it can be easily deleted
+            setTimeout(() => {
+              annotationApi.setActiveTool('select');
+            }, 100);
           }
           break;
 
