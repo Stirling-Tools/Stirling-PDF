@@ -20,6 +20,8 @@ import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
+import CertSign from "../tools/CertSign";
+import BookletImposition from "../tools/BookletImposition";
 import Flatten from "../tools/Flatten";
 import Rotate from "../tools/Rotate";
 import ChangeMetadata from "../tools/ChangeMetadata";
@@ -38,6 +40,8 @@ import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
+import { certSignOperationConfig } from "../hooks/tools/certSign/useCertSignOperation";
+import { bookletImpositionOperationConfig } from "../hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
 import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
 import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
@@ -56,6 +60,8 @@ import AddWatermarkSingleStepSettings from "../components/tools/addWatermark/Add
 import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
+import CertificateTypeSettings from "../components/tools/certSign/CertificateTypeSettings";
+import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
 import RotateSettings from "../components/tools/rotate/RotateSettings";
@@ -161,11 +167,15 @@ export function useFlatToolRegistry(): ToolRegistry {
 
       certSign: {
         icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.certSign.title", "Sign with Certificate"),
-        component: null,
-        description: t("home.certSign.desc", "Signs a PDF with a Certificate/Key (PEM/P12)"),
+        name: t("home.certSign.title", "Certificate Sign"),
+        component: CertSign,
+        description: t("home.certSign.desc", "Sign PDF documents using digital certificates"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
+        maxFiles: -1,
+        endpoints: ["cert-sign"],
+        operationConfig: certSignOperationConfig,
+        settingsComponent: CertificateTypeSettings,
       },
       sign: {
         icon: <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />,
@@ -272,8 +282,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: changePermissionsOperationConfig,
         settingsComponent: ChangePermissionsSettings,
       },
-      // Verification
-
       getPdfInfo: {
         icon: <LocalIcon icon="fact-check-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
@@ -395,7 +403,18 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
       },
+      bookletImposition: {
+        icon: <LocalIcon icon="menu-book-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.bookletImposition.title", "Booklet Imposition"),
+        component: BookletImposition,
+        operationConfig: bookletImpositionOperationConfig,
+        settingsComponent: BookletImpositionSettings,
+        description: t("home.bookletImposition.desc", "Create booklets with proper page ordering and multi-page layout for printing and binding"),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.PAGE_FORMATTING,
+      },
       pdfToSinglePage: {
+
         icon: <LocalIcon icon="looks-one-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.pdfToSinglePage.title", "PDF to Single Large Page"),
         component: SingleLargePage,

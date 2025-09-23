@@ -10,21 +10,32 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
-import lombok.RequiredArgsConstructor;
-
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.ServerCertificateServiceInterface;
 
 @ConfigApi
-@RequiredArgsConstructor
 @Hidden
 public class ConfigController {
 
     private final ApplicationProperties applicationProperties;
     private final ApplicationContext applicationContext;
     private final EndpointConfiguration endpointConfiguration;
+    private final ServerCertificateServiceInterface serverCertificateService;
+
+    public ConfigController(
+            ApplicationProperties applicationProperties,
+            ApplicationContext applicationContext,
+            EndpointConfiguration endpointConfiguration,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+                    ServerCertificateServiceInterface serverCertificateService) {
+        this.applicationProperties = applicationProperties;
+        this.applicationContext = applicationContext;
+        this.endpointConfiguration = endpointConfiguration;
+        this.serverCertificateService = serverCertificateService;
+    }
 
     @GetMapping("/app-config")
     public ResponseEntity<Map<String, Object>> getAppConfig() {
@@ -57,6 +68,11 @@ public class ConfigController {
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
+
+            // Server certificate settings
+            configData.put(
+                    "serverCertificateEnabled",
+                    serverCertificateService != null && serverCertificateService.isEnabled());
 
             // Legal settings
             configData.put(
