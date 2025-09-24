@@ -96,6 +96,9 @@ export function rankByFuzzy<T>(items: T[], query: string, getters: Array<(item: 
         best = s;
         matchedText = value;
       }
+      if (best >= 95) {
+        break;
+      }
     }
     if (best >= threshold) results.push({ item, score: best, matchedText });
   }

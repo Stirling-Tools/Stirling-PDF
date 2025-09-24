@@ -12,6 +12,7 @@ import RemoveBlanks from "../tools/RemoveBlanks";
 import RemovePages from "../tools/RemovePages";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
+import { mergeSynonyms } from "../utils/toolSynonyms";
 import AddWatermark from "../tools/AddWatermark";
 import Merge from '../tools/Merge';
 import Repair from "../tools/Repair";
@@ -145,31 +146,6 @@ export const CONVERT_SUPPORTED_FORMATS = [
   "ps",
   "pdf",
 ];
-
-// Helper function to get translated synonyms for a tool
-const getTranslatedSynonyms = (t: any, toolId: string): string[] => {
-  try {
-    const tagsKey = `${toolId}.tags`;
-    const tags = t(tagsKey);
-    
-    // If the translation key doesn't exist or returns the key itself, return empty array
-    if (!tags || tags === tagsKey) {
-      return [];
-    }
-    
-    // Split by comma and clean up the tags
-    return tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
-  } catch (error) {
-    console.warn(`Failed to get translated synonyms for tool ${toolId}:`, error);
-    return [];
-  }
-};
-
-// Helper function to merge translated synonyms with existing synonyms
-const mergeSynonyms = (t: any, toolId: string, existingSynonyms: string[] = []): string[] => {
-  const translatedSynonyms = getTranslatedSynonyms(t, toolId);
-  return [...translatedSynonyms, ...existingSynonyms];
-};
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {

@@ -11,7 +11,7 @@ import { useNavigationActions, useNavigationState } from './NavigationContext';
 import { ToolId, isValidToolId } from '../types/toolId';
 import { useNavigationUrlSync } from '../hooks/useUrlSync';
 import { getDefaultWorkbench } from '../types/workbench';
-import { idToWords, scoreMatch, minScoreForQuery } from '../utils/fuzzySearch';
+import { filterToolRegistryByQuery } from '../utils/toolSearch';
 
 // State interface
 interface ToolWorkflowState {
@@ -219,54 +219,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setReaderMode(true);
   }, [setReaderMode]);
 
-  // Filter tools based on search query with fuzzy matching (name and description)
+  // Filter tools based on search query with fuzzy matching (name, description, id, synonyms)
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    const entries = Object.entries(toolRegistry);
-    if (!state.searchQuery.trim()) {
-      // Return in the new format even when not searching
-      return entries.map(([id, tool]) => ({ item: [id, tool] as [string, ToolRegistryEntry] }));
-    }
-
-    const threshold = minScoreForQuery(state.searchQuery);
-    const results: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string; score: number }> = [];
-
-    for (const [id, tool] of entries) {
-      let best = 0;
-      let matchedText = '';
-
-      const candidates: string[] = [
-        idToWords(id),
-        tool.name || '',
-        tool.description || ''
-      ];
-      for (const value of candidates) {
-        if (!value) continue;
-        const s = scoreMatch(state.searchQuery, value);
-        if (s > best) {
-          best = s;
-          matchedText = value;
-        }
-      }
-
-      if (Array.isArray(tool.synonyms)) {
-        for (const synonym of tool.synonyms) {
-          if (!synonym) continue;
-          const s = scoreMatch(state.searchQuery, synonym);
-          if (s > best) {
-            best = s;
-            matchedText = synonym; 
-          }
-        }
-      }
-
-      if (best >= threshold) {
-        results.push({ item: [id, tool] as [string, ToolRegistryEntry], matchedText, score: best });
-      }
-    }
-
-    results.sort((a, b) => b.score - a.score);
-    return results.map(({ item, matchedText }) => ({ item, matchedText }));
+    return filterToolRegistryByQuery(toolRegistry as Record<string, ToolRegistryEntry>, state.searchQuery);
   }, [toolRegistry, state.searchQuery]);
 
   const isPanelVisible = useMemo(() =>
