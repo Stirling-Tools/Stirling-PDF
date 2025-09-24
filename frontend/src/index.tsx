@@ -60,7 +60,7 @@ root.render(
     <PostHogProvider
       client={posthog}
     >
-      <BrowserRouter>
+      <BrowserRouter basename={(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}>
         <App />
       </BrowserRouter>
     </PostHogProvider>
