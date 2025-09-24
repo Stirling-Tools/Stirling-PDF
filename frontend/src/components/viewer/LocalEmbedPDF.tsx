@@ -17,6 +17,7 @@ import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
+import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { Rotation } from '@embedpdf/models';
 
 // Import annotation plugins
@@ -36,6 +37,7 @@ import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 import { RotateAPIBridge } from './RotateAPIBridge';
 import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
 import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
+import { ExportAPIBridge } from './ExportAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -134,6 +136,10 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
       // Register rotate plugin
       createPluginRegistration(RotatePluginPackage, {
         defaultRotation: Rotation.Degree0, // Start with no rotation
+      }),
+      // Register export plugin for downloading PDFs
+      createPluginRegistration(ExportPluginPackage, {
+        defaultFileName: 'document.pdf',
       }),
     ];
   }, [pdfUrl]);
@@ -260,6 +266,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
         <RotateAPIBridge />
         {enableSignature && <SignatureAPIBridge ref={signatureApiRef} />}
         {enableSignature && <HistoryAPIBridge ref={historyApiRef} />}
+        <ExportAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{
@@ -303,7 +310,6 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
 
                     {/* Selection layer for text interaction */}
                     <SelectionLayer pageIndex={pageIndex} scale={scale} />
-
                     {/* Annotation layer for signatures (only when enabled) */}
                     {enableSignature && (
                       <AnnotationLayer
@@ -321,7 +327,6 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
             )}
           />
           </Viewport>
-
         </GlobalPointerProvider>
       </EmbedPDF>
     </div>

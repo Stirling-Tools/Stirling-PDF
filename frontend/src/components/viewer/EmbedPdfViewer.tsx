@@ -42,7 +42,6 @@ const EmbedPdfViewerContent = ({
   // Get signature context
   const { signatureApiRef, historyApiRef } = useSignature();
 
-
   // Get current file from FileContext
   const { selectors } = useFileState();
   const activeFiles = selectors.getFiles();

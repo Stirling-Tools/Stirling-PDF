@@ -15,6 +15,7 @@ import "./index.css";
 import { RightRailProvider } from "./contexts/RightRailContext";
 import { ViewerProvider } from "./contexts/ViewerContext";
 import { SignatureProvider } from "./contexts/SignatureContext";
+import { ViewerProvider } from "./contexts/ViewerContext";
 
 // Import file ID debugging helpers (development only)
 import "./utils/fileIdSafety";
@@ -47,9 +48,9 @@ export default function App() {
                   <SidebarProvider>
                     <ViewerProvider>
                       <SignatureProvider>
-                        <RightRailProvider>
-                          <HomePage />
-                        </RightRailProvider>
+                      <RightRailProvider>
+                            <HomePage />
+                          </RightRailProvider>
                       </SignatureProvider>
                     </ViewerProvider>
                   </SidebarProvider>

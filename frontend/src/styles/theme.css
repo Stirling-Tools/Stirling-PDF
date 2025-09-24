@@ -191,6 +191,8 @@
   --checkbox-checked-bg: #3FAFFF;
   --checkbox-tick: #FFFFFF;
 
+  --information-text-bg: #eaeaea;
+  --information-text-color: #5e5e5e;
   /* Bulk selection panel specific colors (light mode) */
   --bulk-panel-bg: #ffffff; /* white background for parent container */
   --bulk-card-bg: #ffffff; /* white background for cards */
@@ -351,6 +353,9 @@
   /* Tool panel search bar background colors (dark mode) */
   --tool-panel-search-bg: #1F2329;
   --tool-panel-search-border-bottom: #4B525A;
+  
+  --information-text-bg: #292e34;
+  --information-text-color: #ececec;
 
   /* Bulk selection panel specific colors (dark mode) */
   --bulk-panel-bg: var(--bg-raised); /* dark background for parent container */

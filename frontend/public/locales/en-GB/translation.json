@@ -104,6 +104,7 @@
   "green": "Green",
   "blue": "Blue",
   "custom": "Custom...",
+  "comingSoon": "Coming soon",
   "WorkInProgess": "Work in progress, May not work or be buggy, Please report any problems!",
   "poweredBy": "Powered by",
   "yes": "Yes",
@@ -144,6 +145,7 @@
   "noFileSelected": "No file selected. Please upload one.",
   "legal": {
     "privacy": "Privacy Policy",
+    "iAgreeToThe": "I agree to all of the",
     "terms": "Terms and Conditions",
     "accessibility": "Accessibility",
     "cookie": "Cookie Policy",
@@ -382,7 +384,7 @@
       "title": "Add image",
       "desc": "Adds a image onto a set location on the PDF"
     },
-    "attachments": {
+    "addAttachments": {
       "title": "Add Attachments",
       "desc": "Add or remove embedded files (attachments) to/from a PDF"
     },
@@ -414,7 +416,7 @@
       "title": "Extract Images",
       "desc": "Extracts all images from a PDF and saves them to zip"
     },
-    "ScannerImageSplit": {
+    "scannerImageSplit": {
       "title": "Detect/Split Scanned photos",
       "desc": "Splits multiple photos from within a photo/PDF"
     },
@@ -425,6 +427,10 @@
     "flatten": {
       "title": "Flatten",
       "desc": "Remove all interactive elements and forms from a PDF"
+    },
+    "certSign": {
+      "title": "Sign with Certificate",
+      "desc": "Signs a PDF with a Certificate/Key (PEM/P12)"
     },
     "repair": {
       "title": "Repair",
@@ -442,10 +448,6 @@
       "title": "Compare",
       "desc": "Compares and shows the differences between 2 PDF Documents"
     },
-    "certSign": {
-      "title": "Sign with Certificate",
-      "desc": "Signs a PDF with a Certificate/Key (PEM/P12)"
-    },
     "removeCertSign": {
       "title": "Remove Certificate Sign",
       "desc": "Remove certificate signature from PDF"
@@ -454,19 +456,19 @@
       "title": "Multi-Page Layout",
       "desc": "Merge multiple pages of a PDF document into a single page"
     },
+    "bookletImposition": {
+      "title": "Booklet Imposition",
+      "desc": "Create booklets with proper page ordering and multi-page layout for printing and binding"
+    },
     "scalePages": {
       "title": "Adjust page size/scale",
       "desc": "Change the size/scale of a page and/or its contents."
-    },
-    "pipeline": {
-      "title": "Pipeline",
-      "desc": "Run multiple actions on PDFs by defining pipeline scripts"
     },
     "addPageNumbers": {
       "title": "Add Page Numbers",
       "desc": "Add Page numbers throughout a document in a set location"
     },
-    "auto-rename": {
+    "autoRename": {
       "title": "Auto Rename PDF File",
       "desc": "Auto renames a PDF file based on its detected header"
     },
@@ -502,15 +504,15 @@
       "title": "Redact",
       "desc": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "overlay-pdfs": {
+    "overlayPdfs": {
       "title": "Overlay PDFs",
       "desc": "Overlays PDFs on-top of another PDF"
     },
-    "split-by-sections": {
+    "splitBySections": {
       "title": "Split PDF by Sections",
       "desc": "Divide each page of a PDF into smaller horizontal and vertical sections"
     },
-    "AddStampRequest": {
+    "addStamp": {
       "title": "Add Stamp to PDF",
       "desc": "Add text or add image stamps at set locations"
     },
@@ -529,10 +531,6 @@
     "swagger": {
       "title": "API Documentation",
       "desc": "View API documentation and test endpoints"
-    },
-    "replace-color": {
-      "title": "Advanced Colour options",
-      "desc": "Replace colour for text and background in PDF and invert full colour of pdf to reduce file size"
     },
     "fakeScan": {
       "title": "Fake Scan",
@@ -562,17 +560,9 @@
       "title": "Remove Pages",
       "desc": "Remove specific pages from a PDF document"
     },
-    "removeImagePdf": {
-      "title": "Remove Image",
-      "desc": "Remove images from PDF documents"
-    },
     "autoSizeSplitPDF": {
       "title": "Auto Split by Size/Count",
       "desc": "Automatically split PDFs by file size or page count"
-    },
-    "adjust-contrast": {
-      "title": "Adjust Colours/Contrast",
-      "desc": "Adjust colours and contrast of PDF documents"
     },
     "replaceColorPdf": {
       "title": "Replace & Invert Colour",
@@ -1194,7 +1184,9 @@
   },
   "pageSelection": {
     "tooltip": {
-      "header": { "title": "Page Selection Guide" },
+      "header": {
+        "title": "Page Selection Guide"
+      },
       "basic": {
         "title": "Basic Usage",
         "text": "Select specific pages from your PDF document using simple syntax.",
@@ -1228,11 +1220,15 @@
         "comma": "Comma: , or | — combine selections (e.g., 1-10, 20)",
         "not": "NOT: ! or \"not\" — exclude pages (e.g., 3n & not 30)"
       },
-      "examples": { "title": "Examples" }
+      "examples": {
+        "title": "Examples"
+      }
     }
   },
   "bulkSelection": {
-    "header": { "title": "Page Selection Guide" },
+    "header": {
+      "title": "Page Selection Guide"
+    },
     "syntax": {
       "title": "Syntax Basics",
       "text": "Use numbers, ranges, keywords, and progressions (n starts at 0). Parentheses are supported.",
@@ -1819,23 +1815,124 @@
     }
   },
   "certSign": {
-    "tags": "authenticate,PEM,P12,official,encrypt",
+    "tags": "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto",
     "title": "Certificate Signing",
-    "header": "Sign a PDF with your certificate (Work in progress)",
-    "selectPDF": "Select a PDF File for Signing:",
-    "jksNote": "Note: If your certificate type is not listed below, please convert it to a Java Keystore (.jks) file using the keytool command line tool. Then, choose the .jks file option below.",
-    "selectKey": "Select Your Private Key File (PKCS#8 format, could be .pem or .der):",
-    "selectCert": "Select Your Certificate File (X.509 format, could be .pem or .der):",
-    "selectP12": "Select Your PKCS#12 Keystore File (.p12 or .pfx) (Optional, If provided, it should contain your private key and certificate):",
-    "selectJKS": "Select Your Java Keystore File (.jks or .keystore):",
-    "certType": "Certificate Type",
-    "password": "Enter Your Keystore or Private Key Password (If Any):",
-    "showSig": "Show Signature",
-    "reason": "Reason",
-    "location": "Location",
-    "name": "Name",
-    "showLogo": "Show Logo",
-    "submit": "Sign PDF"
+    "filenamePrefix": "signed",
+    "signMode": {
+      "stepTitle": "Sign Mode",
+      "tooltip": {
+        "header": {
+          "title": "About PDF Signatures"
+        },
+        "overview": {
+          "title": "How signatures work",
+          "text": "Both modes seal the document (any edits are flagged as tampering) and record who/when/how for auditing. Viewer trust depends on the certificate chain."
+        },
+        "manual": {
+          "title": "Manual - Bring your certificate",
+          "text": "Use your own certificate files for brand-aligned identity. Can display <b>Trusted</b> when your CA/chain is recognised.",
+          "use": "Use for: customer-facing, legal, compliance."
+        },
+        "auto": {
+          "title": "Auto - Zero-setup, instant system seal",
+          "text": "Signs with a server <b>self-signed</b> certificate. Same <b>tamper-evident seal</b> and <b>audit trail</b>; typically shows <b>Unverified</b> in viewers.",
+          "use": "Use when: you need speed and consistent internal identity across reviews and records."
+        },
+        "rule": {
+          "title": "Rule of thumb",
+          "text": "Need recipient <b>Trusted</b> status? <b>Manual</b>. Need a fast, tamper-evident seal and audit trail with no setup? <b>Auto</b>."
+        }
+      }
+    },
+    "certTypeStep": {
+      "stepTitle": "Certificate Format"
+    },
+    "certFiles": {
+      "stepTitle": "Certificate Files"
+    },
+    "appearance": {
+      "stepTitle": "Signature Appearance",
+      "tooltip": {
+        "header": {
+          "title": "About Signature Appearance"
+        },
+        "invisible": {
+          "title": "Invisible Signatures",
+          "text": "The signature is added to the PDF for security but won't be visible when viewing the document. Perfect for legal requirements without changing the document's appearance.",
+          "bullet1": "Provides security without visual changes",
+          "bullet2": "Meets legal requirements for digital signing",
+          "bullet3": "Doesn't affect document layout or design"
+        },
+        "visible": {
+          "title": "Visible Signatures",
+          "text": "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed.",
+          "bullet1": "Shows signer name and date on the document",
+          "bullet2": "Can include reason and location for signing",
+          "bullet3": "Choose which page to place the signature",
+          "bullet4": "Optional logo can be included"
+        }
+      }
+    },
+    "sign": {
+      "submit": "Sign PDF",
+      "results": "Signed PDF"
+    },
+    "error": {
+      "failed": "An error occurred whilst processing signatures."
+    },
+    "tooltip": {
+      "header": {
+        "title": "About Managing Signatures"
+      },
+      "overview": {
+        "title": "What can this tool do?",
+        "text": "This tool lets you check if your PDFs are digitally signed and add new digital signatures. Digital signatures prove who created or approved a document and show if it has been changed since signing.",
+        "bullet1": "Check existing signatures and their validity",
+        "bullet2": "View detailed information about signers and certificates",
+        "bullet3": "Add new digital signatures to secure your documents",
+        "bullet4": "Multiple files supported with easy navigation"
+      },
+      "validation": {
+        "title": "Checking Signatures",
+        "text": "When you check signatures, the tool tells you if they're valid, who signed the document, when it was signed, and whether the document has been changed since signing.",
+        "bullet1": "Shows if signatures are valid or invalid",
+        "bullet2": "Displays signer information and signing date",
+        "bullet3": "Checks if the document was modified after signing",
+        "bullet4": "Can use custom certificates for verification"
+      },
+      "signing": {
+        "title": "Adding Signatures",
+        "text": "To sign a PDF, you need a digital certificate (like PEM, PKCS12, or JKS). You can choose to make the signature visible on the document or keep it invisible for security only.",
+        "bullet1": "Supports PEM, PKCS12, JKS, and server certificate formats",
+        "bullet2": "Option to show or hide signature on the PDF",
+        "bullet3": "Add reason, location, and signer name",
+        "bullet4": "Choose which page to place visible signatures",
+        "bullet5": "Use server certificate for simple 'Sign with Stirling-PDF' option"
+      }
+    },
+    "certType": {
+      "tooltip": {
+        "header": {
+          "title": "About Certificate Types"
+        },
+        "what": {
+          "title": "What's a certificate?",
+          "text": "It's a secure ID for your signature that proves you signed. Unless you're required to sign via certificate, we recommend using another secure method like Type, Draw, or Upload."
+        },
+        "which": {
+          "title": "Which option should I use?",
+          "text": "Choose the format that matches your certificate file:",
+          "bullet1": "PKCS#12 (.p12 / .pfx) – one combined file (most common)",
+          "bullet2": "PFX (.pfx) – Microsoft's version of PKCS12",
+          "bullet3": "PEM – separate private-key and certificate .pem files",
+          "bullet4": "JKS – Java .jks keystore for dev / CI-CD workflows"
+        },
+        "convert": {
+          "title": "Key not listed?",
+          "text": "Convert your file to a Java keystore (.jks) with keytool, then pick JKS."
+        }
+      }
+    }
   },
   "removeCertSign": {
     "tags": "authenticate,PEM,P12,official,decrypt",
@@ -1862,6 +1959,99 @@
     "pagesPerSheet": "Pages per sheet:",
     "addBorder": "Add Borders",
     "submit": "Submit"
+  },
+  "bookletImposition": {
+    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "title": "Booklet Imposition",
+    "header": "Booklet Imposition",
+    "submit": "Create Booklet",
+    "spineLocation": {
+      "label": "Spine Location",
+      "left": "Left (Standard)",
+      "right": "Right (RTL)"
+    },
+    "doubleSided": {
+      "label": "Double-sided printing",
+      "tooltip": "Creates both front and back sides for proper booklet printing"
+    },
+    "manualDuplex": {
+      "title": "Manual Duplex Mode",
+      "instructions": "For printers without automatic duplex. You'll need to run this twice:"
+    },
+    "duplexPass": {
+      "label": "Print Pass",
+      "first": "1st Pass",
+      "second": "2nd Pass",
+      "firstInstructions": "Prints front sides → stack face-down → run again with 2nd Pass",
+      "secondInstructions": "Load printed stack face-down → prints back sides"
+    },
+    "rtlBinding": {
+      "label": "Right-to-left binding",
+      "tooltip": "For Arabic, Hebrew, or other right-to-left languages"
+    },
+    "addBorder": {
+      "label": "Add borders around pages",
+      "tooltip": "Adds borders around each page section to help with cutting and alignment"
+    },
+    "addGutter": {
+      "label": "Add gutter margin",
+      "tooltip": "Adds inner margin space for binding"
+    },
+    "gutterSize": {
+      "label": "Gutter size (points)"
+    },
+    "flipOnShortEdge": {
+      "label": "Flip on short edge (automatic duplex only)",
+      "tooltip": "Enable for short-edge duplex printing (automatic duplex only - ignored in manual mode)",
+      "manualNote": "Not needed in manual mode - you flip the stack yourself"
+    },
+    "advanced": {
+      "toggle": "Advanced Options"
+    },
+    "paperSizeNote": "Paper size is automatically derived from your first page.",
+    "tooltip": {
+      "header": {
+        "title": "Booklet Creation Guide"
+      },
+      "description": {
+        "title": "What is Booklet Imposition?",
+        "text": "Creates professional booklets by arranging pages in the correct printing order. Your PDF pages are placed 2-up on landscape sheets so when folded and bound, they read in proper sequence like a real book."
+      },
+      "example": {
+        "title": "Example: 8-Page Booklet",
+        "text": "Your 8-page document becomes 2 sheets:",
+        "bullet1": "Sheet 1 Front: Pages 8, 1  |  Back: Pages 2, 7",
+        "bullet2": "Sheet 2 Front: Pages 6, 3  |  Back: Pages 4, 5",
+        "bullet3": "When folded & stacked: Reads 1→2→3→4→5→6→7→8"
+      },
+      "printing": {
+        "title": "How to Print & Assemble",
+        "text": "Follow these steps for perfect booklets:",
+        "bullet1": "Print double-sided with 'Flip on long edge'",
+        "bullet2": "Stack sheets in order, fold in half",
+        "bullet3": "Staple or bind along the folded spine",
+        "bullet4": "For short-edge printers: Enable 'Flip on short edge' option"
+      },
+      "manualDuplex": {
+        "title": "Manual Duplex (Single-sided Printers)",
+        "text": "For printers without automatic duplex:",
+        "bullet1": "Turn OFF 'Double-sided printing'",
+        "bullet2": "Select '1st Pass' → Print → Stack face-down",
+        "bullet3": "Select '2nd Pass' → Load stack → Print backs",
+        "bullet4": "Fold and assemble as normal"
+      },
+      "advanced": {
+        "title": "Advanced Options",
+        "text": "Fine-tune your booklet:",
+        "bullet1": "Right-to-Left Binding: For Arabic, Hebrew, or RTL languages",
+        "bullet2": "Borders: Shows cut lines for trimming",
+        "bullet3": "Gutter Margin: Adds space for binding/stapling",
+        "bullet4": "Short-edge Flip: Only for automatic duplex printers"
+      }
+    },
+    "error": {
+      "failed": "An error occurred while creating the booklet imposition."
+    }
   },
   "scalePages": {
     "title": "Adjust page-scale",
@@ -1947,7 +2137,36 @@
     "tags": "trim,shrink,edit,shape",
     "title": "Crop",
     "header": "Crop PDF",
-    "submit": "Submit"
+    "submit": "Apply Crop",
+    "noFileSelected": "Select a PDF file to begin cropping",
+    "preview": {
+      "title": "Crop Area Selection"
+    },
+    "reset": "Reset to full PDF",
+    "coordinates": {
+      "title": "Position and Size",
+      "x": "X Position",
+      "y": "Y Position",
+      "width": "Width",
+      "height": "Height"
+    },
+    "error": {
+      "invalidArea": "Crop area extends beyond PDF boundaries",
+      "failed": "Failed to crop PDF"
+    },
+    "steps": {
+      "selectArea": "Select Crop Area"
+    },
+    "tooltip": {
+      "title": "How to Crop PDFs",
+      "description": "Select the area to crop from your PDF by dragging and resizing the blue overlay on the thumbnail.",
+      "drag": "Drag the overlay to move the crop area",
+      "resize": "Drag the corner and edge handles to resize",
+      "precision": "Use coordinate inputs for precise positioning"
+    },
+    "results": {
+      "title": "Crop Results"
+    }
   },
   "autoSplitPDF": {
     "tags": "QR-based,separate,scan-segment,organize",
@@ -2199,6 +2418,7 @@
     "tags": "Stamp, Add image, center image, Watermark, PDF, Embed, Customize,Customise",
     "header": "Stamp PDF",
     "title": "Stamp PDF",
+    "stampSetup": "Stamp Setup",
     "stampType": "Stamp Type",
     "stampText": "Stamp Text",
     "stampImage": "Stamp Image",
@@ -2211,7 +2431,8 @@
     "overrideY": "Override Y Coordinate",
     "customMargin": "Custom Margin",
     "customColor": "Custom Text Colour",
-    "submit": "Submit"
+    "submit": "Submit",
+    "noStampSelected": "No stamp selected. Return to Step 1."
   },
   "removeImagePdf": {
     "tags": "Remove Image,Page operations,Back end,server side"
@@ -2290,6 +2511,8 @@
     "title": "Sign in",
     "header": "Sign in",
     "signin": "Sign in",
+    "signInWith": "Sign in with",
+    "signInAnonymously": "Sign Up as a Guest",
     "rememberme": "Remember me",
     "invalid": "Invalid username or password.",
     "locked": "Your account has been locked.",
@@ -2308,7 +2531,54 @@
     "alreadyLoggedIn": "You are already logged in to",
     "alreadyLoggedIn2": "devices. Please log out of the devices and try again.",
     "toManySessions": "You have too many active sessions",
-    "logoutMessage": "You have been logged out."
+    "logoutMessage": "You have been logged out.",
+    "youAreLoggedIn": "You are logged in!",
+    "email": "Email",
+    "password": "Password",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "loggingIn": "Logging In...",
+    "signingIn": "Signing in...",
+    "login": "Login",
+    "or": "Or",
+    "useMagicLink": "Use magic link instead",
+    "enterEmailForMagicLink": "Enter your email for magic link",
+    "sending": "Sending…",
+    "sendMagicLink": "Send Magic Link",
+    "cancel": "Cancel",
+    "dontHaveAccount": "Don't have an account? Sign up",
+    "home": "Home",
+    "debug": "Debug",
+    "signOut": "Sign Out",
+    "pleaseEnterBoth": "Please enter both email and password",
+    "pleaseEnterEmail": "Please enter your email address",
+    "magicLinkSent": "Magic link sent to {{email}}! Check your email and click the link to sign in.",
+    "passwordResetSent": "Password reset link sent to {{email}}! Check your email and follow the instructions.",
+    "failedToSignIn": "Failed to sign in with {{provider}}: {{message}}",
+    "unexpectedError": "Unexpected error: {{message}}"
+  },
+  "signup": {
+    "title": "Create an account",
+    "subtitle": "Join Stirling PDF to get started",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "enterName": "Enter your name",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "or": "or",
+    "creatingAccount": "Creating Account...",
+    "signUp": "Sign Up",
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "pleaseFillAllFields": "Please fill in all fields",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters long",
+    "invalidEmail": "Please enter a valid email address",
+    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
+    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
+    "unexpectedError": "Unexpected error: {{message}}"
   },
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
@@ -2365,6 +2635,28 @@
     "credit": "This service uses qpdf for PDF Compress/Optimisation.",
     "grayscale": {
       "label": "Apply Grayscale for Compression"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Compress Settings Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually."
+      },
+      "qualityAdjustment": {
+        "title": "Quality Adjustment",
+        "text": "Drag the slider to adjust the compression strength. Lower values (1-3) preserve quality but result in larger files. Higher values (7-9) shrink the file more but reduce image clarity.",
+        "bullet1": "Lower values preserve quality",
+        "bullet2": "Higher values reduce file size"
+      },
+      "grayscale": {
+        "title": "Grayscale",
+        "text": "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents."
+      }
+    },
+    "error": {
+      "failed": "An error occurred while compressing the PDF."
     },
     "selectText": {
       "1": {
@@ -2587,20 +2879,14 @@
     "actualSize": "Actual Size"
   },
   "viewer": {
-    "noPdfLoaded": "No PDF loaded. Click to upload a PDF.",
-    "choosePdf": "Choose PDF",
-    "noPagesToDisplay": "No pages to display.",
-    "singlePageView": "Single Page View",
-    "dualPageView": "Dual Page View",
-    "hideSidebars": "Hide Sidebars",
-    "showSidebars": "Show Sidebars",
-    "zoomOut": "Zoom out",
-    "zoomIn": "Zoom in",
+    "firstPage": "First Page",
+    "lastPage": "Last Page",
     "previousPage": "Previous Page",
     "nextPage": "Next Page",
-    "pageNavigation": "Page Navigation",
-    "currentPage": "Current Page",
-    "totalPages": "Total Pages"
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "singlePageView": "Single Page View",
+    "dualPageView": "Dual Page View"
   },
   "rightRail": {
     "closeSelected": "Close Selected Files",
@@ -2619,6 +2905,16 @@
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
     "toggleSidebar": "Toggle Sidebar"
+  },
+  "search": {
+    "title": "Search PDF",
+    "placeholder": "Enter search term..."
+  },
+  "guestBanner": {
+    "title": "You're using Stirling PDF as a guest!",
+    "message": "Create a free account to save your work, access more features, and support the project.",
+    "dismiss": "Dismiss banner",
+    "signUp": "Sign Up Free"
   },
   "toolPicker": {
     "searchPlaceholder": "Search tools...",
@@ -2994,5 +3290,63 @@
     "zoomOut": "Zoom Out",
     "singlePageView": "Single Page View",
     "dualPageView": "Dual Page View"
-  }
+  },
+  "common": {
+    "copy": "Copy",
+    "copied": "Copied!",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "remaining": "remaining",
+    "used": "used",
+    "available": "available",
+    "cancel": "Cancel"
+  },
+  "config": {
+    "account": {
+      "overview": {
+        "title": "Account Settings",
+        "manageAccountPreferences": "Manage your account preferences",
+        "guestDescription": "You are signed in as a guest. Consider upgrading your account above."
+      },
+      "upgrade": {
+        "title": "Upgrade Guest Account",
+        "description": "Link your account to preserve your history and access more features!",
+        "socialLogin": "Upgrade with Social Account",
+        "linkWith": "Link with",
+        "emailPassword": "or enter your email & password",
+        "email": "Email",
+        "emailPlaceholder": "Enter your email",
+        "password": "Password (optional)",
+        "passwordPlaceholder": "Set a password",
+        "passwordNote": "Leave empty to use email verification only",
+        "upgradeButton": "Upgrade Account"
+      }
+    },
+    "apiKeys": {
+      "description": "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
+      "publicKeyAriaLabel": "Public API key",
+      "copyKeyAriaLabel": "Copy API key",
+      "refreshAriaLabel": "Refresh API key",
+      "includedCredits": "Included credits",
+      "purchasedCredits": "Purchased credits",
+      "totalCredits": "Total Credits",
+      "chartAriaLabel": "Credits usage: included {{includedUsed}} of {{includedTotal}}, purchased {{purchasedUsed}} of {{purchasedTotal}}",
+      "nextReset": "Next Reset",
+      "lastApiUse": "Last API Use",
+      "overlayMessage": "Generate a key to see credits and available credits",
+      "label": "API Key",
+      "guestInfo": "Guest users do not receive API keys. Create an account to get an API key you can use in your applications.",
+      "goToAccount": "Go to Account",
+      "refreshModal": {
+        "title": "Refresh API Keys",
+        "warning": "⚠️ Warning: This action will generate new API keys and make your previous keys invalid.",
+        "impact": "Any applications or services currently using these keys will stop working until you update them with the new keys.",
+        "confirmPrompt": "Are you sure you want to continue?",
+        "confirmCta": "Refresh Keys"
+      },
+      "generateError": "We couldn't generate your API key."
+    }
+  },
+  "termsAndConditions": "Terms & Conditions",
+  "logOut": "Log out"
 }
