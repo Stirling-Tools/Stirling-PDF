@@ -2493,7 +2493,10 @@
     "alreadyLoggedIn": "You are already logged in to",
     "alreadyLoggedIn2": "devices. Please log out of the devices and try again.",
     "toManySessions": "You have too many active sessions",
-    "logoutMessage": "You have been logged out."
+    "logoutMessage": "You have been logged out.",
+    "loggingIn": "Logging In...",
+    "signingIn": "Signing in...",
+    "login": "Login"
   },
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
