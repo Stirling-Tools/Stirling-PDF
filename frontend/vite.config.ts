@@ -11,6 +11,28 @@ export default defineConfig({
         secure: false,
       },
     },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+    fs: {
+      allow: ['..'],
+    },
+  },
+  assetsInclude: ['**/*.mjs'],
+  optimizeDeps: {
+    exclude: ['pdfjs-dist'],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name && assetInfo.name.endsWith('.mjs')) {
+            return 'assets/[name]-[hash][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
+      },
+    },
   },
   base: "./",
 });
