@@ -1,5 +1,5 @@
 // Define all possible tool IDs as source of truth
-const TOOL_IDS = [
+export const TOOL_IDS = [
   'certSign',
   'sign',
   'addPassword',
@@ -55,6 +55,7 @@ const TOOL_IDS = [
   'devFolderScanning',
   'devSsoGuide',
   'devAirgapped',
+  'bookletImposition',
 ] as const;
 
 // Tool identity - what PDF operation we're performing (type-safe)

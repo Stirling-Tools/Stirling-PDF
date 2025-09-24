@@ -1,0 +1,41 @@
+.container {
+  position: relative;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px;
+  color: #ffffff;
+  font-weight: 600;
+  background: rgba(16, 18, 27, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 2;
+}
+
+.overlayContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.overlayMessage {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.overlayButton {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  cursor: pointer;
+}
