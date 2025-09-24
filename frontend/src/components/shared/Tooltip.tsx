@@ -6,6 +6,7 @@ import { useTooltipPosition } from '../../hooks/useTooltipPosition';
 import { TooltipTip } from '../../types/tips';
 import { TooltipContent } from './tooltip/TooltipContent';
 import { useSidebarContext } from '../../contexts/SidebarContext';
+import { BASE_PATH } from '../../constants/app';
 import styles from './tooltip/Tooltip.module.css';
 
 export interface TooltipProps {
@@ -328,7 +329,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           <div className={styles['tooltip-logo']}>
             {header.logo || (
               <img
-                src="/logo-tooltip.svg"
+                src={`${BASE_PATH}/logo-tooltip.svg`}
                 alt="Stirling PDF"
                 style={{ width: '1.4rem', height: '1.4rem', display: 'block' }}
               />

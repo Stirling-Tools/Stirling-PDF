@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BASE_PATH } from '../constants/app';
 
 declare global {
   interface Window {
@@ -37,17 +38,17 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
     // Load the cookie consent CSS files first
     const mainCSS = document.createElement('link');
     mainCSS.rel = 'stylesheet';
-    mainCSS.href = '/css/cookieconsent.css';
+    mainCSS.href = `${BASE_PATH}/css/cookieconsent.css`;
     document.head.appendChild(mainCSS);
 
     const customCSS = document.createElement('link');
     customCSS.rel = 'stylesheet';
-    customCSS.href = '/css/cookieconsentCustomisation.css';
+    customCSS.href = `${BASE_PATH}/css/cookieconsentCustomisation.css`;
     document.head.appendChild(customCSS);
 
     // Load the cookie consent library
     const script = document.createElement('script');
-    script.src = '/js/thirdParty/cookieconsent.umd.js';
+    script.src = `${BASE_PATH}/js/thirdParty/cookieconsent.umd.js`;
     script.onload = () => {
       // Small delay to ensure DOM is ready
       setTimeout(() => {

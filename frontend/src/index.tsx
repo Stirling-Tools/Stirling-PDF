@@ -10,6 +10,7 @@ import App from './App';
 import './i18n'; // Initialize i18next
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
+import { BASE_PATH } from './constants/app';
 
 // Compute initial color scheme
 function getInitialScheme(): 'light' | 'dark' {
@@ -60,7 +61,7 @@ root.render(
     <PostHogProvider
       client={posthog}
     >
-      <BrowserRouter>
+      <BrowserRouter basename={BASE_PATH}>
         <App />
       </BrowserRouter>
     </PostHogProvider>

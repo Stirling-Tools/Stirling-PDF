@@ -7,6 +7,7 @@ import { ToolId } from '../types/toolId';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
 import { ToolRegistry } from '../data/toolsTaxonomy';
 import { firePixel } from '../utils/scarfTracking';
+import { withBasePath } from '../constants/app';
 
 /**
  * Hook to sync workbench and tool with URL using registry
@@ -51,7 +52,8 @@ export function useNavigationUrlSync(
     } else if (prevSelectedTool.current !== null) {
       // Only clear URL if we had a tool before (user navigated away)
       // Don't clear on initial load when both current and previous are null
-      if (window.location.pathname !== '/') {
+      const homePath = withBasePath('/');
+      if (window.location.pathname !== homePath) {
         clearToolRoute(false); // Use pushState for user navigation
       }
     }
