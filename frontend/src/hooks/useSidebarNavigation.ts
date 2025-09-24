@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useToolNavigation } from './useToolNavigation';
-import { useToolManagement } from './useToolManagement';
+import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
 import { handleUnlessSpecialClick } from '../utils/clickHandlers';
 
 export interface SidebarNavigationProps {
@@ -19,7 +19,7 @@ export function useSidebarNavigation(): {
   getToolNavigation: (toolId: string) => SidebarNavigationProps | null;
 } {
   const { getToolNavigation: getToolNavProps } = useToolNavigation();
-  const { getSelectedTool } = useToolManagement();
+  const { getSelectedTool } = useToolWorkflow();
 
   const defaultNavClick = useCallback((e: React.MouseEvent) => {
     handleUnlessSpecialClick(e, () => {
