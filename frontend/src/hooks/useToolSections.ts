@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
 import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } from '../data/toolsTaxonomy';
-import { idToWords, normalizeForSearch } from '../utils/fuzzySearch';
 import { useTranslation } from 'react-i18next';
 
 type SubcategoryIdMap = {

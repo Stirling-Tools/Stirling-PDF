@@ -17,7 +17,6 @@ export const getTranslatedSynonyms = (t: TFunction, toolId: string): string[] =>
       .map((tag: string) => tag.trim())
       .filter((tag: string) => tag.length > 0);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.warn(`Failed to get translated synonyms for tool ${toolId}:`, error);
     return [];
   }
