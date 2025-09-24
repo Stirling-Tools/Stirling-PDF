@@ -49,6 +49,8 @@ import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperati
 import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
+import { signOperationConfig } from "../hooks/tools/sign/useSignOperation";
+import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -72,6 +74,8 @@ import MergeSettings from '../components/tools/merge/MergeSettings';
 import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
+import SignSettings from "../components/tools/sign/SignSettings";
+import CropSettings from "../components/tools/crop/CropSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
