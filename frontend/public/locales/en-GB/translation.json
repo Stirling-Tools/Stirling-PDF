@@ -145,6 +145,7 @@
   "noFileSelected": "No file selected. Please upload one.",
   "legal": {
     "privacy": "Privacy Policy",
+    "iAgreeToThe": "I agree to all of the",
     "terms": "Terms and Conditions",
     "accessibility": "Accessibility",
     "cookie": "Cookie Policy",
@@ -2475,6 +2476,8 @@
     "title": "Sign in",
     "header": "Sign in",
     "signin": "Sign in",
+    "signInWith": "Sign in with",
+    "signInAnonymously": "Sign Up as a Guest",
     "rememberme": "Remember me",
     "invalid": "Invalid username or password.",
     "locked": "Your account has been locked.",
@@ -2494,9 +2497,53 @@
     "alreadyLoggedIn2": "devices. Please log out of the devices and try again.",
     "toManySessions": "You have too many active sessions",
     "logoutMessage": "You have been logged out.",
+    "youAreLoggedIn": "You are logged in!",
+    "email": "Email",
+    "password": "Password",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
     "loggingIn": "Logging In...",
     "signingIn": "Signing in...",
-    "login": "Login"
+    "login": "Login",
+    "or": "Or",
+    "useMagicLink": "Use magic link instead",
+    "enterEmailForMagicLink": "Enter your email for magic link",
+    "sending": "Sending…",
+    "sendMagicLink": "Send Magic Link",
+    "cancel": "Cancel",
+    "dontHaveAccount": "Don't have an account? Sign up",
+    "home": "Home",
+    "debug": "Debug",
+    "signOut": "Sign Out",
+    "pleaseEnterBoth": "Please enter both email and password",
+    "pleaseEnterEmail": "Please enter your email address",
+    "magicLinkSent": "Magic link sent to {{email}}! Check your email and click the link to sign in.",
+    "passwordResetSent": "Password reset link sent to {{email}}! Check your email and follow the instructions.",
+    "failedToSignIn": "Failed to sign in with {{provider}}: {{message}}",
+    "unexpectedError": "Unexpected error: {{message}}"
+  },
+  "signup": {
+    "title": "Create an account",
+    "subtitle": "Join Stirling PDF to get started",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "enterName": "Enter your name",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "or": "or",
+    "creatingAccount": "Creating Account...",
+    "signUp": "Sign Up",
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "pleaseFillAllFields": "Please fill in all fields",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters long",
+    "invalidEmail": "Please enter a valid email address",
+    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
+    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
+    "unexpectedError": "Unexpected error: {{message}}"
   },
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
@@ -2553,6 +2600,28 @@
     "credit": "This service uses qpdf for PDF Compress/Optimisation.",
     "grayscale": {
       "label": "Apply Grayscale for Compression"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Compress Settings Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually."
+      },
+      "qualityAdjustment": {
+        "title": "Quality Adjustment",
+        "text": "Drag the slider to adjust the compression strength. Lower values (1-3) preserve quality but result in larger files. Higher values (7-9) shrink the file more but reduce image clarity.",
+        "bullet1": "Lower values preserve quality",
+        "bullet2": "Higher values reduce file size"
+      },
+      "grayscale": {
+        "title": "Grayscale",
+        "text": "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents."
+      }
+    },
+    "error": {
+      "failed": "An error occurred while compressing the PDF."
     },
     "selectText": {
       "1": {
@@ -2801,6 +2870,16 @@
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
     "toggleSidebar": "Toggle Sidebar"
+  },
+  "search": {
+    "title": "Search PDF",
+    "placeholder": "Enter search term..."
+  },
+  "guestBanner": {
+    "title": "You're using Stirling PDF as a guest!",
+    "message": "Create a free account to save your work, access more features, and support the project.",
+    "dismiss": "Dismiss banner",
+    "signUp": "Sign Up Free"
   },
   "toolPicker": {
     "searchPlaceholder": "Search tools...",
@@ -3166,5 +3245,63 @@
       "processImages": "Process Images",
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
-  }
+  },
+  "common": {
+    "copy": "Copy",
+    "copied": "Copied!",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "remaining": "remaining",
+    "used": "used",
+    "available": "available",
+    "cancel": "Cancel"
+  },
+  "config": {
+    "account": {
+      "overview": {
+        "title": "Account Settings",
+        "manageAccountPreferences": "Manage your account preferences",
+        "guestDescription": "You are signed in as a guest. Consider upgrading your account above."
+      },
+      "upgrade": {
+        "title": "Upgrade Guest Account",
+        "description": "Link your account to preserve your history and access more features!",
+        "socialLogin": "Upgrade with Social Account",
+        "linkWith": "Link with",
+        "emailPassword": "or enter your email & password",
+        "email": "Email",
+        "emailPlaceholder": "Enter your email",
+        "password": "Password (optional)",
+        "passwordPlaceholder": "Set a password",
+        "passwordNote": "Leave empty to use email verification only",
+        "upgradeButton": "Upgrade Account"
+      }
+    },
+    "apiKeys": {
+      "description": "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
+      "publicKeyAriaLabel": "Public API key",
+      "copyKeyAriaLabel": "Copy API key",
+      "refreshAriaLabel": "Refresh API key",
+      "includedCredits": "Included credits",
+      "purchasedCredits": "Purchased credits",
+      "totalCredits": "Total Credits",
+      "chartAriaLabel": "Credits usage: included {{includedUsed}} of {{includedTotal}}, purchased {{purchasedUsed}} of {{purchasedTotal}}",
+      "nextReset": "Next Reset",
+      "lastApiUse": "Last API Use",
+      "overlayMessage": "Generate a key to see credits and available credits",
+      "label": "API Key",
+      "guestInfo": "Guest users do not receive API keys. Create an account to get an API key you can use in your applications.",
+      "goToAccount": "Go to Account",
+      "refreshModal": {
+        "title": "Refresh API Keys",
+        "warning": "⚠️ Warning: This action will generate new API keys and make your previous keys invalid.",
+        "impact": "Any applications or services currently using these keys will stop working until you update them with the new keys.",
+        "confirmPrompt": "Are you sure you want to continue?",
+        "confirmCta": "Refresh Keys"
+      },
+      "generateError": "We couldn't generate your API key."
+    }
+  },
+  "termsAndConditions": "Terms & Conditions",
+  "logOut": "Log out"
 }
