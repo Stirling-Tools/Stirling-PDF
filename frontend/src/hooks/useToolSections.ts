@@ -116,31 +116,25 @@ export function useToolSections(
     });
     const entries = Object.entries(subMap);
 
-    // If a search query is provided, and there are no exact/substring matches across any field,
-    // preserve the encounter order of subcategories (best matches first) instead of alphabetical.
+    // If a search query is present, always order subcategories by first occurrence in
+    // the ranked filteredTools list so the top-ranked tools' subcategory appears first.
     if (searchQuery && searchQuery.trim()) {
-      const nq = normalizeForSearch(searchQuery);
-      const hasExact = filteredTools.some(({ item: [id, tool] }) => {
-        const idWords = idToWords(id);
-        return (
-          idWords.includes(nq) ||
-          normalizeForSearch(tool.name).includes(nq) ||
-          normalizeForSearch(tool.description).includes(nq)
-        );
+      const order: SubcategoryId[] = [];
+      filteredTools.forEach(({ item: [_, tool] }) => {
+        const sc = tool.subcategoryId;
+        if (!order.includes(sc)) order.push(sc);
       });
-      if (!hasExact) {
-        // Keep original appearance order of subcategories as they occur in filteredTools
-        const order: SubcategoryId[] = [];
-        filteredTools.forEach(({ item: [_, tool] }) => {
-          const sc = tool.subcategoryId;
-          if (!order.includes(sc)) order.push(sc);
-        });
-        return entries
-          .sort(([a], [b]) => order.indexOf(a as SubcategoryId) - order.indexOf(b as SubcategoryId))
-          .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
-      }
+      return entries
+        .sort(([a], [b]) => {
+          const ai = order.indexOf(a as SubcategoryId);
+          const bi = order.indexOf(b as SubcategoryId);
+          if (ai !== bi) return ai - bi;
+          return (a as SubcategoryId).localeCompare(b as SubcategoryId);
+        })
+        .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
     }
 
+    // No search: alphabetical subcategory ordering
     return entries
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
