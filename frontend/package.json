@@ -62,7 +62,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint && npm run test:run",
-    "generate-licenses": "node scripts/generate-licenses.js",
+    "generate-licenses": "node scripts/generate-licenses.mjs",
     "generate-icons": "node scripts/generate-icons.js",
     "generate-icons:verbose": "node scripts/generate-icons.js --verbose",
     "test": "vitest",
