@@ -2,10 +2,20 @@ import { ToolId } from '../types/toolId';
 
 // Map URL paths to tool keys (multiple URLs can map to same tool)
 export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
-  '/split-pdfs': 'split',
+  // Basic tools - standard patterns
   '/split': 'split',
+  '/split-pdfs': 'split',
+  '/merge': 'merge',
   '/merge-pdfs': 'merge',
+  '/compress': 'compress',
   '/compress-pdf': 'compress',
+  '/rotate': 'rotate',
+  '/rotate-pdf': 'rotate',
+  '/repair': 'repair',
+  '/flatten': 'flatten',
+  '/crop': 'crop',
+
+  // Convert tool and all its variants
   '/convert': 'convert',
   '/convert-pdf': 'convert',
   '/file-to-pdf': 'convert',
@@ -18,20 +28,101 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/pdf-to-pdfa': 'convert',
   '/pdf-to-word': 'convert',
   '/pdf-to-xml': 'convert',
+
+  // Security tools
   '/add-password': 'addPassword',
+  '/remove-password': 'removePassword',
   '/change-permissions': 'changePermissions',
+  '/cert-sign': 'certSign',
+  '/manage-signatures': 'certSign',
+  '/remove-certificate-sign': 'removeCertSign',
+  '/remove-cert-sign': 'removeCertSign',
+  '/unlock-pdf-forms': 'unlockPDFForms',
+  '/validate-signature': 'validateSignature',
+  '/manage-certificates': 'manageCertificates',
+
+  // Content manipulation
+  '/sanitize': 'sanitize',
   '/sanitize-pdf': 'sanitize',
   '/ocr': 'ocr',
   '/ocr-pdf': 'ocr',
+  '/watermark': 'watermark',
   '/add-watermark': 'watermark',
-  '/remove-password': 'removePassword',
+  '/add-image': 'addImage',
+  '/add-stamp': 'addStamp',
+  '/add-page-numbers': 'addPageNumbers',
+  '/redact': 'redact',
+
+  // Page manipulation
+  '/remove-pages': 'removePages',
+  '/remove-blanks': 'removeBlanks',
+  '/extract-pages': 'extractPages',
+  '/reorganize-pages': 'reorganizePages',
   '/single-large-page': 'pdfToSinglePage',
-  '/repair': 'repair',
-  '/rotate-pdf': 'rotate',
-  '/unlock-pdf-forms': 'unlockPDFForms',
-  '/remove-certificate-sign': 'removeCertSign',
-  '/remove-cert-sign': 'removeCertSign',
-  '/cert-sign': 'certSign',
-  '/manage-signatures': 'certSign',
+  '/page-layout': 'pageLayout',
+  '/scale-pages': 'scalePages',
   '/booklet-imposition': 'bookletImposition',
+
+  // Splitting tools
+  '/auto-split-pdf': 'autoSplitPDF',
+  '/auto-size-split-pdf': 'autoSizeSplitPDF',
+  '/scanner-image-split': 'scannerImageSplit',
+
+  // Annotation and content removal
+  '/remove-annotations': 'removeAnnotations',
+  '/remove-image': 'removeImage',
+
+  // Image and visual tools
+  '/extract-images': 'extractImages',
+  '/adjust-contrast': 'adjustContrast',
+  '/fake-scan': 'fakeScan',
+  '/replace-color-pdf': 'replaceColorPdf',
+
+  // Metadata and info
+  '/change-metadata': 'changeMetadata',
+  '/get-pdf-info': 'getPdfInfo',
+  '/add-attachments': 'addAttachments',
+
+  // Advanced tools
+  '/overlay-pdfs': 'overlayPdfs',
+  '/edit-table-of-contents': 'editTableOfContents',
+  '/auto-rename': 'autoRename',
+  '/compare': 'compare',
+  '/multi-tool': 'multiTool',
+  '/show-js': 'showJS',
+
+  // Special/utility tools
+  '/read': 'read',
+  '/automate': 'automate',
+  '/sign': 'sign',
+
+  // Developer tools
+  '/dev-api': 'devApi',
+  '/dev-folder-scanning': 'devFolderScanning',
+  '/dev-sso-guide': 'devSsoGuide',
+  '/dev-airgapped': 'devAirgapped',
+
+  // Legacy URL mappings from sitemap
+  '/pdf-organizer': 'reorganizePages',
+  '/multi-page-layout': 'pageLayout',
+  '/extract-page': 'extractPages',
+  '/pdf-to-single-page': 'pdfToSinglePage',
+  '/img-to-pdf': 'convert',
+  '/pdf-to-presentation': 'convert',
+  '/pdf-to-text': 'convert',
+  '/pdf-to-html': 'convert',
+  '/auto-redact': 'redact',
+  '/stamp': 'addStamp',
+  '/view-pdf': 'read',
+  '/get-info-on-pdf': 'getPdfInfo',
+  '/remove-image-pdf': 'removeImage',
+  '/replace-and-invert-color-pdf': 'replaceColorPdf',
+  '/pipeline': 'automate',
+  '/extract-image-scans': 'scannerImageSplit',
+  '/show-javascript': 'showJS',
+  '/scanner-effect': 'fakeScan',
+  '/split-by-size-or-count': 'autoSizeSplitPDF',
+  '/overlay-pdf': 'overlayPdfs',
+  '/split-pdf-by-sections': 'autoSplitPDF',
+  '/split-pdf-by-chapters': 'autoSplitPDF',
 };

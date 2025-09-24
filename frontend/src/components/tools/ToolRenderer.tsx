@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { useToolManagement } from "../../hooks/useToolManagement";
+import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
 import { BaseToolProps } from "../../types/tool";
 import ToolLoadingFallback from "./ToolLoadingFallback";
 
@@ -14,8 +14,8 @@ const ToolRenderer = ({
   onComplete,
   onError,
 }: ToolRendererProps) => {
-  // Get the tool from registry
-  const { toolRegistry } = useToolManagement();
+  // Get the tool from context (instead of direct hook call)
+  const { toolRegistry } = useToolWorkflow();
   const selectedTool = toolRegistry[selectedToolKey];
 
   if (!selectedTool || !selectedTool.component) {
