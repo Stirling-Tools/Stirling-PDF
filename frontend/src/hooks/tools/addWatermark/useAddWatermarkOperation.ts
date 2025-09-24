@@ -9,7 +9,7 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
   formData.append("fileInput", file);
 
   // Required: watermarkType as string
-  formData.append("watermarkType", parameters.watermarkType || "text");
+  formData.append("watermarkType", parameters.watermarkType ?? "text");
 
   // Add watermark content based on type
   if (parameters.watermarkType === 'text') {

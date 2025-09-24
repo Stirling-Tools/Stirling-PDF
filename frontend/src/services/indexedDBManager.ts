@@ -67,7 +67,7 @@ class IndexedDBManager {
 
       request.onerror = () => {
         console.error(`Failed to open ${config.name}:`, request.error);
-        reject(request.error);
+        reject(new Error(request.error?.message || 'Unknown error occurred while opening the database'));
       };
 
       request.onsuccess = () => {
@@ -220,7 +220,7 @@ class IndexedDBManager {
    * Get database connection (must be already opened)
    */
   getDatabase(name: string): IDBDatabase | null {
-    return this.databases.get(name) || null;
+    return this.databases.get(name) ?? null;
   }
 
   /**
@@ -257,7 +257,7 @@ class IndexedDBManager {
     return new Promise((resolve, reject) => {
       const deleteRequest = indexedDB.deleteDatabase(name);
 
-      deleteRequest.onerror = () => reject(deleteRequest.error);
+      deleteRequest.onerror = () => reject(new Error(deleteRequest.error?.message || 'Unknown error occurred while deleting the database'));
       deleteRequest.onsuccess = () => {
         console.log(`Deleted database: ${name}`);
         resolve();

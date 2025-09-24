@@ -279,7 +279,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       const newCache = new Map(prev);
 
       // Remove cache entries for all deleted files
-      filesToDelete.forEach(id => newCache.delete(id as FileId));
+      filesToDelete.forEach(id => newCache.delete(id));
 
       // Also remove deleted files from any other file's history cache
       for (const [mainFileId, historyFiles] of newCache.entries()) {
@@ -295,7 +295,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     // Delete safe files from IndexedDB
     try {
       for (const fileId of filesToDelete) {
-        await fileStorage.deleteStirlingFile(fileId as FileId);
+        await fileStorage.deleteStirlingFile(fileId);
       }
     } catch (error) {
       console.error('Failed to delete files from chain:', error);
@@ -385,7 +385,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   }, []);
 
   const handleFileInputChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
+    const files = Array.from(event.target.files ?? []);
     if (files.length > 0) {
       try {
         // For local file uploads, pass File objects directly to FileContext
@@ -476,7 +476,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
           const fileMap = new Map(allStoredStubs.map(f => [f.id, f]));
 
           // Get the current file's IndexedDB data
-          const currentStoredStub = fileMap.get(fileId as FileId);
+          const currentStoredStub = fileMap.get(fileId);
           if (!currentStoredStub) {
             console.warn(`No stored file found for ${fileId}`);
             return;
@@ -514,7 +514,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
           historyFiles.push(...chainFiles);
 
           // Cache the loaded history files
-          setLoadedHistoryFiles(prev => new Map(prev.set(fileId as FileId, historyFiles)));
+          setLoadedHistoryFiles(prev => new Map(prev.set(fileId, historyFiles)));
         } catch (error) {
           console.warn(`Failed to load history chain for file ${fileId}:`, error);
         }
@@ -523,7 +523,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       // Clear loaded history when collapsing
       setLoadedHistoryFiles(prev => {
         const newMap = new Map(prev);
-        newMap.delete(fileId as FileId);
+        newMap.delete(fileId);
         return newMap;
       });
     }

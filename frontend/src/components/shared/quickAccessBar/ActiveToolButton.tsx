@@ -73,7 +73,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
     replayRafRef.current = requestAnimationFrame(() => {
       setReplayAnim(true);
     });
-    prevKeyRef.current = (selectedToolKey as string) || null;
+    prevKeyRef.current = (selectedToolKey!) || null;
     animTimeoutRef.current = window.setTimeout(() => {
       setReplayAnim(false);
       animTimeoutRef.current = null;
@@ -84,7 +84,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
     clearTimers();
     setIndicatorTool(selectedTool);
     setIndicatorVisible(true);
-    prevKeyRef.current = (selectedToolKey as string) || null;
+    prevKeyRef.current = (selectedToolKey!) || null;
     animTimeoutRef.current = window.setTimeout(() => {
       animTimeoutRef.current = null;
     }, 500);
@@ -113,7 +113,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
         playGrowDown();
       } else {
         // keep reference in sync
-        prevKeyRef.current = (selectedToolKey as string) || null;
+        prevKeyRef.current = (selectedToolKey!) || null;
       }
     } else if (indicatorTool || indicatorVisible) {
       triggerCollapse();

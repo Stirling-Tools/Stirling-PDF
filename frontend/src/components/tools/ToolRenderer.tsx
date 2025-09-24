@@ -18,7 +18,7 @@ const ToolRenderer = ({
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = toolRegistry[selectedToolKey];
 
-  if (!selectedTool || !selectedTool.component) {
+  if (!selectedTool?.component) {
     return <div>Tool not found: {selectedToolKey}</div>;
   }
 

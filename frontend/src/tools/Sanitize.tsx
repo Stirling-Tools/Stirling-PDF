@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";

@@ -12,7 +12,7 @@ interface SearchInterfaceProps {
 export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const { t } = useTranslation();
   const viewerContext = React.useContext(ViewerContext);
-  
+
   const searchState = viewerContext?.getSearchState();
   const searchResults = searchState?.results;
   const searchActiveIndex = searchState?.activeIndex;
@@ -33,7 +33,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     const checkSearchState = () => {
       // Use ViewerContext state instead of window APIs
       if (searchResults && searchResults.length > 0) {
-        const activeIndex = searchActiveIndex || 1;
+        const activeIndex = searchActiveIndex ?? 1;
 
         setResultInfo({
           currentIndex: activeIndex,
@@ -196,7 +196,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
               </Text>
             </Group>
           )}
-          
+
           {resultInfo.totalResults > 0 && (
             <Group gap="xs">
               <ActionIcon

@@ -606,7 +606,7 @@ const PageEditor = ({
   }, [actions]);
 
   // Export preview function - defined after export functions to avoid circular dependency
-  const handleExportPreview = useCallback((selectedOnly: boolean = false) => {
+  const handleExportPreview = useCallback((selectedOnly = false) => {
     if (!displayDocument) return;
 
     // For now, trigger the actual export directly

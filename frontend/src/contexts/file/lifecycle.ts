@@ -16,7 +16,7 @@ export class FileLifecycleManager {
   private fileGenerations = new Map<string, number>(); // Generation tokens to prevent stale cleanup
 
   constructor(
-    private filesRef: React.MutableRefObject<Map<FileId, File>>,
+    private filesRef: React.Ref<Map<FileId, File>>,
     private dispatch: React.Dispatch<FileContextAction>
   ) {}
 
@@ -34,7 +34,7 @@ export class FileLifecycleManager {
   /**
    * Clean up resources for a specific file (with stateRef access for complete cleanup)
    */
-  cleanupFile = (fileId: FileId, stateRef?: React.MutableRefObject<any>): void => {
+  cleanupFile = (fileId: FileId, stateRef?: React.Ref<any>): void => {
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
 
@@ -68,7 +68,7 @@ export class FileLifecycleManager {
   /**
    * Schedule delayed cleanup for a file with generation token to prevent stale cleanup
    */
-  scheduleCleanup = (fileId: FileId, delay: number = 30000, stateRef?: React.MutableRefObject<any>): void => {
+  scheduleCleanup = (fileId: FileId, delay = 30000, stateRef?: React.Ref<any>): void => {
     // Cancel existing timer
     const existingTimer = this.cleanupTimers.get(fileId);
     if (existingTimer) {
@@ -82,7 +82,7 @@ export class FileLifecycleManager {
     }
 
     // Increment generation for this file to invalidate any pending cleanup
-    const currentGen = (this.fileGenerations.get(fileId) || 0) + 1;
+    const currentGen = (this.fileGenerations.get(fileId) ?? 0) + 1;
     this.fileGenerations.set(fileId, currentGen);
 
     // Schedule new cleanup with generation token
@@ -101,7 +101,7 @@ export class FileLifecycleManager {
   /**
    * Remove a file immediately with complete resource cleanup
    */
-  removeFiles = (fileIds: FileId[], stateRef?: React.MutableRefObject<any>): void => {
+  removeFiles = (fileIds: FileId[], stateRef?: React.Ref<any>): void => {
     fileIds.forEach(fileId => {
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
@@ -114,7 +114,7 @@ export class FileLifecycleManager {
   /**
    * Complete resource cleanup for a single file
    */
-  private cleanupAllResourcesForFile = (fileId: FileId, stateRef?: React.MutableRefObject<any>): void => {
+  private cleanupAllResourcesForFile = (fileId: FileId, stateRef?: React.Ref<any>): void => {
     // Remove from files ref
     this.filesRef.current.delete(fileId);
 
@@ -131,7 +131,7 @@ export class FileLifecycleManager {
       const record = stateRef.current.files.byId[fileId];
       if (record) {
         // Clean up thumbnail blob URLs
-        if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
+        if (record.thumbnailUrl?.startsWith('blob:')) {
           try {
             URL.revokeObjectURL(record.thumbnailUrl);
           } catch {
@@ -139,7 +139,7 @@ export class FileLifecycleManager {
           }
         }
 
-        if (record.blobUrl && record.blobUrl.startsWith('blob:')) {
+        if (record.blobUrl?.startsWith('blob:')) {
           try {
             URL.revokeObjectURL(record.blobUrl);
           } catch {
@@ -150,7 +150,7 @@ export class FileLifecycleManager {
         // Clean up processed file thumbnails
         if (record.processedFile?.pages) {
           record.processedFile.pages.forEach((page: ProcessedFilePage) => {
-            if (page.thumbnail && page.thumbnail.startsWith('blob:')) {
+            if (page.thumbnail?.startsWith('blob:')) {
               try {
                 URL.revokeObjectURL(page.thumbnail);
               } catch {
@@ -166,7 +166,7 @@ export class FileLifecycleManager {
   /**
    * Update file record with race condition guards
    */
-  updateStirlingFileStub = (fileId: FileId, updates: Partial<StirlingFileStub>, stateRef?: React.MutableRefObject<any>): void => {
+  updateStirlingFileStub = (fileId: FileId, updates: Partial<StirlingFileStub>, stateRef?: React.Ref<any>): void => {
     // Guard against updating removed files (race condition protection)
     if (!this.filesRef.current.has(fileId)) {
       if (DEBUG) console.warn(`🗂️ Attempted to update removed file (filesRef): ${fileId}`);

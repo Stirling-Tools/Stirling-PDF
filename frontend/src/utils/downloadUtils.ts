@@ -75,7 +75,7 @@ export async function downloadFilesAsZip(files: StirlingFileStub[], zipFilename?
   }
 
   // Generate default filename if not provided
-  const finalZipFilename = zipFilename ||
+  const finalZipFilename = zipFilename ??
     `files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.zip`;
 
   // Create and download ZIP
@@ -120,7 +120,7 @@ export async function downloadFiles(
  * @param filename - Optional custom filename
  */
 export function downloadFileObject(file: File, filename?: string): void {
-  downloadBlob(file, filename || file.name);
+  downloadBlob(file, filename ?? file.name);
 }
 
 /**
@@ -132,7 +132,7 @@ export function downloadFileObject(file: File, filename?: string): void {
 export function downloadTextAsFile(
   content: string,
   filename: string,
-  mimeType: string = 'text/plain'
+  mimeType = 'text/plain'
 ): void {
   const blob = new Blob([content], { type: mimeType });
   downloadBlob(blob, filename);
@@ -143,7 +143,7 @@ export function downloadTextAsFile(
  * @param data - Data to serialize and download
  * @param filename - Filename for the download
  */
-export function downloadJsonAsFile(data: any, filename: string): void {
+export function downloadJsonAsFile(data: unknown, filename: string): void {
   const content = JSON.stringify(data, null, 2);
   downloadTextAsFile(content, filename, 'application/json');
 }

@@ -4,7 +4,7 @@ import { useAppConfig, type AppConfig } from '../hooks/useAppConfig';
 export const DEFAULT_BASE_URL = 'https://stirling.com';
 
 export const getBaseUrlFromConfig = (config?: AppConfig | null): string =>
-  config?.baseUrl || DEFAULT_BASE_URL;
+  config?.baseUrl ?? DEFAULT_BASE_URL;
 
 // Hook to access the base URL within React components
 export const useBaseUrl = (): string => {

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import MergeSettings from "../components/tools/merge/MergeSettings";
@@ -28,7 +28,7 @@ const Merge = (props: BaseToolProps) => {
   );
 
   // Custom file sorting logic for merge tool
-  const sortFiles = useCallback((sortType: 'filename' | 'dateModified', ascending: boolean = true) => {
+  const sortFiles = useCallback((sortType: 'filename' | 'dateModified', ascending = true) => {
     const sortedStubs = [...selectedFileStubs].sort((stubA, stubB) => {
       let comparison = 0;
       switch (sortType) {

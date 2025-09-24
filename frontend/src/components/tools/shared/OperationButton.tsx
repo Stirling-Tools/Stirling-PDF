@@ -47,8 +47,8 @@ const OperationButton = ({
       style={{ minHeight: '2.5rem'  }}
     >
       {isLoading
-        ? (loadingText || t("loading", "Loading..."))
-        : (submitText || t("submit", "Submit"))
+        ? (loadingText ?? t("loading", "Loading..."))
+        : (submitText ?? t("submit", "Submit"))
       }
     </Button>
   );

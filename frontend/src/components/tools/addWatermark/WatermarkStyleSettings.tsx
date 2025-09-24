@@ -19,7 +19,7 @@ const WatermarkStyleSettings = ({ parameters, onParameterChange, disabled = fals
         <Text size="sm" fw={500}>{t('watermark.settings.rotation', 'Rotation (degrees)')}</Text>
         <NumberInput
           value={parameters.rotation}
-          onChange={(value) => onParameterChange('rotation', typeof value === 'number' ? value : (parseInt(value as string, 10) || 0))}
+          onChange={(value) => onParameterChange('rotation', typeof value === 'number' ? value : (parseInt(value, 10) || 0))}
           min={-360}
           max={360}
           disabled={disabled}
@@ -28,7 +28,7 @@ const WatermarkStyleSettings = ({ parameters, onParameterChange, disabled = fals
         <Text size="sm" fw={500}>{t('watermark.settings.opacity', 'Opacity (%)')}</Text>
         <NumberInput
           value={parameters.opacity}
-          onChange={(value) => onParameterChange('opacity', typeof value === 'number' ? value : (parseInt(value as string, 10) || 50))}
+          onChange={(value) => onParameterChange('opacity', typeof value === 'number' ? value : (parseInt(value, 10) || 50))}
           min={0}
           max={100}
           disabled={disabled}
@@ -40,7 +40,7 @@ const WatermarkStyleSettings = ({ parameters, onParameterChange, disabled = fals
         <Text size="sm" fw={500}>{t('watermark.settings.spacing.width', 'Width Spacing')}</Text>
         <NumberInput
           value={parameters.widthSpacer}
-          onChange={(value) => onParameterChange('widthSpacer', typeof value === 'number' ? value : (parseInt(value as string, 10) || 50))}
+          onChange={(value) => onParameterChange('widthSpacer', typeof value === 'number' ? value : (parseInt(value, 10) || 50))}
           min={0}
           max={200}
           disabled={disabled}
@@ -49,7 +49,7 @@ const WatermarkStyleSettings = ({ parameters, onParameterChange, disabled = fals
         <Text size="sm" fw={500}>{t('watermark.settings.spacing.height', 'Height Spacing')}</Text>
         <NumberInput
           value={parameters.heightSpacer}
-          onChange={(value) => onParameterChange('heightSpacer', typeof value === 'number' ? value : (parseInt(value as string, 10) || 50))}
+          onChange={(value) => onParameterChange('heightSpacer', typeof value === 'number' ? value : (parseInt(value, 10) || 50))}
           min={0}
           max={200}
           disabled={disabled}

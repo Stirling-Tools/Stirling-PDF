@@ -10,7 +10,7 @@ export function usePDFProcessor() {
   const generatePageThumbnail = useCallback(async (
     file: File,
     pageNumber: number,
-    scale: number = 0.5
+    scale = 0.5
   ): Promise<string> => {
     try {
       const arrayBuffer = await file.arrayBuffer();
@@ -44,7 +44,7 @@ export function usePDFProcessor() {
   const generateThumbnailFromPDF = useCallback(async (
     pdf: any,
     pageNumber: number,
-    scale: number = 0.5
+    scale = 0.5
   ): Promise<string> => {
     const page = await pdf.getPage(pageNumber);
 

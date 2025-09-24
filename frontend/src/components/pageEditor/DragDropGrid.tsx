@@ -14,7 +14,7 @@ interface DragDropGridProps<T extends DragDropItem> {
   selectionMode: boolean;
   isAnimating: boolean;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>) => React.ReactNode;
+  renderItem: (item: T, index: number, refs: React.Ref<Map<string, HTMLDivElement>>) => React.ReactNode;
   renderSplitMarker?: (item: T, index: number) => React.ReactNode;
 }
 
@@ -77,7 +77,7 @@ const DragDropGrid = <T extends DragDropItem>({
   // Virtualization with react-virtual library
   const rowVirtualizer = useVirtualizer({
     count: Math.ceil(items.length / itemsPerRow),
-    getScrollElement: () => containerRef.current?.closest('[data-scrolling-container]') as Element,
+    getScrollElement: () => containerRef.current?.closest('[data-scrolling-container]')!,
     estimateSize: () => {
       const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
       return parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx;

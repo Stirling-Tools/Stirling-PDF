@@ -1,3 +1,4 @@
+import React from "react";
 import { Stack, PasswordInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemovePasswordParameters } from "../../../hooks/tools/removePassword/useRemovePasswordParameters";

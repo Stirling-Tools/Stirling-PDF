@@ -1,3 +1,4 @@
+import React from 'react';
 import { Notification } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
@@ -23,7 +24,7 @@ const ErrorNotification = ({
   return (
     <Notification
       color={color}
-      title={title || t("error._value", "Error")}
+      title={title ?? t("error._value", "Error")}
       onClose={onClose}
       mb={mb}
     >

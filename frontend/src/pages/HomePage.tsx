@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
@@ -27,9 +28,9 @@ export default function HomePage() {
   // Update document meta when tool changes
   useDocumentMeta({
     title: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
-    description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
+    description: selectedTool?.description ?? t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
     ogTitle: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
-    ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
+    ogDescription: selectedTool?.description ?? t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
     ogImage: selectedToolKey ? `${baseUrl}/og_images/${selectedToolKey}.png` : `${baseUrl}/og_images/home.png`,
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
   });

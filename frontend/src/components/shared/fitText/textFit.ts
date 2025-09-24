@@ -1,6 +1,6 @@
 import { RefObject, useEffect } from 'react';
 
-export type AdjustFontSizeOptions = {
+export interface AdjustFontSizeOptions {
   /** Max font size to start from. Defaults to the element's computed font size. */
   maxFontSizePx?: number;
   /** Minimum scale relative to max size (like React Native's minimumFontScale). Default 0.7 */
@@ -11,7 +11,7 @@ export type AdjustFontSizeOptions = {
   maxLines?: number;
   /** If true, force single-line fitting (uses nowrap). Default false. */
   singleLine?: boolean;
-};
+}
 
 /**
  * Imperative util: progressively reduces font-size until content fits within the element

@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
@@ -148,7 +149,11 @@ const ChangeMetadata = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("changeMetadata.results.title", "Updated PDFs"),
       onFileClick: base.handleThumbnailClick,
-      onUndo: base.handleUndo,
+      onUndo: () => {
+        base.handleUndo().catch((error) => {
+          console.error("Undo operation failed:", error);
+        });
+      },
     },
   });
 };

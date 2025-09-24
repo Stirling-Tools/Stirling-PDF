@@ -78,14 +78,14 @@ class FileStorageService {
 
         request.onerror = () => {
           console.error('IndexedDB add error:', request.error);
-          reject(request.error);
+          reject(new Error(request.error?.message || 'Unknown error occurred'));
         };
         request.onsuccess = () => {
           resolve();
         };
       } catch (error) {
         console.error('Transaction error:', error);
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }
@@ -101,7 +101,7 @@ class FileStorageService {
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       request.onsuccess = () => {
         const record = request.result as StoredStirlingFileRecord | undefined;
         if (!record) {
@@ -142,7 +142,7 @@ class FileStorageService {
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       request.onsuccess = () => {
         const record = request.result as StoredStirlingFileRecord | undefined;
         if (!record) {
@@ -184,7 +184,7 @@ class FileStorageService {
       const request = store.openCursor();
       const stubs: StirlingFileStub[] = [];
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
@@ -203,7 +203,7 @@ class FileStorageService {
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
-              toolHistory: record.toolHistory || [],
+              toolHistory: record.toolHistory ?? [],
               createdAt: Date.now()
             });
           }
@@ -227,7 +227,7 @@ class FileStorageService {
       const request = store.openCursor();
       const leafStubs: StirlingFileStub[] = [];
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
@@ -246,7 +246,7 @@ class FileStorageService {
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
-              toolHistory: record.toolHistory || [],
+              toolHistory: record.toolHistory ?? [],
               createdAt: Date.now()
             });
           }
@@ -269,7 +269,7 @@ class FileStorageService {
       const store = transaction.objectStore(this.storeName);
       const request = store.delete(id);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       request.onsuccess = () => resolve();
     });
   }
@@ -326,7 +326,7 @@ class FileStorageService {
       const store = transaction.objectStore(this.storeName);
       const request = store.clear();
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       request.onsuccess = () => resolve();
     });
   }
@@ -345,7 +345,7 @@ class FileStorageService {
       if ('storage' in navigator && 'estimate' in navigator.storage) {
         const estimate = await navigator.storage.estimate();
         quota = estimate.quota;
-        available = estimate.quota || 0;
+        available = estimate.quota ?? 0;
       }
 
       // Calculate our actual IndexedDB usage from file metadata
@@ -384,7 +384,7 @@ class FileStorageService {
         const store = transaction.objectStore(this.storeName);
         const request = store.get(id);
 
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
         request.onsuccess = () => {
           const record = request.result as StoredStirlingFileRecord | undefined;
           if (record) {
@@ -415,7 +415,7 @@ class FileStorageService {
       const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
         const request = store.get(fileId);
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       });
 
       if (!record) {
@@ -428,7 +428,7 @@ class FileStorageService {
       await new Promise<void>((resolve, reject) => {
         const request = store.put(record);
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       });
 
       return true;
@@ -451,7 +451,7 @@ class FileStorageService {
       const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
         const request = store.get(fileId);
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       });
 
       if (!record) {
@@ -464,7 +464,7 @@ class FileStorageService {
       await new Promise<void>((resolve, reject) => {
         const request = store.put(record);
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(request.error?.message || 'Unknown error occurred'));
       });
 
       return true;

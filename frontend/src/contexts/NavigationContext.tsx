@@ -170,7 +170,7 @@ export const NavigationProvider: React.FC<{
       // Look up the tool in the registry to get its proper workbench
 
       const tool = isValidToolId(toolId)? toolRegistry[toolId] : null;
-      const workbench = tool ? (tool.workbench || getDefaultWorkbench()) : getDefaultWorkbench();
+      const workbench = tool ? (tool.workbench ?? getDefaultWorkbench()) : getDefaultWorkbench();
 
       // Validate toolId and convert to ToolId type
       const validToolId = isValidToolId(toolId) ? toolId : null;

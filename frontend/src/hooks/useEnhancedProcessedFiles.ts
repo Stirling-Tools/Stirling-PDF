@@ -248,7 +248,7 @@ function calculateProcessingProgress(states: Map<string, ProcessingState>): {
   for (const [fileKey, state] of states) {
     fileProgress.set(fileKey, state.progress);
     totalProgress += state.progress;
-    totalEstimatedTime += state.estimatedTimeRemaining || 0;
+    totalEstimatedTime += state.estimatedTimeRemaining ?? 0;
   }
 
   const overall = totalProgress / states.size;
@@ -280,13 +280,13 @@ export function useEnhancedProcessedFile(
 } {
   const result = useEnhancedProcessedFiles(file ? [file] : [], config);
 
-  const processedFile = file ? result.processedFiles.get(file) || null : null;
+  const processedFile = file ? result.processedFiles.get(file) ?? null : null;
   // Note: This is async but we can't await in hook return - consider refactoring if needed
   const fileKey = file ? '' : '';
-  const processingState = fileKey ? result.processingStates.get(fileKey) || null : null;
+  const processingState = fileKey ? result.processingStates.get(fileKey) ?? null : null;
   const isProcessing = !!processingState;
-  const error = processingState?.error?.message || null;
-  const canRetry = processingState?.error?.recoverable || false;
+  const error = processingState?.error?.message ?? null;
+  const canRetry = processingState?.error?.recoverable ?? false;
 
   const actions = {
     cancel: () => {

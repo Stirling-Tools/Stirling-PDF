@@ -3,13 +3,9 @@ import { useMemo } from 'react';
 import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } from '../data/toolsTaxonomy';
 import { useTranslation } from 'react-i18next';
 
-type SubcategoryIdMap = {
-  [subcategoryId in SubcategoryId]: Array<{ id: string /* FIX ME: Should be ToolId */; tool: ToolRegistryEntry }>;
-}
+type SubcategoryIdMap = Record<SubcategoryId, { id: string /* FIX ME: Should be ToolId */; tool: ToolRegistryEntry }[]>
 
-type GroupedTools = {
-  [categoryId in ToolCategoryId]: SubcategoryIdMap;
-};
+type GroupedTools = Record<ToolCategoryId, SubcategoryIdMap>;
 
 export interface SubcategoryGroup {
   subcategoryId: SubcategoryId;
@@ -95,7 +91,7 @@ export function useToolSections(filteredTools: [string /* FIX ME: Should be Tool
     const subMap = {} as SubcategoryIdMap;
     const seen = new Set<string /* FIX ME: Should be ToolId */>();
     filteredTools.forEach(([id, tool]) => {
-      const toolId = id as string /* FIX ME: Should be ToolId */;
+      const toolId = id /* FIX ME: Should be ToolId */;
       if (seen.has(toolId)) return;
       seen.add(toolId);
       const sub = tool.subcategoryId;

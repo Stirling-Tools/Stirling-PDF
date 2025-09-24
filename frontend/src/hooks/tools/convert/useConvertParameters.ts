@@ -42,8 +42,8 @@ export interface ConvertParameters extends BaseParameters {
 
 export interface ConvertParametersHook extends BaseParametersHook<ConvertParameters> {
   getEndpoint: () => string;
-  getAvailableToExtensions: (fromExtension: string) => Array<{value: string, label: string, group: string}>;
-  analyzeFileTypes: (files: Array<{name: string}>) => void;
+  getAvailableToExtensions: (fromExtension: string) => {value: string, label: string, group: string}[];
+  analyzeFileTypes: (files: {name: string}[]) => void;
 }
 
 export const defaultParameters: ConvertParameters = {
@@ -82,7 +82,7 @@ const validateParameters = (params: ConvertParameters): boolean => {
   let supportedToExtensions: string[] = [];
   if (fromExtension.startsWith('file-')) {
     // Dynamic format - use 'any' conversion options
-    supportedToExtensions = CONVERSION_MATRIX['any'] || [];
+    supportedToExtensions = CONVERSION_MATRIX.any || [];
   } else {
     // Regular format - check conversion matrix
     supportedToExtensions = CONVERSION_MATRIX[fromExtension] || [];
@@ -157,7 +157,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
   const getAvailableToExtensions = getAvailableToExtensionsUtil;
 
 
-  const analyzeFileTypes = useCallback((files: Array<{name: string}>) => {
+  const analyzeFileTypes = useCallback((files: {name: string}[]) => {
     if (files.length === 0) {
       // No files - only reset smart detection, keep user's format choices
       baseHook.setParameters(prev => {
@@ -186,11 +186,11 @@ export const useConvertParameters = (): ConvertParametersHook => {
       // and fall back to 'any' conversion logic for the actual endpoint
       if (availableTargets.length === 0 && detectedExt) {
         fromExt = `file-${detectedExt}`; // Create dynamic format identifier
-        availableTargets = CONVERSION_MATRIX['any'] || [];
+        availableTargets = CONVERSION_MATRIX.any || [];
       } else if (availableTargets.length === 0) {
         // No extension detected - fall back to 'any'
         fromExt = 'any';
-        availableTargets = CONVERSION_MATRIX['any'] || [];
+        availableTargets = CONVERSION_MATRIX.any || [];
       }
 
       baseHook.setParameters(prev => {
@@ -243,7 +243,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
       // If no explicit conversion exists for this file type, fall back to 'any'
       if (availableTargets.length === 0) {
         fromExt = 'any';
-        availableTargets = CONVERSION_MATRIX['any'] || [];
+        availableTargets = CONVERSION_MATRIX.any || [];
       }
 
       baseHook.setParameters(prev => {

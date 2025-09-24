@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Stack, Text, Box, ActionIcon, Group, Center } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
@@ -25,7 +25,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
   const [thumbnail, setThumbnail] = useState<string | null>(null);
 
   useEffect(() => {
-    setThumbnail(selectedStub?.thumbnailUrl || null);
+    setThumbnail(selectedStub?.thumbnailUrl ?? null);
   }, [selectedStub]);
 
   // Calculate current angle display

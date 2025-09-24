@@ -16,7 +16,7 @@ export function useAutomateOperation() {
 
     // Execute the automation sequence and return the final results
     const finalResults = await executeAutomationSequence(
-      params.automationConfig!,
+      params.automationConfig,
       files,
       toolRegistry,
       (stepIndex: number, operationName: string) => {

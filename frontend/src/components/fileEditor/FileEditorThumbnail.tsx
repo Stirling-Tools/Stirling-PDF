@@ -60,7 +60,7 @@ const FileEditorThumbnail = ({
   }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
-  const pageCount = file.processedFile?.totalPages || 0;
+  const pageCount = file.processedFile?.totalPages ?? 0;
 
   const handleRef = useRef<HTMLSpanElement | null>(null);
 
@@ -74,7 +74,7 @@ const FileEditorThumbnail = ({
 
   const extUpper = useMemo(() => {
     const m = /\.([a-z0-9]+)$/i.exec(file.name ?? '');
-    return (m?.[1] || '').toUpperCase();
+    return (m?.[1] ?? '').toUpperCase();
   }, [file.name]);
 
   const pageLabel = useMemo(

@@ -15,7 +15,7 @@ export async function processResponse(
   originalFiles: File[],
   filePrefix?: string,
   responseHandler?: ResponseHandler,
-  responseHeaders?: Record<string, any>
+  responseHeaders?: Record<string, string | undefined>
 ): Promise<File[]> {
   if (responseHandler) {
     const out = await responseHandler(blob, originalFiles);
@@ -25,10 +25,12 @@ export async function processResponse(
   // Check if we should use the backend-provided filename from headers
   // Only when responseHeaders are explicitly provided (indicating the operation requested this)
   if (responseHeaders) {
-    const contentDisposition = responseHeaders['content-disposition'];
+    const contentDisposition = typeof responseHeaders['content-disposition'] === 'string' 
+      ? responseHeaders['content-disposition'] 
+      : undefined;
     const backendFilename = getFilenameFromHeaders(contentDisposition);
     if (backendFilename) {
-      const type = blob.type || responseHeaders['content-type'] || 'application/octet-stream';
+      const type = blob.type || (typeof responseHeaders['content-type'] === 'string' ? responseHeaders['content-type'] : 'application/octet-stream');
       return [new File([blob], backendFilename, { type })];
     }
     // If preserveBackendFilename was requested but no Content-Disposition header found,

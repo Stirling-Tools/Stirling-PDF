@@ -1,6 +1,6 @@
 import type { AddStampParameters } from './useAddStampParameters';
 
-export type ContainerSize = { width: number; height: number };
+export interface ContainerSize { width: number; height: number }
 export type PageSizePts = { widthPts: number; heightPts: number } | null;
 export type ImageMeta = { url: string; width: number; height: number } | null;
 
@@ -48,11 +48,11 @@ export const getFirstSelectedPage = (input: string): number => {
   return 1;
 };
 
-export type StampPreviewStyle = { container: any; item: any };
+export interface StampPreviewStyle { container: any; item: any }
 
 // Unified per-alphabet preview adjustments
 export type Alphabet = 'roman' | 'arabic' | 'japanese' | 'korean' | 'chinese' | 'thai';
-export type AlphabetTweaks = { scale: number; rowOffsetRem: [number, number, number]; lineHeight: number; capHeightRatio: number; defaultFontSize: number };
+export interface AlphabetTweaks { scale: number; rowOffsetRem: [number, number, number]; lineHeight: number; capHeightRatio: number; defaultFontSize: number }
 export const ALPHABET_PREVIEW_TWEAKS: Record<Alphabet, AlphabetTweaks> = {
   // [top, middle, bottom] row offsets in rem
   roman: { scale: 1.0/1.18, rowOffsetRem: [0, 1, 2.2], lineHeight: 1.28, capHeightRatio: 0.70, defaultFontSize: 80 },

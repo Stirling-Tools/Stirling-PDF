@@ -81,7 +81,7 @@ function parseCsvFallback(input: string, max: number): Set<number> {
   const result = new Set<number>();
   const parts = input.split(',').map(p => p.trim()).filter(Boolean);
   for (const part of parts) {
-    const rangeMatch = part.match(/^(\d+)\s*-\s*(\d+)$/);
+    const rangeMatch = /^(\d+)\s*-\s*(\d+)$/.exec(part);
     if (rangeMatch) {
       const start = clampToRange(parseInt(rangeMatch[1], 10), 1, max);
       const end = clampToRange(parseInt(rangeMatch[2], 10), 1, max);
@@ -108,7 +108,7 @@ function clampToRange(v: number, min: number, max: number): number {
 class ExpressionParser {
   private readonly src: string;
   private readonly max: number;
-  private idx: number = 0;
+  private idx = 0;
 
   constructor(source: string, maxPages: number) {
     this.src = source;
@@ -274,7 +274,7 @@ class ExpressionParser {
     if (!word) return null;
     const lower = word.toLowerCase();
     if (lower === 'even' || lower === 'odd') {
-      return lower as 'even' | 'odd';
+      return lower;
     }
     // Not a keyword; rewind
     this.idx = start;
@@ -317,7 +317,7 @@ class ExpressionParser {
 
   private tryReadNumber(): number | null {
     this.skipWs();
-    const m = this.src.slice(this.idx).match(/^(\d+)/);
+    const m = /^(\d+)/.exec(this.src.slice(this.idx));
     if (!m) return null;
     this.consume(m[1].length);
     const num = parseInt(m[1], 10);
@@ -332,7 +332,7 @@ class ExpressionParser {
 
   private readWord(): string | null {
     this.skipWs();
-    const m = this.src.slice(this.idx).match(/^([A-Za-z]+)/);
+    const m = /^([A-Za-z]+)/.exec(this.src.slice(this.idx));
     if (!m) return null;
     this.consume(m[1].length);
     return m[1];

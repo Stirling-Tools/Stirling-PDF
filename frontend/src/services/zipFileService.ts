@@ -81,7 +81,7 @@ export class ZipFileService {
         }
 
         fileCount++;
-        const uncompressedSize = getData(zipEntry)?.uncompressedSize || 0;
+        const uncompressedSize = getData(zipEntry)?.uncompressedSize ?? 0;
         totalSize += uncompressedSize;
 
         // Check if file is a PDF
@@ -287,7 +287,7 @@ export class ZipFileService {
    */
   private sanitizeFilename(filename: string): string {
     // Remove directory path and get just the filename
-    const basename = filename.split('/').pop() || filename;
+    const basename = filename.split('/').pop() ?? filename;
 
     // Remove or replace unsafe characters
     return basename

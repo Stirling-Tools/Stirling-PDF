@@ -40,8 +40,8 @@ export function insertOperatorSmart(currentInput: string, op: LogicalOperator): 
   const tokens: string[] = [];
   let rest = text;
   for (let i = 0; i < 2; i++) {
-    const m = rest.match(/(?:\s*)(?:(&|\||,|!|\band\b|\bor\b|\bnot\b))\s*$/i);
-    if (!m || m.index === undefined) break;
+    const m = /(?:\s*)(?:(&|\||,|!|\band\b|\bor\b|\bnot\b))\s*$/i.exec(rest);
+    if (m?.index === undefined) break;
     const raw = m[1].toLowerCase();
     const word = raw === '&' ? 'and' : raw === '|' || raw === ',' ? 'or' : raw === '!' ? 'not' : raw;
     tokens.unshift(word);

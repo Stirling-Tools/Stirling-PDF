@@ -32,7 +32,7 @@ function ReviewStepContent<TParams = unknown>({
   const { t } = useTranslation();
   const stepRef = useRef<HTMLDivElement>(null);
 
-  const handleUndo = async () => {
+  const handleUndo = () => {
     try {
       onUndo();
     } catch (error) {
@@ -50,7 +50,7 @@ function ReviewStepContent<TParams = unknown>({
   // Auto-scroll to bottom when content appears
   useEffect(() => {
     if (stepRef.current && (previewFiles.length > 0 || operation.downloadUrl || operation.errorMessage)) {
-      const scrollableContainer = stepRef.current.closest('[style*="overflow: auto"]') as HTMLElement;
+      const scrollableContainer = stepRef.current.closest('[style*="overflow: auto"]')!;
       if (scrollableContainer) {
         setTimeout(() => {
           scrollableContainer.scrollTo({

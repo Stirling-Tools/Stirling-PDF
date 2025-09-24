@@ -12,28 +12,28 @@ interface MetaOptions {
 
 export const useDocumentMeta = (meta: MetaOptions) => {
   const { i18n } = useTranslation();
-  
+
   useEffect(() => {
     const originalTitle = document.title;
-    const originalDescription = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-    
+    const originalDescription = document.querySelector('meta[name="description"]')?.getAttribute('content') ?? '';
+
     // Store original OpenGraph values for cleanup
     const ogProperties = ['og:site_name', 'og:locale', 'og:title', 'og:description', 'og:image', 'og:image:width', 'og:image:height', 'og:url', 'og:type'];
     const originalOgValues = new Map<string, string | null>();
-    
+
     ogProperties.forEach(property => {
       const element = document.querySelector(`meta[property="${property}"]`);
-      originalOgValues.set(property, element?.getAttribute('content') || null);
+      originalOgValues.set(property, element?.getAttribute('content') ?? null);
     });
-    
+
     // Update title
     if (meta.title) {
       document.title = meta.title;
     }
-    
+
     // Update or create meta tags
     const updateOrCreateMeta = (name: string, content: string) => {
-      let metaElement = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement;
+      let metaElement = document.querySelector(`meta[name="${name}"]`)!;
       if (!metaElement) {
         metaElement = document.createElement('meta');
         metaElement.name = name;
@@ -43,7 +43,7 @@ export const useDocumentMeta = (meta: MetaOptions) => {
     };
 
     const updateOrCreateProperty = (property: string, content: string) => {
-      let metaElement = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+      let metaElement = document.querySelector(`meta[property="${property}"]`)!;
       if (!metaElement) {
         metaElement = document.createElement('meta');
         metaElement.setAttribute('property', property);
@@ -60,7 +60,7 @@ export const useDocumentMeta = (meta: MetaOptions) => {
     // Update OpenGraph tags
     updateOrCreateProperty('og:site_name', 'Stirling PDF');
     updateOrCreateProperty('og:locale', i18n.language.replace('-', '_'));
-    
+
     if (meta.ogTitle) {
       updateOrCreateProperty('og:title', meta.ogTitle);
     }
@@ -84,10 +84,10 @@ export const useDocumentMeta = (meta: MetaOptions) => {
       if (originalDescription) {
         updateOrCreateMeta('description', originalDescription);
       }
-      
+
       // Restore or remove OpenGraph tags
       originalOgValues.forEach((originalValue, property) => {
-        const element = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+        const element = document.querySelector(`meta[property="${property}"]`)!;
         if (element) {
           if (originalValue !== null) {
             element.content = originalValue;

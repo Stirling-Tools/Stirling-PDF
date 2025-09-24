@@ -39,7 +39,7 @@ const renderTooltipTitle = (
   title: string,
   tooltip: ToolStepProps['tooltip'],
   isCollapsed: boolean,
-  alwaysShowTooltip: boolean = false
+  alwaysShowTooltip = false
 ) => {
   if (tooltip && (!isCollapsed || alwaysShowTooltip)) {
     return (
@@ -164,13 +164,16 @@ export function createToolSteps() {
     const isVisible = props.isVisible !== false;
     const currentStepNumber = isVisible ? stepNumber++ : undefined;
 
-    const step = React.createElement(ToolStep, {
-      ...props,
-      title,
-      _stepNumber: currentStepNumber,
-      children,
-      key: `step-${title.toLowerCase().replace(/\s+/g, '-')}`
-    });
+    const step = React.createElement(
+      ToolStep,
+      {
+        ...props,
+        title,
+        _stepNumber: currentStepNumber,
+        key: `step-${title.toLowerCase().replace(/\s+/g, '-')}`
+      },
+      children
+    );
 
     steps.push(step);
     return step;

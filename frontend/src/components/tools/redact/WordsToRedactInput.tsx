@@ -82,7 +82,7 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
           size="sm"
           variant="light"
           onClick={addWord}
-          disabled={disabled || !currentWord.trim()}
+          disabled={disabled ?? !currentWord.trim()}
         >
           + {t('redact.auto.wordsToRedact.add', 'Add')}
         </Button>

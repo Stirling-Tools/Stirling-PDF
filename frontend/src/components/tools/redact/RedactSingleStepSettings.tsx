@@ -1,3 +1,4 @@
+import React from "react";
 import { Stack, Divider } from "@mantine/core";
 import { RedactParameters } from "../../../hooks/tools/redact/useRedactParameters";
 import RedactModeSelector from "./RedactModeSelector";

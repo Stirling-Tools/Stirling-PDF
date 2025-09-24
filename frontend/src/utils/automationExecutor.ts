@@ -11,7 +11,7 @@ import { processResponse } from './toolResponseProcessor';
  */
 export const executeToolOperation = async (
   operationName: string,
-  parameters: any,
+  parameters: Record<string, unknown>,
   files: File[],
   toolRegistry: ToolRegistry
 ): Promise<File[]> => {
@@ -23,7 +23,7 @@ export const executeToolOperation = async (
  */
 export const executeToolOperationWithPrefix = async (
   operationName: string,
-  parameters: any,
+  parameters: Record<string, unknown>,
   files: File[],
   toolRegistry: ToolRegistry,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
@@ -54,7 +54,7 @@ export const executeToolOperationWithPrefix = async (
         : config.endpoint;
 
       console.log(`🌐 Making multi-file request to: ${endpoint}`);
-      const formData = (config.buildFormData as (params: any, files: File[]) => FormData)(parameters, files);
+      const formData = (config.buildFormData as (params: Record<string, unknown>, files: File[]) => FormData)(parameters, files);
       console.log(`📤 FormData entries:`, Array.from(formData.entries()));
 
       const response = await axios.post(endpoint, formData, {
@@ -70,11 +70,13 @@ export const executeToolOperationWithPrefix = async (
           (response.headers && response.headers['content-type'] === 'application/pdf')) {
         // Single PDF response (e.g. split with merge option) - use processResponse to respect preserveBackendFilename
         const processedFiles = await processResponse(
-          response.data,
+          response.data as Blob,
           files,
           filePrefix,
           undefined,
-          config.preserveBackendFilename ? response.headers : undefined
+          config.preserveBackendFilename ? Object.fromEntries(
+            Object.entries(response.headers || {}).map(([key, value]: [string, unknown]) => [key, String(value)])
+          ) : undefined
         );
         result = {
           success: true,
@@ -113,7 +115,7 @@ export const executeToolOperationWithPrefix = async (
           : config.endpoint;
 
         console.log(`🌐 Making single-file request ${i+1}/${files.length} to: ${endpoint} for file: ${file.name}`);
-        const formData = (config.buildFormData as (params: any, file: File) => FormData)(parameters, file);
+        const formData = (config.buildFormData as (params: Record<string, unknown>, file: File) => FormData)(parameters, file);
         console.log(`📤 FormData entries:`, Array.from(formData.entries()));
 
         const response = await axios.post(endpoint, formData, {
@@ -141,7 +143,7 @@ export const executeToolOperationWithPrefix = async (
 
   } catch (error: any) {
     console.error(`Tool operation ${operationName} failed:`, error);
-    throw new Error(`${operationName} operation failed: ${error.response?.data || error.message}`);
+    throw new Error(`${operationName} operation failed: ${error.response?.data ?? error.message}`);
   }
 };
 
@@ -156,9 +158,9 @@ export const executeAutomationSequence = async (
   onStepComplete?: (stepIndex: number, resultFiles: File[]) => void,
   onStepError?: (stepIndex: number, error: string) => void
 ): Promise<File[]> => {
-  console.log(`🚀 Starting automation sequence: ${automation.name || 'Unnamed'}`);
+  console.log(`🚀 Starting automation sequence: ${automation.name ?? 'Unnamed'}`);
   console.log(`📁 Initial files: ${initialFiles.length}`);
-  console.log(`🔧 Operations: ${automation.operations?.length || 0}`);
+  console.log(`🔧 Operations: ${automation.operations?.length ?? 0}`);
 
   if (!automation?.operations || automation.operations.length === 0) {
     throw new Error('No operations in automation');
@@ -172,14 +174,14 @@ export const executeAutomationSequence = async (
 
     console.log(`📋 Step ${i + 1}/${automation.operations.length}: ${operation.operation}`);
     console.log(`📄 Input files: ${currentFiles.length}`);
-    console.log(`⚙️ Parameters:`, operation.parameters || {});
+    console.log(`⚙️ Parameters:`, operation.parameters ?? {});
 
     try {
       onStepStart?.(i, operation.operation);
 
       const resultFiles = await executeToolOperationWithPrefix(
         operation.operation,
-        operation.parameters || {},
+        operation.parameters ?? {},
         currentFiles,
         toolRegistry,
         i === automation.operations.length - 1 ? automationPrefix : '' // Only add prefix to final step

@@ -14,12 +14,12 @@ const HoverOverlay: React.FC<HoverOverlayProps> = ({
   children
 }) => {
   const defaultMouseEnter = (e: React.MouseEvent) => {
-    const overlay = e.currentTarget.querySelector('.hover-overlay') as HTMLElement;
+    const overlay = e.currentTarget.querySelector('.hover-overlay')!;
     if (overlay) overlay.style.opacity = '1';
   };
 
   const defaultMouseLeave = (e: React.MouseEvent) => {
-    const overlay = e.currentTarget.querySelector('.hover-overlay') as HTMLElement;
+    const overlay = e.currentTarget.querySelector('.hover-overlay')!;
     if (overlay) overlay.style.opacity = '0';
   };
 

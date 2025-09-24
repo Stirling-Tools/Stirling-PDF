@@ -16,7 +16,7 @@ export function useNavigationUrlSync(
   handleToolSelect: (toolId: string) => void,
   clearToolSelection: () => void,
   registry: ToolRegistry,
-  enableSync: boolean = true
+  enableSync = true
 ) {
   const hasInitialized = useRef(false);
   const prevSelectedTool = useRef<ToolId | null>(null);

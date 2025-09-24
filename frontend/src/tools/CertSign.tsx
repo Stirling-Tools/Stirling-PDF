@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import CertificateTypeSettings from "../components/tools/certSign/CertificateTypeSettings";
@@ -14,14 +15,14 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 
 const CertSign = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  
+
   const base = useBaseTool(
     'certSign',
     useCertSignParameters,
     useCertSignOperation,
     props
   );
-  
+
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
   const signModeTips = useSignModeTips();
@@ -29,12 +30,12 @@ const CertSign = (props: BaseToolProps) => {
   // Check if certificate files are configured for appearance step
   const areCertFilesConfigured = () => {
     const params = base.params.parameters;
-    
+
     // Auto mode (server certificate) - always configured
     if (params.signMode === 'AUTO') {
       return true;
     }
-    
+
     // Manual mode - check for required files based on cert type
     switch (params.certType) {
       case 'PEM':

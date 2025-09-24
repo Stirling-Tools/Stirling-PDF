@@ -82,10 +82,10 @@ interface RotationState {
 
 interface SearchResult {
   pageIndex: number;
-  rects: Array<{
+  rects: {
     origin: { x: number; y: number };
     size: { width: number; height: number };
-  }>;
+  }[];
 }
 
 interface SearchState {
@@ -179,7 +179,7 @@ interface ViewerContextType {
     clear: () => void;
   };
 
-  // Bridge registration - internal use by bridges  
+  // Bridge registration - internal use by bridges
   registerBridge: (type: string, ref: BridgeRef) => void;
 }
 
@@ -247,35 +247,35 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   // State getters - read from bridge refs
   const getScrollState = (): ScrollState => {
-    return bridgeRefs.current.scroll?.state || { currentPage: 1, totalPages: 0 };
+    return bridgeRefs.current.scroll?.state ?? { currentPage: 1, totalPages: 0 };
   };
 
   const getZoomState = (): ZoomState => {
-    return bridgeRefs.current.zoom?.state || { currentZoom: 1.4, zoomPercent: 140 };
+    return bridgeRefs.current.zoom?.state ?? { currentZoom: 1.4, zoomPercent: 140 };
   };
 
   const getPanState = (): PanState => {
-    return bridgeRefs.current.pan?.state || { isPanning: false };
+    return bridgeRefs.current.pan?.state ?? { isPanning: false };
   };
 
   const getSelectionState = (): SelectionState => {
-    return bridgeRefs.current.selection?.state || { hasSelection: false };
+    return bridgeRefs.current.selection?.state ?? { hasSelection: false };
   };
 
   const getSpreadState = (): SpreadState => {
-    return bridgeRefs.current.spread?.state || { spreadMode: SpreadMode.None, isDualPage: false };
+    return bridgeRefs.current.spread?.state ?? { spreadMode: SpreadMode.None, isDualPage: false };
   };
 
   const getRotationState = (): RotationState => {
-    return bridgeRefs.current.rotation?.state || { rotation: 0 };
+    return bridgeRefs.current.rotation?.state ?? { rotation: 0 };
   };
 
   const getSearchState = (): SearchState => {
-    return bridgeRefs.current.search?.state || { results: null, activeIndex: 0 };
+    return bridgeRefs.current.search?.state ?? { results: null, activeIndex: 0 };
   };
 
   const getThumbnailAPI = () => {
-    return bridgeRefs.current.thumbnail?.api || null;
+    return bridgeRefs.current.thumbnail?.api ?? null;
   };
 
   // Action handlers - call APIs directly

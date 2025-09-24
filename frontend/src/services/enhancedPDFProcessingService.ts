@@ -433,7 +433,7 @@ export class EnhancedPDFProcessingService {
    */
   cancelProcessing(fileKey: string): void {
     const state = this.processing.get(fileKey);
-    if (state && state.cancellationToken) {
+    if (state?.cancellationToken) {
       state.cancellationToken.abort();
       state.status = 'cancelled';
       this.notifyListeners();

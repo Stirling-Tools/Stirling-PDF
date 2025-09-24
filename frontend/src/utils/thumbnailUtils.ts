@@ -86,7 +86,7 @@ function generatePlaceholderThumbnail(file: File): string {
   const ctx = canvas.getContext('2d')!;
 
   // Get file extension for color theming
-  const extension = file.name.split('.').pop()?.toUpperCase() || 'FILE';
+  const extension = file.name.split('.').pop()?.toUpperCase() ?? 'FILE';
   const colorScheme = getFileTypeColorScheme(extension);
 
   // Create gradient background
@@ -173,7 +173,7 @@ function getFileTypeColorScheme(extension: string): ColorScheme {
     'DEFAULT': { bgTop: '#74B9FF20', bgBottom: '#74B9FF10', border: '#74B9FF40', icon: '#74B9FF', badge: '#74B9FF', textPrimary: '#FFFFFF', textSecondary: '#666666' }
   };
 
-  return schemes[extension] || schemes['DEFAULT'];
+  return schemes[extension] || schemes.DEFAULT;
 }
 
 /**
@@ -255,7 +255,7 @@ function drawLargeLockIcon(ctx: CanvasRenderingContext2D, centerX: number, cente
 /**
  * Generate standard PDF thumbnail by rendering first page
  */
-async function generateStandardPDFThumbnail(pdf: any, scale: number): Promise<string> {
+async function generateStandardPDFThumbnail(pdf: unknown, scale: number): Promise<string> {
   const page = await pdf.getPage(1);
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
@@ -338,7 +338,7 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error);
+      reader.onerror = () => reject(new Error(reader.error?.message ?? 'FileReader error'));
       reader.readAsDataURL(file);
     });
   }

@@ -40,7 +40,7 @@ export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null)
 
           // Try to load file from IndexedDB using new context
           if (file.id && indexedDB) {
-            const loadedFile = await indexedDB.loadFile(file.id as FileId);
+            const loadedFile = await indexedDB.loadFile(file.id);
             if (!loadedFile) {
               throw new Error('File not found in IndexedDB');
             }
@@ -57,7 +57,7 @@ export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null)
             // Save thumbnail to IndexedDB for persistence
             if (file.id && indexedDB && thumbnail) {
               try {
-                await indexedDB.updateThumbnail(file.id as FileId, thumbnail);
+                await indexedDB.updateThumbnail(file.id, thumbnail);
               } catch (error) {
                 console.warn('Failed to save thumbnail to IndexedDB:', error);
               }

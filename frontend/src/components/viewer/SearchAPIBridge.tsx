@@ -4,10 +4,10 @@ import { useViewer } from '../../contexts/ViewerContext';
 
 interface SearchResult {
   pageIndex: number;
-  rects: Array<{
+  rects: {
     origin: { x: number; y: number };
     size: { width: number; height: number };
-  }>;
+  }[];
 }
 
 /**
@@ -17,7 +17,7 @@ interface SearchResult {
 export function SearchAPIBridge() {
   const { provides: search } = useSearch();
   const { registerBridge } = useViewer();
-  
+
   const [localState, setLocalState] = useState({
     results: null as SearchResult[] | null,
     activeIndex: 0
@@ -29,10 +29,10 @@ export function SearchAPIBridge() {
 
     const unsubscribe = search.onSearchResultStateChange?.((state: any) => {
       const newState = {
-        results: state?.results || null,
-        activeIndex: (state?.activeResultIndex || 0) + 1 // Convert to 1-based index
+        results: state?.results ?? null,
+        activeIndex: (state?.activeResultIndex ?? 0) + 1 // Convert to 1-based index
       };
-      
+
       setLocalState(prevState => {
         // Only update if state actually changed
         if (prevState.results !== newState.results || prevState.activeIndex !== newState.activeIndex) {

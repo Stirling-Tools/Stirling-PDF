@@ -14,7 +14,7 @@ export function updateStorageStatsIncremental(
   files: File[] = []
 ): StorageStats {
   const filesSizeTotal = files.reduce((total, file) => total + file.size, 0);
-  
+
   switch (operation) {
     case 'add':
       return {
@@ -23,7 +23,7 @@ export function updateStorageStatsIncremental(
         available: currentStats.available - filesSizeTotal,
         fileCount: currentStats.fileCount + files.length
       };
-      
+
     case 'remove':
       return {
         ...currentStats,
@@ -31,15 +31,15 @@ export function updateStorageStatsIncremental(
         available: currentStats.available + filesSizeTotal,
         fileCount: Math.max(0, currentStats.fileCount - files.length)
       };
-      
+
     case 'clear':
       return {
         ...currentStats,
         used: 0,
-        available: currentStats.quota || currentStats.available,
+        available: currentStats.quota ?? currentStats.available,
         fileCount: 0
       };
-      
+
     default:
       return currentStats;
   }
@@ -50,15 +50,15 @@ export function updateStorageStatsIncremental(
  */
 export function checkStorageWarnings(stats: StorageStats): string | null {
   if (!stats.quota || stats.used === 0) return null;
-  
+
   const usagePercent = (stats.used / stats.quota) * 100;
-  
+
   if (usagePercent > 90) {
     return 'Warning: Storage is nearly full (>90%). Browser may start clearing data.';
   } else if (usagePercent > 80) {
     return 'Storage is getting full (>80%). Consider removing old files.';
   }
-  
+
   return null;
 }
 

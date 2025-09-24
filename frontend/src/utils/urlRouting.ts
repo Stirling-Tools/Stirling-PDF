@@ -57,7 +57,7 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
 /**
  * Update URL and fire analytics pixel
  */
-function updateUrl(newPath: string, searchParams: URLSearchParams, replace: boolean = false): void {
+function updateUrl(newPath: string, searchParams: URLSearchParams, replace = false): void {
   const currentPath = window.location.pathname;
   const queryString = searchParams.toString();
   const fullUrl = newPath + (queryString ? `?${queryString}` : '');
@@ -76,7 +76,7 @@ function updateUrl(newPath: string, searchParams: URLSearchParams, replace: bool
 /**
  * Update the URL to reflect the current tool selection
  */
-export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace: boolean = false): void {
+export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace = false): void {
   const tool = registry[toolId];
   if (!tool) {
     console.warn(`Tool ${toolId} not found in registry`);
@@ -95,7 +95,7 @@ export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace:
 /**
  * Clear tool routing and return to home page
  */
-export function clearToolRoute(replace: boolean = false): void {
+export function clearToolRoute(replace = false): void {
   const searchParams = new URLSearchParams(window.location.search);
   searchParams.delete('tool');
 

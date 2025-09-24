@@ -32,7 +32,7 @@ import * as React from 'react';
 */
 
 
-export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callback?: (isOverflow: boolean) => void) => {
+export const useIsOverflowing = (ref: React.Ref<HTMLElement | null>, callback?: (isOverflow: boolean) => void) => {
   // State to track overflow status
   const [isOverflow, setIsOverflow] = React.useState<boolean | undefined>(undefined);
 
@@ -42,11 +42,11 @@ export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callb
     // Function to check if element is overflowing
     const trigger = () => {
       if (!current) return;
-      
+
       // Compare scroll height (total content height) vs client height (visible height)
       const hasOverflow = current.scrollHeight > current.clientHeight;
       setIsOverflow(hasOverflow);
-      
+
       // Call optional callback with overflow state
       if (callback) callback(hasOverflow);
     };
@@ -56,13 +56,13 @@ export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callb
       if ('ResizeObserver' in window) {
         const resizeObserver = new ResizeObserver(trigger);
         resizeObserver.observe(current);
-        
+
         // Cleanup function to disconnect observer
         return () => {
           resizeObserver.disconnect();
         };
       }
-      
+
       // Fallback for browsers without ResizeObserver support
       // Add a small delay to ensure the element is fully rendered
       setTimeout(trigger, 0);
@@ -70,4 +70,4 @@ export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callb
   }, [callback, ref]);
 
   return isOverflow;
-}; 
+};

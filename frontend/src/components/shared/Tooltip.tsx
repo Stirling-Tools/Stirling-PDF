@@ -268,7 +268,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       triggerRef.current = node || null;
       const originalRef = (children as any).ref;
       if (typeof originalRef === 'function') originalRef(node);
-      else if (originalRef && typeof originalRef === 'object') (originalRef as any).current = node;
+      else if (originalRef && typeof originalRef === 'object') (originalRef).current = node;
     },
     'aria-describedby': open ? tooltipIdRef.current : undefined,
     onPointerEnter: handlePointerEnter,

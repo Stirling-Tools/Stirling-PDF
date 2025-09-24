@@ -51,7 +51,7 @@ export function groupFilesByOriginal(StirlingFileStubs: StirlingFileStub[]): Map
       }
 
       // Check for infinite loops before moving to next
-      if (nextFile && lineagePath.some(file => file.id === nextFile!.id)) {
+      if (nextFile && lineagePath.some(file => file.id === nextFile.id)) {
         break;
       }
 

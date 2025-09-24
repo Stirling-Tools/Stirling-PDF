@@ -1,7 +1,7 @@
 import React, { CSSProperties, useMemo, useRef } from 'react';
 import { useAdjustFontSizeToFit } from './fitText/textFit';
 
-type FitTextProps = {
+interface FitTextProps {
   text: string;
   fontSize?: number; // px; if omitted, uses computed style
   minimumFontScale?: number; // 0..1
@@ -14,7 +14,7 @@ type FitTextProps = {
    * when multi-line is enabled. Defaults to '/'. Ignored when lines === 1.
    */
   softBreakChars?: string | string[];
-};
+}
 
 const FitText: React.FC<FitTextProps> = ({
   text,

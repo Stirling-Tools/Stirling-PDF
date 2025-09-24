@@ -20,7 +20,7 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
 
   const getToolName = useCallback((operation: string) => {
     const tool = toolRegistry?.[operation as keyof ToolRegistry] as any;
-    return tool?.name || t(`tools.${operation}.name`, operation);
+    return tool?.name ?? t(`tools.${operation}.name`, operation);
   }, [toolRegistry, t]);
 
   const getToolDefaultParameters = useCallback((operation: string): Record<string, any> => {
@@ -35,8 +35,8 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
   useEffect(() => {
     if ((mode === AutomationMode.SUGGESTED || mode === AutomationMode.EDIT) && existingAutomation) {
       setAutomationName(existingAutomation.name || '');
-      setAutomationDescription(existingAutomation.description || '');
-      setAutomationIcon(existingAutomation.icon || '');
+      setAutomationDescription(existingAutomation.description ?? '');
+      setAutomationIcon(existingAutomation.icon ?? '');
 
       const operations = existingAutomation.operations || [];
       const tools = operations.map((op, index) => {

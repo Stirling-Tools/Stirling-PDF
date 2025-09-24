@@ -39,10 +39,10 @@ export class ResourceManager {
    * Create a File with proper naming convention
    */
   static createResultFile(
-    data: BlobPart, 
-    originalName: string, 
+    data: BlobPart,
+    originalName: string,
     prefix: string = AUTOMATION_CONSTANTS.PROCESSED_FILE_PREFIX,
-    type: string = 'application/pdf'
+    type = 'application/pdf'
   ): File {
     return new File([data], `${prefix}${originalName}`, { type });
   }
@@ -53,8 +53,8 @@ export class ResourceManager {
   static createTimestampedFile(
     data: BlobPart,
     prefix: string,
-    extension: string = '.pdf',
-    type: string = 'application/pdf'
+    extension = '.pdf',
+    type = 'application/pdf'
   ): File {
     const timestamp = Date.now();
     return new File([data], `${prefix}${timestamp}${extension}`, { type });

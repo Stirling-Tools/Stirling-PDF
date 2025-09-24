@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileSelection } from "../contexts/FileContext";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
@@ -41,7 +41,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         onComplete(operation.files);
       }
     } catch (error: any) {
-      onError?.(error?.message || t("AddStampRequest.error.failed", "Add stamp operation failed"));
+      onError?.(error?.message ?? t("AddStampRequest.error.failed", "Add stamp operation failed"));
     }
   };
 
@@ -70,7 +70,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const getSteps = () => {
     const steps: any[] = [];
 
-    // Step 1: Stamp Setup 
+    // Step 1: Stamp Setup
     steps.push({
       title: t("AddStampRequest.stampSetup", "Stamp Setup"),
       isCollapsed: accordion.getCollapsedState(AddStampStep.STAMP_SETUP),
@@ -114,7 +114,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 label={t('AddStampRequest.alphabet', 'Alphabet')}
                 value={params.parameters.alphabet}
                 onChange={(v) => {
-                  const nextAlphabet = (v as any) || 'roman';
+                  const nextAlphabet = (v as any) ?? 'roman';
                   params.updateParameter('alphabet', nextAlphabet);
                   const nextDefault = getDefaultFontSizeForAlphabet(nextAlphabet);
                   params.updateParameter('fontSize', nextDefault);
@@ -245,7 +245,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           {params.parameters._activePill === 'fontSize' && (
             <Stack gap="xs">
               <Text className={styles.labelText}>
-                {params.parameters.stampType === 'image' 
+                {params.parameters.stampType === 'image'
                   ? t('AddStampRequest.imageSize', 'Image Size')
                   : t('AddStampRequest.fontSize', 'Font Size')
                 }
@@ -263,7 +263,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 />
                 <Slider
                   value={params.parameters.fontSize}
-                  onChange={(v) => params.updateParameter('fontSize', v as number)}
+                  onChange={(v) => params.updateParameter('fontSize', v)}
                   min={1}
                   max={400}
                   step={1}
@@ -289,7 +289,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 />
                 <Slider
                   value={params.parameters.rotation}
-                  onChange={(v) => params.updateParameter('rotation', v as number)}
+                  onChange={(v) => params.updateParameter('rotation', v)}
                   min={-180}
                   max={180}
                   step={1}
@@ -314,7 +314,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 />
                 <Slider
                   value={params.parameters.opacity}
-                  onChange={(v) => params.updateParameter('opacity', v as number)}
+                  onChange={(v) => params.updateParameter('opacity', v)}
                   min={0}
                   max={100}
                   step={1}
@@ -341,7 +341,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             <Select
               label={t('AddStampRequest.margin', 'Margin')}
               value={params.parameters.customMargin}
-              onChange={(v) => params.updateParameter('customMargin', (v as any) || 'medium')}
+              onChange={(v) => params.updateParameter('customMargin', (v as any) ?? 'medium')}
               data={[
                 { value: 'small', label: t('margin.small', 'Small') },
                 { value: 'medium', label: t('margin.medium', 'Medium') },

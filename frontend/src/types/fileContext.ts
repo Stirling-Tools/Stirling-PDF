@@ -14,14 +14,14 @@ export interface ProcessedFilePage {
   pageNumber?: number;
   rotation?: number;
   splitBefore?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ProcessedFileMetadata {
   pages: ProcessedFilePage[];
   totalPages?: number;
   lastProcessed?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -81,8 +81,8 @@ export interface StirlingFile extends File {
 
 // Type guard to check if a File object has an embedded fileId
 export function isStirlingFile(file: File): file is StirlingFile {
-  return 'fileId' in file && typeof (file as any).fileId === 'string' &&
-         'quickKey' in file && typeof (file as any).quickKey === 'string';
+  return 'fileId' in file && typeof (file as unknown as { fileId: string }).fileId === 'string' &&
+         'quickKey' in file && typeof (file as { quickKey: string }).quickKey === 'string';
 }
 
 // Create a StirlingFile from a regular File object
@@ -92,7 +92,7 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
     return file; // Already has fileId and quickKey properties
   }
 
-  const fileId = id || createFileId();
+  const fileId = id ?? createFileId();
   const quickKey = createQuickKey(file);
 
   // Use Object.defineProperty to add properties while preserving the original File object
@@ -126,12 +126,12 @@ export function extractFiles(files: StirlingFile[]): File[] {
 
 // Check if an object is a File or StirlingFile (replaces instanceof File checks)
 export function isFileObject(obj: any): obj is File | StirlingFile {
-  return obj &&
-         typeof obj.name === 'string' &&
-         typeof obj.size === 'number' &&
-         typeof obj.type === 'string' &&
-         typeof obj.lastModified === 'number' &&
-         typeof obj.arrayBuffer === 'function';
+  return typeof obj === 'object' && obj !== null &&
+         'name' in obj && typeof (obj as { name: unknown }).name === 'string' &&
+         'size' in obj && typeof (obj as { size: unknown }).size === 'number' &&
+         'type' in obj && typeof (obj as { type: unknown }).type === 'string' &&
+         'lastModified' in obj && typeof (obj as { lastModified: unknown }).lastModified === 'number' &&
+         'arrayBuffer' in obj && typeof (obj as { arrayBuffer: unknown }).arrayBuffer === 'function';
 }
 
 
@@ -142,7 +142,7 @@ export function createNewStirlingFileStub(
   thumbnail?: string,
   processedFileMetadata?: ProcessedFileMetadata
 ): StirlingFileStub {
-  const fileId = id || createFileId();
+  const fileId = id ?? createFileId();
   return {
     id: fileId,
     name: file.name,
@@ -161,14 +161,14 @@ export function createNewStirlingFileStub(
 
 export function revokeFileResources(record: StirlingFileStub): void {
   // Only revoke blob: URLs to prevent errors on other schemes
-  if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
+  if (record.thumbnailUrl?.startsWith('blob:')) {
     try {
       URL.revokeObjectURL(record.thumbnailUrl);
     } catch (error) {
       console.warn('Failed to revoke thumbnail URL:', error);
     }
   }
-  if (record.blobUrl && record.blobUrl.startsWith('blob:')) {
+  if (record.blobUrl?.startsWith('blob:')) {
     try {
       URL.revokeObjectURL(record.blobUrl);
     } catch (error) {
@@ -178,7 +178,7 @@ export function revokeFileResources(record: StirlingFileStub): void {
   // Clean up processed file thumbnails
   if (record.processedFile?.pages) {
     record.processedFile.pages.forEach(page => {
-      if (page.thumbnail && page.thumbnail.startsWith('blob:')) {
+      if (page.thumbnail?.startsWith('blob:')) {
         try {
           URL.revokeObjectURL(page.thumbnail);
         } catch (error) {

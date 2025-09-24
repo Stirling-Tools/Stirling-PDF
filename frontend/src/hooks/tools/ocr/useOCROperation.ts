@@ -80,8 +80,8 @@ export const ocrResponseHandler = async (blob: Blob, originalFiles: File[], extr
         throw new Error('OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.');
       }
       const title =
-        text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ||
-        text.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] ||
+        (/<title[^>]*>([^<]+)<\/title>/i.exec(text))?.[1] ??
+        (/<h1[^>]*>([^<]+)<\/h1>/i.exec(text))?.[1] ??
         'Unknown error';
       throw new Error(`OCR service error: ${title}`);
     }

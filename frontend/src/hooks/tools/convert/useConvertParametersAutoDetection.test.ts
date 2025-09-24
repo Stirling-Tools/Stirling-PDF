@@ -345,7 +345,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     test('should handle malformed file objects', () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const malformedFiles: Array<{name: string}> = [
+      const malformedFiles: {name: string}[] = [
         { name: 'valid.pdf' },
         // @ts-expect-error - Testing runtime resilience
         { name: null },

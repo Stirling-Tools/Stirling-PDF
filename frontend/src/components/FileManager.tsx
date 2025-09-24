@@ -26,7 +26,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const isFileSupported = useCallback((fileName: string) => {
     if (!selectedTool?.supportedFormats) return true;
     const extension = fileName.split('.').pop()?.toLowerCase();
-    return selectedTool.supportedFormats.includes(extension || '');
+    return selectedTool.supportedFormats.includes(extension ?? '');
   }, [selectedTool?.supportedFormats]);
 
   const refreshRecentFiles = useCallback(async () => {

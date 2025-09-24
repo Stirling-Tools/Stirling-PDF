@@ -1,3 +1,4 @@
+import React from "react";
 import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemovePagesParameters } from "../../../hooks/tools/removePages/useRemovePagesParameters";

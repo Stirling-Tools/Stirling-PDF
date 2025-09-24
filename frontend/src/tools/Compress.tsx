@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import CompressSettings from "../components/tools/compress/CompressSettings";
@@ -50,7 +51,11 @@ const Compress = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("compress.title", "Compression Results"),
       onFileClick: base.handleThumbnailClick,
-      onUndo: base.handleUndo,
+      onUndo: () => {
+        base.handleUndo().catch((error) => {
+          console.error("Error during undo operation:", error);
+        });
+      },
     },
   });
 };

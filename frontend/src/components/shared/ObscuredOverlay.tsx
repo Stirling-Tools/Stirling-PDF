@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './ObscuredOverlay/ObscuredOverlay.module.css';
 
-type ObscuredOverlayProps = {
+interface ObscuredOverlayProps {
   obscured: boolean;
   overlayMessage?: React.ReactNode;
   buttonText?: string;
@@ -9,7 +9,7 @@ type ObscuredOverlayProps = {
   children: React.ReactNode;
   // Optional border radius for the overlay container. If undefined, no radius is applied.
   borderRadius?: string | number;
-};
+}
 
 export default function ObscuredOverlay({
   obscured,

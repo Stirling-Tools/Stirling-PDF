@@ -9,7 +9,7 @@ interface ThumbnailSidebarProps {
 
 export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSidebarProps) {
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
-  const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
+  const [thumbnails, setThumbnails] = useState<Record<number, string>>({});
 
   const scrollState = getScrollState();
   const thumbnailAPI = getThumbnailAPI();

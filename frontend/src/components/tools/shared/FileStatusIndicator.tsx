@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Text, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import FolderIcon from '@mui/icons-material/Folder';
@@ -33,7 +33,7 @@ const FileStatusIndicator = ({
         setHasRecentFiles(false);
       }
     };
-    checkRecentFiles();
+    void checkRecentFiles();
   }, [loadRecentFiles]);
 
   // Handle native file picker
@@ -43,7 +43,7 @@ const FileStatusIndicator = ({
     input.multiple = true;
     input.accept = '.pdf,application/pdf';
     input.onchange = (event) => {
-      const files = Array.from((event.target as HTMLInputElement).files || []);
+      const files = Array.from((event.target as HTMLInputElement).files ?? []);
       if (files.length > 0) {
         onFileUpload(files);
       }

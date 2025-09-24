@@ -1,3 +1,4 @@
+import React from "react";
 import { Stack, Text, Checkbox, Slider, NumberInput, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import NumberInputWithUnit from "../shared/NumberInputWithUnit";

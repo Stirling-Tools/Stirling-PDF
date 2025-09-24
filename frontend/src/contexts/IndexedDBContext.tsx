@@ -60,7 +60,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
   const saveFile = useCallback(async (file: File, fileId: FileId, existingThumbnail?: string): Promise<StirlingFileStub> => {
     // Use existing thumbnail or generate new one if none provided
-    const thumbnail = existingThumbnail || await generateThumbnailForFile(file);
+    const thumbnail = existingThumbnail ?? await generateThumbnailForFile(file);
 
     // Store in IndexedDB (no history data - that's handled by direct fileStorage calls now)
     const stirlingFile = createStirlingFile(file, fileId);

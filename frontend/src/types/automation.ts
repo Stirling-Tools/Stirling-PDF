@@ -4,7 +4,7 @@
 
 export interface AutomationOperation {
   operation: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, string | number | boolean | null>;
 }
 
 export interface AutomationConfig {

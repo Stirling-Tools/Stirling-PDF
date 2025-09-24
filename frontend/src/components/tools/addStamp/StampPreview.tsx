@@ -5,12 +5,12 @@ import { useThumbnailGeneration } from '../../../hooks/useThumbnailGeneration';
 import { A4_ASPECT_RATIO, getFirstSelectedPage, getFontFamily, computeStampPreviewStyle, getAlphabetPreviewScale } from './StampPreviewUtils';
 import styles from './StampPreview.module.css';
 
-type Props = {
+interface Props {
   parameters: AddStampParameters;
   onParameterChange: <K extends keyof AddStampParameters>(key: K, value: AddStampParameters[K]) => void;
   file?: File | null;
   showQuickGrid?: boolean;
-};
+}
 
 export default function StampPreview({ parameters, onParameterChange, file, showQuickGrid }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -112,7 +112,7 @@ export default function StampPreview({ parameters, onParameterChange, file, show
   // Keep center fixed when scaling via slider (or any fontSize changes)
   const prevDimsRef = useRef<{ fontSize: number; widthPx: number; heightPx: number; leftPx: number; bottomPx: number } | null>(null);
   useEffect(() => {
-    const itemStyle = style.item as any;
+    const itemStyle = style.item;
     if (!itemStyle || containerSize.width <= 0 || containerSize.height <= 0) return;
 
     const parse = (v: any) => parseFloat(String(v).replace('px', '')) || 0;
@@ -160,7 +160,7 @@ export default function StampPreview({ parameters, onParameterChange, file, show
     if (pageWidth <= 0 || pageHeight <= 0) return;
 
     // Recompute current x,y from style (so that we start from visual position)
-    const itemStyle = style.item as any;
+    const itemStyle = style.item;
     const leftPx = parseFloat(String(itemStyle.left).replace('px', '')) || 0;
     const bottomPx = parseFloat(String(itemStyle.bottom).replace('px', '')) || 0;
     const widthPts = pageSize?.widthPts ?? 595.28;
@@ -177,13 +177,13 @@ export default function StampPreview({ parameters, onParameterChange, file, show
     e.preventDefault();
     ensureOverrides();
 
-    const item = style.item as any;
+    const item = style.item;
     const left = parseFloat(String(item.left).replace('px', '')) || 0;
     const bottom = parseFloat(String(item.bottom).replace('px', '')) || 0;
     const width = parseFloat(String(item.width).replace('px', '')) || parameters.fontSize;
     const height = parseFloat(String(item.height).replace('px', '')) || parameters.fontSize;
 
-    const rect = (e.currentTarget.parentElement as HTMLElement)?.getBoundingClientRect();
+    const rect = (e.currentTarget.parentElement)?.getBoundingClientRect();
     const centerX = left + width / 2;
     const centerY = bottom + height / 2;
 

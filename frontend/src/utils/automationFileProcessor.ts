@@ -90,8 +90,8 @@ export class AutomationFileProcessor {
   ): Promise<AutomationProcessingResult> {
     try {
       const response = await axios.post(endpoint, formData, {
-        responseType: options.responseType || 'blob',
-        timeout: options.timeout || AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
+        responseType: options.responseType ?? 'blob',
+        timeout: options.timeout ?? AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
       });
 
       if (response.status !== 200) {
@@ -117,7 +117,7 @@ export class AutomationFileProcessor {
       return {
         success: false,
         files: [],
-        errors: [`Automation step failed: ${error.response?.data || error.message}`]
+        errors: [`Automation step failed: ${error.response?.data ?? error.message}`]
       };
     }
   }
@@ -132,8 +132,8 @@ export class AutomationFileProcessor {
   ): Promise<AutomationProcessingResult> {
     try {
       const response = await axios.post(endpoint, formData, {
-        responseType: options.responseType || 'blob',
-        timeout: options.timeout || AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
+        responseType: options.responseType ?? 'blob',
+        timeout: options.timeout ?? AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
       });
 
       if (response.status !== 200) {
@@ -150,7 +150,7 @@ export class AutomationFileProcessor {
       return {
         success: false,
         files: [],
-        errors: [`Automation step failed: ${error.response?.data || error.message}`]
+        errors: [`Automation step failed: ${error.response?.data ?? error.message}`]
       };
     }
   }
@@ -159,9 +159,9 @@ export class AutomationFileProcessor {
    * Build form data for automation tool operations
    */
   static buildAutomationFormData(
-    parameters: Record<string, any>,
+    parameters: Record<string, string | Blob | (string | Blob)[]>,
     files: File | File[],
-    fileFieldName: string = 'fileInput'
+    fileFieldName = 'fileInput'
   ): FormData {
     const formData = new FormData();
 
@@ -175,9 +175,19 @@ export class AutomationFileProcessor {
     // Add parameters
     Object.entries(parameters).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        value.forEach(item => formData.append(key, item));
+        value.forEach(item => {
+          if (typeof item === 'string' || item instanceof Blob) {
+            formData.append(key, item);
+          } else {
+            console.warn(`Skipping invalid form data item for key "${key}":`, item);
+          }
+        });
       } else if (value !== undefined && value !== null) {
-        formData.append(key, value);
+        if (typeof value === 'string' || value instanceof Blob) {
+          formData.append(key, value);
+        } else {
+          console.warn(`Skipping invalid form data value for key "${key}":`, value);
+        }
       }
     });
 

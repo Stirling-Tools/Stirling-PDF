@@ -126,7 +126,7 @@ const ALL_CONVERSION_ENDPOINTS: ConversionEndpoint[] = [
 export class ConversionEndpointDiscovery {
   private baseUrl: string;
   private cache: Map<string, boolean> | null = null;
-  private cacheExpiry: number = 0;
+  private cacheExpiry = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   constructor(baseUrl: string = process.env.BACKEND_URL || 'http://localhost:8080') {

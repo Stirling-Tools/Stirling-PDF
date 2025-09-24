@@ -8,7 +8,7 @@ export interface ToolWorkflowTitleProps {
   description?: string;
   tooltip?: {
     content?: React.ReactNode;
-    tips?: any[];
+    tips?: unknown[];
     header?: {
       title: string;
       logo?: React.ReactNode;

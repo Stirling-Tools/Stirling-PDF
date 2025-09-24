@@ -129,7 +129,7 @@ export class FileAnalyzer {
    */
   private static estimateProcessingTime(
     _fileSize: number,
-    pageCount: number = 0,
+    pageCount = 0,
     strategy: ProcessingStrategy
   ): number {
     const baseTimes = {
@@ -188,7 +188,7 @@ export class FileAnalyzer {
       analyses.set(file, analysis);
       totalEstimatedTime += analysis.estimatedProcessingTime;
       totalSize += file.size;
-      totalPages += analysis.estimatedPageCount || 0;
+      totalPages += analysis.estimatedPageCount ?? 0;
     }
 
     // Generate recommendations

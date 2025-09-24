@@ -14,7 +14,7 @@ const ChangePermissionsSettings = ({ parameters, onParameterChange, disabled = f
   return (
     <Stack gap="sm">
       <Stack gap="xs">
-        {(Object.keys(parameters) as Array<keyof ChangePermissionsParameters>).map((key) => (
+        {(Object.keys(parameters) as (keyof ChangePermissionsParameters)[]).map((key) => (
           <Checkbox
             key={key}
             label={t(`changePermissions.permissions.${key}.label`, key)}

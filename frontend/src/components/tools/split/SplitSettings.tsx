@@ -1,3 +1,4 @@
+import React from 'react';
 import { Stack, TextInput, Checkbox, Anchor, Text } from '@mantine/core';
 import LocalIcon from '../../shared/LocalIcon';
 import { useTranslation } from 'react-i18next';

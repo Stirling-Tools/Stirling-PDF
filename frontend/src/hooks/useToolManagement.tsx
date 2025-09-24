@@ -26,7 +26,7 @@ export const useToolManagement = (): ToolManagementResult => {
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
     if (endpointsLoading) return true;
-    const endpoints = baseRegistry[toolKey as keyof typeof baseRegistry]?.endpoints || [];
+    const endpoints = baseRegistry[toolKey as keyof typeof baseRegistry]?.endpoints ?? [];
     return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 

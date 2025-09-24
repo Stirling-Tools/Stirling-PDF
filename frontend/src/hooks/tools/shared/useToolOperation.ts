@@ -320,7 +320,7 @@ export const useToolOperation = <TParams>(
       }
 
     } catch (error: any) {
-      const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
+      const errorMessage = config.getErrorMessage?.(error) ?? extractErrorMessage(error);
       actions.setError(errorMessage);
       actions.setStatus('');
     } finally {

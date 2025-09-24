@@ -25,7 +25,7 @@ export enum ToolCategoryId {
   RECOMMENDED_TOOLS = 'recommendedTools'
 }
 
-export type ToolRegistryEntry = {
+export interface ToolRegistryEntry {
 	icon: React.ReactNode;
 	name: string;
 	component: React.ComponentType<BaseToolProps> | null;
@@ -122,14 +122,14 @@ export const getDefaultToolWorkbench = (): WorkbenchType => 'fileEditor';
  * Get workbench type for a tool
  */
 export const getToolWorkbench = (tool: ToolRegistryEntry): WorkbenchType => {
-  return tool.workbench || getDefaultToolWorkbench();
+  return tool.workbench ?? getDefaultToolWorkbench();
 };
 
 /**
  * Get URL path for a tool
  */
 export const getToolUrlPath = (toolId: string, tool: ToolRegistryEntry): string => {
-  return tool.urlPath || `/${toolId.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+  return tool.urlPath ?? `/${toolId.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
 };
 
 /**

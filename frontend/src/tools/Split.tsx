@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import CardSelector from "../components/shared/CardSelector";
@@ -27,7 +27,7 @@ const Split = (props: BaseToolProps) => {
   // Get tooltip content for a specific method
   const getMethodTooltip = useCallback((option: MethodOption) => {
     const tooltipContent = getSplitSettingsTips(t, option.value);
-    return tooltipContent?.tips || [];
+    return tooltipContent?.tips ?? [];
   }, [t]);
 
   // Get the method name for the settings step title
@@ -67,7 +67,7 @@ const Split = (props: BaseToolProps) => {
         title: getSettingsTitle(),
         isCollapsed: !base.params.parameters.method, // Collapsed until method selected
         onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
-        tooltip: settingsTips || undefined,
+        tooltip: settingsTips ?? undefined,
         content: (
           <SplitSettings
             parameters={base.params.parameters}
@@ -89,7 +89,9 @@ const Split = (props: BaseToolProps) => {
       operation: base.operation,
       title: "Split Results",
       onFileClick: base.handleThumbnailClick,
-      onUndo: base.handleUndo,
+      onUndo: () => {
+        void base.handleUndo();
+      },
     },
   });
 };

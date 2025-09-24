@@ -15,8 +15,8 @@ import {
  * Create stable selectors using stateRef and filesRef
  */
 export function createFileSelectors(
-  stateRef: React.MutableRefObject<FileContextState>,
-  filesRef: React.MutableRefObject<Map<FileId, File>>
+  stateRef: React.Ref<FileContextState>,
+  filesRef: React.Ref<Map<FileId, File>>
 ): FileContextSelectors {
   return {
     getFile: (id: FileId) => {
@@ -25,7 +25,7 @@ export function createFileSelectors(
     },
 
     getFiles: (ids?: FileId[]) => {
-      const currentIds = ids || stateRef.current.files.ids;
+      const currentIds = ids ?? stateRef.current.files.ids;
       return currentIds
         .map(id => {
           const file = filesRef.current.get(id);
@@ -37,7 +37,7 @@ export function createFileSelectors(
     getStirlingFileStub: (id: FileId) => stateRef.current.files.byId[id],
 
     getStirlingFileStubs: (ids?: FileId[]) => {
-      const currentIds = ids || stateRef.current.files.ids;
+      const currentIds = ids ?? stateRef.current.files.ids;
       return currentIds.map(id => stateRef.current.files.byId[id]).filter(Boolean);
     },
 
@@ -111,7 +111,7 @@ export function buildQuickKeySet(stirlingFileStubs: Record<FileId, StirlingFileS
 /**
  * Helper for building quickKey sets from IndexedDB metadata
  */
-export function buildQuickKeySetFromMetadata(metadata: Array<{ name: string; size: number; lastModified: number }>): Set<string> {
+export function buildQuickKeySetFromMetadata(metadata: { name: string; size: number; lastModified: number }[]): Set<string> {
   const quickKeys = new Set<string>();
   metadata.forEach(meta => {
     // Format: name|size|lastModified (same as createQuickKey)
@@ -125,8 +125,8 @@ export function buildQuickKeySetFromMetadata(metadata: Array<{ name: string; siz
  * Get primary file (first in list) - commonly used pattern
  */
 export function getPrimaryFile(
-  stateRef: React.MutableRefObject<FileContextState>,
-  filesRef: React.MutableRefObject<Map<FileId, File>>
+  stateRef: React.Ref<FileContextState>,
+  filesRef: React.Ref<Map<FileId, File>>
 ): { file?: File; record?: StirlingFileStub } {
   const primaryFileId = stateRef.current.files.ids[0];
   if (!primaryFileId) return {};

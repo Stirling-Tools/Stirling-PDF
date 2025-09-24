@@ -5,6 +5,9 @@ import OperationButton from './OperationButton';
 import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
 import { ToolWorkflowTitle, ToolWorkflowTitleProps } from './ToolWorkflowTitle';
 import { StirlingFile } from '../../../types/fileContext';
+import { SplitParameters } from 'src/hooks/tools/split/useSplitParameters';
+import { CompressParameters } from 'src/hooks/tools/compress/useCompressParameters';
+import { ChangeMetadataParameters } from 'src/hooks/tools/changeMetadata/useChangeMetadataParameters';
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -22,7 +25,7 @@ export interface MiddleStepConfig {
   content: React.ReactNode;
   tooltip?: {
     content?: React.ReactNode;
-    tips?: any[];
+    tips?: unknown[];
     header?: {
       title: string;
       logo?: React.ReactNode;
@@ -41,7 +44,7 @@ export interface ExecuteButtonConfig {
 
 export interface ReviewStepConfig {
   isVisible: boolean;
-  operation: ToolOperationHook<any>;
+  operation: ToolOperationHook<SplitParameters> | ToolOperationHook<CompressParameters> | ToolOperationHook<ChangeMetadataParameters>;
   title: string;
   onFileClick?: (file: File) => void;
   onUndo: () => void;

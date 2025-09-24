@@ -189,7 +189,7 @@ export function LocalEmbedPDF({ file, url }: LocalEmbedPDFProps) {
           <Scroller
             renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
               <Rotate pageSize={{ width, height }}>
-                <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
+                <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation ?? 0 }}>
                   <div
                     style={{
                       width,

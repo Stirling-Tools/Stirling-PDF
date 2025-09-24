@@ -24,7 +24,7 @@ export class RotatePageCommand extends DOMCommand {
       if (img) {
         // Extract current rotation from transform property to match the animated CSS
         const currentTransform = img.style.transform || '';
-        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+        const rotateMatch = /rotate\(([^)]+)\)/.exec(currentTransform);
         const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
         const newRotation = currentRotation + this.degrees;
         img.style.transform = `rotate(${newRotation}deg)`;
@@ -40,7 +40,7 @@ export class RotatePageCommand extends DOMCommand {
       if (img) {
         // Extract current rotation from transform property
         const currentTransform = img.style.transform || '';
-        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+        const rotateMatch = /rotate\(([^)]+)\)/.exec(currentTransform);
         const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
         const previousRotation = currentRotation - this.degrees;
         img.style.transform = `rotate(${previousRotation}deg)`;
@@ -55,9 +55,9 @@ export class RotatePageCommand extends DOMCommand {
 
 export class DeletePagesCommand extends DOMCommand {
   private originalDocument: PDFDocument | null = null;
-  private originalSplitPositions: Set<number> = new Set();
+  private originalSplitPositions = new Set<number>();
   private originalSelectedPages: number[] = [];
-  private hasExecuted: boolean = false;
+  private hasExecuted = false;
   private pageIdsToDelete: string[] = [];
   private onAllPagesDeleted?: () => void;
 
@@ -181,7 +181,7 @@ export class ReorderPagesCommand extends DOMCommand {
       // Multi-page reorder
       const selectedPageObjects = this.selectedPages
         .map(pageNum => currentDoc.pages.find(p => p.pageNumber === pageNum))
-        .filter(page => page !== undefined) as PDFPage[];
+        .filter(page => page !== undefined);
 
       const remainingPages = newPages.filter(page => !this.selectedPages!.includes(page.pageNumber));
       remainingPages.splice(this.targetIndex, 0, ...selectedPageObjects);
@@ -230,7 +230,7 @@ export class ReorderPagesCommand extends DOMCommand {
 }
 
 export class SplitCommand extends DOMCommand {
-  private originalSplitPositions: Set<number> = new Set();
+  private originalSplitPositions = new Set<number>();
 
   constructor(
     private position: number,
@@ -270,7 +270,7 @@ export class SplitCommand extends DOMCommand {
 }
 
 export class BulkRotateCommand extends DOMCommand {
-  private originalRotations: Map<string, number> = new Map();
+  private originalRotations = new Map<string, number>();
 
   constructor(
     private pageIds: string[],
@@ -288,14 +288,14 @@ export class BulkRotateCommand extends DOMCommand {
           // Store original rotation for undo (only on first execution)
           if (!this.originalRotations.has(pageId)) {
             const currentTransform = img.style.transform || '';
-            const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+            const rotateMatch = /rotate\(([^)]+)\)/.exec(currentTransform);
             const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
             this.originalRotations.set(pageId, currentRotation);
           }
 
           // Apply rotation using transform to trigger CSS animation
           const currentTransform = img.style.transform || '';
-          const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+          const rotateMatch = /rotate\(([^)]+)\)/.exec(currentTransform);
           const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
           const newRotation = currentRotation + this.degrees;
           img.style.transform = `rotate(${newRotation}deg)`;
@@ -322,7 +322,7 @@ export class BulkRotateCommand extends DOMCommand {
 }
 
 export class BulkSplitCommand extends DOMCommand {
-  private originalSplitPositions: Set<number> = new Set();
+  private originalSplitPositions = new Set<number>();
 
   constructor(
     private positions: number[],
@@ -362,8 +362,8 @@ export class BulkSplitCommand extends DOMCommand {
 }
 
 export class SplitAllCommand extends DOMCommand {
-  private originalSplitPositions: Set<number> = new Set();
-  private allPossibleSplits: Set<number> = new Set();
+  private originalSplitPositions = new Set<number>();
+  private allPossibleSplits = new Set<number>();
 
   constructor(
     private totalPages: number,
@@ -716,7 +716,7 @@ export class InsertFilesCommand extends DOMCommand {
         if (arrayBuffer && arrayBuffer.byteLength > 0) {
           // Extract page numbers for all pages from this file
           const pageNumbers = pages.map(page => {
-            const pageNumMatch = page.id.match(/-page-(\d+)$/);
+            const pageNumMatch = /-page-(\d+)$/.exec(page.id);
             return pageNumMatch ? parseInt(pageNumMatch[1]) : 1;
           });
 

@@ -41,7 +41,7 @@ export class ThumbnailGenerationService {
   private pdfDocumentCache = new Map<FileId, CachedPDFDocument>();
   private maxPdfCacheSize = 10; // Keep up to 10 PDF documents cached
 
-  constructor(private maxWorkers: number = 10) {
+  constructor(private maxWorkers = 10) {
     // PDF rendering requires DOM access, so we use optimized main thread processing
   }
 

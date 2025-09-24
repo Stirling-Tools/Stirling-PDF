@@ -73,7 +73,7 @@ export class FileHasher {
     return chunks;
   }
 
-  private static async combineChunks(chunks: ArrayBuffer[]): Promise<ArrayBuffer> {
+  private static combineChunks(chunks: ArrayBuffer[]): Promise<ArrayBuffer> {
     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
     const combined = new Uint8Array(totalLength);
     

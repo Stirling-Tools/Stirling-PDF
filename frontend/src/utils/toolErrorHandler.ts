@@ -21,7 +21,7 @@ export const extractErrorMessage = (error: any): string => {
  * @returns Error handler function that follows the standard pattern
  */
 export const createStandardErrorHandler = (fallbackMessage: string) => {
-  return (error: any): string => {
+  return (error: unknown): string => {
     if (error.response?.data && typeof error.response.data === 'string') {
       return error.response.data;
     }

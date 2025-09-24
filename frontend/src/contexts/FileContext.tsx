@@ -57,9 +57,7 @@ function FileContextContent({
 
   // Create lifecycle manager
   const lifecycleManagerRef = useRef<FileLifecycleManager | null>(null);
-  if (!lifecycleManagerRef.current) {
-    lifecycleManagerRef.current = new FileLifecycleManager(filesRef, dispatch);
-  }
+  lifecycleManagerRef.current ??= new FileLifecycleManager(filesRef, dispatch);
   const lifecycleManager = lifecycleManagerRef.current;
 
   // Create stable selectors (memoized once to avoid re-renders)
@@ -150,7 +148,7 @@ function FileContextContent({
     reorderFiles: (orderedFileIds: FileId[]) => {
       dispatch({ type: 'REORDER_FILES', payload: { orderedFileIds } });
     },
-    clearAllFiles: async () => {
+    clearAllFiles:  async () => {
       lifecycleManager.cleanupAllFiles();
       filesRef.current.clear();
       dispatch({ type: 'RESET_CONTEXT' });

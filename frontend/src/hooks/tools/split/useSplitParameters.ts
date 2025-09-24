@@ -35,7 +35,7 @@ export const useSplitParameters = (): SplitParametersHook => {
     defaultParameters,
     endpointName: (params) => {
       if (!params.method) return ENDPOINTS[SPLIT_METHODS.BY_PAGES];
-      return ENDPOINTS[params.method as SplitMethod];
+      return ENDPOINTS[params.method];
     },
     validateFn: (params) => {
       if (!params.method) return false;

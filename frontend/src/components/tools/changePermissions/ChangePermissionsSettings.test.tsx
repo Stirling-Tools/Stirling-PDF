@@ -34,7 +34,7 @@ describe('ChangePermissionsSettings', () => {
     );
 
     // Should render checkboxes for all permission types
-    const permissionKeys = Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>;
+    const permissionKeys = Object.keys(defaultParameters) as (keyof ChangePermissionsParameters)[];
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(permissionKeys.length);
 
@@ -55,7 +55,7 @@ describe('ChangePermissionsSettings', () => {
       </TestWrapper>
     );
 
-    const permissionKeys = Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>;
+    const permissionKeys = Object.keys(defaultParameters) as (keyof ChangePermissionsParameters)[];
 
     permissionKeys.forEach(permission => {
       expect(screen.getByText(`mock-changePermissions.permissions.${permission}.label`)).toBeInTheDocument();
@@ -183,13 +183,13 @@ describe('ChangePermissionsSettings', () => {
       </TestWrapper>
     );
 
-    const permissionKeys = Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>;
+    const permissionKeys = Object.keys(defaultParameters) as (keyof ChangePermissionsParameters)[];
     permissionKeys.forEach(permission => {
       expect(mockT).toHaveBeenCalledWith(`changePermissions.permissions.${permission}.label`, permission);
     });
   });
 
-  test.each(Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>)('should handle %s permission type individually', (permission) => {
+  test.each(Object.keys(defaultParameters) as (keyof ChangePermissionsParameters)[])('should handle %s permission type individually', (permission) => {
     const testParameters: ChangePermissionsParameters = {
       ...defaultParameters,
       [permission]: true

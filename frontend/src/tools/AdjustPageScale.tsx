@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
@@ -50,7 +51,9 @@ const AdjustPageScale = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("adjustPageScale.title", "Page Scale Results"),
       onFileClick: base.handleThumbnailClick,
-      onUndo: base.handleUndo,
+      onUndo: () => {
+        base.handleUndo();
+      },
     },
   });
 };

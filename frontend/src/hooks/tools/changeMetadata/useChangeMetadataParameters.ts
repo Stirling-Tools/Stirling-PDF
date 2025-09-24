@@ -47,7 +47,7 @@ export const createCustomMetadataFunctions = (
   parameters: ChangeMetadataParameters,
   onParameterChange: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void
 ) => {
-  const addCustomMetadata = (key: string = '', value: string = '') => {
+  const addCustomMetadata = (key = '', value = '') => {
     const newEntry: CustomMetadataEntry = {
       key,
       value,
@@ -97,8 +97,8 @@ const validateParameters = (params: ChangeMetadataParameters): boolean => {
     || params.creator.trim()
     || params.producer.trim()
     || params.creationDate
-    || params.modificationDate
-    || params.trapped !== TrappedStatus.UNKNOWN
+    ?? params.modificationDate
+    ?? params.trapped !== TrappedStatus.UNKNOWN
   );
 
   const hasCustomMetadata = params.customMetadata.some(

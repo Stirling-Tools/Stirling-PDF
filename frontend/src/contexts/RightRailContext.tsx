@@ -20,7 +20,7 @@ export function RightRailProvider({ children }: { children: React.ReactNode }) {
 		setButtons(prev => {
 			const byId = new Map(prev.map(b => [b.id, b] as const));
 			newButtons.forEach(nb => {
-				const existing = byId.get(nb.id) || ({} as RightRailButtonConfig);
+				const existing = byId.get(nb.id) ?? ({} as RightRailButtonConfig);
 				byId.set(nb.id, { ...existing, ...nb });
 			});
 			const merged = Array.from(byId.values());

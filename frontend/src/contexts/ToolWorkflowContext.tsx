@@ -186,7 +186,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     // Get the tool from registry to determine workbench
     const tool = getSelectedTool(toolId);
-    if (tool && tool.workbench) {
+    if (tool?.workbench) {
       actions.setWorkbench(tool.workbench);
     } else {
       actions.setWorkbench(getDefaultWorkbench());

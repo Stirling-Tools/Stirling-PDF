@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
@@ -51,7 +52,11 @@ const BookletImposition = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("bookletImposition.title", "Booklet Imposition Results"),
       onFileClick: base.handleThumbnailClick,
-      onUndo: base.handleUndo,
+      onUndo: () => {
+        base.handleUndo().catch((error) => {
+          console.error("Error in handleUndo:", error);
+        });
+      },
     },
   });
 };
