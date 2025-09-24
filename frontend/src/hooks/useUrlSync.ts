@@ -7,7 +7,7 @@ import { ToolId } from '../types/toolId';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
 import { ToolRegistry } from '../data/toolsTaxonomy';
 import { firePixel } from '../utils/scarfTracking';
-import { BASE_PATH, withBasePath } from '../constants/app';
+import { withBasePath } from '../constants/app';
 
 /**
  * Hook to sync workbench and tool with URL using registry
