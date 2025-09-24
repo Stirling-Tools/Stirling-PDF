@@ -67,7 +67,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
           paddingLeft: isHistoryFile ? '2rem' : '0.75rem', // Indent history files
           borderLeft: isHistoryFile ? '3px solid var(--mantine-color-blue-4)' : 'none' // Visual indicator for history
         }}
-        onClick={isHistoryFile ? undefined : (e) => onSelect(e.shiftKey)}
+        onClick={isHistoryFile ? undefined : (e: React.MouseEvent) => onSelect(e.shiftKey)}
         onDoubleClick={onDoubleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -128,7 +128,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                 variant="subtle"
                 c="dimmed"
                 size="md"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 style={{
                   opacity: shouldShowHovered ? 1 : 0,
                   transform: shouldShowHovered ? 'scale(1)' : 'scale(0.8)',
@@ -144,7 +144,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {onDownload && (
                 <Menu.Item
                   leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     onDownload();
                   }}
@@ -160,7 +160,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                     leftSection={
                         <HistoryIcon style={{ fontSize: 16 }} />
                     }
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       onToggleExpansion(leafFileId);
                     }}
@@ -181,7 +181,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                 <>
                   <Menu.Item
                     leftSection={<RestoreIcon style={{ fontSize: 16 }} />}
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       onAddToRecents(file);
                     }}
@@ -194,7 +194,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
               <Menu.Item
                 leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   onRemove();
                 }}

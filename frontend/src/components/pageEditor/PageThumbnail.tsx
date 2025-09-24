@@ -440,7 +440,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
               variant="subtle"
               style={{ color: 'var(--mantine-color-dimmed)' }}
               disabled={index === 0}
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 if (index > 0 && !movingPage && !isAnimating) {
                   onSetMovingPage(page.pageNumber);
@@ -461,7 +461,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
               variant="subtle"
               style={{ color: 'var(--mantine-color-dimmed)' }}
               disabled={index === totalPages - 1}
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 if (index < totalPages - 1 && !movingPage && !isAnimating) {
                   onSetMovingPage(page.pageNumber);

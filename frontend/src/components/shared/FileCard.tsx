@@ -89,7 +89,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
                     size="sm"
                     variant="subtle"
                     color="blue"
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       onView();
                     }}
@@ -104,7 +104,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
                     size="sm"
                     variant="subtle"
                     color="orange"
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       onEdit();
                     }}
@@ -197,7 +197,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
           color="red"
           size="xs"
           variant="light"
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             onRemove();
           }}

@@ -59,7 +59,7 @@ const GroupedFormatDropdown = ({
   return (
     <Popover
       opened={dropdownOpened}
-      onDismiss={() => setDropdownOpened(false)}
+      onClose={() => setDropdownOpened(false)}
       position="bottom-start"
       withArrow
       shadow="sm"

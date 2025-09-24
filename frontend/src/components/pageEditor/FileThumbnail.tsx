@@ -238,7 +238,7 @@ const FileThumbnail = ({
           aria-label={t('moreOptions', 'More options')}
           variant="subtle"
           className={styles.kebab}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             setShowActions((v) => !v);
           }}

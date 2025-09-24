@@ -188,12 +188,12 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                     alignItems: 'center',
                     justifyContent: 'space-between'
                   }}
-                  onMouseEnter={(e) => {
+                  onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
                     if (!item.disabled) {
                       e.currentTarget.style.backgroundColor = 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-5))';
                     }
                   }}
-                  onMouseLeave={(e) => {
+                  onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >

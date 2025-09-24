@@ -186,7 +186,7 @@ export default function AutomationEntry({
                 variant="subtle"
                 c="dimmed"
                 size="md"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 style={{
                   opacity: shouldShowHovered ? 1 : 0,
                   transform: shouldShowHovered ? 'scale(1)' : 'scale(0.8)',
@@ -202,7 +202,7 @@ export default function AutomationEntry({
               {onCopy && (
                 <Menu.Item
                   leftSection={<ContentCopyIcon style={{ fontSize: 16 }} />}
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     onCopy();
                   }}
@@ -213,7 +213,7 @@ export default function AutomationEntry({
               {onEdit && (
                 <Menu.Item
                   leftSection={<EditIcon style={{ fontSize: 16 }} />}
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     onEdit();
                   }}
@@ -224,7 +224,7 @@ export default function AutomationEntry({
               {onDelete && (
                 <Menu.Item
                   leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     onDelete();
                   }}

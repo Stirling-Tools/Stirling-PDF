@@ -32,7 +32,6 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
       <Popover
         opened={isDropdownOpen}
         onClose={() => setIsDropdownOpen(false)}
-        onDismiss={() => setIsDropdownOpen(false)}
         position="bottom-start"
         withArrow
         trapFocus
@@ -86,12 +85,12 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
                         cursor: "pointer",
                         backgroundColor: isSelected ? "var(--mantine-color-gray-1)" : "transparent",
                       }}
-                      onMouseEnter={(e) => {
+                      onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
                         if (!isSelected) {
                           e.currentTarget.style.backgroundColor = "var(--mantine-color-gray-0)";
                         }
                       }}
-                      onMouseLeave={(e) => {
+                      onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
                         if (!isSelected) {
                           e.currentTarget.style.backgroundColor = "transparent";
                         }

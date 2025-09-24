@@ -120,12 +120,12 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
                       alignItems: 'center',
                       gap: '8px'
                     }}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
                       if (scrollState.currentPage !== pageIndex + 1) {
                         e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
                       }
                     }}
-                    onMouseLeave={(e) => {
+                    onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
                       if (scrollState.currentPage !== pageIndex + 1) {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }

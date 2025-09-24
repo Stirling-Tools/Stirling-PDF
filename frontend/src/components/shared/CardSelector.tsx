@@ -59,14 +59,14 @@ const CardSelector = <T, K extends CardOption<T>>({
               flexDirection: 'row',
               transition: 'all 0.2s ease',
             }}
-            onMouseEnter={(e) => {
+            onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
               if (!disabled) {
                 e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-3)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
                 e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
               }
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
               if (!disabled) {
                 e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-2)';
                 e.currentTarget.style.transform = 'translateY(0px)';
