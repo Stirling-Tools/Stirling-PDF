@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from "react-i18next";
-import { Stack, TextInput, FileInput, Paper, Group, Button, Text, Alert, Modal, ColorSwatch, Menu, ActionIcon, Slider, Select, Combobox, useCombobox, ColorPicker } from '@mantine/core';
+import { Stack, TextInput, FileInput, Paper, Group, Button, Text, Alert, Modal, ColorSwatch, Menu, ActionIcon, Slider, Select, Combobox, useCombobox, ColorPicker, Tabs } from '@mantine/core';
 import ButtonSelector from "../../shared/ButtonSelector";
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
 
@@ -12,9 +12,11 @@ interface SignSettingsProps {
   onActivateSignaturePlacement?: () => void;
   onDeactivateSignature?: () => void;
   onUpdateDrawSettings?: (color: string, size: number) => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
-const SignSettings = ({ parameters, onParameterChange, disabled = false, onActivateDrawMode, onActivateSignaturePlacement, onDeactivateSignature, onUpdateDrawSettings }: SignSettingsProps) => {
+const SignSettings = ({ parameters, onParameterChange, disabled = false, onActivateDrawMode, onActivateSignaturePlacement, onDeactivateSignature, onUpdateDrawSettings, onUndo, onRedo }: SignSettingsProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -432,35 +434,43 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
   return (
     <Stack gap="md">
       {/* Signature Type Selection */}
-      <div>
-        <Text size="sm" fw={500} mb="xs">
-          {t('sign.type.title', 'Signature Type')}
-        </Text>
-        <ButtonSelector
-          value={parameters.signatureType}
-          onChange={(value) => onParameterChange('signatureType', value as 'image' | 'text' | 'draw' | 'canvas')}
-          options={[
-            {
-              value: 'draw',
-              label: t('sign.type.draw', 'Draw'),
-            },
-            {
-              value: 'canvas',
-              label: t('sign.type.canvas', 'Canvas'),
-            },
-            {
-              value: 'image',
-              label: t('sign.type.image', 'Image'),
-            },
-            {
-              value: 'text',
-              label: t('sign.type.text', 'Text'),
-            },
-          ]}
-          disabled={disabled}
-        />
-      </div>
+      <Tabs
+        value={parameters.signatureType}
+        onChange={(value) => onParameterChange('signatureType', value as 'image' | 'text' | 'draw' | 'canvas')}
+      >
+        <Tabs.List grow>
+          <Tabs.Tab value="draw" style={{ fontSize: '0.8rem' }}>
+            {t('sign.type.draw', 'Draw')}
+          </Tabs.Tab>
+          <Tabs.Tab value="canvas" style={{ fontSize: '0.8rem' }}>
+            {t('sign.type.canvas', 'Canvas')}
+          </Tabs.Tab>
+          <Tabs.Tab value="image" style={{ fontSize: '0.8rem' }}>
+            {t('sign.type.image', 'Image')}
+          </Tabs.Tab>
+          <Tabs.Tab value="text" style={{ fontSize: '0.8rem' }}>
+            {t('sign.type.text', 'Text')}
+          </Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
 
+      {/* Undo/Redo Controls */}
+      <Group justify="space-between" grow>
+        <Button
+          variant="outline"
+          onClick={onUndo}
+          disabled={disabled}
+        >
+          {t('sign.undo', 'Undo')}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={onRedo}
+          disabled={disabled}
+        >
+          {t('sign.redo', 'Redo')}
+        </Button>
+      </Group>
 
       {/* Signature Creation based on type */}
       {parameters.signatureType === 'canvas' && (
@@ -782,9 +792,9 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
       {(parameters.signatureType === 'canvas' || parameters.signatureType === 'image' || parameters.signatureType === 'text') && (
         <Alert color="blue" title={t('sign.instructions.title', 'How to add signature')}>
           <Text size="sm">
-            {parameters.signatureType === 'canvas' && 'Draw your signature in the canvas above. Placement mode will activate automatically when you finish drawing.'}
-            {parameters.signatureType === 'image' && 'Upload your signature image above. Placement mode will activate automatically when the image is loaded.'}
-            {parameters.signatureType === 'text' && 'Enter your name above. Placement mode will activate automatically when you type your name.'}
+            {parameters.signatureType === 'canvas' && 'After drawing your signature in the canvas above, click anywhere on the PDF to place it.'}
+            {parameters.signatureType === 'image' && 'After uploading your signature image above, click anywhere on the PDF to place it.'}
+            {parameters.signatureType === 'text' && 'After entering your name above, click anywhere on the PDF to place your signature.'}
           </Text>
         </Alert>
       )}

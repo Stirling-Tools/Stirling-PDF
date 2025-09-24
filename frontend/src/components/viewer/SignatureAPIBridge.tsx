@@ -20,7 +20,8 @@ export interface SignatureAPIBridgeProps {}
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgeProps>((props, ref) => {
   const { provides: annotationApi } = useAnnotationCapability();
-  const { signatureConfig } = useSignature();
+  const { signatureConfig, storeImageData } = useSignature();
+
 
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
@@ -31,13 +32,30 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
         const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
 
         if (selectedAnnotation) {
-          const annotation = selectedAnnotation as any;
-          const pageIndex = annotation.object?.pageIndex || 0;
-          const id = annotation.object?.id;
+          // First, let EmbedPDF try to handle this natively
+          // Only intervene if needed
+          setTimeout(() => {
+            // Check if the annotation is still selected after a brief delay
+            // If EmbedPDF handled it natively, it should be gone
+            const stillSelected = annotationApi.getSelectedAnnotation?.();
 
-          if (id) {
-            annotationApi.deleteAnnotation(pageIndex, id);
-          }
+            if (stillSelected) {
+              // EmbedPDF didn't handle it, so we need to delete manually
+              const annotation = stillSelected as any;
+              const pageIndex = annotation.object?.pageIndex || 0;
+              const id = annotation.object?.id;
+
+              if (id) {
+                // Try deleteSelected method first (should integrate with history)
+                if ((annotationApi as any).deleteSelected) {
+                  (annotationApi as any).deleteSelected();
+                } else {
+                  // Fallback to direct deletion
+                  annotationApi.deleteAnnotation(pageIndex, id);
+                }
+              }
+            }
+          }, 10);
         }
       }
     };
@@ -50,7 +68,14 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
     addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => {
       if (!annotationApi) return;
 
-      // Create image stamp annotation
+      // Create image stamp annotation with proper image data
+      console.log('Creating image annotation with data length:', signatureData?.length);
+
+      const annotationId = uuidV4();
+
+      // Store image data in our persistent store
+      storeImageData(annotationId, signatureData);
+
       annotationApi.createAnnotation(pageIndex, {
         type: PdfAnnotationSubtype.STAMP,
         rect: {
@@ -60,8 +85,14 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
         author: 'Digital Signature',
         subject: 'Digital Signature',
         pageIndex: pageIndex,
-        id: uuidV4(),
+        id: annotationId,
         created: new Date(),
+        // Store image data in multiple places to ensure history captures it
+        imageSrc: signatureData,
+        contents: signatureData, // Some annotation systems use contents
+        data: signatureData, // Try data field
+        imageData: signatureData, // Try imageData field
+        appearance: signatureData // Try appearance field
       });
     },
 
@@ -86,6 +117,10 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
         pageIndex: pageIndex,
         id: uuidV4(),
         created: new Date(),
+        customData: {
+          signatureText: text,
+          signatureType: 'text'
+        }
       });
     },
 
@@ -235,6 +270,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
       switch (params.signatureType) {
         case 'image':
           if (params.signatureData) {
+            const annotationId = uuidV4();
+
+            // Store image data in our persistent store
+            storeImageData(annotationId, params.signatureData);
+
             annotationApi.createAnnotation(page, {
               type: PdfAnnotationSubtype.STAMP,
               rect: {
@@ -244,8 +284,14 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
               author: 'Digital Signature',
               subject: `Digital Signature - ${params.reason || 'Document signing'}`,
               pageIndex: page,
-              id: uuidV4(),
+              id: annotationId,
               created: new Date(),
+              // Store image data in multiple places to ensure history captures it
+              imageSrc: params.signatureData,
+              contents: params.signatureData, // Some annotation systems use contents
+              data: params.signatureData, // Try data field
+              imageData: params.signatureData, // Try imageData field
+              appearance: params.signatureData // Try appearance field
             });
 
             // Switch to select mode after placing signature so it can be easily deleted
@@ -274,6 +320,10 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
               pageIndex: page,
               id: uuidV4(),
               created: new Date(),
+              customData: {
+                signatureText: params.signerName,
+                signatureType: 'text'
+              }
             });
 
             // Switch to select mode after placing signature so it can be easily deleted

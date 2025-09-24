@@ -35,6 +35,7 @@ import { SearchAPIBridge } from './SearchAPIBridge';
 import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 import { RotateAPIBridge } from './RotateAPIBridge';
 import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
+import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -42,9 +43,10 @@ interface LocalEmbedPDFProps {
   enableSignature?: boolean;
   onSignatureAdded?: (annotation: any) => void;
   signatureApiRef?: React.RefObject<SignatureAPI>;
+  historyApiRef?: React.RefObject<HistoryAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureAdded, signatureApiRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [annotations, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
@@ -257,6 +259,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
         {enableSignature && <SignatureAPIBridge ref={signatureApiRef} />}
+        {enableSignature && <HistoryAPIBridge ref={historyApiRef} />}
         <GlobalPointerProvider>
           <Viewport
             style={{

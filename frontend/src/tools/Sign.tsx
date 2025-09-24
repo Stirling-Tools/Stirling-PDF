@@ -12,7 +12,7 @@ import { useSignature } from "../contexts/SignatureContext";
 const Sign = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const { setWorkbench } = useNavigation();
-  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings } = useSignature();
+  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo } = useSignature();
 
   // Manual sync function
   const syncSignatureConfig = () => {
@@ -65,6 +65,8 @@ const Sign = (props: BaseToolProps) => {
             onActivateSignaturePlacement={handleSignaturePlacement}
             onDeactivateSignature={deactivateDrawMode}
             onUpdateDrawSettings={updateDrawSettings}
+            onUndo={undo}
+            onRedo={redo}
           />
         ),
       });

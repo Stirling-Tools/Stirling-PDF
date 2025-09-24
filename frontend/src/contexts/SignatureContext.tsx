@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react';
 import { SignParameters } from '../hooks/tools/sign/useSignParameters';
 import { SignatureAPI } from '../components/viewer/SignatureAPIBridge';
+import { HistoryAPI } from '../components/viewer/HistoryAPIBridge';
 
 // Signature state interface
 interface SignatureState {
@@ -19,11 +20,16 @@ interface SignatureActions {
   activateSignaturePlacementMode: () => void;
   activateDeleteMode: () => void;
   updateDrawSettings: (color: string, size: number) => void;
+  undo: () => void;
+  redo: () => void;
+  storeImageData: (id: string, data: string) => void;
+  getImageData: (id: string) => string | undefined;
 }
 
 // Combined context interface
 interface SignatureContextValue extends SignatureState, SignatureActions {
   signatureApiRef: React.RefObject<SignatureAPI | null>;
+  historyApiRef: React.RefObject<HistoryAPI | null>;
 }
 
 // Create context
@@ -39,6 +45,8 @@ const initialState: SignatureState = {
 export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<SignatureState>(initialState);
   const signatureApiRef = useRef<SignatureAPI>(null);
+  const historyApiRef = useRef<HistoryAPI>(null);
+  const imageDataStore = useRef<Map<string, string>>(new Map());
 
   // Actions
   const setSignatureConfig = useCallback((config: SignParameters | null) => {
@@ -100,12 +108,36 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, []);
 
+  const undo = useCallback(() => {
+    if (historyApiRef.current) {
+      historyApiRef.current.undo();
+    }
+  }, []);
+
+  const redo = useCallback(() => {
+    if (historyApiRef.current) {
+      historyApiRef.current.redo();
+    }
+  }, []);
+
+  const storeImageData = useCallback((id: string, data: string) => {
+    console.log('Storing image data for annotation:', id, data.length, 'chars');
+    imageDataStore.current.set(id, data);
+  }, []);
+
+  const getImageData = useCallback((id: string) => {
+    const data = imageDataStore.current.get(id);
+    console.log('Retrieving image data for annotation:', id, data?.length, 'chars');
+    return data;
+  }, []);
+
 
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {
     ...state,
     signatureApiRef,
+    historyApiRef,
     setSignatureConfig,
     setPlacementMode,
     activateDrawMode,
@@ -113,6 +145,10 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     activateSignaturePlacementMode,
     activateDeleteMode,
     updateDrawSettings,
+    undo,
+    redo,
+    storeImageData,
+    getImageData,
   };
 
   return (

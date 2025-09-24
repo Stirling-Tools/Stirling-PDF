@@ -40,7 +40,7 @@ const EmbedPdfViewerContent = ({
   const isSignatureMode = selectedTool === 'sign';
 
   // Get signature context
-  const { signatureApiRef } = useSignature();
+  const { signatureApiRef, historyApiRef } = useSignature();
 
 
   // Get current file from FileContext
@@ -189,8 +189,17 @@ const EmbedPdfViewerContent = ({
               url={effectiveFile.url}
               enableSignature={isSignatureMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
+              historyApiRef={historyApiRef as React.RefObject<any>}
               onSignatureAdded={(annotation) => {
                 console.log('Signature added:', annotation);
+                if (annotation.type === 13) {
+                  console.log('- imageSrc:', !!annotation.imageSrc, annotation.imageSrc?.length);
+                  console.log('- contents:', !!annotation.contents, annotation.contents?.length);
+                  console.log('- data:', !!annotation.data, annotation.data?.length);
+                  console.log('- imageData:', !!annotation.imageData, annotation.imageData?.length);
+                  console.log('- appearance:', !!annotation.appearance, typeof annotation.appearance);
+                  console.log('- All keys:', Object.keys(annotation));
+                }
                 // Future: Handle signature completion
               }}
             />
