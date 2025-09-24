@@ -51,6 +51,11 @@ interface ThumbnailAPIWrapper {
   renderThumb: (pageIndex: number, scale: number) => { toPromise: () => Promise<Blob> };
 }
 
+interface ExportAPIWrapper {
+  download: () => void;
+  saveAsCopy: () => { toPromise: () => Promise<ArrayBuffer> };
+}
+
 
 // State interfaces - represent the shape of data from each bridge
 interface ScrollState {
@@ -93,6 +98,10 @@ interface SearchState {
   activeIndex: number;
 }
 
+interface ExportState {
+  canExport: boolean;
+}
+
 // Bridge registration interface - bridges register with state and API
 interface BridgeRef<TState = unknown, TApi = unknown> {
   state: TState;
@@ -122,6 +131,7 @@ interface ViewerContextType {
   getRotationState: () => RotationState;
   getSearchState: () => SearchState;
   getThumbnailAPI: () => ThumbnailAPIWrapper | null;
+  getExportState: () => ExportState;
 
   // Immediate update callbacks
   registerImmediateZoomUpdate: (callback: (percent: number) => void) => void;
@@ -179,6 +189,11 @@ interface ViewerContextType {
     clear: () => void;
   };
 
+  exportActions: {
+    download: () => void;
+    saveAsCopy: () => Promise<ArrayBuffer | null>;
+  };
+
   // Bridge registration - internal use by bridges  
   registerBridge: (type: string, ref: BridgeRef) => void;
 }
@@ -203,6 +218,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     spread: null as BridgeRef<SpreadState, SpreadAPIWrapper> | null,
     rotation: null as BridgeRef<RotationState, RotationAPIWrapper> | null,
     thumbnail: null as BridgeRef<unknown, ThumbnailAPIWrapper> | null,
+    export: null as BridgeRef<ExportState, ExportAPIWrapper> | null,
   });
 
   // Immediate zoom callback for responsive display updates
@@ -237,6 +253,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         break;
       case 'thumbnail':
         bridgeRefs.current.thumbnail = ref as BridgeRef<unknown, ThumbnailAPIWrapper>;
+        break;
+      case 'export':
+        bridgeRefs.current.export = ref as BridgeRef<ExportState, ExportAPIWrapper>;
         break;
     }
   };
@@ -276,6 +295,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const getThumbnailAPI = () => {
     return bridgeRefs.current.thumbnail?.api || null;
+  };
+
+  const getExportState = (): ExportState => {
+    return bridgeRefs.current.export?.state || { canExport: false };
   };
 
   // Action handlers - call APIs directly
@@ -473,6 +496,28 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   };
 
+  const exportActions = {
+    download: () => {
+      const api = bridgeRefs.current.export?.api;
+      if (api?.download) {
+        api.download();
+      }
+    },
+    saveAsCopy: async () => {
+      const api = bridgeRefs.current.export?.api;
+      if (api?.saveAsCopy) {
+        try {
+          const result = api.saveAsCopy();
+          return await result.toPromise();
+        } catch (error) {
+          console.error('Failed to save PDF copy:', error);
+          return null;
+        }
+      }
+      return null;
+    }
+  };
+
   const registerImmediateZoomUpdate = (callback: (percent: number) => void) => {
     immediateZoomUpdateCallback.current = callback;
   };
@@ -507,6 +552,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     getRotationState,
     getSearchState,
     getThumbnailAPI,
+    getExportState,
 
     // Immediate updates
     registerImmediateZoomUpdate,
@@ -522,6 +568,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     spreadActions,
     rotationActions,
     searchActions,
+    exportActions,
 
     // Bridge registration
     registerBridge,
