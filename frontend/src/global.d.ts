@@ -17,6 +17,7 @@ declare module '../assets/material-symbols-icons.json' {
   export default value;
 }
 
+declare module 'pdfjs-dist/legacy/build/pdf.mjs'
 // TODO: Add proper EmbedPDF types for local submodule integration
 
 export {};

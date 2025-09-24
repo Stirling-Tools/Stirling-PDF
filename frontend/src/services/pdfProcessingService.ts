@@ -110,7 +110,7 @@ export class PDFProcessingService {
 
       const context = canvas.getContext('2d');
       if (context) {
-        await page.render({ canvasContext: context, viewport }).promise;
+        await page.render({ canvasContext: context, viewport, canvas }).promise;
         const thumbnail = canvas.toDataURL();
 
         pages.push({
