@@ -75,6 +75,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
   toolRegistry: any; // From useToolManagement
+  getSelectedTool: (toolId: string | null) => ToolRegistryEntry | null;
 
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
@@ -247,6 +248,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     selectedToolKey: navigationState.selectedTool,
     selectedTool,
     toolRegistry,
+    getSelectedTool,
 
     // Actions
     setSidebarsVisible,
@@ -276,6 +278,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     navigationState.selectedTool,
     selectedTool,
     toolRegistry,
+    getSelectedTool,
     setSidebarsVisible,
     setLeftPanelView,
     setReaderMode,

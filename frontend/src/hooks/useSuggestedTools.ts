@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigationState } from '../contexts/NavigationContext';
 import { useToolNavigation } from './useToolNavigation';
-import { useToolManagement } from './useToolManagement';
+import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
 import { ToolId } from '../types/toolId';
 
 // Material UI Icons
@@ -50,7 +50,7 @@ const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, 'href' | 'onClick'>[] = [
 export function useSuggestedTools(): SuggestedTool[] {
   const { selectedTool } = useNavigationState();
   const { getToolNavigation } = useToolNavigation();
-  const { getSelectedTool } = useToolManagement();
+  const { getSelectedTool } = useToolWorkflow();
 
   return useMemo(() => {
     // Filter out the current tool

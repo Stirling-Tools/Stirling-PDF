@@ -4,7 +4,6 @@ import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
-import { useToolManagement } from '../../hooks/useToolManagement';
 import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
@@ -39,8 +38,8 @@ export default function Workbench() {
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
 
-  // Get tool registry to look up selected tool
-  const { toolRegistry } = useToolManagement();
+  // Get tool registry from context (instead of direct hook call)
+  const { toolRegistry } = useToolWorkflow();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
 

@@ -1,5 +1,5 @@
 // Define all possible tool IDs as source of truth
-const TOOL_IDS = [
+export const TOOL_IDS = [
   'certSign',
   'sign',
   'addPassword',
