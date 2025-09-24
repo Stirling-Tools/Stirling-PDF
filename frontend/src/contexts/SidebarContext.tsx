@@ -7,7 +7,7 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   // All sidebar state management
   const quickAccessRef = useRef<HTMLDivElement>(null);
   const toolPanelRef = useRef<HTMLDivElement>(null);
-  
+
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
@@ -44,4 +44,8 @@ export function useSidebarContext(): SidebarContextValue {
     throw new Error('useSidebarContext must be used within a SidebarProvider');
   }
   return context;
-} 
+}
+
+export function useOptionalSidebarContext(): SidebarContextValue | undefined {
+  return useContext(SidebarContext);
+}
