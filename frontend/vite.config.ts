@@ -12,5 +12,5 @@ export default defineConfig({
       },
     },
   },
-  base: "./",
+  base: process.env.RUN_SUBPATH ? `/${process.env.RUN_SUBPATH}` : './',
 });
