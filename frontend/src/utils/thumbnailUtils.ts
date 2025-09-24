@@ -410,7 +410,7 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
       throw new Error('Could not get canvas context');
     }
 
-    await page.render({ canvasContext: context, viewport }).promise;
+    await page.render({ canvasContext: context, viewport, canvas }).promise;
     const thumbnail = canvas.toDataURL();
 
     pdfWorkerManager.destroyDocument(pdf);
