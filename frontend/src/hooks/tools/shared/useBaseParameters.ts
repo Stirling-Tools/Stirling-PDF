@@ -15,8 +15,12 @@ export interface BaseParametersConfig<T> {
   validateFn?: (params: T) => boolean;
 }
 
-export function useBaseParameters<T>(config: BaseParametersConfig<T>): BaseParametersHook<T> {
-  const [parameters, setParameters] = useState<T>(config.defaultParameters);
+export function useBaseParameters<T>({
+  defaultParameters,
+  endpointName,
+  validateFn
+}: BaseParametersConfig<T>): BaseParametersHook<T> {
+  const [parameters, setParameters] = useState<T>(defaultParameters);
 
   const updateParameter = useCallback(<K extends keyof T>(parameter: K, value: T[K]) => {
     setParameters(prev => ({
@@ -26,24 +30,19 @@ export function useBaseParameters<T>(config: BaseParametersConfig<T>): BaseParam
   }, []);
 
   const resetParameters = useCallback(() => {
-    setParameters(config.defaultParameters);
-  }, [config.defaultParameters]);
+    setParameters(defaultParameters);
+  }, [defaultParameters]);
 
   const validateParameters = useCallback(() => {
-    return config.validateFn ? config.validateFn(parameters) : true;
-  }, [parameters, config.validateFn]);
-
-  const endpointName = config.endpointName;
-  let getEndpointName: () => string;
-  if (typeof endpointName === "string") {
-    getEndpointName = useCallback(() => {
+    return validateFn ? validateFn(parameters) : true;
+  }, [parameters, validateFn]);
+  const getEndpointName = useCallback(() => {
+    if (typeof endpointName === "string") {
       return endpointName;
-    }, []);
-  } else {
-    getEndpointName = useCallback(() => {
+    } else {
       return endpointName(parameters);
-    }, [parameters]);
-  }
+    }
+  }, [endpointName, parameters]);
 
   return {
     parameters,

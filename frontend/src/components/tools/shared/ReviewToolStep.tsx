@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Button, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import i18n from "../../../i18n";
 import DownloadIcon from "@mui/icons-material/Download";
 import UndoIcon from "@mui/icons-material/Undo";
 import ErrorNotification from "./ErrorNotification";
@@ -107,10 +108,10 @@ export function createReviewToolStep<TParams = unknown>(
   createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
   props: ReviewToolStepProps<TParams>
 ): React.ReactElement {
-  const { t } = useTranslation();
+  const title = i18n.t("review", { defaultValue: "Review" });
 
   return createStep(
-    t("review", "Review"),
+    title,
     {
       isVisible: props.isVisible,
       isCollapsed: props.isCollapsed,

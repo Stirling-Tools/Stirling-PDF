@@ -80,8 +80,6 @@ const ToolStep = ({
   alwaysShowTooltip = false,
   tooltip
 }: ToolStepProps) => {
-  if (!isVisible) return null;
-
   const parent = useContext(ToolStepContext);
 
   // Auto-detect if we should show numbers based on sibling count or force option
@@ -90,6 +88,8 @@ const ToolStep = ({
     if (parent?.forceStepNumbers) return true; // Flow-level force
     return parent ? parent.visibleStepCount >= 3 : false; // Auto-detect
   }, [showNumber, parent]);
+
+  if (!isVisible) return null;
 
   const stepNumber = _stepNumber;
 

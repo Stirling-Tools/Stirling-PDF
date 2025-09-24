@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import i18n from '../../../i18n';
 import FileStatusIndicator from './FileStatusIndicator';
 import { StirlingFile } from '../../../types/fileContext';
 
@@ -14,9 +14,9 @@ export function createFilesToolStep(
   createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
   props: FilesToolStepProps
 ): React.ReactElement {
-  const { t } = useTranslation();
+  const title = i18n.t('files.title', { defaultValue: 'Files' });
 
-  return createStep(t("files.title", "Files"), {
+  return createStep(title, {
     isVisible: true,
     isCollapsed: props.isCollapsed,
     onCollapsedClick: props.onCollapsedClick

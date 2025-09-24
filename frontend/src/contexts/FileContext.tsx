@@ -34,16 +34,19 @@ import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
+type IndexedDBApi = ReturnType<typeof useIndexedDB>;
+
 
 // Inner provider component that has access to IndexedDB
-function FileContextInner({
+function FileContextContent({
   children,
-  enablePersistence = true
-}: FileContextProviderProps) {
+  enablePersistence = true,
+  indexedDB
+}: FileContextProviderProps & { indexedDB: IndexedDBApi | null }) {
   const [state, dispatch] = useReducer(fileContextReducer, initialFileContextState);
 
   // IndexedDB context for persistence
-  const indexedDB = enablePersistence ? useIndexedDB() : null;
+  const persistenceApi = enablePersistence ? indexedDB : null;
 
   // File ref map - stores File objects outside React state
   const filesRef = useRef<Map<FileId, File>>(new Map());
@@ -72,11 +75,11 @@ function FileContextInner({
     dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
   }, []);
 
-  const selectFiles = (stirlingFiles: StirlingFile[]) => {
+  const selectFiles = useCallback((stirlingFiles: StirlingFile[]) => {
     const currentSelection = stateRef.current.ui.selectedFileIds;
     const newFileIds = stirlingFiles.map(stirlingFile => stirlingFile.fileId);
     dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
-  }
+  }, [dispatch]);
 
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
@@ -88,7 +91,7 @@ function FileContextInner({
     }
 
     return stirlingFiles;
-  }, [enablePersistence]);
+  }, [enablePersistence, lifecycleManager, selectFiles]);
 
   const addStirlingFileStubsAction = useCallback(async (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
     // StirlingFileStubs preserve all metadata - perfect for FileManager use case!
@@ -100,7 +103,7 @@ function FileContextInner({
     }
 
     return result;
-  }, []);
+  }, [lifecycleManager, selectFiles]);
 
 
   // Action creators
@@ -112,8 +115,8 @@ function FileContextInner({
   }, []);
 
   const undoConsumeFilesWrapper = useCallback(async (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]): Promise<void> => {
-    return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, filesRef, dispatch, indexedDB);
-  }, [indexedDB]);
+    return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, filesRef, dispatch, persistenceApi);
+  }, [persistenceApi]);
 
   // File pinning functions - use StirlingFile directly
   const pinFileWrapper = useCallback((file: StirlingFile) => {
@@ -134,9 +137,9 @@ function FileContextInner({
       lifecycleManager.removeFiles(fileIds, stateRef);
 
       // Remove from IndexedDB if enabled
-      if (indexedDB && enablePersistence && deleteFromStorage !== false) {
+      if (persistenceApi && enablePersistence && deleteFromStorage !== false) {
         try {
-          await indexedDB.deleteMultiple(fileIds);
+          await persistenceApi.deleteMultiple(fileIds);
         } catch (error) {
           console.error('Failed to delete files from IndexedDB:', error);
         }
@@ -162,9 +165,9 @@ function FileContextInner({
       dispatch({ type: 'RESET_CONTEXT' });
 
       // Then clear IndexedDB storage
-      if (indexedDB && enablePersistence) {
+      if (persistenceApi && enablePersistence) {
         try {
-          await indexedDB.clearAll();
+          await persistenceApi.clearAll();
         } catch (error) {
           console.error('Failed to clear IndexedDB:', error);
         }
@@ -190,7 +193,7 @@ function FileContextInner({
     undoConsumeFilesWrapper,
     pinFileWrapper,
     unpinFileWrapper,
-    indexedDB,
+    persistenceApi,
     enablePersistence
   ]);
 
@@ -229,31 +232,38 @@ function FileContextInner({
   );
 }
 
+function FileContextWithPersistence(props: FileContextProviderProps) {
+  const indexedDB = useIndexedDB();
+  return <FileContextContent {...props} indexedDB={indexedDB} />;
+}
+
+
 // Outer provider component that wraps with IndexedDBProvider
 export function FileContextProvider({
   children,
   enableUrlSync = true,
-  enablePersistence = true
+  enablePersistence = true,
+  ...rest
 }: FileContextProviderProps) {
+  const sharedProps = {
+    children,
+    enableUrlSync,
+    enablePersistence,
+    ...rest
+  };
+
   if (enablePersistence) {
     return (
       <IndexedDBProvider>
-        <FileContextInner
-          enableUrlSync={enableUrlSync}
-          enablePersistence={enablePersistence}
-        >
-          {children}
-        </FileContextInner>
+        <FileContextWithPersistence {...sharedProps} />
       </IndexedDBProvider>
     );
   } else {
     return (
-      <FileContextInner
-        enableUrlSync={enableUrlSync}
-        enablePersistence={enablePersistence}
-      >
-        {children}
-      </FileContextInner>
+      <FileContextContent
+        {...sharedProps}
+        indexedDB={null}
+      />
     );
   }
 }

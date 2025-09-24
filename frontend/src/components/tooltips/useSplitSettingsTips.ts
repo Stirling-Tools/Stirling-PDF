@@ -1,11 +1,15 @@
-import { useTranslation } from 'react-i18next';
+import { useMemo } from 'react';
+import { useTranslation, type TFunction } from 'react-i18next';
 import { TooltipContent } from '../../types/tips';
 import { SPLIT_METHODS, type SplitMethod } from '../../constants/splitConstants';
 
-export const useSplitSettingsTips = (method: SplitMethod | ''): TooltipContent | null => {
-  const { t } = useTranslation();
-
-  if (!method) return null;
+export const getSplitSettingsTips = (
+  t: TFunction,
+  method: SplitMethod | ''
+): TooltipContent | null => {
+  if (!method) {
+    return null;
+  }
 
   const tooltipMap: Record<SplitMethod, TooltipContent> = {
     [SPLIT_METHODS.BY_PAGES]: {
@@ -131,4 +135,10 @@ export const useSplitSettingsTips = (method: SplitMethod | ''): TooltipContent |
   };
 
   return tooltipMap[method];
+};
+
+export const useSplitSettingsTips = (method: SplitMethod | ''): TooltipContent | null => {
+  const { t } = useTranslation();
+
+  return useMemo(() => getSplitSettingsTips(t, method), [t, method]);
 };

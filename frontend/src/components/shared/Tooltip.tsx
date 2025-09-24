@@ -5,7 +5,7 @@ import { addEventListenerWithCleanup } from '../../utils/genericUtils';
 import { useTooltipPosition } from '../../hooks/useTooltipPosition';
 import { TooltipTip } from '../../types/tips';
 import { TooltipContent } from './tooltip/TooltipContent';
-import { useSidebarContext } from '../../contexts/SidebarContext';
+import { useOptionalSidebarContext } from '../../contexts/SidebarContext';
 import styles from './tooltip/Tooltip.module.css';
 
 export interface TooltipProps {
@@ -64,7 +64,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
     }
   }, []);
 
-  const sidebarContext = sidebarTooltip ? useSidebarContext() : null;
+  const sidebarContext = useOptionalSidebarContext();
+  const effectiveSidebarContext = sidebarTooltip ? sidebarContext : undefined;
+
+  useEffect(() => {
+    if (sidebarTooltip && !sidebarContext) {
+      console.warn('Sidebar tooltip requested without SidebarProvider context.');
+    }
+  }, [sidebarTooltip, sidebarContext]);
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? !!controlledOpen : internalOpen;
@@ -86,8 +93,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
     gap,
     triggerRef,
     tooltipRef,
-    sidebarRefs: sidebarContext?.sidebarRefs,
-    sidebarState: sidebarContext?.sidebarState,
+    sidebarRefs: effectiveSidebarContext?.sidebarRefs,
+    sidebarState: effectiveSidebarContext?.sidebarState,
   });
 
   // Close on outside click: pinned → close; not pinned → optionally close

@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "../components/tools/shared/createToolFlow";
 import CardSelector from "../components/shared/CardSelector";
@@ -6,7 +7,7 @@ import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
 import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { useSplitMethodTips } from "../components/tooltips/useSplitMethodTips";
-import { useSplitSettingsTips } from "../components/tooltips/useSplitSettingsTips";
+import { useSplitSettingsTips, getSplitSettingsTips } from "../components/tooltips/useSplitSettingsTips";
 import { BaseToolProps, ToolComponent } from "../types/tool";
 import { type SplitMethod, METHOD_OPTIONS, type MethodOption } from "../constants/splitConstants";
 
@@ -24,10 +25,10 @@ const Split = (props: BaseToolProps) => {
   const settingsTips = useSplitSettingsTips(base.params.parameters.method);
 
   // Get tooltip content for a specific method
-  const getMethodTooltip = (option: MethodOption) => {
-    const tooltipContent = useSplitSettingsTips(option.value);
+  const getMethodTooltip = useCallback((option: MethodOption) => {
+    const tooltipContent = getSplitSettingsTips(t, option.value);
     return tooltipContent?.tips || [];
-  };
+  }, [t]);
 
   // Get the method name for the settings step title
   const getSettingsTitle = () => {
