@@ -3,7 +3,7 @@ import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { getBaseUrl } from "../constants/app";
+import { useBaseUrl } from "../constants/app";
 
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
@@ -22,7 +22,7 @@ export default function HomePage() {
 
   const { selectedTool, selectedToolKey } = useToolWorkflow();
 
-  const baseUrl = getBaseUrl();
+  const baseUrl = useBaseUrl();
 
   // Update document meta when tool changes
   useDocumentMeta({
