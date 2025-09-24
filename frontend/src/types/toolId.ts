@@ -55,6 +55,7 @@ const TOOL_IDS = [
   'devFolderScanning',
   'devSsoGuide',
   'devAirgapped',
+  'bookletImposition',
 ] as const;
 
 // Tool identity - what PDF operation we're performing (type-safe)

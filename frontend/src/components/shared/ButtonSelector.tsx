@@ -1,4 +1,5 @@
 import { Button, Group, Stack, Text } from "@mantine/core";
+import FitText from "./FitText";
 
 export interface ButtonOption<T> {
   value: T;
@@ -13,15 +14,19 @@ interface ButtonSelectorProps<T> {
   label?: string;
   disabled?: boolean;
   fullWidth?: boolean;
+  buttonClassName?: string;
+  textClassName?: string;
 }
 
-const ButtonSelector = <T extends string>({
+const ButtonSelector = <T extends string | number>({
   value,
   onChange,
   options,
   label = undefined,
   disabled = false,
   fullWidth = true,
+  buttonClassName,
+  textClassName,
 }: ButtonSelectorProps<T>) => {
   return (
     <Stack gap='var(--mantine-spacing-sm)'>
@@ -41,14 +46,24 @@ const ButtonSelector = <T extends string>({
             color={value === option.value ? 'var(--color-primary-500)' : 'var(--text-muted)'}
             onClick={() => onChange(option.value)}
             disabled={disabled || option.disabled}
+            className={buttonClassName}
             style={{
               flex: fullWidth ? 1 : undefined,
               height: 'auto',
               minHeight: '2.5rem',
-              fontSize: 'var(--mantine-font-size-sm)'
+              fontSize: 'var(--mantine-font-size-sm)',
+              lineHeight: '1.4',
+              paddingTop: '0.5rem',
+              paddingBottom: '0.5rem'
             }}
           >
-            {option.label}
+            <FitText
+              text={option.label}
+              lines={1}
+              minimumFontScale={0.5}
+              fontSize={10}
+              className={textClassName}
+            />
           </Button>
         ))}
       </Group>

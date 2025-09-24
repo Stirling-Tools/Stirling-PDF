@@ -23,6 +23,7 @@ export interface AppConfig {
   license?: string;
   GoogleDriveEnabled?: boolean;
   SSOAutoLogin?: boolean;
+  serverCertificateEnabled?: boolean;
   error?: string;
 }
 

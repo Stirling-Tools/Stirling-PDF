@@ -495,6 +495,10 @@
       "title": "Multi-Page Layout",
       "desc": "Merge multiple pages of a PDF document into a single page"
     },
+    "bookletImposition": {
+      "title": "Booklet Imposition",
+      "desc": "Create booklets with proper page ordering and multi-page layout for printing and binding"
+    },
     "scalePages": {
       "title": "Adjust page size/scale",
       "desc": "Change the size/scale of a page and/or its contents."
@@ -1230,6 +1234,17 @@
     "addBorder": "Add Borders",
     "submit": "Submit"
   },
+  "bookletImposition": {
+    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "title": "Booklet Imposition",
+    "header": "Booklet Imposition",
+    "submit": "Create Booklet",
+    "files": {
+    },
+    "error": {
+      "failed": "An error occurred while creating the booklet imposition."
+    }
+  },
   "scalePages": {
     "tags": "resize,modify,dimension,adapt",
     "title": "Adjust page-scale",
@@ -1455,6 +1470,7 @@
     "tags": "Stamp, Add image, center image, Watermark, PDF, Embed, Customize",
     "header": "Stamp PDF",
     "title": "Stamp PDF",
+    "stampSetup": "Stamp Setup",
     "stampType": "Stamp Type",
     "stampText": "Stamp Text",
     "stampImage": "Stamp Image",
@@ -1467,7 +1483,8 @@
     "overrideY": "Override Y Coordinate",
     "customMargin": "Custom Margin",
     "customColor": "Custom Text Color",
-    "submit": "Submit"
+    "submit": "Submit",
+    "noStampSelected": "No stamp selected. Return to Step 1."
   },
   "removeImagePdf": {
     "tags": "Remove Image,Page operations,Back end,server side"
