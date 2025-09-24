@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import axios, { CancelTokenSource } from 'axios';
+import axios, { CancelTokenSource } from '../../../services/http';
 import { processResponse, ResponseHandler } from '../../../utils/toolResponseProcessor';
 import type { ProcessingProgress } from './useToolState';
 

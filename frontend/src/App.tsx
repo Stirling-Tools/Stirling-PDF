@@ -14,6 +14,7 @@ import "./styles/cookieconsent.css";
 import "./index.css";
 import { RightRailProvider } from "./contexts/RightRailContext";
 import { ViewerProvider } from "./contexts/ViewerContext";
+import ToastPlayground from "./components/toast/ToastPlayground";
 
 // Import file ID debugging helpers (development only)
 import "./utils/fileIdSafety";
@@ -47,6 +48,7 @@ export default function App() {
                     <ViewerProvider>
                       <RightRailProvider>
                         <HomePage />
+                        {import.meta.env.DEV && <ToastPlayground />}
                       </RightRailProvider>
                     </ViewerProvider>
                   </SidebarProvider>

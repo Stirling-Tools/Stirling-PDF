@@ -30,6 +30,30 @@
   --color-primary-800: #1e40af;
   --color-primary-900: #1e3a8a;
 
+  /* Success (green) */
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-200: #bbf7d0;
+  --color-green-300: #86efac;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
+  --color-green-900: #14532d;
+
+  /* Warning (yellow) */
+  --color-yellow-50: #fefce8;
+  --color-yellow-100: #fef9c3;
+  --color-yellow-200: #fef08a;
+  --color-yellow-300: #fde047;
+  --color-yellow-400: #facc15;
+  --color-yellow-500: #eab308;
+  --color-yellow-600: #ca8a04;
+  --color-yellow-700: #a16207;
+  --color-yellow-800: #854d0e;
+  --color-yellow-900: #713f12;
+
   --color-red-50: #fef2f2;
   --color-red-100: #fee2e2;
   --color-red-200: #fecaca;
@@ -240,6 +264,30 @@
   --color-gray-700: #d1d5db;
   --color-gray-800: #e5e7eb;
   --color-gray-900: #f3f4f6;
+
+  /* Success (green) - dark */
+  --color-green-50: #052e16;
+  --color-green-100: #064e3b;
+  --color-green-200: #065f46;
+  --color-green-300: #047857;
+  --color-green-400: #059669;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #4ade80;
+  --color-green-800: #86efac;
+  --color-green-900: #bbf7d0;
+
+  /* Warning (yellow) - dark */
+  --color-yellow-50: #451a03;
+  --color-yellow-100: #713f12;
+  --color-yellow-200: #854d0e;
+  --color-yellow-300: #a16207;
+  --color-yellow-400: #ca8a04;
+  --color-yellow-500: #eab308;
+  --color-yellow-600: #facc15;
+  --color-yellow-700: #fde047;
+  --color-yellow-800: #fef08a;
+  --color-yellow-900: #fef9c3;
 
   /* Dark theme semantic colors */
   --bg-surface: #2A2F36;

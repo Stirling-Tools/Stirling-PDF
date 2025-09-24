@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../../services/http';
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from '../../../contexts/FileContext';
 import { useToolState, type ProcessingProgress } from './useToolState';

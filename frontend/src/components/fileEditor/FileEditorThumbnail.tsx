@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { Text, ActionIcon, CheckboxIndicator } from '@mantine/core';
+import { alert } from '../toast';
 import { useTranslation } from 'react-i18next';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
@@ -263,10 +264,10 @@ const FileEditorThumbnail = ({
               if (actualFile) {
                 if (isPinned) {
                   unpinFile(actualFile);
-                  onSetStatus?.(`Unpinned ${file.name}`);
+                  alert({ alertType: 'neutral', title: `Unpinned ${file.name}`, expandable: false, durationMs: 3000 });
                 } else {
                   pinFile(actualFile);
-                  onSetStatus?.(`Pinned ${file.name}`);
+                  alert({ alertType: 'success', title: `Pinned ${file.name}`, expandable: false, durationMs: 3000 });
                 }
               }
               setShowActions(false);
@@ -278,7 +279,7 @@ const FileEditorThumbnail = ({
 
           <button
             className={styles.actionRow}
-            onClick={() => { onDownloadFile(file.id); setShowActions(false); }}
+            onClick={() => { onDownloadFile(file.id); alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 }); setShowActions(false); }}
           >
             <DownloadOutlinedIcon fontSize="small" />
             <span>{t('download', 'Download')}</span>
@@ -290,7 +291,7 @@ const FileEditorThumbnail = ({
             className={`${styles.actionRow} ${styles.actionDanger}`}
             onClick={() => {
               onDeleteFile(file.id);
-              onSetStatus(`Deleted ${file.name}`);
+              alert({ alertType: 'neutral', title: `Deleted ${file.name}`, expandable: false, durationMs: 3500 });
               setShowActions(false);
             }}
           >

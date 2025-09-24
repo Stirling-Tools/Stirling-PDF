@@ -11,6 +11,7 @@ import FileEditorThumbnail from './FileEditorThumbnail';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import { FileId, StirlingFile } from '../../types/fileContext';
+import { alert } from '../toast';
 import { downloadBlob } from '../../utils/downloadUtils';
 
 
@@ -48,6 +49,14 @@ const FileEditor = ({
 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Toast helpers
+  const showStatus = useCallback((message: string, type: 'neutral' | 'success' | 'warning' | 'error' = 'neutral') => {
+    alert({ alertType: type, title: message, expandable: false, durationMs: 4000 });
+  }, []);
+  const showError = useCallback((message: string) => {
+    alert({ alertType: 'error', title: 'Error', body: message, expandable: true });
+  }, []);
   const [selectionMode, setSelectionMode] = useState(toolMode);
 
   // Enable selection mode automatically in tool mode
@@ -157,18 +166,18 @@ const FileEditor = ({
 
       // Show any errors
       if (errors.length > 0) {
-        setError(errors.join('\n'));
+        showError(errors.join('\n'));
       }
 
       // Process all extracted files
       if (allExtractedFiles.length > 0) {
         // Add files to context (they will be processed automatically)
         await addFiles(allExtractedFiles);
-        setStatus(`Added ${allExtractedFiles.length} files`);
+        showStatus(`Added ${allExtractedFiles.length} files`, 'success');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
-      setError(errorMessage);
+      showError(errorMessage);
       console.error('File processing error:', err);
 
       // Reset extraction progress on error
@@ -206,7 +215,7 @@ const FileEditor = ({
       } else {
         // Check if we've hit the selection limit
         if (maxAllowed > 1 && currentSelectedIds.length >= maxAllowed) {
-          setStatus(`Maximum ${maxAllowed} files can be selected`);
+          showStatus(`Maximum ${maxAllowed} files can be selected`, 'warning');
           return;
         }
         newSelection = [...currentSelectedIds, contextFileId];
@@ -271,7 +280,7 @@ const FileEditor = ({
 
     // Update status
     const moveCount = filesToMove.length;
-    setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
+    showStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
   }, [activeStirlingFileStubs, reorderFiles, setStatus]);
 
 
@@ -314,10 +323,10 @@ const FileEditor = ({
     try {
       // Use FileContext to handle loading stored files
       // The files are already in FileContext, just need to add them to active files
-      setStatus(`Loaded ${selectedFiles.length} files from storage`);
+      showStatus(`Loaded ${selectedFiles.length} files from storage`);
     } catch (err) {
       console.error('Error loading files from storage:', err);
-      setError('Failed to load some files from storage');
+      showError('Failed to load some files from storage');
     }
   }, []);
 
@@ -408,7 +417,7 @@ const FileEditor = ({
                   onToggleFile={toggleFile}
                   onDeleteFile={handleDeleteFile}
                   onViewFile={handleViewFile}
-                  onSetStatus={setStatus}
+                  onSetStatus={showStatus}
                   onReorderFiles={handleReorderFiles}
                   onDownloadFile={handleDownloadFile}
                   toolMode={toolMode}
@@ -428,31 +437,7 @@ const FileEditor = ({
         onSelectFiles={handleLoadFromStorage}
       />
 
-      {status && (
-        <Portal>
-          <Notification
-            color="blue"
-            mt="md"
-            onClose={() => setStatus(null)}
-            style={{ position: 'fixed', bottom: 40, right: 80, zIndex: 10001 }}
-          >
-            {status}
-          </Notification>
-        </Portal>
-      )}
-
-      {error && (
-        <Portal>
-          <Notification
-            color="red"
-            mt="md"
-            onClose={() => setError(null)}
-            style={{ position: 'fixed', bottom: 80, right: 20, zIndex: 10001 }}
-          >
-            {error}
-          </Notification>
-        </Portal>
-      )}
+      
       </Box>
     </Dropzone>
   );
