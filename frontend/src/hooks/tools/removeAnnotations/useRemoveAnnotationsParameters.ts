@@ -1,9 +1,6 @@
 import { useBaseParameters } from '../shared/useBaseParameters';
 
-// Remove annotations is a simple tool with no configurable parameters
-export interface RemoveAnnotationsParameters {
-  // No parameters needed - this tool just removes all annotations
-}
+export interface RemoveAnnotationsParameters {}
 
 export const defaultParameters: RemoveAnnotationsParameters = {
 };

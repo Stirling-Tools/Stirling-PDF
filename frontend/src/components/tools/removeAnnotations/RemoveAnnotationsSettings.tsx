@@ -1,19 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, Alert } from '@mantine/core';
 import LocalIcon from '../../shared/LocalIcon';
-import { RemoveAnnotationsParameters } from '../../../hooks/tools/removeAnnotations/useRemoveAnnotationsParameters';
 
-interface RemoveAnnotationsSettingsProps {
-  parameters: RemoveAnnotationsParameters;
-  onParameterChange: <K extends keyof RemoveAnnotationsParameters>(key: K, value: RemoveAnnotationsParameters[K]) => void;
-  disabled?: boolean;
-}
-
-const RemoveAnnotationsSettings = ({
-  parameters,
-  onParameterChange,
-  disabled = false
-}: RemoveAnnotationsSettingsProps) => {
+const RemoveAnnotationsSettings = () => {
   const { t } = useTranslation();
 
   return (

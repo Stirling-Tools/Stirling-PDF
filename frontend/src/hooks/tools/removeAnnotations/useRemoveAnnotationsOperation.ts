@@ -51,7 +51,7 @@ const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParamete
       const processedBlob = new Blob([pdfBytes], { type: 'application/pdf' });
 
       // Create new file with modified name
-      const fileName = file.name.replace('.pdf', '') + '_removed_annotations.pdf';
+      const fileName = file.name.replace(/\.pdf$/i, '') + '_removed_annotations.pdf';
       const processedFile = new File([processedBlob], fileName, { type: 'application/pdf' });
 
       processedFiles.push(processedFile);
