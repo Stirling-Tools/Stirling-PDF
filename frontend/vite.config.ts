@@ -17,6 +17,5 @@ export default defineConfig({
       target: 'es2020'
     }
   },
-  assetsInclude: ['**/*.mjs'],
   base: process.env.RUN_SUBPATH ? `/${process.env.RUN_SUBPATH}` : './',
 });
