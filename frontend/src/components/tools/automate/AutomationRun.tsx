@@ -12,7 +12,12 @@ import { useResourceCleanup } from "../../../utils/resourceManager";
 interface AutomationRunProps {
   automation: AutomationConfig;
   onComplete: () => void;
-  automateOperation?: any; // TODO: Type this properly when available
+  automateOperation?: {
+    isLoading: boolean;
+    files: File[];
+    downloadUrl: string | null;
+    executeOperation: (params: any, files: File[]) => Promise<void>;
+  };
 }
 
 export default function AutomationRun({ automation, onComplete, automateOperation }: AutomationRunProps) {
@@ -27,12 +32,12 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
 
   // Use the operation hook's loading state
   const isExecuting = automateOperation?.isLoading ?? false;
-  const hasResults = automateOperation?.files.length > 0 || automateOperation?.downloadUrl !== null;
+  const hasResults = (automateOperation?.files?.length ?? 0) > 0 || automateOperation?.downloadUrl !== null;
 
   // Initialize execution steps from automation
   React.useEffect(() => {
     if (automation?.operations) {
-      const steps = automation.operations.map((op: any, index: number) => {
+      const steps = automation.operations.map((op: { operation: string }, index: number) => {
         const tool = toolRegistry[op.operation as keyof typeof toolRegistry];
         return {
           id: `${op.operation}-${index}`,
@@ -193,8 +198,8 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
         <Group justify="space-between" mt="xl">
           <Button
             leftSection={<PlayArrowIcon />}
-            onClick={executeAutomation}
-            disabled={(isExecuting ?? !selectedFiles) ?? selectedFiles.length === 0}
+            onClick={() => { void executeAutomation(); }}
+            disabled={isExecuting || !selectedFiles || selectedFiles.length === 0}
             loading={isExecuting}
           >
             {isExecuting
