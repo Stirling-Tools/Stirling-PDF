@@ -203,3 +203,10 @@ id_ed25519.pub
 
 # node_modules
 node_modules/
+
+# Translation temp files
+*_compact.json
+*compact*.json
+test_batch.json
+*.backup.*.json
+frontend/public/locales/*/translation.backup*.json
