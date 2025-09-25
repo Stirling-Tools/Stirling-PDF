@@ -348,206 +348,257 @@
     "globalPopularity": "Global Popularity",
     "sortBy": "Sort by:",
     "multiTool": {
+      "tags": "multiple,tools",
       "title": "PDF Multi Tool",
       "desc": "Merge, Rotate, Rearrange, Split, and Remove pages"
     },
     "merge": {
+      "tags": "combine,join,unite",
       "title": "Merge",
       "desc": "Easily merge multiple PDFs into one."
     },
     "split": {
+      "tags": "divide,separate,break",
       "title": "Split",
       "desc": "Split PDFs into multiple documents"
     },
     "rotate": {
+      "tags": "turn,flip,orient",
       "title": "Rotate",
       "desc": "Easily rotate your PDFs."
     },
     "imageToPDF": {
+      "tags": "convert,image,transform",
       "title": "Image to PDF",
       "desc": "Convert a image (PNG, JPEG, GIF) to PDF."
     },
     "pdfToImage": {
+      "tags": "convert,image,extract",
       "title": "PDF to Image",
       "desc": "Convert a PDF to a image. (PNG, JPEG, GIF)"
     },
     "pdfOrganiser": {
+      "tags": "organize,rearrange,reorder",
       "title": "Organize",
       "desc": "Remove/Rearrange pages in any order"
     },
     "addImage": {
+      "tags": "insert,embed,place",
       "title": "Add image",
       "desc": "Adds a image onto a set location on the PDF"
     },
     "watermark": {
+      "tags": "stamp,mark,overlay",
       "title": "Add Watermark",
       "desc": "Add a custom watermark to your PDF document."
     },
     "permissions": {
+      "tags": "permissions,security,access",
       "title": "Change Permissions",
       "desc": "Change the permissions of your PDF document"
     },
     "pageRemover": {
+      "tags": "remove,delete,pages",
       "title": "Remove",
       "desc": "Delete unwanted pages from your PDF document."
     },
     "addPassword": {
+      "tags": "password,encrypt,secure",
       "title": "Add Password",
       "desc": "Encrypt your PDF document with a password."
     },
     "changePermissions": {
+      "tags": "permissions,restrictions,security",
       "title": "Change Permissions",
       "desc": "Change document restrictions and permissions."
     },
     "removePassword": {
+      "tags": "unlock,remove,password",
       "title": "Remove Password",
       "desc": "Remove password protection from your PDF document."
     },
     "compress": {
+      "tags": "shrink,reduce,optimize",
       "title": "Compress",
       "desc": "Compress PDFs to reduce their file size."
     },
     "sanitize": {
+      "tags": "clean,purge,remove",
       "title": "Sanitize",
       "desc": "Remove potentially harmful elements from PDF files."
     },
     "unlockPDFForms": {
+      "tags": "unlock,enable,edit",
       "title": "Unlock PDF Forms",
       "desc": "Remove read-only property of form fields in a PDF document."
     },
     "changeMetadata": {
+      "tags": "edit,modify,update",
       "title": "Change Metadata",
       "desc": "Change/Remove/Add metadata from a PDF document"
     },
     "fileToPDF": {
+      "tags": "convert,transform,change",
       "title": "Convert file to PDF",
       "desc": "Convert nearly any file to PDF (DOCX, PNG, XLS, PPT, TXT and more)"
     },
     "ocr": {
+      "tags": "extract,scan",
       "title": "OCR / Cleanup scans",
       "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
     },
     "extractImages": {
+      "tags": "pull,save,export",
       "title": "Extract Images",
       "desc": "Extracts all images from a PDF and saves them to zip"
     },
     "pdfToPDFA": {
+      "tags": "convert,archive,long-term",
       "title": "PDF to PDF/A",
       "desc": "Convert PDF to PDF/A for long-term storage"
     },
     "PDFToWord": {
+      "tags": "convert,word,doc",
       "title": "PDF to Word",
       "desc": "Convert PDF to Word formats (DOC, DOCX and ODT)"
     },
     "PDFToPresentation": {
+      "tags": "convert,presentation,ppt",
       "title": "PDF to Presentation",
       "desc": "Convert PDF to Presentation formats (PPT, PPTX and ODP)"
     },
     "PDFToText": {
+      "tags": "convert,text,rtf",
       "title": "PDF to RTF (Text)",
       "desc": "Convert PDF to Text or RTF format"
     },
     "PDFToHTML": {
+      "tags": "convert,html,web",
       "title": "PDF to HTML",
       "desc": "Convert PDF to HTML format"
     },
     "PDFToXML": {
+      "tags": "convert,xml,data",
       "title": "PDF to XML",
       "desc": "Convert PDF to XML format"
     },
     "ScannerImageSplit": {
+      "tags": "detect,split,photos",
       "title": "Detect/Split Scanned photos",
       "desc": "Splits multiple photos from within a photo/PDF"
     },
     "sign": {
+      "tags": "signature,autograph",
       "title": "Sign",
       "desc": "Adds signature to PDF by drawing, text or image"
     },
     "flatten": {
+      "tags": "simplify,remove,interactive",
       "title": "Flatten",
       "desc": "Remove all interactive elements and forms from a PDF"
     },
     "repair": {
+      "tags": "fix,restore",
       "title": "Repair",
       "desc": "Tries to repair a corrupt/broken PDF"
     },
     "removeBlanks": {
+      "tags": "delete,clean,empty",
       "title": "Remove Blank pages",
       "desc": "Detects and removes blank pages from a document"
     },
     "removeAnnotations": {
+      "tags": "delete,clean,strip",
       "title": "Remove Annotations",
       "desc": "Removes all comments/annotations from a PDF"
     },
     "compare": {
+      "tags": "difference",
       "title": "Compare",
       "desc": "Compares and shows the differences between 2 PDF Documents"
     },
     "certSign": {
+      "tags": "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto",
       "title": "Sign with Certificate",
       "desc": "Signs a PDF with a Certificate/Key (PEM/P12)"
     },
     "removeCertSign": {
+      "tags": "remove,delete,unlock",
       "title": "Remove Certificate Sign",
       "desc": "Remove certificate signature from PDF"
     },
     "pageLayout": {
+      "tags": "layout,arrange,combine",
       "title": "Multi-Page Layout",
       "desc": "Merge multiple pages of a PDF document into a single page"
     },
     "bookletImposition": {
+      "tags": "booklet,print,binding",
       "title": "Booklet Imposition",
       "desc": "Create booklets with proper page ordering and multi-page layout for printing and binding"
     },
     "scalePages": {
+      "tags": "resize,adjust,scale",
       "title": "Adjust page size/scale",
       "desc": "Change the size/scale of a page and/or its contents."
     },
     "pipeline": {
+      "tags": "automation,script,workflow",
       "title": "Pipeline",
       "desc": "Run multiple actions on PDFs by defining pipeline scripts"
     },
     "addPageNumbers": {
+      "tags": "number,pagination,count",
       "title": "Add Page Numbers",
       "desc": "Add Page numbers throughout a document in a set location"
     },
     "auto-rename": {
+      "tags": "auto-detect,header-based,organize,relabel",
       "title": "Auto Rename PDF File",
       "desc": "Auto renames a PDF file based on its detected header"
     },
     "adjustContrast": {
+      "tags": "contrast,brightness,saturation",
       "title": "Adjust Colors/Contrast",
       "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
     },
     "crop": {
+      "tags": "trim,cut,resize",
       "title": "Crop PDF",
       "desc": "Crop a PDF to reduce its size (maintains text!)"
     },
     "autoSplitPDF": {
+      "tags": "auto,split,QR",
       "title": "Auto Split Pages",
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
     "sanitizePDF": {
+      "tags": "clean,purge,remove",
       "title": "Sanitize",
       "desc": "Remove scripts and other elements from PDF files"
     },
     "URLToPDF": {
+      "tags": "convert,url,website",
       "title": "URL/Website To PDF",
       "desc": "Converts any http(s)URL to PDF"
     },
     "HTMLToPDF": {
+      "tags": "convert,html,web",
       "title": "HTML to PDF",
       "desc": "Converts any HTML file or zip to PDF"
     },
     "MarkdownToPDF": {
+      "tags": "convert,markdown,md",
       "title": "Markdown to PDF",
       "desc": "Converts any Markdown file to PDF"
     },
     "PDFToMarkdown": {
+      "tags": "convert,markdown,md",
       "title": "PDF to Markdown",
       "desc": "Converts any PDF to Markdown"
     },
     "getPdfInfo": {
+      "tags": "info,metadata,details",
       "title": "Get ALL Info on PDF",
       "desc": "Grabs any and all information possible on PDFs"
     },
@@ -564,50 +615,62 @@
       "desc": "Searches and displays any JS injected into a PDF"
     },
     "autoRedact": {
+      "tags": "auto,redact,censor",
       "title": "Auto Redact",
       "desc": "Auto Redacts(Blacks out) text in a PDF based on input text"
     },
     "redact": {
+      "tags": "censor,blackout,hide",
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
     "PDFToCSV": {
+      "tags": "convert,csv,table",
       "title": "PDF to CSV",
       "desc": "Extracts Tables from a PDF converting it to CSV"
     },
     "split-by-size-or-count": {
+      "tags": "auto,split,size",
       "title": "Auto Split by Size/Count",
       "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
     },
     "overlay-pdfs": {
+      "tags": "overlay,combine,stack",
       "title": "Overlay PDFs",
       "desc": "Overlays PDFs on-top of another PDF"
     },
     "split-by-sections": {
+      "tags": "split,sections,divide",
       "title": "Split PDF by Sections",
       "desc": "Divide each page of a PDF into smaller horizontal and vertical sections"
     },
     "AddStampRequest": {
+      "tags": "stamp,mark,seal",
       "title": "Add Stamp to PDF",
       "desc": "Add text or add image stamps at set locations"
     },
     "removeImage": {
+      "tags": "remove,delete,clean",
       "title": "Remove image",
       "desc": "Remove image from PDF to reduce file size"
     },
     "splitByChapters": {
+      "tags": "split,chapters,structure",
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
     "validateSignature": {
+      "tags": "validate,verify,certificate",
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
     "swagger": {
+      "tags": "API,documentation,test",
       "title": "API Documentation",
       "desc": "View API documentation and test endpoints"
     },
     "replace-color": {
+      "tags": "color,replace,invert",
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }
@@ -1064,7 +1127,6 @@
     "info": "Python is not installed. It is required to run."
   },
   "sign": {
-    "tags": "authorize,initials,drawn-signature,text-sign,image-signature",
     "title": "Sign",
     "header": "Sign PDFs",
     "upload": "Upload Image",
