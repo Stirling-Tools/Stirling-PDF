@@ -32,37 +32,41 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
         const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
 
         if (selectedAnnotation) {
-          // First, let EmbedPDF try to handle this natively
-          // Only intervene if needed
-          setTimeout(() => {
-            // Check if the annotation is still selected after a brief delay
-            // If EmbedPDF handled it natively, it should be gone
-            const stillSelected = annotationApi.getSelectedAnnotation?.();
+          const annotation = selectedAnnotation as any;
+          const pageIndex = annotation.object?.pageIndex || 0;
+          const id = annotation.object?.id;
 
-            if (stillSelected) {
-              // EmbedPDF didn't handle it, so we need to delete manually
-              const annotation = stillSelected as any;
-              const pageIndex = annotation.object?.pageIndex || 0;
-              const id = annotation.object?.id;
-
-              if (id) {
-                // Try deleteSelected method first (should integrate with history)
-                if ((annotationApi as any).deleteSelected) {
-                  (annotationApi as any).deleteSelected();
-                } else {
-                  // Fallback to direct deletion
-                  annotationApi.deleteAnnotation(pageIndex, id);
+          // For STAMP annotations, ensure image data is preserved before deletion
+          if (annotation.object?.type === 13 && id) {
+            // Get current annotation data to ensure we have latest image data stored
+            const pageAnnotationsTask = annotationApi.getPageAnnotations?.({ pageIndex });
+            if (pageAnnotationsTask) {
+              pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
+                const currentAnn = pageAnnotations?.find((ann: any) => ann.id === id);
+                if (currentAnn && currentAnn.imageSrc) {
+                  // Ensure the image data is stored in our persistent store
+                  storeImageData(id, currentAnn.imageSrc);
                 }
-              }
+              }).catch(console.error);
             }
-          }, 10);
+          }
+
+          // Use EmbedPDF's native deletion which should integrate with history
+          if ((annotationApi as any).deleteSelected) {
+            (annotationApi as any).deleteSelected();
+          } else {
+            // Fallback to direct deletion - less ideal for history
+            if (id) {
+              annotationApi.deleteAnnotation(pageIndex, id);
+            }
+          }
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [annotationApi]);
+  }, [annotationApi, storeImageData]);
 
   useImperativeHandle(ref, () => ({
     addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => {
@@ -253,6 +257,19 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
 
     deleteAnnotation: (annotationId: string, pageIndex: number) => {
       if (!annotationApi) return;
+
+      // Before deleting, try to preserve image data for potential undo
+      const pageAnnotationsTask = annotationApi.getPageAnnotations?.({ pageIndex });
+      if (pageAnnotationsTask) {
+        pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
+          const annotation = pageAnnotations?.find((ann: any) => ann.id === annotationId);
+          if (annotation && annotation.type === 13 && annotation.imageSrc) {
+            // Store image data before deletion
+            storeImageData(annotationId, annotation.imageSrc);
+          }
+        }).catch(console.error);
+      }
+
       // Delete specific annotation by ID
       annotationApi.deleteAnnotation(pageIndex, annotationId);
     },

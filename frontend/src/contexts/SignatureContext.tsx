@@ -121,14 +121,11 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, []);
 
   const storeImageData = useCallback((id: string, data: string) => {
-    console.log('Storing image data for annotation:', id, data.length, 'chars');
     imageDataStore.current.set(id, data);
   }, []);
 
   const getImageData = useCallback((id: string) => {
-    const data = imageDataStore.current.get(id);
-    console.log('Retrieving image data for annotation:', id, data?.length, 'chars');
-    return data;
+    return imageDataStore.current.get(id);
   }, []);
 
 
