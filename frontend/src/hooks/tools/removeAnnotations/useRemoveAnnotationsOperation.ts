@@ -21,40 +21,21 @@ const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParamete
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
-        const annots = page.node.Annots();
-        if (!annots || annots.size() === 0) continue;
-
-        const ctx = annots.context;
-
-        // delete each annotation object (reverse to be safe)
-        for (let j = annots.size() - 1; j >= 0; j--) {
-          try {
-            const annot = annots.get(j);
-            if (annot) ctx.delete(annot);
-          } catch (err) {
-            console.warn(`Failed to remove annotation ${j} on page ${i + 1}:`, err);
-          }
-        }
-
-        // remove the Annots entry entirely
         try {
-          if (page.node.has('Annots')) page.node.delete('Annots');
+          // Remove the Annots key entirely from the page dictionary
+          const pageRef = page.ref;
+          const pageDict = pdfDoc.context.lookup(pageRef);
+          if (pageDict && 'delete' in pageDict) {
+            (pageDict as any).delete('Annots');
+          }
         } catch (err) {
-          console.warn(`Failed to delete Annots key on page ${i + 1}:`, err);
+          console.warn(`Failed to remove annotations from page ${i + 1}:`, err);
         }
-      }
-
-      // If removing ALL annotations across the doc, also strip AcroForm:
-      try {
-        const catalog = pdfDoc.context.lookup(pdfDoc.context.trailerInfo.Root);
-        if (catalog?.has && catalog.has('AcroForm')) catalog.delete('AcroForm');
-      } catch (err) {
-        console.warn('Failed to remove AcroForm:', err);
       }
 
       // Save the processed PDF
       const pdfBytes = await pdfDoc.save();
-      const processedBlob = new Blob([pdfBytes.buffer], { type: 'application/pdf' });
+      const processedBlob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
 
       // Create new file with modified name
       const fileName = file.name.replace(/\.pdf$/i, '') + '_removed_annotations.pdf';
