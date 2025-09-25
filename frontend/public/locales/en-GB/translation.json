@@ -1673,6 +1673,35 @@
     "submit": "Extract Image Scans",
     "error": {
       "failed": "An error occurred while extracting image scans."
+    },
+    "tooltip": {
+      "title": "Extract Individual Photos from Scans",
+      "overview": {
+        "title": "What This Tool Does",
+        "description": "This tool automatically detects and extracts individual photos from scanned documents or images. Perfect for digitising old photo albums, extracting multiple photos from scanner flatbed scans, or splitting composite images."
+      },
+      "commonUseCases": "Common Use Cases:",
+      "useCase1": "Extracting multiple photos from a single flatbed scanner session",
+      "useCase2": "Splitting collages or composite images into individual photos",
+      "useCase3": "Digitising photo albums by scanning entire pages then extracting individual photos",
+      "useCase4": "Processing documents with embedded photos or images",
+      "settingsExplained": "Settings Explained:",
+      "angleThresholdTerm": "Angle Threshold (10°)",
+      "angleThresholdDef": "How much an image needs to be tilted before the tool tries to straighten it. Lower values detect smaller tilts.",
+      "toleranceTerm": "Tolerance (20)",
+      "toleranceDef": "How similar background colours need to be to be considered the same. Higher values group more varied colours together.",
+      "minAreaTerm": "Minimum Area (8000)",
+      "minAreaDef": "Smallest size (in pixels) for something to be considered a photo. Helps ignore small spots or artefacts.",
+      "minContourAreaTerm": "Minimum Contour Area (500)",
+      "minContourAreaDef": "Minimum edge detection size. Helps distinguish actual photo edges from noise or texture.",
+      "borderSizeTerm": "Border Size (1)",
+      "borderSizeDef": "Adds padding around detected photos to avoid cutting off edges. Increase if photos are getting cropped too tightly.",
+      "tips": "Tips for Best Results:",
+      "tip1": "Ensure good contrast between photos and background",
+      "tip2": "Place photos with some space between them on the scanner",
+      "tip3": "Use higher resolution scans for better edge detection",
+      "tip4": "Clean scanner glass to avoid dust spots being detected as photos",
+      "tip5": "For difficult images, try adjusting the tolerance and minimum area settings"
     }
   },
   "sign": {

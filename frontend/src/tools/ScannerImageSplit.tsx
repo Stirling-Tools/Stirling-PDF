@@ -5,9 +5,11 @@ import { useScannerImageSplitParameters } from "../hooks/tools/scannerImageSplit
 import { useScannerImageSplitOperation } from "../hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "../types/tool";
+import { useScannerImageSplitTips } from "../components/tooltips/useScannerImageSplitTips";
 
 const ScannerImageSplit = (props: BaseToolProps) => {
   const { t } = useTranslation();
+  const scannerImageSplitTips = useScannerImageSplitTips();
 
   const base = useBaseTool(
     'scannerImageSplit',
@@ -26,6 +28,7 @@ const ScannerImageSplit = (props: BaseToolProps) => {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        tooltip: scannerImageSplitTips,
         content: (
           <ScannerImageSplitSettings
             parameters={base.params.parameters}
