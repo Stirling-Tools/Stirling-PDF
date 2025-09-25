@@ -22,12 +22,12 @@
                 <input id="y" type="hidden" name="y">
                 <input id="width" type="hidden" name="width">
                 <input id="height" type="hidden" name="height">
-                
-                <div class="form-check mb-3">
-                  <input class="form-check-input" id="removeDataOutsideCrop" name="removeDataOutsideCrop" type="checkbox" value="true">
-                  <label class="form-check-label" for="removeDataOutsideCrop" th:text="#{crop.removeDataOutsideCrop}">
-                    Remove data outside crop area
-                  </label>
+
+                <div class="mb-3">
+                  <div class="form-check ms-3">
+                    <input id="removeDataOutsideCrop" name="removeDataOutsideCrop" type="checkbox" value="true">
+                    <label for="removeDataOutsideCrop" th:text="#{crop.removeDataOutsideCrop}"></label>
+                  </div>
                 </div>
                 
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{crop.submit}"></button>

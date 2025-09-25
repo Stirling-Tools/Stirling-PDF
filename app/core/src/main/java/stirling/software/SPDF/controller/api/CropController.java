@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -34,6 +35,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
+@Slf4j
 public class CropController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -114,7 +116,6 @@ public class CropController {
             throws IOException {
         PDDocument sourceDocument = pdfDocumentFactory.load(request);
 
-        // First, set the crop box using PDFBox
         for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
             PDPage page = sourceDocument.getPage(i);
             PDRectangle cropBox =
@@ -126,7 +127,6 @@ public class CropController {
             page.setCropBox(cropBox);
         }
 
-        // Save the document with crop box set
         Path tempInputFile = Files.createTempFile("crop_input", ".pdf");
         Path tempOutputFile = Files.createTempFile("crop_output", ".pdf");
 
@@ -134,7 +134,6 @@ public class CropController {
             sourceDocument.save(tempInputFile.toFile());
             sourceDocument.close();
 
-            // Run Ghostscript command to remove data outside crop box
             ProcessExecutor processExecutor =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT);
             List<String> command =
@@ -148,7 +147,6 @@ public class CropController {
 
             processExecutor.runCommandWithOutputHandling(command);
 
-            // Read the processed file
             byte[] pdfContent = Files.readAllBytes(tempOutputFile);
 
             return WebResponseUtils.bytesToWebResponse(
@@ -160,13 +158,11 @@ public class CropController {
             Thread.currentThread().interrupt();
             throw new IOException("Ghostscript processing was interrupted", e);
         } finally {
-            // Clean up temp files
             try {
                 Files.deleteIfExists(tempInputFile);
                 Files.deleteIfExists(tempOutputFile);
             } catch (IOException e) {
-                // Log but don't fail if cleanup fails
-                System.err.println("Failed to cleanup temp files: " + e.getMessage());
+                log.debug("Failed to delete temporary files", e);
             }
         }
     }
