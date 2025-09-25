@@ -21,7 +21,7 @@ export const useReplaceColorParameters = (): ReplaceColorParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: 'replace-invert-pdf',
-    validateFn: (params) => {
+    validateFn: () => {
       // All parameters are always valid as they have defaults
       return true;
     },

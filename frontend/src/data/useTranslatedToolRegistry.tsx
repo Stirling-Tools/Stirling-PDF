@@ -642,18 +642,18 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         synonyms: getSynonyms(t, "overlayPdfs"),
       },
-      replaceColorPdf: {
+      replaceColor: {
         icon: <LocalIcon icon="format-color-fill-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.replaceColorPdf.title", "Replace & Invert Color"),
+        name: t("home.replaceColor.title", "Replace & Invert Color"),
         component: ReplaceColor,
-        description: t("home.replaceColorPdf.desc", "Replace or invert colors in PDF documents"),
+        description: t("home.replaceColor.desc", "Replace or invert colors in PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         maxFiles: -1,
         endpoints: ["replace-invert-pdf"],
         operationConfig: replaceColorOperationConfig,
         settingsComponent: ReplaceColorSettings,
-        synonyms: getSynonyms(t, "replaceColorPdf"),
+        synonyms: getSynonyms(t, "replaceColor"),
       },
       addImage: {
         icon: <LocalIcon icon="image-rounded" width="1.5rem" height="1.5rem" />,
