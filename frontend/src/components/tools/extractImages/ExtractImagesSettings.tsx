@@ -20,7 +20,11 @@ const ExtractImagesSettings = ({
       <Select
         label={t('extractImages.selectText', 'Output Format')}
         value={parameters.format}
-        onChange={(value) => onParameterChange('format', (value as 'png' | 'jpg' | 'gif') || 'png')}
+        onChange={(value) => {
+          const allowedFormats = ['png', 'jpg', 'gif'] as const;
+          const format = allowedFormats.includes(value as any) ? (value as typeof allowedFormats[number]) : 'png';
+          onParameterChange('format', format);
+        }}
         data={[
           { value: 'png', label: 'PNG' },
           { value: 'jpg', label: 'JPG' },

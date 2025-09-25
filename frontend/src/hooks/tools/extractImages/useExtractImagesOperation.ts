@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useToolOperation, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { ExtractImagesParameters, defaultParameters } from './useExtractImagesParameters';
+import JSZip from 'jszip';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildExtractImagesFormData = (parameters: ExtractImagesParameters, file: File): FormData => {
@@ -13,9 +14,7 @@ export const buildExtractImagesFormData = (parameters: ExtractImagesParameters, 
 };
 
 // Response handler for extract-images which returns a ZIP file
-const extractImagesResponseHandler = async (responseData: Blob, originalFiles: File[]): Promise<File[]> => {
-  // Import the ZIP extraction utility from useToolResources
-  const JSZip = (await import('jszip')).default;
+const extractImagesResponseHandler = async (responseData: Blob, _originalFiles: File[]): Promise<File[]> => {
   const zip = new JSZip();
   const zipContent = await zip.loadAsync(responseData);
   const extractedFiles: File[] = [];
