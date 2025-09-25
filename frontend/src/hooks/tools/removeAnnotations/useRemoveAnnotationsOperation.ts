@@ -21,34 +21,19 @@ const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParamete
 
       for (let i = 0; i < pages.length; ++i) {
         const page = pages[i];
-        const annotations = page.node.Annots();
-        if (!annotations) continue;
-
-        const ctx = annotations.context;
-
-        // Remove annotations in reverse order to avoid index shifting issues
-        for (let j = annotations.size() - 1; j >= 0; j--) {
-          try {
-            const annotation = annotations.get(j);
-            if (annotation) {
-              ctx.delete(annotation);
-            }
-          } catch (error) {
-            console.warn(`Failed to remove annotation ${j} on page ${i + 1}:`, error);
-          }
-        }
-
-        // Clear the annotations array reference from the page
         try {
-          page.node.set('Annots', ctx.obj([]));
+          // Remove the Annots key entirely from the page dictionary
+          if (page.node.has('Annots')) {
+            page.node.delete('Annots');
+          }
         } catch (error) {
-          console.warn(`Failed to clear annotations array on page ${i + 1}:`, error);
+          console.warn(`Failed to remove annotations from page ${i + 1}:`, error);
         }
       }
 
       // Save the processed PDF
       const pdfBytes = await pdfDoc.save();
-      const processedBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const processedBlob = new Blob([pdfBytes.buffer], { type: 'application/pdf' });
 
       // Create new file with modified name
       const fileName = file.name.replace(/\.pdf$/i, '') + '_removed_annotations.pdf';
