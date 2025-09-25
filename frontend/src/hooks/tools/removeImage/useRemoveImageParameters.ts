@@ -1,7 +1,7 @@
 import { useBaseParameters } from '../shared/useBaseParameters';
 import type { BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface RemoveImageParameters {}
+export type RemoveImageParameters = Record<string, never>;
 
 export const defaultParameters: RemoveImageParameters = {};
 
