@@ -61,7 +61,11 @@ export const useToolApiCalls = <TParams = void>() => {
         if (empty) {
           console.warn('[processFiles] Empty output treated as failure', { name: file.name });
           failedFiles.push(file.name);
-          try { (markFileError as any)?.((file as any).fileId); } catch {}
+          try { 
+            (markFileError as any)?.((file as any).fileId); 
+          } catch (e) { 
+            console.debug('markFileError', e); 
+          }
           continue;
         }
         processedFiles.push(...responseFiles);
@@ -76,7 +80,11 @@ export const useToolApiCalls = <TParams = void>() => {
         console.error('[processFiles] Failed', { name: file.name, error });
         failedFiles.push(file.name);
         // mark errored file so UI can highlight
-        try { (markFileError as any)?.((file as any).fileId); } catch {}
+        try { 
+          (markFileError as any)?.((file as any).fileId); 
+        } catch (e) { 
+          console.debug('markFileError', e); 
+        }
       }
     }
 

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
-  Text, Center, Box, Notification, LoadingOverlay, Stack, Group, Portal
+  Text, Center, Box, LoadingOverlay, Stack, Group
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useFileSelection, useFileState, useFileManagement } from '../../contexts/FileContext';
@@ -47,8 +47,8 @@ const FileEditor = ({
   // Get file selection context
   const { setSelectedFiles } = useFileSelection();
 
-  const [status, setStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [_status, _setStatus] = useState<string | null>(null);
+  const [_error, _setError] = useState<string | null>(null);
 
   // Toast helpers
   const showStatus = useCallback((message: string, type: 'neutral' | 'success' | 'warning' | 'error' = 'neutral') => {
@@ -91,7 +91,7 @@ const FileEditor = ({
 
   // Process uploaded files using context
   const handleFileUpload = useCallback(async (uploadedFiles: File[]) => {
-    setError(null);
+    _setError(null);
 
     try {
       const allExtractedFiles: File[] = [];
@@ -224,7 +224,7 @@ const FileEditor = ({
 
     // Update context (this automatically updates tool selection since they use the same action)
     setSelectedFiles(newSelection);
-  }, [setSelectedFiles, toolMode, setStatus, activeStirlingFileStubs]);
+  }, [setSelectedFiles, toolMode, _setStatus, activeStirlingFileStubs]);
 
 
   // File reordering handler for drag and drop
@@ -281,7 +281,7 @@ const FileEditor = ({
     // Update status
     const moveCount = filesToMove.length;
     showStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
-  }, [activeStirlingFileStubs, reorderFiles, setStatus]);
+  }, [activeStirlingFileStubs, reorderFiles, _setStatus]);
 
 
 
@@ -306,7 +306,7 @@ const FileEditor = ({
     if (record && file) {
        downloadBlob(file, file.name);
     }
-  }, [activeStirlingFileStubs, selectors, setStatus]);
+  }, [activeStirlingFileStubs, selectors, _setStatus]);
 
   const handleViewFile = useCallback((fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
@@ -417,7 +417,7 @@ const FileEditor = ({
                   onToggleFile={toggleFile}
                   onDeleteFile={handleDeleteFile}
                   onViewFile={handleViewFile}
-                  onSetStatus={showStatus}
+                  _onSetStatus={showStatus}
                   onReorderFiles={handleReorderFiles}
                   onDownloadFile={handleDownloadFile}
                   toolMode={toolMode}

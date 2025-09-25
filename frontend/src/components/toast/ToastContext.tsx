@@ -57,7 +57,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       progress: normalizeProgress(options.progressBarPercentage),
       justCompleted: false,
       expandable: hasButton ? false : (options.expandable !== false),
-      isExpanded: hasButton ? true : (options.expandable === false ? true : false),
+      isExpanded: hasButton ? true : (options.expandable === false ? true : (options.alertType === 'error' ? true : false)),
       createdAt: Date.now(),
     } as ToastInstance;
     setToasts(prev => {

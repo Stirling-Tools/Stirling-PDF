@@ -29,7 +29,7 @@ interface FileEditorThumbnailProps {
   onToggleFile: (fileId: FileId) => void;
   onDeleteFile: (fileId: FileId) => void;
   onViewFile: (fileId: FileId) => void;
-  onSetStatus: (status: string) => void;
+  _onSetStatus: (status: string) => void;
   onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
   onDownloadFile: (fileId: FileId) => void;
   toolMode?: boolean;
@@ -42,7 +42,7 @@ const FileEditorThumbnail = ({
   selectedFiles,
   onToggleFile,
   onDeleteFile,
-  onSetStatus,
+  _onSetStatus,
   onReorderFiles,
   onDownloadFile,
   isSupported = true,
@@ -193,7 +193,7 @@ const FileEditorThumbnail = ({
     if (!isSupported) return;
     // Clear error state if file has an error (click to clear error)
     if (hasError) {
-      try { fileActions.clearFileError(file.id); } catch {}
+      try { fileActions.clearFileError(file.id); } catch (_e) { void _e; }
     }
     onToggleFile(file.id);
   };

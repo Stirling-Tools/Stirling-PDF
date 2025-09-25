@@ -6,7 +6,7 @@ import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile } from '../../../types/fileContext';
 import { FILE_EVENTS } from '../../../services/errorUtils';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '../../../contexts/file/fileActions';
@@ -177,7 +177,9 @@ export const useToolOperation = <TParams>(
         for (const f of zeroByteFiles) {
           (fileActions.markFileError as any)((f as any).fileId);
         }
-      } catch {}
+      } catch (e) { 
+        console.log('markFileError', e); 
+      }
     }
     const validFiles = selectedFiles.filter(file => (file as any)?.size > 0);
     if (validFiles.length === 0) {
@@ -298,15 +300,15 @@ export const useToolOperation = <TParams>(
         const okSet = new Set((successSourceIds as unknown as string[]) || []);
         // Clear errors on successes
         for (const okId of okSet) {
-          try { (fileActions.clearFileError as any)(okId); } catch {}
+          try { (fileActions.clearFileError as any)(okId); } catch (_e) { void _e; }
         }
         // Mark errors on inputs that didn't succeed
         for (const id of allInputIds) {
           if (!okSet.has(id)) {
-            try { (fileActions.markFileError as any)(id); } catch {}
+            try { (fileActions.markFileError as any)(id); } catch (_e) { void _e; }
           }
         }
-      } catch {}
+      } catch (_e) { void _e; }
 
       if (externalErrorFileIds.length > 0) {
         // If backend told us which sources failed, prefer that mapping
@@ -318,7 +320,7 @@ export const useToolOperation = <TParams>(
           for (const badId of externalErrorFileIds) {
             (fileActions.markFileError as any)(badId);
           }
-        } catch {}
+        } catch (_e) { void _e; }
       }
 
       if (processedFiles.length > 0) {
@@ -426,14 +428,14 @@ export const useToolOperation = <TParams>(
           }
           if (ids && ids.length > 0) {
             for (const badId of ids) {
-              try { (fileActions.markFileError as any)(badId); } catch {}
+              try { (fileActions.markFileError as any)(badId); } catch (_e) { void _e; }
             }
-            actions.setStatus('Some files could not be processed');
+            actions.setStatus('Process failed due to invalid/corrupted file(s)');
             // Avoid duplicating toast messaging here
             return;
           }
         }
-      } catch {}
+      } catch (_e) { void _e; }
 
       const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
       actions.setError(errorMessage);

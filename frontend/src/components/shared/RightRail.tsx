@@ -72,7 +72,7 @@ export default function RightRail() {
       const allIds = state.files.ids;
       setSelectedFiles(allIds);
       // Clear any previous error flags when selecting all
-      try { fileActions.clearAllFileErrors(); } catch {}
+      try { fileActions.clearAllFileErrors(); } catch (_e) { void _e; }
       return;
     }
 
@@ -86,7 +86,7 @@ export default function RightRail() {
     if (currentView === 'fileEditor' || currentView === 'viewer') {
       setSelectedFiles([]);
       // Clear any previous error flags when deselecting all
-      try { fileActions.clearAllFileErrors(); } catch {}
+      try { fileActions.clearAllFileErrors(); } catch (_e) { void _e; }
       return;
     }
     if (currentView === 'pageEditor') {

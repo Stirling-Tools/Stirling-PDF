@@ -25,7 +25,7 @@ function titleForStatus(status?: number): string {
 function extractAxiosErrorMessage(error: any): { title: string; body: string } {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
-    const statusText = error.response?.statusText || '';
+    const _statusText = error.response?.statusText || '';
     let parsed: any = undefined;
     const raw = error.response?.data;
     if (typeof raw === 'string') {
@@ -49,20 +49,37 @@ function extractAxiosErrorMessage(error: any): { title: string; body: string } {
       if (typeof raw === 'string') return raw;
       try { return JSON.stringify(data); } catch { return ''; }
     })();
-    const bodyMsg = isUnhelpfulMessage(body) ? FRIENDLY_FALLBACK : body;
+    const ids = extractIds();
     const title = titleForStatus(status);
+    if (ids && ids.length > 0) {
+      return { title, body: 'Process failed due to invalid/corrupted file(s)' };
+    }
+    if (status === 422) {
+      const fallbackMsg = 'Process failed due to invalid/corrupted file(s)';
+      const bodyMsg = isUnhelpfulMessage(body) ? fallbackMsg : body;
+      return { title, body: bodyMsg };
+    }
+    const bodyMsg = isUnhelpfulMessage(body) ? FRIENDLY_FALLBACK : body;
     return { title, body: bodyMsg };
   }
   try {
     const msg = (error?.message || String(error)) as string;
     return { title: 'Network error', body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg };
-  } catch {
+  } catch (e) {
+    // ignore extraction errors
+    console.debug('extractAxiosErrorMessage', e);
     return { title: 'Network error', body: FRIENDLY_FALLBACK };
   }
 }
 
-// Install Axios response error interceptor
-axios.interceptors.response.use(
+// Install Axios response error interceptor (guard against double-registration in HMR)
+const __globalAny = (typeof window !== 'undefined' ? (window as any) : undefined);
+if (__globalAny?.__SPDF_HTTP_ERR_INTERCEPTOR_ID !== undefined) {
+  try { axios.interceptors.response.eject(__globalAny.__SPDF_HTTP_ERR_INTERCEPTOR_ID); } catch (_e) { void _e; }
+}
+const __recentSpecialByEndpoint: Record<string, number> = (__globalAny?.__SPDF_RECENT_SPECIAL || {});
+const __SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate after special toast
+const __INTERCEPTOR_ID__ = axios.interceptors.response.use(
   (response) => response,
   async (error) => {
     const { title, body } = extractAxiosErrorMessage(error);
@@ -71,12 +88,34 @@ axios.interceptors.response.use(
       const raw = (error?.response?.data) as any;
       const data = await normalizeAxiosErrorData(raw);
       const ids = extractErrorFileIds(data);
-      if (ids && ids.length > 0) broadcastErroredFiles(ids);
-    } catch {}
+      if (ids && ids.length > 0) {
+        broadcastErroredFiles(ids);
+      }
+    } catch (_e) { void _e; }
+
+    // Generic-vs-special dedupe by endpoint
+    const url: string | undefined = error?.config?.url;
+    const status: number | undefined = error?.response?.status;
+    const now = Date.now();
+    const isSpecial = status === 422 || /Failed files:/.test(body) || /invalid\/corrupted file\(s\)/i.test(body);
+    if (isSpecial && url) {
+      __recentSpecialByEndpoint[url] = now;
+      if (__globalAny) __globalAny.__SPDF_RECENT_SPECIAL = __recentSpecialByEndpoint;
+    }
+    if (!isSpecial && url) {
+      const last = __recentSpecialByEndpoint[url] || 0;
+      if (now - last < __SPECIAL_SUPPRESS_MS) {
+        return Promise.reject(error);
+      }
+    }
+
     alert({ alertType: 'error', title, body, expandable: true, isPersistentPopup: false });
     return Promise.reject(error);
   }
 );
+if (__globalAny) {
+  __globalAny.__SPDF_HTTP_ERR_INTERCEPTOR_ID = __INTERCEPTOR_ID__;
+}
 
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const res = await fetch(input, { credentials: init?.credentials ?? 'include', ...init });
