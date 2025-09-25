@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import axios, { CancelTokenSource } from '../../../services/http';
 import { processResponse, ResponseHandler } from '../../../utils/toolResponseProcessor';
+import { isEmptyOutput } from '../../../services/errorUtils';
 import type { ProcessingProgress } from './useToolState';
 
 export interface ApiCallsConfig<TParams = void> {
@@ -19,9 +20,11 @@ export const useToolApiCalls = <TParams = void>() => {
     validFiles: File[],
     config: ApiCallsConfig<TParams>,
     onProgress: (progress: ProcessingProgress) => void,
-    onStatus: (status: string) => void
-  ): Promise<File[]> => {
+    onStatus: (status: string) => void,
+    markFileError?: (fileId: string) => void,
+  ): Promise<{ outputFiles: File[]; successSourceIds: string[] }> => {
     const processedFiles: File[] = [];
+    const successSourceIds: string[] = [];
     const failedFiles: string[] = [];
     const total = validFiles.length;
 
@@ -31,16 +34,19 @@ export const useToolApiCalls = <TParams = void>() => {
     for (let i = 0; i < validFiles.length; i++) {
       const file = validFiles[i];
 
+      console.debug('[processFiles] Start', { index: i, total, name: file.name, fileId: (file as any).fileId });
       onProgress({ current: i + 1, total, currentFileName: file.name });
       onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
       try {
         const formData = config.buildFormData(params, file);
         const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
+        console.debug('[processFiles] POST', { endpoint, name: file.name });
         const response = await axios.post(endpoint, formData, {
           responseType: 'blob',
           cancelToken: cancelTokenRef.current.token,
         });
+        console.debug('[processFiles] Response OK', { name: file.name, status: (response as any)?.status });
 
         // Forward to shared response processor (uses tool-specific responseHandler if provided)
         const responseFiles = await processResponse(
@@ -50,14 +56,27 @@ export const useToolApiCalls = <TParams = void>() => {
           config.responseHandler,
           config.preserveBackendFilename ? response.headers : undefined
         );
+        // Guard: some endpoints may return an empty/0-byte file with 200
+        const empty = isEmptyOutput(responseFiles);
+        if (empty) {
+          console.warn('[processFiles] Empty output treated as failure', { name: file.name });
+          failedFiles.push(file.name);
+          try { (markFileError as any)?.((file as any).fileId); } catch {}
+          continue;
+        }
         processedFiles.push(...responseFiles);
+        // record source id as successful
+        successSourceIds.push((file as any).fileId);
+        console.debug('[processFiles] Success', { name: file.name, produced: responseFiles.length });
 
       } catch (error) {
         if (axios.isCancel(error)) {
           throw new Error('Operation was cancelled');
         }
-        console.error(`Failed to process ${file.name}:`, error);
+        console.error('[processFiles] Failed', { name: file.name, error });
         failedFiles.push(file.name);
+        // mark errored file so UI can highlight
+        try { (markFileError as any)?.((file as any).fileId); } catch {}
       }
     }
 
@@ -71,7 +90,8 @@ export const useToolApiCalls = <TParams = void>() => {
       onStatus(`Successfully processed ${processedFiles.length} file${processedFiles.length === 1 ? '' : 's'}`);
     }
 
-    return processedFiles;
+    console.debug('[processFiles] Completed batch', { total, successes: successSourceIds.length, outputs: processedFiles.length, failed: failedFiles.length });
+    return { outputFiles: processedFiles, successSourceIds };
   }, []);
 
   const cancelOperation = useCallback(() => {

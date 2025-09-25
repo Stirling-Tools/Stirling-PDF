@@ -49,17 +49,30 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const show = useCallback<ToastApi['show']>((options) => {
     const id = options.id || generateId();
+    const hasButton = !!(options.buttonText && options.buttonCallback);
     const merged: ToastInstance = {
       ...defaultOptions,
       ...options,
       id,
       progress: normalizeProgress(options.progressBarPercentage),
       justCompleted: false,
-      expandable: options.expandable !== false,
-      isExpanded: options.expandable === false ? true : false,
+      expandable: hasButton ? false : (options.expandable !== false),
+      isExpanded: hasButton ? true : (options.expandable === false ? true : false),
       createdAt: Date.now(),
     } as ToastInstance;
     setToasts(prev => {
+      // Coalesce duplicates by alertType + title + body text if no explicit id was provided
+      if (!options.id) {
+        const bodyText = typeof merged.body === 'string' ? merged.body : '';
+        const existingIndex = prev.findIndex(t => t.alertType === merged.alertType && t.title === merged.title && (typeof t.body === 'string' ? t.body : '') === bodyText);
+        if (existingIndex !== -1) {
+          const updated = [...prev];
+          const existing = updated[existingIndex];
+          const nextCount = (existing.count ?? 1) + 1;
+          updated[existingIndex] = { ...existing, count: nextCount, createdAt: Date.now() };
+          return updated;
+        }
+      }
       const next = [...prev.filter(t => t.id !== id), merged];
       return next;
     });

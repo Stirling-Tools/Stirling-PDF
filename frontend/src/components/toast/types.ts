@@ -30,6 +30,8 @@ export interface ToastInstance extends Omit<ToastOptions, 'id' | 'progressBarPer
   durationMs: number;
   expandable: boolean;
   isExpanded: boolean;
+  /** Number of coalesced duplicates */
+  count?: number;
   /** internal progress normalized 0..100 */
   progress?: number;
   /** if progress completed, briefly show check icon */

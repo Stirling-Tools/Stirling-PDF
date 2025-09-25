@@ -222,6 +222,8 @@
   --bulk-card-bg: #ffffff; /* white background for cards */
   --bulk-card-border: #e5e7eb; /* light gray border for cards and buttons */
   --bulk-card-hover-border: #d1d5db; /* slightly darker on hover */
+  --unsupported-bar-bg: #5a616e;
+  --unsupported-bar-border: #6B7280;
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -410,7 +412,8 @@
   --bulk-card-bg: var(--bg-raised); /* dark background for cards */
   --bulk-card-border: var(--border-default); /* default border for cards and buttons */
   --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
-
+  --unsupported-bar-bg: #1F2329;
+  --unsupported-bar-border: #4B525A;
 }
 
 /* Dropzone drop state styling */
