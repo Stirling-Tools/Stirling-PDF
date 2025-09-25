@@ -26,13 +26,7 @@ const RemoveAnnotations = (props: BaseToolProps) => {
         title: t("removeAnnotations.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
-        content: (
-          <RemoveAnnotationsSettings
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />
-        ),
+        content: <RemoveAnnotationsSettings />,
       },
     ],
     executeButton: {

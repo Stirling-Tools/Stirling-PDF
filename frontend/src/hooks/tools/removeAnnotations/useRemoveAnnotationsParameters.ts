@@ -1,6 +1,6 @@
 import { useBaseParameters } from '../shared/useBaseParameters';
 
-export interface RemoveAnnotationsParameters {}
+export type RemoveAnnotationsParameters = Record<string, never>
 
 export const defaultParameters: RemoveAnnotationsParameters = {
 };
