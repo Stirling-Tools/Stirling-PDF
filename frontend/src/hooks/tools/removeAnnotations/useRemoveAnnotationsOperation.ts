@@ -53,10 +53,12 @@ const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParamete
 
       // Optional: if removing ALL annotations across the doc, strip AcroForm to avoid dangling widget refs
       try {
-        const catalog = pdfDoc.catalog; // typed PDFCatalog wrapper
-        const dict = catalog.dict;      // underlying PDFDict
-        if (dict.has(PDFName.of('AcroForm'))) {
-          dict.delete(PDFName.of('AcroForm'));
+        const catalog = pdfDoc.context.lookup(pdfDoc.context.trailerInfo.Root);
+        if (catalog && 'has' in catalog && 'delete' in catalog) {
+          const catalogDict = catalog as any;
+          if (catalogDict.has(PDFName.of('AcroForm'))) {
+            catalogDict.delete(PDFName.of('AcroForm'));
+          }
         }
       } catch (err) {
         console.warn('Failed to remove /AcroForm:', err);
@@ -64,7 +66,7 @@ const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParamete
 
       // Save returns Uint8Array — safe for Blob
       const outBytes = await pdfDoc.save();
-      const outBlob = new Blob([outBytes], { type: 'application/pdf' });
+      const outBlob = new Blob([new Uint8Array(outBytes)], { type: 'application/pdf' });
 
       // Create new file with modified name
       const fileName = file.name.replace(/\.pdf$/i, '') + '_removed_annotations.pdf';
