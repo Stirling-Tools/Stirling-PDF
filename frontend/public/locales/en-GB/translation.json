@@ -436,8 +436,8 @@
     },
     "scannerImageSplit": {
       "tags": "detect,split,photos",
-      "title": "Detect/Split Scanned photos",
-      "desc": "Splits multiple photos from within a photo/PDF"
+      "title": "Detect & Split Scanned Photos",
+      "desc": "Detect and split scanned photos into separate pages"
     },
     "sign": {
       "tags": "signature,autograph",
@@ -1667,6 +1667,13 @@
       "10": "Sets the size of the border added and removed to prevent white borders in the output (default: 1)."
     },
     "info": "Python is not installed. It is required to run."
+  },
+  "scannerImageSplit": {
+    "title": "Extracted Images",
+    "submit": "Extract Image Scans",
+    "error": {
+      "failed": "An error occurred while extracting image scans."
+    }
   },
   "sign": {
     "title": "Sign",
