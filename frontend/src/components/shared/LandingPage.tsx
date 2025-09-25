@@ -5,6 +5,7 @@ import LocalIcon from './LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
+import { BASE_PATH } from '../../constants/app';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -72,7 +73,7 @@ const LandingPage = () => {
           }}
         >
           <img
-            src={colorScheme === 'dark' ? '/branding/StirlingPDFLogoNoTextDark.svg' : '/branding/StirlingPDFLogoNoTextLight.svg'}
+            src={colorScheme === 'dark' ? `${BASE_PATH}/branding/StirlingPDFLogoNoTextDark.svg` : `${BASE_PATH}/branding/StirlingPDFLogoNoTextLight.svg`}
             alt="Stirling PDF Logo"
             style={{
               height: 'auto',
@@ -98,7 +99,7 @@ const LandingPage = () => {
             {/* Stirling PDF Branding */}
             <Group gap="xs" align="center">
               <img
-                src={colorScheme === 'dark' ? '/branding/StirlingPDFLogoWhiteText.svg' : '/branding/StirlingPDFLogoGreyText.svg'}
+                src={colorScheme === 'dark' ? `${BASE_PATH}/branding/StirlingPDFLogoWhiteText.svg` : `${BASE_PATH}/branding/StirlingPDFLogoGreyText.svg`}
                 alt="Stirling PDF"
                 style={{ height: '2.2rem', width: 'auto' }}
               />
