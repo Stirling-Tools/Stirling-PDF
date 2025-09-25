@@ -40,7 +40,7 @@ export function useFileWithUrlAndCleanup(file: File | null): {
   cleanup: () => void;
 } {
   return useMemo(() => {
-    if (!file) return { fileObj: null, cleanup: () => {} };
+    if (!file) return { fileObj: null, cleanup: () => { /* empty */ } };
 
     const url = URL.createObjectURL(file);
     const fileObj = { file, url };

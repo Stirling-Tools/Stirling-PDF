@@ -29,7 +29,7 @@ export class EnhancedPDFProcessingService {
     maxRetries: 3
   };
 
-  private constructor() {}
+  private constructor() { /* empty */ }
 
   static getInstance(): EnhancedPDFProcessingService {
     if (!EnhancedPDFProcessingService.instance) {

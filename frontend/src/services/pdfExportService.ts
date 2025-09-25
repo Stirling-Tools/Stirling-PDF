@@ -210,7 +210,7 @@ export class PDFExportService {
   /**
    * Download multiple files as a ZIP
    */
-  async downloadAsZip(blobs: Blob[], filenames: string[]): Promise<void> {
+  downloadAsZip(blobs: Blob[], filenames: string[]): void {
     blobs.forEach((blob, index) => {
       setTimeout(() => {
         this.downloadFile(blob, filenames[index]);

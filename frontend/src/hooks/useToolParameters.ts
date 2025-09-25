@@ -16,7 +16,7 @@ export function useToolParameters(
 
   // Return empty values and noop updater
   const currentValues = useMemo(() => ({}), []);
-  const updateParameters = useCallback(() => {}, []);
+  const updateParameters = useCallback(() => { /* empty */ }, []);
 
   return [currentValues, updateParameters];
 }
@@ -45,7 +45,7 @@ export function useToolParameter<T = any>(
  */
 export function useGlobalParameters() {
   const currentValues = useMemo(() => ({}), []);
-  const updateParameters = useCallback(() => {}, []);
+  const updateParameters = useCallback(() => { /* empty */ }, []);
 
   return [currentValues, updateParameters];
 }

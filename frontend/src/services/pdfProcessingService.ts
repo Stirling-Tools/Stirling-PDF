@@ -9,7 +9,7 @@ export class PDFProcessingService {
   private processing = new Map<string, ProcessingState>();
   private processingListeners = new Set<(states: Map<string, ProcessingState>) => void>();
 
-  private constructor() {}
+  private constructor() { /* empty */ }
 
   static getInstance(): PDFProcessingService {
     if (!PDFProcessingService.instance) {
@@ -18,7 +18,7 @@ export class PDFProcessingService {
     return PDFProcessingService.instance;
   }
 
-  async getProcessedFile(file: File): Promise<ProcessedFile | null> {
+  getProcessedFile(file: File): ProcessedFile | null {
     const fileKey = this.generateFileKey(file);
 
     // Check cache first

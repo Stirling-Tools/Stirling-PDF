@@ -57,7 +57,7 @@ describe('useAdjustPageScaleParameters', () => {
   test.each([
     {
       description: 'with default parameters',
-      setup: () => {},
+      setup: () => { /* empty */ },
       expected: true
     },
     {

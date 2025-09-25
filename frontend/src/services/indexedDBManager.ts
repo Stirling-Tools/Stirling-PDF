@@ -24,7 +24,7 @@ class IndexedDBManager {
   private databases = new Map<string, IDBDatabase>();
   private initPromises = new Map<string, Promise<IDBDatabase>>();
 
-  private constructor() {}
+  private constructor() { /* empty */ }
 
   static getInstance(): IndexedDBManager {
     if (!IndexedDBManager.instance) {

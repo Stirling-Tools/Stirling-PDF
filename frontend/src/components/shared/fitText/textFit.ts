@@ -21,7 +21,7 @@ export function adjustFontSizeToFit(
   element: HTMLElement,
   options: AdjustFontSizeOptions = {}
 ): () => void {
-  if (!element) return () => {};
+  if (!element) return () => { /* empty */ };
 
   const computed = window.getComputedStyle(element);
   const baseFontPx = options.maxFontSizePx ?? parseFloat(computed.fontSize || '16');
