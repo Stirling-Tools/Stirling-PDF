@@ -8,12 +8,17 @@ import { getDefaultWorkbench } from '../types/workbench';
 import { ToolRegistry, getToolWorkbench, getToolUrlPath } from '../data/toolsTaxonomy';
 import { firePixel } from './scarfTracking';
 import { URL_TO_TOOL_MAP } from './urlMapping';
+import { BASE_PATH, withBasePath } from '../constants/app';
 
 /**
  * Parse the current URL to extract tool routing information
  */
 export function parseToolRoute(registry: ToolRegistry): ToolRoute {
-  const path = window.location.pathname;
+  const fullPath = window.location.pathname;
+  // Remove base path to get app-relative path
+  const path = BASE_PATH && fullPath.startsWith(BASE_PATH)
+    ? fullPath.slice(BASE_PATH.length) || '/'
+    : fullPath;
   const searchParams = new URLSearchParams(window.location.search);
 
   // First, check URL mapping for multiple URL aliases
@@ -83,7 +88,8 @@ export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace 
     return;
   }
 
-  const newPath = getToolUrlPath(toolId, tool);
+  const toolPath = getToolUrlPath(toolId, tool);
+  const newPath = withBasePath(toolPath);
   const searchParams = new URLSearchParams(window.location.search);
 
   // Remove tool query parameter since we're using path-based routing
@@ -99,7 +105,7 @@ export function clearToolRoute(replace = false): void {
   const searchParams = new URLSearchParams(window.location.search);
   searchParams.delete('tool');
 
-  updateUrl('/', searchParams, replace);
+  updateUrl(withBasePath('/'), searchParams, replace);
 }
 
 /**
@@ -117,11 +123,12 @@ export function generateShareableUrl(toolId: ToolId | null, registry: ToolRegist
   const baseUrl = window.location.origin;
 
   if (!toolId || !registry[toolId]) {
-    return baseUrl;
+    return `${baseUrl}${BASE_PATH || ''}`;
   }
 
   const tool = registry[toolId];
 
-  const path = getToolUrlPath(toolId, tool);
-  return `${baseUrl}${path}`;
+  const toolPath = getToolUrlPath(toolId, tool);
+  const fullPath = withBasePath(toolPath);
+  return `${baseUrl}${fullPath}`;
 }
