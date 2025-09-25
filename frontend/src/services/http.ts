@@ -85,15 +85,25 @@ type ExtendedAxiosInstance = AxiosInstance & {
 // Reuse existing client across HMR reloads to avoid duplicate interceptors
 const __PREV_CLIENT: ExtendedAxiosInstance | undefined = __globalAny?.__SPDF_HTTP_CLIENT as ExtendedAxiosInstance | undefined;
 
-const apiClient: ExtendedAxiosInstance = (__PREV_CLIENT || axios.create({
-  baseURL: (import.meta as any)?.env?.VITE_API_BASE_URL || '/',
-  responseType: 'json',
-  withCredentials: true,
-})) as ExtendedAxiosInstance;
+let __createdClient: any;
+if (__PREV_CLIENT) {
+  __createdClient = __PREV_CLIENT;
+} else if (typeof (axios as any)?.create === 'function') {
+  try {
+    __createdClient = (axios as any).create();
+  } catch (_e) {
+    __createdClient = axios as any;
+  }
+} else {
+  __createdClient = axios as any;
+}
+const apiClient: ExtendedAxiosInstance = (__createdClient || (axios as any)) as ExtendedAxiosInstance;
 
 // Augment instance with axios static helpers for backwards compatibility
-(apiClient as any).CancelToken = axios.CancelToken;
-(apiClient as any).isCancel = axios.isCancel;
+if (apiClient) {
+  try { (apiClient as any).CancelToken = (axios as any).CancelToken; } catch (_e) { void _e; }
+  try { (apiClient as any).isCancel = (axios as any).isCancel; } catch (_e) { void _e; }
+}
 
 // Install Axios response error interceptor on the instance (guard against double-registration in HMR)
 if (__globalAny?.__SPDF_HTTP_ERR_INTERCEPTOR_ID !== undefined && __PREV_CLIENT) {
@@ -102,7 +112,7 @@ if (__globalAny?.__SPDF_HTTP_ERR_INTERCEPTOR_ID !== undefined && __PREV_CLIENT) 
 
 const __recentSpecialByEndpoint: Record<string, number> = (__globalAny?.__SPDF_RECENT_SPECIAL || {});
 const __SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate after special toast
-const __INTERCEPTOR_ID__ = apiClient.interceptors.response.use(
+const __INTERCEPTOR_ID__ = apiClient?.interceptors?.response?.use ? apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const { title, body } = extractAxiosErrorMessage(error);
@@ -145,7 +155,7 @@ const __INTERCEPTOR_ID__ = apiClient.interceptors.response.use(
     }
     return Promise.reject(error);
   }
-);
+) : undefined as any;
 if (__globalAny) {
   __globalAny.__SPDF_HTTP_ERR_INTERCEPTOR_ID = __INTERCEPTOR_ID__;
   __globalAny.__SPDF_RECENT_SPECIAL = __recentSpecialByEndpoint;

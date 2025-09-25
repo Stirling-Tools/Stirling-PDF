@@ -216,7 +216,8 @@ public class MergeController {
                 filesToDelete.add(tempFile); // Add temp file to the list for later deletion
 
                 // Pre-validate each PDF so we can report which one(s) are broken
-                try (PDDocument ignored = pdfDocumentFactory.load(tempFile)) {
+                // Use the original MultipartFile to avoid deleting the tempFile during validation
+                try (PDDocument ignored = pdfDocumentFactory.load(multipartFile)) {
                     // OK
                 } catch (IOException e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
