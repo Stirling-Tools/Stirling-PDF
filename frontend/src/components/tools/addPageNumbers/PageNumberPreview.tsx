@@ -22,13 +22,6 @@ const getFirstSelectedPage = (input: string): number => {
   return 1;
 };
 
-const generatePreviewText = (parameters: AddPageNumbersParameters): string => {
-  const pageNum = parameters.startingNumber;
-  if (parameters.customText.trim()) {
-    return parameters.customText.replace(/\{n\}/g, pageNum.toString());
-  }
-  return pageNum.toString();
-};
 
 const detectOverallBackgroundColor = async (thumbnailSrc: string | null): Promise<'light' | 'dark'> => {
   if (!thumbnailSrc) {
@@ -101,7 +94,7 @@ type Props = {
 export default function PageNumberPreview({ parameters, onParameterChange, file, showQuickGrid }: Props) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   const [pageSize, setPageSize] = useState<{ widthPts: number; heightPts: number } | null>(null);
   const [pageThumbnail, setPageThumbnail] = useState<string | null>(null);
   const { requestThumbnail } = useThumbnailGeneration();
