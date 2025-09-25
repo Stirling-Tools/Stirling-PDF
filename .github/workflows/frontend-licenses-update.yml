@@ -7,14 +7,14 @@ on:
     paths:
       - "frontend/package.json"
       - "frontend/package-lock.json"
-      - "frontend/scripts/generate-licenses.js"
+      - "frontend/scripts/generate-licenses.mjs"
   pull_request:
     branches:
       - V2
     paths:
       - "frontend/package.json"
       - "frontend/package-lock.json"
-      - "frontend/scripts/generate-licenses.js"
+      - "frontend/scripts/generate-licenses.mjs"
 
 permissions:
   contents: read
@@ -89,7 +89,7 @@ jobs:
         env:
           PR_IS_FORK: "true"
         run: |
-          node base/frontend/scripts/generate-licenses.js \
+          node base/frontend/scripts/generate-licenses.mjs \
             --input frontend/src/assets/3rdPartyLicenses.json
 
       - name: Copy postprocessed artifacts back (fork PRs)
