@@ -50,11 +50,6 @@ function extractAxiosErrorMessage(error: any): { title: string; body: string } {
       if (typeof raw === 'string') return raw;
       try { return JSON.stringify(data); } catch { return ''; }
     })();
-    // Specific friendly mapping for encrypted PDFs (centralized toast also fires in interceptor)
-    if (ENCRYPTION_ERROR_REGEX.test(body)) {
-      const title = titleForStatus(error.response?.status);
-      return { title, body: ENCRYPTION_FRIENDLY };
-    }
     const ids = extractIds();
     const title = titleForStatus(status);
     if (ids && ids.length > 0) {
@@ -70,9 +65,6 @@ function extractAxiosErrorMessage(error: any): { title: string; body: string } {
   }
   try {
     const msg = (error?.message || String(error)) as string;
-    if (ENCRYPTION_ERROR_REGEX.test(msg)) {
-      return { title: 'Request error', body: ENCRYPTION_FRIENDLY };
-    }
     return { title: 'Network error', body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg };
   } catch (e) {
     // ignore extraction errors
