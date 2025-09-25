@@ -6,7 +6,7 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useAddAttachmentsParameters } from "../hooks/tools/addAttachments/useAddAttachmentsParameters";
 import { useAddAttachmentsOperation } from "../hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { Stack, FileInput, Text, Group, ActionIcon, Alert, ScrollArea } from "@mantine/core";
+import { Stack, FileInput, Text, Group, ActionIcon, Alert, ScrollArea, Button } from "@mantine/core";
 import LocalIcon from "../components/shared/LocalIcon";
 import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
 // Removed FitText for two-line wrapping with clamping
@@ -49,7 +49,7 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     initialStep: AddAttachmentsStep.ATTACHMENTS,
     stateConditions: {
       hasFiles,
-      hasResults
+      hasResults: false // Don't collapse when there are results for add attachments
     },
     afterResults: () => {
       operation.resetResults();
@@ -65,7 +65,7 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
       title: t("AddAttachmentsRequest.attachments", "Select Attachments"),
       isCollapsed: accordion.getCollapsedState(AddAttachmentsStep.ATTACHMENTS),
       onCollapsedClick: () => accordion.handleStepToggle(AddAttachmentsStep.ATTACHMENTS),
-      isVisible: hasFiles || hasResults,
+      isVisible: true,
       content: (
         <Stack gap="md">
           <Alert color="blue" variant="light">
@@ -74,15 +74,39 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
             </Text>
           </Alert>
 
-          <FileInput
-            label={t("AddAttachmentsRequest.selectFiles", "Select Files to Attach")}
-            placeholder={t("AddAttachmentsRequest.placeholder", "Choose files...")}
-            multiple
-            value={params.parameters.attachments}
-            onChange={(files) => params.updateParameter('attachments', files)}
-            disabled={endpointLoading}
-            // No leading icon per UI request
-          />
+          <Stack gap="xs">
+            <Text size="sm" fw={500}>
+              {t("AddAttachmentsRequest.selectFiles", "Select Files to Attach")}
+            </Text>
+            <input
+              type="file"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                // Append to existing attachments instead of replacing
+                const newAttachments = [...params.parameters.attachments, ...files];
+                params.updateParameter('attachments', newAttachments);
+                // Reset the input so the same file can be selected again
+                e.target.value = '';
+              }}
+              disabled={endpointLoading}
+              style={{ display: 'none' }}
+              id="attachments-input"
+            />
+            <Button
+              size="xs"
+              color="blue"
+              component="label"
+              htmlFor="attachments-input"
+              disabled={endpointLoading}
+              leftSection={<LocalIcon icon="plus" width="14" height="14" />}
+            >
+              {params.parameters.attachments.length > 0 
+                ? t("AddAttachmentsRequest.addMoreFiles", "Add more files...")
+                : t("AddAttachmentsRequest.placeholder", "Choose files...")
+              }
+            </Button>
+          </Stack>
 
           {params.parameters.attachments && params.parameters.attachments.length > 0 && (
             <Stack gap="xs">
