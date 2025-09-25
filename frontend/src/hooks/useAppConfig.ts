@@ -65,7 +65,7 @@ export function useAppConfig(): UseAppConfigReturn {
   };
 
   useEffect(() => {
-    fetchConfig();
+    void fetchConfig();
   }, []);
 
   return {

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, ScrollArea } from '@mantine/core';
 import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
@@ -82,7 +82,7 @@ export default function ToolSelector({
 
     // Find the "all" section which contains all tools without duplicates
     const allSection = sections.find(s => (s as any).key === 'all');
-    return allSection?.subcategories || [];
+    return allSection?.subcategories ?? [];
   }, [isSearching, searchGroups, sections, baseFilteredTools]);
 
   const handleToolSelect = useCallback((toolKey: string) => {
@@ -138,7 +138,7 @@ export default function ToolSelector({
     if (selectedValue && toolRegistry[selectedValue]) {
       return toolRegistry[selectedValue].name;
     }
-    return placeholder || t('automate.creation.tools.add', 'Add a tool...');
+    return placeholder ?? t('automate.creation.tools.add', 'Add a tool...');
   };
 
   return (

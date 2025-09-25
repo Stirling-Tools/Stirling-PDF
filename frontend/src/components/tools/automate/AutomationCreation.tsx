@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -100,7 +100,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       icon: automationIcon,
       operations: selectedTools.map(tool => ({
         operation: tool.operation,
-        parameters: tool.parameters || {}
+        parameters: tool.parameters ?? {}
       }))
     };
 

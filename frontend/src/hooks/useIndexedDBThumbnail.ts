@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { StirlingFileStub } from "../types/fileContext";
 import { useIndexedDB } from "../contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "../utils/thumbnailUtils";
-import { FileId } from "../types/fileContext";
 
 
 /**
@@ -75,7 +74,7 @@ export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null)
       }
     }
 
-    loadThumbnail();
+    void loadThumbnail();
     return () => { cancelled = true; };
   }, [file, file?.thumbnailUrl, file?.id, indexedDB, generating]);
 

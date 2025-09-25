@@ -35,7 +35,7 @@ export class PDFProcessingService {
     }
 
     // Start processing
-    this.startProcessing(file, fileKey);
+    void this.startProcessing(file, fileKey);
     return null;
   }
 

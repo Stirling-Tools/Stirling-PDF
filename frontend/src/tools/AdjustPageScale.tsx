@@ -52,7 +52,7 @@ const AdjustPageScale = (props: BaseToolProps) => {
       title: t("adjustPageScale.title", "Page Scale Results"),
       onFileClick: base.handleThumbnailClick,
       onUndo: () => {
-        base.handleUndo();
+        void base.handleUndo();
       },
     },
   });

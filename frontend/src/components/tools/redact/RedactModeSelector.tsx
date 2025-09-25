@@ -1,3 +1,4 @@
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { RedactMode } from '../../../hooks/tools/redact/useRedactParameters';
 import ButtonSelector from '../../shared/ButtonSelector';

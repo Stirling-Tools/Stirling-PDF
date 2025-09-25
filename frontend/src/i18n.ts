@@ -52,7 +52,7 @@ export const supportedLanguages = {
 // RTL languages (based on your existing language.direction property)
 export const rtlLanguages = ['ar-AR', 'fa-IR'];
 
-i18n
+void i18n
   .use(Backend)
   .use(LanguageDetector)
   .use(initReactI18next)

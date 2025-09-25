@@ -70,7 +70,7 @@ export class EnhancedPDFProcessingService {
     };
 
     // Start processing
-    this.startProcessing(file, fileKey, config, analysis.estimatedProcessingTime);
+    await this.startProcessing(file, fileKey, config, analysis.estimatedProcessingTime);
     return null;
   }
 

@@ -72,7 +72,7 @@ export default function StampPreview({ parameters, onParameterChange, file, show
         if (!cancelled) setPageSize(null);
       }
     };
-    load();
+    void load();
     return () => { cancelled = true; };
   }, [file]);
 
@@ -88,12 +88,12 @@ export default function StampPreview({ parameters, onParameterChange, file, show
         const pageNumber = Math.max(1, getFirstSelectedPage(parameters.pageNumbers));
         const pageId = `${file.name}:${file.size}:${file.lastModified}:page:${pageNumber}`;
         const thumb = await requestThumbnail(pageId, file, pageNumber);
-        if (isActive) setPageThumbnail(thumb || null);
+        if (isActive) setPageThumbnail(thumb ?? null);
       } catch {
         if (isActive) setPageThumbnail(null);
       }
     };
-    loadThumb();
+    void loadThumb();
     return () => { isActive = false; };
   }, [file, parameters.pageNumbers, requestThumbnail]);
 
@@ -189,7 +189,7 @@ export default function StampPreview({ parameters, onParameterChange, file, show
 
     draggingRef.current = {
       type,
-      startX: e.clientX - (rect?.left || 0),
+      startX: e.clientX - (rect?.left ?? 0),
       startY: (rect ? rect.bottom - e.clientY : 0), // convert to bottom-based coords
       initLeft: left,
       initBottom: bottom,
@@ -255,11 +255,11 @@ export default function StampPreview({ parameters, onParameterChange, file, show
         <div className={styles.divider} />
         <div className={styles.previewLabel}>Preview Stamp</div>
       </div>
-      <div 
-        ref={containerRef} 
+      <div
+        ref={containerRef}
         className={`${styles.container} ${styles.containerBorder} ${pageThumbnail ? styles.containerWithThumbnail : styles.containerWithoutThumbnail}`}
-        style={style.container as React.CSSProperties} 
-        onPointerMove={handlePointerMove} 
+        style={style.container as React.CSSProperties}
+        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
         {pageThumbnail && (

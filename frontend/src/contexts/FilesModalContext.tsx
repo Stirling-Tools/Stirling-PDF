@@ -43,7 +43,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       customHandler(files, insertAfterPage);
     } else {
       // Use normal file handling
-      addFiles(files);
+      void addFiles(files);
     }
     closeFilesModal();
   }, [addFiles, closeFilesModal, insertAfterPage, customHandler]);
@@ -59,7 +59,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             loadedFiles.push(stirlingFile);
           }
         }
-        
+
         if (loadedFiles.length > 0) {
           customHandler(loadedFiles, insertAfterPage);
         }
@@ -69,7 +69,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } else {
       // Normal case - use addStirlingFileStubs to preserve metadata
       if (actions.addStirlingFileStubs) {
-        actions.addStirlingFileStubs(stirlingFileStubs, { selectFiles: true });
+        try {
+          await actions.addStirlingFileStubs(stirlingFileStubs, { selectFiles: true });
+        } catch (error) {
+          console.error('Error adding Stirling file stubs:', error);
+        }
       } else {
         console.error('addStirlingFileStubs action not available');
       }

@@ -41,7 +41,7 @@ export function useEndpointEnabled(endpoint: string): {
   };
 
   useEffect(() => {
-    fetchEndpointStatus();
+    void fetchEndpointStatus();
   }, [endpoint]);
 
   return {
@@ -105,7 +105,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   };
 
   useEffect(() => {
-    fetchAllEndpointStatuses();
+    void fetchAllEndpointStatuses();
   }, [endpoints.join(',')]); // Re-run when endpoints array changes
 
   return {

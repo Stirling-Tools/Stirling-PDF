@@ -94,7 +94,7 @@ class PDFWorkerManager {
       // If document creation fails, make sure to clean up the loading task
       if (loadingTask) {
         try {
-          loadingTask.destroy();
+          await loadingTask.destroy();
         } catch {
           // Ignore errors
         }
@@ -109,7 +109,7 @@ class PDFWorkerManager {
   destroyDocument(pdf: PDFDocumentProxy): void {
     if (this.activeDocuments.has(pdf)) {
       try {
-        pdf.destroy();
+        void pdf.destroy();
         this.activeDocuments.delete(pdf);
         this.workerCount = Math.max(0, this.workerCount - 1);
       } catch {
@@ -167,7 +167,7 @@ class PDFWorkerManager {
     // Force destroy all documents
     this.activeDocuments.forEach(pdf => {
       try {
-        pdf.destroy();
+        void pdf.destroy();
       } catch {
         // Ignore errors
       }

@@ -1,3 +1,4 @@
+import React from "react";
 import { Stack, NumberInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AdjustPageScaleParameters, PageSize } from "../../../hooks/tools/adjustPageScale/useAdjustPageScaleParameters";

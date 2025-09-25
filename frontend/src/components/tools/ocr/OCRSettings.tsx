@@ -23,7 +23,7 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
       <Select
         label={t('ocr.settings.ocrMode.label', 'OCR Mode')}
         value={parameters.ocrType}
-        onChange={(value) => onParameterChange('ocrType', value || 'skip-text')}
+        onChange={(value) => onParameterChange('ocrType', value ?? 'skip-text')}
         data={[
           { value: 'skip-text', label: t('ocr.settings.ocrMode.auto', 'Auto (skip text layers)') },
           { value: 'force-ocr', label: t('ocr.settings.ocrMode.force', 'Force (re-OCR all, replace text)') },

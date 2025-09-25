@@ -58,7 +58,7 @@ export const usePdfSignatureDetection = (files: StirlingFile[]): PdfSignatureDet
       setIsChecking(false);
     };
 
-    checkForDigitalSignatures();
+    void checkForDigitalSignatures();
   }, [files]);
 
   return {

@@ -80,7 +80,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      handleSearch(searchQuery);
+      void handleSearch(searchQuery);
     } else if (event.key === 'Escape') {
       onClose();
     }

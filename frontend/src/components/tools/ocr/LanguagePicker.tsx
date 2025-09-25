@@ -75,7 +75,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
       }
     };
 
-    fetchLanguages();
+    void fetchLanguages();
   }, [languagesEndpoint]);
 
   // Auto-fill OCR language based on browser language when languages are loaded

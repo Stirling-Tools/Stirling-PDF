@@ -7,7 +7,7 @@ export const buildAddStampFormData = (parameters: AddStampParameters, file: File
   const formData = new FormData();
   formData.append('fileInput', file);
   formData.append('pageNumbers', parameters.pageNumbers);
-  formData.append('customMargin', parameters.customMargin || 'medium'); 
+  formData.append('customMargin', parameters.customMargin || 'medium');
   formData.append('position', String(parameters.position));
   const effectiveFontSize = parameters.fontSize;
   formData.append('fontSize', String(effectiveFontSize));
@@ -19,7 +19,7 @@ export const buildAddStampFormData = (parameters: AddStampParameters, file: File
   formData.append('alphabet', parameters.alphabet);
 
   // Stamp type and payload
-  formData.append('stampType', parameters.stampType || 'text');
+  formData.append('stampType', parameters.stampType ?? 'text');
   if (parameters.stampType === 'text') {
     formData.append('stampText', parameters.stampText);
   } else if (parameters.stampType === 'image' && parameters.stampImage) {

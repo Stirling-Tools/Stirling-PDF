@@ -1,3 +1,4 @@
+import React from "react";
 import { Stack, Divider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ChangeMetadataParameters, createCustomMetadataFunctions } from "../../../hooks/tools/changeMetadata/useChangeMetadataParameters";

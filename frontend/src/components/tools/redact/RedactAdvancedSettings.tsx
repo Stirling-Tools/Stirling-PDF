@@ -1,3 +1,4 @@
+import React from "react";
 import { Stack, NumberInput, ColorInput, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RedactParameters } from "../../../hooks/tools/redact/useRedactParameters";

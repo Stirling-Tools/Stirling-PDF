@@ -60,7 +60,7 @@ class FileProcessingService {
     this.processingCache.set(fileId, operation);
 
     // Clean up cache after completion
-    processingPromise.finally(() => {
+    void processingPromise.finally(() => {
       this.processingCache.delete(fileId);
     });
 

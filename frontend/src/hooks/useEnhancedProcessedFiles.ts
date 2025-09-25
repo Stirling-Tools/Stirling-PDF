@@ -104,7 +104,7 @@ export function useEnhancedProcessedFiles(
       }
     };
 
-    processFiles();
+    void processFiles();
   }, [activeFiles]); // Only depend on activeFiles to avoid infinite loops
 
   // Listen for processing completion

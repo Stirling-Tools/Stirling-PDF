@@ -26,7 +26,7 @@ export function useSavedAutomations() {
   }, []);
 
   const refreshAutomations = useCallback(() => {
-    loadSavedAutomations();
+    void loadSavedAutomations();
   }, [loadSavedAutomations]);
 
   const deleteAutomation = useCallback(async (id: string) => {
@@ -80,7 +80,7 @@ export function useSavedAutomations() {
 
   // Load automations on mount
   useEffect(() => {
-    loadSavedAutomations();
+    void loadSavedAutomations();
   }, [loadSavedAutomations]);
 
   return {

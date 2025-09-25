@@ -26,7 +26,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
 
   // Use the operation hook's loading state
-  const isExecuting = automateOperation?.isLoading || false;
+  const isExecuting = automateOperation?.isLoading ?? false;
   const hasResults = automateOperation?.files.length > 0 || automateOperation?.downloadUrl !== null;
 
   // Initialize execution steps from automation
@@ -194,7 +194,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           <Button
             leftSection={<PlayArrowIcon />}
             onClick={executeAutomation}
-            disabled={isExecuting || !selectedFiles || selectedFiles.length === 0}
+            disabled={(isExecuting ?? !selectedFiles) ?? selectedFiles.length === 0}
             loading={isExecuting}
           >
             {isExecuting

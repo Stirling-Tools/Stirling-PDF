@@ -44,7 +44,7 @@ const ConvertToPdfaSettings = ({
           value={parameters.pdfaOptions.outputFormat}
           onChange={(value) => onParameterChange('pdfaOptions', {
             ...parameters.pdfaOptions,
-            outputFormat: value || 'pdfa-1'
+            outputFormat: value ?? 'pdfa-1'
           })}
           data={pdfaFormatOptions}
           disabled={disabled || isChecking}

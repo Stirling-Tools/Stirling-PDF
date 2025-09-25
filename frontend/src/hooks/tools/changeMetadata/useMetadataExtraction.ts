@@ -60,7 +60,7 @@ export const useMetadataExtraction = (params: MetadataExtractionParams) => {
       setIsExtractingMetadata(false);
     };
 
-    extractMetadata();
+    void extractMetadata();
   }, [selectedFiles, hasExtractedMetadata, params]);
 
   return {

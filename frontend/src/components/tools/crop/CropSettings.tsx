@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Stack, Text, Box, Group, NumberInput, ActionIcon, Center, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -48,7 +48,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         return;
       }
 
-      setThumbnail(selectedStub.thumbnailUrl || null);
+      setThumbnail(selectedStub.thumbnailUrl ?? null);
 
       try {
         // Get PDF dimensions from the actual file
@@ -89,7 +89,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       }
     };
 
-    loadPDFDimensions();
+    void loadPDFDimensions();
   }, [selectedStub, selectedFile, parameters]);
 
   // Current crop area

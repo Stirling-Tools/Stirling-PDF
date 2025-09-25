@@ -240,7 +240,7 @@ export default function AutomationEntry({
   );
 
   // Show tooltip if there's a description OR operations to display
-  const shouldShowTooltip = description || operations.length > 0;
+  const shouldShowTooltip = description ?? operations.length > 0;
 
   return shouldShowTooltip ? (
     <Tooltip

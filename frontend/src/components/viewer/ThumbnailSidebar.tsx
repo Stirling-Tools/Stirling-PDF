@@ -65,7 +65,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
       }
     };
 
-    generateThumbnails();
+    void generateThumbnails();
   }, [visible, scrollState.totalPages, thumbnailAPI]);
 
   const handlePageClick = (pageIndex: number) => {

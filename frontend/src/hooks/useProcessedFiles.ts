@@ -36,7 +36,7 @@ export function useProcessedFiles(activeFiles: File[]): UseProcessedFilesResult 
       setProcessedFiles(newProcessedFiles);
     };
 
-    checkProcessing();
+    void checkProcessing();
 
     return unsubscribe;
   }, [activeFiles]);

@@ -2,7 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import Backend from 'i18next-http-backend';
 
-i18n
+void i18n
   .use(Backend)
   .use(initReactI18next)
   .init({
@@ -29,7 +29,7 @@ i18n
           'convert.singleOrMultiple': 'Output',
           'convert.emailNote': 'Email attachments and embedded images will be included',
           'common.color': 'Color',
-          'common.grayscale': 'Grayscale', 
+          'common.grayscale': 'Grayscale',
           'common.blackWhite': 'Black & White',
           'common.single': 'Single Image',
           'common.multiple': 'Multiple Images',
