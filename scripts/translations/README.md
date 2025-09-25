@@ -10,22 +10,22 @@ Analyzes translation files to find missing translations, untranslated entries, a
 **Usage:**
 ```bash
 # Analyze all languages
-python scripts/translation_analyzer.py
+python scripts/translations/translation_analyzer.py
 
 # Analyze specific language
-python scripts/translation_analyzer.py --language fr-FR
+python scripts/translations/translation_analyzer.py --language fr-FR
 
 # Show only missing translations
-python scripts/translation_analyzer.py --missing-only
+python scripts/translations/translation_analyzer.py --missing-only
 
 # Show only untranslated entries
-python scripts/translation_analyzer.py --untranslated-only
+python scripts/translations/translation_analyzer.py --untranslated-only
 
 # Show summary only
-python scripts/translation_analyzer.py --summary
+python scripts/translations/translation_analyzer.py --summary
 
 # JSON output format
-python scripts/translation_analyzer.py --format json
+python scripts/translations/translation_analyzer.py --format json
 ```
 
 **Features:**
@@ -42,19 +42,19 @@ Merges missing translations from en-GB into target language files and manages tr
 **Usage:**
 ```bash
 # Add missing translations from en-GB to French
-python scripts/translation_merger.py fr-FR add-missing
+python scripts/translations/translation_merger.py fr-FR add-missing
 
 # Add without marking as [UNTRANSLATED]
-python scripts/translation_merger.py fr-FR add-missing --no-mark-untranslated
+python scripts/translations/translation_merger.py fr-FR add-missing --no-mark-untranslated
 
 # Extract untranslated entries to a file
-python scripts/translation_merger.py fr-FR extract-untranslated --output fr_untranslated.json
+python scripts/translations/translation_merger.py fr-FR extract-untranslated --output fr_untranslated.json
 
 # Create a template for AI translation
-python scripts/translation_merger.py fr-FR create-template --output fr_template.json
+python scripts/translations/translation_merger.py fr-FR create-template --output fr_template.json
 
 # Apply translations from a file
-python scripts/translation_merger.py fr-FR apply-translations --translations-file fr_translated.json
+python scripts/translations/translation_merger.py fr-FR apply-translations --translations-file fr_translated.json
 ```
 
 **Features:**
@@ -70,16 +70,16 @@ Specialized tool for AI-assisted translation workflows with batch processing and
 **Usage:**
 ```bash
 # Create batch file for AI translation (multiple languages)
-python scripts/ai_translation_helper.py create-batch --languages fr-FR de-DE es-ES --output batch.json --max-entries 50
+python scripts/translations/ai_translation_helper.py create-batch --languages fr-FR de-DE es-ES --output batch.json --max-entries 50
 
 # Validate AI translations
-python scripts/ai_translation_helper.py validate batch.json
+python scripts/translations/ai_translation_helper.py validate batch.json
 
 # Apply validated AI translations
-python scripts/ai_translation_helper.py apply-batch batch.json
+python scripts/translations/ai_translation_helper.py apply-batch batch.json
 
 # Export for external translation services
-python scripts/ai_translation_helper.py export --languages fr-FR de-DE --format csv
+python scripts/translations/ai_translation_helper.py export --languages fr-FR de-DE --format csv
 ```
 
 **Features:**
@@ -89,22 +89,37 @@ python scripts/ai_translation_helper.py export --languages fr-FR de-DE --format 
 - Applies batch translations with validation
 - Exports to CSV/JSON for external translation services
 
-### 4. `json_beautifier.py`
+### 4. `compact_translator.py`
+Extracts untranslated entries in minimal JSON format for character-limited AI services.
+
+**Usage:**
+```bash
+# Extract all untranslated entries
+python scripts/translations/compact_translator.py it-IT --output to_translate.json
+```
+
+**Features:**
+- Produces minimal JSON output with no extra whitespace
+- Automatic ignore patterns for cleaner output
+- Batch size control for manageable chunks
+- 50-80% fewer characters than other extraction methods
+
+### 5. `json_beautifier.py`
 Restructures and beautifies translation JSON files to match en-GB structure exactly.
 
 **Usage:**
 ```bash
 # Restructure single language to match en-GB structure
-python scripts/json_beautifier.py --language de-DE
+python scripts/translations/json_beautifier.py --language de-DE
 
 # Restructure all languages
-python scripts/json_beautifier.py --all-languages
+python scripts/translations/json_beautifier.py --all-languages
 
 # Validate structure without modifying files
-python scripts/json_beautifier.py --language de-DE --validate-only
+python scripts/translations/json_beautifier.py --language de-DE --validate-only
 
 # Skip backup creation
-python scripts/json_beautifier.py --language de-DE --no-backup
+python scripts/translations/json_beautifier.py --language de-DE --no-backup
 ```
 
 **Features:**
@@ -114,27 +129,63 @@ python scripts/json_beautifier.py --language de-DE --no-backup
 - Validates structure and key ordering
 - Handles flattened dot-notation keys (e.g., "key.subkey") properly
 
-## Complete Translation Workflows
+## Translation Workflows
 
-### Method 1: Batch Translation Workflow (RECOMMENDED)
+### Method 1: Compact Translation Workflow (RECOMMENDED for AI)
+
+**Best for character-limited AI services like Claude or ChatGPT**
+
+#### Step 1: Check Current Status
+```bash
+python scripts/translations/translation_analyzer.py --language it-IT --summary
+```
+
+#### Step 2: Extract Untranslated Entries
+```bash
+python scripts/translations/compact_translator.py it-IT --output to_translate.json
+```
+
+**Output format**: Compact JSON with minimal whitespace
+```json
+{"key1":"English text","key2":"Another text","key3":"More text"}
+```
+
+#### Step 3: AI Translation
+1. Copy the compact JSON output
+2. Give it to your AI with instructions:
+   ```
+   Translate this JSON to Italian. Keep the same structure, translate only the values.
+   Preserve placeholders like {n}, {total}, {filename}, {{variable}}.
+   ```
+3. Save the AI's response as `translated.json`
+
+#### Step 4: Apply Translations
+```bash
+python scripts/translations/translation_merger.py it-IT apply-translations --translations-file translated.json
+```
+
+#### Step 5: Verify Results
+```bash
+python scripts/translations/translation_analyzer.py --language it-IT --summary
+```
+
+### Method 2: Batch Translation Workflow
 
 **For complete language translation from scratch or major updates**
 
 #### Step 1: Analyze Current State
 ```bash
-python scripts/translation_analyzer.py --language de-DE --summary
+python scripts/translations/translation_analyzer.py --language de-DE --summary
 ```
-This shows completion percentage and missing translation count.
 
 #### Step 2: Create Translation Batches
 ```bash
 # Create batches of 100 entries each for systematic translation
-python scripts/ai_translation_helper.py create-batch --languages de-DE --output de_batch_1.json --max-entries 100
+python scripts/translations/ai_translation_helper.py create-batch --languages de-DE --output de_batch_1.json --max-entries 100
 ```
-**Important**: Use 100 entries per batch to avoid incomplete translations and [UNTRANSLATED] pollution.
 
 #### Step 3: Translate Batch with AI
-Edit the batch file and fill in ALL `translated` fields. Use Claude Code or other AI:
+Edit the batch file and fill in ALL `translated` fields:
 - Preserve all placeholders like `{n}`, `{total}`, `{filename}`, `{{toolName}}`
 - Keep technical terms consistent
 - Maintain JSON structure exactly
@@ -143,55 +194,32 @@ Edit the batch file and fill in ALL `translated` fields. Use Claude Code or othe
 #### Step 4: Apply Translations
 ```bash
 # Skip validation if using legitimate placeholders ({{variable}})
-python scripts/ai_translation_helper.py apply-batch de_batch_1.json --skip-validation
+python scripts/translations/ai_translation_helper.py apply-batch de_batch_1.json --skip-validation
 ```
 
 #### Step 5: Check Progress and Continue
 ```bash
-python scripts/translation_analyzer.py --language de-DE --summary
+python scripts/translations/translation_analyzer.py --language de-DE --summary
 ```
-Repeat steps 2-5 with incrementing batch numbers until 100% complete.
+Repeat steps 2-5 until 100% complete.
 
-#### Step 6: Final Structure Check (Optional)
-```bash
-python scripts/json_beautifier.py --language de-DE
-```
-
-### Method 2: Quick Translation Workflow (Legacy)
+### Method 3: Quick Translation Workflow (Legacy)
 
 **For small updates or existing translations**
 
-#### Step 1: Analyze Current State
+#### Step 1: Add Missing Translations
 ```bash
-python scripts/translation_analyzer.py --language fr-FR
+python scripts/translations/translation_merger.py fr-FR add-missing --mark-untranslated
 ```
 
-#### Step 2: Add Missing Translations
+#### Step 2: Create AI Template
 ```bash
-python scripts/translation_merger.py fr-FR add-missing --mark-untranslated
+python scripts/translations/translation_merger.py fr-FR create-template --output fr_template.json
 ```
 
-#### Step 3: Create AI Batch File
+#### Step 3: Apply Translations
 ```bash
-python scripts/ai_translation_helper.py create-batch --languages fr-FR --output fr_batch.json --max-entries 30
-```
-
-#### Step 4: Use AI to Translate
-Edit the `fr_batch.json` file and fill in the `translated` fields using an AI tool like Claude or ChatGPT.
-
-#### Step 5: Validate Translations
-```bash
-python scripts/ai_translation_helper.py validate fr_batch.json
-```
-
-#### Step 6: Apply Translations
-```bash
-python scripts/ai_translation_helper.py apply-batch fr_batch.json
-```
-
-#### Step 7: Beautify Structure (Optional)
-```bash
-python scripts/json_beautifier.py --language fr-FR
+python scripts/translations/translation_merger.py fr-FR apply-translations --translations-file fr_translated.json
 ```
 
 ## Translation File Structure
@@ -261,24 +289,30 @@ ignore = [
 ]
 ```
 
-**Usage:** All analyzer scripts automatically use this file to provide accurate completion percentages by excluding irrelevant keys from translation requirements.
-
 ## Best Practices & Lessons Learned
 
-### Critical Rules for Batch Translation
+### Critical Rules for Translation
 
 1. **NEVER skip entries**: Translate ALL entries in each batch to avoid [UNTRANSLATED] pollution
-2. **Use 100-entry batches**: Optimal size for systematic completion without overwhelming workload
+2. **Use appropriate batch sizes**: 100 entries for systematic translation, unlimited for compact method
 3. **Skip validation for placeholders**: Use `--skip-validation` when batch contains `{{variable}}` patterns
 4. **Check progress between batches**: Use `--summary` flag to track completion percentage
 5. **Preserve all placeholders**: Keep `{n}`, `{total}`, `{filename}`, `{{toolName}}` exactly as-is
+
+### Workflow Comparison
+
+| Method | Best For | Character Usage | Complexity | Speed |
+|--------|----------|----------------|------------|-------|
+| Compact | AI services | Minimal (50-80% less) | Simple | Fastest |
+| Batch | Systematic translation | Moderate | Medium | Medium |
+| Quick | Small updates | High | Low | Slow |
 
 ### Common Issues and Solutions
 
 #### [UNTRANSLATED] Pollution
 **Problem**: Hundreds of [UNTRANSLATED] markers from incomplete translation attempts
 **Solution**:
-- Only translate complete batches of manageable size (100 entries)
+- Only translate complete batches of manageable size
 - Use analyzer that counts [UNTRANSLATED] as missing translations
 - Restore from backup if pollution occurs
 
@@ -290,11 +324,44 @@ ignore = [
 **Problem**: Flattened dot-notation keys instead of proper nested objects
 **Solution**: Use `json_beautifier.py` to restructure files to match en-GB exactly
 
-### German Translation Notes
-- Technical terms: Use German equivalents (PDF → PDF, API → API)
-- UI actions: "hochladen" (upload), "herunterladen" (download), "speichern" (save)
-- Error messages: Consistent pattern "Ein Fehler ist beim [action] aufgetreten"
-- Formal address: Use "Sie" form for user-facing text
+## Real-World Examples
+
+### Complete Italian Translation (Compact Method)
+```bash
+# Check status
+python scripts/translations/translation_analyzer.py --language it-IT --summary
+# Result: 46.8% complete, 1147 missing
+
+# Extract all entries for translation
+python scripts/translations/compact_translator.py it-IT --output batch1.json
+
+# [Translate batch1.json with AI, save as batch1_translated.json]
+
+# Apply translations
+python scripts/translations/translation_merger.py it-IT apply-translations --translations-file batch1_translated.json
+# Result: Applied 1147 translations
+
+# Check progress
+python scripts/translations/translation_analyzer.py --language it-IT --summary
+# Result: 100% complete, 0 missing
+```
+
+### German Translation (Batch Method)
+Starting from 46.3% completion, reaching 60.3% with batch method:
+
+```bash
+# Initial analysis
+python scripts/translations/translation_analyzer.py --language de-DE --summary
+# Result: 46.3% complete, 1142 missing entries
+
+# Batch 1 (100 entries)
+python scripts/translations/ai_translation_helper.py create-batch --languages de-DE --output de_batch_1.json --max-entries 100
+# [Translate all 100 entries in batch file]
+python scripts/translations/ai_translation_helper.py apply-batch de_batch_1.json --skip-validation
+# Progress: 46.6% → 51.2%
+
+# Continue with more batches until 100% complete
+```
 
 ## Error Handling
 
@@ -312,50 +379,25 @@ These scripts integrate with the existing translation system:
 - Respects the JSON format expected by the translation loader
 - Maintains the nested structure required by the UI components
 
-## Real-World Examples
+## Language-Specific Notes
 
-### Complete German Translation (de-DE)
-Starting from 46.3% completion, reaching 60.3% with batch method:
+### German Translation Notes
+- Technical terms: Use German equivalents (PDF → PDF, API → API)
+- UI actions: "hochladen" (upload), "herunterladen" (download), "speichern" (save)
+- Error messages: Consistent pattern "Ein Fehler ist beim [action] aufgetreten"
+- Formal address: Use "Sie" form for user-facing text
 
-```bash
-# Initial analysis
-python scripts/translation_analyzer.py --language de-DE --summary
-# Result: 46.3% complete, 1142 missing entries
-
-# Batch 1 (100 entries)
-python scripts/ai_translation_helper.py create-batch --languages de-DE --output de_batch_1.json --max-entries 100
-# [Translate all 100 entries in batch file]
-python scripts/ai_translation_helper.py apply-batch de_batch_1.json --skip-validation
-# Progress: 46.6% → 51.2%
-
-# Batch 2 (100 entries)
-python scripts/ai_translation_helper.py create-batch --languages de-DE --output de_batch_2.json --max-entries 100
-# [Translate all 100 entries in batch file]
-python scripts/ai_translation_helper.py apply-batch de_batch_2.json --skip-validation
-# Progress: 51.2% → 56.0%
-
-# Batch 3 (100 entries)
-python scripts/ai_translation_helper.py create-batch --languages de-DE --output de_batch_3.json --max-entries 100
-# [Translate all 100 entries in batch file]
-python scripts/ai_translation_helper.py apply-batch de_batch_3.json --skip-validation
-# Progress: 56.0% → 60.3%
-
-# Continue until 100% complete (approximately 8-10 more batches needed)
-```
-
-### Fixing [UNTRANSLATED] Pollution
-```bash
-# Problem: 927 [UNTRANSLATED] entries from incomplete translation
-# Solution: Restore from backup and use batch method
-cp frontend/public/locales/de-DE/translation.backup.20241201_143022.json frontend/public/locales/de-DE/translation.json
-# Then proceed with complete batch translation
-```
+### Italian Translation Notes
+- Keep technical terms in English when commonly used (PDF, API, URL)
+- Use formal address ("Lei" form) for user-facing text
+- Error messages: "Si è verificato un errore durante [action]"
+- UI actions: "carica" (upload), "scarica" (download), "salva" (save)
 
 ## Common Use Cases
 
-1. **Complete Language Translation**: Use Method 1 (Batch Workflow) for systematic 0→100% translation
-2. **New Language Addition**: Start with batch workflow for comprehensive coverage
-3. **Updating Existing Language**: Use analyzer to find gaps, then batch or quick method as needed
+1. **Complete Language Translation**: Use Compact Workflow for fastest AI-assisted translation
+2. **New Language Addition**: Start with compact workflow for comprehensive coverage
+3. **Updating Existing Language**: Use analyzer to find gaps, then compact or batch method
 4. **Quality Assurance**: Use analyzer with `--summary` for completion metrics and issue detection
 5. **External Translation Services**: Use export functionality to generate CSV files for translators
 6. **Structure Maintenance**: Use json_beautifier to keep files aligned with en-GB structure
