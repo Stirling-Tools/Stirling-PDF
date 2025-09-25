@@ -616,11 +616,6 @@
       "title": "Auto Split by Size/Count",
       "desc": "Automatically split PDFs by file size or page count"
     },
-    "replaceColorPdf": {
-      "tags": "color,replace,invert",
-      "title": "Replace & Invert Colour",
-      "desc": "Replace or invert colours in PDF documents"
-    },
     "replaceColor": {
       "title": "Replace & Invert Colour",
       "desc": "Replace or invert colours in PDF documents"
@@ -2504,24 +2499,6 @@
     },
     "selectCustomCert": "Custom Certificate File X.509 (Optional)"
   },
-  "replace-color": {
-    "title": "Advanced Colour options",
-    "header": "Replace-Invert Colour PDF",
-    "selectText": {
-      "1": "Replace or Invert colour Options",
-      "2": "Default(Default high contrast colours)",
-      "3": "Custom(Customised colours)",
-      "4": "Full-Invert(Invert all colours)",
-      "5": "High contrast colour options",
-      "6": "White text on black background",
-      "7": "Black text on white background",
-      "8": "Yellow text on black background",
-      "9": "Green text on black background",
-      "10": "Choose text Colour",
-      "11": "Choose background Colour"
-    },
-    "submit": "Replace"
-  },
   "replaceColor": {
     "labels": {
       "settings": "Settings",
@@ -2563,7 +2540,7 @@
       "failed": "An error occurred while processing the colour replacement."
     }
   },
-  "replaceColorPdf": {
+  "replaceColor": {
     "tags": "Replace Colour,Page operations,Back end,server side"
   },
   "login": {
