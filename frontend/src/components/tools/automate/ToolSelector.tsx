@@ -58,8 +58,13 @@ export default function ToolSelector({
     return registry;
   }, [baseFilteredTools]);
 
+  // Transform filteredTools to the expected format for useToolSections
+  const transformedFilteredTools = useMemo(() => {
+    return filteredTools.map(([id, tool]) => ({ item: [id, tool] as [string, ToolRegistryEntry] }));
+  }, [filteredTools]);
+
   // Use the same tool sections logic as the main ToolPicker
-  const { sections, searchGroups } = useToolSections(filteredTools);
+  const { sections, searchGroups } = useToolSections(transformedFilteredTools);
 
   // Determine what to display: search results or organized sections
   const isSearching = searchTerm.trim().length > 0;

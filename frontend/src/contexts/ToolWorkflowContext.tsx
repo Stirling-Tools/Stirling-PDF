@@ -11,6 +11,7 @@ import { useNavigationActions, useNavigationState } from './NavigationContext';
 import { ToolId, isValidToolId } from '../types/toolId';
 import { useNavigationUrlSync } from '../hooks/useUrlSync';
 import { getDefaultWorkbench } from '../types/workbench';
+import { filterToolRegistryByQuery } from '../utils/toolSearch';
 
 // State interface
 interface ToolWorkflowState {
@@ -100,7 +101,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: [string, ToolRegistryEntry][]; // Filtered by search
+  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
   isPanelVisible: boolean;
 }
 
@@ -219,12 +220,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setReaderMode(true);
   }, [setReaderMode]);
 
-  // Filter tools based on search query
+  // Filter tools based on search query with fuzzy matching (name, description, id, synonyms)
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    return Object.entries(toolRegistry).filter(([_, { name }]) =>
-      name.toLowerCase().includes(state.searchQuery.toLowerCase())
-    );
+    return filterToolRegistryByQuery(toolRegistry as Record<string, ToolRegistryEntry>, state.searchQuery);
   }, [toolRegistry, state.searchQuery]);
 
   const isPanelVisible = useMemo(() =>

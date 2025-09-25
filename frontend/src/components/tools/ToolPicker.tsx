@@ -10,7 +10,7 @@ import { renderToolButtons } from "./shared/renderToolButtons";
 interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
-  filteredTools: [string, ToolRegistryEntry][];
+  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
   isSearching?: boolean;
 }
 

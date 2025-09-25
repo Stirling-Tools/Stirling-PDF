@@ -9,13 +9,22 @@ import NoToolsFound from './shared/NoToolsFound';
 import "./toolPicker/ToolPicker.css";
 
 interface SearchResultsProps {
-  filteredTools: [string, ToolRegistryEntry][];
+  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
   onSelect: (id: string) => void;
+  searchQuery?: string;
 }
 
-const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }) => {
+const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect, searchQuery }) => {
   const { t } = useTranslation();
-  const { searchGroups } = useToolSections(filteredTools);
+  const { searchGroups } = useToolSections(filteredTools, searchQuery);
+
+  // Create a map of matched text for quick lookup
+  const matchedTextMap = new Map<string, string>();
+  if (filteredTools && Array.isArray(filteredTools)) {
+    filteredTools.forEach(({ item: [id], matchedText }) => {
+      if (matchedText) matchedTextMap.set(id, matchedText);
+    });
+  }
 
   if (searchGroups.length === 0) {
     return <NoToolsFound />;
@@ -28,15 +37,27 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect }
         <Box key={group.subcategoryId}  w="100%">
           <SubcategoryHeader label={getSubcategoryLabel(t, group.subcategoryId)} />
           <Stack  gap="xs">
-            {group.tools.map(({ id, tool }) => (
-              <ToolButton
-                key={id}
-                id={id}
-                tool={tool}
-                isSelected={false}
-                onSelect={onSelect}
-              />
-            ))}
+            {group.tools.map(({ id, tool }) => {
+              const matchedText = matchedTextMap.get(id);
+              // Check if the match was from synonyms and show the actual synonym that matched
+              const isSynonymMatch = matchedText && tool.synonyms?.some(synonym => 
+                matchedText.toLowerCase().includes(synonym.toLowerCase())
+              );
+              const matchedSynonym = isSynonymMatch ? tool.synonyms?.find(synonym => 
+                matchedText.toLowerCase().includes(synonym.toLowerCase())
+              ) : undefined;
+              
+              return (
+                <ToolButton
+                  key={id}
+                  id={id}
+                  tool={tool}
+                  isSelected={false}
+                  onSelect={onSelect}
+                  matchedSynonym={matchedSynonym}
+                />
+              );
+            })}
           </Stack>
         </Box>
       ))}

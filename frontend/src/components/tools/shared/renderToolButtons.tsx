@@ -13,23 +13,39 @@ export const renderToolButtons = (
   selectedToolKey: string | null,
   onSelect: (id: string) => void,
   showSubcategoryHeader: boolean = true,
-  disableNavigation: boolean = false
-) => (
-  <Box key={subcategory.subcategoryId} w="100%">
-    {showSubcategoryHeader && (
-      <SubcategoryHeader label={getSubcategoryLabel(t, subcategory.subcategoryId)} />
-    )}
-    <div>
-      {subcategory.tools.map(({ id, tool }) => (
-        <ToolButton
-          key={id}
-          id={id}
-          tool={tool}
-          isSelected={selectedToolKey === id}
-          onSelect={onSelect}
-          disableNavigation={disableNavigation}
-        />
-      ))}
-    </div>
-  </Box>
-);
+  disableNavigation: boolean = false,
+  searchResults?: Array<{ item: [string, any]; matchedText?: string }>
+) => {
+  // Create a map of matched text for quick lookup
+  const matchedTextMap = new Map<string, string>();
+  if (searchResults) {
+    searchResults.forEach(({ item: [id], matchedText }) => {
+      if (matchedText) matchedTextMap.set(id, matchedText);
+    });
+  }
+
+  return (
+    <Box key={subcategory.subcategoryId} w="100%">
+      {showSubcategoryHeader && (
+        <SubcategoryHeader label={getSubcategoryLabel(t, subcategory.subcategoryId)} />
+      )}
+      <div>
+        {subcategory.tools.map(({ id, tool }) => {
+          const matchedSynonym = matchedTextMap.get(id);
+          
+          return (
+            <ToolButton
+              key={id}
+              id={id}
+              tool={tool}
+              isSelected={selectedToolKey === id}
+              onSelect={onSelect}
+              disableNavigation={disableNavigation}
+              matchedSynonym={matchedSynonym}
+            />
+          );
+        })}
+      </div>
+    </Box>
+  );
+};

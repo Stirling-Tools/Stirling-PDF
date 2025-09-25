@@ -45,6 +45,8 @@ export type ToolRegistryEntry = {
 	operationConfig?: ToolOperationConfig<any>;
 	// Settings component for automation configuration
 	settingsComponent?: React.ComponentType<any>;
+	// Synonyms for search (optional)
+	synonyms?: string[];
 }
 
 export type ToolRegistry = Record<ToolId, ToolRegistryEntry>;
