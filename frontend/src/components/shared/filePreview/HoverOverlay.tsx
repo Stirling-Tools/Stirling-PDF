@@ -15,12 +15,12 @@ const HoverOverlay: React.FC<HoverOverlayProps> = ({
 }) => {
   const defaultMouseEnter = (e: React.MouseEvent) => {
     const overlay = e.currentTarget.querySelector('.hover-overlay')!;
-    if (overlay) overlay.style.opacity = '1';
+    if (overlay instanceof HTMLElement) overlay.style.opacity = '1';
   };
 
   const defaultMouseLeave = (e: React.MouseEvent) => {
     const overlay = e.currentTarget.querySelector('.hover-overlay')!;
-    if (overlay) overlay.style.opacity = '0';
+    if (overlay instanceof HTMLElement) overlay.style.opacity = '0';
   };
 
   return (
@@ -30,11 +30,11 @@ const HoverOverlay: React.FC<HoverOverlayProps> = ({
         width: '100%',
         height: '100%'
       }}
-      onMouseEnter={onMouseEnter || defaultMouseEnter}
-      onMouseLeave={onMouseLeave || defaultMouseLeave}
+      onMouseEnter={onMouseEnter ?? defaultMouseEnter}
+      onMouseLeave={onMouseLeave ?? defaultMouseLeave}
     >
       {children}
-      
+
       {/* Hover overlay */}
       <Box
         className="hover-overlay"

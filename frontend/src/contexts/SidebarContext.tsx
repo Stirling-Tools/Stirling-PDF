@@ -5,8 +5,8 @@ const SidebarContext = createContext<SidebarContextValue | undefined>(undefined)
 
 export function SidebarProvider({ children }: SidebarProviderProps) {
   // All sidebar state management
-  const quickAccessRef = useRef<HTMLDivElement>(null);
-  const toolPanelRef = useRef<HTMLDivElement>(null);
+  const quickAccessRef = useRef<HTMLDivElement | null>(null);
+  const toolPanelRef = useRef<HTMLDivElement | null>(null);
 
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');

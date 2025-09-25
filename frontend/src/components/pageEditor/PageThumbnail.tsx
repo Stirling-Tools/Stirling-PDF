@@ -65,7 +65,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
-  const dragElementRef = useRef<HTMLDivElement>(null);
+  const dragElementRef = useRef<HTMLDivElement & { __dragCleanup?: () => void } | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
   const { openFilesModal } = useFilesModalContext();
@@ -128,7 +128,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   const pageElementRef = useCallback((element: HTMLDivElement | null) => {
     if (element) {
-      pageRefs.current.set(page.id, element);
+      if (pageRefs && 'current' in pageRefs && pageRefs.current) {
+        pageRefs.current.set(page.id, element);
+      }
       dragElementRef.current = element;
 
       const dragCleanup = draggable({
@@ -172,14 +174,16 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         onDrop: (_) => {}
       });
 
-      (element as any).__dragCleanup = () => {
+      dragElementRef.current.__dragCleanup = () => {
         dragCleanup();
         dropCleanup();
       };
     } else {
-      pageRefs.current.delete(page.id);
+      if (pageRefs && 'current' in pageRefs && pageRefs.current) {
+        pageRefs.current.delete(page.id);
+      }
       if (dragElementRef.current && (dragElementRef.current as any).__dragCleanup) {
-        (dragElementRef.current as any).__dragCleanup();
+        dragElementRef.current.__dragCleanup?.();
       }
     }
   }, [page.id, page.pageNumber, pageRefs, selectionMode, selectedPageIds, pdfDocument.pages, onReorderPages]);

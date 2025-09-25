@@ -2,6 +2,7 @@ import React from 'react';
 import { Flex, Text, Divider } from '@mantine/core';
 import LocalIcon from '../../shared/LocalIcon';
 import { Tooltip } from '../../shared/Tooltip';
+import { TooltipTip } from 'src/types/tips';
 
 export interface ToolWorkflowTitleProps {
   title: string;
@@ -32,7 +33,7 @@ export function ToolWorkflowTitle({ title, tooltip, description }: ToolWorkflowT
         <Flex justify="center" w="100%">
           <Tooltip
             content={tooltip.content}
-            tips={tooltip.tips}
+            tips={tooltip.tips as TooltipTip[] | undefined}
             header={tooltip.header}
             sidebarTooltip={true}
           >

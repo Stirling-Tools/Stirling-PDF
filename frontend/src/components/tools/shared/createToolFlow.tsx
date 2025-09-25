@@ -8,6 +8,9 @@ import { StirlingFile } from '../../../types/fileContext';
 import { SplitParameters } from 'src/hooks/tools/split/useSplitParameters';
 import { CompressParameters } from 'src/hooks/tools/compress/useCompressParameters';
 import { ChangeMetadataParameters } from 'src/hooks/tools/changeMetadata/useChangeMetadataParameters';
+import { OCRParameters } from 'src/hooks/tools/ocr/useOCRParameters';
+import { TooltipTip } from 'src/types/tips';
+import { RemovePasswordParameters } from 'src/hooks/tools/removePassword/useRemovePasswordParameters';
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -25,7 +28,7 @@ export interface MiddleStepConfig {
   content: React.ReactNode;
   tooltip?: {
     content?: React.ReactNode;
-    tips?: unknown[];
+    tips?: TooltipTip[];
     header?: {
       title: string;
       logo?: React.ReactNode;
@@ -44,14 +47,14 @@ export interface ExecuteButtonConfig {
 
 export interface ReviewStepConfig {
   isVisible: boolean;
-  operation: ToolOperationHook<SplitParameters> | ToolOperationHook<CompressParameters> | ToolOperationHook<ChangeMetadataParameters>;
+  operation: ToolOperationHook<SplitParameters> | ToolOperationHook<CompressParameters> | ToolOperationHook<ChangeMetadataParameters> | ToolOperationHook<OCRParameters> | ToolOperationHook<RemovePasswordParameters>;
   title: string;
   onFileClick?: (file: File) => void;
   onUndo: () => void;
   testId?: string;
 }
 
-export interface TitleConfig extends ToolWorkflowTitleProps {}
+export interface TitleConfig extends ToolWorkflowTitleProps { }
 
 export interface ToolFlowConfig {
   title?: TitleConfig;
@@ -71,7 +74,7 @@ export function createToolFlow(config: ToolFlowConfig) {
 
   return (
     <Stack gap="sm" p="sm" >
-    {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
+      {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
       <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>
         {config.title && <ToolWorkflowTitle {...config.title} />}
 

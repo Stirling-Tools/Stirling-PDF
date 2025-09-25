@@ -84,11 +84,11 @@ export function usePageDocument(): PageDocumentHook {
         filePages = processedFile.pages.map((page, pageIndex) => ({
           id: `${fileId}-${page.pageNumber}`,
           pageNumber: startPageNumber + pageIndex,
-          thumbnail: page.thumbnail || null,
-          rotation: page.rotation || 0,
+          thumbnail: page.thumbnail ?? null,
+          rotation: page.rotation ?? 0,
           selected: false,
-          splitAfter: page.splitAfter || false,
-          originalPageNumber: page.originalPageNumber || page.pageNumber || pageIndex + 1,
+          splitAfter: typeof page.splitAfter === 'boolean' ? page.splitAfter : false,
+          originalPageNumber: typeof page.originalPageNumber === 'number' ? page.originalPageNumber : (page.pageNumber ?? pageIndex + 1),
           originalFileId: fileId,
         }));
       } else if (processedFile?.totalPages) {
