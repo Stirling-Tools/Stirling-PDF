@@ -26,4 +26,7 @@ public class CropPdfForm extends PDFFile {
 
     @Schema(description = "The height of the crop area", type = "number")
     private float height;
+
+    @Schema(description = "Whether to remove text outside the crop area (keeps images)", type = "boolean")
+    private boolean removeDataOutsideCrop = false;
 }

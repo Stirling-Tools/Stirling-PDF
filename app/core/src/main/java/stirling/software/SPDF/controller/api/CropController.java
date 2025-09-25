@@ -2,6 +2,9 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -24,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -41,6 +45,15 @@ public class CropController {
                     "This operation takes an input PDF file and crops it according to the given"
                             + " coordinates. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm request) throws IOException {
+        if (request.isRemoveDataOutsideCrop()) {
+            return cropWithGhostscript(request);
+        } else {
+            return cropWithPDFBox(request);
+        }
+    }
+
+    private ResponseEntity<byte[]> cropWithPDFBox(@ModelAttribute CropPdfForm request)
+            throws IOException {
         PDDocument sourceDocument = pdfDocumentFactory.load(request);
 
         PDDocument newDocument =
@@ -95,5 +108,66 @@ public class CropController {
                 pdfContent,
                 request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
                         + "_cropped.pdf");
+    }
+
+    private ResponseEntity<byte[]> cropWithGhostscript(@ModelAttribute CropPdfForm request)
+            throws IOException {
+        PDDocument sourceDocument = pdfDocumentFactory.load(request);
+
+        // First, set the crop box using PDFBox
+        for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
+            PDPage page = sourceDocument.getPage(i);
+            PDRectangle cropBox =
+                    new PDRectangle(
+                            request.getX(),
+                            request.getY(),
+                            request.getWidth(),
+                            request.getHeight());
+            page.setCropBox(cropBox);
+        }
+
+        // Save the document with crop box set
+        Path tempInputFile = Files.createTempFile("crop_input", ".pdf");
+        Path tempOutputFile = Files.createTempFile("crop_output", ".pdf");
+
+        try {
+            sourceDocument.save(tempInputFile.toFile());
+            sourceDocument.close();
+
+            // Run Ghostscript command to remove data outside crop box
+            ProcessExecutor processExecutor =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT);
+            List<String> command =
+                    List.of(
+                            "gs",
+                            "-sDEVICE=pdfwrite",
+                            "-dUseCropBox",
+                            "-o",
+                            tempOutputFile.toString(),
+                            tempInputFile.toString());
+
+            processExecutor.runCommandWithOutputHandling(command);
+
+            // Read the processed file
+            byte[] pdfContent = Files.readAllBytes(tempOutputFile);
+
+            return WebResponseUtils.bytesToWebResponse(
+                    pdfContent,
+                    request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                            + "_cropped.pdf");
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Ghostscript processing was interrupted", e);
+        } finally {
+            // Clean up temp files
+            try {
+                Files.deleteIfExists(tempInputFile);
+                Files.deleteIfExists(tempOutputFile);
+            } catch (IOException e) {
+                // Log but don't fail if cleanup fails
+                System.err.println("Failed to cleanup temp files: " + e.getMessage());
+            }
+        }
     }
 }
