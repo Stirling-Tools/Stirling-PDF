@@ -89,6 +89,7 @@ const validateParameters = (params: ChangeMetadataParameters): boolean => {
   }
 
   // At least one field should have content for the operation to be meaningful
+  /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
   const hasStandardMetadata = !!(
     params.title.trim()
     || params.author.trim()
@@ -97,8 +98,8 @@ const validateParameters = (params: ChangeMetadataParameters): boolean => {
     || params.creator.trim()
     || params.producer.trim()
     || params.creationDate
-    ?? params.modificationDate
-    ?? params.trapped !== TrappedStatus.UNKNOWN
+    || params.modificationDate
+    || params.trapped !== TrappedStatus.UNKNOWN
   );
 
   const hasCustomMetadata = params.customMetadata.some(

@@ -4,7 +4,7 @@
 
 export interface AutomationOperation {
   operation: string;
-  parameters: Record<string, JsonValue>;
+  parameters: Record<string, JsonValue | undefined>;
 }
 
 export interface AutomationConfig {
@@ -22,7 +22,7 @@ export interface AutomationTool {
   operation: string;
   name: string;
   configured: boolean;
-  parameters?: Record<string, JsonValue>;
+  parameters?: Record<string, JsonValue | undefined>;
 }
 
 export type AutomationStep = typeof import('../constants/automation').AUTOMATION_STEPS[keyof typeof import('../constants/automation').AUTOMATION_STEPS];
@@ -82,34 +82,4 @@ export type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
-export type JsonObject = Record<string, JsonValue>;
-
-export interface AutomationOperation {
-  operation: string;
-  // Wurde von Record<string, string | number | boolean | null> auf JSON erweitert
-  parameters: Record<string, JsonValue>;
-}
-
-export interface AutomationConfig {
-  id: string;
-  name: string;
-  description?: string;
-  icon?: string;
-  operations: AutomationOperation[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AutomationStepData {
-  step: AutomationStep;
-  mode?: AutomationMode;
-  automation?: AutomationConfig;
-}
-
-export interface ExecutionStep {
-  id: string;
-  operation: string;
-  name: string;
-  status: 'pending' | 'running' | 'completed' | 'error';
-  error?: string;
-}
+export type JsonObject = { [key: string]: JsonValue };
