@@ -21,6 +21,7 @@ import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
+import RemoveImage from "../tools/RemoveImage";
 import CertSign from "../tools/CertSign";
 import BookletImposition from "../tools/BookletImposition";
 import Flatten from "../tools/Flatten";
@@ -516,11 +517,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       },
       removeImage: {
         icon: <LocalIcon icon="remove-selection-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.removeImage.title", "Remove Image"),
-        component: null,
-        description: t("home.removeImage.desc", "Remove images from PDF documents"),
+        name: t("home.removeImage.title", "Remove Images"),
+        component: RemoveImage,
+        description: t("home.removeImage.desc", "Remove all images from a PDF document"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        maxFiles: -1,
+        endpoints: ["remove-image-pdf"],
+        operationConfig: undefined,
         synonyms: getSynonyms(t, "removeImage"),
       },
       removePassword: {

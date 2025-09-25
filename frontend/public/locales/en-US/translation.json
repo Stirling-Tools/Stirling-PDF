@@ -1804,10 +1804,16 @@
     }
   },
   "removeImage": {
-    "title": "Remove image",
-    "header": "Remove image",
-    "removeImage": "Remove image",
-    "submit": "Remove image"
+    "title": "Remove Images",
+    "header": "Remove Images",
+    "removeImage": "Remove Images",
+    "submit": "Remove Images",
+    "results": {
+      "title": "Remove Images Results"
+    },
+    "error": {
+      "failed": "Failed to remove images from the PDF."
+    }
   },
   "splitByChapters": {
     "title": "Split PDF by Chapters",
