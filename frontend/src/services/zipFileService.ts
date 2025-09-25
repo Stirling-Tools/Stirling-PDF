@@ -360,7 +360,7 @@ export class ZipFileService {
       const zipContents = await zip.loadAsync(file);
 
       // Get all files (not directories)
-      const allFiles = Object.entries(zipContents.files).filter(([filename, zipEntry]) =>
+      const allFiles = Object.entries(zipContents.files).filter(([, zipEntry]) =>
         !zipEntry.dir
       );
 
