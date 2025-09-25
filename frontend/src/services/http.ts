@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { alert } from '../components/toast';
 import { broadcastErroredFiles, extractErrorFileIds, normalizeAxiosErrorData } from './errorUtils';
+import { showSpecialErrorToast } from './specialErrorToasts';
 
 const FRIENDLY_FALLBACK = 'There was an error processing your request.';
 
@@ -49,6 +50,11 @@ function extractAxiosErrorMessage(error: any): { title: string; body: string } {
       if (typeof raw === 'string') return raw;
       try { return JSON.stringify(data); } catch { return ''; }
     })();
+    // Specific friendly mapping for encrypted PDFs (centralized toast also fires in interceptor)
+    if (ENCRYPTION_ERROR_REGEX.test(body)) {
+      const title = titleForStatus(error.response?.status);
+      return { title, body: ENCRYPTION_FRIENDLY };
+    }
     const ids = extractIds();
     const title = titleForStatus(status);
     if (ids && ids.length > 0) {
@@ -64,6 +70,9 @@ function extractAxiosErrorMessage(error: any): { title: string; body: string } {
   }
   try {
     const msg = (error?.message || String(error)) as string;
+    if (ENCRYPTION_ERROR_REGEX.test(msg)) {
+      return { title: 'Request error', body: ENCRYPTION_FRIENDLY };
+    }
     return { title: 'Network error', body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg };
   } catch (e) {
     // ignore extraction errors
@@ -109,7 +118,17 @@ const __INTERCEPTOR_ID__ = axios.interceptors.response.use(
       }
     }
 
-    alert({ alertType: 'error', title, body, expandable: true, isPersistentPopup: false });
+    // Show specialized friendly toasts if matched; otherwise show the generic one
+    const raw = (error?.response?.data) as any;
+    let rawString: string | undefined;
+    try {
+      if (typeof raw === 'string') rawString = raw;
+      else rawString = await normalizeAxiosErrorData(raw).then((d) => (typeof d === 'string' ? d : JSON.stringify(d)));
+    } catch { /* ignore */ }
+    const handled = showSpecialErrorToast(rawString, { status });
+    if (!handled) {
+      alert({ alertType: 'error', title, body, expandable: true, isPersistentPopup: false });
+    }
     return Promise.reject(error);
   }
 );

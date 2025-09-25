@@ -74,6 +74,8 @@
   },
   "error": {
     "pdfPassword": "The PDF Document is passworded and either the password was not provided or was incorrect",
+    "encryptedPdfMustRemovePassword": "This PDF is encrypted or password-protected. Please unlock it before converting to PDF/A.",
+    "incorrectPasswordProvided": "The PDF password is incorrect or not provided.",
     "_value": "Error",
     "dismissAllErrors": "Dismiss All Errors",
     "sorry": "Sorry for the issue!",
