@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 import { alert } from '../components/toast';
 import { broadcastErroredFiles, extractErrorFileIds, normalizeAxiosErrorData } from './errorUtils';
 import { showSpecialErrorToast } from './specialErrorToasts';
@@ -73,14 +74,35 @@ function extractAxiosErrorMessage(error: any): { title: string; body: string } {
   }
 }
 
-// Install Axios response error interceptor (guard against double-registration in HMR)
+// Create axios instance with default config similar to SaaS client
 const __globalAny = (typeof window !== 'undefined' ? (window as any) : undefined);
-if (__globalAny?.__SPDF_HTTP_ERR_INTERCEPTOR_ID !== undefined) {
-  try { axios.interceptors.response.eject(__globalAny.__SPDF_HTTP_ERR_INTERCEPTOR_ID); } catch (_e) { void _e; }
+
+type ExtendedAxiosInstance = AxiosInstance & {
+  CancelToken: typeof axios.CancelToken;
+  isCancel: typeof axios.isCancel;
+};
+
+// Reuse existing client across HMR reloads to avoid duplicate interceptors
+const __PREV_CLIENT: ExtendedAxiosInstance | undefined = __globalAny?.__SPDF_HTTP_CLIENT as ExtendedAxiosInstance | undefined;
+
+const apiClient: ExtendedAxiosInstance = (__PREV_CLIENT || axios.create({
+  baseURL: (import.meta as any)?.env?.VITE_API_BASE_URL || '/',
+  responseType: 'json',
+  withCredentials: true,
+})) as ExtendedAxiosInstance;
+
+// Augment instance with axios static helpers for backwards compatibility
+(apiClient as any).CancelToken = axios.CancelToken;
+(apiClient as any).isCancel = axios.isCancel;
+
+// Install Axios response error interceptor on the instance (guard against double-registration in HMR)
+if (__globalAny?.__SPDF_HTTP_ERR_INTERCEPTOR_ID !== undefined && __PREV_CLIENT) {
+  try { __PREV_CLIENT.interceptors.response.eject(__globalAny.__SPDF_HTTP_ERR_INTERCEPTOR_ID); } catch (_e) { void _e; }
 }
+
 const __recentSpecialByEndpoint: Record<string, number> = (__globalAny?.__SPDF_RECENT_SPECIAL || {});
 const __SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate after special toast
-const __INTERCEPTOR_ID__ = axios.interceptors.response.use(
+const __INTERCEPTOR_ID__ = apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const { title, body } = extractAxiosErrorMessage(error);
@@ -126,6 +148,8 @@ const __INTERCEPTOR_ID__ = axios.interceptors.response.use(
 );
 if (__globalAny) {
   __globalAny.__SPDF_HTTP_ERR_INTERCEPTOR_ID = __INTERCEPTOR_ID__;
+  __globalAny.__SPDF_RECENT_SPECIAL = __recentSpecialByEndpoint;
+  __globalAny.__SPDF_HTTP_CLIENT = apiClient;
 }
 
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -150,7 +174,17 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
   return res;
 }
 
-export default axios;
+
+export const api = {
+  get: apiClient.get,
+  post: apiClient.post,
+  put: apiClient.put,
+  patch: apiClient.patch,
+  delete: apiClient.delete,
+  request: apiClient.request,
+};
+
+export default apiClient;
 export type { CancelTokenSource } from 'axios';
 
 
