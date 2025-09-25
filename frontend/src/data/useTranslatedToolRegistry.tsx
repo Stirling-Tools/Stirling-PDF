@@ -50,6 +50,7 @@ import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation"
 import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
+import { removeAnnotationsOperationConfig } from "../hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -74,6 +75,8 @@ import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/u
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import CropSettings from "../components/tools/crop/CropSettings";
+import RemoveAnnotations from "../tools/RemoveAnnotations";
+import RemoveAnnotationsSettings from "../components/tools/removeAnnotations/RemoveAnnotationsSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -508,10 +511,13 @@ export function useFlatToolRegistry(): ToolRegistry {
       removeAnnotations: {
         icon: <LocalIcon icon="thread-unread-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeAnnotations.title", "Remove Annotations"),
-        component: null,
+        component: RemoveAnnotations,
         description: t("home.removeAnnotations.desc", "Remove annotations and comments from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        maxFiles: -1,
+        operationConfig: removeAnnotationsOperationConfig,
+        settingsComponent: RemoveAnnotationsSettings,
         synonyms: getSynonyms(t, "removeAnnotations")
       },
       removeImage: {
