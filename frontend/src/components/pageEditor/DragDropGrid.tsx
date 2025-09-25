@@ -77,7 +77,7 @@ const DragDropGrid = <T extends DragDropItem>({
   // Virtualization with react-virtual library
   const rowVirtualizer = useVirtualizer({
     count: Math.ceil(items.length / itemsPerRow),
-    getScrollElement: () => containerRef.current?.closest('[data-scrolling-container]')!,
+    getScrollElement: () => containerRef.current?.closest('[data-scrolling-container]') ?? containerRef.current,
     estimateSize: () => {
       const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
       return parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx;
