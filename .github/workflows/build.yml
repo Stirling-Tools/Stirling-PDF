@@ -145,8 +145,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
+      - name: Clean and install frontend dependencies
+        run: cd frontend && rm -rf node_modules package-lock.json && npm install
       - name: Lint frontend
         run: cd frontend && npm run lint
       - name: Build frontend
