@@ -621,6 +621,10 @@
       "title": "Replace & Invert Colour",
       "desc": "Replace or invert colours in PDF documents"
     },
+    "replaceColor": {
+      "title": "Replace & Invert Colour",
+      "desc": "Replace or invert colours in PDF documents"
+    },
     "devApi": {
       "tags": "API,development,documentation",
       "title": "API",
@@ -2509,7 +2513,7 @@
       "3": "Custom(Customised colours)",
       "4": "Full-Invert(Invert all colours)",
       "5": "High contrast colour options",
-      "6": "white text on black background",
+      "6": "White text on black background",
       "7": "Black text on white background",
       "8": "Yellow text on black background",
       "9": "Green text on black background",
@@ -2517,6 +2521,47 @@
       "11": "Choose background Colour"
     },
     "submit": "Replace"
+  },
+  "replaceColor": {
+    "labels": {
+      "settings": "Settings",
+      "colourOperation": "Colour operation"
+    },
+    "options": {
+      "highContrast": "High contrast",
+      "invertAll": "Invert all colours",
+      "custom": "Custom"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Replace & Invert Colour Settings Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Transform PDF colours to improve readability and accessibility. Choose from high contrast presets, invert all colours, or create custom colour schemes."
+      },
+      "highContrast": {
+        "title": "High Contrast",
+        "text": "Apply predefined high contrast colour combinations designed for better readability and accessibility compliance.",
+        "bullet1": "White text on black background - Classic dark mode",
+        "bullet2": "Black text on white background - Standard high contrast",
+        "bullet3": "Yellow text on black background - High visibility option",
+        "bullet4": "Green text on black background - Alternative high contrast"
+      },
+      "invertAll": {
+        "title": "Invert All Colours",
+        "text": "Completely invert all colours in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
+      },
+      "custom": {
+        "title": "Custom Colours",
+        "text": "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
+        "bullet1": "Text colour - Choose the colour for text elements",
+        "bullet2": "Background colour - Set the background colour for the document"
+      }
+    },
+    "error": {
+      "failed": "An error occurred while processing the colour replacement."
+    }
   },
   "replaceColorPdf": {
     "tags": "Replace Colour,Page operations,Back end,server side"

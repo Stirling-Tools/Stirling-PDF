@@ -50,6 +50,7 @@ import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation"
 import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
+import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -68,12 +69,14 @@ import RedactSingleStepSettings from "../components/tools/redact/RedactSingleSte
 import RotateSettings from "../components/tools/rotate/RotateSettings";
 import Redact from "../tools/Redact";
 import AdjustPageScale from "../tools/AdjustPageScale";
+import ReplaceColor from "../tools/ReplaceColor";
 import { ToolId } from "../types/toolId";
 import MergeSettings from '../components/tools/merge/MergeSettings';
 import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import CropSettings from "../components/tools/crop/CropSettings";
+import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -642,10 +645,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       replaceColorPdf: {
         icon: <LocalIcon icon="format-color-fill-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.replaceColorPdf.title", "Replace & Invert Color"),
-        component: null,
+        component: ReplaceColor,
         description: t("home.replaceColorPdf.desc", "Replace or invert colors in PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["replace-invert-pdf"],
+        operationConfig: replaceColorOperationConfig,
+        settingsComponent: ReplaceColorSettings,
         synonyms: getSynonyms(t, "replaceColorPdf"),
       },
       addImage: {
