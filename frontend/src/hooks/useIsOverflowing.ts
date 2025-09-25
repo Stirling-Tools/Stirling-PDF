@@ -32,7 +32,7 @@ import * as React from 'react';
 */
 
 
-export const useIsOverflowing = (ref: React.Ref<HTMLElement | null>, callback?: (isOverflow: boolean) => void) => {
+export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callback?: (isOverflow: boolean) => void) => {
   // State to track overflow status
   const [isOverflow, setIsOverflow] = React.useState<boolean | undefined>(undefined);
 

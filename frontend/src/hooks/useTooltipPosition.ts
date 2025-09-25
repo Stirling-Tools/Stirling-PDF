@@ -60,8 +60,8 @@ export function useTooltipPosition({
   sidebarTooltip: boolean;
   position: Position;
   gap: number;
-  triggerRef: React.Ref<HTMLElement | null>;
-  tooltipRef: React.Ref<HTMLDivElement | null>;
+  triggerRef: React.RefObject<HTMLElement | null>;
+  tooltipRef: React.RefObject<HTMLDivElement | null>;
   sidebarRefs?: SidebarRefs;
   sidebarState?: SidebarState;
 }): PositionState {

@@ -44,11 +44,15 @@ export const useToolApiCalls = <TParams = void>() => {
 
         // Forward to shared response processor (uses tool-specific responseHandler if provided)
         const responseFiles = await processResponse(
-          response.data,
+          response.data as Blob,
           [file],
           config.filePrefix,
           config.responseHandler,
-          config.preserveBackendFilename ? response.headers : undefined
+          config.preserveBackendFilename
+            ? Object.fromEntries(
+                Object.entries(response.headers as Record<string, string | undefined>).map(([key, value]) => [key, value?.toString()])
+              )
+            : undefined
         );
         processedFiles.push(...responseFiles);
 

@@ -36,10 +36,10 @@ export const useDocumentMeta = (meta: MetaOptions) => {
       let metaElement = document.querySelector(`meta[name="${name}"]`)!;
       if (!metaElement) {
         metaElement = document.createElement('meta');
-        metaElement.name = name;
+        (metaElement as HTMLMetaElement).name = name;
         document.head.appendChild(metaElement);
       }
-      metaElement.content = content;
+      (metaElement as HTMLMetaElement).content = content;
     };
 
     const updateOrCreateProperty = (property: string, content: string) => {
@@ -49,7 +49,7 @@ export const useDocumentMeta = (meta: MetaOptions) => {
         metaElement.setAttribute('property', property);
         document.head.appendChild(metaElement);
       }
-      metaElement.content = content;
+      (metaElement as HTMLMetaElement).content = content;
     };
 
     // Update meta tags
@@ -90,7 +90,7 @@ export const useDocumentMeta = (meta: MetaOptions) => {
         const element = document.querySelector(`meta[property="${property}"]`)!;
         if (element) {
           if (originalValue !== null) {
-            element.content = originalValue;
+            (element as HTMLMetaElement).content = originalValue;
           } else {
             element.remove();
           }

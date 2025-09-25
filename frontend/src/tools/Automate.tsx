@@ -4,7 +4,7 @@ import { useFileSelection } from "../contexts/FileContext";
 import { useNavigationActions } from "../contexts/NavigationContext";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
+import { createToolFlow, MiddleStepConfig } from "../components/tools/shared/createToolFlow";
 import { createFilesToolStep } from "../components/tools/shared/FilesToolStep";
 import AutomationSelection from "../components/tools/automate/AutomationSelection";
 import AutomationCreation from "../components/tools/automate/AutomationCreation";
@@ -14,8 +14,9 @@ import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperati
 import { BaseToolProps } from "../types/tool";
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 import { useSavedAutomations } from "../hooks/tools/automate/useSavedAutomations";
-import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep } from "../types/automation";
+import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep, AutomateParameters } from "../types/automation";
 import { AUTOMATION_STEPS } from "../constants/automation";
+import { StirlingFile } from "src/types/fileContext";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -146,7 +147,13 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <AutomationRun
             automation={stepData.automation}
             onComplete={handleComplete}
-            automateOperation={automateOperation}
+            automateOperation={{
+              ...automateOperation,
+              executeOperation: async (params, files) => {
+                const stirlingFiles = files as StirlingFile[]; // Ensure type compatibility
+                await automateOperation.executeOperation(params as AutomateParameters, stirlingFiles);
+              }
+            }}
           />
         );
 
@@ -155,11 +162,14 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     }
   };
 
-  const createStep = (title: string, props: any, content?: React.ReactNode) => ({
-    title,
-    ...props,
-    content
-  });
+  const createStep = (title: string, props: Record<string, unknown>, content?: React.ReactNode): React.ReactElement => {
+    return (
+      <div {...props}>
+        <h3>{title}</h3>
+        {content}
+      </div>
+    );
+  };
 
   // Always create files step to avoid conditional hook calls
   const filesStep = createFilesToolStep(createStep, {
@@ -167,8 +177,10 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     isCollapsed: hasResults,
   });
 
-  const automationSteps = [
-    createStep(t('automate.selection.title', 'Automation Selection'), {
+  const automationSteps: MiddleStepConfig[] = [
+    {
+      title: t('automate.selection.title', 'Automation Selection'),
+      content: currentStep === AUTOMATION_STEPS.SELECTION ? renderCurrentStep() : null,
       isVisible: true,
       isCollapsed: currentStep !== AUTOMATION_STEPS.SELECTION,
       onCollapsedClick: () => {
@@ -177,26 +189,27 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         setCurrentStep(AUTOMATION_STEPS.SELECTION);
         setStepData({ step: AUTOMATION_STEPS.SELECTION });
       }
-    }, currentStep === AUTOMATION_STEPS.SELECTION ? renderCurrentStep() : null),
-
-    createStep(stepData.mode === AutomationMode.EDIT
-      ? t('automate.creation.editTitle', 'Edit Automation')
-      : t('automate.creation.createTitle', 'Create Automation'), {
+    },
+    {
+      title: stepData.mode === AutomationMode.EDIT
+        ? t('automate.creation.editTitle', 'Edit Automation')
+        : t('automate.creation.createTitle', 'Create Automation'),
+      content: currentStep === AUTOMATION_STEPS.CREATION ? renderCurrentStep() : null,
       isVisible: currentStep === AUTOMATION_STEPS.CREATION,
       isCollapsed: false
-    }, currentStep === AUTOMATION_STEPS.CREATION ? renderCurrentStep() : null),
-
-    // Files step - only visible during run mode
+    },
     {
       ...filesStep,
+      title: t('automate.files.title', 'Files'),
+      content: null, // Files step content is managed separately
       isVisible: currentStep === AUTOMATION_STEPS.RUN
     },
-
-    // Run step
-    createStep(t('automate.run.title', 'Run Automation'), {
+    {
+      title: t('automate.run.title', 'Run Automation'),
+      content: currentStep === AUTOMATION_STEPS.RUN ? renderCurrentStep() : null,
       isVisible: currentStep === AUTOMATION_STEPS.RUN,
-      isCollapsed: hasResults,
-    }, currentStep === AUTOMATION_STEPS.RUN ? renderCurrentStep() : null)
+      isCollapsed: hasResults
+    }
   ];
 
   return createToolFlow({
@@ -214,7 +227,11 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         onPreviewFile?.(file);
         actions.setWorkbench('viewer');
       },
-      onUndo: handleUndo
+      onUndo: () => {
+        handleUndo().catch((error) => {
+          console.error('Undo operation failed:', error);
+        });
+      }
     }
   });
 };

@@ -173,8 +173,10 @@ class AutomationStorage {
     const lowerQuery = query.toLowerCase();
     return automations.filter(automation =>
       automation.name.toLowerCase().includes(lowerQuery) ||
-      (automation.description?.toLowerCase().includes(lowerQuery)) ??
-      automation.operations.some(op => op.operation.toLowerCase().includes(lowerQuery))
+      ((automation.description?.toLowerCase().includes(lowerQuery)) ?? false),
+      automations.some(automation => 
+        automation.operations.some(op => op.operation.toLowerCase().includes(lowerQuery))
+      )
     );
   }
 }

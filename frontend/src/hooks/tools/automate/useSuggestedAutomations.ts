@@ -34,7 +34,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           {
             operation: "ocr",
             parameters: {
-              languages: ['eng'],
+              languages: ['eng'] as (string | null)[],
               ocrType: 'skip-text',
               ocrRenderType: 'hocr',
               additionalOptions: ['clean', 'cleanFinal'],
@@ -175,7 +175,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
           {
             operation: "ocr",
             parameters: {
-              languages: ['eng'],
+              languages: ['eng'] as (string | null)[],
               ocrType: 'skip-text',
               ocrRenderType: 'hocr',
               additionalOptions: [],

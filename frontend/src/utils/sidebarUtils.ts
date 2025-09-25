@@ -1,3 +1,4 @@
+import { RefObject } from 'react';
 import { SidebarRefs, SidebarState, SidebarInfo } from '../types/sidebar';
 
 /**
@@ -7,7 +8,10 @@ import { SidebarRefs, SidebarState, SidebarInfo } from '../types/sidebar';
  * @returns Object containing the sidebar rect and whether the tool panel is active
  */
 export function getSidebarInfo(refs: SidebarRefs, state: SidebarState): SidebarInfo {
-  const { quickAccessRef, toolPanelRef } = refs;
+  const { quickAccessRef, toolPanelRef } = refs as {
+  quickAccessRef: RefObject<HTMLDivElement>;
+  toolPanelRef: RefObject<HTMLDivElement>;
+  };
   const { sidebarsVisible, readerMode } = state;
 
   // Determine if tool panel should be active based on state

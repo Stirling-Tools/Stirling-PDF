@@ -165,8 +165,8 @@ interface AddFileOptions {
  */
 export async function addFiles(
   options: AddFileOptions,
-  stateRef: React.Ref<FileContextState>,
-  filesRef: React.Ref<Map<FileId, File>>,
+  stateRef: React.RefObject<FileContextState>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   lifecycleManager: FileLifecycleManager,
   enablePersistence = false
@@ -204,7 +204,7 @@ export async function addFiles(
       let thumbnail: string | undefined;
       if (processedFileMetadata) {
         // PDF file - use thumbnail from processedFile metadata
-        thumbnail = processedFileMetadata.thumbnailUrl;
+        thumbnail = processedFileMetadata.thumbnailUrl as string | undefined;
         if (DEBUG) console.log(`📄 Generated PDF metadata for ${file.name}: ${processedFileMetadata.totalPages} pages, thumbnail: SUCCESS`);
       } else if (!file.type.startsWith('application/pdf')) {
         // Non-PDF files: simple thumbnail generation, no processedFile metadata
@@ -278,7 +278,7 @@ export async function consumeFiles(
   inputFileIds: FileId[],
   outputStirlingFiles: StirlingFile[],
   outputStirlingFileStubs: StirlingFileStub[],
-  filesRef: React.Ref<Map<FileId, File>>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>
 ): Promise<FileId[]> {
   if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputStirlingFiles.length} output files with pre-created stubs`);
@@ -357,7 +357,7 @@ export async function consumeFiles(
 async function restoreFilesAndCleanup(
   filesToRestore: { file: File; record: StirlingFileStub }[],
   fileIdsToRemove: FileId[],
-  filesRef: React.Ref<Map<FileId, File>>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   indexedDB?: { deleteFile: (fileId: FileId) => Promise<void> } | null
 ): Promise<void> {
   // Remove files from filesRef
@@ -406,7 +406,7 @@ export async function undoConsumeFiles(
   inputFiles: File[],
   inputStirlingFileStubs: StirlingFileStub[],
   outputFileIds: FileId[],
-  filesRef: React.Ref<Map<FileId, File>>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>; deleteFile: (fileId: FileId) => Promise<void> } | null
 ): Promise<void> {
@@ -468,8 +468,8 @@ export async function undoConsumeFiles(
 export async function addStirlingFileStubs(
   stirlingFileStubs: StirlingFileStub[],
   options: { insertAfterPageId?: string; selectFiles?: boolean } = {},
-  stateRef: React.Ref<FileContextState>,
-  filesRef: React.Ref<Map<FileId, File>>,
+  stateRef: React.RefObject<FileContextState>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   _lifecycleManager: FileLifecycleManager
 ): Promise<StirlingFile[]> {

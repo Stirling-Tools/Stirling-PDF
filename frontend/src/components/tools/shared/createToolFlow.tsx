@@ -11,6 +11,24 @@ import { ChangeMetadataParameters } from 'src/hooks/tools/changeMetadata/useChan
 import { OCRParameters } from 'src/hooks/tools/ocr/useOCRParameters';
 import { TooltipTip } from 'src/types/tips';
 import { RemovePasswordParameters } from 'src/hooks/tools/removePassword/useRemovePasswordParameters';
+import { SanitizeParameters } from 'src/hooks/tools/sanitize/useSanitizeParameters';
+import { RotateParameters } from 'src/hooks/tools/rotate/useRotateParameters';
+import { RemovePagesParameters } from 'src/hooks/tools/removePages/useRemovePagesParameters';
+import { RemoveBlanksParameters } from 'src/hooks/tools/removeBlanks/useRemoveBlanksParameters';
+import { RedactParameters } from 'src/hooks/tools/redact/useRedactParameters';
+import { MergeParameters } from 'src/hooks/tools/merge/useMergeParameters';
+import { CropParameters } from 'src/hooks/tools/crop/useCropParameters';
+import { ConvertParameters } from 'src/hooks/tools/convert/useConvertParameters';
+import { ChangePermissionsParameters } from 'src/hooks/tools/changePermissions/useChangePermissionsParameters';
+import { CertSignParameters } from 'src/hooks/tools/certSign/useCertSignParameters';
+import { BookletImpositionParameters } from 'src/hooks/tools/bookletImposition/useBookletImpositionParameters';
+import { AutoRenameParameters } from 'src/hooks/tools/autoRename/useAutoRenameParameters';
+import { FlattenParameters } from 'src/hooks/tools/flatten/useFlattenParameters';
+import { AutomateParameters } from 'src/types/automation';
+import { AdjustPageScaleParameters } from 'src/hooks/tools/adjustPageScale/useAdjustPageScaleParameters';
+import { AddWatermarkParameters } from 'src/hooks/tools/addWatermark/useAddWatermarkParameters';
+import { AddStampParameters } from '../addStamp/useAddStampParameters';
+import { AddPasswordFullParameters } from 'src/hooks/tools/addPassword/useAddPasswordParameters';
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -47,7 +65,29 @@ export interface ExecuteButtonConfig {
 
 export interface ReviewStepConfig {
   isVisible: boolean;
-  operation: ToolOperationHook<SplitParameters> | ToolOperationHook<CompressParameters> | ToolOperationHook<ChangeMetadataParameters> | ToolOperationHook<OCRParameters> | ToolOperationHook<RemovePasswordParameters>;
+  operation: ToolOperationHook<SplitParameters> |
+  ToolOperationHook<CompressParameters> |
+  ToolOperationHook<ChangeMetadataParameters> |
+  ToolOperationHook<OCRParameters> |
+  ToolOperationHook<RemovePasswordParameters> |
+  ToolOperationHook<SanitizeParameters> |
+  ToolOperationHook<RotateParameters> |
+  ToolOperationHook<RemovePagesParameters> |
+  ToolOperationHook<RemoveBlanksParameters> |
+  ToolOperationHook<RedactParameters> |
+  ToolOperationHook<MergeParameters> |
+  ToolOperationHook<ConvertParameters> |
+  ToolOperationHook<ChangePermissionsParameters> |
+  ToolOperationHook<CertSignParameters> |
+  ToolOperationHook<BookletImpositionParameters> |
+  ToolOperationHook<AutoRenameParameters> |
+  ToolOperationHook<FlattenParameters> |
+  ToolOperationHook<AutomateParameters> |
+  ToolOperationHook<AdjustPageScaleParameters> |
+  ToolOperationHook<AddWatermarkParameters> |
+  ToolOperationHook<AddStampParameters> |
+  ToolOperationHook<AddPasswordFullParameters> |
+  ToolOperationHook<CropParameters>;
   title: string;
   onFileClick?: (file: File) => void;
   onUndo: () => void;
@@ -99,7 +139,11 @@ export function createToolFlow(config: ToolFlowConfig) {
         {/* Execute Button */}
         {config.executeButton && config.executeButton.isVisible !== false && (
           <OperationButton
-            onClick={config.executeButton.onClick}
+            onClick={() => {
+              if (config.executeButton) {
+                config.executeButton.onClick().catch(console.error);
+              }
+            }}
             isLoading={config.review.operation.isLoading}
             disabled={config.executeButton.disabled}
             loadingText={config.executeButton.loadingText}
@@ -109,9 +153,9 @@ export function createToolFlow(config: ToolFlowConfig) {
         )}
 
         {/* Review Step */}
-        {steps.createReviewStep({
+        {steps.createReviewStep<SplitParameters | CompressParameters | ChangeMetadataParameters | OCRParameters | RemovePasswordParameters>({
           isVisible: config.review.isVisible,
-          operation: config.review.operation,
+          operation: config.review.operation as ToolOperationHook<SplitParameters | CompressParameters | ChangeMetadataParameters | OCRParameters | RemovePasswordParameters>,
           title: config.review.title,
           onFileClick: config.review.onFileClick,
           onUndo: config.review.onUndo

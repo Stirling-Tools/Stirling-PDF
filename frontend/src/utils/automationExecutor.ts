@@ -62,11 +62,15 @@ export const executeToolOperationWithPrefix = async (
         timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
       });
 
-      console.log(`📥 Response status: ${response.status}, size: ${response.data.size} bytes`);
+      if (response.data instanceof Blob) {
+        console.log(`📥 Response status: ${response.status}, size: ${response.data.size} bytes`);
+      } else {
+        console.warn(`📥 Response data is not a Blob, unable to determine size.`);
+      }
 
       // Multi-file responses are typically ZIP files, but may be single files (e.g. split with merge=true)
       let result;
-      if (response.data.type === 'application/pdf' ||
+      if ((response.data as Blob).type === 'application/pdf' ||
           (response.headers && response.headers['content-type'] === 'application/pdf')) {
         // Single PDF response (e.g. split with merge option) - use processResponse to respect preserveBackendFilename
         const processedFiles = await processResponse(
@@ -85,7 +89,11 @@ export const executeToolOperationWithPrefix = async (
         };
       } else {
         // ZIP response
-        result = await AutomationFileProcessor.extractAutomationZipFiles(response.data);
+        if (response.data instanceof Blob) {
+          result = await AutomationFileProcessor.extractAutomationZipFiles(response.data);
+        } else {
+          throw new Error('Response data is not a Blob, unable to process ZIP files.');
+        }
       }
 
       if (result.errors.length > 0) {
@@ -123,15 +131,21 @@ export const executeToolOperationWithPrefix = async (
           timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
         });
 
-        console.log(`📥 Response ${i+1} status: ${response.status}, size: ${response.data.size} bytes`);
+        if (response.data instanceof Blob) {
+          console.log(`📥 Response ${i+1} status: ${response.status}, size: ${response.data.size} bytes`);
+        } else {
+          console.warn(`📥 Response ${i+1} data is not a Blob, unable to determine size.`);
+        }
 
         // Create result file using processResponse to respect preserveBackendFilename setting
         const processedFiles = await processResponse(
-          response.data,
+          response.data as Blob,
           [file],
           filePrefix,
           undefined,
-          config.preserveBackendFilename ? response.headers : undefined
+          config.preserveBackendFilename ? Object.fromEntries(
+            Object.entries(response.headers || {}).map(([key, value]) => [key, value != null ? String(value) : undefined])
+          ) : undefined
         );
         resultFiles.push(...processedFiles);
         console.log(`✅ Created result file(s): ${processedFiles.map(f => f.name).join(', ')}`);
@@ -141,17 +155,26 @@ export const executeToolOperationWithPrefix = async (
       return resultFiles;
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Tool operation ${operationName} failed:`, error);
-    throw new Error(`${operationName} operation failed: ${error.response?.data ?? error.message}`);
+    if (error instanceof Error) {
+      throw new Error(`${operationName} operation failed: ${error.message}`);
+    } else {
+      throw new Error(`${operationName} operation failed: Unknown error`);
+    }
   }
 };
 
 /**
  * Execute an entire automation sequence
  */
+interface Automation {
+  name?: string;
+  operations: { operation: string; parameters?: Record<string, unknown> }[];
+}
+
 export const executeAutomationSequence = async (
-  automation: any,
+  automation: Automation,
   initialFiles: File[],
   toolRegistry: ToolRegistry,
   onStepStart?: (stepIndex: number, operationName: string) => void,
@@ -191,9 +214,9 @@ export const executeAutomationSequence = async (
       currentFiles = resultFiles;
       onStepComplete?.(i, resultFiles);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ Step ${i + 1} failed:`, error);
-      onStepError?.(i, error.message);
+      onStepError?.(i, error instanceof Error ? error.message : 'Unknown error');
       throw error;
     }
   }

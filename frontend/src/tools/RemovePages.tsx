@@ -54,7 +54,11 @@ const RemovePages = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("removePages.results.title", "Pages Removed"),
       onFileClick: base.handleThumbnailClick,
-      onUndo: base.handleUndo,
+      onUndo: () => {
+        base.handleUndo().catch((error) => {
+          console.error("Undo operation failed:", error);
+        });
+      },
     },
   });
 };

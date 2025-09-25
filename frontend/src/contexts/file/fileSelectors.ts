@@ -15,8 +15,8 @@ import {
  * Create stable selectors using stateRef and filesRef
  */
 export function createFileSelectors(
-  stateRef: React.Ref<FileContextState>,
-  filesRef: React.Ref<Map<FileId, File>>
+  stateRef: React.RefObject<FileContextState>,
+  filesRef: React.RefObject<Map<FileId, File>>
 ): FileContextSelectors {
   return {
     getFile: (id: FileId) => {
@@ -125,8 +125,8 @@ export function buildQuickKeySetFromMetadata(metadata: { name: string; size: num
  * Get primary file (first in list) - commonly used pattern
  */
 export function getPrimaryFile(
-  stateRef: React.Ref<FileContextState>,
-  filesRef: React.Ref<Map<FileId, File>>
+  stateRef: React.RefObject<FileContextState>,
+  filesRef: React.RefObject<Map<FileId, File>>
 ): { file?: File; record?: StirlingFileStub } {
   const primaryFileId = stateRef.current.files.ids[0];
   if (!primaryFileId) return {};

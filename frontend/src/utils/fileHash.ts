@@ -83,7 +83,7 @@ export class FileHasher {
       offset += chunk.byteLength;
     }
     
-    return combined.buffer;
+    return Promise.resolve(combined.buffer);
   }
 
   private static async hashArrayBuffer(buffer: ArrayBuffer): Promise<string> {

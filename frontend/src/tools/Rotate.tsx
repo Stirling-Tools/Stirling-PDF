@@ -50,7 +50,11 @@ const Rotate = (props: BaseToolProps) => {
       operation: base.operation,
       title: t("rotate.title", "Rotation Results"),
       onFileClick: base.handleThumbnailClick,
-      onUndo: base.handleUndo,
+      onUndo: () => {
+        base.handleUndo().catch((error) => {
+          console.error("Undo operation failed:", error);
+        });
+      },
     },
   });
 };
