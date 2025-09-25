@@ -219,6 +219,7 @@ export interface FileContextState {
     isProcessing: boolean;
     processingProgress: number;
     hasUnsavedChanges: boolean;
+    errorFileIds: FileId[]; // files that errored during processing
   };
 }
 
@@ -241,6 +242,9 @@ export type FileContextAction =
   | { type: 'SET_SELECTED_PAGES'; payload: { pageNumbers: number[] } }
   | { type: 'CLEAR_SELECTIONS' }
   | { type: 'SET_PROCESSING'; payload: { isProcessing: boolean; progress: number } }
+  | { type: 'MARK_FILE_ERROR'; payload: { fileId: FileId } }
+  | { type: 'CLEAR_FILE_ERROR'; payload: { fileId: FileId } }
+  | { type: 'CLEAR_ALL_FILE_ERRORS' }
 
   // Navigation guard actions (minimal for file-related unsaved changes only)
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
@@ -269,6 +273,9 @@ export interface FileContextActions {
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
   clearSelections: () => void;
+  markFileError: (fileId: FileId) => void;
+  clearFileError: (fileId: FileId) => void;
+  clearAllFileErrors: () => void;
 
   // Processing state - simple flags only
   setProcessing: (isProcessing: boolean, progress?: number) => void;

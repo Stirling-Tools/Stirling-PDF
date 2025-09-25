@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { Text, ActionIcon, CheckboxIndicator } from '@mantine/core';
+import { alert } from '../toast';
 import { useTranslation } from 'react-i18next';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
@@ -12,6 +13,7 @@ import { StirlingFileStub } from '../../types/fileContext';
 
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
+import { useFileState } from '../../contexts/file/fileHooks';
 import { FileId } from '../../types/file';
 import { formatFileSize } from '../../utils/fileUtils';
 import ToolChain from '../shared/ToolChain';
@@ -27,7 +29,7 @@ interface FileEditorThumbnailProps {
   onToggleFile: (fileId: FileId) => void;
   onDeleteFile: (fileId: FileId) => void;
   onViewFile: (fileId: FileId) => void;
-  onSetStatus: (status: string) => void;
+  _onSetStatus: (status: string) => void;
   onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
   onDownloadFile: (fileId: FileId) => void;
   toolMode?: boolean;
@@ -40,13 +42,15 @@ const FileEditorThumbnail = ({
   selectedFiles,
   onToggleFile,
   onDeleteFile,
-  onSetStatus,
+  _onSetStatus,
   onReorderFiles,
   onDownloadFile,
   isSupported = true,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
-  const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
+  const { pinFile, unpinFile, isFilePinned, activeFiles, actions: fileActions } = useFileContext();
+  const { state } = useFileState();
+  const hasError = state.ui.errorFileIds.includes(file.id);
 
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
@@ -187,7 +191,18 @@ const FileEditorThumbnail = ({
   // ---- Card interactions ----
   const handleCardClick = () => {
     if (!isSupported) return;
+    // Clear error state if file has an error (click to clear error)
+    if (hasError) {
+      try { fileActions.clearFileError(file.id); } catch (_e) { void _e; }
+    }
     onToggleFile(file.id);
+  };
+
+  // ---- Style helpers ----
+  const getHeaderClassName = () => {
+    if (hasError) return styles.headerError;
+    if (!isSupported) return styles.headerUnsupported;
+    return isSelected ? styles.headerSelected : styles.headerResting;
   };
 
 
@@ -199,10 +214,7 @@ const FileEditorThumbnail = ({
       data-selected={isSelected}
       data-supported={isSupported}
       className={`${styles.card} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}
-      style={{
-        opacity: isSupported ? (isDragging ? 0.9 : 1) : 0.5,
-        filter: isSupported ? 'none' : 'grayscale(50%)',
-      }}
+      style={{opacity: isDragging ? 0.9 : 1}}
       tabIndex={0}
       role="listitem"
       aria-selected={isSelected}
@@ -210,13 +222,16 @@ const FileEditorThumbnail = ({
     >
       {/* Header bar */}
       <div
-        className={`${styles.header} ${
-          isSelected ? styles.headerSelected : styles.headerResting
-        }`}
+        className={`${styles.header} ${getHeaderClassName()}`}
+        data-has-error={hasError}
       >
         {/* Logo/checkbox area */}
         <div className={styles.logoMark}>
-          {isSupported ? (
+          {hasError ? (
+            <div className={styles.errorPill}>
+              <span>{t('error._value', 'Error')}</span>
+            </div>
+          ) : isSupported ? (
             <CheckboxIndicator
               checked={isSelected}
               onChange={() => onToggleFile(file.id)}
@@ -263,10 +278,10 @@ const FileEditorThumbnail = ({
               if (actualFile) {
                 if (isPinned) {
                   unpinFile(actualFile);
-                  onSetStatus?.(`Unpinned ${file.name}`);
+                  alert({ alertType: 'neutral', title: `Unpinned ${file.name}`, expandable: false, durationMs: 3000 });
                 } else {
                   pinFile(actualFile);
-                  onSetStatus?.(`Pinned ${file.name}`);
+                  alert({ alertType: 'success', title: `Pinned ${file.name}`, expandable: false, durationMs: 3000 });
                 }
               }
               setShowActions(false);
@@ -278,7 +293,7 @@ const FileEditorThumbnail = ({
 
           <button
             className={styles.actionRow}
-            onClick={() => { onDownloadFile(file.id); setShowActions(false); }}
+            onClick={() => { onDownloadFile(file.id); alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 }); setShowActions(false); }}
           >
             <DownloadOutlinedIcon fontSize="small" />
             <span>{t('download', 'Download')}</span>
@@ -290,7 +305,7 @@ const FileEditorThumbnail = ({
             className={`${styles.actionRow} ${styles.actionDanger}`}
             onClick={() => {
               onDeleteFile(file.id);
-              onSetStatus(`Deleted ${file.name}`);
+              alert({ alertType: 'neutral', title: `Deleted ${file.name}`, expandable: false, durationMs: 3500 });
               setShowActions(false);
             }}
           >
@@ -328,7 +343,10 @@ const FileEditorThumbnail = ({
       </div>
 
       {/* Preview area */}
-      <div className={`${styles.previewBox} mx-6 mb-4 relative flex-1`}>
+      <div
+        className={`${styles.previewBox} mx-6 mb-4 relative flex-1`}
+        style={isSupported || hasError ? undefined : { filter: 'grayscale(80%)', opacity: 0.6 }}
+      >
         <div className={styles.previewPaper}>
           {file.thumbnailUrl && (
             <img

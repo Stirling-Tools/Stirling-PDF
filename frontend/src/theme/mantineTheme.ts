@@ -14,6 +14,32 @@ const primary: MantineColorsTuple = [
   'var(--color-primary-900)',
 ];
 
+const green: MantineColorsTuple = [
+  'var(--color-green-50)',
+  'var(--color-green-100)',
+  'var(--color-green-200)',
+  'var(--color-green-300)',
+  'var(--color-green-400)',
+  'var(--color-green-500)',
+  'var(--color-green-600)',
+  'var(--color-green-700)',
+  'var(--color-green-800)',
+  'var(--color-green-900)',
+];
+
+const yellow: MantineColorsTuple = [
+  'var(--color-yellow-50)',
+  'var(--color-yellow-100)',
+  'var(--color-yellow-200)',
+  'var(--color-yellow-300)',
+  'var(--color-yellow-400)',
+  'var(--color-yellow-500)',
+  'var(--color-yellow-600)',
+  'var(--color-yellow-700)',
+  'var(--color-yellow-800)',
+  'var(--color-yellow-900)',
+];
+
 const gray: MantineColorsTuple = [
   'var(--color-gray-50)',
   'var(--color-gray-100)',
@@ -34,6 +60,8 @@ export const mantineTheme = createTheme({
   // Color palette
   colors: {
     primary,
+    green,
+    yellow,
     gray,
   },
 

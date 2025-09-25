@@ -56,6 +56,20 @@
   border-bottom: 1px solid var(--header-selected-bg);
 }
 
+/* Error highlight (transient) */
+.headerError {
+  background: var(--color-red-200);
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--color-red-500);
+}
+
+/* Unsupported (but not errored) header appearance */
+.headerUnsupported {
+  background: var(--unsupported-bar-bg); /* neutral gray */
+  color: #FFFFFF;
+  border-bottom: 1px solid var(--unsupported-bar-border);
+}
+
 /* Selected border color in light mode */
 :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
   outline-color: var(--card-selected-border);
@@ -80,6 +94,7 @@
 
 .kebab {
   justify-self: end;
+  color: #FFFFFF !important;
 }
 
 /* Menu dropdown */
@@ -214,6 +229,22 @@
   align-items: center;
   justify-content: center;
   min-width: 80px;
+  height: 20px;
+}
+
+/* Error pill shown when a file failed processing */
+.errorPill {
+  margin-left: 1.75rem;
+  background: var(--color-red-500);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
   height: 20px;
 }
 

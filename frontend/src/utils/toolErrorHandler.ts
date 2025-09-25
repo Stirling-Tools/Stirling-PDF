@@ -12,7 +12,7 @@ export const extractErrorMessage = (error: any): string => {
   if (error.message) {
     return error.message;
   }
-  return 'Operation failed';
+  return 'There was an error processing your request.';
 };
 
 /**
