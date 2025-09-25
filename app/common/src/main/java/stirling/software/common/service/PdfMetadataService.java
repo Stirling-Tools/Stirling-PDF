@@ -1,5 +1,6 @@
 package stirling.software.common.service;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -75,7 +76,8 @@ public class PdfMetadataService {
         }
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-            ZonedDateTime zonedDateTime = ZonedDateTime.parse(dateString, formatter);
+            ZonedDateTime zonedDateTime =
+                    LocalDateTime.parse(dateString, formatter).atZone(ZoneId.systemDefault());
             return toCalendar(zonedDateTime);
         } catch (Exception e) {
             return null;

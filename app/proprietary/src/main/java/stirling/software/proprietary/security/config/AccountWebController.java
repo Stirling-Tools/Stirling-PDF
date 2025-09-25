@@ -254,10 +254,10 @@ public class AccountWebController {
                 if (latestSession.isPresent()) {
                     SessionEntity sessionEntity = latestSession.get();
                     // sessionEntity stores Instant directly
-                    Instant lastAccessedTime = Instant.EPOCH;
-                    if (sessionEntity.getLastRequest() != null) {
-                        lastAccessedTime = sessionEntity.getLastRequest();
-                    }
+                    Instant lastAccessedTime =
+                            Optional.ofNullable(sessionEntity.getLastRequest())
+                                    .orElse(Instant.EPOCH);
+
                     Instant now = Instant.now();
                     // Calculate session expiration and update session status accordingly
                     Instant expirationTime =
