@@ -1684,18 +1684,18 @@
       "useCase3": "Break collages into individual photos",
       "useCase4": "Pull photos from documents",
       "quickFixes": "Quick fixes",
-      "problem1": "Photos not detected → increase Tolerance to 30–50",
-      "problem2": "Too many false detections → increase Minimum Area to 15,000–20,000",
-      "problem3": "Crops are too tight → increase Border Size to 5–10",
+      "problem1": "Photos not detected → increase Tolerance to 30-50",
+      "problem2": "Too many false detections → increase Minimum Area to 15,000-20,000",
+      "problem3": "Crops are too tight → increase Border Size to 5-10",
       "problem4": "Tilted photos not straightened → lower Angle Threshold to ~5°",
-      "problem5": "Dust/noise boxes → increase Minimum Contour Area to 1000–2000",
+      "problem5": "Dust/noise boxes → increase Minimum Contour Area to 1000-2000",
       "setupTips": "Setup tips",
       "tip1": "Use a plain, light background",
       "tip2": "Leave a small gap (≈1 cm) between photos",
-      "tip3": "Scan at 300–600 DPI",
+      "tip3": "Scan at 300-600 DPI",
       "tip4": "Clean the scanner glass",
       "headsUp": "Heads-up",
-      "headsUpDesc": "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy—try a lighter or darker background and leave more space."
+      "headsUpDesc": "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy-try a lighter or darker background and leave more space."
     }
   },
   "sign": {

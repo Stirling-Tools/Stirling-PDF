@@ -32,7 +32,7 @@ const ScannerImageSplitSettings: React.FC<ScannerImageSplitSettingsProps> = ({
         label={t('ScannerImageSplit.selectText.3', 'Tolerance:')}
         description={t('ScannerImageSplit.selectText.4', 'Determines the range of colour variation around the estimated background colour (default: 30).')}
         value={parameters.tolerance}
-        onChange={(value) => onParameterChange('tolerance', Number(value) || 20)}
+        onChange={(value) => onParameterChange('tolerance', Number(value) || 30)}
         min={0}
         step={1}
         disabled={disabled}
@@ -42,7 +42,7 @@ const ScannerImageSplitSettings: React.FC<ScannerImageSplitSettingsProps> = ({
         label={t('ScannerImageSplit.selectText.5', 'Minimum Area:')}
         description={t('ScannerImageSplit.selectText.6', 'Sets the minimum area threshold for a photo (default: 10000).')}
         value={parameters.min_area}
-        onChange={(value) => onParameterChange('min_area', Number(value) || 8000)}
+        onChange={(value) => onParameterChange('min_area', Number(value) || 10000)}
         min={0}
         step={100}
         disabled={disabled}
@@ -50,7 +50,7 @@ const ScannerImageSplitSettings: React.FC<ScannerImageSplitSettingsProps> = ({
 
       <NumberInput
         label={t('ScannerImageSplit.selectText.7', 'Minimum Contour Area:')}
-        description={t('ScannerImageSplit.selectText.8', 'Sets the minimum contour area threshold for a photo')}
+        description={t('ScannerImageSplit.selectText.8', 'Sets the minimum contour area threshold for a photo.')}
         value={parameters.min_contour_area}
         onChange={(value) => onParameterChange('min_contour_area', Number(value) || 500)}
         min={0}

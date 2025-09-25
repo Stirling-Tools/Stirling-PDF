@@ -11,8 +11,8 @@ export interface ScannerImageSplitParameters extends BaseParameters {
 
 export const defaultParameters: ScannerImageSplitParameters = {
   angle_threshold: 10,
-  tolerance: 20,
-  min_area: 8000,
+  tolerance: 30,
+  min_area: 10000,
   min_contour_area: 500,
   border_size: 1,
 };
