@@ -25,43 +25,23 @@ export const useScannerImageSplitTips = (): TooltipContent => {
         ]
       },
       {
-        title: t('scannerImageSplit.tooltip.angleThresholdTerm', 'Angle Threshold (10°)'),
-        description: t('scannerImageSplit.tooltip.angleThresholdDef',
-          'How much an image needs to be tilted before the tool tries to straighten it. Lower values detect smaller tilts.'
-        )
-      },
-      {
-        title: t('scannerImageSplit.tooltip.toleranceTerm', 'Tolerance (20)'),
-        description: t('scannerImageSplit.tooltip.toleranceDef',
-          'How similar background colours need to be to be considered the same. Higher values group more varied colours together.'
-        )
-      },
-      {
-        title: t('scannerImageSplit.tooltip.minAreaTerm', 'Minimum Area (8000)'),
-        description: t('scannerImageSplit.tooltip.minAreaDef',
-          'Smallest size (in pixels) for something to be considered a photo. Helps ignore small spots or artefacts.'
-        )
-      },
-      {
-        title: t('scannerImageSplit.tooltip.minContourAreaTerm', 'Minimum Contour Area (500)'),
-        description: t('scannerImageSplit.tooltip.minContourAreaDef',
-          'Minimum edge detection size. Helps distinguish actual photo edges from noise or texture.'
-        )
-      },
-      {
-        title: t('scannerImageSplit.tooltip.borderSizeTerm', 'Border Size (1)'),
-        description: t('scannerImageSplit.tooltip.borderSizeDef',
-          'Adds padding around detected photos to avoid cutting off edges. Increase if photos are getting cropped too tightly.'
-        )
-      },
-      {
-        title: t('scannerImageSplit.tooltip.tips', 'Tips for Best Results'),
+        title: t('scannerImageSplit.tooltip.problemSolving', 'Common Problems & Solutions'),
         bullets: [
-          t('scannerImageSplit.tooltip.tip1', 'Ensure good contrast between photos and background'),
-          t('scannerImageSplit.tooltip.tip2', 'Place photos with some space between them on the scanner'),
-          t('scannerImageSplit.tooltip.tip3', 'Use higher resolution scans for better edge detection'),
-          t('scannerImageSplit.tooltip.tip4', 'Clean scanner glass to avoid dust spots being detected as photos'),
-          t('scannerImageSplit.tooltip.tip5', 'For difficult images, try adjusting the tolerance and minimum area settings')
+          t('scannerImageSplit.tooltip.problem1', 'Photos not detected → Try increasing "Tolerance" to 30-50'),
+          t('scannerImageSplit.tooltip.problem2', 'Too many false detections → Increase "Minimum Area" to 15000-20000'),
+          t('scannerImageSplit.tooltip.problem3', 'Photos cropped too tight → Increase "Border Size" to 5-10'),
+          t('scannerImageSplit.tooltip.problem4', 'Tilted photos not straightened → Lower "Angle Threshold" to 5'),
+          t('scannerImageSplit.tooltip.problem5', 'Detecting dust/noise → Increase "Minimum Contour Area" to 1000')
+        ]
+      },
+      {
+        title: t('scannerImageSplit.tooltip.tips', 'Setup Tips for Best Results'),
+        bullets: [
+          t('scannerImageSplit.tooltip.tip1', 'Use white or light background behind photos'),
+          t('scannerImageSplit.tooltip.tip2', 'Leave at least 1cm gap between photos'),
+          t('scannerImageSplit.tooltip.tip3', 'Scan at 300+ DPI for better detection'),
+          t('scannerImageSplit.tooltip.tip4', 'Clean scanner glass to avoid dust being detected as photos'),
+          t('scannerImageSplit.tooltip.tip5', 'If it fails, try the default settings first before adjusting')
         ]
       }
     ]
