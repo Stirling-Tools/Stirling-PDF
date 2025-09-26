@@ -14,6 +14,7 @@ export interface SignatureAPI {
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
   applySignatureFromParameters: (params: SignParameters) => void;
+  getPageAnnotations: (pageIndex: number) => Promise<any[]>;
 }
 
 export interface SignatureAPIBridgeProps {}
@@ -342,6 +343,26 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
           // For draw mode, we activate the tool and let user draw
           annotationApi.setActiveTool('ink');
           break;
+      }
+    },
+
+    getPageAnnotations: async (pageIndex: number): Promise<any[]> => {
+      if (!annotationApi || !annotationApi.getPageAnnotations) {
+        console.warn('getPageAnnotations not available');
+        return [];
+      }
+
+      try {
+        const pageAnnotationsTask = annotationApi.getPageAnnotations({ pageIndex });
+        if (pageAnnotationsTask && pageAnnotationsTask.toPromise) {
+          const annotations = await pageAnnotationsTask.toPromise();
+          console.log(`Retrieved ${annotations?.length || 0} annotations from page ${pageIndex}`);
+          return annotations || [];
+        }
+        return [];
+      } catch (error) {
+        console.error(`Error getting annotations for page ${pageIndex}:`, error);
+        return [];
       }
     },
   }), [annotationApi, signatureConfig]);

@@ -91,11 +91,9 @@ const SignSettings = ({
     }
   };
 
-  // Handle drawing mode activation
+  // Handle signature mode deactivation when switching types
   useEffect(() => {
-    if (parameters.signatureType === 'draw' && onActivateDrawMode) {
-      onActivateDrawMode();
-    } else if (parameters.signatureType !== 'draw' && onDeactivateSignature) {
+    if (parameters.signatureType !== 'text' && onDeactivateSignature) {
       onDeactivateSignature();
     }
   }, [parameters.signatureType]);
@@ -140,19 +138,14 @@ const SignSettings = ({
     }
   }, [parameters.signatureType, parameters.signatureData, imageSignatureData]);
 
-  // Update draw settings when color or pen size changes
-  useEffect(() => {
-    if (parameters.signatureType === 'draw' && onUpdateDrawSettings) {
-      onUpdateDrawSettings(selectedColor, penSize);
-    }
-  }, [selectedColor, penSize, parameters.signatureType]);
+  // Draw settings are no longer needed since draw mode is removed
 
   return (
     <Stack gap="md">
       {/* Signature Type Selection */}
       <Tabs
         value={parameters.signatureType}
-        onChange={(value) => onParameterChange('signatureType', value as 'image' | 'text' | 'draw' | 'canvas')}
+        onChange={(value) => onParameterChange('signatureType', value as 'image' | 'text' | 'canvas')}
       >
         <Tabs.List grow>
           <Tabs.Tab value="canvas" style={{ fontSize: '0.8rem' }}>
@@ -163,9 +156,6 @@ const SignSettings = ({
           </Tabs.Tab>
           <Tabs.Tab value="text" style={{ fontSize: '0.8rem' }}>
             {t('sign.type.text', 'Text')}
-          </Tabs.Tab>
-          <Tabs.Tab value="draw" style={{ fontSize: '0.8rem' }}>
-            {t('sign.type.draw', 'Draw')}
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>
@@ -232,66 +222,15 @@ const SignSettings = ({
         />
       )}
 
-      {/* Direct PDF Drawing */}
-      {parameters.signatureType === 'draw' && (
-        <Paper withBorder p="md">
-          <Stack gap="md">
-            <Text fw={500}>Direct PDF Drawing</Text>
-            <Text size="sm" c="dimmed">
-              Draw signatures and annotations directly on the PDF document.
-            </Text>
-
-            {/* Drawing Controls */}
-            <Group gap="md" align="flex-end">
-              {/* Color Picker */}
-              <div>
-                <Text size="sm" fw={500} mb="xs">Color</Text>
-                <div
-                  style={{
-                    width: 24,
-                    height: 24,
-                    backgroundColor: selectedColor,
-                    border: '1px solid #ccc',
-                    borderRadius: 0,
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => setIsColorPickerOpen(true)}
-                />
-              </div>
-
-              {/* Pen Size */}
-              <div style={{ flexGrow: 1, maxWidth: '200px' }}>
-                <Text size="sm" fw={500} mb="xs">Pen Size</Text>
-                <input
-                  type="number"
-                  value={penSize}
-                  onChange={(e) => {
-                    const size = parseInt(e.target.value);
-                    if (!isNaN(size) && size >= 1 && size <= 200) {
-                      setPenSize(size);
-                    }
-                  }}
-                  min={1}
-                  max={200}
-                  disabled={disabled}
-                  style={{ width: '100%', padding: '4px 8px' }}
-                />
-              </div>
-            </Group>
-          </Stack>
-        </Paper>
-      )}
 
       {/* Instructions for placing signature */}
-      {(parameters.signatureType === 'canvas' || parameters.signatureType === 'image' || parameters.signatureType === 'text') && (
-        <Alert color="blue" title={t('sign.instructions.title', 'How to add signature')}>
-          <Text size="sm">
-            {parameters.signatureType === 'canvas' && 'After drawing your signature in the canvas above, click "Update and Place" then click anywhere on the PDF to place it.'}
-            {parameters.signatureType === 'image' && 'After uploading your signature image above, click anywhere on the PDF to place it.'}
-            {parameters.signatureType === 'text' && 'After entering your name above, click anywhere on the PDF to place your signature.'}
-          </Text>
-        </Alert>
-      )}
+      <Alert color="blue" title={t('sign.instructions.title', 'How to add signature')}>
+        <Text size="sm">
+          {parameters.signatureType === 'canvas' && 'After drawing your signature in the canvas above, click "Update and Place" then click anywhere on the PDF to place it.'}
+          {parameters.signatureType === 'image' && 'After uploading your signature image above, click anywhere on the PDF to place it.'}
+          {parameters.signatureType === 'text' && 'After entering your name above, click anywhere on the PDF to place your signature.'}
+        </Text>
+      </Alert>
 
       {/* Color Picker Modal */}
       <ColorPicker
@@ -301,7 +240,7 @@ const SignSettings = ({
         onColorChange={setSelectedColor}
       />
 
-      {/* Save Button */}
+      {/* Apply Signatures Button */}
       {onSave && (
         <Button
           onClick={onSave}
@@ -309,7 +248,7 @@ const SignSettings = ({
           variant="filled"
           fullWidth
         >
-          {t('save', 'Save')}
+          {t('sign.applySignatures', 'Apply Signatures')}
         </Button>
       )}
 

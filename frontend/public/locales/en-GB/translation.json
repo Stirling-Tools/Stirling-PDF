@@ -1623,6 +1623,7 @@
     "add": "Add",
     "saved": "Saved Signatures",
     "save": "Save Signature",
+    "applySignatures": "Apply Signatures",
     "personalSigs": "Personal Signatures",
     "sharedSigs": "Shared Signatures",
     "noSavedSigs": "No saved signatures found",
