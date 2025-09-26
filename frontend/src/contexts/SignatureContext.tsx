@@ -117,7 +117,6 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     return imageDataStore.current.get(id);
   }, []);
 
-
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {

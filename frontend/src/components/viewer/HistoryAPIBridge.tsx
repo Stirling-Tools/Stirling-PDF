@@ -96,59 +96,6 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI, HistoryAPIBridgeProps>((p
     undo: () => {
       if (historyApi) {
         historyApi.undo();
-
-        // Restore image data for STAMP annotations after undo
-        // This handles both manual undo and delete+undo scenarios
-        setTimeout(() => {
-          if (!annotationApi) return;
-
-          // Check reasonable number of pages - most documents have fewer than 10 pages
-          for (let pageIndex = 0; pageIndex < 5; pageIndex++) {
-            const pageAnnotationsTask = annotationApi.getPageAnnotations?.({ pageIndex });
-            if (pageAnnotationsTask) {
-              pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
-                if (pageAnnotations && pageAnnotations.length > 0) {
-                  pageAnnotations.forEach((ann: any) => {
-                    if (ann.type === 13) { // STAMP annotations
-                      const storedImageData = getImageData(ann.id);
-
-                      if (storedImageData && (!ann.imageSrc || ann.imageSrc !== storedImageData)) {
-                        // Generate new ID to avoid React key conflicts
-                        const newId = uuidV4();
-
-                        const originalData = {
-                          type: ann.type,
-                          rect: ann.rect,
-                          author: ann.author || 'Digital Signature',
-                          subject: ann.subject || 'Digital Signature',
-                          pageIndex: pageIndex,
-                          id: newId,
-                          created: ann.created || new Date(),
-                          imageSrc: storedImageData,
-                          // Store in multiple fields to ensure compatibility
-                          contents: storedImageData,
-                          data: storedImageData,
-                          imageData: storedImageData,
-                          appearance: storedImageData
-                        };
-
-                        // Update stored data to use new ID
-                        storeImageData(newId, storedImageData);
-
-                        annotationApi.deleteAnnotation(pageIndex, ann.id);
-                        setTimeout(() => {
-                          annotationApi.createAnnotation(pageIndex, originalData);
-                        }, 50);
-                      }
-                    }
-                  });
-                }
-              }).catch(() => {
-                // Silently ignore "Page not found" errors for non-existent pages
-              });
-            }
-          }
-        }, 200);
       }
     },
 
