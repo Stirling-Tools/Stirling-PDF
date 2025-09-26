@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html th:data-language="${#locale.toString()}" th:dir="#{language.direction}" th:lang="${#locale.language}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{formFill.title}, header=#{formFill.header})}"></th:block>
+  </head>
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-9 bg-card">
+              <div class="tool-header mb-3">
+                <span class="material-symbols-rounded tool-header-icon other">assignment</span>
+                <span class="tool-header-text" th:text="#{formFill.header}"></span>
+              </div>
+              <p class="text-muted" th:text="#{formFill.description}"></p>
+
+              <form autocomplete="off" id="formFillForm" novalidate>
+                <div class="mb-3">
+                  <label class="form-label" for="formFillFile-input" th:text="#{formFill.selectPdf}"></label>
+                  <div th:replace="~{fragments/common :: fileSelector(name='formFillFile', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}"></div>
+                </div>
+
+                <div class="form-check ms-3">
+                  <input id="formFillFlatten" name="flatten" type="checkbox" />
+                  <label for="formFillFlatten" th:text="#{formFill.flattenLabel}"></label>
+                </div>
+
+                <div class="form-check ms-3">
+                  <input id="formFillMultiTemplate" type="checkbox" />
+                  <label for="formFillMultiTemplate" th:text="#{formFill.multiTemplateLabel}"></label>
+                </div>
+                <p class="form-text ms-3" th:text="#{formFill.multiTemplateHelp}"></p>
+
+                <div class="alert alert-info mb-3" id="formFillStatus" role="alert" th:text="#{formFill.selectPrompt}"></div>
+
+                <div class="d-none" id="formFillFields"></div>
+
+                <div class="mb-3 text-start">
+                  <button class="btn btn-primary" disabled id="formFillDownload" th:text="#{formFill.download}" type="button"></button>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="formFillBatchJson" th:text="#{formFill.batchTitle}"></label>
+                  <p class="form-text" th:text="#{formFill.batchHelp}"></p>
+                  <textarea class="form-control" id="formFillBatchJson" placeholder='[{"field":"value"}]' rows="6"></textarea>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="formFillBatchFile" th:text="#{formFill.batchFileLabel}"></label>
+                  <p class="form-text" th:text="#{formFill.batchFileHelp}"></p>
+                  <input accept="application/json,.json" class="form-control" id="formFillBatchFile" type="file" />
+                </div>
+
+                <div class="mb-2 text-start">
+                  <button class="btn btn-outline-primary" disabled id="formFillBatchDownload" th:text="#{formFill.batchDownload}" type="button"></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <br><br>
+        <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+      </div>
+    </div>
+    <script th:src="@{'/js/form-fill.js'}" type="module"></script>
+    <script th:inline="javascript">
+      const formFillLocale = {
+        noFields: /*[[#{formFill.noFields}]]*/ 'No fields detected.',
+        loading: /*[[#{formFill.loading}]]*/ 'Reading form fields…',
+        ready: /*[[#{formFill.ready}]]*/ 'Fields loaded. Enter values and press Download.',
+        selectFile: /*[[#{formFill.selectPrompt}]]*/ 'Please choose a PDF form first.',
+        parsingError: /*[[#{formFill.parsingError}]]*/ 'Unable to parse JSON payload.',
+        requestError: /*[[#{formFill.requestError}]]*/ 'Something went wrong while communicating with the server.',
+        unsupportedField: /*[[#{formFill.unsupportedField}]]*/ 'Unsupported field type',
+        batchReady: /*[[#{formFill.batchReady}]]*/ 'Ready to generate batch output.',
+        batchFileReady: /*[[#{formFill.batchFileReady}]]*/ "Batch file ready. You'll receive a combined PDF when you download.",
+        multiTemplatePreview: /*[[#{formFill.multiTemplatePreview}]]*/ 'Multi-template mode enabled. The preview shows the first PDF; others will use JSON mapping when you download.',
+        multiTemplateReady: /*[[#{formFill.multiTemplateReady}]]*/ 'Templates ready. Review the JSON payload then download to merge.',
+        batchEmpty: /*[[#{formFill.batchEmpty}]]*/ 'Provide an array of JSON objects to enable batch generation.',
+        pageLabel: /*[[#{formFill.pageLabel}]]*/ 'Page',
+        keyLabel: /*[[#{formFill.keyLabel}]]*/ 'Key'
+      };
+    </script>
+  </body>
+</html>

@@ -282,6 +282,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "change-metadata");
         addEndpointToGroup("Other", "flatten");
         addEndpointToGroup("Other", "unlock-pdf-forms");
+        addEndpointToGroup("Other", "fill-pdf-form");
         addEndpointToGroup("Other", REMOVE_BLANKS);
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "compare");

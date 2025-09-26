@@ -2,9 +2,17 @@ package stirling.software.common.util;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -18,10 +26,16 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.*;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class FormUtils {
+
+    private static final Pattern GENERIC_NAME_PATTERN =
+            Pattern.compile(
+                    "(?i)^(field|form|text|textbox|checkbox|check|radio|combo|list|untitled|input|question|subform|page|control)[\\s_\\-]*[0-9]*$");
 
     private FormUtils() {}
 
@@ -572,6 +586,10 @@ public final class FormUtils {
                             pageIndex,
                             fieldNameCounters);
 
+            if (!initialized) {
+                return;
+            }
+
         } catch (Exception e) {
             log.warn(
                     "Failed to create push button field '{}': {}",
@@ -655,4 +673,608 @@ public final class FormUtils {
         }
         return map;
     }
+
+    public static List<FormFieldInfo> extractFormFields(PDDocument document) {
+        if (document == null) {
+            return List.of();
+        }
+
+        PDAcroForm acroForm = getAcroFormSafely(document);
+        if (acroForm == null) {
+            return List.of();
+        }
+
+        List<FormFieldInfo> fields = new ArrayList<>();
+        Map<String, Integer> typeCounters = new HashMap<>();
+        for (PDField field : acroForm.getFieldTree()) {
+            if (!(field instanceof PDTerminalField terminalField)) {
+                continue;
+            }
+
+            String type = resolveFieldType(terminalField);
+            if (type == null) {
+                continue;
+            }
+
+            String name =
+                    Optional.ofNullable(field.getFullyQualifiedName())
+                            .orElseGet(field::getPartialName);
+            if (name == null || name.isBlank()) {
+                continue;
+            }
+
+            String currentValue = safeValue(terminalField);
+            boolean required = field.isRequired();
+            int pageIndex = resolveFirstWidgetPageIndex(document, terminalField);
+            List<String> options = resolveOptions(terminalField);
+            String tooltip = resolveTooltip(terminalField);
+            int typeIndex = typeCounters.merge(type, 1, Integer::sum);
+            String displayLabel =
+                    deriveDisplayLabel(field, name, tooltip, type, typeIndex, options);
+
+            fields.add(
+                    new FormFieldInfo(
+                            name,
+                            displayLabel,
+                            type,
+                            currentValue,
+                            options.isEmpty() ? null : Collections.unmodifiableList(options),
+                            required,
+                            pageIndex,
+                            tooltip));
+        }
+
+        fields.sort(
+                (a, b) -> {
+                    int pageCompare = Integer.compare(a.pageIndex(), b.pageIndex());
+                    if (pageCompare != 0) {
+                        return pageCompare;
+                    }
+                    return a.name().compareToIgnoreCase(b.name());
+                });
+
+        return Collections.unmodifiableList(fields);
+    }
+
+    public static void applyFieldValues(PDDocument document, Map<String, ?> values, boolean flatten)
+            throws IOException {
+        applyFieldValues(document, values, flatten, false);
+    }
+
+    public static void applyFieldValues(
+            PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
+            throws IOException {
+        if (document == null || values == null || values.isEmpty()) {
+            return;
+        }
+
+        PDAcroForm acroForm = getAcroFormSafely(document);
+        if (acroForm == null) {
+            if (strict) {
+                throw new IOException("No AcroForm present in document");
+            }
+            log.debug("Skipping form fill because document has no AcroForm");
+            return;
+        }
+
+        ensureFontResources(acroForm);
+
+        Map<String, PDField> lookup = new LinkedHashMap<>();
+        for (PDField field : acroForm.getFieldTree()) {
+            String fqName = field.getFullyQualifiedName();
+            if (fqName != null) {
+                lookup.putIfAbsent(fqName, field);
+            }
+            String partial = field.getPartialName();
+            if (partial != null) {
+                lookup.putIfAbsent(partial, field);
+            }
+        }
+
+        for (Map.Entry<String, ?> entry : values.entrySet()) {
+            String key = entry.getKey();
+            if (key == null || key.isBlank()) {
+                continue;
+            }
+
+            PDField field = lookup.get(key);
+            if (field == null) {
+                field = acroForm.getField(key);
+            }
+            if (field == null) {
+                log.debug("No matching field found for '{}', skipping", key);
+                continue;
+            }
+
+            Object rawValue = entry.getValue();
+            String value = rawValue == null ? null : Objects.toString(rawValue, null);
+            applyValueToField(field, value);
+        }
+
+        ensureAppearances(acroForm);
+
+        if (flatten) {
+            try {
+                acroForm.flatten();
+            } catch (Exception e) {
+                log.warn("Failed to flatten AcroForm: {}", e.getMessage(), e);
+            }
+        }
+    }
+
+    private static PDAcroForm getAcroFormSafely(PDDocument document) {
+        try {
+            PDDocumentCatalog catalog = document.getDocumentCatalog();
+            return catalog != null ? catalog.getAcroForm() : null;
+        } catch (Exception e) {
+            log.warn("Unable to access AcroForm: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private static void ensureAppearances(PDAcroForm acroForm) {
+        if (acroForm == null) {
+            return;
+        }
+
+        boolean originalNeedAppearances = acroForm.getNeedAppearances();
+        acroForm.setNeedAppearances(true);
+        try {
+            Method refresh = acroForm.getClass().getMethod("refreshAppearances");
+            refresh.invoke(acroForm);
+        } catch (NoSuchMethodException e) {
+            log.debug("AcroForm.refreshAppearances() not available on this PDFBox version");
+        } catch (Exception e) {
+            log.warn("Failed to refresh form appearances: {}", e.getMessage(), e);
+        } finally {
+            if (!originalNeedAppearances) {
+                try {
+                    acroForm.setNeedAppearances(false);
+                } catch (Exception ignored) {
+                    acroForm.getCOSObject().setBoolean(COSName.NEED_APPEARANCES, false);
+                }
+            }
+        }
+    }
+
+    private static void ensureFontResources(PDAcroForm acroForm) {
+        try {
+            PDResources resources = acroForm.getDefaultResources();
+            if (resources == null) {
+                resources = new PDResources();
+                acroForm.setDefaultResources(resources);
+            }
+
+            registerFontIfMissing(resources, "Helvetica", Standard14Fonts.FontName.HELVETICA);
+            registerFontIfMissing(resources, "Helv", Standard14Fonts.FontName.HELVETICA);
+            registerFontIfMissing(resources, "ZaDb", Standard14Fonts.FontName.ZAPF_DINGBATS);
+
+            String appearance = acroForm.getDefaultAppearance();
+            if (appearance == null || appearance.isBlank()) {
+                acroForm.setDefaultAppearance("/Helvetica 12 Tf 0 g");
+            }
+        } catch (Exception e) {
+            log.debug("Unable to ensure font resources for form: {}", e.getMessage());
+        }
+    }
+
+    private static void registerFontIfMissing(
+            PDResources resources, String alias, Standard14Fonts.FontName fontName)
+            throws IOException {
+        COSName name = COSName.getPDFName(alias);
+        if (resources.getFont(name) == null) {
+            resources.put(name, new PDType1Font(fontName));
+        }
+    }
+
+    private static void applyValueToField(PDField field, String value) {
+        try {
+            if (field instanceof PDTextField textField) {
+                setTextValue(textField, value);
+            } else if (field instanceof PDCheckBox checkBox) {
+                if (isChecked(value)) {
+                    String onValue = determineCheckBoxOnValue(checkBox);
+                    if (onValue != null) {
+                        try {
+                            checkBox.getCOSObject().setName(COSName.AS, onValue);
+                            checkBox.getCOSObject().setName(COSName.V, onValue);
+                        } catch (Exception e) {
+                            log.debug(
+                                    "Failed to set checkbox appearance state directly: {}",
+                                    e.getMessage());
+                        }
+                        checkBox.setValue(onValue);
+                        if (!checkBox.isChecked()) {
+                            checkBox.check();
+                        }
+                    } else {
+                        checkBox.check();
+                    }
+                } else {
+                    checkBox.unCheck();
+                }
+            } else if (field instanceof PDRadioButton radioButton) {
+                if (value != null && !value.isBlank()) {
+                    radioButton.setValue(value);
+                }
+            } else if (field instanceof PDChoice choiceField) {
+                applyChoiceValue(choiceField, value);
+            } else if (field instanceof PDPushButton) {
+                // Ignore buttons during fill operations
+            } else if (field instanceof PDSignatureField) {
+                log.debug("Skipping signature field '{}'", field.getFullyQualifiedName());
+            } else {
+                field.setValue(value != null ? value : "");
+            }
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to set value for field '{}': {}",
+                    field.getFullyQualifiedName(),
+                    e.getMessage(),
+                    e);
+        }
+    }
+
+    private static void setTextValue(PDTextField textField, String value) throws IOException {
+        try {
+            textField.setValue(value != null ? value : "");
+            return;
+        } catch (IOException initial) {
+            log.debug(
+                    "Primary fill failed for text field '{}': {}",
+                    textField.getFullyQualifiedName(),
+                    initial.getMessage());
+        }
+
+        PDAcroForm acroForm = textField.getAcroForm();
+        ensureFontResources(acroForm);
+        try {
+            textField.setDefaultAppearance("/Helvetica 12 Tf 0 g");
+        } catch (Exception e) {
+            log.debug(
+                    "Unable to adjust default appearance for '{}': {}",
+                    textField.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+
+        textField.setValue(value != null ? value : "");
+    }
+
+    private static void applyChoiceValue(PDChoice choiceField, String value) throws IOException {
+        if (value == null) {
+            choiceField.setValue("");
+            return;
+        }
+
+        if (choiceField.isMultiSelect()) {
+            List<String> selections =
+                    Arrays.stream(value.split(","))
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .toList();
+            if (selections.isEmpty()) {
+                choiceField.setValue(Collections.emptyList());
+            } else {
+                choiceField.setValue(selections);
+            }
+        } else {
+            choiceField.setValue(value);
+        }
+    }
+
+    private static boolean isChecked(String value) {
+        if (value == null) {
+            return false;
+        }
+        String normalized = value.trim().toLowerCase();
+        return normalized.equals("true")
+                || normalized.equals("1")
+                || normalized.equals("yes")
+                || normalized.equals("on")
+                || normalized.equals("checked");
+    }
+
+    private static String resolveFieldType(PDTerminalField field) {
+        if (field instanceof PDTextField) {
+            return "text";
+        }
+        if (field instanceof PDCheckBox) {
+            return "checkbox";
+        }
+        if (field instanceof PDRadioButton) {
+            return "radio";
+        }
+        if (field instanceof PDComboBox) {
+            return "combobox";
+        }
+        if (field instanceof PDListBox) {
+            return "listbox";
+        }
+        if (field instanceof PDSignatureField) {
+            return "signature";
+        }
+        if (field instanceof PDPushButton) {
+            return "button";
+        }
+        return "field";
+    }
+
+    private static String safeValue(PDTerminalField field) {
+        try {
+            return field.getValueAsString();
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to read current value for field '{}': {}",
+                    field.getFullyQualifiedName(),
+                    e.getMessage());
+            return null;
+        }
+    }
+
+    private static List<String> resolveOptions(PDTerminalField field) {
+        try {
+            if (field instanceof PDChoice choice) {
+                List<String> display = choice.getOptionsDisplayValues();
+                if (display != null && !display.isEmpty()) {
+                    return new ArrayList<>(display);
+                }
+                List<String> exportValues = choice.getOptionsExportValues();
+                if (exportValues != null && !exportValues.isEmpty()) {
+                    return new ArrayList<>(exportValues);
+                }
+            } else if (field instanceof PDRadioButton radio) {
+                List<String> exports = radio.getExportValues();
+                if (exports != null && !exports.isEmpty()) {
+                    return new ArrayList<>(exports);
+                }
+            } else if (field instanceof PDCheckBox checkBox) {
+                List<String> exports = checkBox.getExportValues();
+                if (exports != null && !exports.isEmpty()) {
+                    return new ArrayList<>(exports);
+                }
+            }
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to resolve options for field '{}': {}",
+                    field.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+        return Collections.emptyList();
+    }
+
+    private static String determineCheckBoxOnValue(PDCheckBox checkBox) {
+        try {
+            String onValue = checkBox.getOnValue();
+            if (onValue != null && !onValue.isBlank()) {
+                return onValue;
+            }
+        } catch (Exception e) {
+            log.debug("Failed to obtain explicit on-value for checkbox: {}", e.getMessage());
+        }
+
+        try {
+            List<String> exports = checkBox.getExportValues();
+            if (exports != null && !exports.isEmpty()) {
+                return exports.get(0);
+            }
+        } catch (Exception e) {
+            log.debug("Failed to obtain export values for checkbox: {}", e.getMessage());
+        }
+        return "Yes";
+    }
+
+    private static String deriveDisplayLabel(
+            PDField field,
+            String name,
+            String tooltip,
+            String type,
+            int typeIndex,
+            List<String> options) {
+        String alternate = cleanLabel(field.getAlternateFieldName());
+        if (isMeaningfulLabel(alternate)) {
+            return alternate;
+        }
+
+        String tooltipLabel = cleanLabel(tooltip);
+        if (isMeaningfulLabel(tooltipLabel)) {
+            return tooltipLabel;
+        }
+
+        if (options != null && !options.isEmpty()) {
+            String optionCandidate = cleanLabel(options.get(0));
+            if (isMeaningfulLabel(optionCandidate)) {
+                return optionCandidate;
+            }
+        }
+
+        String humanized = cleanLabel(humanizeName(name));
+        if (isMeaningfulLabel(humanized)) {
+            return humanized;
+        }
+
+        return fallbackLabelForType(type, typeIndex);
+    }
+
+    private static String cleanLabel(String label) {
+        if (label == null) {
+            return null;
+        }
+        String cleaned = label.trim();
+        while (cleaned.endsWith(".")) {
+            cleaned = cleaned.substring(0, cleaned.length() - 1).trim();
+        }
+        if (cleaned.endsWith(":")) {
+            cleaned = cleaned.substring(0, cleaned.length() - 1).trim();
+        }
+        return cleaned.isEmpty() ? null : cleaned;
+    }
+
+    private static boolean isMeaningfulLabel(String candidate) {
+        if (candidate == null || candidate.isBlank()) {
+            return false;
+        }
+        String normalized = candidate.trim();
+        if (looksGeneric(normalized)) {
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean looksGeneric(String value) {
+        String simplified = value.replaceAll("[\\p{Punct}]+", " ").trim();
+        if (simplified.isEmpty()) {
+            return true;
+        }
+        if (GENERIC_NAME_PATTERN.matcher(simplified).matches()) {
+            return true;
+        }
+        if (simplified.matches("(?i)^(text|field|form)[\\s_-]*\\d+$")) {
+            return true;
+        }
+        if (simplified.matches("(?i)^t?\\d{1,3}$")) {
+            return true;
+        }
+        return false;
+    }
+
+    private static String humanizeName(String name) {
+        if (name == null) {
+            return null;
+        }
+        String cleaned =
+                name.replaceAll("[#\\[\\]]", " ")
+                        .replace('.', ' ')
+                        .replaceAll("[_-]+", " ")
+                        .replaceAll("(?<=[a-z])(?=[A-Z])", " ")
+                        .replaceAll("\\s+", " ")
+                        .trim();
+        if (cleaned.isEmpty()) {
+            return null;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (String part : cleaned.split(" ")) {
+            if (part.isBlank()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            builder.append(capitalizeWord(part));
+        }
+        String result = builder.toString().trim();
+        return result.isEmpty() ? null : result;
+    }
+
+    private static String capitalizeWord(String word) {
+        if (word == null || word.isEmpty()) {
+            return word;
+        }
+        if (word.equals(word.toUpperCase(Locale.ROOT))) {
+            return word;
+        }
+        if (word.length() == 1) {
+            return word.toUpperCase(Locale.ROOT);
+        }
+        return word.substring(0, 1).toUpperCase(Locale.ROOT)
+                + word.substring(1).toLowerCase(Locale.ROOT);
+    }
+
+    private static String fallbackLabelForType(String type, int typeIndex) {
+        String suffix = " " + typeIndex;
+        return switch (type) {
+            case "checkbox" -> "Checkbox" + suffix;
+            case "radio" -> "Option" + suffix;
+            case "combobox" -> "Dropdown" + suffix;
+            case "listbox" -> "List" + suffix;
+            case "text" -> "Text field" + suffix;
+            default -> "Field" + suffix;
+        };
+    }
+
+    private static String resolveTooltip(PDTerminalField field) {
+        List<PDAnnotationWidget> widgets = field.getWidgets();
+        if (widgets == null) {
+            return null;
+        }
+        for (PDAnnotationWidget widget : widgets) {
+            if (widget == null) {
+                continue;
+            }
+            try {
+                String alt = widget.getAnnotationName();
+                if (alt != null && !alt.isBlank()) {
+                    return alt;
+                }
+                String tooltip = widget.getCOSObject().getString(COSName.TU);
+                if (tooltip != null && !tooltip.isBlank()) {
+                    return tooltip;
+                }
+            } catch (Exception e) {
+                log.debug(
+                        "Failed to read tooltip for field '{}': {}",
+                        field.getFullyQualifiedName(),
+                        e.getMessage());
+            }
+        }
+        return null;
+    }
+
+    private static int resolveFirstWidgetPageIndex(PDDocument document, PDTerminalField field) {
+        List<PDAnnotationWidget> widgets = field.getWidgets();
+        if (widgets == null || widgets.isEmpty()) {
+            return -1;
+        }
+        for (PDAnnotationWidget widget : widgets) {
+            int idx = resolveWidgetPageIndex(document, widget);
+            if (idx >= 0) {
+                return idx;
+            }
+        }
+        return -1;
+    }
+
+    private static int resolveWidgetPageIndex(PDDocument document, PDAnnotationWidget widget) {
+        if (document == null || widget == null) {
+            return -1;
+        }
+        try {
+            PDPage page = widget.getPage();
+            if (page != null) {
+                int idx = document.getPages().indexOf(page);
+                if (idx >= 0) {
+                    return idx;
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Widget page lookup failed: {}", e.getMessage());
+        }
+
+        int pageCount = document.getNumberOfPages();
+        for (int i = 0; i < pageCount; i++) {
+            try {
+                PDPage candidate = document.getPage(i);
+                List<PDAnnotation> annotations = candidate.getAnnotations();
+                for (PDAnnotation annotation : annotations) {
+                    if (annotation == widget) {
+                        return i;
+                    }
+                }
+            } catch (IOException e) {
+                log.debug("Failed to inspect annotations for page {}: {}", i, e.getMessage());
+            }
+        }
+        return -1;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record FormFieldInfo(
+            String name,
+            String label,
+            String type,
+            String value,
+            List<String> options,
+            boolean required,
+            int pageIndex,
+            String tooltip) {}
 }
