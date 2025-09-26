@@ -76,7 +76,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/extract-images': 'extractImages',
   '/adjust-contrast': 'adjustContrast',
   '/fake-scan': 'fakeScan',
-  '/replace-color-pdf': 'replaceColorPdf',
+  '/replace-color-pdf': 'replaceColor',
 
   // Metadata and info
   '/change-metadata': 'changeMetadata',
@@ -116,7 +116,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/view-pdf': 'read',
   '/get-info-on-pdf': 'getPdfInfo',
   '/remove-image-pdf': 'removeImage',
-  '/replace-and-invert-color-pdf': 'replaceColorPdf',
+  '/replace-and-invert-color-pdf': 'replaceColor',
   '/pipeline': 'automate',
   '/extract-image-scans': 'scannerImageSplit',
   '/show-javascript': 'showJS',

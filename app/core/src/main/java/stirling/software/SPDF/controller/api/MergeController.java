@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -20,6 +21,8 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
@@ -111,6 +114,32 @@ public class MergeController {
         }
     }
 
+    // Parse client file IDs from JSON string
+    private String[] parseClientFileIds(String clientFileIds) {
+        if (clientFileIds == null || clientFileIds.trim().isEmpty()) {
+            return new String[0];
+        }
+        try {
+            // Simple JSON array parsing - remove brackets and split by comma
+            String trimmed = clientFileIds.trim();
+            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+                String inside = trimmed.substring(1, trimmed.length() - 1).trim();
+                if (inside.isEmpty()) {
+                    return new String[0];
+                }
+                String[] parts = inside.split(",");
+                String[] result = new String[parts.length];
+                for (int i = 0; i < parts.length; i++) {
+                    result[i] = parts[i].trim().replaceAll("^\"|\"$", "");
+                }
+                return result;
+            }
+        } catch (Exception e) {
+            log.warn("Failed to parse client file IDs: {}", clientFileIds, e);
+        }
+        return new String[0];
+    }
+
     // Adds a table of contents to the merged document using filenames as chapter titles
     private void addTableOfContents(PDDocument mergedDocument, MultipartFile[] files) {
         // Create the document outline
@@ -177,13 +206,46 @@ public class MergeController {
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;
-            for (MultipartFile multipartFile : files) {
+            List<Integer> invalidIndexes = new ArrayList<>();
+            for (int index = 0; index < files.length; index++) {
+                MultipartFile multipartFile = files[index];
                 totalSize += multipartFile.getSize();
                 File tempFile =
                         GeneralUtils.convertMultipartFileToFile(
                                 multipartFile); // Convert MultipartFile to File
                 filesToDelete.add(tempFile); // Add temp file to the list for later deletion
+
+                // Pre-validate each PDF so we can report which one(s) are broken
+                // Use the original MultipartFile to avoid deleting the tempFile during validation
+                try (PDDocument ignored = pdfDocumentFactory.load(multipartFile)) {
+                    // OK
+                } catch (IOException e) {
+                    ExceptionUtils.logException("PDF pre-validate", e);
+                    invalidIndexes.add(index);
+                }
                 mergerUtility.addSource(tempFile); // Add source file to the merger utility
+            }
+
+            if (!invalidIndexes.isEmpty()) {
+                // Parse client file IDs (always present from frontend)
+                String[] clientIds = parseClientFileIds(request.getClientFileIds());
+
+                // Map invalid indexes to client IDs
+                List<String> errorFileIds = new ArrayList<>();
+                for (Integer index : invalidIndexes) {
+                    if (index < clientIds.length) {
+                        errorFileIds.add(clientIds[index]);
+                    }
+                }
+
+                String payload =
+                        String.format(
+                                "{\"errorFileIds\":%s,\"message\":\"Some of the selected files can't be merged\"}",
+                                errorFileIds.toString());
+
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                        .body(payload.getBytes(StandardCharsets.UTF_8));
             }
 
             mergedTempFile = Files.createTempFile("merged-", ".pdf").toFile();
