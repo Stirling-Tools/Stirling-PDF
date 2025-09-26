@@ -50,6 +50,7 @@ import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation"
 import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
+import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
@@ -79,6 +80,8 @@ import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustP
 import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/ScannerImageSplitSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import CropSettings from "../components/tools/crop/CropSettings";
+import ExtractImages from "../tools/ExtractImages";
+import ExtractImagesSettings from "../components/tools/extractImages/ExtractImagesSettings";
 import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
@@ -478,12 +481,16 @@ export function useFlatToolRegistry(): ToolRegistry {
         synonyms: getSynonyms(t, "extractPages")
       },
       extractImages: {
-        icon: <LocalIcon icon="filter-alt" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="photo-library-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.extractImages.title", "Extract Images"),
-        component: null,
+        component: ExtractImages,
         description: t("home.extractImages.desc", "Extract images from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
+        maxFiles: -1,
+        endpoints: ["extract-images"],
+        operationConfig: extractImagesOperationConfig,
+        settingsComponent: ExtractImagesSettings,
         synonyms: getSynonyms(t, "extractImages")
       },
 

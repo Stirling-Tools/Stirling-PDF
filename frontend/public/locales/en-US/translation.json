@@ -1056,7 +1056,13 @@
     "header": "Extract Images",
     "selectText": "Select image format to convert extracted images to",
     "allowDuplicates": "Save duplicate images",
-    "submit": "Extract"
+    "submit": "Extract",
+    "settings": {
+      "title": "Settings"
+    },
+    "error": {
+      "failed": "An error occurred while extracting images from the PDF."
+    }
   },
   "pdfToPDFA": {
     "tags": "archive,long-term,standard,conversion,storage,preservation",
