@@ -1,4 +1,10 @@
 {
+  "unsavedChanges": "You have unsaved changes to your PDF. What would you like to do?",
+  "unsavedChangesTitle": "Unsaved Changes",
+  "keepWorking": "Keep Working",
+  "discardChanges": "Discard Changes",
+  "applyAndContinue": "Apply & Continue",
+  "exportAndContinue": "Export & Continue",
   "language": {
     "direction": "ltr"
   },

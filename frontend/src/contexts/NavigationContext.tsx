@@ -109,16 +109,34 @@ export const NavigationProvider: React.FC<{
 
   const actions: NavigationContextActions = {
     setWorkbench: useCallback((workbench: WorkbenchType) => {
-      dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
-    }, []),
+      // If we're leaving pageEditor workbench and have unsaved changes, request navigation
+      if (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && state.hasUnsavedChanges) {
+        const performWorkbenchChange = () => {
+          dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
+        };
+        dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: performWorkbenchChange } });
+        dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: true } });
+      } else {
+        dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
+      }
+    }, [state.workbench, state.hasUnsavedChanges]),
 
     setSelectedTool: useCallback((toolId: ToolId | null) => {
       dispatch({ type: 'SET_SELECTED_TOOL', payload: { toolId } });
     }, []),
 
     setToolAndWorkbench: useCallback((toolId: ToolId | null, workbench: WorkbenchType) => {
-      dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId, workbench } });
-    }, []),
+      // If we're leaving pageEditor workbench and have unsaved changes, request navigation
+      if (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && state.hasUnsavedChanges) {
+        const performWorkbenchChange = () => {
+          dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId, workbench } });
+        };
+        dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: performWorkbenchChange } });
+        dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: true } });
+      } else {
+        dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId, workbench } });
+      }
+    }, [state.workbench, state.hasUnsavedChanges]),
 
     setHasUnsavedChanges: useCallback((hasChanges: boolean) => {
       dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
