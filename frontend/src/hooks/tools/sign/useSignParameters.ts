@@ -20,7 +20,7 @@ export interface SignParameters {
 }
 
 export const DEFAULT_PARAMETERS: SignParameters = {
-  signatureType: 'draw',
+  signatureType: 'canvas',
   reason: 'Document signing',
   location: 'Digital',
   signerName: '',

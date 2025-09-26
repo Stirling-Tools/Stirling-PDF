@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Stack, TextInput, FileInput, Paper, Group, Button, Text, Alert, Modal, ColorSwatch, Menu, ActionIcon, Slider, Select, Combobox, useCombobox, ColorPicker, Tabs } from '@mantine/core';
 import ButtonSelector from "../../shared/ButtonSelector";
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
+import { SuggestedToolsSection } from "../shared/SuggestedToolsSection";
 
 interface SignSettingsProps {
   parameters: SignParameters;
@@ -14,9 +15,10 @@ interface SignSettingsProps {
   onUpdateDrawSettings?: (color: string, size: number) => void;
   onUndo?: () => void;
   onRedo?: () => void;
+  onSave?: () => void;
 }
 
-const SignSettings = ({ parameters, onParameterChange, disabled = false, onActivateDrawMode, onActivateSignaturePlacement, onDeactivateSignature, onUpdateDrawSettings, onUndo, onRedo }: SignSettingsProps) => {
+const SignSettings = ({ parameters, onParameterChange, disabled = false, onActivateDrawMode, onActivateSignaturePlacement, onDeactivateSignature, onUpdateDrawSettings, onUndo, onRedo, onSave }: SignSettingsProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -439,9 +441,6 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
         onChange={(value) => onParameterChange('signatureType', value as 'image' | 'text' | 'draw' | 'canvas')}
       >
         <Tabs.List grow>
-          <Tabs.Tab value="draw" style={{ fontSize: '0.8rem' }}>
-            {t('sign.type.draw', 'Draw')}
-          </Tabs.Tab>
           <Tabs.Tab value="canvas" style={{ fontSize: '0.8rem' }}>
             {t('sign.type.canvas', 'Canvas')}
           </Tabs.Tab>
@@ -450,6 +449,9 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
           </Tabs.Tab>
           <Tabs.Tab value="text" style={{ fontSize: '0.8rem' }}>
             {t('sign.type.text', 'Text')}
+          </Tabs.Tab>
+          <Tabs.Tab value="draw" style={{ fontSize: '0.8rem' }}>
+            {t('sign.type.draw', 'Draw')}
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>
@@ -471,6 +473,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
           {t('sign.redo', 'Redo')}
         </Button>
       </Group>
+
 
       {/* Signature Creation based on type */}
       {parameters.signatureType === 'canvas' && (
@@ -958,6 +961,21 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
           </Group>
         </Stack>
       </Modal>
+
+      {/* Save Button */}
+      {onSave && (
+        <Button
+          onClick={onSave}
+          color="green"
+          variant="filled"
+          fullWidth
+        >
+          {t('save', 'Save')}
+        </Button>
+      )}
+
+      {/* Suggested Tools Section */}
+      <SuggestedToolsSection />
     </Stack>
   );
 };
