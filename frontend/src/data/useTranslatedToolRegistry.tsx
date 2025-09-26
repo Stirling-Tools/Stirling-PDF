@@ -75,6 +75,8 @@ import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/u
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import CropSettings from "../components/tools/crop/CropSettings";
+import PageLayoutSettings from "src/components/tools/pageLayout/PageLayoutSettings";
+import Automate from "src/tools/Automate";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -424,7 +426,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
         endpoints: ["multi-page-layout"],
-        settingsComponent: React.lazy(() => import("../components/tools/pageLayout/PageLayoutSettings")),
+        settingsComponent: PageLayoutSettings,
         synonyms: getSynonyms(t, "pageLayout")
       },
       bookletImposition: {
@@ -557,7 +559,7 @@ export function useFlatToolRegistry(): ToolRegistry {
       automate: {
         icon: <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.automate.title", "Automate"),
-        component: React.lazy(() => import("../tools/Automate")),
+        component: Automate,
         description: t(
           "home.automate.desc",
           "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
