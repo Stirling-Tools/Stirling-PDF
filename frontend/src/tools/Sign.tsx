@@ -17,7 +17,7 @@ const Sign = (props: BaseToolProps) => {
   const { setWorkbench } = useNavigation();
   const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, signatureApiRef, getImageData, setSignaturesApplied } = useSignature();
   const { consumeFiles, selectors } = useFileContext();
-  const { exportActions } = useViewer();
+  const { exportActions, getScrollState } = useViewer();
 
   // Track which signature mode was active for reactivation after save
   const activeModeRef = useRef<'draw' | 'placement' | null>(null);
@@ -76,7 +76,8 @@ const Sign = (props: BaseToolProps) => {
         exportActions,
         selectors,
         consumeFiles,
-        originalFile
+        originalFile,
+        getScrollState
       });
 
       if (success) {
