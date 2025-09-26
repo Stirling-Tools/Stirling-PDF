@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -51,7 +52,7 @@ public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/img")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
     @Operation(
             summary = "Convert PDF to image(s)",
             description =
@@ -150,10 +151,11 @@ public class ConvertImgPDFController {
                                 .runCommandWithOutputHandling(command);
 
                 // Find all WebP files in the output directory
-                List<Path> webpFiles =
-                        Files.walk(tempOutputDir)
-                                .filter(path -> path.toString().endsWith(".webp"))
-                                .toList();
+                List<Path> webpFiles;
+                try (Stream<Path> walkStream = Files.walk(tempOutputDir)) {
+                    webpFiles =
+                            walkStream.filter(path -> path.toString().endsWith(".webp")).toList();
+                }
 
                 if (webpFiles.isEmpty()) {
                     log.error("No WebP files were created in: {}", tempOutputDir.toString());
@@ -213,7 +215,7 @@ public class ConvertImgPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/img/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/img/pdf")
     @Operation(
             summary = "Convert images to a PDF file",
             description =
@@ -244,7 +246,7 @@ public class ConvertImgPDFController {
 
     private String getMediaType(String imageFormat) {
         String mimeType = URLConnection.guessContentTypeFromName("." + imageFormat);
-        return "null".equals(mimeType) ? "application/octet-stream" : mimeType;
+        return "null".equals(mimeType) ? MediaType.APPLICATION_OCTET_STREAM_VALUE : mimeType;
     }
 
     /**

@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,13 +46,22 @@ class AttachmentControllerTest {
     void setUp() {
         pdfFile =
                 new MockMultipartFile(
-                        "fileInput", "test.pdf", "application/pdf", "PDF content".getBytes());
+                        "fileInput",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "PDF content".getBytes());
         attachment1 =
                 new MockMultipartFile(
-                        "attachment1", "file1.txt", "text/plain", "File 1 content".getBytes());
+                        "attachment1",
+                        "file1.txt",
+                        MediaType.TEXT_PLAIN_VALUE,
+                        "File 1 content".getBytes());
         attachment2 =
                 new MockMultipartFile(
-                        "attachment2", "file2.jpg", "image/jpeg", "Image content".getBytes());
+                        "attachment2",
+                        "file2.jpg",
+                        MediaType.IMAGE_JPEG_VALUE,
+                        "Image content".getBytes());
         request = new AddAttachmentRequest();
         mockDocument = mock(PDDocument.class);
         modifiedMockDocument = mock(PDDocument.class);

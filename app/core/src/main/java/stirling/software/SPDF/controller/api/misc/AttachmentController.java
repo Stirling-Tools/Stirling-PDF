@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +35,7 @@ public class AttachmentController {
 
     private final AttachmentServiceInterface pdfAttachmentService;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-attachments")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-attachments")
     @Operation(
             summary = "Add attachments to PDF",
             description =
