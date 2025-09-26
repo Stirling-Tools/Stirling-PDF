@@ -1,12 +1,13 @@
 import { useCallback, useRef, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../../services/http';
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from '../../../contexts/FileContext';
 import { useToolState, type ProcessingProgress } from './useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile } from '../../../types/fileContext';
+import { FILE_EVENTS } from '../../../services/errorUtils';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '../../../contexts/file/fileActions';
 import { ToolOperation } from '../../../types/file';
@@ -148,6 +149,7 @@ export const useToolOperation = <TParams>(
 
   // Composed hooks
   const { state, actions } = useToolState();
+  const { actions: fileActions } = useFileContext();
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
   const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles } = useToolResources();
 
@@ -168,7 +170,18 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    const validFiles = selectedFiles.filter(file => file.size > 0);
+    // Handle zero-byte inputs explicitly: mark as error and continue with others
+    const zeroByteFiles = selectedFiles.filter(file => (file as any)?.size === 0);
+    if (zeroByteFiles.length > 0) {
+      try {
+        for (const f of zeroByteFiles) {
+          (fileActions.markFileError as any)((f as any).fileId);
+        }
+      } catch (e) { 
+        console.log('markFileError', e); 
+      }
+    }
+    const validFiles = selectedFiles.filter(file => (file as any)?.size > 0);
     if (validFiles.length === 0) {
       actions.setError(t('noValidFiles', 'No valid files to process'));
       return;
@@ -183,8 +196,19 @@ export const useToolOperation = <TParams>(
     // Prepare files with history metadata injection (for PDFs)
     actions.setStatus('Processing files...');
 
-    try {
+    // Listen for global error file id events from HTTP interceptor during this run
+    let externalErrorFileIds: string[] = [];
+    const errorListener = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail as any;
+      if (detail?.fileIds) {
+        externalErrorFileIds = Array.isArray(detail.fileIds) ? detail.fileIds : [];
+      }
+    };
+    window.addEventListener(FILE_EVENTS.markError, errorListener as EventListener);
+
+      try {
       let processedFiles: File[];
+        let successSourceIds: string[] = [];
 
       // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
       const filesForAPI = extractFiles(validFiles);
@@ -199,13 +223,18 @@ export const useToolOperation = <TParams>(
             responseHandler: config.responseHandler,
             preserveBackendFilename: config.preserveBackendFilename
           };
-          processedFiles = await processFiles(
+          console.debug('[useToolOperation] Multi-file start', { count: filesForAPI.length });
+          const result = await processFiles(
             params,
             filesForAPI,
             apiCallsConfig,
             actions.setProgress,
-            actions.setStatus
+            actions.setStatus,
+            fileActions.markFileError as any
           );
+          processedFiles = result.outputFiles;
+          successSourceIds = result.successSourceIds as any;
+          console.debug('[useToolOperation] Multi-file results', { outputFiles: processedFiles.length, successSources: result.successSourceIds.length });
           break;
         }
         case ToolType.multiFile: {
@@ -235,13 +264,63 @@ export const useToolOperation = <TParams>(
               processedFiles = await extractAllZipFiles(response.data);
             }
           }
+          // Assume all inputs succeeded together unless server provided an error earlier
+          successSourceIds = validFiles.map(f => (f as any).fileId) as any;
           break;
         }
 
-        case ToolType.custom:
+        case ToolType.custom: {
           actions.setStatus('Processing files...');
           processedFiles = await config.customProcessor(params, filesForAPI);
+          // Try to map outputs back to inputs by filename (before extension)
+          const inputBaseNames = new Map<string, string>();
+          for (const f of validFiles) {
+            const base = (f.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+            inputBaseNames.set(base, (f as any).fileId);
+          }
+          const mappedSuccess: string[] = [];
+          for (const out of processedFiles) {
+            const base = (out.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+            const id = inputBaseNames.get(base);
+            if (id) mappedSuccess.push(id);
+          }
+          // Fallback to naive alignment if names don't match
+          if (mappedSuccess.length === 0) {
+            successSourceIds = validFiles.slice(0, processedFiles.length).map(f => (f as any).fileId) as any;
+          } else {
+            successSourceIds = mappedSuccess as any;
+          }
           break;
+        }
+      }
+
+      // Normalize error flags across tool types: mark failures, clear successes
+      try {
+        const allInputIds = validFiles.map(f => (f as any).fileId) as unknown as string[];
+        const okSet = new Set((successSourceIds as unknown as string[]) || []);
+        // Clear errors on successes
+        for (const okId of okSet) {
+          try { (fileActions.clearFileError as any)(okId); } catch (_e) { void _e; }
+        }
+        // Mark errors on inputs that didn't succeed
+        for (const id of allInputIds) {
+          if (!okSet.has(id)) {
+            try { (fileActions.markFileError as any)(id); } catch (_e) { void _e; }
+          }
+        }
+      } catch (_e) { void _e; }
+
+      if (externalErrorFileIds.length > 0) {
+        // If backend told us which sources failed, prefer that mapping
+        successSourceIds = validFiles
+          .map(f => (f as any).fileId)
+          .filter(id => !externalErrorFileIds.includes(id)) as any;
+        // Also mark failed IDs immediately
+        try {
+          for (const badId of externalErrorFileIds) {
+            (fileActions.markFileError as any)(badId);
+          }
+        } catch (_e) { void _e; }
       }
 
       if (processedFiles.length > 0) {
@@ -286,29 +365,38 @@ export const useToolOperation = <TParams>(
         const processedFileMetadataArray = await Promise.all(
           processedFiles.map(file => generateProcessedFileMetadata(file))
         );
-        const shouldBranchHistory = processedFiles.length != inputStirlingFileStubs.length;
-        // Create output stubs with fresh metadata (no inheritance of stale processedFile data)
-        const outputStirlingFileStubs = shouldBranchHistory
-          ? processedFiles.map((file, index) =>
-              createNewStirlingFileStub(file, undefined, thumbnails[index], processedFileMetadataArray[index])
-            )
-          : processedFiles.map((resultingFile, index) =>
-              createChildStub(
-                inputStirlingFileStubs[index],
-                newToolOperation,
-                resultingFile,
-                thumbnails[index],
-                processedFileMetadataArray[index]
-              )
-            );
+        // Always create child stubs linking back to the successful source inputs
+        const successInputStubs = successSourceIds
+          .map((id) => selectors.getStirlingFileStub(id as any))
+          .filter(Boolean) as StirlingFileStub[];
+
+        if (successInputStubs.length !== processedFiles.length) {
+          console.warn('[useToolOperation] Mismatch successInputStubs vs outputs', {
+            successInputStubs: successInputStubs.length,
+            outputs: processedFiles.length,
+          });
+        }
+
+        const outputStirlingFileStubs = processedFiles.map((resultingFile, index) =>
+          createChildStub(
+            successInputStubs[index] || inputStirlingFileStubs[index] || inputStirlingFileStubs[0],
+            newToolOperation,
+            resultingFile,
+            thumbnails[index],
+            processedFileMetadataArray[index]
+          )
+        );
 
         // Create StirlingFile objects from processed files and child stubs
         const outputStirlingFiles = processedFiles.map((file, index) => {
           const childStub = outputStirlingFileStubs[index];
           return createStirlingFile(file, childStub.id);
         });
-
-        const outputFileIds = await consumeFiles(inputFileIds, outputStirlingFiles, outputStirlingFileStubs);
+        // Build consumption arrays aligned to the successful source IDs
+        const toConsumeInputIds = successSourceIds.filter((id: string) => inputFileIds.includes(id as any)) as unknown as FileId[];
+        // Outputs and stubs are already ordered by success sequence
+        console.debug('[useToolOperation] Consuming files', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
+        const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
 
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
@@ -320,10 +408,40 @@ export const useToolOperation = <TParams>(
       }
 
     } catch (error: any) {
+      // Centralized 422 handler: mark provided IDs in errorFileIds
+      try {
+        const status = (error?.response?.status as number | undefined);
+        if (status === 422) {
+          const payload = error?.response?.data;
+          let parsed: any = payload;
+          if (typeof payload === 'string') {
+            try { parsed = JSON.parse(payload); } catch { parsed = payload; }
+          } else if (payload && typeof (payload as any).text === 'function') {
+            // Blob or Response-like object from axios when responseType='blob'
+            const text = await (payload as Blob).text();
+            try { parsed = JSON.parse(text); } catch { parsed = text; }
+          }
+          let ids: string[] | undefined = Array.isArray(parsed?.errorFileIds) ? parsed.errorFileIds : undefined;
+          if (!ids && typeof parsed === 'string') {
+            const match = parsed.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g);
+            if (match && match.length > 0) ids = Array.from(new Set(match));
+          }
+          if (ids && ids.length > 0) {
+            for (const badId of ids) {
+              try { (fileActions.markFileError as any)(badId); } catch (_e) { void _e; }
+            }
+            actions.setStatus('Process failed due to invalid/corrupted file(s)');
+            // Avoid duplicating toast messaging here
+            return;
+          }
+        }
+      } catch (_e) { void _e; }
+
       const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
       actions.setError(errorMessage);
       actions.setStatus('');
     } finally {
+      window.removeEventListener(FILE_EVENTS.markError, errorListener as EventListener);
       actions.setLoading(false);
       actions.setProgress(null);
     }

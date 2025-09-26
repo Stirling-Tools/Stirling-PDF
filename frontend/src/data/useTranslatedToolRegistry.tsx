@@ -70,10 +70,13 @@ import RotateSettings from "../components/tools/rotate/RotateSettings";
 import Redact from "../tools/Redact";
 import AdjustPageScale from "../tools/AdjustPageScale";
 import ReplaceColor from "../tools/ReplaceColor";
+import ScannerImageSplit from "../tools/ScannerImageSplit";
 import { ToolId } from "../types/toolId";
 import MergeSettings from '../components/tools/merge/MergeSettings';
 import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
+import { scannerImageSplitOperationConfig } from "../hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
+import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/ScannerImageSplitSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import CropSettings from "../components/tools/crop/CropSettings";
 import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
@@ -627,10 +630,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       scannerImageSplit: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.scannerImageSplit.title", "Detect & Split Scanned Photos"),
-        component: null,
+        component: ScannerImageSplit,
         description: t("home.scannerImageSplit.desc", "Detect and split scanned photos into separate pages"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["extract-image-scans"],
+        operationConfig: scannerImageSplitOperationConfig,
+        settingsComponent: ScannerImageSplitSettings,
         synonyms: getSynonyms(t, "ScannerImageSplit"),
       },
       overlayPdfs: {

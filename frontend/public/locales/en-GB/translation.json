@@ -74,7 +74,10 @@
   },
   "error": {
     "pdfPassword": "The PDF Document is passworded and either the password was not provided or was incorrect",
+    "encryptedPdfMustRemovePassword": "This PDF is encrypted or password-protected. Please unlock it before converting to PDF/A.",
+    "incorrectPasswordProvided": "The PDF password is incorrect or not provided.",
     "_value": "Error",
+    "dismissAllErrors": "Dismiss All Errors",
     "sorry": "Sorry for the issue!",
     "needHelp": "Need help / Found an issue?",
     "contactTip": "If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket on our GitHub page or contact us through Discord:",
@@ -433,8 +436,8 @@
     },
     "scannerImageSplit": {
       "tags": "detect,split,photos",
-      "title": "Detect/Split Scanned photos",
-      "desc": "Splits multiple photos from within a photo/PDF"
+      "title": "Detect & Split Scanned Photos",
+      "desc": "Detect and split scanned photos into separate pages"
     },
     "sign": {
       "tags": "signature,autograph",
@@ -1652,17 +1655,47 @@
     "tags": "separate,auto-detect,scans,multi-photo,organize",
     "selectText": {
       "1": "Angle Threshold:",
-      "2": "Sets the minimum absolute angle required for the image to be rotated (default: 10).",
+      "2": "Tilt (in degrees) needed before we auto-straighten a photo.",
       "3": "Tolerance:",
-      "4": "Determines the range of colour variation around the estimated background colour (default: 30).",
+      "4": "How closely a colour must match the page background to count as background. Higher = looser, lower = stricter.",
       "5": "Minimum Area:",
-      "6": "Sets the minimum area threshold for a photo (default: 10000).",
+      "6": "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments.",
       "7": "Minimum Contour Area:",
-      "8": "Sets the minimum contour area threshold for a photo",
+      "8": "Smallest edge/shape we consider when finding photos (filters dust and specks).",
       "9": "Border Size:",
-      "10": "Sets the size of the border added and removed to prevent white borders in the output (default: 1)."
+      "10": "Extra padding (in pixels) around each saved photo so edges aren't cut."
     },
     "info": "Python is not installed. It is required to run."
+  },
+  "scannerImageSplit": {
+    "title": "Extracted Images",
+    "submit": "Extract Image Scans",
+    "error": {
+      "failed": "An error occurred while extracting image scans."
+    },
+    "tooltip": {
+      "title": "Photo Splitter",
+      "whatThisDoes": "What this does",
+      "whatThisDoesDesc": "Automatically finds and extracts each photo from a scanned page or composite image—no manual cropping.",
+      "whenToUse": "When to use",
+      "useCase1": "Scan whole album pages in one go",
+      "useCase2": "Split flatbed batches into separate files",
+      "useCase3": "Break collages into individual photos",
+      "useCase4": "Pull photos from documents",
+      "quickFixes": "Quick fixes",
+      "problem1": "Photos not detected → increase Tolerance to 30-50",
+      "problem2": "Too many false detections → increase Minimum Area to 15,000-20,000",
+      "problem3": "Crops are too tight → increase Border Size to 5-10",
+      "problem4": "Tilted photos not straightened → lower Angle Threshold to ~5°",
+      "problem5": "Dust/noise boxes → increase Minimum Contour Area to 1000-2000",
+      "setupTips": "Setup tips",
+      "tip1": "Use a plain, light background",
+      "tip2": "Leave a small gap (≈1 cm) between photos",
+      "tip3": "Scan at 300-600 DPI",
+      "tip4": "Clean the scanner glass",
+      "headsUp": "Heads-up",
+      "headsUpDesc": "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy-try a lighter or darker background and leave more space."
+    }
   },
   "sign": {
     "title": "Sign",
