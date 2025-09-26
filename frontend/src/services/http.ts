@@ -149,7 +149,7 @@ const __INTERCEPTOR_ID__ = apiClient?.interceptors?.response?.use
       const { title, body } = extractAxiosErrorMessage(error);
 
       // Normalize response data ONCE, reuse for both ID extraction and special-toast matching
-      const raw = (error?.response?.data) as any;
+      const raw = (error?.response?.data);
       let normalized: unknown = raw;
       try { normalized = await normalizeAxiosErrorData(raw); } catch (e) { console.debug('normalizeAxiosErrorData', e); }
 
@@ -170,7 +170,7 @@ const __INTERCEPTOR_ID__ = apiClient?.interceptors?.response?.use
       const isSpecial =
         status === 422 ||
         status === 409 || // often actionable conflicts
-        /Failed files:/.test(body) ||
+        body.includes('Failed files:') ||
         /invalid\/corrupted file\(s\)/i.test(body);
 
       if (isSpecial && url) {

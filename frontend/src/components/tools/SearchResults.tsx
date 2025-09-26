@@ -9,7 +9,7 @@ import NoToolsFound from './shared/NoToolsFound';
 import "./toolPicker/ToolPicker.css";
 
 interface SearchResultsProps {
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: { item: [string, ToolRegistryEntry]; matchedText?: string }[];
   onSelect: (id: string) => void;
   searchQuery?: string;
 }

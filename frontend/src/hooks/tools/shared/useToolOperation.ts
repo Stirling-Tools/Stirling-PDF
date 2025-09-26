@@ -199,7 +199,7 @@ export const useToolOperation = <TParams>(
     // Listen for global error file id events from HTTP interceptor during this run
     let externalErrorFileIds: string[] = [];
     const errorListener = (e: Event) => {
-      const detail = (e as CustomEvent)?.detail as any;
+      const detail = (e as CustomEvent)?.detail;
       if (detail?.fileIds) {
         externalErrorFileIds = Array.isArray(detail.fileIds) ? detail.fileIds : [];
       }
@@ -416,7 +416,7 @@ export const useToolOperation = <TParams>(
           let parsed: any = payload;
           if (typeof payload === 'string') {
             try { parsed = JSON.parse(payload); } catch { parsed = payload; }
-          } else if (payload && typeof (payload as any).text === 'function') {
+          } else if (payload && typeof (payload).text === 'function') {
             // Blob or Response-like object from axios when responseType='blob'
             const text = await (payload as Blob).text();
             try { parsed = JSON.parse(text); } catch { parsed = text; }

@@ -18,10 +18,10 @@ export function filterToolRegistryByQuery(
   const nq = normalizeForSearch(query);
   const threshold = minScoreForQuery(query);
 
-  const exactName: Array<{ id: string; tool: ToolRegistryEntry; pos: number }> = [];
-  const exactSyn: Array<{ id: string; tool: ToolRegistryEntry; text: string; pos: number }> = [];
-  const fuzzyName: Array<{ id: string; tool: ToolRegistryEntry; score: number; text: string }> = [];
-  const fuzzySyn: Array<{ id: string; tool: ToolRegistryEntry; score: number; text: string }> = [];
+  const exactName: { id: string; tool: ToolRegistryEntry; pos: number }[] = [];
+  const exactSyn: { id: string; tool: ToolRegistryEntry; text: string; pos: number }[] = [];
+  const fuzzyName: { id: string; tool: ToolRegistryEntry; score: number; text: string }[] = [];
+  const fuzzySyn: { id: string; tool: ToolRegistryEntry; score: number; text: string }[] = [];
 
   for (const [id, tool] of entries) {
     const nameNorm = normalizeForSearch(tool.name || '');

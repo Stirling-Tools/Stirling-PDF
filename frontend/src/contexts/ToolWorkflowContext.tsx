@@ -101,7 +101,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
+  filteredTools: { item: [string, ToolRegistryEntry]; matchedText?: string }[]; // Filtered by search
   isPanelVisible: boolean;
 }
 
@@ -223,7 +223,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // Filter tools based on search query with fuzzy matching (name, description, id, synonyms)
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    return filterToolRegistryByQuery(toolRegistry as Record<string, ToolRegistryEntry>, state.searchQuery);
+    return filterToolRegistryByQuery(toolRegistry, state.searchQuery);
   }, [toolRegistry, state.searchQuery]);
 
   const isPanelVisible = useMemo(() =>

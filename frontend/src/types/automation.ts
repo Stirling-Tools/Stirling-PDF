@@ -82,4 +82,4 @@ export type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
-export type JsonObject = { [key: string]: JsonValue };
+export type JsonObject = Record<string, JsonValue>;

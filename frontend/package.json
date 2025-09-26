@@ -45,10 +45,10 @@
     "license-report": "^6.8.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.4.149",
-    "posthog-js": "^1.268.4",
+    "posthog-js": "^1.268.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-i18next": "^15.7.3",
+    "react-i18next": "^16.0.0",
     "react-router-dom": "^7.9.2",
     "tailwindcss": "^4.1.13",
     "web-vitals": "^5.1.0"
@@ -99,7 +99,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "@iconify-json/material-symbols": "^1.2.38",
+    "@iconify-json/material-symbols": "^1.2.39",
     "@iconify/utils": "^3.0.2",
     "@playwright/test": "^1.55.1",
     "@testing-library/dom": "^10.4.1",

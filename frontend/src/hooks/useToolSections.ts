@@ -24,7 +24,7 @@ export interface ToolSection {
 };
 
 export function useToolSections(
-  filteredTools: Array<{ item: [string /* FIX ME: Should be ToolId */, ToolRegistryEntry]; matchedText?: string }>,
+  filteredTools: { item: [string /* FIX ME: Should be ToolId */, ToolRegistryEntry]; matchedText?: string }[],
   searchQuery?: string
 ) {
   const { t } = useTranslation();
@@ -102,7 +102,7 @@ export function useToolSections(
     const subMap = {} as SubcategoryIdMap;
     const seen = new Set<string /* FIX ME: Should be ToolId */>();
     filteredTools.forEach(({ item: [id, tool] }) => {
-      const toolId = id as string /* FIX ME: Should be ToolId */;
+      const toolId = id /* FIX ME: Should be ToolId */;
       if (seen.has(toolId)) return;
       seen.add(toolId);
       const sub = tool.subcategoryId;
@@ -113,7 +113,7 @@ export function useToolSections(
 
     // If a search query is present, always order subcategories by first occurrence in
     // the ranked filteredTools list so the top-ranked tools' subcategory appears first.
-    if (searchQuery && searchQuery.trim()) {
+    if (searchQuery?.trim()) {
       const order: SubcategoryId[] = [];
       filteredTools.forEach(({ item: [_, tool] }) => {
         const sc = tool.subcategoryId;

@@ -13,9 +13,9 @@ export const renderToolButtons = (
   subcategory: SubcategoryGroup,
   selectedToolKey: string | null,
   onSelect: (id: string) => void,
-  showSubcategoryHeader: boolean = true,
-  disableNavigation: boolean = false,
-  searchResults?: Array<{ item: [string, any]; matchedText?: string }>
+  showSubcategoryHeader = true,
+  disableNavigation = false,
+  searchResults?: { item: [string, any]; matchedText?: string }[]
 ) => {
   // Create a map of matched text for quick lookup
   const matchedTextMap = new Map<string, string>();

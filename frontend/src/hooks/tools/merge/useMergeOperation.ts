@@ -10,7 +10,7 @@ const buildFormData = (parameters: MergeParameters, files: File[]): FormData => 
     formData.append("fileInput", file);
   });
   // Provide stable client file IDs (align with files order)
-  const clientIds: string[] = files.map((f: any) => String((f as any).fileId || f.name));
+  const clientIds: string[] = files.map((f: any) => String((f).fileId || f.name));
   formData.append('clientFileIds', JSON.stringify(clientIds));
   formData.append("sortType", "orderProvided"); // Always use orderProvided since UI handles sorting
   formData.append("removeCertSign", parameters.removeDigitalSignature.toString());
