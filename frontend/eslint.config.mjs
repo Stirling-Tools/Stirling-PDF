@@ -35,7 +35,7 @@ export default defineConfig(
     files: ['**/*.{ts,tsx}'],
     extends: [...tseslint.configs.recommended],
     rules: {
-      "no-undef": "off", // Temporarily disabled until codebase conformant
+      "no-undef": "warn", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-empty-object-type": [
         "error",
         {
@@ -43,8 +43,8 @@ export default defineConfig(
           allowInterfaces: 'with-single-extends',
         },
       ],
-      "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/no-require-imports": "off", // Temporarily disabled until codebase conformant
+      "@typescript-eslint/no-explicit-any": "warn", // Temporarily disabled until codebase conformant
+      "@typescript-eslint/no-require-imports": "warn", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
@@ -92,10 +92,10 @@ export default defineConfig(
     rules: {
       'react/react-in-jsx-scope': 'off', // Not needed with React 17+
 
-      'react-hooks/exhaustive-deps': 'off', // Temporarily disabled until codebase conformant
+      'react-hooks/exhaustive-deps': 'warn',
       'react-hooks/rules-of-hooks': 'warn',
-      '@typescript-eslint/no-empty-function': 'off',
 
+      '@typescript-eslint/no-empty-function': 'off', // Temporarily disabled until codebase conformant
       '@typescript-eslint/no-unsafe-member-access': 'off', // Temporarily disabled until codebase conformant
       '@typescript-eslint/no-explicit-any': 'off', // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-inferrable-types": "off", // Temporarily disabled until codebase conformant
@@ -127,9 +127,9 @@ export default defineConfig(
       '@typescript-eslint/no-redundant-type-constituents': 'off', // Temporarily disabled until codebase conformant
 
       'react/no-children-prop': 'warn', // Children should be passed as actual children, not via the children prop
-      'react/prop-types': 'off', // We use TypeScript's types for props instead
-      'react/display-name': 'off', // Temporarily disabled until codebase conformant
-      'react/no-unescaped-entities': 'off', // Temporarily disabled until codebase conformant
+      'react/prop-types': 'warn', // We use TypeScript's types for props instead
+      'react/display-name': 'warn', // Components should have display names for easier debugging
+      'react/no-unescaped-entities': 'warn', // Prevents issues with JSX parsing certain characters
     },
   },
   {
