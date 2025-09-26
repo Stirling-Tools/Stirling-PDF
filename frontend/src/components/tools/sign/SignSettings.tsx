@@ -85,7 +85,7 @@ const SignSettings = ({
     });
     if (data) {
       // Clear image data when canvas is used
-      setImageSignatureData(prev => prev ? null : prev);
+      setImageSignatureData(null);
     }
   };
 

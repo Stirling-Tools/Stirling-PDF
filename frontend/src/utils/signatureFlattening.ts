@@ -25,7 +25,12 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
     if (signatureApiRef?.current) {
       console.log('Extracting annotations from all pages...');
 
-      for (let pageIndex = 0; pageIndex < 10; pageIndex++) {
+      // Dynamically check all pages until we encounter consecutive errors
+      let pageIndex = 0;
+      let consecutiveErrors = 0;
+      const maxConsecutiveErrors = 3; // Stop after 3 consecutive page access failures
+
+      while (consecutiveErrors < maxConsecutiveErrors) {
         try {
           const pageAnnotations = await signatureApiRef.current.getPageAnnotations(pageIndex);
           if (pageAnnotations && pageAnnotations.length > 0) {
@@ -55,9 +60,15 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
               console.log(`Found ${sessionAnnotations.length} session annotations on page ${pageIndex + 1} (out of ${pageAnnotations.length} total)`);
             }
           }
-        } catch {
-          if (pageIndex > 2) break; // Stop after checking first few pages
+
+          // Reset consecutive error count on successful page access
+          consecutiveErrors = 0;
+        } catch (pageError) {
+          consecutiveErrors++;
+          console.warn(`Error extracting annotations from page ${pageIndex + 1} (error ${consecutiveErrors}/${maxConsecutiveErrors}):`, pageError);
         }
+
+        pageIndex++;
       }
     }
 

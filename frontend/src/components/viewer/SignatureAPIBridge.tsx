@@ -22,12 +22,12 @@ export interface SignatureAPIBridgeProps {}
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgeProps>((_props, ref) => {
   const { provides: annotationApi } = useAnnotationCapability();
-  const { signatureConfig, storeImageData } = useSignature();
+  const { signatureConfig, storeImageData, isPlacementMode } = useSignature();
 
 
-  // Enable keyboard deletion of selected annotations
+  // Enable keyboard deletion of selected annotations - only when in signature placement mode
   useEffect(() => {
-    if (!annotationApi) return;
+    if (!annotationApi || !isPlacementMode) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Delete' || event.key === 'Backspace') {
@@ -68,7 +68,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [annotationApi, storeImageData]);
+  }, [annotationApi, storeImageData, isPlacementMode]);
 
   useImperativeHandle(ref, () => ({
     addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => {
