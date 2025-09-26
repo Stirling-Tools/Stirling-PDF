@@ -229,7 +229,7 @@ public class MergeController {
             if (!invalidIndexes.isEmpty()) {
                 // Parse client file IDs (always present from frontend)
                 String[] clientIds = parseClientFileIds(request.getClientFileIds());
-                
+
                 // Map invalid indexes to client IDs
                 List<String> errorFileIds = new ArrayList<>();
                 for (Integer index : invalidIndexes) {
@@ -237,12 +237,12 @@ public class MergeController {
                         errorFileIds.add(clientIds[index]);
                     }
                 }
-                
-                String payload = String.format(
-                    "{\"errorFileIds\":%s,\"message\":\"Some of the selected files can't be merged\"}",
-                    errorFileIds.toString()
-                );
-                
+
+                String payload =
+                        String.format(
+                                "{\"errorFileIds\":%s,\"message\":\"Some of the selected files can't be merged\"}",
+                                errorFileIds.toString());
+
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                         .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                         .body(payload.getBytes(StandardCharsets.UTF_8));
