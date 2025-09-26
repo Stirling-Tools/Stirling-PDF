@@ -555,5 +555,8 @@ export const createFileActions = (dispatch: React.Dispatch<FileContextAction>) =
   setHasUnsavedChanges: (hasChanges: boolean) => dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } }),
   pinFile: (fileId: FileId) => dispatch({ type: 'PIN_FILE', payload: { fileId } }),
   unpinFile: (fileId: FileId) => dispatch({ type: 'UNPIN_FILE', payload: { fileId } }),
-  resetContext: () => dispatch({ type: 'RESET_CONTEXT' })
+  resetContext: () => dispatch({ type: 'RESET_CONTEXT' }),
+  markFileError: (fileId: FileId) => dispatch({ type: 'MARK_FILE_ERROR', payload: { fileId } }),
+  clearFileError: (fileId: FileId) => dispatch({ type: 'CLEAR_FILE_ERROR', payload: { fileId } }),
+  clearAllFileErrors: () => dispatch({ type: 'CLEAR_ALL_FILE_ERRORS' })
 });

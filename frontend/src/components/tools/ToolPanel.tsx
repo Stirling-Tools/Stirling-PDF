@@ -72,6 +72,7 @@ export default function ToolPanel() {
               <SearchResults
                 filteredTools={filteredTools}
                 onSelect={handleToolSelect}
+                searchQuery={searchQuery}
               />
           </div>
         ) : leftPanelView === 'toolPicker' ? (

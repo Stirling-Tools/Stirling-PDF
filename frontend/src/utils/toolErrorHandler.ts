@@ -47,7 +47,7 @@ export const extractErrorMessage = (error: unknown): string => {
   if (hasMessage(error)) {
     return typeof error === 'string' ? error : error.message;
   }
-  return 'Operation failed';
+  return 'There was an error processing your request.';
 };
 
 /**

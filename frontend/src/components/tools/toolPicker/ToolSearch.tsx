@@ -5,6 +5,7 @@ import LocalIcon from '../../shared/LocalIcon';
 import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { TextInput } from "../../shared/TextInput";
 import "./ToolPicker.css";
+import { rankByFuzzy, idToWords } from "../../../utils/fuzzySearch";
 
 interface ToolSearchProps {
   value: string;
@@ -38,15 +39,14 @@ const ToolSearch = ({
 
   const filteredTools = useMemo(() => {
     if (!value.trim()) return [];
-    return Object.entries(toolRegistry)
-      .filter(([id, tool]) => {
-        if (mode === "dropdown" && id === selectedToolKey) return false;
-        return (
-          tool.name.toLowerCase().includes(value.toLowerCase()) || tool.description.toLowerCase().includes(value.toLowerCase())
-        );
-      })
-      .slice(0, 6)
-      .map(([id, tool]) => ({ id, tool }));
+    const entries = Object.entries(toolRegistry).filter(([id]) => !(mode === "dropdown" && id === selectedToolKey));
+    const ranked = rankByFuzzy(entries, value, [
+      ([key]) => idToWords(key),
+      ([, v]) => v.name,
+      ([, v]) => v.description,
+      ([, v]) => v.synonyms?.join(' ') || '',
+    ]).slice(0, 6);
+    return ranked.map(({ item: [id, tool] }) => ({ id, tool }));
   }, [value, toolRegistry, mode, selectedToolKey]);
 
   const handleSearchChange = (searchValue: string) => {
