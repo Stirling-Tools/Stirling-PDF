@@ -455,6 +455,8 @@ public class FormUtils {
                 return;
             }
 
+            copyChoiceCharacteristics(sourceField, newComboBox);
+
             if (sourceField.getOptions() != null) {
                 newComboBox.setOptions(sourceField.getOptions());
             }
@@ -504,6 +506,8 @@ public class FormUtils {
                 return;
             }
 
+            copyChoiceCharacteristics(sourceField, newListBox);
+
             if (sourceField.getOptions() != null) {
                 newListBox.setOptions(sourceField.getOptions());
             }
@@ -520,16 +524,16 @@ public class FormUtils {
     }
 
     private void createSimpleSignatureField(
-            PDAcroForm newAcroForm,
-            PDPage destinationPage,
-            List<PDAnnotation> destinationAnnotations,
-            PDSignatureField sourceField,
-            PDAnnotationWidget sourceWidget,
-            float offsetX,
-            float offsetY,
-            float scale,
-            int pageIndex,
-            Map<String, Integer> fieldNameCounters) {
+        PDAcroForm newAcroForm,
+        PDPage destinationPage,
+        List<PDAnnotation> destinationAnnotations,
+        PDSignatureField sourceField,
+        PDAnnotationWidget sourceWidget,
+        float offsetX,
+        float offsetY,
+        float scale,
+        int pageIndex,
+        Map<String, Integer> fieldNameCounters) {
 
         try {
             PDSignatureField newSignatureField = new PDSignatureField(newAcroForm);
@@ -549,6 +553,10 @@ public class FormUtils {
                             pageIndex,
                             fieldNameCounters);
 
+            if (!initialized) {
+                return;
+            }
+
         } catch (Exception e) {
             log.warn(
                     "Failed to create signature field '{}': {}",
@@ -559,16 +567,16 @@ public class FormUtils {
     }
 
     private void createSimplePushButtonField(
-            PDAcroForm newAcroForm,
-            PDPage destinationPage,
-            List<PDAnnotation> destinationAnnotations,
-            PDPushButton sourceField,
-            PDAnnotationWidget sourceWidget,
-            float offsetX,
-            float offsetY,
-            float scale,
-            int pageIndex,
-            Map<String, Integer> fieldNameCounters) {
+        PDAcroForm newAcroForm,
+        PDPage destinationPage,
+        List<PDAnnotation> destinationAnnotations,
+        PDPushButton sourceField,
+        PDAnnotationWidget sourceWidget,
+        float offsetX,
+        float offsetY,
+        float scale,
+        int pageIndex,
+        Map<String, Integer> fieldNameCounters) {
 
         try {
             PDPushButton newPushButton = new PDPushButton(newAcroForm);
@@ -587,6 +595,10 @@ public class FormUtils {
                             scale,
                             pageIndex,
                             fieldNameCounters);
+
+            if (!initialized) {
+                return;
+            }
 
         } catch (Exception e) {
             log.warn(
@@ -731,13 +743,41 @@ public class FormUtils {
         return Collections.unmodifiableList(fields);
     }
 
+    private void copyChoiceCharacteristics(PDChoice sourceField, PDChoice targetField) {
+        if (sourceField == null || targetField == null) {
+            return;
+        }
+
+        try {
+            int flags = sourceField.getCOSObject().getInt(COSName.FF);
+            targetField.getCOSObject().setInt(COSName.FF, flags);
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to copy choice field flags for '{}': {}",
+                    sourceField.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+
+        if (sourceField instanceof PDListBox sourceList
+                && targetField instanceof PDListBox targetList) {
+            try {
+                targetList.setMultiSelect(sourceList.isMultiSelect());
+            } catch (Exception e) {
+                log.debug(
+                        "Failed to sync list box multi-select flag for '{}': {}",
+                        sourceField.getFullyQualifiedName(),
+                        e.getMessage());
+            }
+        }
+    }
+
     public void applyFieldValues(PDDocument document, Map<String, ?> values, boolean flatten)
             throws IOException {
         applyFieldValues(document, values, flatten, false);
     }
 
     public void applyFieldValues(
-            PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
+        PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
             throws IOException {
         if (document == null || values == null || values.isEmpty()) {
             return;
