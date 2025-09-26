@@ -7,6 +7,7 @@ import ToolSearch from './toolPicker/ToolSearch';
 import { useSidebarContext } from "../../contexts/SidebarContext";
 import rainbowStyles from '../../styles/rainbow.module.css';
 import { ScrollArea } from '@mantine/core';
+import { ToolId } from '../../types/toolId';
 
 // No props needed - component uses context
 
@@ -71,7 +72,7 @@ export default function ToolPanel() {
           <div className="flex-1 flex flex-col overflow-y-auto">
               <SearchResults
                 filteredTools={filteredTools}
-                onSelect={handleToolSelect}
+                onSelect={(id) => handleToolSelect(id as ToolId)}
                 searchQuery={searchQuery}
               />
           </div>
@@ -80,7 +81,7 @@ export default function ToolPanel() {
           <div className="flex-1 flex flex-col overflow-auto">
             <ToolPicker
               selectedToolKey={selectedToolKey}
-              onSelect={handleToolSelect}
+              onSelect={(id) => handleToolSelect(id as ToolId)}
               filteredTools={filteredTools}
               isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
             />

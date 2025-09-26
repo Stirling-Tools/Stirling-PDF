@@ -22,6 +22,7 @@ import Merge from '../tools/Merge';
 import Repair from "../tools/Repair";
 import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
+import PageLayout from "../tools/PageLayout";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
 import RemoveImage from "../tools/RemoveImage";
@@ -57,6 +58,7 @@ import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation"
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { signOperationConfig } from "../hooks/tools/sign/useSignOperation";
 import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
+import { removeAnnotationsOperationConfig } from "../hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
 import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
@@ -88,6 +90,9 @@ import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/Sca
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import SignSettings from "../components/tools/sign/SignSettings";
 import CropSettings from "../components/tools/crop/CropSettings";
+import RemoveAnnotations from "../tools/RemoveAnnotations";
+import RemoveAnnotationsSettings from "../components/tools/removeAnnotations/RemoveAnnotationsSettings";
+import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings"
 import ExtractImages from "../tools/ExtractImages";
 import ExtractImagesSettings from "../components/tools/extractImages/ExtractImagesSettings";
 import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
@@ -181,8 +186,32 @@ export function useFlatToolRegistry(): ToolRegistry {
 
   return useMemo(() => {
     const allTools: ToolRegistry = {
+      // Recommended Tools in order
+      multiTool: {
+        icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.multiTool.title", "Multi-Tool"),
+        component: null,
+        workbench: "pageEditor",
+        description: t("home.multiTool.desc", "Use multiple tools on a single PDF document"),
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: -1,
+        synonyms: getSynonyms(t, "multiTool"),
+      },
+      merge: {
+        icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.merge.title", "Merge"),
+        component: Merge,
+        description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: -1,
+        endpoints: ["merge-pdfs"],
+        operationConfig: mergeOperationConfig,
+        settingsComponent: MergeSettings,
+        synonyms: getSynonyms(t, "merge")
+      },
       // Signing
-
       certSign: {
         icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.certSign.title", "Certificate Sign"),
@@ -286,18 +315,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         operationConfig: unlockPdfFormsOperationConfig,
         settingsComponent: UnlockPdfFormsSettings,
         synonyms: getSynonyms(t, "unlockPDFForms"),
-      },
-      manageCertificates: {
-        icon: <LocalIcon icon="license-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.manageCertificates.title", "Manage Certificates"),
-        component: null,
-        description: t(
-          "home.manageCertificates.desc",
-          "Import, export, or delete digital certificate files used for signing PDFs."
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
-        synonyms: getSynonyms(t, "manageCertificates"),
       },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
@@ -437,11 +454,13 @@ export function useFlatToolRegistry(): ToolRegistry {
       pageLayout: {
         icon: <LocalIcon icon="dashboard-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.pageLayout.title", "Multi-Page Layout"),
-        component: null,
-
+        component: PageLayout,
         description: t("home.pageLayout.desc", "Merge multiple pages of a PDF document into a single page"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["multi-page-layout"],
+        settingsComponent: PageLayoutSettings,
         synonyms: getSynonyms(t, "pageLayout")
       },
       bookletImposition: {
@@ -534,10 +553,13 @@ export function useFlatToolRegistry(): ToolRegistry {
       removeAnnotations: {
         icon: <LocalIcon icon="thread-unread-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeAnnotations.title", "Remove Annotations"),
-        component: null,
+        component: RemoveAnnotations,
         description: t("home.removeAnnotations.desc", "Remove annotations and comments from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        maxFiles: -1,
+        operationConfig: removeAnnotationsOperationConfig,
+        settingsComponent: RemoveAnnotationsSettings,
         synonyms: getSynonyms(t, "removeAnnotations")
       },
       removeImage: {
@@ -606,24 +628,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.AUTOMATION,
         synonyms: getSynonyms(t, "autoRename"),
-      },
-      autoSplitPDF: {
-        icon: <LocalIcon icon="split-scene-right-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.autoSplitPDF.title", "Auto Split Pages"),
-        component: null,
-        description: t("home.autoSplitPDF.desc", "Automatically split PDF pages based on content detection"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.AUTOMATION,
-        synonyms: getSynonyms(t, "autoSplitPDF"),
-      },
-      autoSizeSplitPDF: {
-        icon: <LocalIcon icon="content-cut-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.autoSizeSplitPDF.title", "Auto Split by Size/Count"),
-        component: null,
-        description: t("home.autoSizeSplitPDF.desc", "Automatically split PDFs by file size or page count"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.AUTOMATION,
-        synonyms: getSynonyms(t, "autoSizeSplitPDF"),
       },
 
       // Advanced Formatting
@@ -703,14 +707,14 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         synonyms: getSynonyms(t, "editTableOfContents"),
       },
-      fakeScan: {
+      scannerEffect: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.fakeScan.title", "Scanner Effect"),
+        name: t("home.scannerEffect.title", "Scanner Effect"),
         component: null,
-        description: t("home.fakeScan.desc", "Create a PDF that looks like it was scanned"),
+        description: t("home.scannerEffect.desc", "Create a PDF that looks like it was scanned"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        synonyms: getSynonyms(t, "fakeScan"),
+        synonyms: getSynonyms(t, "scannerEffect"),
       },
 
       // Developer Tools
@@ -817,30 +821,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         settingsComponent: ConvertSettings,
         synonyms: getSynonyms(t, "convert")
       },
-      merge: {
-        icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.merge.title", "Merge"),
-        component: Merge,
-        description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
-        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
-        subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: -1,
-        endpoints: ["merge-pdfs"],
-        operationConfig: mergeOperationConfig,
-        settingsComponent: MergeSettings,
-        synonyms: getSynonyms(t, "merge")
-      },
-      multiTool: {
-        icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.multiTool.title", "Multi-Tool"),
-        component: null,
-        workbench: "pageEditor",
-        description: t("home.multiTool.desc", "Use multiple tools on a single PDF document"),
-        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
-        subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: -1,
-        synonyms: getSynonyms(t, "multiTool"),
-      },
+
       ocr: {
         icon: <LocalIcon icon="quick-reference-all-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.ocr.title", "OCR"),

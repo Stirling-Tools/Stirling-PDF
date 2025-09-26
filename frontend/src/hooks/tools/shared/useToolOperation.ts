@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect } from 'react';
-import axios from '../../../services/http';
+import apiClient from '../../../services/apiClient';
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from '../../../contexts/FileContext';
 import { useToolState, type ProcessingProgress } from './useToolState';
@@ -177,8 +177,8 @@ export const useToolOperation = <TParams>(
         for (const f of zeroByteFiles) {
           (fileActions.markFileError as any)((f as any).fileId);
         }
-      } catch (e) { 
-        console.log('markFileError', e); 
+      } catch (e) {
+        console.log('markFileError', e);
       }
     }
     const validFiles = selectedFiles.filter(file => (file as any)?.size > 0);
@@ -243,7 +243,7 @@ export const useToolOperation = <TParams>(
           const formData = config.buildFormData(params, filesForAPI);
           const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
 
-          const response = await axios.post(endpoint, formData, { responseType: 'blob' });
+          const response = await apiClient.post(endpoint, formData, { responseType: 'blob' });
 
           // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
           if (config.responseHandler) {

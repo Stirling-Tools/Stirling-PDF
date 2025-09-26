@@ -1,4 +1,10 @@
 {
+  "unsavedChanges": "You have unsaved changes to your PDF. What would you like to do?",
+  "unsavedChangesTitle": "Unsaved Changes",
+  "keepWorking": "Keep Working",
+  "discardChanges": "Discard Changes",
+  "applyAndContinue": "Apply & Continue",
+  "exportAndContinue": "Export & Continue",
   "language": {
     "direction": "ltr"
   },
@@ -579,9 +585,9 @@
       "title": "API Documentation",
       "desc": "View API documentation and test endpoints"
     },
-    "fakeScan": {
+    "scannerEffect": {
       "tags": "scan,simulate,create",
-      "title": "Fake Scan",
+      "title": "Scanner Effect",
       "desc": "Create a PDF that looks like it was scanned"
     },
     "editTableOfContents": {
@@ -1887,7 +1893,17 @@
     "tags": "comments,highlight,notes,markup,remove",
     "title": "Remove Annotations",
     "header": "Remove Annotations",
-    "submit": "Remove"
+    "submit": "Remove",
+    "settings": {
+      "title": "Settings"
+    },
+    "info": {
+      "title": "About Remove Annotations",
+      "description": "This tool will remove all annotations (comments, highlights, notes, etc.) from your PDF documents."
+    },
+    "error": {
+      "failed": "An error occurred while removing annotations from the PDF."
+    }
   },
   "compare": {
     "tags": "differentiate,contrast,changes,analysis",

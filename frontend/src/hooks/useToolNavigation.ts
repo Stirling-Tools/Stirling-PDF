@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { ToolRegistryEntry, getToolUrlPath } from '../data/toolsTaxonomy';
 import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
 import { handleUnlessSpecialClick } from '../utils/clickHandlers';
+import { ToolId } from '../types/toolId';
 
 export interface ToolNavigationProps {
   /** Full URL for the tool (for href attribute) */
@@ -34,7 +35,7 @@ export function useToolNavigation(): {
         }
 
         // Use SPA navigation for internal tools
-        handleToolSelect(toolId);
+        handleToolSelect(toolId as ToolId);
       });
     };
 

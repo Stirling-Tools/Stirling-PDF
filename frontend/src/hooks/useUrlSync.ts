@@ -14,7 +14,7 @@ import { withBasePath } from '../constants/app';
  */
 export function useNavigationUrlSync(
   selectedTool: ToolId | null,
-  handleToolSelect: (toolId: string) => void,
+  handleToolSelect: (toolId: ToolId) => void,
   clearToolSelection: () => void,
   registry: ToolRegistry,
   enableSync: boolean = true
