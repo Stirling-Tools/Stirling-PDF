@@ -75,8 +75,7 @@ import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/u
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import CropSettings from "../components/tools/crop/CropSettings";
-import PageLayoutSettings from "src/components/tools/pageLayout/PageLayoutSettings";
-import Automate from "src/tools/Automate";
+import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings"
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -559,7 +558,7 @@ export function useFlatToolRegistry(): ToolRegistry {
       automate: {
         icon: <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.automate.title", "Automate"),
-        component: Automate,
+        component: React.lazy(() => import("../tools/Automate")),
         description: t(
           "home.automate.desc",
           "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
