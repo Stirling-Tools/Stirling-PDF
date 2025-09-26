@@ -67,6 +67,7 @@ import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
 import RotateSettings from "../components/tools/rotate/RotateSettings";
 import Redact from "../tools/Redact";
+import FakeScan from "../tools/FakeScan";
 import AdjustPageScale from "../tools/AdjustPageScale";
 import { ToolId } from "../types/toolId";
 import MergeSettings from '../components/tools/merge/MergeSettings';
@@ -669,10 +670,13 @@ export function useFlatToolRegistry(): ToolRegistry {
       fakeScan: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.fakeScan.title", "Scanner Effect"),
-        component: null,
+        component: FakeScan,
         description: t("home.fakeScan.desc", "Create a PDF that looks like it was scanned"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["scanner-effect"],
+        settingsComponent: React.lazy(() => import("../components/tools/fakeScan/FakeScanSettings")),
         synonyms: getSynonyms(t, "fakeScan"),
       },
 

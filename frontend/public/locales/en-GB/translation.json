@@ -582,7 +582,8 @@
     "fakeScan": {
       "tags": "scan,simulate,create",
       "title": "Fake Scan",
-      "desc": "Create a PDF that looks like it was scanned"
+      "desc": "Create a PDF that looks like it was scanned",
+      "noPreview": "No preview available, select a PDF to preview fake scan"
     },
     "editTableOfContents": {
       "tags": "bookmarks,contents,edit",

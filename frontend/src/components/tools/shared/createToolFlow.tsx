@@ -56,6 +56,7 @@ export interface ToolFlowConfig {
   steps: MiddleStepConfig[];
   executeButton?: ExecuteButtonConfig;
   review: ReviewStepConfig;
+  preview?: React.ReactNode;
   forceStepNumbers?: boolean;
 }
 
@@ -89,6 +90,9 @@ export function createToolFlow(config: ToolFlowConfig) {
             tooltip: stepConfig.tooltip
           }, stepConfig.content)
         )}
+
+        {/* Preview */}
+        {config.preview}
 
         {/* Execute Button */}
         {config.executeButton && config.executeButton.isVisible !== false && (
