@@ -14,7 +14,7 @@ interface DragDropGridProps<T extends DragDropItem> {
   selectionMode: boolean;
   isAnimating: boolean;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
-  renderItem: (item: T, index: number, refs: React.RefObject<Map<string, HTMLDivElement>>) => React.ReactNode;
+  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>) => React.ReactNode;
   renderSplitMarker?: (item: T, index: number) => React.ReactNode;
 }
 
