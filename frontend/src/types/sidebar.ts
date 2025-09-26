@@ -5,8 +5,8 @@ export interface SidebarState {
 }
 
 export interface SidebarRefs {
-  quickAccessRef: React.MutableRefObject<HTMLDivElement | null>;
-  toolPanelRef: React.MutableRefObject<HTMLDivElement | null>;
+  quickAccessRef: React.RefObject<HTMLDivElement | null>;
+  toolPanelRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export interface SidebarInfo {
