@@ -156,7 +156,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
             if (pageIndex < pages.length) {
               const page = pages[pageIndex];
-              const { width: _pageWidth, height: pageHeight } = page.getSize();
+              const { height: pageHeight } = page.getSize();
 
               for (const annotation of annotations) {
                 try {
@@ -271,12 +271,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
           uint8View.set(flattenedPdfBytes);
           signedFile = new File([arrayBuffer], currentFile.name, { type: 'application/pdf' });
 
-          // Verify the modified PDF can be loaded
-          try {
-            const _verifyDoc = await PDFDocument.load(flattenedPdfBytes);
-          } catch (verifyError) {
-            console.error('❌ Verification: Modified PDF cannot be loaded:', verifyError);
-          }
         } catch (renderError) {
           console.error('Failed to manually render annotations:', renderError);
           console.warn('Signatures may only show as annotations');
