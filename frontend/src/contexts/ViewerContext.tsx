@@ -210,7 +210,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
 
   // Get current navigation state to check if we're in sign mode
-  const { workbench } = useNavigation();
+  useNavigation();
 
   // Bridge registry - bridges register their state and APIs here
   const bridgeRefs = useRef({

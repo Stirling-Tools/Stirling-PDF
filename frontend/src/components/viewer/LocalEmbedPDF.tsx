@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
@@ -22,7 +22,7 @@ import { Rotation } from '@embedpdf/models';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
-import { AnnotationLayer, AnnotationPluginPackage, useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
+import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
 import { CustomSearchLayer } from './CustomSearchLayer';
 import { ZoomAPIBridge } from './ZoomAPIBridge';
@@ -50,7 +50,7 @@ interface LocalEmbedPDFProps {
 
 export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [annotations, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
+  const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
   // Convert File to URL if needed
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, forwardRef, useEffect } from 'react';
+import { useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, PdfStandardFont, PdfTextAlignment, PdfVerticalAlignment, uuidV4 } from '@embedpdf/models';
 import { SignParameters } from '../../hooks/tools/sign/useSignParameters';
@@ -17,9 +17,10 @@ export interface SignatureAPI {
   getPageAnnotations: (pageIndex: number) => Promise<any[]>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SignatureAPIBridgeProps {}
 
-export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgeProps>((props, ref) => {
+export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgeProps>((_props, ref) => {
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig, storeImageData } = useSignature();
 

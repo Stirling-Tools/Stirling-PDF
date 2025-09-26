@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from 'react';
 import { SignParameters } from '../hooks/tools/sign/useSignParameters';
 import { SignatureAPI } from '../components/viewer/SignatureAPIBridge';
 import { HistoryAPI } from '../components/viewer/HistoryAPIBridge';

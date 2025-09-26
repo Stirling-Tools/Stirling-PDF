@@ -55,7 +55,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
               console.log(`Found ${sessionAnnotations.length} session annotations on page ${pageIndex + 1} (out of ${pageAnnotations.length} total)`);
             }
           }
-        } catch (e) {
+        } catch {
           if (pageIndex > 2) break; // Stop after checking first few pages
         }
       }
@@ -93,7 +93,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       console.log('Attempting to load PDF with PDF-lib...');
 
       // Convert ArrayBuffer to File
-      let blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
+      const blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
 
       // Get the current file - try from originalFile first, then from all files
       let currentFile = originalFile;
@@ -130,7 +130,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
               throwOnInvalidObject: false
             });
             console.log('✓ PDF loaded successfully with standard options');
-          } catch (loadError) {
+          } catch {
             console.warn('Failed to load with standard options, trying createProxy...');
             try {
               // Create a fresh PDF and copy pages instead of modifying

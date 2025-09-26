@@ -21,7 +21,7 @@ import { Rotation } from '@embedpdf/models';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
-import { AnnotationLayer, AnnotationPluginPackage, useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
+import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
 
 import { CustomSearchLayer } from './CustomSearchLayer';

@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, forwardRef, useEffect } from 'react';
+import { useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useHistoryCapability } from '@embedpdf/plugin-history/react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useSignature } from '../../contexts/SignatureContext';
@@ -11,9 +11,10 @@ export interface HistoryAPI {
   canRedo: () => boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface HistoryAPIBridgeProps {}
 
-export const HistoryAPIBridge = forwardRef<HistoryAPI, HistoryAPIBridgeProps>((props, ref) => {
+export const HistoryAPIBridge = forwardRef<HistoryAPI, HistoryAPIBridgeProps>(function HistoryAPIBridge(_props, ref) {
   const { provides: historyApi } = useHistoryCapability();
   const { provides: annotationApi } = useAnnotationCapability();
   const { getImageData, storeImageData } = useSignature();
@@ -38,7 +39,7 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI, HistoryAPIBridgeProps>((p
       if (event.type === 'create' && event.committed) {
         // Check if this is a STAMP annotation (signature) that might need image data restoration
         if (annotation && annotation.type === 13 && annotation.id) {
-          const storedImageData = getImageData(annotation.id);
+          getImageData(annotation.id);
 
           // Delay the check to allow the annotation to be fully created
           setTimeout(() => {

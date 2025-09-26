@@ -8,19 +8,14 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 import SignSettings from "../components/tools/sign/SignSettings";
 import { useNavigation } from "../contexts/NavigationContext";
 import { useSignature } from "../contexts/SignatureContext";
-import { useFileActions, useFileContext } from "../contexts/FileContext";
+import { useFileContext } from "../contexts/FileContext";
 import { useViewer } from "../contexts/ViewerContext";
-import { generateThumbnailWithMetadata } from "../utils/thumbnailUtils";
-import { createNewStirlingFileStub, createStirlingFile, StirlingFileStub, StirlingFile, FileId, extractFiles } from "../types/fileContext";
-import { createProcessedFile } from "../contexts/file/fileActions";
-import { PDFDocument, PDFName, PDFDict, PDFArray, rgb } from 'pdf-lib';
 import { flattenSignatures } from "../utils/signatureFlattening";
 
 const Sign = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const { setWorkbench } = useNavigation();
-  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, isPlacementMode, signatureApiRef, getImageData, setSignaturesApplied } = useSignature();
-  const { actions } = useFileActions();
+  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, signatureApiRef, getImageData, setSignaturesApplied } = useSignature();
   const { consumeFiles, selectors } = useFileContext();
   const { exportActions } = useViewer();
 

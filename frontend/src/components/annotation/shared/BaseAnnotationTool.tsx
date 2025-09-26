@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Stack, Tabs, Alert, Text } from '@mantine/core';
+import { Stack, Alert, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { DrawingControls } from './DrawingControls';
 import { ColorPicker } from './ColorPicker';
@@ -29,10 +29,8 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
   const { t } = useTranslation();
   const {
     activateSignaturePlacementMode,
-    deactivateDrawMode,
     undo,
-    redo,
-    isPlacementMode
+    redo
   } = usePDFAnnotation();
 
   const [selectedColor, setSelectedColor] = useState('#000000');

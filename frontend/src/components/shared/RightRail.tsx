@@ -17,11 +17,6 @@ import { ViewerContext } from '../../contexts/ViewerContext';
 import { useSignature } from '../../contexts/SignatureContext';
 
 import { parseSelection } from '../../utils/bulkselection/parseSelection';
-import { flattenSignatures } from '../../utils/signatureFlattening';
-import { PDFDocument, rgb } from 'pdf-lib';
-import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
-import { createProcessedFile } from '../../contexts/file/fileActions';
-import { createNewStirlingFileStub, createStirlingFile } from '../../types/fileContext';
 
 
 export default function RightRail() {

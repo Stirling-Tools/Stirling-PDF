@@ -12,7 +12,7 @@ export const ImageTool: React.FC<ImageToolProps> = ({
   onImageChange,
   disabled = false
 }) => {
-  const [imageData, setImageData] = useState<string | null>(null);
+  const [, setImageData] = useState<string | null>(null);
 
   const handleImageUpload = async (file: File | null) => {
     if (file && !disabled) {

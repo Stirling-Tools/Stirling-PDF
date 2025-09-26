@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from "react-i18next";
-import { Stack, Button, Text, Alert, Tabs, Group, Paper } from '@mantine/core';
+import { Stack, Button, Text, Alert, Tabs } from '@mantine/core';
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "../shared/SuggestedToolsSection";
 
@@ -28,10 +28,8 @@ const SignSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
-  onActivateDrawMode,
   onActivateSignaturePlacement,
   onDeactivateSignature,
-  onUpdateDrawSettings,
   onUndo,
   onRedo,
   onSave

@@ -41,7 +41,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [isModalDrawing, setIsModalDrawing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [, setSignatureData] = useState<string | null>(null);
 
   // Drawing functions for main canvas
   const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
