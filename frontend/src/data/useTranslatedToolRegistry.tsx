@@ -284,18 +284,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         settingsComponent: UnlockPdfFormsSettings,
         synonyms: getSynonyms(t, "unlockPDFForms"),
       },
-      manageCertificates: {
-        icon: <LocalIcon icon="license-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.manageCertificates.title", "Manage Certificates"),
-        component: null,
-        description: t(
-          "home.manageCertificates.desc",
-          "Import, export, or delete digital certificate files used for signing PDFs."
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
-        synonyms: getSynonyms(t, "manageCertificates"),
-      },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.changePermissions.title", "Change Permissions"),
@@ -606,24 +594,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.AUTOMATION,
         synonyms: getSynonyms(t, "autoRename"),
       },
-      autoSplitPDF: {
-        icon: <LocalIcon icon="split-scene-right-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.autoSplitPDF.title", "Auto Split Pages"),
-        component: null,
-        description: t("home.autoSplitPDF.desc", "Automatically split PDF pages based on content detection"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.AUTOMATION,
-        synonyms: getSynonyms(t, "autoSplitPDF"),
-      },
-      autoSizeSplitPDF: {
-        icon: <LocalIcon icon="content-cut-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.autoSizeSplitPDF.title", "Auto Split by Size/Count"),
-        component: null,
-        description: t("home.autoSizeSplitPDF.desc", "Automatically split PDFs by file size or page count"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.AUTOMATION,
-        synonyms: getSynonyms(t, "autoSizeSplitPDF"),
-      },
 
       // Advanced Formatting
 
@@ -702,14 +672,14 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         synonyms: getSynonyms(t, "editTableOfContents"),
       },
-      fakeScan: {
+      scannerEffect: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.fakeScan.title", "Scanner Effect"),
+        name: t("home.scannerEffect.title", "Scanner Effect"),
         component: null,
-        description: t("home.fakeScan.desc", "Create a PDF that looks like it was scanned"),
+        description: t("home.scannerEffect.desc", "Create a PDF that looks like it was scanned"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        synonyms: getSynonyms(t, "fakeScan"),
+        synonyms: getSynonyms(t, "scannerEffect"),
       },
 
       // Developer Tools
