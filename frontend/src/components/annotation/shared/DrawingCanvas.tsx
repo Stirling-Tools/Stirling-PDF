@@ -11,6 +11,7 @@ interface DrawingCanvasProps {
   onPenSizeChange: (size: number) => void;
   onPenSizeInputChange: (input: string) => void;
   onSignatureDataChange: (data: string | null) => void;
+  onDrawingComplete?: () => void;  // Called when user finishes drawing
   disabled?: boolean;
   width?: number;
   height?: number;
@@ -27,6 +28,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   onPenSizeChange,
   onPenSizeInputChange,
   onSignatureDataChange,
+  onDrawingComplete,
   disabled = false,
   width = 400,
   height = 150,
@@ -89,8 +91,15 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (canvasRef.current) {
       const dataURL = canvasRef.current.toDataURL('image/png');
       onSignatureDataChange(dataURL);
+
+      // Trigger drawing complete callback after a brief delay to ensure signature data is processed
+      if (onDrawingComplete) {
+        setTimeout(() => {
+          onDrawingComplete();
+        }, 100);
+      }
     }
-  }, [isDrawing, disabled, onSignatureDataChange]);
+  }, [isDrawing, disabled, onSignatureDataChange, onDrawingComplete]);
 
   // Modal canvas drawing functions
   const startModalDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -161,8 +170,15 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           img.src = dataURL;
         }
       }
+
+      // Trigger drawing complete callback after a brief delay to ensure signature data is processed
+      if (onDrawingComplete) {
+        setTimeout(() => {
+          onDrawingComplete();
+        }, 100);
+      }
     }
-  }, [isModalDrawing]);
+  }, [isModalDrawing, onSignatureDataChange, onDrawingComplete]);
 
   // Clear canvas functions
   const clearCanvas = useCallback(() => {
@@ -231,7 +247,14 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     }
 
     setIsModalOpen(false);
-  }, []);
+
+    // Trigger drawing complete callback after closing modal
+    if (onDrawingComplete) {
+      setTimeout(() => {
+        onDrawingComplete();
+      }, 100);
+    }
+  }, [onSignatureDataChange, onDrawingComplete]);
 
   const openModal = useCallback(() => {
     setIsModalOpen(true);
