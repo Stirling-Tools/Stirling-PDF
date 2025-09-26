@@ -17,6 +17,7 @@ import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
+import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { Rotation } from '@embedpdf/models';
 import { CustomSearchLayer } from './CustomSearchLayer';
 import { ZoomAPIBridge } from './ZoomAPIBridge';
@@ -29,6 +30,7 @@ import { SpreadAPIBridge } from './SpreadAPIBridge';
 import { SearchAPIBridge } from './SearchAPIBridge';
 import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 import { RotateAPIBridge } from './RotateAPIBridge';
+import { ExportAPIBridge } from './ExportAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -112,6 +114,11 @@ export function LocalEmbedPDF({ file, url }: LocalEmbedPDFProps) {
       createPluginRegistration(RotatePluginPackage, {
         defaultRotation: Rotation.Degree0, // Start with no rotation
       }),
+
+      // Register export plugin for downloading PDFs
+      createPluginRegistration(ExportPluginPackage, {
+        defaultFileName: 'document.pdf',
+      }),
     ];
   }, [pdfUrl]);
 
@@ -170,6 +177,7 @@ export function LocalEmbedPDF({ file, url }: LocalEmbedPDFProps) {
         <SearchAPIBridge />
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
+        <ExportAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{
