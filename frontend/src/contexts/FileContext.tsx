@@ -124,6 +124,11 @@ function FileContextInner({
     baseActions.unpinFile(file.fileId);
   }, [baseActions]);
 
+  // Refresh file context - triggers re-render of file-dependent components
+  const refreshFileContext = useCallback(() => {
+    dispatch({ type: 'REFRESH_CONTEXT' });
+  }, []);
+
   // Complete actions object
   const actions = useMemo<FileContextActions>(() => ({
     ...baseActions,
@@ -170,6 +175,7 @@ function FileContextInner({
         }
       }
     },
+    refreshFileContext,
     // Pinned files functionality with File object wrappers
     pinFile: pinFileWrapper,
     unpinFile: unpinFileWrapper,
@@ -191,7 +197,8 @@ function FileContextInner({
     pinFileWrapper,
     unpinFileWrapper,
     indexedDB,
-    enablePersistence
+    enablePersistence,
+    refreshFileContext
   ]);
 
   // Split context values to minimize re-renders

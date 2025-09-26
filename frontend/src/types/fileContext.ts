@@ -250,7 +250,8 @@ export type FileContextAction =
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
 
   // Context management
-  | { type: 'RESET_CONTEXT' };
+  | { type: 'RESET_CONTEXT' }
+  | { type: 'REFRESH_CONTEXT' };
 
 export interface FileContextActions {
   // File management - lightweight actions only
@@ -285,6 +286,7 @@ export interface FileContextActions {
 
   // Context management
   resetContext: () => void;
+  refreshFileContext: () => void;
 
   // Resource management
   trackBlobUrl: (url: string) => void;

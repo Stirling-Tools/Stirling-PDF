@@ -282,6 +282,17 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
       return { ...initialFileContextState };
     }
 
+    case 'REFRESH_CONTEXT': {
+      // Trigger re-render by returning new state object while preserving data
+      // This forces components to reload without losing file data
+      return {
+        ...state,
+        ui: {
+          ...state.ui
+        }
+      };
+    }
+
     default:
       return state;
   }

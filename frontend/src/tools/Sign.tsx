@@ -16,7 +16,7 @@ const Sign = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const { setWorkbench } = useNavigation();
   const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, signatureApiRef, getImageData, setSignaturesApplied } = useSignature();
-  const { consumeFiles, selectors } = useFileContext();
+  const { consumeFiles, selectors, actions } = useFileContext();
   const { exportActions, getScrollState } = useViewer();
 
   // Track which signature mode was active for reactivation after save
@@ -97,20 +97,16 @@ const Sign = (props: BaseToolProps) => {
         // Mark signatures as applied
         setSignaturesApplied(true);
 
-        // Force refresh the viewer to show the flattened PDF
+        // Refresh the file context to reload the flattened PDF in viewer
         setTimeout(() => {
-          // Navigate away from viewer and back to force reload
-          setWorkbench('fileEditor');
-          setTimeout(() => {
-            setWorkbench('viewer');
+          actions.refreshFileContext();
 
-            // Reactivate the signature mode that was active before save
-            if (activeModeRef.current === 'draw') {
-              activateDrawMode();
-            } else if (activeModeRef.current === 'placement') {
-              handleSignaturePlacement();
-            }
-          }, 100);
+          // Reactivate the signature mode that was active before save
+          if (activeModeRef.current === 'draw') {
+            activateDrawMode();
+          } else if (activeModeRef.current === 'placement') {
+            handleSignaturePlacement();
+          }
         }, 200);
       } else {
         console.error('Signature flattening failed');
@@ -118,7 +114,7 @@ const Sign = (props: BaseToolProps) => {
     } catch (error) {
       console.error('Error saving signed document:', error);
     }
-  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode]);
+  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, actions, activateDrawMode, handleSignaturePlacement, setSignaturesApplied]);
 
   const getSteps = () => {
     const steps = [];
