@@ -27,7 +27,6 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
       if (annotation && annotation.type === 13 && annotation.id && annotation.imageSrc) {
         const storedImageData = getImageData(annotation.id);
         if (!storedImageData || storedImageData !== annotation.imageSrc) {
-          console.log('HistoryAPI: Storing image data for annotation', annotation.id);
           storeImageData(annotation.id, annotation.imageSrc);
         }
       }
@@ -43,7 +42,6 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
             const currentStoredData = getImageData(annotation.id);
             // Check if the annotation lacks image data but we have it stored
             if (currentStoredData && (!annotation.imageSrc || annotation.imageSrc !== currentStoredData)) {
-              console.log('HistoryAPI: Restoring image data for annotation', annotation.id);
               
               // Generate new ID to avoid React key conflicts
               const newId = uuidV4();

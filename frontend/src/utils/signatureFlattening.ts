@@ -30,12 +30,10 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
     const allAnnotations: Array<{pageIndex: number, annotations: any[]}> = [];
 
     if (signatureApiRef?.current) {
-      console.log('Extracting annotations from all pages...');
 
       // Get actual page count from viewer
       const scrollState = getScrollState();
       const totalPages = scrollState.totalPages;
-      console.log(`Document has ${totalPages} pages`);
 
       // Check only actual pages that exist in the document
       for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
@@ -54,18 +52,12 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
               const isSessionAnnotation = hasStoredImageData || (hasDirectImageData && typeof hasDirectImageData === 'string' && hasDirectImageData.startsWith('data:image'));
 
-              if (isSessionAnnotation) {
-                console.log(`Including session annotation ${annotation.id} from page ${pageIndex + 1}`);
-              } else {
-                console.log(`Skipping existing annotation ${annotation.id} from page ${pageIndex + 1} (not added in this session)`);
-              }
 
               return isSessionAnnotation;
             });
 
             if (sessionAnnotations.length > 0) {
               allAnnotations.push({pageIndex, annotations: sessionAnnotations});
-              console.log(`Found ${sessionAnnotations.length} session annotations on page ${pageIndex + 1} (out of ${pageAnnotations.length} total)`);
             }
           }
         } catch (pageError) {
@@ -79,12 +71,10 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
     // Step 2: Delete ONLY session annotations from EmbedPDF before export (they'll be rendered manually)
     // Leave old annotations alone - they will remain as annotations in the PDF
     if (allAnnotations.length > 0 && signatureApiRef?.current) {
-      console.log('Deleting session annotations from EmbedPDF before export...');
       for (const pageData of allAnnotations) {
         for (const annotation of pageData.annotations) {
           try {
             await signatureApiRef.current.deleteAnnotation(annotation.id, pageData.pageIndex);
-            console.log(`Deleted session annotation ${annotation.id} from page ${pageData.pageIndex}`);
           } catch (deleteError) {
             console.warn(`Failed to delete annotation ${annotation.id}:`, deleteError);
           }
@@ -100,10 +90,8 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
     const pdfArrayBuffer = await exportActions.saveAsCopy();
 
     if (pdfArrayBuffer) {
-      console.log(`EmbedPDF exported PDF size: ${pdfArrayBuffer.byteLength} bytes`);
 
       // Try loading with more permissive PDF-lib options
-      console.log('Attempting to load PDF with PDF-lib...');
 
       // Convert ArrayBuffer to File
       const blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
@@ -142,7 +130,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
               capNumbers: false,
               throwOnInvalidObject: false
             });
-            console.log('✓ PDF loaded successfully with standard options');
           } catch {
             console.warn('Failed to load with standard options, trying createProxy...');
             try {
@@ -155,7 +142,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
               const pageIndices = sourcePdf.getPages().map((_, i) => i);
               const copiedPages = await pdfDoc.copyPages(sourcePdf, pageIndices);
               copiedPages.forEach(page => pdfDoc.addPage(page));
-              console.log('✓ PDF loaded by creating new document and copying pages');
             } catch (copyError) {
               console.error('Failed to load PDF with any method:', copyError);
               throw copyError;
@@ -163,7 +149,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
           }
 
           const pages = pdfDoc.getPages();
-          console.log(`PDF has ${pages.length} pages`);
 
           let totalRendered = 0;
 
@@ -176,7 +161,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
               for (const annotation of annotations) {
                 try {
-                  console.log('Processing annotation:', annotation);
 
                   const rect = annotation.rect || annotation.bounds || annotation.rectangle || annotation.position;
 
@@ -191,9 +175,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                     const pdfX = originalX;
                     const pdfY = pageHeight - originalY - height;
 
-                    console.log('Signature positioning:', {
-                      originalX, originalY, width, height, pdfX, pdfY, pageWidth, pageHeight
-                    });
 
                     // Try to get annotation image data
                     let imageDataUrl = annotation.imageData || annotation.appearance || annotation.stampData ||
@@ -232,7 +213,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         });
 
                         totalRendered++;
-                        console.log(`✓ SUCCESS: Rendered image annotation at (${pdfX}, ${pdfY}) size (${width}x${height})`);
                       } catch (imageError) {
                         console.error('Failed to render image annotation:', imageError);
                       }
@@ -245,7 +225,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         color: rgb(0, 0, 0)
                       });
                       totalRendered++;
-                      console.log(`Rendered text annotation: "${annotation.content || annotation.text}"`);
                     } else if (annotation.type === 14 || annotation.type === 15) {
                       // Handle ink annotations (drawn signatures)
                       page.drawRectangle({
@@ -267,7 +246,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                       });
 
                       totalRendered++;
-                      console.log(`Rendered ink annotation placeholder at (${pdfX}, ${pdfY}) size (${width}x${height})`);
                     } else {
                       // Handle other annotation types
                       page.drawRectangle({
@@ -282,7 +260,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                       });
 
                       totalRendered++;
-                      console.log(`Rendered unknown annotation type ${annotation.type} as placeholder`);
                     }
                   }
                 } catch (annotationError) {
@@ -292,23 +269,18 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
             }
           }
 
-          console.log(`Successfully rendered ${totalRendered} annotations`);
 
           // Save the PDF with rendered annotations
           const flattenedPdfBytes = await pdfDoc.save({ useObjectStreams: false, addDefaultPage: false });
-          console.log(`Original PDF size: ${pdfArrayBufferForFlattening.byteLength} bytes`);
-          console.log(`Modified PDF size: ${flattenedPdfBytes.length} bytes`);
 
           const arrayBuffer = new ArrayBuffer(flattenedPdfBytes.length);
           const uint8View = new Uint8Array(arrayBuffer);
           uint8View.set(flattenedPdfBytes);
           signedFile = new File([arrayBuffer], currentFile.name, { type: 'application/pdf' });
-          console.log('Manual annotation rendering completed');
 
           // Verify the modified PDF can be loaded
           try {
             const verifyDoc = await PDFDocument.load(flattenedPdfBytes);
-            console.log(`✓ Verification: Modified PDF has ${verifyDoc.getPages().length} pages and can be loaded`);
           } catch (verifyError) {
             console.error('❌ Verification: Modified PDF cannot be loaded:', verifyError);
           }
@@ -316,8 +288,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
           console.error('Failed to manually render annotations:', renderError);
           console.warn('Signatures may only show as annotations');
         }
-      } else {
-        console.log('No annotations found to render');
       }
 
       // Generate thumbnail and metadata for the signed file

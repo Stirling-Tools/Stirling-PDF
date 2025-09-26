@@ -72,7 +72,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       if (!annotationApi) return;
 
       // Create image stamp annotation with proper image data
-      console.log('Creating image annotation with data length:', signatureData?.length);
 
       const annotationId = uuidV4();
 
@@ -354,7 +353,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         const pageAnnotationsTask = annotationApi.getPageAnnotations({ pageIndex });
         if (pageAnnotationsTask && pageAnnotationsTask.toPromise) {
           const annotations = await pageAnnotationsTask.toPromise();
-          console.log(`Retrieved ${annotations?.length || 0} annotations from page ${pageIndex}`);
           return annotations || [];
         }
         return [];
