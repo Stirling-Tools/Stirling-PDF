@@ -524,16 +524,16 @@ public class FormUtils {
     }
 
     private void createSimpleSignatureField(
-        PDAcroForm newAcroForm,
-        PDPage destinationPage,
-        List<PDAnnotation> destinationAnnotations,
-        PDSignatureField sourceField,
-        PDAnnotationWidget sourceWidget,
-        float offsetX,
-        float offsetY,
-        float scale,
-        int pageIndex,
-        Map<String, Integer> fieldNameCounters) {
+            PDAcroForm newAcroForm,
+            PDPage destinationPage,
+            List<PDAnnotation> destinationAnnotations,
+            PDSignatureField sourceField,
+            PDAnnotationWidget sourceWidget,
+            float offsetX,
+            float offsetY,
+            float scale,
+            int pageIndex,
+            Map<String, Integer> fieldNameCounters) {
 
         try {
             PDSignatureField newSignatureField = new PDSignatureField(newAcroForm);
@@ -567,16 +567,16 @@ public class FormUtils {
     }
 
     private void createSimplePushButtonField(
-        PDAcroForm newAcroForm,
-        PDPage destinationPage,
-        List<PDAnnotation> destinationAnnotations,
-        PDPushButton sourceField,
-        PDAnnotationWidget sourceWidget,
-        float offsetX,
-        float offsetY,
-        float scale,
-        int pageIndex,
-        Map<String, Integer> fieldNameCounters) {
+            PDAcroForm newAcroForm,
+            PDPage destinationPage,
+            List<PDAnnotation> destinationAnnotations,
+            PDPushButton sourceField,
+            PDAnnotationWidget sourceWidget,
+            float offsetX,
+            float offsetY,
+            float scale,
+            int pageIndex,
+            Map<String, Integer> fieldNameCounters) {
 
         try {
             PDPushButton newPushButton = new PDPushButton(newAcroForm);
@@ -777,7 +777,7 @@ public class FormUtils {
     }
 
     public void applyFieldValues(
-        PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
+            PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
             throws IOException {
         if (document == null || values == null || values.isEmpty()) {
             return;
