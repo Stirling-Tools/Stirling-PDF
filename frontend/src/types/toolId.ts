@@ -49,7 +49,7 @@ export const TOOL_IDS = [
   'validateSignature',
   'read',
   'automate',
-  'replaceColorPdf',
+  'replaceColor',
   'showJS',
   'devApi',
   'devFolderScanning',
