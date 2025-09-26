@@ -150,14 +150,13 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
           const pages = pdfDoc.getPages();
 
-          let totalRendered = 0;
 
           for (const pageData of allAnnotations) {
             const { pageIndex, annotations } = pageData;
 
             if (pageIndex < pages.length) {
               const page = pages[pageIndex];
-              const { width: pageWidth, height: pageHeight } = page.getSize();
+              const { width: _pageWidth, height: pageHeight } = page.getSize();
 
               for (const annotation of annotations) {
                 try {
@@ -212,7 +211,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                           height: height,
                         });
 
-                        totalRendered++;
                       } catch (imageError) {
                         console.error('Failed to render image annotation:', imageError);
                       }
@@ -224,7 +222,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         size: 12,
                         color: rgb(0, 0, 0)
                       });
-                      totalRendered++;
                     } else if (annotation.type === 14 || annotation.type === 15) {
                       // Handle ink annotations (drawn signatures)
                       page.drawRectangle({
@@ -244,8 +241,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         size: 10,
                         color: rgb(0, 0, 0)
                       });
-
-                      totalRendered++;
                     } else {
                       // Handle other annotation types
                       page.drawRectangle({
@@ -258,8 +253,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         color: rgb(1, 1, 0), // Yellow background
                         opacity: 0.5
                       });
-
-                      totalRendered++;
                     }
                   }
                 } catch (annotationError) {
@@ -280,7 +273,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
           // Verify the modified PDF can be loaded
           try {
-            const verifyDoc = await PDFDocument.load(flattenedPdfBytes);
+            const _verifyDoc = await PDFDocument.load(flattenedPdfBytes);
           } catch (verifyError) {
             console.error('❌ Verification: Modified PDF cannot be loaded:', verifyError);
           }
