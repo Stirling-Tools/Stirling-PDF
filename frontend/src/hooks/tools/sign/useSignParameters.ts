@@ -40,16 +40,10 @@ const validateSignParameters = (parameters: SignParameters): boolean => {
     }
   }
 
-  // For image signatures, require signature data
-  if (parameters.signatureType === 'image' && !parameters.signatureData) {
+  // For image and canvas signatures, require signature data
+  if ((parameters.signatureType === 'image' || parameters.signatureType === 'canvas') && !parameters.signatureData) {
     return false;
   }
-
-  // For canvas signatures, require signature data
-  if (parameters.signatureType === 'canvas' && !parameters.signatureData) {
-    return false;
-  }
-
   // For text signatures, require signer name
   if (parameters.signatureType === 'text' && !parameters.signerName) {
     return false;
