@@ -1732,6 +1732,7 @@
     "add": "Add",
     "saved": "Saved Signatures",
     "save": "Save Signature",
+    "applySignatures": "Apply Signatures",
     "personalSigs": "Personal Signatures",
     "sharedSigs": "Shared Signatures",
     "noSavedSigs": "No saved signatures found",
@@ -1743,7 +1744,42 @@
     "previous": "Previous page",
     "maintainRatio": "Toggle maintain aspect ratio",
     "undo": "Undo",
-    "redo": "Redo"
+    "redo": "Redo",
+    "submit": "Sign Document",
+    "steps": {
+      "configure": "Configure Signature"
+    },
+    "type": {
+      "title": "Signature Type",
+      "draw": "Draw",
+      "canvas": "Canvas",
+      "image": "Image",
+      "text": "Text"
+    },
+    "draw": {
+      "title": "Draw your signature",
+      "clear": "Clear"
+    },
+    "image": {
+      "label": "Upload signature image",
+      "placeholder": "Select image file",
+      "hint": "Upload a PNG or JPG image of your signature"
+    },
+    "text": {
+      "name": "Signer Name",
+      "placeholder": "Enter your full name"
+    },
+    "instructions": {
+      "title": "How to add signature"
+    },
+    "activate": "Activate Signature Placement",
+    "deactivate": "Stop Placing Signatures",
+    "results": {
+      "title": "Signature Results"
+    },
+    "error": {
+      "failed": "An error occurred while signing the PDF."
+    }
   },
   "flatten": {
     "title": "Flatten",
@@ -3384,6 +3420,16 @@
       "processImages": "Process Images",
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
+  },
+  "viewer": {
+    "firstPage": "First Page",
+    "lastPage": "Last Page",
+    "previousPage": "Previous Page",
+    "nextPage": "Next Page",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "singlePageView": "Single Page View",
+    "dualPageView": "Dual Page View"
   },
   "common": {
     "copy": "Copy",

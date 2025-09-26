@@ -25,7 +25,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
       });
       setThumbnails({});
     }
-  }, [visible, thumbnails]);
+  }, [visible]); // Remove thumbnails from dependency to prevent infinite loop
 
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
