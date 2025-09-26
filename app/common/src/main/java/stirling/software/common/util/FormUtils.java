@@ -28,18 +28,23 @@ import org.apache.pdfbox.pdmodel.interactive.form.*;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class FormUtils {
+@UtilityClass
+public class FormUtils {
 
-    private static final Pattern GENERIC_NAME_PATTERN =
+    private final Pattern GENERIC_NAME_PATTERN =
             Pattern.compile(
                     "(?i)^(field|form|text|textbox|checkbox|check|radio|combo|list|untitled|input|question|subform|page|control)[\\s_\\-]*[0-9]*$");
+    private final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+    private final Pattern OPTIONAL_T_NUMERIC_PATTERN = Pattern.compile("(?i)^t?\\d{1,3}$");
+    private final Pattern FORM_FIELD_PATTERN =
+            Pattern.compile("(?i)^(text|field|form)[\\s_-]*\\d+$");
+    private final Pattern PUNCTUATION_PATTERN = Pattern.compile("[\\p{Punct}]+");
 
-    private FormUtils() {}
-
-    public static boolean hasAnyRotatedPage(PDDocument document) {
+    public boolean hasAnyRotatedPage(PDDocument document) {
         try {
             for (PDPage page : document.getPages()) {
                 int rot = page.getRotation();
@@ -54,7 +59,7 @@ public final class FormUtils {
         return false;
     }
 
-    public static void copyAndTransformFormFields(
+    public void copyAndTransformFormFields(
             PDDocument sourceDocument,
             PDDocument newDocument,
             int totalPages,
@@ -148,7 +153,7 @@ public final class FormUtils {
         }
     }
 
-    private static void copyBasicFormFields(
+    private void copyBasicFormFields(
             PDAcroForm sourceAcroForm,
             PDAcroForm newAcroForm,
             PDPage sourcePage,
@@ -270,7 +275,7 @@ public final class FormUtils {
         }
     }
 
-    private static void createSimpleTextField(
+    private void createSimpleTextField(
             PDAcroForm newAcroForm,
             PDPage destinationPage,
             List<PDAnnotation> destinationAnnotations,
@@ -318,7 +323,7 @@ public final class FormUtils {
         }
     }
 
-    private static void createSimpleCheckBoxField(
+    private void createSimpleCheckBoxField(
             PDAcroForm newAcroForm,
             PDPage destinationPage,
             List<PDAnnotation> destinationAnnotations,
@@ -367,7 +372,7 @@ public final class FormUtils {
         }
     }
 
-    private static void createSimpleRadioButtonField(
+    private void createSimpleRadioButtonField(
             PDAcroForm newAcroForm,
             PDPage destinationPage,
             List<PDAnnotation> destinationAnnotations,
@@ -416,7 +421,7 @@ public final class FormUtils {
         }
     }
 
-    private static void createSimpleComboBoxField(
+    private void createSimpleComboBoxField(
             PDAcroForm newAcroForm,
             PDPage destinationPage,
             List<PDAnnotation> destinationAnnotations,
@@ -465,7 +470,7 @@ public final class FormUtils {
         }
     }
 
-    private static void createSimpleListBoxField(
+    private void createSimpleListBoxField(
             PDAcroForm newAcroForm,
             PDPage destinationPage,
             List<PDAnnotation> destinationAnnotations,
@@ -514,7 +519,7 @@ public final class FormUtils {
         }
     }
 
-    private static void createSimpleSignatureField(
+    private void createSimpleSignatureField(
             PDAcroForm newAcroForm,
             PDPage destinationPage,
             List<PDAnnotation> destinationAnnotations,
@@ -544,9 +549,6 @@ public final class FormUtils {
                             pageIndex,
                             fieldNameCounters);
 
-            if (!initialized) {
-                return;
-            }
         } catch (Exception e) {
             log.warn(
                     "Failed to create signature field '{}': {}",
@@ -556,7 +558,7 @@ public final class FormUtils {
         }
     }
 
-    private static void createSimplePushButtonField(
+    private void createSimplePushButtonField(
             PDAcroForm newAcroForm,
             PDPage destinationPage,
             List<PDAnnotation> destinationAnnotations,
@@ -586,10 +588,6 @@ public final class FormUtils {
                             pageIndex,
                             fieldNameCounters);
 
-            if (!initialized) {
-                return;
-            }
-
         } catch (Exception e) {
             log.warn(
                     "Failed to create push button field '{}': {}",
@@ -599,7 +597,7 @@ public final class FormUtils {
         }
     }
 
-    private static <T extends PDTerminalField> boolean initializeFieldWithWidget(
+    private <T extends PDTerminalField> boolean initializeFieldWithWidget(
             PDAcroForm newAcroForm,
             PDPage destinationPage,
             List<PDAnnotation> destinationAnnotations,
@@ -637,7 +635,7 @@ public final class FormUtils {
         return true;
     }
 
-    private static String generateUniqueFieldName(
+    private String generateUniqueFieldName(
             String originalName, int pageIndex, Map<String, Integer> fieldNameCounters) {
         String baseName = "page" + pageIndex + "_" + originalName;
 
@@ -652,7 +650,7 @@ public final class FormUtils {
         return counter == 0 ? baseName : baseName + "_" + counter;
     }
 
-    private static Map<PDAnnotationWidget, PDField> buildWidgetFieldMap(PDAcroForm acroForm) {
+    private Map<PDAnnotationWidget, PDField> buildWidgetFieldMap(PDAcroForm acroForm) {
         Map<PDAnnotationWidget, PDField> map = new HashMap<>();
         if (acroForm == null) {
             return map;
@@ -674,7 +672,7 @@ public final class FormUtils {
         return map;
     }
 
-    public static List<FormFieldInfo> extractFormFields(PDDocument document) {
+    public List<FormFieldInfo> extractFormFields(PDDocument document) {
         if (document == null) {
             return List.of();
         }
@@ -692,9 +690,6 @@ public final class FormUtils {
             }
 
             String type = resolveFieldType(terminalField);
-            if (type == null) {
-                continue;
-            }
 
             String name =
                     Optional.ofNullable(field.getFullyQualifiedName())
@@ -736,12 +731,12 @@ public final class FormUtils {
         return Collections.unmodifiableList(fields);
     }
 
-    public static void applyFieldValues(PDDocument document, Map<String, ?> values, boolean flatten)
+    public void applyFieldValues(PDDocument document, Map<String, ?> values, boolean flatten)
             throws IOException {
         applyFieldValues(document, values, flatten, false);
     }
 
-    public static void applyFieldValues(
+    public void applyFieldValues(
             PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
             throws IOException {
         if (document == null || values == null || values.isEmpty()) {
@@ -802,7 +797,7 @@ public final class FormUtils {
         }
     }
 
-    private static PDAcroForm getAcroFormSafely(PDDocument document) {
+    private PDAcroForm getAcroFormSafely(PDDocument document) {
         try {
             PDDocumentCatalog catalog = document.getDocumentCatalog();
             return catalog != null ? catalog.getAcroForm() : null;
@@ -812,7 +807,7 @@ public final class FormUtils {
         }
     }
 
-    private static void ensureAppearances(PDAcroForm acroForm) {
+    private void ensureAppearances(PDAcroForm acroForm) {
         if (acroForm == null) {
             return;
         }
@@ -837,7 +832,7 @@ public final class FormUtils {
         }
     }
 
-    private static void ensureFontResources(PDAcroForm acroForm) {
+    private void ensureFontResources(PDAcroForm acroForm) {
         try {
             PDResources resources = acroForm.getDefaultResources();
             if (resources == null) {
@@ -858,7 +853,7 @@ public final class FormUtils {
         }
     }
 
-    private static void registerFontIfMissing(
+    private void registerFontIfMissing(
             PDResources resources, String alias, Standard14Fonts.FontName fontName)
             throws IOException {
         COSName name = COSName.getPDFName(alias);
@@ -867,7 +862,7 @@ public final class FormUtils {
         }
     }
 
-    private static void applyValueToField(PDField field, String value) {
+    private void applyValueToField(PDField field, String value) {
         try {
             if (field instanceof PDTextField textField) {
                 setTextValue(textField, value);
@@ -900,6 +895,7 @@ public final class FormUtils {
             } else if (field instanceof PDChoice choiceField) {
                 applyChoiceValue(choiceField, value);
             } else if (field instanceof PDPushButton) {
+                log.debug("Ignore Push button");
                 // Ignore buttons during fill operations
             } else if (field instanceof PDSignatureField) {
                 log.debug("Skipping signature field '{}'", field.getFullyQualifiedName());
@@ -915,7 +911,7 @@ public final class FormUtils {
         }
     }
 
-    private static void setTextValue(PDTextField textField, String value) throws IOException {
+    private void setTextValue(PDTextField textField, String value) throws IOException {
         try {
             textField.setValue(value != null ? value : "");
             return;
@@ -940,7 +936,7 @@ public final class FormUtils {
         textField.setValue(value != null ? value : "");
     }
 
-    private static void applyChoiceValue(PDChoice choiceField, String value) throws IOException {
+    private void applyChoiceValue(PDChoice choiceField, String value) throws IOException {
         if (value == null) {
             choiceField.setValue("");
             return;
@@ -962,19 +958,19 @@ public final class FormUtils {
         }
     }
 
-    private static boolean isChecked(String value) {
+    private boolean isChecked(String value) {
         if (value == null) {
             return false;
         }
         String normalized = value.trim().toLowerCase();
-        return normalized.equals("true")
-                || normalized.equals("1")
-                || normalized.equals("yes")
-                || normalized.equals("on")
-                || normalized.equals("checked");
+        return "true".equals(normalized)
+                || "1".equals(normalized)
+                || "yes".equals(normalized)
+                || "on".equals(normalized)
+                || "checked".equals(normalized);
     }
 
-    private static String resolveFieldType(PDTerminalField field) {
+    private String resolveFieldType(PDTerminalField field) {
         if (field instanceof PDTextField) {
             return "text";
         }
@@ -999,7 +995,7 @@ public final class FormUtils {
         return "field";
     }
 
-    private static String safeValue(PDTerminalField field) {
+    private String safeValue(PDTerminalField field) {
         try {
             return field.getValueAsString();
         } catch (Exception e) {
@@ -1011,7 +1007,7 @@ public final class FormUtils {
         }
     }
 
-    private static List<String> resolveOptions(PDTerminalField field) {
+    private List<String> resolveOptions(PDTerminalField field) {
         try {
             if (field instanceof PDChoice choice) {
                 List<String> display = choice.getOptionsDisplayValues();
@@ -1042,7 +1038,7 @@ public final class FormUtils {
         return Collections.emptyList();
     }
 
-    private static String determineCheckBoxOnValue(PDCheckBox checkBox) {
+    private String determineCheckBoxOnValue(PDCheckBox checkBox) {
         try {
             String onValue = checkBox.getOnValue();
             if (onValue != null && !onValue.isBlank()) {
@@ -1063,7 +1059,7 @@ public final class FormUtils {
         return "Yes";
     }
 
-    private static String deriveDisplayLabel(
+    private String deriveDisplayLabel(
             PDField field,
             String name,
             String tooltip,
@@ -1095,58 +1091,56 @@ public final class FormUtils {
         return fallbackLabelForType(type, typeIndex);
     }
 
-    private static String cleanLabel(String label) {
+    private String cleanLabel(String label) {
         if (label == null) {
             return null;
         }
         String cleaned = label.trim();
-        while (cleaned.endsWith(".")) {
+        while (true) {
+            final boolean b = !cleaned.isEmpty() && cleaned.charAt(cleaned.length() - 1) == '.';
+            if (!b) break;
             cleaned = cleaned.substring(0, cleaned.length() - 1).trim();
         }
-        if (cleaned.endsWith(":")) {
+        if (!cleaned.isEmpty() && cleaned.charAt(cleaned.length() - 1) == ':') {
             cleaned = cleaned.substring(0, cleaned.length() - 1).trim();
         }
         return cleaned.isEmpty() ? null : cleaned;
     }
 
-    private static boolean isMeaningfulLabel(String candidate) {
+    private boolean isMeaningfulLabel(String candidate) {
         if (candidate == null || candidate.isBlank()) {
             return false;
         }
         String normalized = candidate.trim();
-        if (looksGeneric(normalized)) {
-            return false;
-        }
-        return true;
+        return !looksGeneric(normalized);
     }
 
-    private static boolean looksGeneric(String value) {
-        String simplified = value.replaceAll("[\\p{Punct}]+", " ").trim();
+    private boolean looksGeneric(String value) {
+        String simplified = PUNCTUATION_PATTERN.matcher(value).replaceAll(" ").trim();
         if (simplified.isEmpty()) {
             return true;
         }
         if (GENERIC_NAME_PATTERN.matcher(simplified).matches()) {
             return true;
         }
-        if (simplified.matches("(?i)^(text|field|form)[\\s_-]*\\d+$")) {
+        if (FORM_FIELD_PATTERN.matcher(simplified).matches()) {
             return true;
         }
-        if (simplified.matches("(?i)^t?\\d{1,3}$")) {
-            return true;
-        }
-        return false;
+        return OPTIONAL_T_NUMERIC_PATTERN.matcher(simplified).matches();
     }
 
-    private static String humanizeName(String name) {
+    private String humanizeName(String name) {
         if (name == null) {
             return null;
         }
         String cleaned =
-                name.replaceAll("[#\\[\\]]", " ")
-                        .replace('.', ' ')
-                        .replaceAll("[_-]+", " ")
-                        .replaceAll("(?<=[a-z])(?=[A-Z])", " ")
-                        .replaceAll("\\s+", " ")
+                WHITESPACE_PATTERN
+                        .matcher(
+                                name.replaceAll("[#\\[\\]]", " ")
+                                        .replace('.', ' ')
+                                        .replaceAll("[_-]+", " ")
+                                        .replaceAll("(?<=[a-z])(?=[A-Z])", " "))
+                        .replaceAll(" ")
                         .trim();
         if (cleaned.isEmpty()) {
             return null;
@@ -1157,7 +1151,7 @@ public final class FormUtils {
             if (part.isBlank()) {
                 continue;
             }
-            if (builder.length() > 0) {
+            if (!builder.isEmpty()) {
                 builder.append(' ');
             }
             builder.append(capitalizeWord(part));
@@ -1166,7 +1160,7 @@ public final class FormUtils {
         return result.isEmpty() ? null : result;
     }
 
-    private static String capitalizeWord(String word) {
+    private String capitalizeWord(String word) {
         if (word == null || word.isEmpty()) {
             return word;
         }
@@ -1180,7 +1174,7 @@ public final class FormUtils {
                 + word.substring(1).toLowerCase(Locale.ROOT);
     }
 
-    private static String fallbackLabelForType(String type, int typeIndex) {
+    private String fallbackLabelForType(String type, int typeIndex) {
         String suffix = " " + typeIndex;
         return switch (type) {
             case "checkbox" -> "Checkbox" + suffix;
@@ -1192,7 +1186,7 @@ public final class FormUtils {
         };
     }
 
-    private static String resolveTooltip(PDTerminalField field) {
+    private String resolveTooltip(PDTerminalField field) {
         List<PDAnnotationWidget> widgets = field.getWidgets();
         if (widgets == null) {
             return null;
@@ -1220,7 +1214,7 @@ public final class FormUtils {
         return null;
     }
 
-    private static int resolveFirstWidgetPageIndex(PDDocument document, PDTerminalField field) {
+    private int resolveFirstWidgetPageIndex(PDDocument document, PDTerminalField field) {
         List<PDAnnotationWidget> widgets = field.getWidgets();
         if (widgets == null || widgets.isEmpty()) {
             return -1;
@@ -1234,7 +1228,7 @@ public final class FormUtils {
         return -1;
     }
 
-    private static int resolveWidgetPageIndex(PDDocument document, PDAnnotationWidget widget) {
+    private int resolveWidgetPageIndex(PDDocument document, PDAnnotationWidget widget) {
         if (document == null || widget == null) {
             return -1;
         }

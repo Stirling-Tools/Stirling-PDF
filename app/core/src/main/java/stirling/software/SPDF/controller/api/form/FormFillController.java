@@ -152,18 +152,23 @@ public class FormFillController {
         }
     }
 
+    private static String buildBaseName(MultipartFile file, String suffix) {
+        String original = Filenames.toSimpleFileName(file.getOriginalFilename());
+        if (original == null || original.isBlank()) {
+            original = "document";
+        }
+        if (!original.toLowerCase().endsWith(".pdf")) {
+            return original + "_" + suffix;
+        }
+        String withoutExtension = original.substring(0, original.length() - 4);
+        return withoutExtension + "_" + suffix;
+    }
+
     private Map<String, Object> parseValueMap(String json) throws IOException {
         if (json == null || json.isBlank()) {
             return Map.of();
         }
-        return objectMapper.readValue(json, new TypeReference<>() {});
-    }
-
-    private List<Map<String, Object>> parseRecordArray(String json) throws IOException {
-        if (json == null || json.isBlank()) {
-            return List.of();
-        }
-        return objectMapper.readValue(json, new TypeReference<>() {});
+        return objectMapper.readValue(json, new MapTypeReference());
     }
 
     private List<Map<String, Object>> resolveRecords(String inlineJson, MultipartFile recordsFile)
@@ -185,15 +190,14 @@ public class FormFillController {
         return parsed;
     }
 
-    private String buildBaseName(MultipartFile file, String suffix) {
-        String original = Filenames.toSimpleFileName(file.getOriginalFilename());
-        if (original == null || original.isBlank()) {
-            original = "document";
+    private List<Map<String, Object>> parseRecordArray(String json) throws IOException {
+        if (json == null || json.isBlank()) {
+            return List.of();
         }
-        if (!original.toLowerCase().endsWith(".pdf")) {
-            return original + "_" + suffix;
-        }
-        String withoutExtension = original.substring(0, original.length() - 4);
-        return withoutExtension + "_" + suffix;
+        return objectMapper.readValue(json, new ListTypeReference());
     }
+
+    private static class MapTypeReference extends TypeReference<Map<String, Object>> {}
+
+    private static class ListTypeReference extends TypeReference<List<Map<String, Object>>> {}
 }
