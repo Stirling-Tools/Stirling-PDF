@@ -11,14 +11,41 @@ import { useConvertParameters } from '../../hooks/tools/convert/useConvertParame
 import { FileContextProvider } from '../../contexts/FileContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n/config';
-import axios from 'axios';
 import { detectFileExtension } from '../../utils/fileUtils';
 import { FIT_OPTIONS } from '../../constants/convertConstants';
 import { createTestStirlingFile, createTestFilesWithId } from '../utils/testFileHelpers';
 
-// Mock axios
-vi.mock('axios');
-const mockedAxios = vi.mocked(axios);
+// Mock axios (for static methods like CancelToken, isCancel)
+vi.mock('axios', () => ({
+  default: {
+    CancelToken: {
+      source: vi.fn(() => ({
+        token: 'mock-cancel-token',
+        cancel: vi.fn()
+      }))
+    },
+    isCancel: vi.fn(() => false),
+  }
+}));
+
+// Mock our apiClient service
+vi.mock('../../services/apiClient', () => ({
+  default: {
+    post: vi.fn(),
+    get: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    interceptors: {
+      response: {
+        use: vi.fn()
+      }
+    }
+  }
+}));
+
+// Import the mocked apiClient
+import apiClient from '../../services/apiClient';
+const mockedApiClient = vi.mocked(apiClient);
 
 // Mock only essential services that are actually called by the tests
 vi.mock('../../services/fileStorage', () => ({
@@ -61,7 +88,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
     vi.clearAllMocks();
 
     // Mock successful API response
-    (mockedAxios.post as Mock).mockResolvedValue({
+    (mockedApiClient.post as Mock).mockResolvedValue({
       data: new Blob(['fake converted content'], { type: 'application/pdf' })
     });
   });
@@ -103,7 +130,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         );
       });
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/convert/file/pdf', expect.any(FormData), {
+      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/v1/convert/file/pdf', expect.any(FormData), {
         responseType: 'blob'
       });
     });
@@ -139,7 +166,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         );
       });
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/convert/file/pdf', expect.any(FormData), {
+      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/v1/convert/file/pdf', expect.any(FormData), {
         responseType: 'blob'
       });
     });
@@ -183,12 +210,12 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         );
       });
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/convert/img/pdf', expect.any(FormData), {
+      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/v1/convert/img/pdf', expect.any(FormData), {
         responseType: 'blob'
       });
 
       // Should send all files in single request
-      const formData = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
       const files = formData.getAll('fileInput');
       expect(files).toHaveLength(3);
     });
@@ -229,7 +256,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         );
       });
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/convert/file/pdf', expect.any(FormData), {
+      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/v1/convert/file/pdf', expect.any(FormData), {
         responseType: 'blob'
       });
     });
@@ -269,12 +296,12 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         );
       });
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/convert/html/pdf', expect.any(FormData), {
+      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/v1/convert/html/pdf', expect.any(FormData), {
         responseType: 'blob'
       });
 
       // Should process files separately for web files
-      expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+      expect(mockedApiClient.post).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -306,7 +333,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         );
       });
 
-      const formData = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
       expect(formData.get('zoom')).toBe('1.5');
     });
 
@@ -340,7 +367,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         );
       });
 
-      const formData = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
       expect(formData.get('includeAttachments')).toBe('false');
       expect(formData.get('maxAttachmentSizeMB')).toBe('20');
       expect(formData.get('downloadHtml')).toBe('true');
@@ -374,9 +401,9 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         );
       });
 
-      const formData = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
       expect(formData.get('outputFormat')).toBe('pdfa');
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/convert/pdf/pdfa', expect.any(FormData), {
+      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/v1/convert/pdf/pdfa', expect.any(FormData), {
         responseType: 'blob'
       });
     });
@@ -418,7 +445,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         );
       });
 
-      const formData = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
       expect(formData.get('fitOption')).toBe(FIT_OPTIONS.FIT_PAGE);
       expect(formData.get('colorType')).toBe('grayscale');
       expect(formData.get('autoRotate')).toBe('false');
@@ -455,7 +482,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       // Should make separate API calls for each file
-      expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+      expect(mockedApiClient.post).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -472,7 +499,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
 
       // Mock one success, one failure
-      (mockedAxios.post as Mock)
+      (mockedApiClient.post as Mock)
         .mockResolvedValueOnce({
           data: new Blob(['converted1'], { type: 'application/pdf' })
         })
@@ -498,7 +525,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       await waitFor(() => {
         // Should have processed at least one file successfully
         expect(operationResult.current.files.length).toBeGreaterThan(0);
-        expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+        expect(mockedApiClient.post).toHaveBeenCalledTimes(2);
       });
     });
   });
