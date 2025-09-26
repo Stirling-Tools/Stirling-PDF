@@ -39,7 +39,6 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/remove-cert-sign': 'removeCertSign',
   '/unlock-pdf-forms': 'unlockPDFForms',
   '/validate-signature': 'validateSignature',
-  '/manage-certificates': 'manageCertificates',
 
   // Content manipulation
   '/sanitize': 'sanitize',
@@ -75,7 +74,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   // Image and visual tools
   '/extract-images': 'extractImages',
   '/adjust-contrast': 'adjustContrast',
-  '/fake-scan': 'fakeScan',
+  '/fake-scan': 'scannerEffect',
   '/replace-color-pdf': 'replaceColor',
 
   // Metadata and info
@@ -120,7 +119,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/pipeline': 'automate',
   '/extract-image-scans': 'scannerImageSplit',
   '/show-javascript': 'showJS',
-  '/scanner-effect': 'fakeScan',
+  '/scanner-effect': 'scannerEffect',
   '/split-by-size-or-count': 'autoSizeSplitPDF',
   '/overlay-pdf': 'overlayPdfs',
   '/split-pdf-by-sections': 'autoSplitPDF',
