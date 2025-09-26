@@ -63,8 +63,8 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/booklet-imposition': 'bookletImposition',
 
   // Splitting tools
-  '/auto-split-pdf': 'autoSplitPDF',
-  '/auto-size-split-pdf': 'autoSizeSplitPDF',
+  '/auto-split-pdf': 'split',
+  '/auto-size-split-pdf': 'split',
   '/scanner-image-split': 'scannerImageSplit',
 
   // Annotation and content removal
@@ -120,8 +120,8 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/extract-image-scans': 'scannerImageSplit',
   '/show-javascript': 'showJS',
   '/scanner-effect': 'scannerEffect',
-  '/split-by-size-or-count': 'autoSizeSplitPDF',
+  '/split-by-size-or-count': 'split',
   '/overlay-pdf': 'overlayPdfs',
-  '/split-pdf-by-sections': 'autoSplitPDF',
-  '/split-pdf-by-chapters': 'autoSplitPDF',
+  '/split-pdf-by-sections': 'split',
+  '/split-pdf-by-chapters': 'split',
 };

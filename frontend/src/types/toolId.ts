@@ -11,8 +11,6 @@ export const TOOL_IDS = [
   'changePermissions',
   'watermark',
   'sanitize',
-  'autoSplitPDF',
-  'autoSizeSplitPDF',
   'split',
   'merge',
   'convert',
