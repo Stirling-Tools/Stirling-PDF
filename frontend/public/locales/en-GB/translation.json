@@ -3412,6 +3412,18 @@
       "generateError": "We couldn't generate your API key."
     }
   },
+  "AddAttachmentsRequest": {
+    "attachments": "Select Attachments",
+    "info": "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel.",
+    "selectFiles": "Select Files to Attach",
+    "placeholder": "Choose files...",
+    "addMoreFiles": "Add more files...",
+    "selectedFiles": "Selected Files",
+    "submit": "Add Attachments",
+    "results": {
+      "title": "Attachment Results"
+    }
+  },
   "termsAndConditions": "Terms & Conditions",
   "logOut": "Log out"
 }
