@@ -13,7 +13,7 @@ const tsconfigRootDir = fileURLToPath(new URL('./', import.meta.url));
 const srcGlobs = ['{src,frontend/src}/**/*.{ts,tsx,js,jsx}'];
 const srcTsGlobs = ['{src,frontend/src}/**/*.{ts,tsx}'];
 const nodeGlobs = [
-  'scripts/**/*.{js,ts}',
+  'scripts/**/*.{js,ts,mjs}',
   'vite.config.ts',
   'vitest.config.ts',
   'vitest.minimal.config.ts',
