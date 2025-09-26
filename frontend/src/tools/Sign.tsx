@@ -25,17 +25,9 @@ const Sign = (props: BaseToolProps) => {
   // Track which signature mode was active for reactivation after save
   const activeModeRef = useRef<'draw' | 'placement' | null>(null);
 
-  // Manual sync function
-  const syncSignatureConfig = () => {
-    setSignatureConfig(base.params.parameters);
-  };
-
-  // Single handler that syncs first
+  // Single handler that activates placement mode
   const handleSignaturePlacement = () => {
-    syncSignatureConfig();
-    setTimeout(() => {
-      activateSignaturePlacementMode();
-    }, 100);
+    activateSignaturePlacementMode();
   };
 
   const base = useBaseTool(

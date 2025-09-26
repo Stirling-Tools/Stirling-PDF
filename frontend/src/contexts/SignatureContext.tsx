@@ -82,7 +82,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
       signatureApiRef.current.activateSignaturePlacementMode();
       setPlacementMode(true);
     }
-  }, [state.signatureConfig, setPlacementMode]);
+  }, [setPlacementMode]);
 
   const activateDeleteMode = useCallback(() => {
     if (signatureApiRef.current) {
