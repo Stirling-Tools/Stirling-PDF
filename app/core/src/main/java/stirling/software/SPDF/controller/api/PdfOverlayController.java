@@ -39,7 +39,7 @@ public class PdfOverlayController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/overlay-pdfs", consumes = "multipart/form-data")
+    @PostMapping(value = "/overlay-pdfs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Overlay PDF files in various modes",
             description =
