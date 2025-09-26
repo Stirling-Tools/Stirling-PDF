@@ -10,17 +10,21 @@ import AddPassword from "../tools/AddPassword";
 import ChangePermissions from "../tools/ChangePermissions";
 import RemoveBlanks from "../tools/RemoveBlanks";
 import RemovePages from "../tools/RemovePages";
+import ReorganizePages from "../tools/ReorganizePages";
+import { reorganizePagesOperationConfig } from "../hooks/tools/reorganizePages/useReorganizePagesOperation";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import { getSynonyms } from "../utils/toolSynonyms";
 import AddWatermark from "../tools/AddWatermark";
 import AddStamp from "../tools/AddStamp";
+import AddAttachments from "../tools/AddAttachments";
 import Merge from '../tools/Merge';
 import Repair from "../tools/Repair";
 import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
+import RemoveImage from "../tools/RemoveImage";
 import CertSign from "../tools/CertSign";
 import BookletImposition from "../tools/BookletImposition";
 import Flatten from "../tools/Flatten";
@@ -35,6 +39,7 @@ import { sanitizeOperationConfig } from "../hooks/tools/sanitize/useSanitizeOper
 import { repairOperationConfig } from "../hooks/tools/repair/useRepairOperation";
 import { addWatermarkOperationConfig } from "../hooks/tools/addWatermark/useAddWatermarkOperation";
 import { addStampOperationConfig } from "../components/tools/addStamp/useAddStampOperation";
+import { addAttachmentsOperationConfig } from "../hooks/tools/addAttachments/useAddAttachmentsOperation";
 import { unlockPdfFormsOperationConfig } from "../hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
 import { singleLargePageOperationConfig } from "../hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
@@ -51,6 +56,8 @@ import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation"
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
 import { removeAnnotationsOperationConfig } from "../hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
+import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useExtractImagesOperation";
+import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
@@ -69,14 +76,21 @@ import RedactSingleStepSettings from "../components/tools/redact/RedactSingleSte
 import RotateSettings from "../components/tools/rotate/RotateSettings";
 import Redact from "../tools/Redact";
 import AdjustPageScale from "../tools/AdjustPageScale";
+import ReplaceColor from "../tools/ReplaceColor";
+import ScannerImageSplit from "../tools/ScannerImageSplit";
 import { ToolId } from "../types/toolId";
 import MergeSettings from '../components/tools/merge/MergeSettings';
 import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
+import { scannerImageSplitOperationConfig } from "../hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
+import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/ScannerImageSplitSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import CropSettings from "../components/tools/crop/CropSettings";
 import RemoveAnnotations from "../tools/RemoveAnnotations";
 import RemoveAnnotationsSettings from "../components/tools/removeAnnotations/RemoveAnnotationsSettings";
+import ExtractImages from "../tools/ExtractImages";
+import ExtractImagesSettings from "../components/tools/extractImages/ExtractImagesSettings";
+import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -384,14 +398,15 @@ export function useFlatToolRegistry(): ToolRegistry {
       reorganizePages: {
         icon: <LocalIcon icon="move-down-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.reorganizePages.title", "Reorganize Pages"),
-        component: null,
-        workbench: "pageEditor",
+        component: ReorganizePages,
         description: t(
           "home.reorganizePages.desc",
           "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        endpoints: ["rearrange-pages"],
+        operationConfig: reorganizePagesOperationConfig,
         synonyms: getSynonyms(t, "reorganizePages")
       },
       scalePages: {
@@ -455,12 +470,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       addAttachments: {
         icon: <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.addAttachments.title", "Add Attachments"),
-        component: null,
-
+        component: AddAttachments,
         description: t("home.addAttachments.desc", "Add or remove embedded files (attachments) to/from a PDF"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
-        synonyms: getSynonyms(t, "addAttachments")
+        synonyms: getSynonyms(t, "addAttachments"),
+        maxFiles: 1,
+        endpoints: ["add-attachments"],
+        operationConfig: addAttachmentsOperationConfig,
       },
 
       // Extraction
@@ -475,12 +492,16 @@ export function useFlatToolRegistry(): ToolRegistry {
         synonyms: getSynonyms(t, "extractPages")
       },
       extractImages: {
-        icon: <LocalIcon icon="filter-alt" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="photo-library-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.extractImages.title", "Extract Images"),
-        component: null,
+        component: ExtractImages,
         description: t("home.extractImages.desc", "Extract images from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
+        maxFiles: -1,
+        endpoints: ["extract-images"],
+        operationConfig: extractImagesOperationConfig,
+        settingsComponent: ExtractImagesSettings,
         synonyms: getSynonyms(t, "extractImages")
       },
 
@@ -522,11 +543,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       },
       removeImage: {
         icon: <LocalIcon icon="remove-selection-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.removeImage.title", "Remove Image"),
-        component: null,
-        description: t("home.removeImage.desc", "Remove images from PDF documents"),
+        name: t("home.removeImage.title", "Remove Images"),
+        component: RemoveImage,
+        description: t("home.removeImage.desc", "Remove all images from a PDF document"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        maxFiles: -1,
+        endpoints: ["remove-image-pdf"],
+        operationConfig: undefined,
         synonyms: getSynonyms(t, "removeImage"),
       },
       removePassword: {
@@ -630,10 +654,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       scannerImageSplit: {
         icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.scannerImageSplit.title", "Detect & Split Scanned Photos"),
-        component: null,
+        component: ScannerImageSplit,
         description: t("home.scannerImageSplit.desc", "Detect and split scanned photos into separate pages"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["extract-image-scans"],
+        operationConfig: scannerImageSplitOperationConfig,
+        settingsComponent: ScannerImageSplitSettings,
         synonyms: getSynonyms(t, "ScannerImageSplit"),
       },
       overlayPdfs: {
@@ -645,14 +673,18 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         synonyms: getSynonyms(t, "overlayPdfs"),
       },
-      replaceColorPdf: {
+      replaceColor: {
         icon: <LocalIcon icon="format-color-fill-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.replaceColorPdf.title", "Replace & Invert Color"),
-        component: null,
-        description: t("home.replaceColorPdf.desc", "Replace or invert colors in PDF documents"),
+        name: t("home.replaceColor.title", "Replace & Invert Color"),
+        component: ReplaceColor,
+        description: t("home.replaceColor.desc", "Replace or invert colors in PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        synonyms: getSynonyms(t, "replaceColorPdf"),
+        maxFiles: -1,
+        endpoints: ["replace-invert-pdf"],
+        operationConfig: replaceColorOperationConfig,
+        settingsComponent: ReplaceColorSettings,
+        synonyms: getSynonyms(t, "replaceColor"),
       },
       addImage: {
         icon: <LocalIcon icon="image-rounded" width="1.5rem" height="1.5rem" />,
