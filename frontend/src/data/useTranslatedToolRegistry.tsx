@@ -22,6 +22,7 @@ import Merge from '../tools/Merge';
 import Repair from "../tools/Repair";
 import AutoRename from "../tools/AutoRename";
 import SingleLargePage from "../tools/SingleLargePage";
+import PageLayout from "../tools/PageLayout";
 import UnlockPdfForms from "../tools/UnlockPdfForms";
 import RemoveCertificateSign from "../tools/RemoveCertificateSign";
 import RemoveImage from "../tools/RemoveImage";
@@ -88,6 +89,7 @@ import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeM
 import CropSettings from "../components/tools/crop/CropSettings";
 import RemoveAnnotations from "../tools/RemoveAnnotations";
 import RemoveAnnotationsSettings from "../components/tools/removeAnnotations/RemoveAnnotationsSettings";
+import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings"
 import ExtractImages from "../tools/ExtractImages";
 import ExtractImagesSettings from "../components/tools/extractImages/ExtractImagesSettings";
 import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
@@ -435,11 +437,13 @@ export function useFlatToolRegistry(): ToolRegistry {
       pageLayout: {
         icon: <LocalIcon icon="dashboard-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.pageLayout.title", "Multi-Page Layout"),
-        component: null,
-
+        component: PageLayout,
         description: t("home.pageLayout.desc", "Merge multiple pages of a PDF document into a single page"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["multi-page-layout"],
+        settingsComponent: PageLayoutSettings,
         synonyms: getSynonyms(t, "pageLayout")
       },
       bookletImposition: {

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import axios from 'axios';
+import apiClient from '../../../services/apiClient';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters, defaultParameters } from './useConvertParameters';
 import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
@@ -108,7 +108,7 @@ export const convertProcessor = async (
     for (const file of selectedFiles) {
       try {
         const formData = buildConvertFormData(parameters, [file]);
-        const response = await axios.post(endpoint, formData, { responseType: 'blob' });
+        const response = await apiClient.post(endpoint, formData, { responseType: 'blob' });
 
         const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
 
@@ -120,7 +120,7 @@ export const convertProcessor = async (
   } else {
     // Batch processing for simple cases (image→PDF combine)
     const formData = buildConvertFormData(parameters, selectedFiles);
-    const response = await axios.post(endpoint, formData, { responseType: 'blob' });
+    const response = await apiClient.post(endpoint, formData, { responseType: 'blob' });
 
     const baseFilename = selectedFiles.length === 1
       ? selectedFiles[0].name
