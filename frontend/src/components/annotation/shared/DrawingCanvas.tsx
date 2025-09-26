@@ -41,7 +41,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [isModalDrawing, setIsModalDrawing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [, setSignatureData] = useState<string | null>(null);
 
   // Drawing functions for main canvas
   const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -89,7 +88,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     // Save canvas as signature data
     if (canvasRef.current) {
       const dataURL = canvasRef.current.toDataURL('image/png');
-      setSignatureData(dataURL);
       onSignatureDataChange(dataURL);
     }
   }, [isDrawing, disabled, onSignatureDataChange]);
@@ -149,7 +147,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     // Sync the canvases and update signature data (only when drawing stops)
     if (modalCanvasRef.current) {
       const dataURL = modalCanvasRef.current.toDataURL('image/png');
-      setSignatureData(dataURL);
       onSignatureDataChange(dataURL);
 
       // Also update the small canvas display
@@ -183,7 +180,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         }
       }
 
-      setSignatureData(null);
       onSignatureDataChange(null);
     }
   }, [disabled]);
@@ -212,7 +208,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       }
     }
 
-    setSignatureData(null);
     onSignatureDataChange(null);
   }, []);
 
@@ -220,7 +215,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (!modalCanvasRef.current) return;
 
     const dataURL = modalCanvasRef.current.toDataURL('image/png');
-    setSignatureData(dataURL);
     onSignatureDataChange(dataURL);
 
     // Copy to small canvas for display

@@ -11,10 +11,7 @@ export interface HistoryAPI {
   canRedo: () => boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface HistoryAPIBridgeProps {}
-
-export const HistoryAPIBridge = forwardRef<HistoryAPI, HistoryAPIBridgeProps>(function HistoryAPIBridge(_props, ref) {
+export const HistoryAPIBridge = forwardRef<HistoryAPI, {}>((_props, ref) => {
   const { provides: historyApi } = useHistoryCapability();
   const { provides: annotationApi } = useAnnotationCapability();
   const { getImageData, storeImageData } = useSignature();

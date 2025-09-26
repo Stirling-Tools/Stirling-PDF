@@ -17,10 +17,7 @@ export interface SignatureAPI {
   getPageAnnotations: (pageIndex: number) => Promise<any[]>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface SignatureAPIBridgeProps {}
-
-export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgeProps>((_props, ref) => {
+export const SignatureAPIBridge = forwardRef<SignatureAPI, {}>((_props, ref) => {
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig, storeImageData, isPlacementMode } = useSignature();
 

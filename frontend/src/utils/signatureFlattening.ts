@@ -4,13 +4,19 @@ import { createProcessedFile } from '../contexts/file/fileActions';
 import { createNewStirlingFileStub, createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '../types/fileContext';
 import type { SignatureAPI } from '../components/viewer/SignatureAPIBridge';
 
+interface MinimalFileContextSelectors {
+  getAllFileIds: () => FileId[];
+  getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined;
+  getFile: (id: FileId) => StirlingFile | undefined;
+}
+
 interface SignatureFlatteningOptions {
   signatureApiRef: React.RefObject<SignatureAPI | null>;
   getImageData: (id: string) => string | undefined;
   exportActions?: {
     saveAsCopy: () => Promise<ArrayBuffer | null>;
   };
-  selectors: any; // FileContextSelectors - using any to avoid complex type matching
+  selectors: MinimalFileContextSelectors;
   consumeFiles: (inputFileIds: FileId[], outputStirlingFiles: StirlingFile[], outputStirlingFileStubs: StirlingFileStub[]) => Promise<FileId[]>;
   originalFile?: StirlingFile;
 }

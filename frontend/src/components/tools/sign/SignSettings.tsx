@@ -109,7 +109,7 @@ const SignSettings = ({
         onDeactivateSignature();
       }
     }
-  }, [parameters.signatureType, parameters.signerName]);
+  }, [parameters.signatureType, parameters.signerName, onActivateSignaturePlacement, onDeactivateSignature]);
 
   // Handle signature data updates
   useEffect(() => {

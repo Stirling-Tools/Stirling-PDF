@@ -106,7 +106,7 @@ const Sign = (props: BaseToolProps) => {
     } catch (error) {
       console.error('Error saving signed document:', error);
     }
-  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, flattenSignatures, setWorkbench, activateDrawMode]);
+  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode]);
 
   const getSteps = () => {
     const steps = [];
