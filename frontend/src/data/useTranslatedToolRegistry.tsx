@@ -56,6 +56,7 @@ import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation"
 import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
+import { removeAnnotationsOperationConfig } from "../hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
 import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
@@ -86,6 +87,8 @@ import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustP
 import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/ScannerImageSplitSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import CropSettings from "../components/tools/crop/CropSettings";
+import RemoveAnnotations from "../tools/RemoveAnnotations";
+import RemoveAnnotationsSettings from "../components/tools/removeAnnotations/RemoveAnnotationsSettings";
 import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings"
 import ExtractImages from "../tools/ExtractImages";
 import ExtractImagesSettings from "../components/tools/extractImages/ExtractImagesSettings";
@@ -521,10 +524,13 @@ export function useFlatToolRegistry(): ToolRegistry {
       removeAnnotations: {
         icon: <LocalIcon icon="thread-unread-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeAnnotations.title", "Remove Annotations"),
-        component: null,
+        component: RemoveAnnotations,
         description: t("home.removeAnnotations.desc", "Remove annotations and comments from PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.REMOVAL,
+        maxFiles: -1,
+        operationConfig: removeAnnotationsOperationConfig,
+        settingsComponent: RemoveAnnotationsSettings,
         synonyms: getSynonyms(t, "removeAnnotations")
       },
       removeImage: {
