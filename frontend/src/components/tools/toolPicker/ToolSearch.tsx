@@ -44,7 +44,7 @@ const ToolSearch = ({
       ([key]) => idToWords(key),
       ([, v]) => v.name,
       ([, v]) => v.description,
-      ([, v]) => v.synonyms?.join(' ') || '',
+      ([, v]) => v.synonyms?.join(' ') ?? '',
     ]).slice(0, 6);
     return ranked.map(({ item: [id, tool] }) => ({ id, tool }));
   }, [value, toolRegistry, mode, selectedToolKey]);

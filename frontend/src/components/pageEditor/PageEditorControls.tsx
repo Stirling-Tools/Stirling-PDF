@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Tooltip,
   ActionIcon,
@@ -65,7 +66,7 @@ const PageEditorControls = ({
     // Convert selected pages to split positions (same logic as handleSplit)
     const selectedPageNumbers = displayDocument ? selectedPageIds.map(id => {
       const page = displayDocument.pages.find(p => p.id === id);
-      return page?.pageNumber || 0;
+      return page?.pageNumber ?? 0;
     }).filter(num => num > 0) : [];
     const selectedSplitPositions = selectedPageNumbers.map(pageNum => pageNum - 1).filter(pos => pos < totalPages - 1);
 

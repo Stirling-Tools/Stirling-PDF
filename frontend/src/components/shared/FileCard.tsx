@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, Stack, Text, Group, Badge, Button, Box, Image, ThemeIcon, ActionIcon, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -26,7 +26,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
   const { t } = useTranslation();
   // Use record thumbnail if available, otherwise fall back to IndexedDB lookup
   const { thumbnail: indexedDBThumb, isGenerating } = useIndexedDBThumbnail(fileStub);
-  const thumb = fileStub?.thumbnailUrl || indexedDBThumb;
+  const thumb = fileStub?.thumbnailUrl ?? indexedDBThumb;
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -68,7 +68,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
           }}
         >
           {/* Hover action buttons */}
-          {isHovered && (onView || onEdit) && (
+          {isHovered && (onView ?? onEdit) && (
             <div
               style={{
                 position: 'absolute',

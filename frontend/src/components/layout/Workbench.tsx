@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
@@ -75,7 +76,7 @@ export default function Workbench() {
         return (
           <FileEditor
             toolMode={!!selectedToolId}
-            supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
+            supportedExtensions={selectedTool?.supportedFormats ?? ["pdf"]}
             {...(!selectedToolId && {
               onOpenPageEditor: () => {
                 setCurrentView("pageEditor");

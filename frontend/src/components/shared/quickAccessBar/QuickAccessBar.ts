@@ -79,5 +79,5 @@ export const getActiveNavButton = (
   // If a tool is selected, highlight it immediately even if the panel view
   // transition to 'toolContent' has not completed yet. This prevents a brief
   // period of no-highlight during rapid navigation.
-    return selectedToolKey ? selectedToolKey : 'tools';
+    return selectedToolKey ?? 'tools';
 };

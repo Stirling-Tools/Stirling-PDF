@@ -32,7 +32,7 @@ function titleForStatus(status?: number): string {
  * Returns true if a special toast was shown, false otherwise.
  */
 export function showSpecialErrorToast(rawError: string | undefined, options?: { status?: number }): boolean {
-  const message = (rawError || '').toString();
+  const message = (rawError ?? '').toString();
   if (!message) return false;
 
   for (const mapping of MAPPINGS) {

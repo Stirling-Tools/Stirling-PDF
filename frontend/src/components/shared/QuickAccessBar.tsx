@@ -41,10 +41,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   // Helper function to render navigation buttons with URL support
   const renderNavButton = (config: ButtonConfig, index: number) => {
     const isActive = isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
-    
+
     // Check if this button has URL navigation support
-    const navProps = config.type === 'navigation' && (config.id === 'read' || config.id === 'automate') 
-      ? getToolNavigation(config.id) 
+    const navProps = config.type === 'navigation' && (config.id === 'read' || config.id === 'automate')
+      ? getToolNavigation(config.id)
       : null;
 
     const handleClick = (e?: React.MouseEvent) => {
@@ -59,7 +59,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     return (
       <div key={config.id} className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
         <ActionIcon
-          {...(navProps ? { 
+          {...(navProps ? {
             component: "a" as const,
             href: navProps.href,
             onClick: (e: React.MouseEvent) => handleClick(e),
@@ -67,7 +67,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           } : {
             onClick: () => handleClick()
           })}
-          size={isActive ? (config.size || 'lg') : 'lg'}
+          size={isActive ? (config.size ?? 'lg') : 'lg'}
           variant="subtle"
           style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
           className={isActive ? 'activeIconScale' : ''}

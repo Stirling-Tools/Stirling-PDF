@@ -177,8 +177,8 @@ export const useToolOperation = <TParams>(
         for (const f of zeroByteFiles) {
           (fileActions.markFileError as any)((f as any).fileId);
         }
-      } catch (e) { 
-        console.log('markFileError', e); 
+      } catch (e) {
+        console.log('markFileError', e);
       }
     }
     const validFiles = selectedFiles.filter(file => (file as any)?.size > 0);
@@ -437,7 +437,7 @@ export const useToolOperation = <TParams>(
         }
       } catch (_e) { void _e; }
 
-      const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
+      const errorMessage = config.getErrorMessage?.(error) ?? extractErrorMessage(error);
       actions.setError(errorMessage);
       actions.setStatus('');
     } finally {

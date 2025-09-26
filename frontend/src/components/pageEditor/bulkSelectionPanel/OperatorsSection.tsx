@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button, Text, Group, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import classes from './BulkSelectionPanel.module.css';

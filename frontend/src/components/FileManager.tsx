@@ -34,7 +34,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
     setRecentFiles(files);
   }, [loadRecentFiles]);
 
-  const handleRecentFilesSelected = useCallback(async (files: StirlingFileStub[]) => {
+  const handleRecentFilesSelected = useCallback((files: StirlingFileStub[]) => {
     try {
       // Use StirlingFileStubs directly - preserves all metadata!
       onRecentFileSelect(files);
@@ -68,7 +68,9 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
 
   useEffect(() => {
     if (isFilesModalOpen) {
-      refreshRecentFiles();
+      refreshRecentFiles().catch((error) => {
+        console.error('Failed to refresh recent files:', error);
+      });
     } else {
       // Reset state when modal is closed
       setIsDragging(false);

@@ -1,3 +1,4 @@
+import React from 'react';
 import { Stack, Card, Text, Flex } from '@mantine/core';
 import { Tooltip } from './Tooltip';
 import { useTranslation } from 'react-i18next';

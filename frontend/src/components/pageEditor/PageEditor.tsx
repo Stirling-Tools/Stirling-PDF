@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { useFileState, useFileActions } from "../../contexts/FileContext";
 import { PDFDocument, PageEditorFunctions } from "../../types/pageEditor";
@@ -105,14 +105,14 @@ const PageEditor = ({
   }, []);
 
   // Interface functions for parent component
-  const displayDocument = editedDocument || mergedPdfDocument;
+  const displayDocument = editedDocument ?? mergedPdfDocument;
 
   // Utility functions to convert between page IDs and page numbers
   const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
     if (!displayDocument) return [];
     return pageIds.map(id => {
       const page = displayDocument.pages.find(p => p.id === id);
-      return page?.pageNumber || 0;
+      return page?.pageNumber ?? 0;
     }).filter(num => num > 0);
   }, [displayDocument]);
 
@@ -120,7 +120,7 @@ const PageEditor = ({
     if (!displayDocument) return [];
     return pageNumbers.map(num => {
       const page = displayDocument.pages.find(p => p.pageNumber === num);
-      return page?.id || '';
+      return page?.id ?? '';
     }).filter(id => id !== '');
   }, [displayDocument]);
 
@@ -157,7 +157,7 @@ const PageEditor = ({
       const pagesToDelete = pageIds.map(pageId => {
 
     const page = displayDocument.pages.find(p => p.id === pageId);
-        return page?.pageNumber || 0;
+        return page?.pageNumber ?? 0;
       }).filter(num => num > 0);
 
       if (pagesToDelete.length > 0) {
@@ -446,7 +446,7 @@ const PageEditor = ({
   const getExportFilename = useCallback((): string => {
     if (activeFileIds.length <= 1) {
       // Single file - use original name
-      return displayDocument?.name || 'document.pdf';
+      return displayDocument?.name ?? 'document.pdf';
     }
 
     // Multiple files - use first file name with " (merged)" suffix
@@ -466,7 +466,7 @@ const PageEditor = ({
     try {
       // Step 1: Apply DOM changes to document state first
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-        mergedPdfDocument || displayDocument, // Original order
+        mergedPdfDocument ?? displayDocument, // Original order
         displayDocument, // Current display order (includes reordering)
         splitPositions // Position-based splits
       );
@@ -514,7 +514,7 @@ const PageEditor = ({
     try {
       // Step 1: Apply DOM changes to document state first
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-        mergedPdfDocument || displayDocument, // Original order
+        mergedPdfDocument ?? displayDocument, // Original order
         displayDocument, // Current display order (includes reordering)
         splitPositions // Position-based splits
       );
@@ -585,7 +585,7 @@ const PageEditor = ({
 
     // Pass current display document (which includes reordering) to get both reordering AND DOM changes
     const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-      mergedPdfDocument || displayDocument, // Original order
+      mergedPdfDocument ?? displayDocument, // Original order
       displayDocument, // Current display order (includes reordering)
       splitPositions // Position-based splits
     );
@@ -642,9 +642,9 @@ const PageEditor = ({
         exportLoading,
         selectionMode,
         selectedPageIds,
-        displayDocument: displayDocument || undefined,
+        displayDocument: displayDocument ?? undefined,
         splitPositions,
-        totalPages: displayDocument?.pages.length || 0,
+        totalPages: displayDocument?.pages.length ?? 0,
         closePdf,
       });
     }
@@ -655,7 +655,7 @@ const PageEditor = ({
   ]);
 
   // Display all pages - use edited or original document
-  const displayedPages = displayDocument?.pages || [];
+  const displayedPages = displayDocument?.pages ?? [];
 
   return (
     <Box pos="relative" h='100%' pt={40} style={{ overflow: 'auto' }} data-scrolling-container="true">

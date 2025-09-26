@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import classes from './bulkSelectionPanel/BulkSelectionPanel.module.css';
 import { parseSelectionWithDiagnostics } from '../../utils/bulkselection/parseSelection';
 import PageSelectionInput from './bulkSelectionPanel/PageSelectionInput';

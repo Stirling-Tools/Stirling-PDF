@@ -56,7 +56,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
           ) : (
             filteredFiles.map((file, index) => {
               // All files in filteredFiles are now leaf files only
-              const historyFiles = loadedHistoryFiles.get(file.id) || [];
+              const historyFiles = loadedHistoryFiles.get(file.id) ?? [];
               const isExpanded = expandedFileIds.has(file.id);
 
               return (

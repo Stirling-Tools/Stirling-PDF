@@ -91,7 +91,7 @@ export class DeletePagesCommand extends DOMCommand {
       // Convert page numbers to page IDs for stable identification
       this.pageIdsToDelete = this.pagesToDelete.map(pageNum => {
         const page = currentDoc.pages.find(p => p.pageNumber === pageNum);
-        return page?.id || '';
+        return page?.id ?? '';
       }).filter(id => id);
 
       this.hasExecuted = true;
@@ -224,9 +224,7 @@ export class ReorderPagesCommand extends DOMCommand {
     this.setDocument(restoredDocument);
   }
 
-  get description(): string {
-    return `Reorder page(s)`;
-  }
+  readonly description = `Reorder page(s)`;
 }
 
 export class SplitCommand extends DOMCommand {
@@ -560,9 +558,7 @@ export class BulkPageBreakCommand extends DOMCommand {
     this.setDocument(this.originalDocument);
   }
 
-  get description(): string {
-    return `Insert page breaks after all pages`;
-  }
+  readonly description = `Insert page breaks after all pages`;
 }
 
 export class InsertFilesCommand extends DOMCommand {
@@ -711,7 +707,7 @@ export class InsertFilesCommand extends DOMCommand {
 
         console.log('Generating thumbnails for file:', fileId);
         console.log('Pages:', pages.length);
-        console.log('ArrayBuffer size:', arrayBuffer?.byteLength || 'undefined');
+        console.log('ArrayBuffer size:', arrayBuffer?.byteLength ?? 'undefined');
 
         if (arrayBuffer && arrayBuffer.byteLength > 0) {
           // Extract page numbers for all pages from this file
@@ -788,7 +784,7 @@ export class InsertFilesCommand extends DOMCommand {
           this.fileDataMap.set(fileId, arrayBuffer);
 
           console.log('After storing - fileDataMap size:', this.fileDataMap.size);
-          console.log('Stored value size:', this.fileDataMap.get(fileId)?.byteLength || 'undefined');
+          console.log('Stored value size:', this.fileDataMap.get(fileId)?.byteLength ?? 'undefined');
 
           for (let i = 1; i <= pageCount; i++) {
             const pageId = `${fileId}-page-${i}`;

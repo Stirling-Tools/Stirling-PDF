@@ -317,7 +317,7 @@ const FileEditor = ({
     }
   }, [activeStirlingFileStubs, setSelectedFiles, navActions.setWorkbench]);
 
-  const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
+  const handleLoadFromStorage = useCallback((selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
 
     try {

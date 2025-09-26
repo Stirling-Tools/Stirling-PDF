@@ -13,7 +13,7 @@ function clampText(s: string, max = MAX_TOAST_BODY_CHARS): string {
 }
 
 function isUnhelpfulMessage(msg: string | null | undefined): boolean {
-  const s = (msg || '').trim();
+  const s = (msg ?? '').trim();
   if (!s) return true;
   // Common unhelpful payloads we see
   if (s === '{}' || s === '[]') return true;
@@ -33,7 +33,7 @@ function titleForStatus(status?: number): string {
 function extractAxiosErrorMessage(error: any): { title: string; body: string } {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
-    const _statusText = error.response?.statusText || '';
+    const _statusText = error.response?.statusText ?? '';
     let parsed: any = undefined;
     const raw = error.response?.data;
     if (typeof raw === 'string') {
@@ -71,7 +71,7 @@ function extractAxiosErrorMessage(error: any): { title: string; body: string } {
     return { title, body: bodyMsg };
   }
   try {
-    const msg = (error?.message || String(error)) as string;
+    const msg = (error?.message ?? String(error)) as string;
     return { title: 'Network error', body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg };
   } catch (e) {
     // ignore extraction errors
@@ -81,7 +81,7 @@ function extractAxiosErrorMessage(error: any): { title: string; body: string } {
 }
 
 // ---------- Axios instance creation ----------
-const __globalAny = (typeof window !== 'undefined' ? (window as any) : undefined);
+const __globalAny: Window | undefined = (typeof window !== 'undefined' ? window : undefined);
 
 type ExtendedAxiosInstance = AxiosInstance & {
   CancelToken: typeof axios.CancelToken;
@@ -105,9 +105,9 @@ if (__PREV_CLIENT) {
   __createdClient = axios as any;
 }
 
-const apiClient: ExtendedAxiosInstance = (__createdClient || (axios as any)) as ExtendedAxiosInstance;
+const apiClient: ExtendedAxiosInstance = (__createdClient ?? (axios as any)) as ExtendedAxiosInstance;
 
-// Augment instance with axios static helpers for backwards compatibility 
+// Augment instance with axios static helpers for backwards compatibility
 if (apiClient) {
   try { (apiClient as any).CancelToken = (axios as any).CancelToken; } catch (e) { console.debug('setCancelToken', e); }
   try { (apiClient as any).isCancel = (axios as any).isCancel; } catch (e) { console.debug('setIsCancel', e); }
@@ -115,7 +115,7 @@ if (apiClient) {
 
 // ---------- Base defaults  ----------
 try {
-  const env = (import.meta as any)?.env || {};
+  const env = (import.meta as any)?.env ?? {};
   apiClient.defaults.baseURL = env?.VITE_API_BASE_URL ?? '/';
   apiClient.defaults.responseType = 'json';
   // If OSS relies on cookies, uncomment:
@@ -124,9 +124,9 @@ try {
   apiClient.defaults.timeout = 20000;
 } catch (e) {
   console.debug('setDefaults', e);
-  apiClient.defaults.baseURL = apiClient.defaults.baseURL || '/';
-  apiClient.defaults.responseType = apiClient.defaults.responseType || 'json';
-  apiClient.defaults.timeout = apiClient.defaults.timeout || 20000;
+  apiClient.defaults.baseURL = apiClient.defaults.baseURL ?? '/';
+  apiClient.defaults.responseType = apiClient.defaults.responseType ?? 'json';
+  apiClient.defaults.timeout = apiClient.defaults.timeout ?? 20000;
 }
 
 // ---------- Install a single response error interceptor (dedup + UX) ----------
@@ -138,7 +138,7 @@ if (__globalAny?.__SPDF_HTTP_ERR_INTERCEPTOR_ID !== undefined && __PREV_CLIENT) 
   }
 }
 
-const __recentSpecialByEndpoint: Record<string, number> = (__globalAny?.__SPDF_RECENT_SPECIAL || {});
+const __recentSpecialByEndpoint: Record<string, number> = (__globalAny?.__SPDF_RECENT_SPECIAL ?? {});
 const __SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate after special toast
 
 const __INTERCEPTOR_ID__ = apiClient?.interceptors?.response?.use
@@ -219,10 +219,10 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
   if (!res.ok) {
     let detail = '';
     try {
-      const ct = res.headers.get('content-type') || '';
+      const ct = res.headers.get('content-type') ?? '';
       if (ct.includes('application/json')) {
         const data = await res.json();
-        detail = typeof data === 'string' ? data : (data?.message || JSON.stringify(data));
+        detail = typeof data === 'string' ? data : (data?.message ?? JSON.stringify(data));
       } else {
         detail = await res.text();
       }
@@ -243,12 +243,12 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 
 // ---------- Convenience API surface and exports ----------
 export const api = {
-  get: apiClient.get,
-  post: apiClient.post,
-  put: apiClient.put,
-  patch: apiClient.patch,
-  delete: apiClient.delete,
-  request: apiClient.request,
+  get: apiClient.get.bind(apiClient),
+  post: apiClient.post.bind(apiClient),
+  put: apiClient.put.bind(apiClient),
+  patch: apiClient.patch.bind(apiClient),
+  delete: apiClient.delete.bind(apiClient),
+  request: apiClient.request.bind(apiClient),
 };
 
 export default apiClient;

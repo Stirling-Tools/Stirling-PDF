@@ -1,3 +1,4 @@
+import React from 'react';
 import { Text } from '@mantine/core';
 import classes from './BulkSelectionPanel.module.css';
 
@@ -24,7 +25,7 @@ const SelectedPagesDisplay = ({
         <Text size="sm" c="dimmed" className={classes.selectedText}>
           Selected: {selectedPageIds.length} pages ({displayDocument ? selectedPageIds.map(id => {
             const page = displayDocument.pages.find(p => p.id === id);
-            return page?.pageNumber || 0;
+            return page?.pageNumber ?? 0;
           }).filter(n => n > 0).join(', ') : ''})
         </Text>
       )}

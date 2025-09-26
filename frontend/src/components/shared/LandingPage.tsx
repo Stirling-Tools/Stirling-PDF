@@ -28,7 +28,7 @@ const LandingPage = () => {
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
+    const files = Array.from(event.target.files ?? []);
     if (files.length > 0) {
       await addFiles(files);
     }

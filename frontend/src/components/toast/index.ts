@@ -22,7 +22,7 @@ function createImperativeApi() {
   };
 }
 
-if (!_api) _api = createImperativeApi();
+_api ??= createImperativeApi();
 
 // Hook helper to wire context API back to singleton
 export function ToastPortalBinder() {

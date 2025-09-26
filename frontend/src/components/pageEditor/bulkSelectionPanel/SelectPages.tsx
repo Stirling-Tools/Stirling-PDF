@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import { Button, Text, NumberInput, Group } from '@mantine/core';
 import classes from './BulkSelectionPanel.module.css';

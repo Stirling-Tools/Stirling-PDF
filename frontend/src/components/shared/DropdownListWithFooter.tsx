@@ -14,26 +14,26 @@ export interface DropdownListWithFooterProps {
   // Value and onChange - support both single and multi-select
   value: string | string[];
   onChange: (value: string | string[]) => void;
-  
+
   // Items and display
   items: DropdownItem[];
   placeholder?: string;
   disabled?: boolean;
-  
+
   // Labels and headers
   label?: string;
   header?: ReactNode;
   footer?: ReactNode;
-  
+
   // Behavior
   multiSelect?: boolean;
   searchable?: boolean;
   maxHeight?: number;
-  
+
   // Styling
   className?: string;
   dropdownClassName?: string;
-  
+
   // Popover props
   position?: 'top' | 'bottom' | 'left' | 'right';
   withArrow?: boolean;
@@ -58,9 +58,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   withArrow = false,
   width = 'target'
 }) => {
-  
+
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const isMultiValue = Array.isArray(value);
   const selectedValues = isMultiValue ? value : (value ? [value] : []);
 
@@ -69,7 +69,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
     if (!searchable || !searchTerm.trim()) {
       return items;
     }
-    return items.filter(item => 
+    return items.filter(item =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [items, searchTerm, searchable]);
@@ -90,7 +90,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
       return placeholder;
     } else if (selectedValues.length === 1) {
       const selectedItem = items.find(item => item.value === selectedValues[0]);
-      return selectedItem?.name || selectedValues[0];
+      return selectedItem?.name ?? selectedValues[0];
     } else {
       return `${selectedValues.length} selected`;
     }
@@ -107,11 +107,11 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
           {label}
         </Text>
       )}
-      
-      <Popover 
-        width={width} 
-        position={position} 
-        withArrow={withArrow} 
+
+      <Popover
+        width={width}
+        position={position}
+        withArrow={withArrow}
         shadow="md"
         onClose={() => searchable && setSearchTerm('')}
       >
@@ -133,28 +133,28 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             <Text size="sm" style={{ flex: 1 }}>
               {getDisplayText()}
             </Text>
-            <UnfoldMoreIcon style={{ 
-              fontSize: '1rem', 
-              color: 'light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))' 
+            <UnfoldMoreIcon style={{
+              fontSize: '1rem',
+              color: 'light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))'
             }} />
           </Box>
         </Popover.Target>
-        
+
         <Popover.Dropdown className={dropdownClassName}>
           <Stack gap="xs">
             {header && (
-              <Box style={{ 
-                borderBottom: 'light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))', 
-                paddingBottom: '8px' 
+              <Box style={{
+                borderBottom: 'light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))',
+                paddingBottom: '8px'
               }}>
                 {header}
               </Box>
             )}
-            
+
             {searchable && (
-              <Box style={{ 
-                borderBottom: 'light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))', 
-                paddingBottom: '8px' 
+              <Box style={{
+                borderBottom: 'light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))',
+                paddingBottom: '8px'
               }}>
                 <TextInput
                   placeholder="Search..."
@@ -166,7 +166,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                 />
               </Box>
             )}
-            
+
             <Box style={{ maxHeight, overflowY: 'auto' }}>
               {filteredItems.length === 0 ? (
                 <Box style={{ padding: '12px', textAlign: 'center' }}>
@@ -205,11 +205,11 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                     )}
                     <Text size="sm">{item.name}</Text>
                   </Group>
-                  
+
                   {multiSelect && (
                     <Checkbox
                       checked={selectedValues.includes(item.value)}
-                      onChange={() => {}} // Handled by parent onClick
+                      onChange={() => { /* empty */ }} // Handled by parent onClick
                       size="sm"
                       disabled={item.disabled}
                     />
@@ -218,11 +218,11 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                 ))
               )}
             </Box>
-            
+
             {footer && (
-              <Box style={{ 
-                borderTop: 'light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))', 
-                paddingTop: '8px' 
+              <Box style={{
+                borderTop: 'light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))',
+                paddingTop: '8px'
               }}>
                 {footer}
               </Box>
@@ -234,4 +234,4 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   );
 };
 
-export default DropdownListWithFooter; 
+export default DropdownListWithFooter;

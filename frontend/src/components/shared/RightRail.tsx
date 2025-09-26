@@ -26,7 +26,7 @@ export default function RightRail() {
   const viewerContext = React.useContext(ViewerContext);
   const { toggleTheme } = useRainbowThemeContext();
   const { buttons, actions } = useRightRail();
-  const topButtons = useMemo(() => buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true)), [buttons]);
+  const topButtons = useMemo(() => buttons.filter(b => (b.section ?? 'top') === 'top' && (b.visible ?? true)), [buttons]);
 
   // Access PageEditor functions for page-editor-specific actions
   const { pageEditorFunctions } = useToolWorkflow();
@@ -56,8 +56,8 @@ export default function RightRail() {
 
     if (currentView === 'pageEditor') {
       // Use PageEditor's own state
-      const totalItems = pageEditorFunctions?.totalPages || 0;
-      const selectedCount = pageEditorFunctions?.selectedPageIds?.length || 0;
+      const totalItems = pageEditorFunctions?.totalPages ?? 0;
+      const selectedCount = pageEditorFunctions?.selectedPageIds?.length ?? 0;
       return { totalItems, selectedCount };
     }
 
@@ -127,7 +127,7 @@ export default function RightRail() {
   }, [currentView, selectedFileIds, removeFiles, setSelectedFiles]);
 
   const updatePagesFromCSV = useCallback((override?: string) => {
-    const maxPages = pageEditorFunctions?.totalPages || 0;
+    const maxPages = pageEditorFunctions?.totalPages ?? 0;
     const normalized = parseSelection(override ?? csvInput, maxPages);
     pageEditorFunctions?.handleSetSelectedPages?.(normalized);
   }, [csvInput, pageEditorFunctions]);
@@ -365,7 +365,7 @@ export default function RightRail() {
                       radius="md"
                       className="right-rail-icon"
                       onClick={() => { pageEditorFunctions?.handleDelete?.(); }}
-                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0}
+                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length ?? 0) === 0}
                       aria-label={typeof t === 'function' ? t('rightRail.deleteSelected', 'Delete Selected Pages') : 'Delete Selected Pages'}
                     >
                       <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />
@@ -386,7 +386,7 @@ export default function RightRail() {
                       radius="md"
                       className="right-rail-icon"
                       onClick={() => { pageEditorFunctions?.onExportSelected?.(); }}
-                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || pageEditorFunctions?.exportLoading}
+                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length ?? 0) === 0 || pageEditorFunctions?.exportLoading}
                       aria-label={typeof t === 'function' ? t('rightRail.exportSelected', 'Export Selected Pages') : 'Export Selected Pages'}
                     >
                       <LocalIcon icon="download" width="1.5rem" height="1.5rem" />

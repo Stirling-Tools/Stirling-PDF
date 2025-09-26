@@ -13,7 +13,7 @@ import {
   type ConversionEndpoint
 } from '../helpers/conversionEndpointDiscovery';
 import * as path from 'path';
-import * as fs from 'fs';
+import fs from 'fs';
 
 // Test configuration
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
@@ -238,7 +238,7 @@ async function testConversion(page: Page, conversion: ConversionEndpoint) {
   // Save and verify file is not empty
   const path = await download.path();
   if (path) {
-    const fs = require('fs');
+    // fs is already imported at the top of the file
     const stats = fs.statSync(path);
     expect(stats.size).toBeGreaterThan(0);
 

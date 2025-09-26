@@ -1,3 +1,4 @@
+import React from 'react';
 import { TextInput, Button, Text, Flex, Switch } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '../../shared/LocalIcon';

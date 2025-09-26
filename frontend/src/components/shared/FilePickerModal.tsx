@@ -78,19 +78,19 @@ const FilePickerModal = ({
           // If it's from IndexedDB storage, reconstruct the File
           if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
             const arrayBuffer = await fileItem.arrayBuffer();
-            const blob = new Blob([arrayBuffer], { type: fileItem.type || 'application/pdf' });
+            const blob = new Blob([arrayBuffer], { type: fileItem.type ?? 'application/pdf' });
             return new File([blob], fileItem.name, {
-              type: fileItem.type || 'application/pdf',
-              lastModified: fileItem.lastModified || Date.now()
+              type: fileItem.type ?? 'application/pdf',
+              lastModified: fileItem.lastModified ?? Date.now()
             });
           }
 
           // If it has data property, reconstruct the File
           if (fileItem.data) {
-            const blob = new Blob([fileItem.data], { type: fileItem.type || 'application/pdf' });
+            const blob = new Blob([fileItem.data], { type: fileItem.type ?? 'application/pdf' });
             return new File([blob], fileItem.name, {
-              type: fileItem.type || 'application/pdf',
-              lastModified: fileItem.lastModified || Date.now()
+              type: fileItem.type ?? 'application/pdf',
+              lastModified: fileItem.lastModified ?? Date.now()
             });
           }
 
@@ -222,7 +222,7 @@ const FilePickerModal = ({
                           </Text>
                           <Group gap="xs">
                             <Badge size="xs" variant="light" color="gray">
-                              {formatFileSize(file.size || (file.file?.size || 0))}
+                              {formatFileSize(file.size ?? ((file.file?.size ?? 0)))}
                             </Badge>
                           </Group>
                         </Stack>

@@ -1,3 +1,4 @@
+import React from "react";
 import { Button, Group, Stack, Text } from "@mantine/core";
 import FitText from "./FitText";
 

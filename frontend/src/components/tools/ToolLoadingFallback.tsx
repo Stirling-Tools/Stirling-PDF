@@ -1,3 +1,4 @@
+import React from "react";
 import { Center, Stack, Loader, Text } from "@mantine/core";
 
 export default function ToolLoadingFallback({ toolName }: { toolName?: string }) {

@@ -266,7 +266,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   // Enhance child with handlers and ref
   const childWithHandlers = React.cloneElement(children as any, {
     ref: (node: HTMLElement | null) => {
-      triggerRef.current = node || null;
+      triggerRef.current = node ?? null;
       const originalRef = (children as any).ref;
       if (typeof originalRef === 'function') originalRef(node);
       else if (originalRef && typeof originalRef === 'object') (originalRef).current = node;
@@ -296,7 +296,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         position: 'fixed',
         top: coords.top,
         left: coords.left,
-        width: maxWidth !== undefined ? maxWidth : (sidebarTooltip ? '25rem' as const : undefined),
+        width: maxWidth ?? (sidebarTooltip ? '25rem' as const : undefined),
         minWidth,
         zIndex: 9999,
         visibility: positionReady ? 'visible' : 'hidden',
@@ -334,7 +334,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       {header && (
         <div className={styles['tooltip-header']}>
           <div className={styles['tooltip-logo']}>
-            {header.logo || (
+            {header.logo ?? (
               <img
                 src={`${BASE_PATH}/logo-tooltip.svg`}
                 alt="Stirling PDF"

@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const show = useCallback<ToastApi['show']>((options) => {
-    const id = options.id || generateId();
+    const id = options.id ?? generateId();
     const hasButton = !!(options.buttonText && options.buttonCallback);
     const merged: ToastInstance = {
       ...defaultOptions,
