@@ -10,6 +10,8 @@ import AddPassword from "../tools/AddPassword";
 import ChangePermissions from "../tools/ChangePermissions";
 import RemoveBlanks from "../tools/RemoveBlanks";
 import RemovePages from "../tools/RemovePages";
+import ReorganizePages from "../tools/ReorganizePages";
+import { reorganizePagesOperationConfig } from "../hooks/tools/reorganizePages/useReorganizePagesOperation";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import { getSynonyms } from "../utils/toolSynonyms";
@@ -393,14 +395,15 @@ export function useFlatToolRegistry(): ToolRegistry {
       reorganizePages: {
         icon: <LocalIcon icon="move-down-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.reorganizePages.title", "Reorganize Pages"),
-        component: null,
-        workbench: "pageEditor",
+        component: ReorganizePages,
         description: t(
           "home.reorganizePages.desc",
           "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        endpoints: ["rearrange-pages"],
+        operationConfig: reorganizePagesOperationConfig,
         synonyms: getSynonyms(t, "reorganizePages")
       },
       scalePages: {
