@@ -14,6 +14,7 @@ import { Tooltip } from '../shared/Tooltip';
 import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
 import { SearchInterface } from '../viewer/SearchInterface';
 import { ViewerContext } from '../../contexts/ViewerContext';
+import { useSignature } from '../../contexts/SignatureContext';
 
 import { parseSelection } from '../../utils/bulkselection/parseSelection';
 
@@ -42,6 +43,9 @@ export default function RightRail() {
   const { actions: fileActions } = useFileContext();
   const { selectedFiles, selectedFileIds, setSelectedFiles } = useFileSelection();
   const { removeFiles } = useFileManagement();
+
+  // Signature context for checking if signatures have been applied
+  const { signaturesApplied } = useSignature();
 
   const activeFiles = selectors.getFiles();
   const filesSignature = selectors.getFilesSignature();
@@ -98,8 +102,14 @@ export default function RightRail() {
     }
   }, [currentView, setSelectedFiles, pageEditorFunctions]);
 
-  const handleExportAll = useCallback(() => {
+  const handleExportAll = useCallback(async () => {
     if (currentView === 'viewer') {
+      // Check if signatures have been applied
+      if (!signaturesApplied) {
+        alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
+        return;
+      }
+
       // Use EmbedPDF export functionality for viewer mode
       viewerContext?.exportActions?.download();
     } else if (currentView === 'fileEditor') {
@@ -119,7 +129,7 @@ export default function RightRail() {
       // Export all pages (not just selected)
       pageEditorFunctions?.onExportAll?.();
     }
-  }, [currentView, activeFiles, selectedFiles, pageEditorFunctions, viewerContext]);
+  }, [currentView, activeFiles, selectedFiles, pageEditorFunctions, viewerContext, signaturesApplied, selectors, fileActions]);
 
   const handleCloseSelected = useCallback(() => {
     if (currentView !== 'fileEditor') return;

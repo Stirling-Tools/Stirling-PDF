@@ -8,6 +8,132 @@
             "moduleLicenseUrl": "git+https://github.com/atlassian/pragmatic-drag-and-drop.git"
         },
         {
+            "moduleName": "@embedpdf/core",
+            "moduleUrl": "https://registry.npmjs.org/@embedpdf/core/-/core-1.3.1.tgz",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://registry.npmjs.org/@embedpdf/core/-/core-1.3.1.tgz"
+        },
+        {
+            "moduleName": "@embedpdf/engines",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-annotation",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-export",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-history",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-interaction-manager",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-loader",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-pan",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-render",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-rotate",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-scroll",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-search",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-selection",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-spread",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-thumbnail",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-tiling",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-viewport",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
+            "moduleName": "@embedpdf/plugin-zoom",
+            "moduleUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/embedpdf/embed-pdf-viewer.git"
+        },
+        {
             "moduleName": "@emotion/react",
             "moduleUrl": "git+https://github.com/emotion-js/emotion.git#main",
             "moduleVersion": "11.14.0",
@@ -30,6 +156,13 @@
         },
         {
             "moduleName": "@mantine/core",
+            "moduleUrl": "git+https://github.com/mantinedev/mantine.git",
+            "moduleVersion": "8.3.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "git+https://github.com/mantinedev/mantine.git"
+        },
+        {
+            "moduleName": "@mantine/dates",
             "moduleUrl": "git+https://github.com/mantinedev/mantine.git",
             "moduleVersion": "8.3.1",
             "moduleLicense": "MIT",
@@ -143,7 +276,7 @@
         {
             "moduleName": "posthog-js",
             "moduleUrl": "git+https://github.com/PostHog/posthog-js.git",
-            "moduleVersion": "1.266.0",
+            "moduleVersion": "1.268.0",
             "moduleLicense": "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE",
             "moduleLicenseUrl": "git+https://github.com/PostHog/posthog-js.git"
         },

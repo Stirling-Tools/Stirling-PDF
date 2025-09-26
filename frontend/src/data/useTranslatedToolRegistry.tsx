@@ -32,6 +32,7 @@ import Flatten from "../tools/Flatten";
 import Rotate from "../tools/Rotate";
 import ChangeMetadata from "../tools/ChangeMetadata";
 import Crop from "../tools/Crop";
+import Sign from "../tools/Sign";
 import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
@@ -55,6 +56,7 @@ import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperati
 import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
 import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
+import { signOperationConfig } from "../hooks/tools/sign/useSignOperation";
 import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
 import { removeAnnotationsOperationConfig } from "../hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
 import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useExtractImagesOperation";
@@ -86,6 +88,7 @@ import { scannerImageSplitOperationConfig } from "../hooks/tools/scannerImageSpl
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/ScannerImageSplitSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
+import SignSettings from "../components/tools/sign/SignSettings";
 import CropSettings from "../components/tools/crop/CropSettings";
 import RemoveAnnotations from "../tools/RemoveAnnotations";
 import RemoveAnnotationsSettings from "../components/tools/removeAnnotations/RemoveAnnotationsSettings";
@@ -225,10 +228,12 @@ export function useFlatToolRegistry(): ToolRegistry {
       sign: {
         icon: <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.sign.title", "Sign"),
-        component: null,
+        component: Sign,
         description: t("home.sign.desc", "Adds signature to PDF by drawing, text or image"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
+        operationConfig: signOperationConfig,
+        settingsComponent: SignSettings,
         synonyms: getSynonyms(t, "sign")
       },
 
