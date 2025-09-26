@@ -242,7 +242,7 @@ const SignSettings = ({
       {onSave && (
         <Button
           onClick={onSave}
-          color="green"
+          color="blue"
           variant="filled"
           fullWidth
         >

@@ -23,9 +23,20 @@ const Sign = (props: BaseToolProps) => {
   const activeModeRef = useRef<'draw' | 'placement' | null>(null);
 
   // Single handler that activates placement mode
-  const handleSignaturePlacement = () => {
+  const handleSignaturePlacement = useCallback(() => {
     activateSignaturePlacementMode();
-  };
+  }, [activateSignaturePlacementMode]);
+
+  // Memoized callbacks for SignSettings to prevent infinite loops
+  const handleActivateDrawMode = useCallback(() => {
+    activeModeRef.current = 'draw';
+    activateDrawMode();
+  }, [activateDrawMode]);
+
+  const handleActivateSignaturePlacement = useCallback(() => {
+    activeModeRef.current = 'placement';
+    handleSignaturePlacement();
+  }, [handleSignaturePlacement]);
 
   const base = useBaseTool(
     'sign',
@@ -122,14 +133,8 @@ const Sign = (props: BaseToolProps) => {
           parameters={base.params.parameters}
           onParameterChange={base.params.updateParameter}
           disabled={base.endpointLoading}
-          onActivateDrawMode={() => {
-            activeModeRef.current = 'draw';
-            activateDrawMode();
-          }}
-          onActivateSignaturePlacement={() => {
-            activeModeRef.current = 'placement';
-            handleSignaturePlacement();
-          }}
+          onActivateDrawMode={handleActivateDrawMode}
+          onActivateSignaturePlacement={handleActivateSignaturePlacement}
           onDeactivateSignature={deactivateDrawMode}
           onUpdateDrawSettings={updateDrawSettings}
           onUndo={undo}
