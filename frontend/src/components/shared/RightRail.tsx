@@ -14,8 +14,13 @@ import { Tooltip } from '../shared/Tooltip';
 import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
 import { SearchInterface } from '../viewer/SearchInterface';
 import { ViewerContext } from '../../contexts/ViewerContext';
+import { useSignature } from '../../contexts/SignatureContext';
 
 import { parseSelection } from '../../utils/bulkselection/parseSelection';
+import { PDFDocument, rgb } from 'pdf-lib';
+import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
+import { createProcessedFile } from '../../contexts/file/fileActions';
+import { createNewStirlingFileStub, createStirlingFile } from '../../types/fileContext';
 
 
 export default function RightRail() {
@@ -42,6 +47,9 @@ export default function RightRail() {
   const { actions: fileActions } = useFileContext();
   const { selectedFiles, selectedFileIds, setSelectedFiles } = useFileSelection();
   const { removeFiles } = useFileManagement();
+
+  // Signature context for flattening signatures when in sign mode
+  const { signatureApiRef, getImageData } = useSignature();
 
   const activeFiles = selectors.getFiles();
   const filesSignature = selectors.getFilesSignature();
@@ -98,8 +106,30 @@ export default function RightRail() {
     }
   }, [currentView, setSelectedFiles, pageEditorFunctions]);
 
-  const handleExportAll = useCallback(() => {
+  const handleExportAll = useCallback(async () => {
     if (currentView === 'viewer') {
+      // Check if we're in sign mode and warn about unapplied signatures
+      if (signatureApiRef?.current) {
+        // Quick check for any annotations
+        let hasAnnotations = false;
+        for (let pageIndex = 0; pageIndex < 5; pageIndex++) {
+          try {
+            const pageAnnotations = await signatureApiRef.current.getPageAnnotations(pageIndex);
+            if (pageAnnotations && pageAnnotations.length > 0) {
+              hasAnnotations = true;
+              break;
+            }
+          } catch (e) {
+            break;
+          }
+        }
+
+        if (hasAnnotations) {
+          alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
+          return;
+        }
+      }
+
       // Use EmbedPDF export functionality for viewer mode
       viewerContext?.exportActions?.download();
     } else if (currentView === 'fileEditor') {

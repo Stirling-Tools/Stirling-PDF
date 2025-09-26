@@ -14,6 +14,7 @@ import { generateThumbnailWithMetadata } from "../utils/thumbnailUtils";
 import { createNewStirlingFileStub, createStirlingFile, StirlingFileStub, StirlingFile, FileId, extractFiles } from "../types/fileContext";
 import { createProcessedFile } from "../contexts/file/fileActions";
 import { PDFDocument, PDFName, PDFDict, PDFArray, rgb } from 'pdf-lib';
+import { flattenSignatures } from "../utils/signatureFlattening";
 
 const Sign = (props: BaseToolProps) => {
   const { t } = useTranslation();
