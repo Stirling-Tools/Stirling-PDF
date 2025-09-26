@@ -13,6 +13,7 @@ import PageEditorControls from '../pageEditor/PageEditorControls';
 import Viewer from '../viewer/Viewer';
 import LandingPage from '../shared/LandingPage';
 import Footer from '../shared/Footer';
+import DismissAllErrorsButton from '../shared/DismissAllErrorsButton';
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -150,6 +151,9 @@ export default function Workbench() {
         setCurrentView={setCurrentView}
         selectedToolKey={selectedToolId}
       />
+
+      {/* Dismiss All Errors Button */}
+      <DismissAllErrorsButton />
 
       {/* Main content area */}
       <Box

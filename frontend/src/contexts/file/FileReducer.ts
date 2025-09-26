@@ -21,7 +21,8 @@ export const initialFileContextState: FileContextState = {
     selectedPageNumbers: [],
     isProcessing: false,
     processingProgress: 0,
-    hasUnsavedChanges: false
+    hasUnsavedChanges: false,
+    errorFileIds: []
   }
 };
 
@@ -214,6 +215,30 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
           ...state.ui,
           hasUnsavedChanges: action.payload.hasChanges
         }
+      };
+    }
+
+    case 'MARK_FILE_ERROR': {
+      const { fileId } = action.payload;
+      if (state.ui.errorFileIds.includes(fileId)) return state;
+      return {
+        ...state,
+        ui: { ...state.ui, errorFileIds: [...state.ui.errorFileIds, fileId] }
+      };
+    }
+
+    case 'CLEAR_FILE_ERROR': {
+      const { fileId } = action.payload;
+      return {
+        ...state,
+        ui: { ...state.ui, errorFileIds: state.ui.errorFileIds.filter(id => id !== fileId) }
+      };
+    }
+
+    case 'CLEAR_ALL_FILE_ERRORS': {
+      return {
+        ...state,
+        ui: { ...state.ui, errorFileIds: [] }
       };
     }
 

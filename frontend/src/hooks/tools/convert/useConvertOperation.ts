@@ -19,6 +19,8 @@ export const shouldProcessFilesSeparately = (
     (parameters.fromExtension === 'pdf' && isImageFormat(parameters.toExtension)) ||
     // PDF to PDF/A conversions (each PDF should be processed separately)
     (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
+    // PDF to text-like formats should be one output per input
+    (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
     // Web files to PDF conversions (each web file should generate its own PDF)
     ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') &&
      parameters.toExtension === 'pdf') ||
