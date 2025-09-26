@@ -21,7 +21,7 @@ export const defaultParameters: FakeScanParameters = {
   quality: 'high',
   rotation: 'slight',
   advancedEnabled: false,
-  colorspace: 'grayscale',
+  colorspace: 'color',
   border: 20,
   rotate: 0,
   rotateVariance: 2,

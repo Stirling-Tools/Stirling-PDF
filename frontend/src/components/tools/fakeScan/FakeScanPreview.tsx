@@ -61,7 +61,7 @@ export default function FakeScanPreview({ file, parameters }: Props) {
     }
 
     const grayscale = parameters.colorspace === 'grayscale' ? 'grayscale(1)' : 'grayscale(0)';
-    const sepia = parameters.yellowish ? 'sepia(0.35)' : 'sepia(0)';
+    const sepia = parameters.yellowish ? 'sepia(0.6)' : 'sepia(0)';
     // Simulate noise via drop-shadow stacking is heavy; skip and rely on server-side
     return `${grayscale} ${sepia} brightness(${brightness}) contrast(${contrast}) blur(${blur}px)`;
   }, [parameters]);
