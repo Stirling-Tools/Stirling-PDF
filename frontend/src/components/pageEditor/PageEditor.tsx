@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { useFileState, useFileActions } from "../../contexts/FileContext";
+import { useNavigationGuard } from "../../contexts/NavigationContext";
 import { PDFDocument, PageEditorFunctions } from "../../types/pageEditor";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
@@ -35,6 +36,9 @@ const PageEditor = ({
   // Use split contexts to prevent re-renders
   const { state, selectors } = useFileState();
   const { actions } = useFileActions();
+
+  // Navigation guard for unsaved changes
+  const { setHasUnsavedChanges } = useNavigationGuard();
 
   // Prefer IDs + selectors to avoid array identity churn
   const activeFileIds = state.files.ids;
@@ -81,6 +85,12 @@ const PageEditor = ({
     // Initialize state
     updateUndoRedoState();
   }, [updateUndoRedoState]);
+
+  // Wrapper for executeCommand to track unsaved changes
+  const executeCommandWithTracking = useCallback((command: any) => {
+    undoManagerRef.current.executeCommand(command);
+    setHasUnsavedChanges(true);
+  }, [setHasUnsavedChanges]);
 
   // Watch for container size changes to update split line positions
   useEffect(() => {
@@ -138,17 +148,16 @@ const PageEditor = ({
   // DOM-first command handlers
   const handleRotatePages = useCallback((pageIds: string[], rotation: number) => {
     const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
-    undoManagerRef.current.executeCommand(bulkRotateCommand);
-  }, []);
+    executeCommandWithTracking(bulkRotateCommand);
+  }, [executeCommandWithTracking]);
 
   // Command factory functions for PageThumbnail
   const createRotateCommand = useCallback((pageIds: string[], rotation: number) => ({
     execute: () => {
       const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
-
-    undoManagerRef.current.executeCommand(bulkRotateCommand);
+      executeCommandWithTracking(bulkRotateCommand);
     }
-  }), []);
+  }), [executeCommandWithTracking]);
 
   const createDeleteCommand = useCallback((pageIds: string[]) => ({
     execute: () => {
@@ -174,10 +183,10 @@ const PageEditor = ({
           () => getPageNumbersFromIds(selectedPageIds),
           closePdf
         );
-        undoManagerRef.current.executeCommand(deleteCommand);
+        executeCommandWithTracking(deleteCommand);
       }
     }
-  }), [displayDocument, splitPositions, selectedPageIds, getPageNumbersFromIds]);
+  }), [displayDocument, splitPositions, selectedPageIds, getPageNumbersFromIds, executeCommandWithTracking]);
 
   const createSplitCommand = useCallback((position: number) => ({
     execute: () => {
@@ -186,9 +195,9 @@ const PageEditor = ({
         () => splitPositions,
         setSplitPositions
       );
-      undoManagerRef.current.executeCommand(splitCommand);
+      executeCommandWithTracking(splitCommand);
     }
-}), [splitPositions]);
+}), [splitPositions, executeCommandWithTracking]);
 
   // Command executor for PageThumbnail
   const executeCommand = useCallback((command: any) => {
@@ -232,8 +241,8 @@ const PageEditor = ({
       () => selectedPageNumbers,
       closePdf
     );
-    undoManagerRef.current.executeCommand(deleteCommand);
-  }, [selectedPageIds, displayDocument, splitPositions, getPageNumbersFromIds, getPageIdsFromNumbers]);
+    executeCommandWithTracking(deleteCommand);
+  }, [selectedPageIds, displayDocument, splitPositions, getPageNumbersFromIds, getPageIdsFromNumbers, executeCommandWithTracking]);
 
   const handleDeletePage = useCallback((pageNumber: number) => {
     if (!displayDocument) return;
@@ -251,8 +260,8 @@ const PageEditor = ({
       () => getPageNumbersFromIds(selectedPageIds),
       closePdf
     );
-    undoManagerRef.current.executeCommand(deleteCommand);
-  }, [displayDocument, splitPositions, selectedPageIds, getPageNumbersFromIds]);
+    executeCommandWithTracking(deleteCommand);
+  }, [displayDocument, splitPositions, selectedPageIds, getPageNumbersFromIds, executeCommandWithTracking]);
 
   const handleSplit = useCallback(() => {
     if (!displayDocument || selectedPageIds.length === 0) return;
@@ -298,8 +307,8 @@ const PageEditor = ({
         : `Add ${selectedPositions.length - existingSplitsCount} split(s)`
     };
 
-    undoManagerRef.current.executeCommand(smartSplitCommand);
-  }, [selectedPageIds, displayDocument, splitPositions, setSplitPositions, getPageNumbersFromIds]);
+    executeCommandWithTracking(smartSplitCommand);
+  }, [selectedPageIds, displayDocument, splitPositions, setSplitPositions, getPageNumbersFromIds, executeCommandWithTracking]);
 
   const handleSplitAll = useCallback(() => {
     if (!displayDocument || selectedPageIds.length === 0) return;
@@ -344,8 +353,8 @@ const PageEditor = ({
         : `Add ${selectedPositions.length - existingSplitsCount} split(s)`
     };
 
-    undoManagerRef.current.executeCommand(smartSplitCommand);
-  }, [selectedPageIds, displayDocument, splitPositions, setSplitPositions, getPageNumbersFromIds]);
+    executeCommandWithTracking(smartSplitCommand);
+  }, [selectedPageIds, displayDocument, splitPositions, setSplitPositions, getPageNumbersFromIds, executeCommandWithTracking]);
 
   const handlePageBreak = useCallback(() => {
     if (!displayDocument || selectedPageIds.length === 0) return;
@@ -358,8 +367,8 @@ const PageEditor = ({
       () => displayDocument,
       setEditedDocument
     );
-    undoManagerRef.current.executeCommand(pageBreakCommand);
-  }, [selectedPageIds, displayDocument, getPageNumbersFromIds]);
+    executeCommandWithTracking(pageBreakCommand);
+  }, [selectedPageIds, displayDocument, getPageNumbersFromIds, executeCommandWithTracking]);
 
   const handlePageBreakAll = useCallback(() => {
     if (!displayDocument || selectedPageIds.length === 0) return;
@@ -372,8 +381,8 @@ const PageEditor = ({
       () => displayDocument,
       setEditedDocument
     );
-    undoManagerRef.current.executeCommand(pageBreakCommand);
-  }, [selectedPageIds, displayDocument, getPageNumbersFromIds]);
+    executeCommandWithTracking(pageBreakCommand);
+  }, [selectedPageIds, displayDocument, getPageNumbersFromIds, executeCommandWithTracking]);
 
   const handleInsertFiles = useCallback(async (files: File[], insertAfterPage: number) => {
     if (!displayDocument || files.length === 0) return;
@@ -416,8 +425,8 @@ const PageEditor = ({
       () => displayDocument,
       setEditedDocument
     );
-    undoManagerRef.current.executeCommand(reorderCommand);
-  }, [displayDocument, getPageNumbersFromIds]);
+    executeCommandWithTracking(reorderCommand);
+  }, [displayDocument, getPageNumbersFromIds, executeCommandWithTracking]);
 
   // Helper function to collect source files for multi-file export
   const getSourceFiles = useCallback((): Map<FileId, File> | null => {
@@ -499,13 +508,14 @@ const PageEditor = ({
 
       // Step 4: Download the result
       pdfExportService.downloadFile(result.blob, result.filename);
+      setHasUnsavedChanges(false); // Clear unsaved changes after successful export
 
       setExportLoading(false);
     } catch (error) {
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, selectedPageIds, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename]);
+  }, [displayDocument, selectedPageIds, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename, setHasUnsavedChanges]);
 
   const onExportAll = useCallback(async () => {
     if (!displayDocument) return;
@@ -552,6 +562,7 @@ const PageEditor = ({
         const zipFilename = baseExportFilename.replace(/\.pdf$/i, '.zip');
 
         pdfExportService.downloadFile(zipBlob, zipFilename);
+        setHasUnsavedChanges(false); // Clear unsaved changes after successful export
       } else {
         // Single document - regular export
         const sourceFiles = getSourceFiles();
@@ -570,6 +581,7 @@ const PageEditor = ({
             );
 
         pdfExportService.downloadFile(result.blob, result.filename);
+        setHasUnsavedChanges(false); // Clear unsaved changes after successful export
       }
 
       setExportLoading(false);
@@ -577,7 +589,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename]);
+  }, [displayDocument, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename, setHasUnsavedChanges]);
 
   // Apply DOM changes to document state using dedicated service
   const applyChanges = useCallback(() => {
@@ -779,7 +791,14 @@ const PageEditor = ({
       )}
 
 
-      <NavigationWarningModal />
+      <NavigationWarningModal
+        onApplyAndContinue={async () => {
+          applyChanges();
+        }}
+        onExportAndContinue={async () => {
+          await onExportAll();
+        }}
+      />
     </Box>
   );
 };
