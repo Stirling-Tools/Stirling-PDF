@@ -17,7 +17,8 @@ interface ToolButtonProps {
 }
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym }) => {
-  const isUnavailable = !tool.component && !tool.link;
+  // Special case: read and multiTool are navigational tools that are always available
+  const isUnavailable = !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
   const { getToolNavigation } = useToolNavigation();
 
   const handleClick = (id: string) => {

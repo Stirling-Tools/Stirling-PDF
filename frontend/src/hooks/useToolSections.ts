@@ -72,7 +72,10 @@ export function useToolSections(
           const subcategoryId = s as SubcategoryId;
           if (!quick[subcategoryId]) quick[subcategoryId] = [];
           // Only include ready tools (have a component or external link) in Quick Access
-          const readyTools = tools.filter(({ tool }) => tool.component !== null || !!tool.link);
+          // Special case: read and multiTool are navigational tools that don't need components
+          const readyTools = tools.filter(({ tool, id }) =>
+            tool.component !== null || !!tool.link || id === 'read' || id === 'multiTool'
+          );
           quick[subcategoryId].push(...readyTools);
         });
       }

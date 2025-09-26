@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Text, Button, Group, Stack } from '@mantine/core';
 import { useNavigationGuard } from '../../contexts/NavigationContext';
+import { useTranslation } from 'react-i18next';
 
 interface NavigationWarningModalProps {
   onApplyAndContinue?: () => Promise<void>;
@@ -11,6 +12,8 @@ const NavigationWarningModal = ({
   onApplyAndContinue,
   onExportAndContinue
 }: NavigationWarningModalProps) => {
+
+  const { t } = useTranslation();
   const {
     showNavigationWarning,
     hasUnsavedChanges,
@@ -28,7 +31,7 @@ const NavigationWarningModal = ({
     confirmNavigation();
   };
 
-  const handleApplyAndContinue = async () => {
+  const _handleApplyAndContinue = async () => {
     if (onApplyAndContinue) {
       await onApplyAndContinue();
     }
@@ -52,51 +55,55 @@ const NavigationWarningModal = ({
     <Modal
       opened={showNavigationWarning}
       onClose={handleKeepWorking}
-      title="Unsaved Changes"
+      title={t("unsavedChangesTitle", "Unsaved Changes")}
       centered
+      size="lg"
       closeOnClickOutside={false}
       closeOnEscape={false}
     >
       <Stack gap="md">
         <Text>
-          You have unsaved changes to your PDF. What would you like to do?
+          {t("unsavedChanges", "You have unsaved changes to your PDF. What would you like to do?")}
         </Text>
-        
-        <Group justify="flex-end" gap="sm">
-          <Button
-            variant="light"
-            color="gray"
-            onClick={handleKeepWorking}
-          >
-            Keep Working
-          </Button>
-          
+
+
+        <Group justify="space-between" gap="sm">
           <Button
             variant="light"
             color="red"
             onClick={handleDiscardChanges}
           >
-            Discard Changes
+            {t("discardChanges", "Discard Changes")}
           </Button>
-          
-          {onApplyAndContinue && (
+
+          <Group gap="sm">
             <Button
               variant="light"
-              color="blue"
-              onClick={handleApplyAndContinue}
+              color="var(--mantine-color-gray-8)"
+              onClick={handleKeepWorking}
             >
-              Apply & Continue
+              {t("keepWorking", "Keep Working")}
             </Button>
-          )}
-          
-          {onExportAndContinue && (
-            <Button
-              color="green"
-              onClick={handleExportAndContinue}
-            >
-              Export & Continue
-            </Button>
-          )}
+
+            {/* TODO:: Add this back in when it works */}
+            {/* {onApplyAndContinue  && (
+              <Button
+                variant="light"
+                color="blue"
+                onClick={handleApplyAndContinue}
+              >
+                {t("applyAndContinue", "Apply & Continue")}
+              </Button>
+            )} */}
+
+            {onExportAndContinue && (
+              <Button
+                onClick={handleExportAndContinue}
+              >
+                {t("exportAndContinue", "Export & Continue")}
+              </Button>
+            )}
+          </Group>
         </Group>
       </Stack>
     </Modal>

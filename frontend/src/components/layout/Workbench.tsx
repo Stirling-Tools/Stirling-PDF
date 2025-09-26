@@ -149,7 +149,6 @@ export default function Workbench() {
       <TopControls
         currentView={currentView}
         setCurrentView={setCurrentView}
-        selectedToolKey={selectedToolId}
       />
 
       {/* Dismiss All Errors Button */}

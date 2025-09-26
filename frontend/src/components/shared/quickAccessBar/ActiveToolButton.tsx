@@ -33,8 +33,11 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
   const { getHomeNavigation } = useSidebarNavigation();
 
   // Determine if the indicator should be visible (do not require selectedTool to be resolved yet)
+  // Special case: multiTool should always show even when sidebars are hidden
   const indicatorShouldShow = Boolean(
-    selectedToolKey && leftPanelView === 'toolContent' && !NAV_IDS.includes(selectedToolKey)
+    selectedToolKey &&
+    ((leftPanelView === 'toolContent' && !NAV_IDS.includes(selectedToolKey)) ||
+     selectedToolKey === 'multiTool')
   );
 
   // Local animation and hover state

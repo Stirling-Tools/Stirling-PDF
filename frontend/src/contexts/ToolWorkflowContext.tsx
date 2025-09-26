@@ -17,7 +17,7 @@ import { filterToolRegistryByQuery } from '../utils/toolSearch';
 interface ToolWorkflowState {
   // UI State
   sidebarsVisible: boolean;
-  leftPanelView: 'toolPicker' | 'toolContent';
+  leftPanelView: 'toolPicker' | 'toolContent' | 'hidden';
   readerMode: boolean;
 
   // File/Preview State
@@ -31,7 +31,7 @@ interface ToolWorkflowState {
 // Actions
 type ToolWorkflowAction =
   | { type: 'SET_SIDEBARS_VISIBLE'; payload: boolean }
-  | { type: 'SET_LEFT_PANEL_VIEW'; payload: 'toolPicker' | 'toolContent' }
+  | { type: 'SET_LEFT_PANEL_VIEW'; payload: 'toolPicker' | 'toolContent' | 'hidden' }
   | { type: 'SET_READER_MODE'; payload: boolean }
   | { type: 'SET_PREVIEW_FILE'; payload: File | null }
   | { type: 'SET_PAGE_EDITOR_FUNCTIONS'; payload: PageEditorFunctions | null }
@@ -80,7 +80,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
 
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
-  setLeftPanelView: (view: 'toolPicker' | 'toolContent') => void;
+  setLeftPanelView: (view: 'toolPicker' | 'toolContent' | 'hidden') => void;
   setReaderMode: (mode: boolean) => void;
   setPreviewFile: (file: File | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
@@ -96,7 +96,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   resetTool: (toolId: string) => void;
 
   // Workflow Actions (compound actions)
-  handleToolSelect: (toolId: string) => void;
+  handleToolSelect: (toolId: ToolId) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
 
@@ -136,7 +136,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     dispatch({ type: 'SET_SIDEBARS_VISIBLE', payload: visible });
   }, []);
 
-  const setLeftPanelView = useCallback((view: 'toolPicker' | 'toolContent') => {
+  const setLeftPanelView = useCallback((view: 'toolPicker' | 'toolContent' | 'hidden') => {
     dispatch({ type: 'SET_LEFT_PANEL_VIEW', payload: view });
   }, []);
 
@@ -180,7 +180,26 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, []); // Empty dependency array makes this stable
 
   // Workflow actions (compound actions that coordinate multiple state changes)
-  const handleToolSelect = useCallback((toolId: string) => {
+  const handleToolSelect = useCallback((toolId: ToolId) => {
+    // Handle read tool selection - should behave exactly like QuickAccessBar read button
+    if (toolId === 'read') {
+      setReaderMode(true);
+      actions.setSelectedTool('read');
+      actions.setWorkbench('viewer');
+      setSearchQuery('');
+      return;
+    }
+
+    // Handle multiTool selection - enable page editor workbench and hide left panel
+    if (toolId === 'multiTool') {
+      setReaderMode(false);
+      setLeftPanelView('hidden');
+      actions.setSelectedTool('multiTool');
+      actions.setWorkbench('pageEditor');
+      setSearchQuery('');
+      return;
+    }
+
     // Set the selected tool and determine the appropriate workbench
     const validToolId = isValidToolId(toolId) ? toolId : null;
     actions.setSelectedTool(validToolId);
@@ -195,19 +214,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     // Clear search query when selecting a tool
     setSearchQuery('');
-
-    // Handle view switching logic
-    if (toolId === 'allTools' || toolId === 'read' || toolId === 'view-pdf') {
-      setLeftPanelView('toolPicker');
-      if (toolId === 'read' || toolId === 'view-pdf') {
-        setReaderMode(true);
-      } else {
-        setReaderMode(false);
-      }
-    } else {
-      setLeftPanelView('toolContent');
-      setReaderMode(false); // Disable read mode when selecting tools
-    }
+    setLeftPanelView('toolContent');
+    setReaderMode(false); // Disable read mode when selecting tools
   }, [actions, getSelectedTool, setLeftPanelView, setReaderMode, setSearchQuery]);
 
   const handleBackToTools = useCallback(() => {
@@ -227,8 +235,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, [toolRegistry, state.searchQuery]);
 
   const isPanelVisible = useMemo(() =>
-    state.sidebarsVisible && !state.readerMode,
-    [state.sidebarsVisible, state.readerMode]
+    state.sidebarsVisible && !state.readerMode && state.leftPanelView !== 'hidden',
+    [state.sidebarsVisible, state.readerMode, state.leftPanelView]
   );
 
   // URL sync for proper tool navigation
