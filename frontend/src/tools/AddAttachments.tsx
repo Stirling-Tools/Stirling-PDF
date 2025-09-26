@@ -6,7 +6,7 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useAddAttachmentsParameters } from "../hooks/tools/addAttachments/useAddAttachmentsParameters";
 import { useAddAttachmentsOperation } from "../hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { Stack, FileInput, Text, Group, ActionIcon, Alert, ScrollArea, Button } from "@mantine/core";
+import { Stack, Text, Group, ActionIcon, Alert, ScrollArea, Button } from "@mantine/core";
 import LocalIcon from "../components/shared/LocalIcon";
 import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
 // Removed FitText for two-line wrapping with clamping
