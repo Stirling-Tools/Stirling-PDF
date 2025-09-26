@@ -4,6 +4,7 @@ import { Stack, TextInput, FileInput, Paper, Group, Button, Text, Alert, Modal, 
 import ButtonSelector from "../../shared/ButtonSelector";
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "../shared/SuggestedToolsSection";
+import PenSizeSelector from "./PenSizeSelector";
 
 interface SignSettingsProps {
   parameters: SignParameters;
@@ -34,8 +35,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
   const [penSizeInput, setPenSizeInput] = useState('2');
   const [fontSizeInput, setFontSizeInput] = useState((parameters.fontSize || 16).toString());
   const fontSizeCombobox = useCombobox();
-  const penSizeCombobox = useCombobox();
-  const modalPenSizeCombobox = useCombobox();
+
 
   // Drawing functions for signature canvas
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -47,6 +47,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     const scaleY = canvasRef.current.height / rect.height;
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
+
 
     const ctx = canvasRef.current.getContext('2d');
     if (ctx) {
@@ -73,10 +74,8 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
       ctx.lineTo(x, y);
       ctx.stroke();
 
-      // Update signature data immediately after each stroke
-      const dataURL = canvasRef.current.toDataURL('image/png');
-      setCanvasSignatureData(dataURL);
-      onParameterChange('signatureData', dataURL);
+      // Don't update signature data during drawing - too expensive
+      // This will happen in stopDrawing instead
     }
   };
 
@@ -136,6 +135,7 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
 
+
     // Draw on both the visible modal canvas and hidden canvas
     const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
     const hiddenCtx = modalCanvasRef.current.getContext('2d');
@@ -172,52 +172,65 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
       }
     });
 
-    // Update signature data from hidden canvas (consistent size)
-    const dataURL = modalCanvasRef.current.toDataURL('image/png');
-    setCanvasSignatureData(dataURL);
-    onParameterChange('signatureData', dataURL);
-
-    // Also update the small canvas display
-    if (canvasRef.current) {
-      const smallCtx = canvasRef.current.getContext('2d');
-      if (smallCtx) {
-        const img = new Image();
-        img.onload = () => {
-          smallCtx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
-          smallCtx.drawImage(img, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
-        };
-        img.src = dataURL;
-      }
-    }
+    // Don't update signature data or sync canvases during drawing - too expensive
+    // This will happen in stopModalDrawing instead
   };
 
   const stopModalDrawing = () => {
     if (!isModalDrawing) return;
     setIsModalDrawing(false);
+
+    // Now sync the canvases and update signature data (only when drawing stops)
+    if (modalCanvasRef.current) {
+      const dataURL = modalCanvasRef.current.toDataURL('image/png');
+      setCanvasSignatureData(dataURL);
+      onParameterChange('signatureData', dataURL);
+
+      // Also update the small canvas display
+      if (canvasRef.current) {
+        const smallCtx = canvasRef.current.getContext('2d');
+        if (smallCtx) {
+          const img = new Image();
+          img.onload = () => {
+            smallCtx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+            smallCtx.drawImage(img, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
+          };
+          img.src = dataURL;
+        }
+      }
+    }
   };
 
   const clearModalCanvas = () => {
-    if (!modalCanvasRef.current) return;
-
-    const ctx = modalCanvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
-
-      // Also clear the main canvas and signature data
-      if (canvasRef.current) {
-        const mainCtx = canvasRef.current.getContext('2d');
-        if (mainCtx) {
-          mainCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        }
+    // Clear both modal canvases (visible and hidden)
+    if (modalCanvasRef.current) {
+      const hiddenCtx = modalCanvasRef.current.getContext('2d');
+      if (hiddenCtx) {
+        hiddenCtx.clearRect(0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
       }
+    }
 
-      setCanvasSignatureData(null);
-      onParameterChange('signatureData', undefined);
-
-      // Deactivate signature placement when cleared
-      if (onDeactivateSignature) {
-        onDeactivateSignature();
+    if (visibleModalCanvasRef.current) {
+      const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
+      if (visibleCtx) {
+        visibleCtx.clearRect(0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
       }
+    }
+
+    // Also clear the main canvas and signature data
+    if (canvasRef.current) {
+      const mainCtx = canvasRef.current.getContext('2d');
+      if (mainCtx) {
+        mainCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+    }
+
+    setCanvasSignatureData(null);
+    onParameterChange('signatureData', undefined);
+
+    // Deactivate signature placement when cleared
+    if (onDeactivateSignature) {
+      onDeactivateSignature();
     }
   };
 
@@ -496,59 +509,16 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
                 </div>
                 <div>
                   <Text size="sm" fw={500} mb="xs">Pen Size</Text>
-                  <Combobox
-                    onOptionSubmit={(optionValue) => {
-                      const size = parseInt(optionValue);
-                      if (!isNaN(size)) {
-                        setPenSize(size);
-                        setPenSizeInput(optionValue);
-                      }
-                      penSizeCombobox.closeDropdown();
-                    }}
-                    store={penSizeCombobox}
-                    withinPortal={false}
-                  >
-                    <Combobox.Target>
-                      <TextInput
-                        placeholder="Size"
-                        size="compact-sm"
-                        value={penSizeInput}
-                        onChange={(event) => {
-                          const value = event.currentTarget.value;
-                          setPenSizeInput(value);
-
-                          const size = parseInt(value);
-                          if (!isNaN(size) && size >= 1 && size <= 200) {
-                            setPenSize(size);
-                          }
-
-                          penSizeCombobox.openDropdown();
-                          penSizeCombobox.updateSelectedOptionIndex();
-                        }}
-                        onClick={() => penSizeCombobox.openDropdown()}
-                        onFocus={() => penSizeCombobox.openDropdown()}
-                        onBlur={() => {
-                          penSizeCombobox.closeDropdown();
-                          const size = parseInt(penSizeInput);
-                          if (isNaN(size) || size < 1 || size > 200) {
-                            setPenSizeInput(penSize.toString());
-                          }
-                        }}
-                        disabled={disabled}
-                        style={{ width: '60px' }}
-                      />
-                    </Combobox.Target>
-
-                    <Combobox.Dropdown>
-                      <Combobox.Options>
-                        {['1', '2', '3', '4', '5', '8', '10', '12', '15', '20', '25', '30', '40', '50'].map((size) => (
-                          <Combobox.Option value={size} key={size}>
-                            {size}px
-                          </Combobox.Option>
-                        ))}
-                      </Combobox.Options>
-                    </Combobox.Dropdown>
-                  </Combobox>
+                  <PenSizeSelector
+                    value={penSize}
+                    inputValue={penSizeInput}
+                    onValueChange={setPenSize}
+                    onInputChange={setPenSizeInput}
+                    disabled={disabled}
+                    placeholder="Size"
+                    size="compact-sm"
+                    style={{ width: '60px' }}
+                  />
                 </div>
                 <div style={{ paddingTop: '24px' }}>
                   <Button
@@ -733,57 +703,13 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
               {/* Pen Size */}
               <div style={{ flexGrow: 1, maxWidth: '200px' }}>
                 <Text size="sm" fw={500} mb="xs">Pen Size</Text>
-                <Combobox
-                  onOptionSubmit={(optionValue) => {
-                    const size = parseInt(optionValue);
-                    if (!isNaN(size)) {
-                      setPenSize(size);
-                      setPenSizeInput(optionValue);
-                    }
-                    penSizeCombobox.closeDropdown();
-                  }}
-                  store={penSizeCombobox}
-                  withinPortal={false}
-                >
-                  <Combobox.Target>
-                    <TextInput
-                      placeholder="Type or select pen size (1-200)"
-                      value={penSizeInput}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value;
-                        setPenSizeInput(value);
-
-                        const size = parseInt(value);
-                        if (!isNaN(size) && size >= 1 && size <= 200) {
-                          setPenSize(size);
-                        }
-
-                        penSizeCombobox.openDropdown();
-                        penSizeCombobox.updateSelectedOptionIndex();
-                      }}
-                      onClick={() => penSizeCombobox.openDropdown()}
-                      onFocus={() => penSizeCombobox.openDropdown()}
-                      onBlur={() => {
-                        penSizeCombobox.closeDropdown();
-                        const size = parseInt(penSizeInput);
-                        if (isNaN(size) || size < 1 || size > 200) {
-                          setPenSizeInput(penSize.toString());
-                        }
-                      }}
-                      disabled={disabled}
-                    />
-                  </Combobox.Target>
-
-                  <Combobox.Dropdown>
-                    <Combobox.Options>
-                      {['1', '2', '3', '4', '5', '8', '10', '12', '15', '20', '25', '30', '40', '50'].map((size) => (
-                        <Combobox.Option value={size} key={size}>
-                          {size}px
-                        </Combobox.Option>
-                      ))}
-                    </Combobox.Options>
-                  </Combobox.Dropdown>
-                </Combobox>
+                <PenSizeSelector
+                  value={penSize}
+                  inputValue={penSizeInput}
+                  onValueChange={setPenSize}
+                  onInputChange={setPenSizeInput}
+                  disabled={disabled}
+                />
               </div>
             </Group>
           </Stack>
@@ -834,58 +760,15 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
               </div>
               <div>
                 <Text size="sm" fw={500} mb="xs">Pen Size</Text>
-                <Combobox
-                  onOptionSubmit={(optionValue) => {
-                    const size = parseInt(optionValue);
-                    if (!isNaN(size)) {
-                      setPenSize(size);
-                      setPenSizeInput(optionValue);
-                    }
-                    modalPenSizeCombobox.closeDropdown();
-                  }}
-                  store={modalPenSizeCombobox}
-                  withinPortal={false}
-                >
-                  <Combobox.Target>
-                    <TextInput
-                      placeholder="Size"
-                      size="compact-sm"
-                      value={penSizeInput}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value;
-                        setPenSizeInput(value);
-
-                        const size = parseInt(value);
-                        if (!isNaN(size) && size >= 1 && size <= 200) {
-                          setPenSize(size);
-                        }
-
-                        modalPenSizeCombobox.openDropdown();
-                        modalPenSizeCombobox.updateSelectedOptionIndex();
-                      }}
-                      onClick={() => modalPenSizeCombobox.openDropdown()}
-                      onFocus={() => modalPenSizeCombobox.openDropdown()}
-                      onBlur={() => {
-                        modalPenSizeCombobox.closeDropdown();
-                        const size = parseInt(penSizeInput);
-                        if (isNaN(size) || size < 1 || size > 200) {
-                          setPenSizeInput(penSize.toString());
-                        }
-                      }}
-                      style={{ width: '60px' }}
-                    />
-                  </Combobox.Target>
-
-                  <Combobox.Dropdown>
-                    <Combobox.Options>
-                      {['1', '2', '3', '4', '5', '8', '10', '12', '15', '20', '25', '30', '40', '50'].map((size) => (
-                        <Combobox.Option value={size} key={size}>
-                          {size}px
-                        </Combobox.Option>
-                      ))}
-                    </Combobox.Options>
-                  </Combobox.Dropdown>
-                </Combobox>
+                <PenSizeSelector
+                  value={penSize}
+                  inputValue={penSizeInput}
+                  onValueChange={setPenSize}
+                  onInputChange={setPenSizeInput}
+                  placeholder="Size"
+                  size="compact-sm"
+                  style={{ width: '60px' }}
+                />
               </div>
             </Group>
           </Paper>
