@@ -579,9 +579,9 @@
       "title": "API Documentation",
       "desc": "View API documentation and test endpoints"
     },
-    "fakeScan": {
+    "scannerEffect": {
       "tags": "scan,simulate,create",
-      "title": "Fake Scan",
+      "title": "Scanner Effect",
       "desc": "Create a PDF that looks like it was scanned"
     },
     "editTableOfContents": {
