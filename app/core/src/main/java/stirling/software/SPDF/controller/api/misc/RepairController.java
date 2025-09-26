@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,7 +47,7 @@ public class RepairController {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/repair")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/repair")
     @Operation(
             summary = "Repair a PDF file",
             description =
