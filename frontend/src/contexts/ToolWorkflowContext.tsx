@@ -216,7 +216,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSearchQuery('');
     setLeftPanelView('toolContent');
     setReaderMode(false); // Disable read mode when selecting tools
-
   }, [actions, getSelectedTool, setLeftPanelView, setReaderMode, setSearchQuery]);
 
   const handleBackToTools = useCallback(() => {
