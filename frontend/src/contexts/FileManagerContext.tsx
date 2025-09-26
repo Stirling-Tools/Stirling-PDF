@@ -13,7 +13,7 @@ interface FileManagerContextValue {
   searchTerm: string;
   selectedFiles: StirlingFileStub[];
   filteredFiles: StirlingFileStub[];
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
   selectedFilesSet: Set<FileId>;
   expandedFileIds: Set<FileId>;
   fileGroups: Map<FileId, StirlingFileStub[]>;

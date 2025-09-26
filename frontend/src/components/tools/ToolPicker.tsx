@@ -71,7 +71,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
     [visibleSections]
   );
 
-  const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) => {
+  const scrollTo = (ref: React.MutableRefObject<HTMLDivElement | null>) => {
     const container = scrollableRef.current;
     const target = ref.current;
     if (container && target) {
