@@ -29,6 +29,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -156,7 +157,8 @@ public class PdfUtils {
         if (DPI > maxSafeDpi) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.dpiExceedsLimit",
-                    "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause memory issues and crashes. Please use a lower DPI value.",
+                    "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause"
+                            + " memory issues and crashes. Please use a lower DPI value.",
                     DPI,
                     maxSafeDpi);
         }
@@ -196,11 +198,17 @@ public class PdfUtils {
                                                 .contains("Maximum size of image exceeded")) {
                                     throw ExceptionUtils.createIllegalArgumentException(
                                             "error.pageTooBigForDpi",
-                                            "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                            "PDF page {0} is too large to render at {1} DPI. Please"
+                                                    + " try a lower DPI value (recommended: 150 or"
+                                                    + " less).",
                                             i + 1,
                                             DPI);
                                 }
                                 throw e;
+                            } catch (OutOfMemoryError e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
+                            } catch (NegativeArraySizeException e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                             writer.writeToSequence(new IIOImage(image, null, null), param);
                         }
@@ -241,11 +249,18 @@ public class PdfUtils {
                                                 .contains("Maximum size of image exceeded")) {
                                     throw ExceptionUtils.createIllegalArgumentException(
                                             "error.pageTooBigExceedsArray",
-                                            "PDF page {0} is too large to render at {1} DPI. The resulting image would exceed Java's maximum array size. Please try a lower DPI value (recommended: 150 or less).",
+                                            "PDF page {0} is too large to render at {1} DPI. The"
+                                                    + " resulting image would exceed Java's maximum"
+                                                    + " array size. Please try a lower DPI value"
+                                                    + " (recommended: 150 or less).",
                                             i + 1,
                                             DPI);
                                 }
                                 throw e;
+                            } catch (OutOfMemoryError e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
+                            } catch (NegativeArraySizeException e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                             pdfSizeImageIndex = i;
                             dimension =
@@ -282,11 +297,17 @@ public class PdfUtils {
                                                 .contains("Maximum size of image exceeded")) {
                                     throw ExceptionUtils.createIllegalArgumentException(
                                             "error.pageTooBigForDpi",
-                                            "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                            "PDF page {0} is too large to render at {1} DPI. Please"
+                                                    + " try a lower DPI value (recommended: 150 or"
+                                                    + " less).",
                                             i + 1,
                                             DPI);
                                 }
                                 throw e;
+                            } catch (OutOfMemoryError e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
+                            } catch (NegativeArraySizeException e) {
+                                throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                             }
                         }
 
@@ -315,11 +336,16 @@ public class PdfUtils {
                                     && e.getMessage().contains("Maximum size of image exceeded")) {
                                 throw ExceptionUtils.createIllegalArgumentException(
                                         "error.pageTooBigForDpi",
-                                        "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                        "PDF page {0} is too large to render at {1} DPI. Please try"
+                                                + " a lower DPI value (recommended: 150 or less).",
                                         i + 1,
                                         DPI);
                             }
                             throw e;
+                        } catch (OutOfMemoryError e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
+                        } catch (NegativeArraySizeException e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, DPI, e);
                         }
                         try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
                             ImageIO.write(image, imageType, baosImage);
@@ -359,17 +385,32 @@ public class PdfUtils {
         pdfRenderer.setSubsamplingAllowed(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim;
+
+            // Use global maximum DPI setting, fallback to 300 if not set
+            int renderDpi = 300; // Default fallback
+            ApplicationProperties properties =
+                    ApplicationContextProvider.getBean(ApplicationProperties.class);
+            if (properties != null && properties.getSystem() != null) {
+                renderDpi = properties.getSystem().getMaxDPI();
+            }
+
             try {
-                bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
+                bim = pdfRenderer.renderImageWithDPI(page, renderDpi, ImageType.RGB);
             } catch (IllegalArgumentException e) {
                 if (e.getMessage() != null
                         && e.getMessage().contains("Maximum size of image exceeded")) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.pageTooBigFor300Dpi",
-                            "PDF page {0} is too large to render at 300 DPI. The resulting image would exceed Java's maximum array size. Please use a lower DPI value for PDF-to-image conversion.",
+                            "PDF page {0} is too large to render at 300 DPI. The resulting image"
+                                    + " would exceed Java's maximum array size. Please use a lower DPI"
+                                    + " value for PDF-to-image conversion.",
                             page + 1);
                 }
                 throw e;
+            } catch (OutOfMemoryError e) {
+                throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, 300, e);
+            } catch (NegativeArraySizeException e) {
+                throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, 300, e);
             }
             PDPage originalPage = document.getPage(page);
 
@@ -435,7 +476,7 @@ public class PdfUtils {
                             ImageProcessingUtils.convertColorType(image, colorType);
                     // Use JPEGFactory if it's JPEG since JPEG is lossy
                     PDImageXObject pdImage =
-                            (contentType != null && "image/jpeg".equals(contentType))
+                            (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
                                     ? JPEGFactory.createFromImage(doc, convertedImage)
                                     : LosslessFactory.createFromImage(doc, convertedImage);
                     addImageToDocument(doc, pdImage, fitOption, autoRotate);
@@ -540,10 +581,10 @@ public class PdfUtils {
     public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck)
             throws IOException {
         PDFTextStripper textStripper = new PDFTextStripper();
-        String pdfText = "";
+        StringBuilder pdfText = new StringBuilder();
 
         if (pagesToCheck == null || "all".equals(pagesToCheck)) {
-            pdfText = textStripper.getText(pdfDocument);
+            pdfText = new StringBuilder(textStripper.getText(pdfDocument));
         } else {
             // remove whitespaces
             pagesToCheck = pagesToCheck.replaceAll("\\s+", "");
@@ -559,21 +600,21 @@ public class PdfUtils {
                     for (int i = startPage; i <= endPage; i++) {
                         textStripper.setStartPage(i);
                         textStripper.setEndPage(i);
-                        pdfText += textStripper.getText(pdfDocument);
+                        pdfText.append(textStripper.getText(pdfDocument));
                     }
                 } else {
                     // Handle individual page
                     int page = Integer.parseInt(splitPoint);
                     textStripper.setStartPage(page);
                     textStripper.setEndPage(page);
-                    pdfText += textStripper.getText(pdfDocument);
+                    pdfText.append(textStripper.getText(pdfDocument));
                 }
             }
         }
 
         pdfDocument.close();
 
-        return pdfText.contains(text);
+        return pdfText.toString().contains(text);
     }
 
     public boolean pageCount(PDDocument pdfDocument, int pageCount, String comparator)

@@ -6,7 +6,6 @@ import java.awt.image.DataBufferInt;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +34,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -53,6 +57,7 @@ public class AutoSplitPdfController {
                             "https://stirlingpdf.com"));
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     private static String decodeQRCode(BufferedImage bufferedImage) {
         LuminanceSource source;
@@ -102,7 +107,7 @@ public class AutoSplitPdfController {
         }
     }
 
-    @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
+    @PostMapping(value = "/auto-split-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Auto split PDF pages into separate documents",
             description =
@@ -117,16 +122,32 @@ public class AutoSplitPdfController {
 
         PDDocument document = null;
         List<PDDocument> splitDocuments = new ArrayList<>();
-        Path zipFile = null;
-        byte[] data = null;
+        TempFile outputTempFile = null;
 
         try {
+            outputTempFile = new TempFile(tempFileManager, ".zip");
             document = pdfDocumentFactory.load(file.getInputStream());
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
 
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
-                BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 150);
+                BufferedImage bim;
+
+                // Use global maximum DPI setting, fallback to 300 if not set
+                int renderDpi = 150; // Default fallback
+                ApplicationProperties properties =
+                        ApplicationContextProvider.getBean(ApplicationProperties.class);
+                if (properties != null && properties.getSystem() != null) {
+                    renderDpi = properties.getSystem().getMaxDPI();
+                }
+
+                try {
+                    bim = pdfRenderer.renderImageWithDPI(page, renderDpi);
+                } catch (OutOfMemoryError e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
+                }
                 String result = decodeQRCode(bim);
 
                 boolean isValidQrCode = VALID_QR_CONTENTS.contains(result);
@@ -152,12 +173,12 @@ public class AutoSplitPdfController {
             // Remove split documents that have no pages
             splitDocuments.removeIf(pdDocument -> pdDocument.getNumberOfPages() == 0);
 
-            zipFile = Files.createTempFile("split_documents", ".zip");
             String filename =
                     Filenames.toSimpleFileName(file.getOriginalFilename())
                             .replaceFirst("[.][^.]+$", "");
 
-            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            try (ZipOutputStream zipOut =
+                    new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
                 for (int i = 0; i < splitDocuments.size(); i++) {
                     String fileName = filename + "_" + (i + 1) + ".pdf";
                     PDDocument splitDocument = splitDocuments.get(i);
@@ -173,10 +194,10 @@ public class AutoSplitPdfController {
                 }
             }
 
-            data = Files.readAllBytes(zipFile);
-
+            byte[] data = Files.readAllBytes(outputTempFile.getPath());
             return WebResponseUtils.bytesToWebResponse(
                     data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+
         } catch (Exception e) {
             log.error("Error in auto split", e);
             throw e;
@@ -198,12 +219,8 @@ public class AutoSplitPdfController {
                 }
             }
 
-            if (zipFile != null) {
-                try {
-                    Files.deleteIfExists(zipFile);
-                } catch (IOException e) {
-                    log.error("Error deleting temporary zip file", e);
-                }
+            if (outputTempFile != null) {
+                outputTempFile.close();
             }
         }
     }
