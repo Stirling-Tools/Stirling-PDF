@@ -17,7 +17,7 @@ export interface SignatureAPI {
   getPageAnnotations: (pageIndex: number) => Promise<any[]>;
 }
 
-export const SignatureAPIBridge = forwardRef<SignatureAPI, {}>((_props, ref) => {
+export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig, storeImageData, isPlacementMode } = useSignature();
 

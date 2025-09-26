@@ -11,7 +11,7 @@ export interface HistoryAPI {
   canRedo: () => boolean;
 }
 
-export const HistoryAPIBridge = forwardRef<HistoryAPI, {}>((_props, ref) => {
+export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge(_, ref) {
   const { provides: historyApi } = useHistoryCapability();
   const { provides: annotationApi } = useAnnotationCapability();
   const { getImageData, storeImageData } = useSignature();
