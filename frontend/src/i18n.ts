@@ -74,7 +74,9 @@ i18n
       loadPath: (lngs: string[], namespaces: string[]) => {
         // Map 'en' to 'en-GB' for loading translations
         const lng = lngs[0] === 'en' ? 'en-GB' : lngs[0];
-        return `/locales/${lng}/${namespaces[0]}.json`;
+        const basePath = import.meta.env.BASE_URL || '/';
+        const cleanBasePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.json`;
       },
     },
 

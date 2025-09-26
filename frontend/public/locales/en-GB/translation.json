@@ -74,7 +74,10 @@
   },
   "error": {
     "pdfPassword": "The PDF Document is passworded and either the password was not provided or was incorrect",
+    "encryptedPdfMustRemovePassword": "This PDF is encrypted or password-protected. Please unlock it before converting to PDF/A.",
+    "incorrectPasswordProvided": "The PDF password is incorrect or not provided.",
     "_value": "Error",
+    "dismissAllErrors": "Dismiss All Errors",
     "sorry": "Sorry for the issue!",
     "needHelp": "Need help / Found an issue?",
     "contactTip": "If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket on our GitHub page or contact us through Discord:",
@@ -357,222 +360,276 @@
     "globalPopularity": "Global Popularity",
     "sortBy": "Sort by:",
     "multiTool": {
+      "tags": "multiple,tools",
       "title": "PDF Multi Tool",
       "desc": "Merge, Rotate, Rearrange, Split, and Remove pages"
     },
     "merge": {
+      "tags": "combine,join,unite",
       "title": "Merge",
       "desc": "Easily merge multiple PDFs into one."
     },
     "split": {
+      "tags": "divide,separate,break",
       "title": "Split",
       "desc": "Split PDFs into multiple documents"
     },
     "rotate": {
+      "tags": "turn,flip,orient",
       "title": "Rotate",
       "desc": "Easily rotate your PDFs."
     },
     "convert": {
+      "tags": "transform,change",
       "title": "Convert",
       "desc": "Convert files between different formats"
     },
     "pdfOrganiser": {
+      "tags": "organize,rearrange,reorder",
       "title": "Organise",
       "desc": "Remove/Rearrange pages in any order"
     },
     "addImage": {
+      "tags": "insert,embed,place",
       "title": "Add image",
       "desc": "Adds a image onto a set location on the PDF"
     },
     "addAttachments": {
+      "tags": "embed,attach,include",
       "title": "Add Attachments",
       "desc": "Add or remove embedded files (attachments) to/from a PDF"
     },
     "watermark": {
+      "tags": "stamp,mark,overlay",
       "title": "Add Watermark",
       "desc": "Add a custom watermark to your PDF document."
     },
     "removePassword": {
+      "tags": "unlock",
       "title": "Remove Password",
       "desc": "Remove password protection from your PDF document."
     },
     "compress": {
+      "tags": "shrink,reduce,optimize",
       "title": "Compress",
       "desc": "Compress PDFs to reduce their file size."
     },
     "unlockPDFForms": {
+      "tags": "unlock,enable,edit",
       "title": "Unlock PDF Forms",
       "desc": "Remove read-only property of form fields in a PDF document."
     },
     "changeMetadata": {
+      "tags": "edit,modify,update",
       "title": "Change Metadata",
       "desc": "Change/Remove/Add metadata from a PDF document"
     },
     "ocr": {
+      "tags": "extract,scan",
       "title": "OCR / Cleanup scans",
       "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
     },
     "extractImages": {
+      "tags": "pull,save,export",
       "title": "Extract Images",
       "desc": "Extracts all images from a PDF and saves them to zip"
     },
     "scannerImageSplit": {
-      "title": "Detect/Split Scanned photos",
-      "desc": "Splits multiple photos from within a photo/PDF"
+      "tags": "detect,split,photos",
+      "title": "Detect & Split Scanned Photos",
+      "desc": "Detect and split scanned photos into separate pages"
     },
     "sign": {
+      "tags": "signature,autograph",
       "title": "Sign",
       "desc": "Adds signature to PDF by drawing, text or image"
     },
     "flatten": {
+      "tags": "simplify,remove,interactive",
       "title": "Flatten",
       "desc": "Remove all interactive elements and forms from a PDF"
     },
     "certSign": {
+      "tags": "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto",
       "title": "Sign with Certificate",
       "desc": "Signs a PDF with a Certificate/Key (PEM/P12)"
     },
     "repair": {
+      "tags": "fix,restore",
       "title": "Repair",
       "desc": "Tries to repair a corrupt/broken PDF"
     },
     "removeBlanks": {
+      "tags": "delete,clean,empty",
       "title": "Remove Blank pages",
       "desc": "Detects and removes blank pages from a document"
     },
     "removeAnnotations": {
+      "tags": "delete,clean,strip",
       "title": "Remove Annotations",
       "desc": "Removes all comments/annotations from a PDF"
     },
     "compare": {
+      "tags": "difference",
       "title": "Compare",
       "desc": "Compares and shows the differences between 2 PDF Documents"
     },
     "removeCertSign": {
+      "tags": "remove,delete,unlock",
       "title": "Remove Certificate Sign",
       "desc": "Remove certificate signature from PDF"
     },
     "pageLayout": {
+      "tags": "layout,arrange,combine",
       "title": "Multi-Page Layout",
       "desc": "Merge multiple pages of a PDF document into a single page"
     },
     "bookletImposition": {
+      "tags": "booklet,print,binding",
       "title": "Booklet Imposition",
       "desc": "Create booklets with proper page ordering and multi-page layout for printing and binding"
     },
     "scalePages": {
+      "tags": "resize,adjust,scale",
       "title": "Adjust page size/scale",
       "desc": "Change the size/scale of a page and/or its contents."
     },
     "addPageNumbers": {
+      "tags": "number,pagination,count",
       "title": "Add Page Numbers",
       "desc": "Add Page numbers throughout a document in a set location"
     },
     "autoRename": {
+      "tags": "auto-detect,header-based,organize,relabel",
       "title": "Auto Rename PDF File",
       "desc": "Auto renames a PDF file based on its detected header"
     },
     "adjustContrast": {
+      "tags": "contrast,brightness,saturation",
       "title": "Adjust Colours/Contrast",
       "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
     },
     "crop": {
+      "tags": "trim,cut,resize",
       "title": "Crop PDF",
       "desc": "Crop a PDF to reduce its size (maintains text!)"
     },
     "autoSplitPDF": {
+      "tags": "auto,split,QR",
       "title": "Auto Split Pages",
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
     "sanitize": {
+      "tags": "clean,purge,remove",
       "title": "Sanitise",
       "desc": "Remove potentially harmful elements from PDF files"
     },
     "getPdfInfo": {
+      "tags": "info,metadata,details",
       "title": "Get ALL Info on PDF",
       "desc": "Grabs any and all information possible on PDFs"
     },
     "pdfToSinglePage": {
+      "tags": "combine,merge,single",
       "title": "PDF to Single Large Page",
       "desc": "Merges all PDF pages into one large single page"
     },
     "showJS": {
+      "tags": "javascript,code,script",
       "title": "Show Javascript",
       "desc": "Searches and displays any JS injected into a PDF"
     },
     "redact": {
+      "tags": "censor,blackout,hide",
       "title": "Redact",
       "desc": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
     "overlayPdfs": {
+      "tags": "overlay,combine,stack",
       "title": "Overlay PDFs",
       "desc": "Overlays PDFs on-top of another PDF"
     },
     "splitBySections": {
+      "tags": "split,sections,divide",
       "title": "Split PDF by Sections",
       "desc": "Divide each page of a PDF into smaller horizontal and vertical sections"
     },
     "addStamp": {
+      "tags": "stamp,mark,seal",
       "title": "Add Stamp to PDF",
       "desc": "Add text or add image stamps at set locations"
     },
     "removeImage": {
+      "tags": "remove,delete,clean",
       "title": "Remove image",
       "desc": "Remove image from PDF to reduce file size"
     },
     "splitByChapters": {
+      "tags": "split,chapters,structure",
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
     "validateSignature": {
+      "tags": "validate,verify,certificate",
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
     "swagger": {
+      "tags": "API,documentation,test",
       "title": "API Documentation",
       "desc": "View API documentation and test endpoints"
     },
     "fakeScan": {
+      "tags": "scan,simulate,create",
       "title": "Fake Scan",
       "desc": "Create a PDF that looks like it was scanned"
     },
     "editTableOfContents": {
+      "tags": "bookmarks,contents,edit",
       "title": "Edit Table of Contents",
       "desc": "Add or edit bookmarks and table of contents in PDF documents"
     },
     "manageCertificates": {
+      "tags": "certificates,import,export",
       "title": "Manage Certificates",
       "desc": "Import, export, or delete digital certificate files used for signing PDFs."
     },
-    "read": {
-      "title": "Read",
+  "read": {
+    "tags": "view,open,display",
+    "title": "Read",
       "desc": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
     },
     "reorganizePages": {
+      "tags": "rearrange,reorder,organize",
       "title": "Reorganize Pages",
       "desc": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
     },
     "extractPages": {
+      "tags": "pull,select,copy",
       "title": "Extract Pages",
       "desc": "Extract specific pages from a PDF document"
     },
     "removePages": {
+      "tags": "delete,extract,exclude",
       "title": "Remove Pages",
       "desc": "Remove specific pages from a PDF document"
     },
     "autoSizeSplitPDF": {
+      "tags": "auto,split,size",
       "title": "Auto Split by Size/Count",
       "desc": "Automatically split PDFs by file size or page count"
     },
-    "replaceColorPdf": {
+    "replaceColor": {
       "title": "Replace & Invert Colour",
       "desc": "Replace or invert colours in PDF documents"
     },
     "devApi": {
+      "tags": "API,development,documentation",
       "title": "API",
       "desc": "Link to API documentation"
     },
     "devFolderScanning": {
+      "tags": "automation,folder,scanning",
       "title": "Automated Folder Scanning",
       "desc": "Link to automated folder scanning guide"
     },
@@ -593,6 +650,7 @@
       "desc": "Change document restrictions and permissions"
     },
     "automate": {
+      "tags": "workflow,sequence,automation",
       "title": "Automate",
       "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
     }
@@ -659,7 +717,6 @@
     }
   },
   "split": {
-    "tags": "Page operations,divide,Multi Page,cut,server side",
     "title": "Split PDF",
     "header": "Split PDF",
     "desc": {
@@ -785,7 +842,6 @@
     }
   },
   "rotate": {
-    "tags": "server side",
     "title": "Rotate PDF",
     "submit": "Apply Rotation",
     "error": {
@@ -902,7 +958,7 @@
     "header": "PDF Page Organiser",
     "submit": "Rearrange Pages",
     "mode": {
-      "_value": "Mode",
+      "_value": "Organization mode",
       "1": "Custom Page Order",
       "2": "Reverse Order",
       "3": "Duplex Sort",
@@ -914,6 +970,19 @@
       "9": "Remove First and Last",
       "10": "Odd-Even Merge",
       "11": "Duplicate all pages"
+    },
+    "desc": {
+      "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
+      "REVERSE_ORDER": "Flip the document so the last page becomes first and so on.",
+      "DUPLEX_SORT": "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …).",
+      "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
+      "SIDE_STITCH_BOOKLET_SORT": "Arrange pages for side‑stitch booklet printing (optimised for binding on the side).",
+      "ODD_EVEN_SPLIT": "Split the document into two outputs: all odd pages and all even pages.",
+      "ODD_EVEN_MERGE": "Merge two PDFs by alternating pages: odd from the first, even from the second.",
+      "DUPLICATE": "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×).",
+      "REMOVE_FIRST": "Remove the first page from the document.",
+      "REMOVE_LAST": "Remove the last page from the document.",
+      "REMOVE_FIRST_AND_LAST": "Remove both the first and last pages from the document."
     },
     "placeholder": "(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)"
   },
@@ -1298,7 +1367,6 @@
     }
   },
   "changeMetadata": {
-    "tags": "Title,author,date,creation,time,publisher,producer,stats",
     "header": "Change Metadata",
     "submit": "Change",
     "filenamePrefix": "metadata",
@@ -1540,7 +1608,13 @@
     "header": "Extract Images",
     "selectText": "Select image format to convert extracted images to",
     "allowDuplicates": "Save duplicate images",
-    "submit": "Extract"
+    "submit": "Extract",
+    "settings": {
+      "title": "Settings"
+    },
+    "error": {
+      "failed": "An error occurred while extracting images from the PDF."
+    }
   },
   "pdfToPDFA": {
     "tags": "archive,long-term,standard,conversion,storage,preservation",
@@ -1600,20 +1674,49 @@
     "tags": "separate,auto-detect,scans,multi-photo,organize",
     "selectText": {
       "1": "Angle Threshold:",
-      "2": "Sets the minimum absolute angle required for the image to be rotated (default: 10).",
+      "2": "Tilt (in degrees) needed before we auto-straighten a photo.",
       "3": "Tolerance:",
-      "4": "Determines the range of colour variation around the estimated background colour (default: 30).",
+      "4": "How closely a colour must match the page background to count as background. Higher = looser, lower = stricter.",
       "5": "Minimum Area:",
-      "6": "Sets the minimum area threshold for a photo (default: 10000).",
+      "6": "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments.",
       "7": "Minimum Contour Area:",
-      "8": "Sets the minimum contour area threshold for a photo",
+      "8": "Smallest edge/shape we consider when finding photos (filters dust and specks).",
       "9": "Border Size:",
-      "10": "Sets the size of the border added and removed to prevent white borders in the output (default: 1)."
+      "10": "Extra padding (in pixels) around each saved photo so edges aren't cut."
     },
     "info": "Python is not installed. It is required to run."
   },
+  "scannerImageSplit": {
+    "title": "Extracted Images",
+    "submit": "Extract Image Scans",
+    "error": {
+      "failed": "An error occurred while extracting image scans."
+    },
+    "tooltip": {
+      "title": "Photo Splitter",
+      "whatThisDoes": "What this does",
+      "whatThisDoesDesc": "Automatically finds and extracts each photo from a scanned page or composite image—no manual cropping.",
+      "whenToUse": "When to use",
+      "useCase1": "Scan whole album pages in one go",
+      "useCase2": "Split flatbed batches into separate files",
+      "useCase3": "Break collages into individual photos",
+      "useCase4": "Pull photos from documents",
+      "quickFixes": "Quick fixes",
+      "problem1": "Photos not detected → increase Tolerance to 30-50",
+      "problem2": "Too many false detections → increase Minimum Area to 15,000-20,000",
+      "problem3": "Crops are too tight → increase Border Size to 5-10",
+      "problem4": "Tilted photos not straightened → lower Angle Threshold to ~5°",
+      "problem5": "Dust/noise boxes → increase Minimum Contour Area to 1000-2000",
+      "setupTips": "Setup tips",
+      "tip1": "Use a plain, light background",
+      "tip2": "Leave a small gap (≈1 cm) between photos",
+      "tip3": "Scan at 300-600 DPI",
+      "tip4": "Clean the scanner glass",
+      "headsUp": "Heads-up",
+      "headsUpDesc": "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy-try a lighter or darker background and leave more space."
+    }
+  },
   "sign": {
-    "tags": "authorize,initials,drawn-signature,text-sign,image-signature",
     "title": "Sign",
     "header": "Sign PDFs",
     "upload": "Upload Image",
@@ -1672,7 +1775,6 @@
     }
   },
   "flatten": {
-    "tags": "static,deactivate,non-interactive,streamline",
     "title": "Flatten",
     "header": "Flatten PDF",
     "flattenOnlyForms": "Flatten only forms",
@@ -1737,7 +1839,6 @@
     }
   },
   "removeBlanks": {
-    "tags": "cleanup,streamline,non-content,organize",
     "title": "Remove Blanks",
     "header": "Remove Blank Pages",
     "settings": {
@@ -2134,7 +2235,6 @@
     "tags": "color-correction,tune,modify,enhance,colour-correction"
   },
   "crop": {
-    "tags": "trim,shrink,edit,shape",
     "title": "Crop",
     "header": "Crop PDF",
     "submit": "Apply Crop",
@@ -2486,25 +2586,48 @@
     },
     "selectCustomCert": "Custom Certificate File X.509 (Optional)"
   },
-  "replace-color": {
-    "title": "Advanced Colour options",
-    "header": "Replace-Invert Colour PDF",
-    "selectText": {
-      "1": "Replace or Invert colour Options",
-      "2": "Default(Default high contrast colours)",
-      "3": "Custom(Customised colours)",
-      "4": "Full-Invert(Invert all colours)",
-      "5": "High contrast colour options",
-      "6": "white text on black background",
-      "7": "Black text on white background",
-      "8": "Yellow text on black background",
-      "9": "Green text on black background",
-      "10": "Choose text Colour",
-      "11": "Choose background Colour"
+  "replaceColor": {
+    "labels": {
+      "settings": "Settings",
+      "colourOperation": "Colour operation"
     },
-    "submit": "Replace"
+    "options": {
+      "highContrast": "High contrast",
+      "invertAll": "Invert all colours",
+      "custom": "Custom"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Replace & Invert Colour Settings Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Transform PDF colours to improve readability and accessibility. Choose from high contrast presets, invert all colours, or create custom colour schemes."
+      },
+      "highContrast": {
+        "title": "High Contrast",
+        "text": "Apply predefined high contrast colour combinations designed for better readability and accessibility compliance.",
+        "bullet1": "White text on black background - Classic dark mode",
+        "bullet2": "Black text on white background - Standard high contrast",
+        "bullet3": "Yellow text on black background - High visibility option",
+        "bullet4": "Green text on black background - Alternative high contrast"
+      },
+      "invertAll": {
+        "title": "Invert All Colours",
+        "text": "Completely invert all colours in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
+      },
+      "custom": {
+        "title": "Custom Colours",
+        "text": "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
+        "bullet1": "Text colour - Choose the colour for text elements",
+        "bullet2": "Background colour - Set the background colour for the document"
+      }
+    },
+    "error": {
+      "failed": "An error occurred while processing the colour replacement."
+    }
   },
-  "replaceColorPdf": {
+  "replaceColor": {
     "tags": "Replace Colour,Page operations,Back end,server side"
   },
   "login": {
@@ -3345,6 +3468,18 @@
         "confirmCta": "Refresh Keys"
       },
       "generateError": "We couldn't generate your API key."
+    }
+  },
+  "AddAttachmentsRequest": {
+    "attachments": "Select Attachments",
+    "info": "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel.",
+    "selectFiles": "Select Files to Attach",
+    "placeholder": "Choose files...",
+    "addMoreFiles": "Add more files...",
+    "selectedFiles": "Selected Files",
+    "submit": "Add Attachments",
+    "results": {
+      "title": "Attachment Results"
     }
   },
   "termsAndConditions": "Terms & Conditions",

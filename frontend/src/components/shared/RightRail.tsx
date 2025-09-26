@@ -4,7 +4,7 @@ import LocalIcon from './LocalIcon';
 import './rightRail/RightRail.css';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useRightRail } from '../../contexts/RightRailContext';
-import { useFileState, useFileSelection, useFileManagement } from '../../contexts/FileContext';
+import { useFileState, useFileSelection, useFileManagement, useFileContext } from '../../contexts/FileContext';
 import { useNavigationState } from '../../contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
 
@@ -39,6 +39,7 @@ export default function RightRail() {
 
   // File state and selection
   const { state, selectors } = useFileState();
+  const { actions: fileActions } = useFileContext();
   const { selectedFiles, selectedFileIds, setSelectedFiles } = useFileSelection();
   const { removeFiles } = useFileManagement();
 
@@ -73,6 +74,8 @@ export default function RightRail() {
       // Select all file IDs
       const allIds = state.files.ids;
       setSelectedFiles(allIds);
+      // Clear any previous error flags when selecting all
+      try { fileActions.clearAllFileErrors(); } catch (_e) { void _e; }
       return;
     }
 
@@ -85,6 +88,8 @@ export default function RightRail() {
   const handleDeselectAll = useCallback(() => {
     if (currentView === 'fileEditor' || currentView === 'viewer') {
       setSelectedFiles([]);
+      // Clear any previous error flags when deselecting all
+      try { fileActions.clearAllFileErrors(); } catch (_e) { void _e; }
       return;
     }
     if (currentView === 'pageEditor') {

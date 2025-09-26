@@ -137,6 +137,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
       createPluginRegistration(RotatePluginPackage, {
         defaultRotation: Rotation.Degree0, // Start with no rotation
       }),
+
       // Register export plugin for downloading PDFs
       createPluginRegistration(ExportPluginPackage, {
         defaultFileName: 'document.pdf',
