@@ -9,6 +9,8 @@ interface SignatureState {
   signatureConfig: SignParameters | null;
   // Whether we're in signature placement mode
   isPlacementMode: boolean;
+  // Whether signatures have been applied (allows export)
+  signaturesApplied: boolean;
 }
 
 // Signature actions interface
@@ -24,6 +26,7 @@ interface SignatureActions {
   redo: () => void;
   storeImageData: (id: string, data: string) => void;
   getImageData: (id: string) => string | undefined;
+  setSignaturesApplied: (applied: boolean) => void;
 }
 
 // Combined context interface
@@ -39,6 +42,7 @@ const SignatureContext = createContext<SignatureContextValue | undefined>(undefi
 const initialState: SignatureState = {
   signatureConfig: null,
   isPlacementMode: false,
+  signaturesApplied: true, // Start as true (no signatures placed yet)
 };
 
 // Provider component
@@ -67,6 +71,8 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (signatureApiRef.current) {
       signatureApiRef.current.activateDrawMode();
       setPlacementMode(true);
+      // Mark signatures as not applied when entering draw mode
+      setState(prev => ({ ...prev, signaturesApplied: false }));
     }
   }, [setPlacementMode]);
 
@@ -81,6 +87,8 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (signatureApiRef.current) {
       signatureApiRef.current.activateSignaturePlacementMode();
       setPlacementMode(true);
+      // Mark signatures as not applied when placing new signatures
+      setState(prev => ({ ...prev, signaturesApplied: false }));
     }
   }, [setPlacementMode]);
 
@@ -117,6 +125,13 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     return imageDataStore.current.get(id);
   }, []);
 
+  const setSignaturesApplied = useCallback((applied: boolean) => {
+    setState(prev => ({
+      ...prev,
+      signaturesApplied: applied,
+    }));
+  }, []);
+
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {
@@ -134,6 +149,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     redo,
     storeImageData,
     getImageData,
+    setSignaturesApplied,
   };
 
   return (

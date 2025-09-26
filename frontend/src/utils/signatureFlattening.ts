@@ -1,21 +1,17 @@
 import { PDFDocument, rgb } from 'pdf-lib';
 import { generateThumbnailWithMetadata } from './thumbnailUtils';
 import { createProcessedFile } from '../contexts/file/fileActions';
-import { createNewStirlingFileStub, createStirlingFile, StirlingFile, FileId } from '../types/fileContext';
+import { createNewStirlingFileStub, createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '../types/fileContext';
 import type { SignatureAPI } from '../components/viewer/SignatureAPIBridge';
 
 interface SignatureFlatteningOptions {
-  signatureApiRef: React.RefObject<SignatureAPI>;
-  getImageData: (id: string) => string | null;
-  exportActions: {
+  signatureApiRef: React.RefObject<SignatureAPI | null>;
+  getImageData: (id: string) => string | undefined;
+  exportActions?: {
     saveAsCopy: () => Promise<ArrayBuffer | null>;
   };
-  selectors: {
-    getStirlingFileStub: (fileId: string) => any;
-    getFile: (fileId: string) => File | null;
-    getAllFileIds: () => string[];
-  };
-  consumeFiles: (inputFileIds: FileId[], outputFiles: StirlingFile[], outputStubs: any[]) => Promise<void>;
+  selectors: any; // FileContextSelectors - using any to avoid complex type matching
+  consumeFiles: (inputFileIds: FileId[], outputStirlingFiles: StirlingFile[], outputStirlingFileStubs: StirlingFileStub[]) => Promise<FileId[]>;
   originalFile?: StirlingFile;
 }
 
@@ -84,6 +80,10 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
     }
 
     // Step 3: Use EmbedPDF's saveAsCopy to get the base PDF (now without annotations)
+    if (!exportActions) {
+      console.error('No export actions available');
+      return false;
+    }
     const pdfArrayBuffer = await exportActions.saveAsCopy();
 
     if (pdfArrayBuffer) {

@@ -17,6 +17,7 @@ import { ViewerContext } from '../../contexts/ViewerContext';
 import { useSignature } from '../../contexts/SignatureContext';
 
 import { parseSelection } from '../../utils/bulkselection/parseSelection';
+import { flattenSignatures } from '../../utils/signatureFlattening';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
 import { createProcessedFile } from '../../contexts/file/fileActions';
@@ -48,8 +49,8 @@ export default function RightRail() {
   const { selectedFiles, selectedFileIds, setSelectedFiles } = useFileSelection();
   const { removeFiles } = useFileManagement();
 
-  // Signature context for flattening signatures when in sign mode
-  const { signatureApiRef, getImageData } = useSignature();
+  // Signature context for checking if signatures have been applied
+  const { signaturesApplied } = useSignature();
 
   const activeFiles = selectors.getFiles();
   const filesSignature = selectors.getFilesSignature();
@@ -108,26 +109,10 @@ export default function RightRail() {
 
   const handleExportAll = useCallback(async () => {
     if (currentView === 'viewer') {
-      // Check if we're in sign mode and warn about unapplied signatures
-      if (signatureApiRef?.current) {
-        // Quick check for any annotations
-        let hasAnnotations = false;
-        for (let pageIndex = 0; pageIndex < 5; pageIndex++) {
-          try {
-            const pageAnnotations = await signatureApiRef.current.getPageAnnotations(pageIndex);
-            if (pageAnnotations && pageAnnotations.length > 0) {
-              hasAnnotations = true;
-              break;
-            }
-          } catch (e) {
-            break;
-          }
-        }
-
-        if (hasAnnotations) {
-          alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
-          return;
-        }
+      // Check if signatures have been applied
+      if (!signaturesApplied) {
+        alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
+        return;
       }
 
       // Use EmbedPDF export functionality for viewer mode
@@ -149,7 +134,7 @@ export default function RightRail() {
       // Export all pages (not just selected)
       pageEditorFunctions?.onExportAll?.();
     }
-  }, [currentView, activeFiles, selectedFiles, pageEditorFunctions, viewerContext]);
+  }, [currentView, activeFiles, selectedFiles, pageEditorFunctions, viewerContext, signaturesApplied, selectors, fileActions]);
 
   const handleCloseSelected = useCallback(() => {
     if (currentView !== 'fileEditor') return;
