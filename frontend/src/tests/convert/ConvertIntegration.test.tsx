@@ -17,13 +17,40 @@ import { ConvertParameters } from '../../hooks/tools/convert/useConvertParameter
 import { FileContextProvider } from '../../contexts/FileContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n/config';
-import axios from 'axios';
 import { createTestStirlingFile } from '../utils/testFileHelpers';
 import { StirlingFile } from '../../types/fileContext';
 
-// Mock axios
-vi.mock('axios');
-const mockedAxios = vi.mocked(axios);
+// Mock axios (for static methods like CancelToken, isCancel)
+vi.mock('axios', () => ({
+  default: {
+    CancelToken: {
+      source: vi.fn(() => ({
+        token: 'mock-cancel-token',
+        cancel: vi.fn()
+      }))
+    },
+    isCancel: vi.fn(() => false),
+  }
+}));
+
+// Mock our apiClient service
+vi.mock('../../services/apiClient', () => ({
+  default: {
+    post: vi.fn(),
+    get: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    interceptors: {
+      response: {
+        use: vi.fn()
+      }
+    }
+  }
+}));
+
+// Import the mocked apiClient
+import apiClient from '../../services/apiClient';
+const mockedApiClient = vi.mocked(apiClient);
 
 // Mock only essential services that are actually called by the tests
 vi.mock('../../services/fileStorage', () => ({
@@ -71,8 +98,8 @@ describe('Convert Tool Integration Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Setup default axios mock
-    mockedAxios.post = vi.fn();
+    // Setup default apiClient mock
+    mockedApiClient.post = vi.fn();
   });
 
   afterEach(() => {
@@ -83,7 +110,7 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should make correct API call for PDF to PNG conversion', async () => {
       const mockBlob = new Blob(['fake-image-data'], { type: 'image/png' });
-      (mockedAxios.post as Mock).mockResolvedValueOnce({
+      (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         statusText: 'OK'
@@ -126,14 +153,14 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       // Verify axios was called with correct parameters
-      expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
         '/api/v1/convert/pdf/img',
         expect.any(FormData),
         { responseType: 'blob' }
       );
 
       // Verify FormData contains correct parameters
-      const formDataCall = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
+      const formDataCall = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
       expect(formDataCall.get('imageFormat')).toBe('png');
       expect(formDataCall.get('colorType')).toBe('color');
       expect(formDataCall.get('dpi')).toBe('300');
@@ -148,7 +175,7 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should handle API error responses correctly', async () => {
       const errorMessage = 'Invalid file format';
-      (mockedAxios.post as Mock).mockRejectedValueOnce({
+      (mockedApiClient.post as Mock).mockRejectedValueOnce({
         response: {
           status: 400,
           data: errorMessage
@@ -199,7 +226,7 @@ describe('Convert Tool Integration Tests', () => {
     });
 
     test('should handle network errors gracefully', async () => {
-      (mockedAxios.post as Mock).mockRejectedValueOnce(new Error('Network error'));
+      (mockedApiClient.post as Mock).mockRejectedValueOnce(new Error('Network error'));
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -246,7 +273,7 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should correctly map image conversion parameters to API call', async () => {
       const mockBlob = new Blob(['fake-data'], { type: 'image/jpeg' });
-      (mockedAxios.post as Mock).mockResolvedValueOnce({
+      (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         headers: {
@@ -292,7 +319,7 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       // Verify integration: hook parameters → FormData → axios call → hook state
-      const formDataCall = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
+      const formDataCall = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
       expect(formDataCall.get('imageFormat')).toBe('jpg');
       expect(formDataCall.get('colorType')).toBe('grayscale');
       expect(formDataCall.get('dpi')).toBe('150');
@@ -307,7 +334,7 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should make correct API call for PDF to CSV conversion with simplified workflow', async () => {
       const mockBlob = new Blob(['fake-csv-data'], { type: 'text/csv' });
-      (mockedAxios.post as Mock).mockResolvedValueOnce({
+      (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         statusText: 'OK'
@@ -350,14 +377,14 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       // Verify correct endpoint is called
-      expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
         '/api/v1/convert/pdf/csv',
         expect.any(FormData),
         { responseType: 'blob' }
       );
 
       // Verify FormData contains correct parameters for simplified CSV conversion
-      const formDataCall = (mockedAxios.post as Mock).mock.calls[0][1] as FormData;
+      const formDataCall = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
       expect(formDataCall.get('pageNumbers')).toBe('all'); // Always "all" for simplified workflow
       expect(formDataCall.get('fileInput')).toBe(testFile);
 
@@ -406,7 +433,7 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       // Verify integration: utils validation prevents API call, hook shows error
-      expect(mockedAxios.post).not.toHaveBeenCalled();
+      expect(mockedApiClient.post).not.toHaveBeenCalled();
       expect(result.current.errorMessage).toContain('Unsupported conversion format');
       expect(result.current.isLoading).toBe(false);
       expect(result.current.downloadUrl).toBe(null);
@@ -417,7 +444,7 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should handle multiple file uploads correctly', async () => {
       const mockBlob = new Blob(['zip-content'], { type: 'application/zip' });
-      (mockedAxios.post as Mock).mockResolvedValueOnce({ data: mockBlob });
+      (mockedApiClient.post as Mock).mockResolvedValueOnce({ data: mockBlob });
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -458,7 +485,7 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       // Verify both files were uploaded
-      const calls = (mockedAxios.post as Mock).mock.calls;
+      const calls = (mockedApiClient.post as Mock).mock.calls;
 
       for (let i = 0; i < calls.length; i++) {
         const formData = calls[i][1] as FormData;
@@ -506,7 +533,7 @@ describe('Convert Tool Integration Tests', () => {
         await result.current.executeOperation(parameters, []);
       });
 
-      expect(mockedAxios.post).not.toHaveBeenCalled();
+      expect(mockedApiClient.post).not.toHaveBeenCalled();
       expect(result.current.errorMessage).toContain('noFileSelected');
     });
   });
@@ -514,7 +541,7 @@ describe('Convert Tool Integration Tests', () => {
   describe('Error Boundary Integration', () => {
 
     test('should handle corrupted file gracefully', async () => {
-      (mockedAxios.post as Mock).mockRejectedValueOnce({
+      (mockedApiClient.post as Mock).mockRejectedValueOnce({
         response: {
           status: 422,
           data: 'Processing failed'
@@ -562,7 +589,7 @@ describe('Convert Tool Integration Tests', () => {
     });
 
     test('should handle backend service unavailable', async () => {
-      (mockedAxios.post as Mock).mockRejectedValueOnce({
+      (mockedApiClient.post as Mock).mockRejectedValueOnce({
         response: {
           status: 503,
           data: 'Service unavailable'
@@ -614,7 +641,7 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should record operation in FileContext', async () => {
       const mockBlob = new Blob(['fake-data'], { type: 'image/png' });
-      (mockedAxios.post as Mock).mockResolvedValueOnce({
+      (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         headers: {
@@ -667,7 +694,7 @@ describe('Convert Tool Integration Tests', () => {
 
     test('should clean up blob URLs on reset', async () => {
       const mockBlob = new Blob(['fake-data'], { type: 'image/png' });
-      (mockedAxios.post as Mock).mockResolvedValueOnce({
+      (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         headers: {
