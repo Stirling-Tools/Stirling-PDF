@@ -19,7 +19,7 @@ const viewOptionStyle = {
 
 
 // Build view options showing text always
-const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchType | null, isToolSelected: boolean) => {
+const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchType | null) => {
   const viewerOption = {
     label: (
       <div style={viewOptionStyle as React.CSSProperties}>
@@ -75,7 +75,7 @@ const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchTyp
   // Build options array conditionally
   return [
     viewerOption,
-    ...(isToolSelected ? [] : [pageEditorOption]),
+    pageEditorOption,
     fileEditorOption,
   ];
 };
@@ -83,18 +83,14 @@ const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchTyp
 interface TopControlsProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
-  selectedToolKey?: string | null;
 }
 
 const TopControls = ({
   currentView,
   setCurrentView,
-  selectedToolKey,
-}: TopControlsProps) => {
+  }: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
-
-  const isToolSelected = selectedToolKey !== null;
 
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {
@@ -122,7 +118,7 @@ const TopControls = ({
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center mt-[0.5rem]">
         <SegmentedControl
-          data={createViewOptions(currentView, switchingTo, isToolSelected)}
+          data={createViewOptions(currentView, switchingTo)}
           value={currentView}
           onChange={handleViewChange}
           color="blue"

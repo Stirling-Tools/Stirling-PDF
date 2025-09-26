@@ -178,8 +178,32 @@ export function useFlatToolRegistry(): ToolRegistry {
 
   return useMemo(() => {
     const allTools: ToolRegistry = {
+      // Recommended Tools in order
+      multiTool: {
+        icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.multiTool.title", "Multi-Tool"),
+        component: null,
+        workbench: "pageEditor",
+        description: t("home.multiTool.desc", "Use multiple tools on a single PDF document"),
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: -1,
+        synonyms: getSynonyms(t, "multiTool"),
+      },
+      merge: {
+        icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.merge.title", "Merge"),
+        component: Merge,
+        description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: -1,
+        endpoints: ["merge-pdfs"],
+        operationConfig: mergeOperationConfig,
+        settingsComponent: MergeSettings,
+        synonyms: getSynonyms(t, "merge")
+      },
       // Signing
-
       certSign: {
         icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.certSign.title", "Certificate Sign"),
@@ -812,30 +836,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         settingsComponent: ConvertSettings,
         synonyms: getSynonyms(t, "convert")
       },
-      merge: {
-        icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.merge.title", "Merge"),
-        component: Merge,
-        description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
-        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
-        subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: -1,
-        endpoints: ["merge-pdfs"],
-        operationConfig: mergeOperationConfig,
-        settingsComponent: MergeSettings,
-        synonyms: getSynonyms(t, "merge")
-      },
-      multiTool: {
-        icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.multiTool.title", "Multi-Tool"),
-        component: null,
-        workbench: "pageEditor",
-        description: t("home.multiTool.desc", "Use multiple tools on a single PDF document"),
-        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
-        subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: -1,
-        synonyms: getSynonyms(t, "multiTool"),
-      },
+
       ocr: {
         icon: <LocalIcon icon="quick-reference-all-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.ocr.title", "OCR"),

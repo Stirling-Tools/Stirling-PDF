@@ -12,7 +12,7 @@ export const isNavButtonActive = (
   isFilesModalOpen: boolean,
   configModalOpen: boolean,
   selectedToolKey?: string | null,
-  leftPanelView?: 'toolPicker' | 'toolContent'
+  leftPanelView?: 'toolPicker' | 'toolContent' | 'hidden'
 ): boolean => {
   const isActiveByLocalState = config.type === 'navigation' && activeButton === config.id;
   const isActiveByContext =
@@ -35,7 +35,7 @@ export const getNavButtonStyle = (
   isFilesModalOpen: boolean,
   configModalOpen: boolean,
   selectedToolKey?: string | null,
-  leftPanelView?: 'toolPicker' | 'toolContent'
+  leftPanelView?: 'toolPicker' | 'toolContent' | 'hidden'
 ) => {
   const isActive = isNavButtonActive(
     config,
