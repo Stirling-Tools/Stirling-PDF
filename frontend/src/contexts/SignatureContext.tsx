@@ -50,16 +50,10 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   // Actions
   const setSignatureConfig = useCallback((config: SignParameters | null) => {
-    console.log('SignatureContext: setSignatureConfig called with:', config);
-    setState(prev => {
-      console.log('SignatureContext: Previous state:', prev);
-      const newState = {
-        ...prev,
-        signatureConfig: config,
-      };
-      console.log('SignatureContext: New state:', newState);
-      return newState;
-    });
+    setState(prev => ({
+      ...prev,
+      signatureConfig: config,
+    }));
   }, []);
 
   const setPlacementMode = useCallback((enabled: boolean) => {
@@ -84,14 +78,9 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [setPlacementMode]);
 
   const activateSignaturePlacementMode = useCallback(() => {
-    console.log('SignatureContext.activateSignaturePlacementMode called');
-    console.log('Current signature config:', state.signatureConfig);
     if (signatureApiRef.current) {
-      console.log('Calling signatureApiRef.current.activateSignaturePlacementMode()');
       signatureApiRef.current.activateSignaturePlacementMode();
       setPlacementMode(true);
-    } else {
-      console.log('signatureApiRef.current is null');
     }
   }, [state.signatureConfig, setPlacementMode]);
 

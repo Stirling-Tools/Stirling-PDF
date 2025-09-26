@@ -148,29 +148,20 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
     },
 
     activateSignaturePlacementMode: () => {
-      console.log('SignatureAPIBridge.activateSignaturePlacementMode called');
-      console.log('annotationApi:', !!annotationApi, 'signatureConfig:', !!signatureConfig);
       if (!annotationApi || !signatureConfig) return;
 
       try {
-        console.log('Signature type:', signatureConfig.signatureType);
-        console.log('Font settings:', { fontFamily: signatureConfig.fontFamily, fontSize: signatureConfig.fontSize });
         if (signatureConfig.signatureType === 'text' && signatureConfig.signerName) {
-          console.log('Trying different text tool names');
-
           // Try different tool names for text annotations
           const textToolNames = ['freetext', 'text', 'textbox', 'annotation-text'];
           let activatedTool = null;
 
           for (const toolName of textToolNames) {
-            console.log(`Trying tool: ${toolName}`);
             annotationApi.setActiveTool(toolName);
             const tool = annotationApi.getActiveTool();
-            console.log(`Tool result for ${toolName}:`, tool);
 
             if (tool && tool.id === toolName) {
               activatedTool = tool;
-              console.log(`Successfully activated ${toolName}`);
               annotationApi.setToolDefaults(toolName, {
                 contents: signatureConfig.signerName,
                 fontSize: signatureConfig.fontSize || 16,
@@ -184,7 +175,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
           }
 
           if (!activatedTool) {
-            console.log('No text tool could be activated, trying stamp as fallback');
             // Fallback: create a simple text image as stamp
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -212,11 +202,9 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
             }
           }
         } else if (signatureConfig.signatureData) {
-          console.log('Activating stamp tool');
           // Use stamp tool for image/canvas signatures
           annotationApi.setActiveTool('stamp');
           const activeTool = annotationApi.getActiveTool();
-          console.log('Stamp tool activated:', activeTool);
           if (activeTool && activeTool.id === 'stamp') {
             annotationApi.setToolDefaults('stamp', {
               imageSrc: signatureConfig.signatureData,

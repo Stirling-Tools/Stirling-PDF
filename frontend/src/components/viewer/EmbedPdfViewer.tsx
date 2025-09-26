@@ -190,15 +190,7 @@ const EmbedPdfViewerContent = ({
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
               onSignatureAdded={(annotation) => {
-                console.log('Signature added:', annotation);
-                if (annotation.type === 13) {
-                  console.log('- imageSrc:', !!annotation.imageSrc, annotation.imageSrc?.length);
-                  console.log('- contents:', !!annotation.contents, annotation.contents?.length);
-                  console.log('- data:', !!annotation.data, annotation.data?.length);
-                  console.log('- imageData:', !!annotation.imageData, annotation.imageData?.length);
-                  console.log('- appearance:', !!annotation.appearance, typeof annotation.appearance);
-                  console.log('- All keys:', Object.keys(annotation));
-                }
+                // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
               }}
             />

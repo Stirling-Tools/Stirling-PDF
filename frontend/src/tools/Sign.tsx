@@ -61,17 +61,10 @@ const Sign = (props: BaseToolProps) => {
   // Save signed files to the system - apply signatures using EmbedPDF and replace original
   const handleSaveToSystem = useCallback(async () => {
     try {
-      console.log('Save started - attempting to get PDF from viewer...');
-
       // Use EmbedPDF's saveAsCopy to apply signatures and get ArrayBuffer
       const pdfArrayBuffer = await exportActions.saveAsCopy();
-      console.log('Got PDF ArrayBuffer:', pdfArrayBuffer ? `${pdfArrayBuffer.byteLength} bytes` : 'null');
-
-      console.log('Checking conditions - ArrayBuffer exists:', !!pdfArrayBuffer, 'Selected files:', base.selectedFiles.length);
 
       if (pdfArrayBuffer) {
-        console.log('Conditions met, starting file processing...');
-
         // Convert ArrayBuffer to File
         const blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
 
@@ -94,12 +87,8 @@ const Sign = (props: BaseToolProps) => {
           console.error('No file available to replace');
           return;
         }
-        console.log('Original file:', originalFile.name, 'ID:', originalFile.fileId);
 
         const signedFile = new File([blob], originalFile.name, { type: 'application/pdf' });
-        console.log('Created signed file:', signedFile.name, 'Size:', signedFile.size);
-
-        console.log('Processing signed file...');
 
         // Generate thumbnail and metadata for the signed file
         const thumbnailResult = await generateThumbnailWithMetadata(signedFile);
@@ -109,39 +98,29 @@ const Sign = (props: BaseToolProps) => {
         const inputFileIds: FileId[] = [originalFile.fileId];
         const inputStirlingFileStubs: StirlingFileStub[] = [];
 
-        console.log('Original file ID:', originalFile.fileId);
         const record = selectors.getStirlingFileStub(originalFile.fileId);
         if (record) {
           inputStirlingFileStubs.push(record);
-          console.log('Found file record for replacement');
         } else {
           console.error('No file record found for:', originalFile.fileId);
+          return;
         }
 
         // Create output stub and file
         const outputStub = createNewStirlingFileStub(signedFile, undefined, thumbnailResult.thumbnail, processedFileMetadata);
         const outputStirlingFile = createStirlingFile(signedFile, outputStub.id);
-        console.log('Created new file with ID:', outputStub.id);
 
         // Replace the original file with the signed version
-        console.log('Replacing file in context...');
         await consumeFiles(inputFileIds, [outputStirlingFile], [outputStub]);
-        console.log('File replacement complete');
 
         // Reactivate the signature mode that was active before save
         setTimeout(() => {
           if (activeModeRef.current === 'draw') {
-            console.log('Reactivating draw mode');
             activateDrawMode();
           } else if (activeModeRef.current === 'placement') {
-            console.log('Reactivating placement mode');
             handleSignaturePlacement();
           }
         }, 200);
-      } else {
-        console.log('Save aborted - conditions not met');
-        if (!pdfArrayBuffer) console.log('No PDF ArrayBuffer received');
-        if (base.selectedFiles.length === 0) console.log('No selected files');
       }
     } catch (error) {
       console.error('Error saving signed document:', error);
