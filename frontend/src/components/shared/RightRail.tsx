@@ -66,6 +66,9 @@ export default function RightRail() {
 
   const { totalItems, selectedCount } = getSelectionState();
 
+  // Get export state for viewer mode
+  const exportState = viewerContext?.getExportState?.();
+
   const handleSelectAll = useCallback(() => {
     if (currentView === 'fileEditor' || currentView === 'viewer') {
       // Select all file IDs
@@ -96,7 +99,10 @@ export default function RightRail() {
   }, [currentView, setSelectedFiles, pageEditorFunctions]);
 
   const handleExportAll = useCallback(() => {
-    if (currentView === 'fileEditor' || currentView === 'viewer') {
+    if (currentView === 'viewer') {
+      // Use EmbedPDF export functionality for viewer mode
+      viewerContext?.exportActions?.download();
+    } else if (currentView === 'fileEditor') {
       // Download selected files (or all if none selected)
       const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
 
@@ -113,7 +119,7 @@ export default function RightRail() {
       // Export all pages (not just selected)
       pageEditorFunctions?.onExportAll?.();
     }
-  }, [currentView, activeFiles, selectedFiles, pageEditorFunctions]);
+  }, [currentView, activeFiles, selectedFiles, pageEditorFunctions, viewerContext]);
 
   const handleCloseSelected = useCallback(() => {
     if (currentView !== 'fileEditor') return;
@@ -445,7 +451,9 @@ export default function RightRail() {
                 radius="md"
                 className="right-rail-icon"
                 onClick={handleExportAll}
-                disabled={currentView === 'viewer' || totalItems === 0}
+                disabled={
+                  currentView === 'viewer' ? !exportState?.canExport : totalItems === 0
+                }
               >
                 <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
               </ActionIcon>
