@@ -15,6 +15,7 @@ import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import { getSynonyms } from "../utils/toolSynonyms";
 import AddWatermark from "../tools/AddWatermark";
 import AddStamp from "../tools/AddStamp";
+import AddAttachments from "../tools/AddAttachments";
 import Merge from '../tools/Merge';
 import Repair from "../tools/Repair";
 import AutoRename from "../tools/AutoRename";
@@ -35,6 +36,7 @@ import { sanitizeOperationConfig } from "../hooks/tools/sanitize/useSanitizeOper
 import { repairOperationConfig } from "../hooks/tools/repair/useRepairOperation";
 import { addWatermarkOperationConfig } from "../hooks/tools/addWatermark/useAddWatermarkOperation";
 import { addStampOperationConfig } from "../components/tools/addStamp/useAddStampOperation";
+import { addAttachmentsOperationConfig } from "../hooks/tools/addAttachments/useAddAttachmentsOperation";
 import { unlockPdfFormsOperationConfig } from "../hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
 import { singleLargePageOperationConfig } from "../hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
@@ -461,12 +463,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       addAttachments: {
         icon: <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.addAttachments.title", "Add Attachments"),
-        component: null,
-
+        component: AddAttachments,
         description: t("home.addAttachments.desc", "Add or remove embedded files (attachments) to/from a PDF"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
-        synonyms: getSynonyms(t, "addAttachments")
+        synonyms: getSynonyms(t, "addAttachments"),
+        maxFiles: 1,
+        endpoints: ["add-attachments"],
+        operationConfig: addAttachmentsOperationConfig,
       },
 
       // Extraction
