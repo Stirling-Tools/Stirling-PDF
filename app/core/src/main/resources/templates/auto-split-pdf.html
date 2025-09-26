@@ -29,7 +29,7 @@
                 th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
               </div>
               <div class="form-check ms-3">
-                <input type="checkbox" name="duplexMode" id="duplexMode">
+                <input id="duplexMode" name="duplexMode" type="checkbox">
                 <label for="duplexMode" th:text=#{autoSplitPDF.duplexMode}></label>
               </div>
               <p>
