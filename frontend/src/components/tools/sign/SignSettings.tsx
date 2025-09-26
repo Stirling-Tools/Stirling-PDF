@@ -90,12 +90,6 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
       setCanvasSignatureData(dataURL);
       onParameterChange('signatureData', dataURL);
 
-      // Auto-activate placement mode after drawing
-      setTimeout(() => {
-        if (onActivateSignaturePlacement) {
-          onActivateSignaturePlacement();
-        }
-      }, 100);
     }
   };
 
@@ -255,13 +249,6 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
     }
 
     setIsModalOpen(false);
-
-    // Auto-activate placement mode after saving modal signature
-    setTimeout(() => {
-      if (onActivateSignaturePlacement) {
-        onActivateSignaturePlacement();
-      }
-    }, 100);
   };
 
   // Handle signature image upload
@@ -564,7 +551,20 @@ const SignSettings = ({ parameters, onParameterChange, disabled = false, onActiv
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
             />
-            <Group justify="flex-end">
+            <Group justify="space-between">
+              <Button
+                variant="filled"
+                color="blue"
+                size="compact-sm"
+                onClick={() => {
+                  if (onActivateSignaturePlacement) {
+                    onActivateSignaturePlacement();
+                  }
+                }}
+                disabled={disabled || !canvasSignatureData}
+              >
+                Update and Place
+              </Button>
               <Button
                 variant="subtle"
                 color="red"
