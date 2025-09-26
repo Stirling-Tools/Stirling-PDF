@@ -23,7 +23,7 @@ interface PageThumbnailProps {
   selectionMode: boolean;
   movingPage: number | null;
   isAnimating: boolean;
-  pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
+  pageRefs: React.RefObject<Map<string, HTMLDivElement>>;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
   onTogglePage: (pageId: string) => void;
   onAnimateReorder: () => void;

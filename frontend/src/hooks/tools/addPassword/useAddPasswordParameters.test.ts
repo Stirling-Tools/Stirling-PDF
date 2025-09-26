@@ -125,7 +125,7 @@ describe('useAddPasswordParameters', () => {
     expect(result.current.validateParameters()).toBe(true);
   });
 
-  test.each(Object.keys(defaultChangePermissionsParameters) as Array<keyof ChangePermissionsParameters>)('should handle boolean restriction parameter %s', (param) => {
+  test.each(Object.keys(defaultChangePermissionsParameters) as (keyof ChangePermissionsParameters)[])('should handle boolean restriction parameter %s', (param) => {
     const { result } = renderHook(() => useAddPasswordParameters());
 
     act(() => {

@@ -1,4 +1,4 @@
-import { 
+import {
   CONVERSION_ENDPOINTS,
   ENDPOINT_NAMES,
   EXTENSION_TO_ENDPOINT,
@@ -11,15 +11,15 @@ import {
  */
 export const getEndpointName = (fromExtension: string, toExtension: string): string => {
   if (!fromExtension || !toExtension) return '';
-  
+
   let endpointKey = EXTENSION_TO_ENDPOINT[fromExtension]?.[toExtension];
-  
-  // If no explicit mapping exists and we're converting to PDF, 
+
+  // If no explicit mapping exists and we're converting to PDF,
   // fall back to 'any' which uses file-to-pdf endpoint
   if (!endpointKey && toExtension === 'pdf' && fromExtension !== 'any') {
     endpointKey = EXTENSION_TO_ENDPOINT['any']?.[toExtension];
   }
-  
+
   return endpointKey || '';
 };
 
@@ -29,7 +29,7 @@ export const getEndpointName = (fromExtension: string, toExtension: string): str
 export const getEndpointUrl = (fromExtension: string, toExtension: string): string => {
   const endpointName = getEndpointName(fromExtension, toExtension);
   if (!endpointName) return '';
-  
+
   // Find the endpoint URL from CONVERSION_ENDPOINTS using the endpoint name
   for (const [key, endpoint] of Object.entries(CONVERSION_ENDPOINTS)) {
     if (ENDPOINT_NAMES[key as keyof typeof ENDPOINT_NAMES] === endpointName) {
@@ -64,7 +64,7 @@ export const isWebFormat = (extension: string): boolean => {
  * Gets available target extensions for a given source extension
  * Extracted from useConvertParameters to be reusable in automation settings
  */
-export const getAvailableToExtensions = (fromExtension: string): Array<{value: string, label: string, group: string}> => {
+export const getAvailableToExtensions = (fromExtension: string): {value: string, label: string, group: string}[] => {
   if (!fromExtension) return [];
 
   // Handle dynamic format identifiers (file-<extension>)

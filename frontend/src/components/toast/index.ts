@@ -8,7 +8,7 @@ export { useToast, ToastProvider, ToastRenderer };
 let _api: ReturnType<typeof createImperativeApi> | null = null;
 
 function createImperativeApi() {
-  const subscribers: Array<(fn: any) => void> = [];
+  const subscribers: ((fn: any) => void)[] = [];
   let api: any = null;
   return {
     provide(instance: any) {

@@ -82,10 +82,10 @@ interface RotationState {
 
 interface SearchResult {
   pageIndex: number;
-  rects: Array<{
+  rects: {
     origin: { x: number; y: number };
     size: { width: number; height: number };
-  }>;
+  }[];
 }
 
 interface SearchState {
@@ -179,7 +179,7 @@ interface ViewerContextType {
     clear: () => void;
   };
 
-  // Bridge registration - internal use by bridges  
+  // Bridge registration - internal use by bridges
   registerBridge: (type: string, ref: BridgeRef) => void;
 }
 

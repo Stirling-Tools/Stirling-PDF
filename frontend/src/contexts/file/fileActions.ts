@@ -25,7 +25,7 @@ const DEBUG = process.env.NODE_ENV === 'development';
  */
 class SimpleMutex {
   private locked = false;
-  private queue: Array<() => void> = [];
+  private queue: (() => void)[] = [];
 
   async lock(): Promise<void> {
     if (!this.locked) {
@@ -151,7 +151,7 @@ interface AddFileOptions {
   files?: File[];
 
   // For 'processed' files
-  filesWithThumbnails?: Array<{ file: File; thumbnail?: string; pageCount?: number }>;
+  filesWithThumbnails?: { file: File; thumbnail?: string; pageCount?: number }[];
 
   // Insertion position
   insertAfterPageId?: string;
@@ -165,8 +165,8 @@ interface AddFileOptions {
  */
 export async function addFiles(
   options: AddFileOptions,
-  stateRef: React.MutableRefObject<FileContextState>,
-  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  stateRef: React.RefObject<FileContextState>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   lifecycleManager: FileLifecycleManager,
   enablePersistence: boolean = false
@@ -278,7 +278,7 @@ export async function consumeFiles(
   inputFileIds: FileId[],
   outputStirlingFiles: StirlingFile[],
   outputStirlingFileStubs: StirlingFileStub[],
-  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>
 ): Promise<FileId[]> {
   if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputStirlingFiles.length} output files with pre-created stubs`);
@@ -355,9 +355,9 @@ export async function consumeFiles(
  * Helper function to restore files to filesRef and manage IndexedDB cleanup
  */
 async function restoreFilesAndCleanup(
-  filesToRestore: Array<{ file: File; record: StirlingFileStub }>,
+  filesToRestore: { file: File; record: StirlingFileStub }[],
   fileIdsToRemove: FileId[],
-  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   indexedDB?: { deleteFile: (fileId: FileId) => Promise<void> } | null
 ): Promise<void> {
   // Remove files from filesRef
@@ -406,7 +406,7 @@ export async function undoConsumeFiles(
   inputFiles: File[],
   inputStirlingFileStubs: StirlingFileStub[],
   outputFileIds: FileId[],
-  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>; deleteFile: (fileId: FileId) => Promise<void> } | null
 ): Promise<void> {
@@ -468,8 +468,8 @@ export async function undoConsumeFiles(
 export async function addStirlingFileStubs(
   stirlingFileStubs: StirlingFileStub[],
   options: { insertAfterPageId?: string; selectFiles?: boolean } = {},
-  stateRef: React.MutableRefObject<FileContextState>,
-  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  stateRef: React.RefObject<FileContextState>,
+  filesRef: React.RefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   _lifecycleManager: FileLifecycleManager
 ): Promise<StirlingFile[]> {

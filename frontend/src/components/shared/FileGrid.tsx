@@ -8,7 +8,7 @@ import { StirlingFileStub } from "../../types/fileContext";
 import { FileId } from "../../types/file";
 
 interface FileGridProps {
-  files: Array<{ file: File; record?: StirlingFileStub }>;
+  files: { file: File; record?: StirlingFileStub }[];
   onRemove?: (index: number) => void;
   onDoubleClick?: (item: { file: File; record?: StirlingFileStub }) => void;
   onView?: (item: { file: File; record?: StirlingFileStub }) => void;

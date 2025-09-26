@@ -4,7 +4,7 @@ import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } f
 import { useTranslation } from 'react-i18next';
 
 type SubcategoryIdMap = {
-  [subcategoryId in SubcategoryId]: Array<{ id: string /* FIX ME: Should be ToolId */; tool: ToolRegistryEntry }>;
+  [subcategoryId in SubcategoryId]: { id: string /* FIX ME: Should be ToolId */; tool: ToolRegistryEntry }[];
 }
 
 type GroupedTools = {
@@ -28,7 +28,7 @@ export interface ToolSection {
 };
 
 export function useToolSections(
-  filteredTools: Array<{ item: [string /* FIX ME: Should be ToolId */, ToolRegistryEntry]; matchedText?: string }>,
+  filteredTools: { item: [string /* FIX ME: Should be ToolId */, ToolRegistryEntry]; matchedText?: string }[],
   searchQuery?: string
 ) {
   const { t } = useTranslation();
@@ -37,7 +37,7 @@ export function useToolSections(
     if (!filteredTools || !Array.isArray(filteredTools)) {
       return {} as GroupedTools;
     }
-    
+
     const grouped = {} as GroupedTools;
     filteredTools.forEach(({ item: [id, tool] }) => {
       const categoryId = tool.categoryId;
@@ -102,7 +102,7 @@ export function useToolSections(
     if (!filteredTools || !Array.isArray(filteredTools)) {
       return [];
     }
-    
+
     const subMap = {} as SubcategoryIdMap;
     const seen = new Set<string /* FIX ME: Should be ToolId */>();
     filteredTools.forEach(({ item: [id, tool] }) => {

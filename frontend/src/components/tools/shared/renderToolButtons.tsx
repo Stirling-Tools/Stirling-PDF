@@ -14,7 +14,7 @@ export const renderToolButtons = (
   onSelect: (id: string) => void,
   showSubcategoryHeader: boolean = true,
   disableNavigation: boolean = false,
-  searchResults?: Array<{ item: [string, any]; matchedText?: string }>
+  searchResults?: { item: [string, any]; matchedText?: string }[]
 ) => {
   // Create a map of matched text for quick lookup
   const matchedTextMap = new Map<string, string>();
@@ -32,7 +32,7 @@ export const renderToolButtons = (
       <div>
         {subcategory.tools.map(({ id, tool }) => {
           const matchedSynonym = matchedTextMap.get(id);
-          
+
           return (
             <ToolButton
               key={id}

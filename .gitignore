@@ -210,3 +210,4 @@ node_modules/
 test_batch.json
 *.backup.*.json
 frontend/public/locales/*/translation.backup*.json
+/frontend
