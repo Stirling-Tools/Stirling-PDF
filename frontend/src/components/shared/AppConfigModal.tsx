@@ -1,18 +1,5 @@
-import React, { useState } from 'react';
-import {
-  Modal,
-  Button,
-  Stack,
-  Text,
-  Code,
-  ScrollArea,
-  Group,
-  Badge,
-  Alert,
-  Loader,
-  Tabs,
-} from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import React from 'react';
+import { Modal, Button, Stack, Text, Code, ScrollArea, Group, Badge, Alert, Loader, Divider } from '@mantine/core';
 import { useAppConfig } from '../../hooks/useAppConfig';
 import HotkeysSection from '../settings/HotkeysSection';
 
@@ -22,8 +9,6 @@ interface AppConfigModalProps {
 }
 
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
-  const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<string>('config');
   const { config, loading, error, refetch } = useAppConfig();
 
   const renderConfigSection = (title: string, data: any) => {
@@ -92,123 +77,67 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     accessibilityStatement: config.accessibilityStatement,
   } : null;
 
-  const renderConfigDetails = () => (
-    <Stack gap="lg">
-      {loading && (
-        <Stack align="center" py="md">
-          <Loader size="sm" />
-          <Text size="sm" c="dimmed">{t('config.overview.loading', 'Loading configuration...')}</Text>
-        </Stack>
-      )}
-
-      {error && (
-        <Alert color="red" title={t('config.overview.errorTitle', 'Error')}>
-          {error}
-        </Alert>
-      )}
-
-      {!loading && !error && config && (
-        <Stack gap="lg">
-          {renderConfigSection(t('config.overview.basic', 'Basic Configuration'), basicConfig)}
-          {renderConfigSection(t('config.overview.security', 'Security Configuration'), securityConfig)}
-          {renderConfigSection(t('config.overview.system', 'System Configuration'), systemConfig)}
-          {renderConfigSection(t('config.overview.premium', 'Premium/Enterprise Configuration'), premiumConfig)}
-          {renderConfigSection(t('config.overview.integration', 'Integration Configuration'), integrationConfig)}
-          {renderConfigSection(t('config.overview.legal', 'Legal Configuration'), legalConfig)}
-
-          {config.error && (
-            <Alert color="yellow" title={t('config.debug.warningTitle', 'Configuration Warning')}>
-              {config.error}
-            </Alert>
-          )}
-
-          <Stack gap="xs">
-            <Text fw={600} size="md" c="blue">
-              {t('config.debug.rawTitle', 'Raw Configuration')}
-            </Text>
-            <Code block style={{ fontSize: '11px' }}>
-              {JSON.stringify(config, null, 2)}
-            </Code>
-          </Stack>
-        </Stack>
-      )}
-    </Stack>
-  );
-
-  const renderApiKeys = () => (
-    <Stack gap="md">
-      <Text fw={600} size="lg">{t('config.apiKeys.title', 'Manage API Keys')}</Text>
-      <Text size="sm" c="dimmed">
-        {t('config.apiKeys.description', "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.")}
-      </Text>
-      <Alert color="blue" variant="light" radius="md">
-        {t('config.apiKeys.guestInfo', 'Guest users do not receive API keys. Create an account to get an API key you can use in your applications.')}
-      </Alert>
-      <Group>
-        <Button size="sm" variant="light">
-          {t('config.apiKeys.goToAccount', 'Go to Account')}
-        </Button>
-        <Button size="sm" variant="outline">
-          {t('config.apiKeys.refreshModal.confirmCta', 'Refresh Keys')}
-        </Button>
-      </Group>
-    </Stack>
-  );
-
-
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t('settings.title', 'Settings')}
+      title="App Configuration (Testing)"
       size="lg"
       style={{ zIndex: 1000 }}
-      withinPortal
     >
-      <Stack gap="lg">
-        <Group justify="space-between" align="flex-start">
-          <Stack gap={2} style={{ flex: 1 }}>
-            <Text size="sm" c="dimmed">
-              {t('settings.subtitle', 'Manage your Stirling PDF experience in one place.')}
-            </Text>
-          </Stack>
+      <Stack>
+        <Group justify="space-between">
+          <Text size="sm" c="dimmed">
+            This modal shows the current application configuration for testing purposes only.
+          </Text>
           <Button size="xs" variant="light" onClick={refetch}>
-            {t('common.refresh', 'Refresh')}
+            Refresh
           </Button>
         </Group>
 
-        <Tabs value={activeTab} onChange={(value) => value && setActiveTab(value)} keepMounted={false}>
-          <Tabs.List>
-            <Tabs.Tab value="overview">{t('config.account.overview.title', 'Overview')}</Tabs.Tab>
-            <Tabs.Tab value="apiKeys">{t('config.apiKeys.label', 'API Keys')}</Tabs.Tab>
-            <Tabs.Tab value="hotkeys">{t('config.hotkeys.title', 'Keyboard Shortcuts')}</Tabs.Tab>
-            <Tabs.Tab value="config">{t('config.debug.title', 'Configuration Data')}</Tabs.Tab>
-          </Tabs.List>
+        {loading && (
+          <Stack align="center" py="md">
+            <Loader size="sm" />
+            <Text size="sm" c="dimmed">Loading configuration...</Text>
+          </Stack>
+        )}
 
-          <Tabs.Panel value="overview" pt="md">
-            <ScrollArea h={400} type="auto">
-              {renderConfigDetails()}
-            </ScrollArea>
-          </Tabs.Panel>
+        {error && (
+          <Alert color="red" title="Error">
+            {error}
+          </Alert>
+        )}
 
-          <Tabs.Panel value="apiKeys" pt="md">
-            <ScrollArea h={400} type="auto">
-              {renderApiKeys()}
-            </ScrollArea>
-          </Tabs.Panel>
+        <ScrollArea h={400} type="auto">
+          <Stack gap="lg">
+            <HotkeysSection />
 
-          <Tabs.Panel value="hotkeys" pt="md">
-            <ScrollArea h={400} type="auto">
-              <HotkeysSection />
-            </ScrollArea>
-          </Tabs.Panel>
+            {config && (
+              <>
+                <Divider />
+                {renderConfigSection('Basic Configuration', basicConfig)}
+                {renderConfigSection('Security Configuration', securityConfig)}
+                {renderConfigSection('System Configuration', systemConfig)}
+                {renderConfigSection('Premium/Enterprise Configuration', premiumConfig)}
+                {renderConfigSection('Integration Configuration', integrationConfig)}
+                {renderConfigSection('Legal Configuration', legalConfig)}
 
-          <Tabs.Panel value="config" pt="md">
-            <ScrollArea h={400} type="auto">
-              {renderConfigDetails()}
-            </ScrollArea>
-          </Tabs.Panel>
-        </Tabs>
+                {config.error && (
+                  <Alert color="yellow" title="Configuration Warning">
+                    {config.error}
+                  </Alert>
+                )}
+
+                <Stack gap="xs">
+                  <Text fw={600} size="md" c="blue">Raw Configuration</Text>
+                  <Code block style={{ fontSize: '11px' }}>
+                    {JSON.stringify(config, null, 2)}
+                  </Code>
+                </Stack>
+              </>
+            )}
+          </Stack>
+        </ScrollArea>
       </Stack>
     </Modal>
   );

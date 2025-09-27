@@ -156,7 +156,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       size: 'lg',
       type: 'modal',
       onClick: () => {
-        setActiveButton('config');
         setConfigModalOpen(true);
       }
     }
