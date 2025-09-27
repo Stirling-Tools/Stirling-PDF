@@ -4,10 +4,10 @@ import { useViewer } from '../../contexts/ViewerContext';
 
 interface SearchResult {
   pageIndex: number;
-  rects: Array<{
+  rects: {
     origin: { x: number; y: number };
     size: { width: number; height: number };
-  }>;
+  }[];
 }
 
 /**

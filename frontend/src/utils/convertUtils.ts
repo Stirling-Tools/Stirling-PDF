@@ -64,7 +64,7 @@ export const isWebFormat = (extension: string): boolean => {
  * Gets available target extensions for a given source extension
  * Extracted from useConvertParameters to be reusable in automation settings
  */
-export const getAvailableToExtensions = (fromExtension: string): Array<{value: string, label: string, group: string}> => {
+export const getAvailableToExtensions = (fromExtension: string): {value: string, label: string, group: string}[] => {
   if (!fromExtension) return [];
 
   // Handle dynamic format identifiers (file-<extension>)

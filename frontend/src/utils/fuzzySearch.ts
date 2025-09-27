@@ -82,8 +82,8 @@ export function isFuzzyMatch(query: string, target: string, minScore?: number): 
 }
 
 // Convenience: rank a list of items by best score across provided getters
-export function rankByFuzzy<T>(items: T[], query: string, getters: Array<(item: T) => string>, minScore?: number): Array<{ item: T; score: number; matchedText?: string }>{
-  const results: Array<{ item: T; score: number; matchedText?: string }> = [];
+export function rankByFuzzy<T>(items: T[], query: string, getters: ((item: T) => string)[], minScore?: number): { item: T; score: number; matchedText?: string }[]{
+  const results: { item: T; score: number; matchedText?: string }[] = [];
   const threshold = typeof minScore === 'number' ? minScore : minScoreForQuery(query);
   for (const item of items) {
     let best = 0;

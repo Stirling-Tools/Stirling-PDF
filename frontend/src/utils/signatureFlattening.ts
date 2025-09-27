@@ -27,7 +27,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
   try {
     // Step 1: Extract all annotations from EmbedPDF before export
-    const allAnnotations: Array<{pageIndex: number, annotations: any[]}> = [];
+    const allAnnotations: {pageIndex: number, annotations: any[]}[] = [];
 
     if (signatureApiRef?.current) {
 

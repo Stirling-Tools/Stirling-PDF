@@ -96,7 +96,7 @@ describe('useChangePermissionsOperation', () => {
     // Verify the form data contains the file
     expect(formData.get('fileInput')).toBe(testFile);
 
-    (Object.keys(testParameters) as Array<keyof ChangePermissionsParameters>).forEach(key => {
+    (Object.keys(testParameters) as (keyof ChangePermissionsParameters)[]).forEach(key => {
       expect(formData.get(key), `Parameter ${key} should be set correctly`).toBe(testParameters[key].toString());
     });
   });

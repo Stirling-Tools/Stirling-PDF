@@ -50,7 +50,7 @@ interface LocalEmbedPDFProps {
 
 export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
+  const [, setAnnotations] = useState<{id: string, pageIndex: number, rect: any}[]>([]);
 
   // Convert File to URL if needed
   useEffect(() => {

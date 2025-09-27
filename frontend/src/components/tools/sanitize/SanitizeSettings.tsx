@@ -11,7 +11,7 @@ interface SanitizeSettingsProps {
 const SanitizeSettings = ({ parameters, onParameterChange, disabled = false }: SanitizeSettingsProps) => {
   const { t } = useTranslation();
 
-  const options = (Object.keys(defaultParameters) as Array<keyof SanitizeParameters>).map((key) => ({
+  const options = (Object.keys(defaultParameters) as (keyof SanitizeParameters)[]).map((key) => ({
     key: key,
     label: t(`sanitize.options.${key}`, key),
     description: t(`sanitize.options.${key}.desc`, `${key} from the PDF`),

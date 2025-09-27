@@ -25,7 +25,7 @@ const DEBUG = process.env.NODE_ENV === 'development';
  */
 class SimpleMutex {
   private locked = false;
-  private queue: Array<() => void> = [];
+  private queue: (() => void)[] = [];
 
   async lock(): Promise<void> {
     if (!this.locked) {
@@ -151,7 +151,7 @@ interface AddFileOptions {
   files?: File[];
 
   // For 'processed' files
-  filesWithThumbnails?: Array<{ file: File; thumbnail?: string; pageCount?: number }>;
+  filesWithThumbnails?: { file: File; thumbnail?: string; pageCount?: number }[];
 
   // Insertion position
   insertAfterPageId?: string;
@@ -355,7 +355,7 @@ export async function consumeFiles(
  * Helper function to restore files to filesRef and manage IndexedDB cleanup
  */
 async function restoreFilesAndCleanup(
-  filesToRestore: Array<{ file: File; record: StirlingFileStub }>,
+  filesToRestore: { file: File; record: StirlingFileStub }[],
   fileIdsToRemove: FileId[],
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   indexedDB?: { deleteFile: (fileId: FileId) => Promise<void> } | null

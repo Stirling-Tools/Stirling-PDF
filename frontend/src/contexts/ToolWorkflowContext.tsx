@@ -101,7 +101,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
+  filteredTools: { item: [string, ToolRegistryEntry]; matchedText?: string }[]; // Filtered by search
   isPanelVisible: boolean;
 }
 

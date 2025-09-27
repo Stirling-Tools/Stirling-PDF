@@ -6,10 +6,10 @@ export interface AutomationConfig {
   id: string;
   name: string;
   description?: string;
-  operations: Array<{
+  operations: {
     operation: string;
     parameters: any;
-  }>;
+  }[];
   createdAt: string;
   updatedAt: string;
 }

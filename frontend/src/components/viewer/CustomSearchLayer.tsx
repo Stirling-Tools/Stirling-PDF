@@ -14,13 +14,13 @@ interface SearchLayerProps {
 }
 
 interface SearchResultState {
-  results: Array<{
+  results: {
     pageIndex: number;
-    rects: Array<{
+    rects: {
       origin: { x: number; y: number };
       size: { width: number; height: number };
-    }>;
-  }>;
+    }[];
+  }[];
   activeResultIndex?: number;
 }
 

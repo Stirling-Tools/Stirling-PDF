@@ -111,7 +111,7 @@ export function buildQuickKeySet(stirlingFileStubs: Record<FileId, StirlingFileS
 /**
  * Helper for building quickKey sets from IndexedDB metadata
  */
-export function buildQuickKeySetFromMetadata(metadata: Array<{ name: string; size: number; lastModified: number }>): Set<string> {
+export function buildQuickKeySetFromMetadata(metadata: { name: string; size: number; lastModified: number }[]): Set<string> {
   const quickKeys = new Set<string>();
   metadata.forEach(meta => {
     // Format: name|size|lastModified (same as createQuickKey)

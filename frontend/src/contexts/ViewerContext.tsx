@@ -88,10 +88,10 @@ interface RotationState {
 
 interface SearchResult {
   pageIndex: number;
-  rects: Array<{
+  rects: {
     origin: { x: number; y: number };
     size: { width: number; height: number };
-  }>;
+  }[];
 }
 
 interface SearchState {
