@@ -12,6 +12,7 @@ import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
+import SettingsModal from '../settings/SettingsModal';
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -241,10 +242,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         </div>
       </div>
 
-      {/* <AppConfigModal
+      <SettingsModal
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
-      /> */}
+      />
     </div>
   );
 });

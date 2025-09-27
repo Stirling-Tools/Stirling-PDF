@@ -15,6 +15,7 @@ import "./index.css";
 import { RightRailProvider } from "./contexts/RightRailContext";
 import { ViewerProvider } from "./contexts/ViewerContext";
 import { SignatureProvider } from "./contexts/SignatureContext";
+import { HotkeyProvider } from "./contexts/HotkeyContext";
 
 // Import file ID debugging helpers (development only)
 import "./utils/fileIdSafety";
@@ -44,15 +45,17 @@ export default function App() {
             <NavigationProvider>
               <FilesModalProvider>
                 <ToolWorkflowProvider>
-                  <SidebarProvider>
-                    <ViewerProvider>
-                      <SignatureProvider>
-                      <RightRailProvider>
-                            <HomePage />
-                          </RightRailProvider>
-                      </SignatureProvider>
-                    </ViewerProvider>
-                  </SidebarProvider>
+                  <HotkeyProvider>
+                    <SidebarProvider>
+                      <ViewerProvider>
+                        <SignatureProvider>
+                        <RightRailProvider>
+                              <HomePage />
+                            </RightRailProvider>
+                        </SignatureProvider>
+                      </ViewerProvider>
+                    </SidebarProvider>
+                  </HotkeyProvider>
                 </ToolWorkflowProvider>
               </FilesModalProvider>
             </NavigationProvider>

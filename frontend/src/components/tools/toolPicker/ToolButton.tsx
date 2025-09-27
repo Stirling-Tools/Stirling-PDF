@@ -5,6 +5,9 @@ import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { useToolNavigation } from "../../../hooks/useToolNavigation";
 import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
 import FitText from "../../shared/FitText";
+import { useHotkeys } from "../../../contexts/HotkeyContext";
+import ShortcutDisplay from "../../hotkeys/ShortcutDisplay";
+import { useTranslation } from "react-i18next";
 
 interface ToolButtonProps {
   id: string;
@@ -18,7 +21,10 @@ interface ToolButtonProps {
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym }) => {
   // Special case: read and multiTool are navigational tools that are always available
+  const { t } = useTranslation();
+  const { getShortcutForTool } = useHotkeys();
   const isUnavailable = !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
+  const shortcut = !isUnavailable ? getShortcutForTool(id) : undefined;
   const { getToolNavigation } = useToolNavigation();
 
   const handleClick = (id: string) => {
@@ -35,9 +41,23 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   // Get navigation props for URL support (only if navigation is not disabled)
   const navProps = !isUnavailable && !tool.link && !disableNavigation ? getToolNavigation(id, tool) : null;
 
-  const tooltipContent = isUnavailable
-    ? (<span><strong>Coming soon:</strong> {tool.description}</span>)
-    : tool.description;
+  const tooltipContent = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+      {isUnavailable ? (
+        <span><strong>Coming soon:</strong> {tool.description}</span>
+      ) : (
+        <span>{tool.description}</span>
+      )}
+      {!isUnavailable && shortcut && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'nowrap' }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--mantine-color-dimmed)' }}>
+            {t('settings.hotkeys.shortcutLabel', 'Shortcut')}:
+          </span>
+          <ShortcutDisplay shortcut={shortcut} />
+        </div>
+      )}
+    </div>
+  );
 
   const buttonContent = (
     <>
