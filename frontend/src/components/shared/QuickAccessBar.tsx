@@ -12,6 +12,7 @@ import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
+import SettingsDrawer from "../settings/SettingsDrawer";
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -155,6 +156,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       size: 'lg',
       type: 'modal',
       onClick: () => {
+        setActiveButton('config');
         setConfigModalOpen(true);
       }
     }
@@ -217,34 +219,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="spacer" />
 
           {/* Config button at the bottom */}
-          {/* {buttonConfigs
-            .filter(config => config.id === 'config')
-            .map(config => (
-                <div key={config.id} className="flex flex-col items-center gap-1">
-                  <ActionIcon
-                    size={config.size || 'lg'}
-                    variant="subtle"
-                    onClick={config.onClick}
-                    style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
-                    className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'activeIconScale' : ''}
-                    data-testid={`${config.id}-button`}
-                  >
-                    <span className="iconContainer">
-                      {config.icon}
-                    </span>
-                  </ActionIcon>
-                  <span className={`button-text ${isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'active' : 'inactive'}`}>
-                    {config.name}
-                  </span>
-                </div>
-            ))} */}
+          {renderNavButton(buttonConfigs[buttonConfigs.length - 1], buttonConfigs.length - 1)}
         </div>
       </div>
 
-      {/* <AppConfigModal
+      <SettingsDrawer
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
-      /> */}
+      />
     </div>
   );
 });

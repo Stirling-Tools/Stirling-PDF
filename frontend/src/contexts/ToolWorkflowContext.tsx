@@ -75,7 +75,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
-  toolRegistry: any; // From useToolManagement
+  toolRegistry: Record<string, ToolRegistryEntry>;
   getSelectedTool: (toolId: string | null) => ToolRegistryEntry | null;
 
   // UI Actions

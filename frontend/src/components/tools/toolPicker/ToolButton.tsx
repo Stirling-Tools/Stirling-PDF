@@ -5,6 +5,8 @@ import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { useToolNavigation } from "../../../hooks/useToolNavigation";
 import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
 import FitText from "../../shared/FitText";
+import { useHotkeys } from "../../../contexts/HotkeyContext";
+import HotkeyDisplay from "../../hotkeys/HotkeyDisplay";
 
 interface ToolButtonProps {
   id: string;
@@ -19,6 +21,8 @@ interface ToolButtonProps {
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym }) => {
   // Special case: read and multiTool are navigational tools that are always available
   const isUnavailable = !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
+  const { hotkeys } = useHotkeys();
+  const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
 
   const handleClick = (id: string) => {
@@ -37,7 +41,17 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
 
   const tooltipContent = isUnavailable
     ? (<span><strong>Coming soon:</strong> {tool.description}</span>)
-    : tool.description;
+    : (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        <span>{tool.description}</span>
+        {binding && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+            <span style={{ color: 'var(--mantine-color-dimmed)', fontWeight: 500 }}>Shortcut</span>
+            <HotkeyDisplay binding={binding} />
+          </div>
+        )}
+      </div>
+    );
 
   const buttonContent = (
     <>
