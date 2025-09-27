@@ -7,6 +7,7 @@ import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
+import { HotkeysProvider } from "./contexts/HotkeysContext";
 
 // Import global styles
 import "./styles/tailwind.css";
@@ -44,15 +45,17 @@ export default function App() {
             <NavigationProvider>
               <FilesModalProvider>
                 <ToolWorkflowProvider>
-                  <SidebarProvider>
-                    <ViewerProvider>
-                      <SignatureProvider>
-                      <RightRailProvider>
-                            <HomePage />
-                          </RightRailProvider>
-                      </SignatureProvider>
-                    </ViewerProvider>
-                  </SidebarProvider>
+                  <HotkeysProvider>
+                    <SidebarProvider>
+                      <ViewerProvider>
+                        <SignatureProvider>
+                        <RightRailProvider>
+                              <HomePage />
+                            </RightRailProvider>
+                        </SignatureProvider>
+                      </ViewerProvider>
+                    </SidebarProvider>
+                  </HotkeysProvider>
                 </ToolWorkflowProvider>
               </FilesModalProvider>
             </NavigationProvider>

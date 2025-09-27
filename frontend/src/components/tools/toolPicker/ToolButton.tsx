@@ -5,6 +5,7 @@ import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { useToolNavigation } from "../../../hooks/useToolNavigation";
 import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
 import FitText from "../../shared/FitText";
+import { useHotkeysContext } from "../../../contexts/HotkeysContext";
 
 interface ToolButtonProps {
   id: string;
@@ -20,6 +21,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   // Special case: read and multiTool are navigational tools that are always available
   const isUnavailable = !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
   const { getToolNavigation } = useToolNavigation();
+  const { getHotkey, formatHotkeyParts } = useHotkeysContext();
 
   const handleClick = (id: string) => {
     if (isUnavailable) return;
@@ -35,9 +37,39 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   // Get navigation props for URL support (only if navigation is not disabled)
   const navProps = !isUnavailable && !tool.link && !disableNavigation ? getToolNavigation(id, tool) : null;
 
-  const tooltipContent = isUnavailable
+  const assignedHotkey = getHotkey(id);
+  const hotkeyParts = formatHotkeyParts(assignedHotkey);
+
+  const descriptionNode = isUnavailable
     ? (<span><strong>Coming soon:</strong> {tool.description}</span>)
     : tool.description;
+
+  const tooltipContent = hotkeyParts.length > 0
+    ? (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        <span>{descriptionNode}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--mantine-color-dimmed)' }}>Shortcut:</span>
+          {hotkeyParts.map((part, index) => (
+            <span
+              key={`${id}-hotkey-${part}-${index}`}
+              style={{
+                backgroundColor: 'var(--mantine-color-gray-2, rgba(0,0,0,0.08))',
+                color: 'var(--mantine-color-dark-6, #1A1B1E)',
+                borderRadius: '0.4rem',
+                padding: '0.1rem 0.45rem',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                letterSpacing: '0.01em'
+              }}
+            >
+              {part}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+    : descriptionNode;
 
   const buttonContent = (
     <>

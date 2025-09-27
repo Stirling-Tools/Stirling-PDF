@@ -1,6 +1,7 @@
-import React from 'react';
-import { Modal, Button, Stack, Text, Code, ScrollArea, Group, Badge, Alert, Loader } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
+import { Modal, Button, Stack, Text, Code, ScrollArea, Group, Badge, Alert, Loader, Tabs } from '@mantine/core';
 import { useAppConfig } from '../../hooks/useAppConfig';
+import HotkeySettings from './settings/HotkeySettings';
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -9,6 +10,13 @@ interface AppConfigModalProps {
 
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const { config, loading, error, refetch } = useAppConfig();
+  const [activeTab, setActiveTab] = useState<string>('configuration');
+
+  useEffect(() => {
+    if (!opened) {
+      setActiveTab('configuration');
+    }
+  }, [opened]);
 
   const renderConfigSection = (title: string, data: any) => {
     if (!data || typeof data !== 'object') return null;
@@ -22,15 +30,15 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
               <Text size="sm" w={150} style={{ flexShrink: 0 }} c="dimmed">
                 {key}:
               </Text>
-                {typeof value === 'boolean' ? (
-                  <Badge color={value ? 'green' : 'red'} size="sm">
-                    {value ? 'true' : 'false'}
-                  </Badge>
-                ) : typeof value === 'object' ? (
-                  <Code block>{JSON.stringify(value, null, 2)}</Code>
-                ) : (
-                  String(value) || 'null'
-                )}
+              {typeof value === 'boolean' ? (
+                <Badge color={value ? 'green' : 'red'} size="sm">
+                  {value ? 'true' : 'false'}
+                </Badge>
+              ) : typeof value === 'object' ? (
+                <Code block>{JSON.stringify(value, null, 2)}</Code>
+              ) : (
+                String(value) || 'null'
+              )}
             </Group>
           ))}
         </Stack>
@@ -80,59 +88,78 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     <Modal
       opened={opened}
       onClose={onClose}
-      title="App Configuration (Testing)"
+      title="Settings"
       size="lg"
       style={{ zIndex: 1000 }}
     >
-      <Stack>
-        <Group justify="space-between">
-          <Text size="sm" c="dimmed">
-            This modal shows the current application configuration for testing purposes only.
-          </Text>
-          <Button size="xs" variant="light" onClick={refetch}>
-            Refresh
-          </Button>
-        </Group>
+      <Tabs value={activeTab} onChange={value => value && setActiveTab(value)}>
+        <Tabs.List>
+          <Tabs.Tab value="configuration">Configuration</Tabs.Tab>
+          <Tabs.Tab value="hotkeys">Hotkeys</Tabs.Tab>
+        </Tabs.List>
 
-        {loading && (
-          <Stack align="center" py="md">
-            <Loader size="sm" />
-            <Text size="sm" c="dimmed">Loading configuration...</Text>
-          </Stack>
-        )}
+        <Tabs.Panel value="configuration" pt="md">
+          <Stack>
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                Review the current application configuration pulled from the server.
+              </Text>
+              <Button size="xs" variant="light" onClick={refetch}>
+                Refresh
+              </Button>
+            </Group>
 
-        {error && (
-          <Alert color="red" title="Error">
-            {error}
-          </Alert>
-        )}
-
-        {config && (
-          <ScrollArea h={400}>
-            <Stack gap="lg">
-              {renderConfigSection('Basic Configuration', basicConfig)}
-              {renderConfigSection('Security Configuration', securityConfig)}
-              {renderConfigSection('System Configuration', systemConfig)}
-              {renderConfigSection('Premium/Enterprise Configuration', premiumConfig)}
-              {renderConfigSection('Integration Configuration', integrationConfig)}
-              {renderConfigSection('Legal Configuration', legalConfig)}
-              
-              {config.error && (
-                <Alert color="yellow" title="Configuration Warning">
-                  {config.error}
-                </Alert>
-              )}
-
-              <Stack gap="xs">
-                <Text fw={600} size="md" c="blue">Raw Configuration</Text>
-                <Code block style={{ fontSize: '11px' }}>
-                  {JSON.stringify(config, null, 2)}
-                </Code>
+            {loading && (
+              <Stack align="center" py="md">
+                <Loader size="sm" />
+                <Text size="sm" c="dimmed">Loading configuration...</Text>
               </Stack>
-            </Stack>
-          </ScrollArea>
-        )}
-      </Stack>
+            )}
+
+            {error && (
+              <Alert color="red" title="Error">
+                {error}
+              </Alert>
+            )}
+
+            {!loading && !error && !config && (
+              <Alert color="yellow" title="Configuration unavailable">
+                The application configuration could not be loaded.
+              </Alert>
+            )}
+
+            {config && (
+              <ScrollArea h={400}>
+                <Stack gap="lg">
+                  {renderConfigSection('Basic Configuration', basicConfig)}
+                  {renderConfigSection('Security Configuration', securityConfig)}
+                  {renderConfigSection('System Configuration', systemConfig)}
+                  {renderConfigSection('Premium/Enterprise Configuration', premiumConfig)}
+                  {renderConfigSection('Integration Configuration', integrationConfig)}
+                  {renderConfigSection('Legal Configuration', legalConfig)}
+
+                  {config.error && (
+                    <Alert color="yellow" title="Configuration Warning">
+                      {config.error}
+                    </Alert>
+                  )}
+
+                  <Stack gap="xs">
+                    <Text fw={600} size="md" c="blue">Raw Configuration</Text>
+                    <Code block style={{ fontSize: '11px' }}>
+                      {JSON.stringify(config, null, 2)}
+                    </Code>
+                  </Stack>
+                </Stack>
+              </ScrollArea>
+            )}
+          </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="hotkeys" pt="md">
+          <HotkeySettings />
+        </Tabs.Panel>
+      </Tabs>
     </Modal>
   );
 };
