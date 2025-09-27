@@ -203,6 +203,7 @@
   },
   "settings": {
     "title": "Settings",
+    "subtitle": "Manage your Stirling PDF experience in one place.",
     "update": "Update available",
     "updateAvailable": "{0} is the current installed version. A new version ({1}) is available.",
     "appVersion": "App Version:",
@@ -221,6 +222,18 @@
     "cacheInputs": {
       "name": "Save form inputs",
       "help": "Enable to store previously used inputs for future runs"
+    },
+    "hotkeys": {
+      "title": "Keyboard Shortcuts",
+      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
+      "errorModifier": "Include Ctrl/⌘, Alt/⌥, or another modifier in your shortcut.",
+      "errorConflict": "Shortcut already used by {{tool}}.",
+      "none": "Not assigned",
+      "customBadge": "Custom",
+      "defaultLabel": "Default: {{shortcut}}",
+      "capturing": "Press keys… (Esc to cancel)",
+      "change": "Change shortcut",
+      "reset": "Reset"
     }
   },
   "changeCreds": {
@@ -2407,6 +2420,73 @@
   "addAttachments": {
     "error": {
       "failed": "An error occurred while adding attachments to the PDF."
+    }
+  },
+  "config": {
+    "account": {
+      "overview": {
+        "title": "Account Settings",
+        "manageAccountPreferences": "Manage your account preferences",
+        "guestDescription": "You are signed in as a guest. Consider upgrading your account above."
+      },
+      "upgrade": {
+        "title": "Upgrade Guest Account",
+        "description": "Link your account to preserve your history and access more features!",
+        "socialLogin": "Upgrade with Social Account",
+        "linkWith": "Link with",
+        "emailPassword": "or enter your email & password",
+        "email": "Email",
+        "emailPlaceholder": "Enter your email",
+        "password": "Password (optional)",
+        "passwordPlaceholder": "Set a password",
+        "passwordNote": "Leave empty to use email verification only",
+        "upgradeButton": "Upgrade Account"
+      }
+    },
+    "apiKeys": {
+      "title": "Manage API Keys",
+      "description": "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
+      "publicKeyAriaLabel": "Public API key",
+      "copyKeyAriaLabel": "Copy API key",
+      "refreshAriaLabel": "Refresh API key",
+      "includedCredits": "Included credits",
+      "purchasedCredits": "Purchased credits",
+      "totalCredits": "Total Credits",
+      "chartAriaLabel": "Credits usage: included {{includedUsed}} of {{includedTotal}}, purchased {{purchasedUsed}} of {{purchasedTotal}}",
+      "nextReset": "Next Reset",
+      "lastApiUse": "Last API Use",
+      "overlayMessage": "Generate a key to see credits and available credits",
+      "label": "API Key",
+      "guestInfo": "Guest users do not receive API keys. Create an account to get an API key you can use in your applications.",
+      "goToAccount": "Go to Account",
+      "refreshModal": {
+        "title": "Refresh API Keys",
+        "warning": "⚠️ Warning: This action will generate new API keys and make your previous keys invalid.",
+        "impact": "Any applications or services currently using these keys will stop working until you update them with the new keys.",
+        "confirmPrompt": "Are you sure you want to continue?",
+        "confirmCta": "Refresh Keys"
+      },
+      "generateError": "We couldn't generate your API key."
+    },
+    "hotkeys": {
+      "title": "Keyboard Shortcuts",
+      "description": "View and customise tool shortcuts to speed up your workflow."
+    },
+    "overview": {
+      "loading": "Loading configuration...",
+      "errorTitle": "Error",
+      "basic": "Basic Configuration",
+      "security": "Security Configuration",
+      "system": "System Configuration",
+      "premium": "Premium/Enterprise Configuration",
+      "integration": "Integration Configuration",
+      "legal": "Legal Configuration"
+    },
+    "debug": {
+      "title": "Configuration Data",
+      "description": "Inspect raw server configuration values for troubleshooting.",
+      "warningTitle": "Configuration Warning",
+      "rawTitle": "Raw Configuration"
     }
   }
 }
