@@ -16,6 +16,7 @@ let batchEdited = false;
 const DEFAULT_BATCH_PLACEHOLDER = '[{"field":"value"}]';
 const multiTemplateRecordCache = new Map();
 let previousTemplateFileKeys = [];
+const fieldValidationRegistry = new Map();
 
 if (multiTemplateToggle && fileInput) {
   fileInput.multiple = multiTemplateToggle.checked;
@@ -43,6 +44,8 @@ const DATE_PATTERNS = [
   /\bstart\s+date\b/i,
   /\bend\s+date\b/i,
 ];
+const EMAIL_FIELD_PATTERNS = [/\bemail\b/i, /\be-mail\b/i, /\bmail\s*address\b/i];
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const prefersDayFirst = (() => {
   const localeHint =
@@ -257,6 +260,7 @@ function resetState() {
 function resetFieldSection() {
   fieldsForm.classList.add("d-none");
   fieldsForm.innerHTML = "";
+  fieldValidationRegistry.clear();
 }
 
 async function fetchFields(file) {
@@ -281,6 +285,7 @@ async function fetchFields(file) {
 
 function renderFields(fields) {
   fieldsForm.innerHTML = "";
+  fieldValidationRegistry.clear();
   if (!Array.isArray(fields) || fields.length === 0) {
     resetFieldSection();
     if (!batchEdited && batchTextarea) {
@@ -348,6 +353,7 @@ function buildFieldGroup(field, index) {
   }
 
   appendFieldDetails(wrapper, field);
+  setupInlineValidation(input, field, wrapper);
   return wrapper;
 }
 
@@ -373,6 +379,186 @@ function appendFieldDetails(wrapper, field) {
     keyHint.append(`${keyLabel}: `, code);
     wrapper.appendChild(keyHint);
   }
+}
+
+function setupInlineValidation(input, field, wrapper) {
+  if (!input || !field) {
+    return;
+  }
+
+  const constraints = buildValidationConstraints(field, input);
+  if (!constraints) {
+    return;
+  }
+
+  const messageEl = document.createElement("div");
+  messageEl.className = "invalid-feedback d-block small";
+  messageEl.style.display = "none";
+  if (input.type === "checkbox") {
+    messageEl.classList.add("ms-4");
+  }
+  wrapper.appendChild(messageEl);
+
+  const entry = {
+    constraints,
+    messageEl,
+    touched: false,
+    invalid: false,
+  };
+
+  fieldValidationRegistry.set(input, entry);
+
+  const handleChange = () => {
+    entry.touched = true;
+    validateField(input);
+  };
+
+  input.addEventListener("input", handleChange);
+  input.addEventListener("change", handleChange);
+  input.addEventListener("blur", () => {
+    entry.touched = true;
+    validateField(input, { force: true });
+  });
+}
+
+function buildValidationConstraints(field, input) {
+  const constraints = {
+    required: Boolean(field.required),
+    checkbox: input.type === "checkbox",
+    multiple: Boolean(input.multiple),
+    dateLike: field.type === "text" && isDateField(field),
+    emailLike: field.type === "text" && isEmailField(field),
+  };
+
+  if (input.type === "date") {
+    constraints.dateLike = true;
+  }
+
+  if (
+    !constraints.required &&
+    !constraints.dateLike &&
+    !constraints.emailLike &&
+    !constraints.multiple &&
+    !constraints.checkbox
+  ) {
+    return null;
+  }
+
+  return constraints;
+}
+
+function validateField(input, options = {}) {
+  const entry = fieldValidationRegistry.get(input);
+  if (!entry) {
+    return true;
+  }
+  if (!document.body.contains(input)) {
+    fieldValidationRegistry.delete(input);
+    return true;
+  }
+
+  const { constraints, messageEl } = entry;
+  const { force = false } = options;
+  const { value, isEmpty } = extractValueForValidation(input, constraints);
+
+  let error = "";
+  if (constraints.required && isEmpty) {
+    if (constraints.multiple) {
+      error = formFillLocale.validationSelect ?? formFillLocale.validationRequired;
+    } else {
+      error = formFillLocale.validationRequired;
+    }
+  }
+
+  if (!error && constraints.dateLike && !isEmpty) {
+    const normalized = toISODate(String(value));
+    if (!normalized) {
+      error = formFillLocale.validationDate ?? formFillLocale.validationInvalid;
+    }
+  }
+
+  if (!error && constraints.emailLike && !isEmpty) {
+    if (!EMAIL_REGEX.test(String(value).trim())) {
+      error = formFillLocale.validationEmail ?? formFillLocale.validationInvalid;
+    }
+  }
+
+  entry.invalid = Boolean(error);
+  const shouldShow = entry.touched || force;
+
+  if (entry.invalid && shouldShow) {
+    input.classList.add("is-invalid");
+    input.setAttribute("aria-invalid", "true");
+    messageEl.textContent = error || formFillLocale.validationInvalid;
+    messageEl.style.display = "";
+  } else {
+    input.classList.remove("is-invalid");
+    input.removeAttribute("aria-invalid");
+    messageEl.textContent = "";
+    messageEl.style.display = "none";
+  }
+
+  return !entry.invalid;
+}
+
+function validateAllFields(options = {}) {
+  if (fieldValidationRegistry.size === 0) {
+    return true;
+  }
+
+  const { focus = true } = options;
+  let firstInvalid = null;
+
+  for (const input of fieldValidationRegistry.keys()) {
+    const valid = validateField(input, { force: true });
+    if (!valid && !firstInvalid) {
+      firstInvalid = input;
+    }
+  }
+
+  if (firstInvalid && focus) {
+    firstInvalid.focus({ preventScroll: false });
+  }
+
+  return !firstInvalid;
+}
+
+function extractValueForValidation(input, constraints) {
+  if (constraints.checkbox) {
+    const checked = Boolean(input.checked);
+    return { value: checked, isEmpty: !checked };
+  }
+
+  if (constraints.multiple) {
+    const values = Array.from(input.selectedOptions || [])
+      .map((option) => option.value?.trim())
+      .filter((val) => val);
+    return { value: values, isEmpty: values.length === 0 };
+  }
+
+  let value = input.value?.trim() ?? "";
+  if (!value && input.dataset.originalValue) {
+    value = String(input.dataset.originalValue).trim();
+  }
+  return { value, isEmpty: value.length === 0 };
+}
+
+function isEmailField(field) {
+  if (!field || field.type !== "text") {
+    return false;
+  }
+  const haystack = collectFieldHaystack(field);
+  if (!haystack) {
+    return false;
+  }
+  return EMAIL_FIELD_PATTERNS.some((pattern) => pattern.test(haystack));
+}
+
+function collectFieldHaystack(field) {
+  return [field.label, field.name, field.tooltip]
+    .filter(Boolean)
+    .map((value) => value.toString())
+    .join(" ");
 }
 
 function buildInputForField(field, inputId) {
@@ -585,6 +771,13 @@ function normalizeValueCollection(value, multiple) {
 }
 
 async function performDownload(isBatch) {
+  if (!validateAllFields({ focus: true })) {
+    setStatus(
+      formFillLocale.validationFix ?? formFillLocale.validationRequired,
+      "warning"
+    );
+    return;
+  }
   try {
     toggleInputs(false);
     const formData = new FormData();
@@ -822,10 +1015,7 @@ function isDateField(field) {
   if (!field || field.type !== "text") {
     return false;
   }
-  const haystack = [field.label, field.name, field.tooltip]
-    .filter(Boolean)
-    .map((value) => value.toString())
-    .join(" ");
+  const haystack = collectFieldHaystack(field);
   if (!haystack) {
     return false;
   }
