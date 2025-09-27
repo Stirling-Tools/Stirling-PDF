@@ -149,7 +149,7 @@ const ToolStep = ({
       <Divider style={{ color: '#E2E8F0', marginLeft: '1rem', marginRight: '-0.5rem' }} />
     </div>
   );
-}
+};
 
 // ToolStepFactory for creating numbered steps
 export function createToolSteps() {
