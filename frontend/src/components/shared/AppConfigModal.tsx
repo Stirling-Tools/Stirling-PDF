@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   Button,
@@ -11,13 +11,10 @@ import {
   Alert,
   Loader,
   Tabs,
-  ThemeIcon,
-  Box,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useAppConfig } from '../../hooks/useAppConfig';
 import HotkeysSection from '../settings/HotkeysSection';
-import LocalIcon from './LocalIcon';
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -26,7 +23,7 @@ interface AppConfigModalProps {
 
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [activeTab, setActiveTab] = useState<string>('config');
   const { config, loading, error, refetch } = useAppConfig();
 
   const renderConfigSection = (title: string, data: any) => {
@@ -95,34 +92,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     accessibilityStatement: config.accessibilityStatement,
   } : null;
 
-  const sections = useMemo(() => ([
-    {
-      value: 'overview',
-      label: t('config.account.overview.title', 'Overview'),
-      description: t('config.account.overview.manageAccountPreferences', 'Manage your account preferences'),
-      icon: 'dashboard-rounded',
-    },
-    {
-      value: 'apiKeys',
-      label: t('config.apiKeys.label', 'API Key'),
-      description: t('config.apiKeys.description', "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one."),
-      icon: 'vpn-key-rounded',
-    },
-    {
-      value: 'hotkeys',
-      label: t('config.hotkeys.title', 'Keyboard Shortcuts'),
-      description: t('config.hotkeys.description', 'View and customise tool shortcuts to speed up your workflow.'),
-      icon: 'keyboard-rounded',
-    },
-    {
-      value: 'debug',
-      label: t('config.debug.title', 'Configuration Data'),
-      description: t('config.debug.description', 'Inspect raw server configuration values for troubleshooting.'),
-      icon: 'tune-rounded',
-    },
-  ]), [t]);
-
-  const renderOverview = () => (
+  const renderConfigDetails = () => (
     <Stack gap="lg">
       {loading && (
         <Stack align="center" py="md">
@@ -145,6 +115,21 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
           {renderConfigSection(t('config.overview.premium', 'Premium/Enterprise Configuration'), premiumConfig)}
           {renderConfigSection(t('config.overview.integration', 'Integration Configuration'), integrationConfig)}
           {renderConfigSection(t('config.overview.legal', 'Legal Configuration'), legalConfig)}
+
+          {config.error && (
+            <Alert color="yellow" title={t('config.debug.warningTitle', 'Configuration Warning')}>
+              {config.error}
+            </Alert>
+          )}
+
+          <Stack gap="xs">
+            <Text fw={600} size="md" c="blue">
+              {t('config.debug.rawTitle', 'Raw Configuration')}
+            </Text>
+            <Code block style={{ fontSize: '11px' }}>
+              {JSON.stringify(config, null, 2)}
+            </Code>
+          </Stack>
         </Stack>
       )}
     </Stack>
@@ -170,38 +155,6 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     </Stack>
   );
 
-  const renderDebug = () => (
-    <Stack gap="lg">
-      {config && config.error && (
-        <Alert color="yellow" title={t('config.debug.warningTitle', 'Configuration Warning')}>
-          {config.error}
-        </Alert>
-      )}
-      {config && (
-        <Stack gap="xs">
-          <Text fw={600} size="md" c="blue">{t('config.debug.rawTitle', 'Raw Configuration')}</Text>
-          <Code block style={{ fontSize: '11px' }}>
-            {JSON.stringify(config, null, 2)}
-          </Code>
-        </Stack>
-      )}
-    </Stack>
-  );
-
-  const renderActivePanel = () => {
-    switch (activeTab) {
-      case 'overview':
-        return renderOverview();
-      case 'apiKeys':
-        return renderApiKeys();
-      case 'hotkeys':
-        return <HotkeysSection />;
-      case 'debug':
-        return renderDebug();
-      default:
-        return renderOverview();
-    }
-  };
 
   return (
     <Modal
@@ -224,60 +177,35 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
           </Button>
         </Group>
 
-        <Tabs
-          value={activeTab}
-          onChange={(value) => value && setActiveTab(value)}
-          orientation="vertical"
-          keepMounted={false}
-          styles={{
-            root: {
-              display: 'flex',
-              alignItems: 'stretch',
-              gap: '1.5rem',
-            },
-            list: {
-              minWidth: '15rem',
-              paddingRight: '0.5rem',
-              borderRight: '1px solid var(--mantine-color-gray-3)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-            },
-            tab: {
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              borderRadius: '0.75rem',
-              padding: '0.75rem 1rem',
-              fontWeight: 500,
-            },
-          }}
-        >
+        <Tabs value={activeTab} onChange={(value) => value && setActiveTab(value)} keepMounted={false}>
           <Tabs.List>
-            {sections.map((section) => (
-              <Tabs.Tab
-                key={section.value}
-                value={section.value}
-                leftSection={(
-                  <ThemeIcon size={34} radius="md" variant={activeTab === section.value ? 'filled' : 'light'}>
-                    <LocalIcon icon={section.icon} width="1.1rem" height="1.1rem" />
-                  </ThemeIcon>
-                )}
-              >
-                <Stack gap={2} align="flex-start" style={{ textAlign: 'left' }}>
-                  <Text fw={600}>{section.label}</Text>
-                  <Text size="xs" c="dimmed">
-                    {section.description}
-                  </Text>
-                </Stack>
-              </Tabs.Tab>
-            ))}
+            <Tabs.Tab value="overview">{t('config.account.overview.title', 'Overview')}</Tabs.Tab>
+            <Tabs.Tab value="apiKeys">{t('config.apiKeys.label', 'API Keys')}</Tabs.Tab>
+            <Tabs.Tab value="hotkeys">{t('config.hotkeys.title', 'Keyboard Shortcuts')}</Tabs.Tab>
+            <Tabs.Tab value="config">{t('config.debug.title', 'Configuration Data')}</Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value={activeTab} style={{ flex: 1 }}>
+          <Tabs.Panel value="overview" pt="md">
             <ScrollArea h={400} type="auto">
-              <Box pr="sm">
-                {renderActivePanel()}
-              </Box>
+              {renderConfigDetails()}
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="apiKeys" pt="md">
+            <ScrollArea h={400} type="auto">
+              {renderApiKeys()}
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="hotkeys" pt="md">
+            <ScrollArea h={400} type="auto">
+              <HotkeysSection />
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="config" pt="md">
+            <ScrollArea h={400} type="auto">
+              {renderConfigDetails()}
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>
