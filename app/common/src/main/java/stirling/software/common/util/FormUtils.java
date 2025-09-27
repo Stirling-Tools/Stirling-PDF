@@ -6,14 +6,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -43,6 +46,8 @@ public class FormUtils {
     private final Pattern FORM_FIELD_PATTERN =
             Pattern.compile("(?i)^(text|field|form)[\\s_-]*\\d+$");
     private final Pattern PUNCTUATION_PATTERN = Pattern.compile("[\\p{Punct}]+");
+    private final Set<String> SUPPORTED_NEW_FIELD_TYPES =
+            Set.of("text", "checkbox", "combobox", "listbox");
 
     public boolean hasAnyRotatedPage(PDDocument document) {
         try {
@@ -718,6 +723,7 @@ public class FormUtils {
             int typeIndex = typeCounters.merge(type, 1, Integer::sum);
             String displayLabel =
                     deriveDisplayLabel(field, name, tooltip, type, typeIndex, options);
+            boolean multiSelect = resolveMultiSelect(terminalField);
 
             fields.add(
                     new FormFieldInfo(
@@ -728,6 +734,7 @@ public class FormUtils {
                             options.isEmpty() ? null : Collections.unmodifiableList(options),
                             required,
                             pageIndex,
+                            multiSelect,
                             tooltip));
         }
 
@@ -1078,6 +1085,20 @@ public class FormUtils {
         return Collections.emptyList();
     }
 
+    private boolean resolveMultiSelect(PDTerminalField field) {
+        if (field instanceof PDListBox listBox) {
+            try {
+                return listBox.isMultiSelect();
+            } catch (Exception e) {
+                log.debug(
+                        "Failed to resolve multi-select flag for list box '{}': {}",
+                        field.getFullyQualifiedName(),
+                        e.getMessage());
+            }
+        }
+        return false;
+    }
+
     private String determineCheckBoxOnValue(PDCheckBox checkBox) {
         try {
             String onValue = checkBox.getOnValue();
@@ -1301,6 +1322,592 @@ public class FormUtils {
         return -1;
     }
 
+    public void modifyFormFields(
+            PDDocument document, List<ModifyFormFieldDefinition> modifications) {
+        if (document == null || modifications == null || modifications.isEmpty()) {
+            return;
+        }
+
+        PDAcroForm acroForm = getAcroFormSafely(document);
+        if (acroForm == null) {
+            log.warn("Cannot modify fields because the document has no AcroForm");
+            return;
+        }
+
+        ensureFontResources(acroForm);
+
+        Set<String> existingNames = collectExistingFieldNames(acroForm);
+
+        for (ModifyFormFieldDefinition modification : modifications) {
+            if (modification == null || modification.targetName() == null) {
+                continue;
+            }
+
+            String lookupName = modification.targetName().trim();
+            if (lookupName.isEmpty()) {
+                continue;
+            }
+
+            PDField originalField = locateField(acroForm, lookupName);
+            if (originalField == null) {
+                log.warn("No matching field '{}' found for modification", lookupName);
+                continue;
+            }
+
+            List<PDAnnotationWidget> widgets = originalField.getWidgets();
+            if (widgets == null || widgets.isEmpty()) {
+                log.warn("Field '{}' has no widgets; skipping modification", lookupName);
+                continue;
+            }
+
+            PDAnnotationWidget widget = widgets.get(0);
+            PDRectangle originalRectangle = cloneRectangle(widget.getRectangle());
+            PDPage page = resolveWidgetPage(document, widget);
+            if (page == null || originalRectangle == null) {
+                log.warn(
+                        "Unable to resolve widget page or rectangle for '{}'; skipping",
+                        lookupName);
+                continue;
+            }
+
+            String resolvedType =
+                    Optional.ofNullable(modification.type())
+                            .map(FormUtils::normalizeFieldType)
+                            .orElseGet(() -> detectFieldType(originalField));
+
+            if (!SUPPORTED_NEW_FIELD_TYPES.contains(resolvedType)) {
+                log.warn("Unsupported target type '{}' for field '{}'", resolvedType, lookupName);
+                continue;
+            }
+
+            String desiredName =
+                    Optional.ofNullable(modification.name())
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .orElseGet(originalField::getPartialName);
+
+            // Free up the original name so it can be reused.
+            if (desiredName != null) {
+                existingNames.remove(originalField.getFullyQualifiedName());
+                existingNames.remove(originalField.getPartialName());
+                desiredName = generateUniqueFieldName(desiredName, existingNames);
+                existingNames.add(desiredName);
+            }
+
+            removeFieldFromDocument(document, acroForm, originalField);
+
+            NewFormFieldDefinition replacementDefinition =
+                    new NewFormFieldDefinition(
+                            desiredName,
+                            modification.label(),
+                            resolvedType,
+                            determineWidgetPageIndex(document, widget),
+                            originalRectangle.getLowerLeftX(),
+                            page.getMediaBox().getHeight() - originalRectangle.getUpperRightY(),
+                            originalRectangle.getWidth(),
+                            originalRectangle.getHeight(),
+                            modification.required(),
+                            modification.multiSelect(),
+                            modification.options(),
+                            modification.defaultValue(),
+                            modification.tooltip());
+
+            List<String> sanitizedOptions = sanitizeOptions(modification.options());
+
+            try {
+                switch (resolvedType) {
+                    case "checkbox" ->
+                            createNewCheckBox(
+                                    acroForm,
+                                    page,
+                                    originalRectangle,
+                                    desiredName,
+                                    replacementDefinition,
+                                    sanitizedOptions);
+                    case "combobox" ->
+                            createNewComboBox(
+                                    acroForm,
+                                    page,
+                                    originalRectangle,
+                                    desiredName,
+                                    replacementDefinition,
+                                    sanitizedOptions);
+                    case "listbox" ->
+                            createNewListBox(
+                                    acroForm,
+                                    page,
+                                    originalRectangle,
+                                    desiredName,
+                                    replacementDefinition,
+                                    sanitizedOptions);
+                    default ->
+                            createNewTextField(
+                                    acroForm,
+                                    page,
+                                    originalRectangle,
+                                    desiredName,
+                                    replacementDefinition);
+                }
+            } catch (Exception e) {
+                log.warn(
+                        "Failed to modify form field '{}' to type '{}': {}",
+                        lookupName,
+                        resolvedType,
+                        e.getMessage(),
+                        e);
+            }
+        }
+
+        ensureAppearances(acroForm);
+    }
+
+    public void deleteFormFields(PDDocument document, List<String> fieldNames) {
+        if (document == null || fieldNames == null || fieldNames.isEmpty()) {
+            return;
+        }
+
+        PDAcroForm acroForm = getAcroFormSafely(document);
+        if (acroForm == null) {
+            log.warn("Cannot delete fields because the document has no AcroForm");
+            return;
+        }
+
+        for (String name : fieldNames) {
+            if (name == null || name.isBlank()) {
+                continue;
+            }
+
+            PDField field = locateField(acroForm, name.trim());
+            if (field == null) {
+                log.warn("No matching field '{}' found for deletion", name);
+                continue;
+            }
+
+            removeFieldFromDocument(document, acroForm, field);
+        }
+
+        ensureAppearances(acroForm);
+    }
+
+    private void removeFieldFromDocument(PDDocument document, PDAcroForm acroForm, PDField field) {
+        if (field == null) {
+            return;
+        }
+
+        try {
+            List<PDAnnotationWidget> widgets = field.getWidgets();
+            if (widgets != null) {
+                for (PDAnnotationWidget widget : widgets) {
+                    PDPage page = resolveWidgetPage(document, widget);
+                    if (page != null) {
+                        page.getAnnotations().remove(widget);
+                    }
+                }
+                widgets.clear();
+            }
+
+            PDNonTerminalField parent = field.getParent();
+            if (parent != null) {
+                List<PDField> children = parent.getChildren();
+                if (children != null) {
+                    children.removeIf(existing -> existing == field);
+                }
+
+                try {
+                    COSArray kids = parent.getCOSObject().getCOSArray(COSName.KIDS);
+                    if (kids != null) {
+                        kids.removeObject(field.getCOSObject());
+                    }
+                } catch (Exception e) {
+                    log.debug(
+                            "Failed to remove field '{}' from parent kids array: {}",
+                            field.getFullyQualifiedName(),
+                            e.getMessage());
+                }
+            }
+
+            if (acroForm != null) {
+                pruneFieldReferences(acroForm.getFields(), field);
+
+                try {
+                    COSArray fieldsArray = acroForm.getCOSObject().getCOSArray(COSName.FIELDS);
+                    if (fieldsArray != null) {
+                        fieldsArray.removeObject(field.getCOSObject());
+                    }
+                } catch (Exception e) {
+                    log.debug(
+                            "Failed to remove field '{}' from AcroForm COS array: {}",
+                            field.getFullyQualifiedName(),
+                            e.getMessage());
+                }
+            }
+
+            try {
+                field.getCOSObject().clear();
+            } catch (Exception e) {
+                log.debug(
+                        "Failed to clear COS dictionary for field '{}': {}",
+                        field.getFullyQualifiedName(),
+                        e.getMessage());
+            }
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to detach field '{}' from document: {}",
+                    field.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+    }
+
+    private void pruneFieldReferences(List<PDField> fields, PDField target) {
+        if (fields == null || fields.isEmpty() || target == null) {
+            return;
+        }
+
+        fields.removeIf(existing -> isSameFieldReference(existing, target));
+
+        for (PDField existing : List.copyOf(fields)) {
+            if (existing instanceof PDNonTerminalField nonTerminal) {
+                List<PDField> children = nonTerminal.getChildren();
+                if (children != null && !children.isEmpty()) {
+                    pruneFieldReferences(children, target);
+                }
+            }
+        }
+    }
+
+    private boolean isSameFieldReference(PDField a, PDField b) {
+        if (a == b) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+
+        String aName = a.getFullyQualifiedName();
+        String bName = b.getFullyQualifiedName();
+        if (aName != null && aName.equals(bName)) {
+            return true;
+        }
+
+        String aPartial = a.getPartialName();
+        String bPartial = b.getPartialName();
+        return aPartial != null && aPartial.equals(bPartial);
+    }
+
+    private PDRectangle cloneRectangle(PDRectangle rectangle) {
+        if (rectangle == null) {
+            return null;
+        }
+        return new PDRectangle(
+                rectangle.getLowerLeftX(),
+                rectangle.getLowerLeftY(),
+                rectangle.getWidth(),
+                rectangle.getHeight());
+    }
+
+    private PDPage resolveWidgetPage(PDDocument document, PDAnnotationWidget widget) {
+        if (widget == null) {
+            return null;
+        }
+        PDPage page = widget.getPage();
+        if (page != null) {
+            return page;
+        }
+        int pageIndex = determineWidgetPageIndex(document, widget);
+        if (pageIndex >= 0) {
+            try {
+                return document.getPage(pageIndex);
+            } catch (Exception e) {
+                log.debug("Failed to resolve widget page index {}: {}", pageIndex, e.getMessage());
+            }
+        }
+        return null;
+    }
+
+    private int determineWidgetPageIndex(PDDocument document, PDAnnotationWidget widget) {
+        if (document == null || widget == null) {
+            return -1;
+        }
+
+        PDPage directPage = widget.getPage();
+        if (directPage != null) {
+            int index = 0;
+            for (PDPage page : document.getPages()) {
+                if (page == directPage) {
+                    return index;
+                }
+                index++;
+            }
+        }
+
+        int pageCount = document.getNumberOfPages();
+        for (int i = 0; i < pageCount; i++) {
+            try {
+                PDPage page = document.getPage(i);
+                for (PDAnnotation annotation : page.getAnnotations()) {
+                    if (annotation == widget) {
+                        return i;
+                    }
+                }
+            } catch (IOException e) {
+                log.debug("Failed to inspect annotations for page {}: {}", i, e.getMessage());
+            }
+        }
+        return -1;
+    }
+
+    private Set<String> collectExistingFieldNames(PDAcroForm acroForm) {
+        Set<String> existing = new HashSet<>();
+        if (acroForm == null) {
+            return existing;
+        }
+        for (PDField field : acroForm.getFieldTree()) {
+            if (field == null) {
+                continue;
+            }
+            if (field.getFullyQualifiedName() != null) {
+                existing.add(field.getFullyQualifiedName());
+            }
+            if (field.getPartialName() != null) {
+                existing.add(field.getPartialName());
+            }
+        }
+        return existing;
+    }
+
+    private PDField locateField(PDAcroForm acroForm, String name) {
+        if (acroForm == null || name == null) {
+            return null;
+        }
+        PDField direct = acroForm.getField(name);
+        if (direct != null) {
+            return direct;
+        }
+        for (PDField field : acroForm.getFieldTree()) {
+            if (field == null) {
+                continue;
+            }
+            String fq = field.getFullyQualifiedName();
+            if (name.equals(fq)) {
+                return field;
+            }
+            String partial = field.getPartialName();
+            if (name.equals(partial)) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    private String detectFieldType(PDField field) {
+        if (field instanceof PDCheckBox) {
+            return "checkbox";
+        }
+        if (field instanceof PDComboBox) {
+            return "combobox";
+        }
+        if (field instanceof PDListBox) {
+            return "listbox";
+        }
+        if (field instanceof PDRadioButton) {
+            return "radio";
+        }
+        return "text";
+    }
+
+    private String normalizeFieldType(String type) {
+        if (type == null) {
+            return "text";
+        }
+        String normalized = type.trim().toLowerCase(Locale.ROOT);
+        if (normalized.isEmpty()) {
+            return "text";
+        }
+        return normalized;
+    }
+
+    private String generateUniqueFieldName(String baseName, Set<String> existingNames) {
+        String sanitized =
+                Optional.ofNullable(baseName)
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .orElse("field");
+
+        String candidate = sanitized;
+        int counter = 1;
+        while (existingNames.contains(candidate)) {
+            candidate = sanitized + "_" + counter;
+            counter++;
+        }
+        return candidate;
+    }
+
+    private List<String> sanitizeOptions(List<String> options) {
+        if (options == null || options.isEmpty()) {
+            return List.of();
+        }
+        return options.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
+    private void createNewTextField(
+            PDAcroForm acroForm,
+            PDPage page,
+            PDRectangle rectangle,
+            String name,
+            NewFormFieldDefinition definition)
+            throws IOException {
+
+        PDTextField textField = new PDTextField(acroForm);
+        textField.setDefaultAppearance("/Helv 12 Tf 0 g");
+        registerNewField(textField, acroForm, page, rectangle, name, definition);
+
+        String defaultValue = Optional.ofNullable(definition.defaultValue()).orElse("");
+        if (!defaultValue.isBlank()) {
+            setTextValue(textField, defaultValue);
+        }
+    }
+
+    private void createNewCheckBox(
+            PDAcroForm acroForm,
+            PDPage page,
+            PDRectangle rectangle,
+            String name,
+            NewFormFieldDefinition definition,
+            List<String> options)
+            throws IOException {
+
+        PDCheckBox checkBox = new PDCheckBox(acroForm);
+        if (!options.isEmpty()) {
+            checkBox.setExportValues(options);
+        }
+        registerNewField(checkBox, acroForm, page, rectangle, name, definition);
+
+        if (isChecked(definition.defaultValue())) {
+            checkBox.check();
+        } else {
+            checkBox.unCheck();
+        }
+    }
+
+    private void createNewComboBox(
+            PDAcroForm acroForm,
+            PDPage page,
+            PDRectangle rectangle,
+            String name,
+            NewFormFieldDefinition definition,
+            List<String> options)
+            throws IOException {
+
+        PDComboBox comboBox = new PDComboBox(acroForm);
+        registerNewField(comboBox, acroForm, page, rectangle, name, definition);
+        if (!options.isEmpty()) {
+            comboBox.setOptions(options);
+        }
+        String defaultValue = definition.defaultValue();
+        if (defaultValue != null && !defaultValue.isBlank()) {
+            comboBox.setValue(defaultValue);
+        }
+    }
+
+    private void createNewListBox(
+            PDAcroForm acroForm,
+            PDPage page,
+            PDRectangle rectangle,
+            String name,
+            NewFormFieldDefinition definition,
+            List<String> options)
+            throws IOException {
+
+        PDListBox listBox = new PDListBox(acroForm);
+        registerNewField(listBox, acroForm, page, rectangle, name, definition);
+        listBox.setMultiSelect(Boolean.TRUE.equals(definition.multiSelect()));
+
+        if (!options.isEmpty()) {
+            listBox.setOptions(options);
+        }
+
+        String defaultValue = definition.defaultValue();
+        if (defaultValue != null && !defaultValue.isBlank()) {
+            if (Boolean.TRUE.equals(definition.multiSelect())) {
+                List<String> selections =
+                        Arrays.stream(defaultValue.split(","))
+                                .map(String::trim)
+                                .filter(s -> !s.isEmpty())
+                                .toList();
+                if (!selections.isEmpty()) {
+                    listBox.setValue(selections);
+                }
+            } else {
+                listBox.setValue(defaultValue);
+            }
+        }
+    }
+
+    private <T extends PDTerminalField> void registerNewField(
+            T field,
+            PDAcroForm acroForm,
+            PDPage page,
+            PDRectangle rectangle,
+            String name,
+            NewFormFieldDefinition definition)
+            throws IOException {
+
+        field.setPartialName(name);
+        if (definition.label() != null && !definition.label().isBlank()) {
+            try {
+                field.setAlternateFieldName(definition.label());
+            } catch (Exception e) {
+                log.debug("Unable to set alternate field name for '{}': {}", name, e.getMessage());
+            }
+        }
+        field.setRequired(Boolean.TRUE.equals(definition.required()));
+
+        PDAnnotationWidget widget = new PDAnnotationWidget();
+        widget.setRectangle(rectangle);
+        widget.setPage(page);
+        widget.setPrinted(true);
+        if (definition.tooltip() != null && !definition.tooltip().isBlank()) {
+            widget.getCOSObject().setString(COSName.TU, definition.tooltip());
+        }
+
+        field.getWidgets().add(widget);
+        widget.setParent(field);
+        page.getAnnotations().add(widget);
+        acroForm.getFields().add(field);
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record NewFormFieldDefinition(
+            String name,
+            String label,
+            String type,
+            Integer pageIndex,
+            Float x,
+            Float y,
+            Float width,
+            Float height,
+            Boolean required,
+            Boolean multiSelect,
+            List<String> options,
+            String defaultValue,
+            String tooltip) {}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record ModifyFormFieldDefinition(
+            String targetName,
+            String name,
+            String label,
+            String type,
+            Boolean required,
+            Boolean multiSelect,
+            List<String> options,
+            String defaultValue,
+            String tooltip) {}
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record FormFieldInfo(
             String name,
@@ -1310,5 +1917,6 @@ public class FormUtils {
             List<String> options,
             boolean required,
             int pageIndex,
+            boolean multiSelect,
             String tooltip) {}
 }

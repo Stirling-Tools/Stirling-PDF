@@ -17,7 +17,7 @@
               </div>
               <p class="text-muted" th:text="#{formFill.description}"></p>
 
-              <form autocomplete="off" id="formFillForm" novalidate>
+              <form autocomplete="off" data-skip-downloader id="formFillForm" novalidate>
                 <div class="mb-3">
                   <label class="form-label" for="formFillFile-input" th:text="#{formFill.selectPdf}"></label>
                   <div th:replace="~{fragments/common :: fileSelector(name='formFillFile', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}"></div>
@@ -61,6 +61,75 @@
             </div>
           </div>
         </div>
+
+        <div aria-hidden="true" class="modal fade" id="formFieldEditModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+              <form data-skip-downloader id="formFieldEditForm">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="formFieldEditModalLabel" th:text="#{formFill.editModalTitle}"></h5>
+                  <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label" for="formFieldEditType" th:text="#{formFill.editType}"></label>
+                      <select class="form-select" id="formFieldEditType">
+                        <option th:text="#{formFill.type.text}" value="text"></option>
+                        <option th:text="#{formFill.type.checkbox}" value="checkbox"></option>
+                        <option th:text="#{formFill.type.combobox}" value="combobox"></option>
+                        <option th:text="#{formFill.type.listbox}" value="listbox"></option>
+                      </select>
+                      <div class="form-text" th:text="#{formFill.editTypeHelp}"></div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="formFieldEditName" th:text="#{formFill.editName}"></label>
+                      <input class="form-control" id="formFieldEditName" maxlength="128" type="text" />
+                      <div class="form-text" th:text="#{formFill.editNameHelp}"></div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="formFieldEditLabel" th:text="#{formFill.editLabel}"></label>
+                      <input class="form-control" id="formFieldEditLabel" maxlength="128" type="text" />
+                      <div class="form-text" th:text="#{formFill.editLabelHelp}"></div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="formFieldEditDefault" th:text="#{formFill.editDefault}"></label>
+                      <input class="form-control" id="formFieldEditDefault" maxlength="256" type="text" />
+                      <div class="form-text" th:text="#{formFill.editDefaultHelp}"></div>
+                    </div>
+                    <div class="col-12 d-none" id="formFieldEditOptionsGroup">
+                      <label class="form-label" for="formFieldEditOptions" th:text="#{formFill.editOptions}"></label>
+                      <textarea class="form-control" id="formFieldEditOptions" rows="3"></textarea>
+                      <div class="form-text" th:text="#{formFill.editOptionsHelp}"></div>
+                    </div>
+                    <div class="col-md-6 d-none" id="formFieldEditMultiSelectGroup">
+                      <div class="form-check">
+                        <input id="formFieldEditMultiSelect" type="checkbox" />
+                        <label for="formFieldEditMultiSelect" th:text="#{formFill.editMultiSelect}"></label>
+                      </div>
+                      <div class="form-text" th:text="#{formFill.editMultiSelectHelp}"></div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-check">
+                        <input id="formFieldEditRequired" type="checkbox" />
+                        <label for="formFieldEditRequired" th:text="#{formFill.editRequired}"></label>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="formFieldEditTooltip" th:text="#{formFill.editTooltip}"></label>
+                      <input class="form-control" id="formFieldEditTooltip" maxlength="256" type="text" />
+                      <div class="form-text" th:text="#{formFill.editTooltipHelp}"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-outline-secondary" data-bs-dismiss="modal" th:text="#{cancel}" type="button"></button>
+                  <button class="btn btn-primary" th:text="#{save}" type="submit"></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
         <br><br>
         <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
       </div>
@@ -87,7 +156,22 @@
         validationDate: /*[[#{formFill.validationDate}]]*/ 'Enter a valid date (YYYY-MM-DD).',
         validationEmail: /*[[#{formFill.validationEmail}]]*/ 'Enter a valid email address.',
         validationInvalid: /*[[#{formFill.validationInvalid}]]*/ 'The provided value is not valid for this field.',
-        validationFix: /*[[#{formFill.validationFix}]]*/ 'Fix the highlighted fields before downloading.'
+        validationFix: /*[[#{formFill.validationFix}]]*/ 'Fix the highlighted fields before downloading.',
+        editField: /*[[#{formFill.editField}]]*/ 'Edit field',
+        deleteField: /*[[#{formFill.deleteField}]]*/ 'Delete field',
+        editUnavailable: /*[[#{formFill.editUnavailable}]]*/ 'Editing is currently unavailable.',
+        editMultiDisabled: /*[[#{formFill.editMultiDisabled}]]*/ 'Turn off multi-template mode to edit individual fields.',
+        editMissing: /*[[#{formFill.editMissing}]]*/ 'Unable to locate the selected field.',
+        editUnsupported: /*[[#{formFill.editUnsupported}]]*/ 'This field type is not supported for editing yet.',
+        deleteMissing: /*[[#{formFill.deleteMissing}]]*/ 'Unable to locate the selected field.',
+        deleteConfirm: /*[[#{formFill.deleteConfirm}]]*/ 'Delete "{0}"? This action cannot be undone.',
+        deleteSuccess: /*[[#{formFill.deleteSuccess}]]*/ 'Field deleted. Preview refreshed.',
+        modifying: /*[[#{formFill.modifying}]]*/ 'Updating field…',
+        deleting: /*[[#{formFill.deleting}]]*/ 'Deleting field…',
+        modifySuccess: /*[[#{formFill.modifySuccess}]]*/ 'Field updated. Preview refreshed.',
+        updating: /*[[#{formFill.modifying}]]*/ 'Updating field…',
+        checkboxDefaultHint: /*[[#{formFill.checkboxDefaultHint}]]*/ 'Use true/false to control the initial state.',
+        listboxDefaultHint: /*[[#{formFill.listboxDefaultHint}]]*/ 'Separate multiple selections with commas or new lines.'
       };
     </script>
   </body>

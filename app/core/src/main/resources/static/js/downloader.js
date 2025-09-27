@@ -46,13 +46,18 @@
 
   $(document).ready(function () {
     $('form').submit(async function (event) {
+      if (this?.dataset?.skipDownloader !== undefined) {
+        return;
+      }
       event.preventDefault();
       firstErrorOccurred = false;
       const url = this.action;
-      let files = $('#fileInput-input')[0].files;
+      const fileInputElement =
+        this.querySelector('#fileInput-input') || this.querySelector("input[type='file']");
+      let files = Array.from(fileInputElement?.files ?? []);
       const uploadLimit = window.stirlingPDF?.uploadLimit ?? 0;
       if (uploadLimit > 0) {
-        const oversizedFiles = Array.from(files).filter(f => f.size > uploadLimit);
+        const oversizedFiles = files.filter(f => f.size > uploadLimit);
         if (oversizedFiles.length > 0) {
           const names = oversizedFiles.map(f => `"${f.name}"`).join(', ');
           if (names.length === 1) {
@@ -60,14 +65,15 @@
           } else {
             alert(`${names} ${window.stirlingPDF.uploadLimitExceededPlural} ${window.stirlingPDF.uploadLimitReadable}.`);
           }
-          files = Array.from(files).filter(f => f.size <= uploadLimit);
+          files = files.filter(f => f.size <= uploadLimit);
           if (files.length === 0) return;
         }
       }
       const formData = new FormData(this);
-      const submitButton = document.getElementById('submitBtn');
+      const submitButton =
+        this.querySelector('#submitBtn') || this.querySelector("button[type='submit'], input[type='submit']");
       const showGameBtn = document.getElementById('show-game-btn');
-      const originalButtonText = submitButton.textContent;
+      const originalButtonText = submitButton?.textContent ?? '';
       var boredWaiting = localStorage.getItem('boredWaiting') || 'disabled';
 
       if (showGameBtn) {
@@ -98,8 +104,10 @@
           files = decryptedFiles;
         }
 
-        submitButton.textContent = 'Processing...';
-        submitButton.disabled = true;
+        if (submitButton) {
+          submitButton.textContent = 'Processing...';
+          submitButton.disabled = true;
+        }
 
         if (remoteCall === true) {
           if (override === 'multi' || (!multipleInputsForSingleRequest && files.length > 1 && override !== 'single')) {
@@ -115,8 +123,10 @@
           showGameBtn.style.display = 'none';
           showGameBtn.style.marginTop = '';
         }
-        submitButton.textContent = originalButtonText;
-        submitButton.disabled = false;
+        if (submitButton) {
+          submitButton.textContent = originalButtonText;
+          submitButton.disabled = false;
+        }
 
         // After process finishes, check for boredWaiting and gameDialog open status
         const gameDialog = document.getElementById('game-container-wrapper');
@@ -142,8 +152,10 @@
         if(showGameBtn){
           showGameBtn.style.display = 'none';
         }
-        submitButton.textContent = originalButtonText;
-        submitButton.disabled = false;
+        if (submitButton) {
+          submitButton.textContent = originalButtonText;
+          submitButton.disabled = false;
+        }
         handleDownloadError(error);
         console.error(error);
       }

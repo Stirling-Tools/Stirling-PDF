@@ -17,6 +17,51 @@ const DEFAULT_BATCH_PLACEHOLDER = '[{"field":"value"}]';
 const multiTemplateRecordCache = new Map();
 let previousTemplateFileKeys = [];
 const fieldValidationRegistry = new Map();
+const fieldMetadata = new Map();
+let editingFieldName = null;
+const pendingRemovalNames = new Set();
+const retainedFieldValues = new Map();
+const multiTemplateSelectedFiles = [];
+const multiTemplateSelectionIndex = new Map();
+let suppressFileInputChange = false;
+
+const editModalEl = document.getElementById("formFieldEditModal");
+const editModal =
+  editModalEl && window.bootstrap?.Modal
+    ? new window.bootstrap.Modal(editModalEl, { backdrop: "static" })
+    : null;
+const editForm = document.getElementById("formFieldEditForm");
+const editInputs = {
+  type: document.getElementById("formFieldEditType"),
+  name: document.getElementById("formFieldEditName"),
+  label: document.getElementById("formFieldEditLabel"),
+  defaultValue: document.getElementById("formFieldEditDefault"),
+  options: document.getElementById("formFieldEditOptions"),
+  required: document.getElementById("formFieldEditRequired"),
+  tooltip: document.getElementById("formFieldEditTooltip"),
+  multiSelect: document.getElementById("formFieldEditMultiSelect"),
+  optionsGroup: document.getElementById("formFieldEditOptionsGroup"),
+  multiSelectGroup: document.getElementById("formFieldEditMultiSelectGroup"),
+};
+
+const MODIFIABLE_FIELD_TYPES = new Set(["text", "checkbox", "combobox", "listbox"]);
+const OPTION_FIELD_TYPES = new Set(["combobox", "listbox"]);
+
+if (editInputs.type) {
+  editInputs.type.addEventListener("change", (event) => {
+    updateEditTypeControls(event.target?.value ?? "text");
+  });
+}
+
+if (editForm) {
+  editForm.addEventListener("submit", submitEditForm);
+}
+
+if (editModalEl) {
+  editModalEl.addEventListener("hidden.bs.modal", () => {
+    resetEditForm();
+  });
+}
 
 if (multiTemplateToggle && fileInput) {
   fileInput.multiple = multiTemplateToggle.checked;
@@ -86,51 +131,147 @@ function readExistingBatchRecords() {
   }
 }
 
-fileInput?.addEventListener("change", async (event) => {
-  const files = Array.from(event.target.files ?? []);
-  const primaryFile = files[0] ?? null;
+function updateFileChooserSummary(files) {
+  if (!fileChooser) {
+    return;
+  }
+  const selectedFilesContainer = fileChooser.querySelector(".selected-files");
+  if (!selectedFilesContainer) {
+    return;
+  }
 
-  if (!primaryFile) {
+  if (!Array.isArray(files) || files.length === 0) {
+    selectedFilesContainer.textContent = "";
+    return;
+  }
+
+  const summary = files
+    .map((file) => (file && typeof file.name === "string" ? file.name : ""))
+    .filter((name) => name.length > 0)
+    .join(", ");
+  selectedFilesContainer.textContent = summary;
+}
+
+function syncMultiTemplateSelectionToInput() {
+  if (!fileInput) {
+    return;
+  }
+
+  try {
+    suppressFileInputChange = true;
+    if (multiTemplateSelectedFiles.length === 0) {
+      fileInput.value = "";
+    } else {
+      const dataTransfer = new DataTransfer();
+      multiTemplateSelectedFiles.forEach((file) => {
+        try {
+          dataTransfer.items.add(file);
+        } catch (error) {
+          console.warn("Unable to add file to DataTransfer", error);
+        }
+      });
+      fileInput.files = dataTransfer.files;
+    }
+  } catch (error) {
+    console.warn("Unable to synchronize multi-template selection with input", error);
+  } finally {
+    suppressFileInputChange = false;
+    updateFileChooserSummary(multiTemplateSelectedFiles);
+  }
+}
+
+function clearMultiTemplateSelection(options = {}) {
+  const { skipInputSync = false } = options;
+  multiTemplateSelectedFiles.length = 0;
+  multiTemplateSelectionIndex.clear();
+  if (!skipInputSync) {
+    syncMultiTemplateSelectionToInput();
+  }
+}
+
+function mergeMultiTemplateFiles(files) {
+  if (!Array.isArray(files) || files.length === 0) {
+    return false;
+  }
+
+  let changed = false;
+  files.forEach((file) => {
+    if (!file) {
+      return;
+    }
+    const signature = getFileSignature(file);
+    if (!signature) {
+      return;
+    }
+    const existingIndex = multiTemplateSelectionIndex.get(signature);
+    if (existingIndex == null) {
+      multiTemplateSelectionIndex.set(signature, multiTemplateSelectedFiles.length);
+      multiTemplateSelectedFiles.push(file);
+      changed = true;
+    } else {
+      multiTemplateSelectedFiles[existingIndex] = file;
+      changed = true;
+    }
+  });
+
+  return changed;
+}
+
+async function loadSingleFormFile(file) {
+  if (!file) {
     previousTemplateFileKeys = [];
     resetState();
     return;
   }
 
-  currentFile = primaryFile;
+  currentFile = file;
+
+  if (batchTextarea) {
+    batchTextarea.value = "";
+  }
+  if (batchFileInput) {
+    batchFileInput.value = "";
+  }
+
+  batchEdited = false;
+  setStatus(formFillLocale.loading, "info");
+  toggleInputs(false);
+
+  try {
+    const fields = await fetchFields(file);
+    renderFields(fields);
+    const usableFields = fields.filter((field) => FILLABLE_TYPES.has(field.type));
+    if (usableFields.length === 0) {
+      setStatus(formFillLocale.noFields, "warning");
+      downloadButton.disabled = false;
+      batchButton.disabled = true;
+    } else {
+      setStatus(formFillLocale.ready, "success");
+      downloadButton.disabled = false;
+      updateBatchButtonState({ silent: true });
+    }
+    previousTemplateFileKeys = [getFileSignature(file)];
+  } catch (error) {
+    console.error(error);
+    setStatus(formFillLocale.requestError, "danger");
+    resetFieldSection();
+  } finally {
+    toggleInputs(true);
+  }
+}
+
+fileInput?.addEventListener("change", async (event) => {
+  if (suppressFileInputChange) {
+    return;
+  }
+
+  const files = Array.from(event.target.files ?? []);
+  const primaryFile = files[0] ?? null;
   const multiMode = isMultiTemplateMode();
 
   if (!multiMode) {
-    if (batchTextarea) {
-      batchTextarea.value = "";
-    }
-    if (batchFileInput) {
-      batchFileInput.value = "";
-    }
-
-    batchEdited = false;
-    setStatus(formFillLocale.loading, "info");
-    toggleInputs(false);
-    try {
-      const fields = await fetchFields(primaryFile);
-      renderFields(fields);
-      const usableFields = fields.filter((field) => FILLABLE_TYPES.has(field.type));
-      if (usableFields.length === 0) {
-        setStatus(formFillLocale.noFields, "warning");
-        downloadButton.disabled = false;
-        batchButton.disabled = true;
-      } else {
-        setStatus(formFillLocale.ready, "success");
-        downloadButton.disabled = false;
-        updateBatchButtonState({ silent: true });
-      }
-      previousTemplateFileKeys = [getFileSignature(primaryFile)];
-    } catch (error) {
-      console.error(error);
-      setStatus(formFillLocale.requestError, "danger");
-      resetFieldSection();
-    } finally {
-      toggleInputs(true);
-    }
+    clearMultiTemplateSelection({ skipInputSync: true });
+    await loadSingleFormFile(primaryFile);
     return;
   }
 
@@ -138,12 +279,36 @@ fileInput?.addEventListener("change", async (event) => {
     batchFileInput.value = "";
   }
 
+  if (files.length === 0) {
+    if (multiTemplateSelectedFiles.length === 0) {
+      previousTemplateFileKeys = [];
+      clearMultiTemplateSelection();
+      resetState();
+    } else {
+      syncMultiTemplateSelectionToInput();
+    }
+    return;
+  }
+
+  mergeMultiTemplateFiles(files);
+  syncMultiTemplateSelectionToInput();
+
+  if (multiTemplateSelectedFiles.length === 0) {
+    previousTemplateFileKeys = [];
+    resetState();
+    return;
+  }
+
+  currentFile = multiTemplateSelectedFiles[0] ?? null;
+
   setStatus(formFillLocale.loading, "info");
   toggleInputs(false);
   resetFieldSection();
   try {
-    const records = await buildMultiTemplateRecords(files);
-    previousTemplateFileKeys = files.map((file) => getFileSignature(file));
+    const records = await buildMultiTemplateRecords(multiTemplateSelectedFiles);
+    previousTemplateFileKeys = multiTemplateSelectedFiles.map((file) =>
+      getFileSignature(file)
+    );
     if (records.length > 0) {
       if (batchTextarea) {
         batchTextarea.value = JSON.stringify(records, null, 2);
@@ -175,11 +340,39 @@ batchTextarea?.addEventListener("input", () => {
   updateBatchButtonState();
 });
 
-batchFileInput?.addEventListener("change", () => {
+batchFileInput?.addEventListener("change", async () => {
   batchEdited = false;
-  updateBatchButtonState({ silent: true });
-  if (batchFileInput.files?.length) {
+  const file = batchFileInput.files?.[0];
+  if (!file) {
+    updateBatchButtonState({ silent: true });
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      setStatus(formFillLocale.batchEmpty, "warning");
+      batchTextarea && (batchTextarea.value = "");
+      batchButton.disabled = true;
+      return;
+    }
+
+    if (batchTextarea) {
+      batchTextarea.value = JSON.stringify(parsed, null, 2);
+    }
+    batchEdited = true;
     setStatus(formFillLocale.batchFileReady ?? formFillLocale.batchReady, "success");
+  } catch (error) {
+    console.error("Unable to load batch JSON file", error);
+    if (batchTextarea) {
+      batchTextarea.value = "";
+    }
+    setStatus(formFillLocale.parsingError, "danger");
+    batchButton.disabled = true;
+  } finally {
+    batchFileInput.value = "";
+    updateBatchButtonState({ silent: true });
   }
 });
 
@@ -187,6 +380,16 @@ multiTemplateToggle?.addEventListener("change", () => {
   const enabled = multiTemplateToggle.checked;
   if (fileInput) {
     fileInput.multiple = enabled;
+  }
+
+  if (enabled) {
+    const currentSelection = Array.from(fileInput?.files ?? []);
+    if (currentSelection.length > 0) {
+      mergeMultiTemplateFiles(currentSelection);
+      syncMultiTemplateSelectionToInput();
+    }
+  } else {
+    clearMultiTemplateSelection({ skipInputSync: true });
   }
 
   if (!enabled && fileInput?.files?.length > 1) {
@@ -246,6 +449,7 @@ function resetState() {
   resetFieldSection();
   downloadButton.disabled = true;
   batchButton.disabled = true;
+  clearMultiTemplateSelection({ skipInputSync: true });
   clearFileSelection();
   if (batchTextarea) {
     batchTextarea.value = "";
@@ -261,6 +465,7 @@ function resetFieldSection() {
   fieldsForm.classList.add("d-none");
   fieldsForm.innerHTML = "";
   fieldValidationRegistry.clear();
+  retainedFieldValues.clear();
 }
 
 async function fetchFields(file) {
@@ -284,9 +489,12 @@ async function fetchFields(file) {
 }
 
 function renderFields(fields) {
+  const fieldsForDisplay = normalizeFieldsForDisplay(fields);
+
   fieldsForm.innerHTML = "";
   fieldValidationRegistry.clear();
-  if (!Array.isArray(fields) || fields.length === 0) {
+  fieldMetadata.clear();
+  if (!Array.isArray(fieldsForDisplay) || fieldsForDisplay.length === 0) {
     resetFieldSection();
     if (!batchEdited && batchTextarea) {
       batchTextarea.value = "";
@@ -296,18 +504,38 @@ function renderFields(fields) {
 
   fieldsForm.classList.remove("d-none");
 
-  fields.forEach((field, index) => {
-    const group = buildFieldGroup(field, index);
+  const displayedNames = new Set();
+  fieldsForDisplay.forEach((field, index) => {
+    const metadataKey = buildFieldMetadataKey(field, index);
+    fieldMetadata.set(metadataKey, {
+      ...field,
+      key: metadataKey,
+      index,
+      multiSelect: Boolean(field.multiSelect),
+    });
+    if (field?.name) {
+      displayedNames.add(field.name);
+    }
+    const group = buildFieldGroup(field, index, metadataKey);
     fieldsForm.appendChild(group);
   });
 
-  populateBatchTemplate(fields);
+  for (const name of Array.from(retainedFieldValues.keys())) {
+    if (!displayedNames.has(name)) {
+      retainedFieldValues.delete(name);
+    }
+  }
+
+  populateBatchTemplate(fieldsForDisplay);
 }
 
-function buildFieldGroup(field, index) {
+function buildFieldGroup(field, index, metadataKey) {
   const isCheckbox = field.type === "checkbox";
   const wrapper = document.createElement("div");
   wrapper.className = isCheckbox ? "form-check ms-3 mb-3" : "mb-3";
+  if (metadataKey) {
+    wrapper.dataset.fieldKey = metadataKey;
+  }
 
   const inputId = `formField_${index}`;
   const input = buildInputForField(field, inputId);
@@ -319,6 +547,8 @@ function buildFieldGroup(field, index) {
     wrapper.appendChild(note);
     return wrapper;
   }
+
+  applyRetainedValueToInput(input, field);
 
   const label = document.createElement("label");
   if (!isCheckbox) {
@@ -352,12 +582,13 @@ function buildFieldGroup(field, index) {
     wrapper.appendChild(input);
   }
 
-  appendFieldDetails(wrapper, field);
+  appendFieldDetails(wrapper, field, metadataKey);
   setupInlineValidation(input, field, wrapper);
+  registerInputRetention(input, field);
   return wrapper;
 }
 
-function appendFieldDetails(wrapper, field) {
+function appendFieldDetails(wrapper, field, metadataKey) {
   if (typeof field.pageIndex === "number" && field.pageIndex >= 0) {
     const pageHint = document.createElement("div");
     pageHint.className = "form-text";
@@ -378,6 +609,457 @@ function appendFieldDetails(wrapper, field) {
     const keyLabel = formFillLocale.keyLabel ?? "Key";
     keyHint.append(`${keyLabel}: `, code);
     wrapper.appendChild(keyHint);
+  }
+
+  const actions = createFieldActions(field, metadataKey);
+  if (actions) {
+    wrapper.appendChild(actions);
+  }
+}
+
+function createFieldActions(field, metadataKey) {
+  if (!metadataKey || !field?.name || isMultiTemplateMode()) {
+    return null;
+  }
+
+  const container = document.createElement("div");
+  container.className = "d-flex align-items-center gap-2 mt-2 field-action-row";
+  container.setAttribute("role", "group");
+
+  const fieldKey = metadataKey;
+  const displayLabel = field.label || field.name;
+
+  if (editModal && editForm && MODIFIABLE_FIELD_TYPES.has(field.type)) {
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1";
+    editButton.title = formFillLocale.editField ?? "Edit field";
+    editButton.dataset.fieldKey = fieldKey;
+    editButton.innerHTML =
+      '<span class="material-symbols-rounded" aria-hidden="true">edit</span><span class="visually-hidden">' +
+      (displayLabel || field.name) +
+      '</span>';
+    editButton.addEventListener("click", () => {
+      handleEditField(fieldKey);
+    });
+    container.appendChild(editButton);
+  }
+
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className =
+    "btn btn-link btn-sm text-danger p-0 d-inline-flex align-items-center gap-1";
+  deleteButton.title = formFillLocale.deleteField ?? "Delete field";
+  deleteButton.dataset.fieldKey = fieldKey;
+  deleteButton.innerHTML =
+    '<span class="material-symbols-rounded" aria-hidden="true">delete</span><span class="visually-hidden">' +
+    (displayLabel || field.name) +
+    '</span>';
+  deleteButton.addEventListener("click", () => {
+    handleDeleteField(fieldKey);
+  });
+  container.appendChild(deleteButton);
+
+  return container;
+}
+
+function lookupFieldMetadata(fieldKey) {
+  if (!fieldKey) {
+    return null;
+  }
+  return fieldMetadata.get(fieldKey) ?? null;
+}
+
+function handleEditField(fieldKey) {
+  if (!editModal || !editForm) {
+    setStatus(formFillLocale.editUnavailable ?? formFillLocale.requestError, "warning");
+    return;
+  }
+  if (isMultiTemplateMode()) {
+    setStatus(formFillLocale.editMultiDisabled ?? formFillLocale.selectFile, "warning");
+    return;
+  }
+
+  const metadata = lookupFieldMetadata(fieldKey);
+  if (!metadata) {
+    setStatus(formFillLocale.editMissing ?? formFillLocale.requestError, "warning");
+    return;
+  }
+
+  if (!MODIFIABLE_FIELD_TYPES.has(metadata.type)) {
+    setStatus(formFillLocale.editUnsupported ?? formFillLocale.requestError, "warning");
+    return;
+  }
+
+  populateEditForm(metadata);
+  try {
+    editModal.show();
+  } catch (error) {
+    console.error("Failed to show edit modal", error);
+    setStatus(formFillLocale.requestError, "danger");
+  }
+}
+
+async function handleDeleteField(fieldKey) {
+  if (isMultiTemplateMode()) {
+    setStatus(formFillLocale.editMultiDisabled ?? formFillLocale.selectFile, "warning");
+    return;
+  }
+
+  const metadata = lookupFieldMetadata(fieldKey);
+  if (!metadata?.name) {
+    setStatus(formFillLocale.deleteMissing ?? formFillLocale.requestError, "warning");
+    return;
+  }
+
+  if (!currentFile) {
+    setStatus(formFillLocale.selectFile, "warning");
+    return;
+  }
+
+  const displayLabel = metadata.label || metadata.name;
+  const confirmTemplate =
+    formFillLocale.deleteConfirm ?? 'Delete "{0}"? This action cannot be undone.';
+  const confirmationMessage = confirmTemplate.replace("{0}", displayLabel);
+  const confirmed = window.confirm(confirmationMessage);
+  if (!confirmed) {
+    return;
+  }
+
+  const success = await mutatePdf(
+    "/api/v1/form/delete-fields",
+    "names",
+    JSON.stringify([metadata.name]),
+    formFillLocale.deleteSuccess ?? formFillLocale.ready,
+    formFillLocale.deleting ?? formFillLocale.loading
+  );
+
+  if (success && metadata.name) {
+    pendingRemovalNames.add(metadata.name);
+    removeRetainedValue(metadata.name);
+  }
+}
+
+function populateEditForm(metadata) {
+  if (!editInputs || !metadata) {
+    return;
+  }
+
+  editingFieldName = metadata.name;
+  if (editForm) {
+    editForm.dataset.fieldKey = metadata.key ?? metadata.name ?? "";
+  }
+
+  const resolvedType = MODIFIABLE_FIELD_TYPES.has(metadata.type)
+    ? metadata.type
+    : "text";
+
+  if (editInputs.type) {
+    editInputs.type.value = resolvedType;
+  }
+
+  updateEditTypeControls(resolvedType);
+
+  if (editInputs.name) {
+    editInputs.name.value = metadata.name ?? "";
+  }
+  if (editInputs.label) {
+    editInputs.label.value = metadata.label ?? "";
+  }
+  if (editInputs.defaultValue) {
+    editInputs.defaultValue.value = metadata.value ?? "";
+  }
+  if (editInputs.required) {
+    editInputs.required.checked = Boolean(metadata.required);
+  }
+  if (editInputs.tooltip) {
+    editInputs.tooltip.value = metadata.tooltip ?? "";
+  }
+  if (editInputs.options) {
+    const options = Array.isArray(metadata.options) ? metadata.options : [];
+    editInputs.options.value = options.join("\n");
+  }
+  if (editInputs.multiSelect) {
+    editInputs.multiSelect.checked = Boolean(metadata.multiSelect);
+  }
+}
+
+function resetEditForm() {
+  if (!editInputs) {
+    return;
+  }
+  editingFieldName = null;
+  if (editForm) {
+    delete editForm.dataset.fieldKey;
+  }
+  if (editInputs.type) {
+    editInputs.type.value = "text";
+  }
+  if (editInputs.name) {
+    editInputs.name.value = "";
+  }
+  if (editInputs.label) {
+    editInputs.label.value = "";
+  }
+  if (editInputs.defaultValue) {
+    editInputs.defaultValue.value = "";
+  }
+  if (editInputs.options) {
+    editInputs.options.value = "";
+  }
+  if (editInputs.tooltip) {
+    editInputs.tooltip.value = "";
+  }
+  if (editInputs.required) {
+    editInputs.required.checked = false;
+  }
+  if (editInputs.multiSelect) {
+    editInputs.multiSelect.checked = false;
+  }
+  updateEditTypeControls(editInputs.type?.value ?? "text");
+}
+
+function updateEditTypeControls(type) {
+  const normalized = type ?? "text";
+  const hasOptions = OPTION_FIELD_TYPES.has(normalized);
+
+  if (editInputs.optionsGroup) {
+    editInputs.optionsGroup.classList.toggle("d-none", !hasOptions);
+  }
+  if (editInputs.options) {
+    editInputs.options.disabled = !hasOptions;
+  }
+
+  const isListBox = normalized === "listbox";
+  if (editInputs.multiSelectGroup) {
+    editInputs.multiSelectGroup.classList.toggle("d-none", !isListBox);
+  }
+  if (editInputs.multiSelect) {
+    editInputs.multiSelect.disabled = !isListBox;
+  }
+
+  if (editInputs.defaultValue) {
+    if (normalized === "checkbox") {
+      editInputs.defaultValue.placeholder =
+        formFillLocale.checkboxDefaultHint ?? "true or false";
+    } else if (normalized === "listbox") {
+      editInputs.defaultValue.placeholder =
+        formFillLocale.listboxDefaultHint ?? "Option 1, Option 2";
+    } else {
+      editInputs.defaultValue.placeholder = "";
+    }
+  }
+}
+
+function collectModificationPayload(metadata) {
+  if (!metadata?.name) {
+    return null;
+  }
+
+  const type = editInputs.type?.value ?? metadata.type ?? "text";
+
+  const payload = {
+    targetName: metadata.name,
+    name: sanitizeFieldName(editInputs.name?.value, metadata.name),
+    label: sanitizeOptionalText(editInputs.label?.value),
+    type,
+    required: Boolean(editInputs.required?.checked),
+    tooltip: sanitizeOptionalText(editInputs.tooltip?.value),
+  };
+
+  if (OPTION_FIELD_TYPES.has(type)) {
+    const options = parseOptionsInput(editInputs.options?.value ?? "");
+    payload.options = options.length > 0 ? options : [];
+  }
+
+  let listMultiSelect = false;
+  if (type === "listbox") {
+    listMultiSelect = Boolean(editInputs.multiSelect?.checked);
+    payload.multiSelect = listMultiSelect;
+  }
+
+  const defaultValue = computeDefaultValue(
+    type,
+    editInputs.defaultValue?.value ?? "",
+    { listMultiSelect }
+  );
+  if (defaultValue !== undefined) {
+    payload.defaultValue = defaultValue;
+  }
+
+  return payload;
+}
+
+function sanitizeFieldName(value, fallback) {
+  const trimmed = (value ?? "").trim();
+  if (trimmed) {
+    return trimmed;
+  }
+  return fallback ?? "";
+}
+
+function sanitizeOptionalText(value) {
+  const trimmed = (value ?? "").trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function parseOptionsInput(raw) {
+  if (!raw) {
+    return [];
+  }
+  return raw
+    .split(/\r?\n|,/)
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+}
+
+function computeDefaultValue(type, rawValue, options = {}) {
+  const { listMultiSelect = false } = options;
+  if (type === "checkbox") {
+    const normalized = (rawValue ?? "").trim().toLowerCase();
+    if (!normalized) {
+      return "";
+    }
+    if (["true", "yes", "1", "on"].includes(normalized)) {
+      return "true";
+    }
+    if (["false", "no", "0", "off"].includes(normalized)) {
+      return "false";
+    }
+    return normalized;
+  }
+
+  if (type === "listbox") {
+    const selections = parseOptionsInput(rawValue);
+    if (selections.length === 0) {
+      return "";
+    }
+    if (listMultiSelect) {
+      return selections.join(",");
+    }
+    return selections[0];
+  }
+
+  return rawValue ?? "";
+}
+
+async function mutatePdf(endpoint, payloadKey, payloadValue, successMessage, statusMessage) {
+  if (!currentFile) {
+    setStatus(formFillLocale.selectFile, "warning");
+    return false;
+  }
+
+  const formData = new FormData();
+  formData.append("file", currentFile);
+  formData.append(payloadKey, payloadValue);
+
+  toggleInputs(false);
+  if (statusMessage) {
+    setStatus(statusMessage, "info");
+  }
+
+  let success = false;
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || response.statusText);
+    }
+
+    const blob = await response.blob();
+    await refreshFormPreviewFromBlob(blob, currentFile?.name, successMessage);
+    success = true;
+  } catch (error) {
+    console.error(error);
+    const message = error?.message || formFillLocale.requestError;
+    setStatus(message, "danger");
+  } finally {
+    toggleInputs(true);
+  }
+
+  return success;
+}
+
+async function refreshFormPreviewFromBlob(blob, originalName, successMessage) {
+  const filename = originalName || "updated.pdf";
+  const newFile = new File([blob], filename, {
+    type: "application/pdf",
+    lastModified: Date.now(),
+  });
+
+  synchronizeFileInput(newFile);
+  await loadSingleFormFile(newFile);
+
+  if (successMessage) {
+    setStatus(successMessage, "success");
+  }
+}
+
+function synchronizeFileInput(file) {
+  if (!fileInput || !file) {
+    return;
+  }
+
+  try {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+  } catch (error) {
+    console.warn("Unable to synchronize file input with updated PDF", error);
+  }
+
+  if (fileChooser) {
+    updateFileChooserSummary([file]);
+  }
+}
+
+async function submitEditForm(event) {
+  event?.preventDefault?.();
+  if (!editForm) {
+    return;
+  }
+
+  if (isMultiTemplateMode()) {
+    setStatus(formFillLocale.editMultiDisabled ?? formFillLocale.selectFile, "warning");
+    return;
+  }
+
+  const fieldKey = editForm.dataset.fieldKey;
+  const metadata = lookupFieldMetadata(fieldKey);
+  if (!metadata) {
+    setStatus(formFillLocale.editMissing ?? formFillLocale.requestError, "warning");
+    return;
+  }
+
+  const payload = collectModificationPayload(metadata);
+  if (!payload) {
+    setStatus(formFillLocale.editMissing ?? formFillLocale.requestError, "warning");
+    return;
+  }
+
+  const success = await mutatePdf(
+    "/api/v1/form/modify-fields",
+    "updates",
+    JSON.stringify([payload]),
+    formFillLocale.modifySuccess ?? formFillLocale.ready,
+    formFillLocale.updating ?? formFillLocale.loading
+  );
+
+  if (success) {
+    const targetName = payload.targetName;
+    const replacementName = payload.name ?? targetName;
+    if (targetName && replacementName && targetName !== replacementName) {
+      pendingRemovalNames.add(targetName);
+      renameRetainedValue(targetName, replacementName);
+    }
+  }
+
+  if (success && editModal) {
+    editModal.hide();
   }
 }
 
@@ -419,6 +1101,141 @@ function setupInlineValidation(input, field, wrapper) {
     entry.touched = true;
     validateField(input, { force: true });
   });
+}
+
+function registerInputRetention(input, field) {
+  if (!input || !field?.name) {
+    return;
+  }
+
+  const fieldName = field.name;
+  const storeValue = () => {
+    const snapshot = snapshotInputForRetention(input);
+    if (snapshot) {
+      retainedFieldValues.set(fieldName, snapshot);
+    } else {
+      retainedFieldValues.delete(fieldName);
+    }
+  };
+
+  input.addEventListener("input", storeValue);
+  input.addEventListener("change", storeValue);
+}
+
+function snapshotInputForRetention(input) {
+  if (!input || typeof input.name !== "string") {
+    return null;
+  }
+
+  if (input.type === "checkbox") {
+    return { kind: "checkbox", value: Boolean(input.checked) };
+  }
+
+  if (input.multiple) {
+    const values = Array.from(input.selectedOptions || []).map((option) => option.value);
+    return { kind: "multiple", value: values };
+  }
+
+  if (input.tagName === "SELECT") {
+    return { kind: "select", value: input.value ?? "" };
+  }
+
+  return { kind: "text", value: input.value ?? "" };
+}
+
+function inferRetentionDescriptor(input, retained) {
+  if (retained && typeof retained === "object" && "kind" in retained) {
+    return retained;
+  }
+
+  if (input.type === "checkbox") {
+    return { kind: "checkbox", value: Boolean(retained) };
+  }
+
+  if (input.multiple) {
+    const values = Array.isArray(retained)
+      ? retained
+      : typeof retained === "string" && retained
+      ? retained.split(",").map((value) => value.trim()).filter((value) => value.length > 0)
+      : [];
+    return { kind: "multiple", value: values };
+  }
+
+  if (input.tagName === "SELECT") {
+    return { kind: "select", value: retained ?? "" };
+  }
+
+  return { kind: "text", value: retained ?? "" };
+}
+
+function applyRetainedValueToInput(input, field) {
+  if (!input || !field?.name) {
+    return;
+  }
+
+  const retained = retainedFieldValues.get(field.name);
+  if (!retained) {
+    return;
+  }
+
+  const descriptor = inferRetentionDescriptor(input, retained);
+  switch (descriptor.kind) {
+    case "checkbox":
+      input.checked = Boolean(descriptor.value);
+      break;
+    case "multiple": {
+      const values = Array.isArray(descriptor.value)
+        ? descriptor.value.map((value) => String(value))
+        : [];
+      const valueSet = new Set(values);
+      let applied = 0;
+      Array.from(input.options || []).forEach((option) => {
+        const selected = valueSet.has(option.value);
+        option.selected = selected;
+        if (selected) {
+          applied += 1;
+        }
+      });
+      if (values.length > 0 && applied === 0) {
+        retainedFieldValues.delete(field.name);
+      }
+      break;
+    }
+    case "select": {
+      const value = descriptor.value ?? "";
+      const options = Array.from(input.options || []);
+      const canApply =
+        value === "" || options.some((option) => option.value === value);
+      if (canApply) {
+        input.value = value;
+      } else {
+        retainedFieldValues.delete(field.name);
+      }
+      break;
+    }
+    default:
+      input.value = descriptor.value ?? "";
+      break;
+  }
+}
+
+function removeRetainedValue(fieldName) {
+  if (!fieldName) {
+    return;
+  }
+  retainedFieldValues.delete(fieldName);
+}
+
+function renameRetainedValue(oldName, newName) {
+  if (!oldName || !newName || oldName === newName) {
+    return;
+  }
+  if (!retainedFieldValues.has(oldName)) {
+    return;
+  }
+  const retained = retainedFieldValues.get(oldName);
+  retainedFieldValues.delete(oldName);
+  retainedFieldValues.set(newName, retained);
 }
 
 function buildValidationConstraints(field, input) {
@@ -610,11 +1427,12 @@ function buildInputForField(field, inputId) {
     case "listbox":
       element = document.createElement("select");
       element.className = "form-select";
-      element.multiple = true;
-      if (Array.isArray(field.options)) {
-        element.size = Math.min(6, Math.max(3, field.options.length));
+      element.multiple = field.multiSelect !== undefined ? Boolean(field.multiSelect) : true;
+      if (Array.isArray(field.options) && field.options.length > 0) {
+        const defaultSize = Math.min(6, Math.max(3, field.options.length));
+        element.size = element.multiple ? defaultSize : Math.min(defaultSize, field.options.length);
       }
-      addOptionsToSelect(element, field.options, currentValue, true);
+      addOptionsToSelect(element, field.options, currentValue, element.multiple);
       break;
     default:
       return null;
@@ -687,6 +1505,49 @@ function createTemplateRecordFromFields(fields) {
     templateRecord[field.name] = inferTemplateValue(field);
   });
   return templateRecord;
+}
+
+function buildFieldMetadataKey(field, index) {
+  const baseName = (field?.name && String(field.name).trim()) || `field_${index}`;
+  return `${baseName}__${index}`;
+}
+
+function normalizeFieldsForDisplay(fields) {
+  if (!Array.isArray(fields) || fields.length === 0) {
+    return [];
+  }
+
+  const filtered = [];
+  const indexByName = new Map();
+  const namesEncountered = new Set();
+
+  fields.forEach((field) => {
+    const name = typeof field?.name === "string" ? field.name : null;
+    if (name) {
+      namesEncountered.add(name);
+      if (pendingRemovalNames.has(name)) {
+        return;
+      }
+    }
+
+    if (name && indexByName.has(name)) {
+      const existingIndex = indexByName.get(name);
+      filtered[existingIndex] = field;
+    } else {
+      if (name) {
+        indexByName.set(name, filtered.length);
+      }
+      filtered.push(field);
+    }
+  });
+
+  for (const name of Array.from(pendingRemovalNames)) {
+    if (!namesEncountered.has(name)) {
+      pendingRemovalNames.delete(name);
+    }
+  }
+
+  return filtered;
 }
 
 async function buildMultiTemplateRecords(files) {
@@ -797,13 +1658,8 @@ async function performDownload(isBatch) {
     formData.append("flatten", String(flattenToggle?.checked ?? false));
 
     if (isBatch) {
-      const batchFile = batchFileInput?.files?.[0] ?? null;
-      if (batchFile) {
-        formData.append("recordsFile", batchFile);
-      } else {
-        const payload = parseBatchPayload();
-        formData.append("records", JSON.stringify(payload));
-      }
+      const payload = parseBatchPayload();
+      formData.append("records", JSON.stringify(payload));
       setStatus(formFillLocale.loading, "info");
       const response = await fetch("/api/v1/form/mail-merge", {
         method: "POST",
@@ -945,10 +1801,7 @@ function clearFileSelection() {
     }
   }
   if (fileChooser) {
-    const selectedFiles = fileChooser.querySelector(".selected-files");
-    if (selectedFiles) {
-      selectedFiles.innerHTML = "";
-    }
+    updateFileChooserSummary([]);
   }
 }
 
@@ -969,14 +1822,7 @@ function updateBatchButtonState(options = {}) {
     batchButton.disabled = true;
     return;
   }
-  const hasFile = Boolean(batchFileInput?.files?.length);
-  if (hasFile) {
-    batchButton.disabled = false;
-    if (!silent) {
-      setStatus(formFillLocale.batchFileReady ?? formFillLocale.batchReady, "success");
-    }
-    return;
-  }
+
   const raw = batchTextarea?.value ?? "";
   if (!raw.trim()) {
     if (!silent) setStatus(formFillLocale.batchEmpty, "info");
