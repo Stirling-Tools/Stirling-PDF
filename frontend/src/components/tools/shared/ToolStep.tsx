@@ -103,48 +103,48 @@ const ToolStep = ({
           transition: 'opacity 0.2s ease, color 0.2s ease'
         }}
       >
-      {/* Chevron icon to collapse/expand the step */}
-      <Flex
-        align="center"
-        justify="space-between"
-        mb="sm"
-        style={{
-          cursor: onCollapsedClick ? 'pointer' : 'default'
-        }}
-        onClick={onCollapsedClick}
-      >
-        <Flex align="center" gap="sm">
-          {shouldShowNumber && (
-            <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
-              {stepNumber}
-            </Text>
+        {/* Chevron icon to collapse/expand the step */}
+        <Flex
+          align="center"
+          justify="space-between"
+          mb="sm"
+          style={{
+            cursor: onCollapsedClick ? 'pointer' : 'default'
+          }}
+          onClick={onCollapsedClick}
+        >
+          <Flex align="center" gap="sm">
+            {shouldShowNumber && (
+              <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
+                {stepNumber}
+              </Text>
+            )}
+            {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
+          </Flex>
+
+          {isCollapsed ? (
+            <LocalIcon icon="chevron-right-rounded" width="1.2rem" height="1.2rem" style={{
+              color: 'var(--mantine-color-dimmed)',
+              opacity: onCollapsedClick ? 1 : 0.5
+            }} />
+          ) : (
+            <LocalIcon icon="expand-more-rounded" width="1.2rem" height="1.2rem" style={{
+              color: 'var(--mantine-color-dimmed)',
+              opacity: onCollapsedClick ? 1 : 0.5
+            }} />
           )}
-          {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
         </Flex>
 
-        {isCollapsed ? (
-          <LocalIcon icon="chevron-right-rounded" width="1.2rem" height="1.2rem" style={{
-            color: 'var(--mantine-color-dimmed)',
-            opacity: onCollapsedClick ? 1 : 0.5
-          }} />
-        ) : (
-          <LocalIcon icon="expand-more-rounded" width="1.2rem" height="1.2rem" style={{
-            color: 'var(--mantine-color-dimmed)',
-            opacity: onCollapsedClick ? 1 : 0.5
-          }} />
+        {!isCollapsed && (
+          <Stack gap="sm" pl={_noPadding ? 0 : "sm"}>
+            {helpText && (
+              <Text size="sm" c="dimmed">
+                {helpText}
+              </Text>
+            )}
+            {children}
+          </Stack>
         )}
-      </Flex>
-
-      {!isCollapsed && (
-        <Stack gap="sm" pl={_noPadding ? 0 : "sm"}>
-          {helpText && (
-            <Text size="sm" c="dimmed">
-              {helpText}
-            </Text>
-          )}
-          {children}
-        </Stack>
-      )}
       </div>
       <Divider style={{ color: '#E2E8F0', marginLeft: '1rem', marginRight: '-0.5rem' }} />
     </div>
@@ -164,13 +164,16 @@ export function createToolSteps() {
     const isVisible = props.isVisible !== false;
     const currentStepNumber = isVisible ? stepNumber++ : undefined;
 
-    const step = React.createElement(ToolStep, {
-      ...props,
-      title,
-      _stepNumber: currentStepNumber,
-      children,
-      key: `step-${title.toLowerCase().replace(/\s+/g, '-')}`
-    });
+    const step = React.createElement(
+      ToolStep,
+      {
+        ...props,
+        title,
+        _stepNumber: currentStepNumber,
+        key: `step-${title.toLowerCase().replace(/\s+/g, '-')}`
+      },
+      children
+    );
 
     steps.push(step);
     return step;
@@ -186,9 +189,9 @@ export function createToolSteps() {
 
   const getVisibleCount = () => {
     return steps.filter(step => {
-      const props = step.props as ToolStepProps;
-      const isVisible = props.isVisible !== false;
-      const excludeFromCount = props._excludeFromCount === true;
+      const stepProps = step.props as ToolStepProps;
+      const isVisible = stepProps.isVisible !== false;
+      const excludeFromCount = stepProps._excludeFromCount === true;
       return isVisible && !excludeFromCount;
     }).length;
   };
