@@ -12,6 +12,7 @@ on:
     branches:
       - V2
     paths:
+      - ".github/workflows/frontend-licenses-update.yml"
       - "frontend/package.json"
       - "frontend/package-lock.json"
       - "frontend/scripts/generate-licenses.js"
