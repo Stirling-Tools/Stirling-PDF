@@ -77,7 +77,7 @@ public class GeneralWebController {
                             new ObjectMapper()
                                     .readValue(config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
-                    if (name == null || name.length() < 1) {
+                    if (name == null || name.isEmpty()) {
                         String filename =
                                 jsonFiles
                                         .get(pipelineConfigs.indexOf(config))
@@ -94,7 +94,7 @@ public class GeneralWebController {
                 log.error("exception", e);
             }
         }
-        if (pipelineConfigsWithNames.size() == 0) {
+        if (pipelineConfigsWithNames.isEmpty()) {
             Map<String, String> configWithName = new HashMap<>();
             configWithName.put("json", "");
             configWithName.put("name", "No preloaded configs found");
@@ -281,21 +281,16 @@ public class GeneralWebController {
     }
 
     public String getFormatFromExtension(String extension) {
-        switch (extension) {
-            case "ttf":
-                return "truetype";
-            case "woff":
-                return "woff";
-            case "woff2":
-                return "woff2";
-            case "eot":
-                return "embedded-opentype";
-            case "svg":
-                return "svg";
-            default:
+        return switch (extension) {
+            case "ttf" -> "truetype";
+            case "woff" -> "woff";
+            case "woff2" -> "woff2";
+            case "eot" -> "embedded-opentype";
+            case "svg" -> "svg";
+            default ->
                 // or throw an exception if an unexpected extension is encountered
-                return "";
-        }
+                "";
+        };
     }
 
     @GetMapping("/crop")

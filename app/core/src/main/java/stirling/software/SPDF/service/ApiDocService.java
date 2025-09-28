@@ -52,7 +52,7 @@ public class ApiDocService {
     }
 
     public List<String> getExtensionTypes(boolean output, String operationName) {
-        if (outputToFileTypes.size() == 0) {
+        if (outputToFileTypes.isEmpty()) {
             outputToFileTypes.put("PDF", List.of("pdf"));
             outputToFileTypes.put(
                     "IMAGE",
@@ -74,7 +74,7 @@ public class ApiDocService {
                     "BOOK", Arrays.asList("epub", "mobi", "azw3", "fb2", "txt", "docx"));
             // type.
         }
-        if (apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {
+        if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
             loadApiDocumentation();
         }
         if (!apiDocumentation.containsKey(operationName)) {
@@ -136,7 +136,7 @@ public class ApiDocService {
     }
 
     public boolean isValidOperation(String operationName, Map<String, Object> parameters) {
-        if (apiDocumentation.size() == 0) {
+        if (apiDocumentation.isEmpty()) {
             loadApiDocumentation();
         }
         if (!apiDocumentation.containsKey(operationName)) {
@@ -147,7 +147,7 @@ public class ApiDocService {
     }
 
     public boolean isMultiInput(String operationName) {
-        if (apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {
+        if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
             loadApiDocumentation();
         }
         if (!apiDocumentation.containsKey(operationName)) {
