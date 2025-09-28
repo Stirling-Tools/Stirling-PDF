@@ -21,17 +21,19 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j
+@UtilityClass
 public class CbzUtils {
 
-    private static final Pattern IMAGE_PATTERN =
+    private final Pattern IMAGE_PATTERN =
             Pattern.compile(".*\\.(jpg|jpeg|png|gif|bmp|webp)$", Pattern.CASE_INSENSITIVE);
 
-    public static byte[] convertCbzToPdf(
+    public byte[] convertCbzToPdf(
             MultipartFile cbzFile,
             CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager)
@@ -109,7 +111,7 @@ public class CbzUtils {
         }
     }
 
-    private static void validateCbzFile(MultipartFile file) {
+    private void validateCbzFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File cannot be null or empty");
         }
@@ -125,7 +127,7 @@ public class CbzUtils {
         }
     }
 
-    public static boolean isCbzFile(MultipartFile file) {
+    public boolean isCbzFile(MultipartFile file) {
         String filename = file.getOriginalFilename();
         if (filename == null) {
             return false;
@@ -135,13 +137,13 @@ public class CbzUtils {
         return "cbz".equals(extension) || "zip".equals(extension);
     }
 
-    private static boolean isImageFile(String filename) {
+    private boolean isImageFile(String filename) {
         return IMAGE_PATTERN.matcher(filename).matches();
     }
 
     private record ImageEntryData(String name, byte[] data) {}
 
-    private static class NaturalOrderComparator implements Comparator<String> {
+    private class NaturalOrderComparator implements Comparator<String> {
         @Override
         public int compare(String s1, String s2) {
             int len1 = s1.length();
