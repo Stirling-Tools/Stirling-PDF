@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -36,14 +37,15 @@ import stirling.software.SPDF.model.api.converters.ConvertPdfToCbzRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CbzUtils;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfToCbzUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.CbzUtils;
-import stirling.software.common.util.PdfToCbzUtils;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -56,6 +58,9 @@ public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private static final Pattern EXTENSION_PATTERN =
+            RegexPatternUtils.getInstance().getPattern(RegexPatternUtils.getExtensionRegex());
+    private static final String DEFAULT_COMIC_NAME = "comic";
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
     @Operation(
@@ -265,11 +270,7 @@ public class ConvertImgPDFController {
                     .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
 
-        String filename = file.getOriginalFilename();
-        if (filename == null) {
-            filename = "comic";
-        }
-        filename = filename.replaceFirst("[.][^.]+$", "") + "_converted.pdf";
+        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
 
         return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
     }
@@ -299,14 +300,23 @@ public class ConvertImgPDFController {
                     .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
 
-        String filename = file.getOriginalFilename();
-        if (filename == null) {
-            filename = "comic";
-        }
-        filename = filename.replaceFirst("[.][^.]+$", "") + "_converted.cbz";
+        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbz");
 
         return WebResponseUtils.bytesToWebResponse(
                 cbzBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    private String createConvertedFilename(String originalFilename, String suffix) {
+        if (originalFilename == null) {
+            return GeneralUtils.generateFilename(DEFAULT_COMIC_NAME, suffix);
+        }
+
+        String baseName = EXTENSION_PATTERN.matcher(originalFilename).replaceFirst("");
+        if (baseName.isBlank()) {
+            baseName = DEFAULT_COMIC_NAME;
+        }
+
+        return GeneralUtils.generateFilename(baseName, suffix);
     }
 
     private String getMediaType(String imageFormat) {
