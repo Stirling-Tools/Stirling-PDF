@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -145,7 +147,11 @@ public class EmlParser {
             extractRecipients(message, messageClass, content);
 
             Method getSentDate = messageClass.getMethod("getSentDate");
-            content.setDate((Date) getSentDate.invoke(message));
+            Date legacyDate = (Date) getSentDate.invoke(message);
+            if (legacyDate != null) {
+                content.setDate(
+                        ZonedDateTime.ofInstant(legacyDate.toInstant(), ZoneId.systemDefault()));
+            }
 
             Method getContent = messageClass.getMethod("getContent");
             Object messageContent = getContent.invoke(message);
@@ -616,7 +622,7 @@ public class EmlParser {
         private String to;
         private String cc;
         private String bcc;
-        private Date date;
+        private ZonedDateTime date;
         private String dateString; // For basic parsing fallback
         private String htmlBody;
         private String textBody;
