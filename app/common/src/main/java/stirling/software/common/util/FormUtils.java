@@ -38,16 +38,17 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 public class FormUtils {
 
-    private final Pattern GENERIC_NAME_PATTERN =
+    private final Pattern GENERIC_FIELD_NAME_PATTERN =
             Pattern.compile(
                     "(?i)^(field|form|text|textbox|checkbox|check|radio|combo|list|untitled|input|question|subform|page|control)[\\s_\\-]*[0-9]*$");
     private final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
     private final Pattern OPTIONAL_T_NUMERIC_PATTERN = Pattern.compile("(?i)^t?\\d{1,3}$");
-    private final Pattern FORM_FIELD_PATTERN =
+    private final Pattern SIMPLE_FORM_FIELD_PATTERN =
             Pattern.compile("(?i)^(text|field|form)[\\s_-]*\\d+$");
     private final Pattern PUNCTUATION_PATTERN = Pattern.compile("[\\p{Punct}]+");
     private final Set<String> SUPPORTED_NEW_FIELD_TYPES =
             Set.of("text", "checkbox", "combobox", "listbox");
+    private final Pattern CAMEL_CASE_BOUNDARY_PATTERN = Pattern.compile("(?<=[a-z])(?=[A-Z])");
 
     public boolean hasAnyRotatedPage(PDDocument document) {
         try {
@@ -1181,10 +1182,10 @@ public class FormUtils {
         if (simplified.isEmpty()) {
             return true;
         }
-        if (GENERIC_NAME_PATTERN.matcher(simplified).matches()) {
+        if (GENERIC_FIELD_NAME_PATTERN.matcher(simplified).matches()) {
             return true;
         }
-        if (FORM_FIELD_PATTERN.matcher(simplified).matches()) {
+        if (SIMPLE_FORM_FIELD_PATTERN.matcher(simplified).matches()) {
             return true;
         }
         return OPTIONAL_T_NUMERIC_PATTERN.matcher(simplified).matches();
@@ -1197,10 +1198,12 @@ public class FormUtils {
         String cleaned =
                 WHITESPACE_PATTERN
                         .matcher(
-                                name.replaceAll("[#\\[\\]]", " ")
-                                        .replace('.', ' ')
-                                        .replaceAll("[_-]+", " ")
-                                        .replaceAll("(?<=[a-z])(?=[A-Z])", " "))
+                                CAMEL_CASE_BOUNDARY_PATTERN
+                                        .matcher(
+                                                name.replaceAll("[#\\[\\]]", " ")
+                                                        .replace('.', ' ')
+                                                        .replaceAll("[_-]+", " "))
+                                        .replaceAll(" "))
                         .replaceAll(" ")
                         .trim();
         if (cleaned.isEmpty()) {
