@@ -116,7 +116,7 @@ public class CertSignController {
             signature.setName(name);
             signature.setLocation(location);
             signature.setReason(reason);
-            signature.setSignDate(Calendar.getInstance());
+            signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
             if (Boolean.TRUE.equals(showSignature)) {
                 SignatureOptions signatureOptions = new SignatureOptions();
                 signatureOptions.setVisualSignature(
