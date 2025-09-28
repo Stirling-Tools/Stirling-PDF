@@ -70,7 +70,8 @@ class MultiPageLayoutControllerTest {
         Assertions.assertNotNull(resp.getBody());
         Assertions.assertTrue(resp.getBody().length > 0);
         Assertions.assertEquals(
-                "test_layoutChanged.pdf", resp.getHeaders().getContentDisposition().getFilename());
+                "test_multi_page_layout.pdf",
+                resp.getHeaders().getContentDisposition().getFilename());
     }
 
     @Test
@@ -111,6 +112,7 @@ class MultiPageLayoutControllerTest {
 
         ResponseEntity<byte[]> resp = controller.mergeMultiplePagesIntoOne(req);
         Assertions.assertEquals(
-                "name_layoutChanged.pdf", resp.getHeaders().getContentDisposition().getFilename());
+                "name_multi_page_layout.pdf",
+                resp.getHeaders().getContentDisposition().getFilename());
     }
 }
