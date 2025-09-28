@@ -8,7 +8,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -18,7 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -257,10 +258,7 @@ public class PdfAttachmentHandler {
 
         if (contentIdMap.isEmpty()) return htmlContent;
 
-        Pattern cidPattern =
-                Pattern.compile(
-                        "(?i)<img[^>]*\\ssrc\\s*=\\s*['\"]cid:([^'\"]+)['\"][^>]*>",
-                        Pattern.CASE_INSENSITIVE);
+        Pattern cidPattern = RegexPatternUtils.getInstance().getInlineCidImagePattern();
         Matcher matcher = cidPattern.matcher(htmlContent);
 
         StringBuilder result = new StringBuilder();
@@ -290,11 +288,15 @@ public class PdfAttachmentHandler {
 
     public static String formatEmailDate(Date date) {
         if (date == null) return "";
+        return formatEmailDate(ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
+    }
 
-        SimpleDateFormat formatter =
-                new SimpleDateFormat("EEE, MMM d, yyyy 'at' h:mm a z", Locale.ENGLISH);
-        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return formatter.format(date);
+    public static String formatEmailDate(ZonedDateTime dateTime) {
+        if (dateTime == null) return "";
+
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("EEE, MMM d, yyyy 'at' h:mm a z", Locale.ENGLISH);
+        return dateTime.withZoneSameInstant(ZoneId.of("UTC")).format(formatter);
     }
 
     @Data
@@ -314,121 +316,20 @@ public class PdfAttachmentHandler {
         }
     }
 
-    public static class AttachmentMarkerPositionFinder extends PDFTextStripper {
-        @Getter private final List<MarkerPosition> positions = new ArrayList<>();
-        private int currentPageIndex;
-        protected boolean sortByPosition;
-        private boolean isInAttachmentSection;
-        private boolean attachmentSectionFound;
-        private final StringBuilder currentText = new StringBuilder();
-
-        private static final Pattern ATTACHMENT_SECTION_PATTERN =
-                Pattern.compile("attachments\\s*\\(\\d+\\)", Pattern.CASE_INSENSITIVE);
-
-        private static final Pattern FILENAME_PATTERN =
-                Pattern.compile("@\\s*([^\\s\\(]+(?:\\.[a-zA-Z0-9]+)?)");
-
-        public AttachmentMarkerPositionFinder() {
-            super();
-            this.currentPageIndex = 0;
-            this.sortByPosition = false; // Disable sorting to preserve document order
-            this.isInAttachmentSection = false;
-            this.attachmentSectionFound = false;
-        }
-
-        @Override
-        public String getText(PDDocument document) throws IOException {
-            super.getText(document);
-
-            if (sortByPosition) {
-                positions.sort(
-                        (a, b) -> {
-                            int pageCompare = Integer.compare(a.getPageIndex(), b.getPageIndex());
-                            if (pageCompare != 0) return pageCompare;
-                            return Float.compare(
-                                    b.getY(), a.getY()); // Descending Y per PDF coordinate system
-                        });
-            }
-
-            return ""; // Return empty string as we only need positions
-        }
-
-        @Override
-        protected void startPage(PDPage page) throws IOException {
-            super.startPage(page);
-        }
-
-        @Override
-        protected void endPage(PDPage page) throws IOException {
-            currentPageIndex++;
-            super.endPage(page);
-        }
-
-        @Override
-        protected void writeString(String string, List<TextPosition> textPositions)
-                throws IOException {
-            String lowerString = string.toLowerCase();
-
-            if (ATTACHMENT_SECTION_PATTERN.matcher(lowerString).find()) {
-                isInAttachmentSection = true;
-                attachmentSectionFound = true;
-            }
-
-            if (isInAttachmentSection
-                    && (lowerString.contains("</body>")
-                            || lowerString.contains("</html>")
-                            || (attachmentSectionFound
-                                    && lowerString.trim().isEmpty()
-                                    && string.length() > 50))) {
-                isInAttachmentSection = false;
-            }
-
-            if (isInAttachmentSection) {
-                currentText.append(string);
-
-                for (int i = 0; (i = string.indexOf(ATTACHMENT_MARKER, i)) != -1; i++) {
-                    if (i < textPositions.size()) {
-                        TextPosition textPosition = textPositions.get(i);
-
-                        String filename = extractFilenameAfterMarker(string, i);
-
-                        MarkerPosition position =
-                                new MarkerPosition(
-                                        currentPageIndex,
-                                        textPosition.getXDirAdj(),
-                                        textPosition.getYDirAdj(),
-                                        ATTACHMENT_MARKER,
-                                        filename);
-                        positions.add(position);
-                    }
-                }
-            }
-            super.writeString(string, textPositions);
-        }
-
-        @Override
-        public void setSortByPosition(boolean sortByPosition) {
-            this.sortByPosition = sortByPosition;
-        }
-
-        private String extractFilenameAfterMarker(String text, int markerIndex) {
-            String afterMarker = text.substring(markerIndex + 1);
-
-            Matcher matcher = FILENAME_PATTERN.matcher("@" + afterMarker);
-            if (matcher.find()) {
-                return matcher.group(1);
-            }
-
-            String[] parts = afterMarker.split("[\\s\\(\\)]+");
-            for (String part : parts) {
-                part = part.trim();
-                if (part.length() > 3 && part.contains(".")) {
-                    return part;
-                }
-            }
-
-            return null;
-        }
+    private static String normalizeFilename(String filename) {
+        if (filename == null) return "";
+        String normalized = filename.toLowerCase().trim();
+        normalized =
+                RegexPatternUtils.getInstance()
+                        .getWhitespacePattern()
+                        .matcher(normalized)
+                        .replaceAll(" ");
+        normalized =
+                RegexPatternUtils.getInstance()
+                        .getPattern("[^a-zA-Z0-9._-]")
+                        .matcher(normalized)
+                        .replaceAll("");
+        return normalized;
     }
 
     private static Map<Integer, String> addAttachmentsToDocumentWithMapping(
@@ -608,12 +509,122 @@ public class PdfAttachmentHandler {
         return null;
     }
 
-    private static String normalizeFilename(String filename) {
-        if (filename == null) return "";
-        return filename.toLowerCase()
-                .trim()
-                .replaceAll("\\s+", " ")
-                .replaceAll("[^a-zA-Z0-9._-]", "");
+    public static class AttachmentMarkerPositionFinder extends PDFTextStripper {
+        private static final Pattern ATTACHMENT_SECTION_PATTERN =
+                RegexPatternUtils.getInstance().getAttachmentSectionPattern();
+        private static final Pattern FILENAME_PATTERN =
+                RegexPatternUtils.getInstance().getAttachmentFilenamePattern();
+        @Getter private final List<MarkerPosition> positions = new ArrayList<>();
+        private final StringBuilder currentText = new StringBuilder();
+        protected boolean sortByPosition;
+        private int currentPageIndex;
+        private boolean isInAttachmentSection;
+        private boolean attachmentSectionFound;
+
+        public AttachmentMarkerPositionFinder() {
+            super();
+            this.currentPageIndex = 0;
+            this.sortByPosition = false; // Disable sorting to preserve document order
+            this.isInAttachmentSection = false;
+            this.attachmentSectionFound = false;
+        }
+
+        @Override
+        public String getText(PDDocument document) throws IOException {
+            super.getText(document);
+
+            if (sortByPosition) {
+                positions.sort(
+                        (a, b) -> {
+                            int pageCompare = Integer.compare(a.getPageIndex(), b.getPageIndex());
+                            if (pageCompare != 0) return pageCompare;
+                            return Float.compare(
+                                    b.getY(), a.getY()); // Descending Y per PDF coordinate system
+                        });
+            }
+
+            return ""; // Return empty string as we only need positions
+        }
+
+        @Override
+        protected void startPage(PDPage page) throws IOException {
+            super.startPage(page);
+        }
+
+        @Override
+        protected void endPage(PDPage page) throws IOException {
+            currentPageIndex++;
+            super.endPage(page);
+        }
+
+        @Override
+        protected void writeString(String string, List<TextPosition> textPositions)
+                throws IOException {
+            String lowerString = string.toLowerCase();
+
+            if (ATTACHMENT_SECTION_PATTERN.matcher(lowerString).find()) {
+                isInAttachmentSection = true;
+                attachmentSectionFound = true;
+            }
+
+            if (isInAttachmentSection
+                    && (lowerString.contains("</body>")
+                            || lowerString.contains("</html>")
+                            || (attachmentSectionFound
+                                    && lowerString.trim().isEmpty()
+                                    && string.length() > 50))) {
+                isInAttachmentSection = false;
+            }
+
+            if (isInAttachmentSection) {
+                currentText.append(string);
+
+                for (int i = 0; (i = string.indexOf(ATTACHMENT_MARKER, i)) != -1; i++) {
+                    if (i < textPositions.size()) {
+                        TextPosition textPosition = textPositions.get(i);
+
+                        String filename = extractFilenameAfterMarker(string, i);
+
+                        MarkerPosition position =
+                                new MarkerPosition(
+                                        currentPageIndex,
+                                        textPosition.getXDirAdj(),
+                                        textPosition.getYDirAdj(),
+                                        ATTACHMENT_MARKER,
+                                        filename);
+                        positions.add(position);
+                    }
+                }
+            }
+            super.writeString(string, textPositions);
+        }
+
+        @Override
+        public void setSortByPosition(boolean sortByPosition) {
+            this.sortByPosition = sortByPosition;
+        }
+
+        private String extractFilenameAfterMarker(String text, int markerIndex) {
+            String afterMarker = text.substring(markerIndex + 1);
+
+            Matcher matcher = FILENAME_PATTERN.matcher("@" + afterMarker);
+            if (matcher.find()) {
+                return matcher.group(1);
+            }
+
+            String[] parts =
+                    RegexPatternUtils.getInstance()
+                            .getWhitespaceParenthesesSplitPattern()
+                            .split(afterMarker);
+            for (String part : parts) {
+                part = part.trim();
+                if (part.length() > 3 && part.contains(".")) {
+                    return part;
+                }
+            }
+
+            return null;
+        }
     }
 
     private static void addAttachmentAnnotationToPageWithMapping(
