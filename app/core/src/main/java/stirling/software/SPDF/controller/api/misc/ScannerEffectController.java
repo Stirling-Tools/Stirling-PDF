@@ -34,7 +34,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -52,7 +55,7 @@ public class ScannerEffectController {
     private static final int MAX_IMAGE_HEIGHT = 8192;
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
-    @PostMapping(value = "/scanner-effect", consumes = "multipart/form-data")
+    @PostMapping(value = "/scanner-effect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Apply scanner effect to PDF",
             description =
@@ -81,6 +84,22 @@ public class ScannerEffectController {
         boolean yellowish = request.isYellowish();
         int resolution = request.getResolution();
         ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
+
+        // Validate and limit DPI to prevent excessive memory usage (respecting global limits)
+        int maxSafeDpi = 500; // Default maximum safe DPI
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        if (properties != null && properties.getSystem() != null) {
+            maxSafeDpi = properties.getSystem().getMaxDPI();
+        }
+        if (resolution > maxSafeDpi) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.dpiExceedsLimit",
+                    "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause"
+                            + " memory issues and crashes. Please use a lower DPI value.",
+                    resolution,
+                    maxSafeDpi);
+        }
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocument outputDocument = new PDDocument();
@@ -118,7 +137,14 @@ public class ScannerEffectController {
                 }
 
                 // Render page to image with safe resolution
-                BufferedImage image = pdfRenderer.renderImageWithDPI(i, safeResolution);
+                BufferedImage image;
+                try {
+                    image = pdfRenderer.renderImageWithDPI(i, safeResolution);
+                } catch (OutOfMemoryError e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, safeResolution, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, safeResolution, e);
+                }
 
                 log.debug(
                         "Processing page {} with dimensions {}x{} ({} pixels) at {}dpi",

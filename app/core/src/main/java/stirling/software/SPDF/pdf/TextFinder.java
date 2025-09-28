@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
@@ -20,7 +21,7 @@ public class TextFinder extends PDFTextStripper {
     private final String searchTerm;
     private final boolean useRegex;
     private final boolean wholeWordSearch;
-    private final List<PDFText> foundTexts = new ArrayList<>();
+    @Getter private final List<PDFText> foundTexts = new ArrayList<>();
 
     private final List<TextPosition> pageTextPositions = new ArrayList<>();
     private final StringBuilder pageTextBuilder = new StringBuilder();
@@ -185,10 +186,6 @@ public class TextFinder extends PDFTextStripper {
                 processedSearchTerm);
 
         super.endPage(page);
-    }
-
-    public List<PDFText> getFoundTexts() {
-        return foundTexts;
     }
 
     public String getDebugInfo() {
