@@ -10,6 +10,7 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.AttributeProvider;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,11 +27,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CustomHtmlSanitizer;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.FileToPdf;
-import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.*;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
@@ -45,7 +42,7 @@ public class ConvertMarkdownToPdf {
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/markdown/pdf")
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =
@@ -88,9 +85,7 @@ public class ConvertMarkdownToPdf {
                         tempFileManager,
                         customHtmlSanitizer);
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
-        String outputFilename =
-                originalFilename.replaceFirst("[.][^.]+$", "")
-                        + ".pdf"; // Remove file extension and append .pdf
+        String outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
         return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 }

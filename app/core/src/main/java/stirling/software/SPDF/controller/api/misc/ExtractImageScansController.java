@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -31,7 +32,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -50,7 +53,7 @@ public class ExtractImageScansController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/extract-image-scans")
     @Operation(
             summary = "Extract image scans from an input file",
             description =
@@ -96,7 +99,23 @@ public class ExtractImageScansController {
                         Path tempFile = Files.createTempFile("image_", ".png");
 
                         // Render image and save as temp file
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300);
+                        BufferedImage image;
+
+                        // Use global maximum DPI setting, fallback to 300 if not set
+                        int renderDpi = 300; // Default fallback
+                        ApplicationProperties properties =
+                                ApplicationContextProvider.getBean(ApplicationProperties.class);
+                        if (properties != null && properties.getSystem() != null) {
+                            renderDpi = properties.getSystem().getMaxDPI();
+                        }
+
+                        try {
+                            image = pdfRenderer.renderImageWithDPI(i, renderDpi);
+                        } catch (OutOfMemoryError e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                        } catch (NegativeArraySizeException e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                        }
                         ImageIO.write(image, "png", tempFile.toFile());
 
                         // Add temp file path to images list
@@ -142,7 +161,10 @@ public class ExtractImageScansController {
                                 .runCommandWithOutputHandling(command);
 
                 // Read the output photos in temp directory
-                List<Path> tempOutputFiles = Files.list(tempDir).sorted().toList();
+                List<Path> tempOutputFiles;
+                try (Stream<Path> listStream = Files.list(tempDir)) {
+                    tempOutputFiles = listStream.sorted().toList();
+                }
                 for (Path tempOutputFile : tempOutputFiles) {
                     byte[] imageBytes = Files.readAllBytes(tempOutputFile);
                     processedImageBytes.add(imageBytes);
@@ -154,7 +176,7 @@ public class ExtractImageScansController {
             // Create zip file if multiple images
             if (processedImageBytes.size() > 1) {
                 String outputZipFilename =
-                        fileName.replaceFirst(REPLACEFIRST, "") + "_processed.zip";
+                        GeneralUtils.generateFilename(fileName, "_processed.zip");
                 tempZipFile = Files.createTempFile("output_", ".zip");
 
                 try (ZipOutputStream zipOut =
@@ -163,10 +185,8 @@ public class ExtractImageScansController {
                     for (int i = 0; i < processedImageBytes.size(); i++) {
                         ZipEntry entry =
                                 new ZipEntry(
-                                        fileName.replaceFirst(REPLACEFIRST, "")
-                                                + "_"
-                                                + (i + 1)
-                                                + ".png");
+                                        GeneralUtils.generateFilename(
+                                                fileName, "_processed_" + (i + 1) + ".png"));
                         zipOut.putNextEntry(entry);
                         zipOut.write(processedImageBytes.get(i));
                         zipOut.closeEntry();
@@ -189,7 +209,7 @@ public class ExtractImageScansController {
                 byte[] imageBytes = processedImageBytes.get(0);
                 return WebResponseUtils.bytesToWebResponse(
                         imageBytes,
-                        fileName.replaceFirst(REPLACEFIRST, "") + ".png",
+                        GeneralUtils.generateFilename(fileName, ".png"),
                         MediaType.IMAGE_PNG);
             }
         } finally {

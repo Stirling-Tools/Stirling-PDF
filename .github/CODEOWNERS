@@ -2,20 +2,20 @@
 * @Frooodle @Ludy87 @jbrunton96 @ConnorYoh
 
 # Backend
-/app/** @DarioGii 
+/app/** @DarioGii @Frooodle @Ludy87 @jbrunton96 @ConnorYoh
 
 #V1 frontend
-/app/core/src/main/resources/static/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96
-/app/core/src/main/resources/templates/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96
+/app/core/src/main/resources/static/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87
+/app/core/src/main/resources/templates/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87
 
 #V2 frontend
-/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96
+/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle
 
 #V2 docker
-/docker/backend/** @Frooodle @Ludy87 @DarioGii
-/docker/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96
-/docker/compose/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96
+/docker/backend/** @Frooodle @Ludy87 @DarioGii @Ludy87
+/docker/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87
+/docker/compose/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96 @Frooodle @Ludy87
 
 
 #GHA (All users)
-/.github/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96
+/.github/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96 @Frooodle @Ludy87

@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyEditorSupport;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,14 +25,16 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -39,6 +42,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -52,7 +57,24 @@ public class StampController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-stamp")
+    /**
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
     @Operation(
             summary = "Add stamp to a PDF file",
             description =
@@ -91,25 +113,14 @@ public class StampController {
         float overrideY = request.getOverrideY(); // New field for Y override
 
         String customColor = request.getCustomColor();
-        float marginFactor;
-
-        switch (request.getCustomMargin().toLowerCase()) {
-            case "small":
-                marginFactor = 0.02f;
-                break;
-            case "medium":
-                marginFactor = 0.035f;
-                break;
-            case "large":
-                marginFactor = 0.05f;
-                break;
-            case "x-large":
-                marginFactor = 0.075f;
-                break;
-            default:
-                marginFactor = 0.035f;
-                break;
-        }
+        float marginFactor =
+                switch (request.getCustomMargin().toLowerCase()) {
+                    case "small" -> 0.02f;
+                    case "medium" -> 0.035f;
+                    case "large" -> 0.05f;
+                    case "x-large" -> 0.075f;
+                    default -> 0.035f;
+                };
 
         // Load the input PDF
         PDDocument document = pdfDocumentFactory.load(pdfFile);
@@ -162,11 +173,10 @@ public class StampController {
                 contentStream.close();
             }
         }
+        // Return the stamped PDF as a response
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_stamped.pdf");
+                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"));
     }
 
     private void addTextStamp(
@@ -185,27 +195,16 @@ public class StampController {
             throws IOException {
         String resourceDir = "";
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        switch (alphabet) {
-            case "arabic":
-                resourceDir = "static/fonts/NotoSansArabic-Regular.ttf";
-                break;
-            case "japanese":
-                resourceDir = "static/fonts/Meiryo.ttf";
-                break;
-            case "korean":
-                resourceDir = "static/fonts/malgun.ttf";
-                break;
-            case "chinese":
-                resourceDir = "static/fonts/SimSun.ttf";
-                break;
-            case "thai":
-                resourceDir = "static/fonts/NotoSansThai-Regular.ttf";
-                break;
-            case "roman":
-            default:
-                resourceDir = "static/fonts/NotoSans-Regular.ttf";
-                break;
-        }
+        resourceDir =
+                switch (alphabet) {
+                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
+                    case "japanese" -> "static/fonts/Meiryo.ttf";
+                    case "korean" -> "static/fonts/malgun.ttf";
+                    case "chinese" -> "static/fonts/SimSun.ttf";
+                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
+                    case "roman" -> "static/fonts/NotoSans-Regular.ttf";
+                    default -> "static/fonts/NotoSans-Regular.ttf";
+                };
 
         if (!"".equals(resourceDir)) {
             ClassPathResource classPathResource = new ClassPathResource(resourceDir);
@@ -251,7 +250,8 @@ public class StampController {
                             pageSize, position, calculateTextCapHeight(font, fontSize), margin);
         }
         // Split the stampText into multiple lines
-        String[] lines = stampText.split("\\\\n");
+        String[] lines =
+                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(stampText);
 
         // Calculate dynamic line height based on font ascent and descent
         float ascent = font.getFontDescriptor().getAscent();
@@ -327,30 +327,30 @@ public class StampController {
             throws IOException {
         float actualWidth =
                 (text != null) ? calculateTextWidth(text, font, fontSize) : contentWidth;
-        switch (position % 3) {
+        return switch (position % 3) {
             case 1: // Left
-                return pageSize.getLowerLeftX() + margin;
+                yield pageSize.getLowerLeftX() + margin;
             case 2: // Center
-                return (pageSize.getWidth() - actualWidth) / 2;
+                yield (pageSize.getWidth() - actualWidth) / 2;
             case 0: // Right
-                return pageSize.getUpperRightX() - actualWidth - margin;
+                yield pageSize.getUpperRightX() - actualWidth - margin;
             default:
-                return 0;
-        }
+                yield 0;
+        };
     }
 
     private float calculatePositionY(
             PDRectangle pageSize, int position, float height, float margin) {
-        switch ((position - 1) / 3) {
+        return switch ((position - 1) / 3) {
             case 0: // Top
-                return pageSize.getUpperRightY() - height - margin;
+                yield pageSize.getUpperRightY() - height - margin;
             case 1: // Middle
-                return (pageSize.getHeight() - height) / 2;
+                yield (pageSize.getHeight() - height) / 2;
             case 2: // Bottom
-                return pageSize.getLowerLeftY() + margin;
+                yield pageSize.getLowerLeftY() + margin;
             default:
-                return 0;
-        }
+                yield 0;
+        };
     }
 
     private float calculateTextWidth(String text, PDFont font, float fontSize) throws IOException {

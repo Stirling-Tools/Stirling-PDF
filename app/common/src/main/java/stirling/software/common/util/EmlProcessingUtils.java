@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.http.MediaType;
+
 import lombok.experimental.UtilityClass;
 
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
@@ -33,10 +35,10 @@ public class EmlProcessingUtils {
     // MIME type detection
     private static final Map<String, String> EXTENSION_TO_MIME_TYPE =
             Map.of(
-                    ".png", "image/png",
-                    ".jpg", "image/jpeg",
-                    ".jpeg", "image/jpeg",
-                    ".gif", "image/gif",
+                    ".png", MediaType.IMAGE_PNG_VALUE,
+                    ".jpg", MediaType.IMAGE_JPEG_VALUE,
+                    ".jpeg", MediaType.IMAGE_JPEG_VALUE,
+                    ".gif", MediaType.IMAGE_GIF_VALUE,
                     ".bmp", "image/bmp",
                     ".webp", "image/webp",
                     ".svg", "image/svg+xml",
@@ -81,8 +83,8 @@ public class EmlProcessingUtils {
                             || lowerContent.contains("bcc:");
             boolean hasMimeStructure =
                     lowerContent.contains("multipart/")
-                            || lowerContent.contains("text/plain")
-                            || lowerContent.contains("text/html")
+                            || lowerContent.contains(MediaType.TEXT_PLAIN_VALUE)
+                            || lowerContent.contains(MediaType.TEXT_HTML_VALUE)
                             || lowerContent.contains("boundary=");
 
             int headerCount = 0;
@@ -197,8 +199,16 @@ public class EmlProcessingUtils {
         String processed =
                 customHtmlSanitizer != null ? customHtmlSanitizer.sanitize(htmlBody) : htmlBody;
 
-        processed = processed.replaceAll("(?i)\\s*position\\s*:\\s*fixed[^;]*;?", "");
-        processed = processed.replaceAll("(?i)\\s*position\\s*:\\s*absolute[^;]*;?", "");
+        processed =
+                RegexPatternUtils.getInstance()
+                        .getFixedPositionCssPattern()
+                        .matcher(processed)
+                        .replaceAll("");
+        processed =
+                RegexPatternUtils.getInstance()
+                        .getAbsolutePositionCssPattern()
+                        .matcher(processed)
+                        .replaceAll("");
 
         if (emailContent != null && !emailContent.getAttachments().isEmpty()) {
             processed = PdfAttachmentHandler.processInlineImages(processed, emailContent);
@@ -220,14 +230,18 @@ public class EmlProcessingUtils {
         html = html.replace("\n", "<br>\n");
 
         html =
-                html.replaceAll(
-                        "(https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+)",
-                        "<a href=\"$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
+                RegexPatternUtils.getInstance()
+                        .getUrlLinkPattern()
+                        .matcher(html)
+                        .replaceAll(
+                                "<a href=\"$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
 
         html =
-                html.replaceAll(
-                        "([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,63})",
-                        "<a href=\"mailto:$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
+                RegexPatternUtils.getInstance()
+                        .getEmailLinkPattern()
+                        .matcher(html)
+                        .replaceAll(
+                                "<a href=\"mailto:$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
 
         return html;
     }
@@ -464,7 +478,7 @@ public class EmlProcessingUtils {
             }
         }
 
-        return "image/png";
+        return MediaType.IMAGE_PNG_VALUE; // Default MIME type
     }
 
     public static String decodeUrlEncoded(String encoded) {
@@ -488,9 +502,13 @@ public class EmlProcessingUtils {
             Matcher concatenatedMatcher = concatenatedPattern.matcher(encodedText);
             String processedText =
                     concatenatedMatcher.replaceAll(
-                            match -> match.group().replaceAll("\\s+(?==\\?)", ""));
+                            match ->
+                                    RegexPatternUtils.getInstance()
+                                            .getMimeHeaderWhitespacePattern()
+                                            .matcher(match.group())
+                                            .replaceAll(""));
 
-            Pattern mimePattern = Pattern.compile("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
+            Pattern mimePattern = RegexPatternUtils.getInstance().getMimeEncodedWordPattern();
             Matcher matcher = mimePattern.matcher(processedText);
             int lastEnd = 0;
 
@@ -505,7 +523,11 @@ public class EmlProcessingUtils {
                     String decodedValue =
                             switch (encoding) {
                                 case "B" -> {
-                                    String cleanBase64 = encodedValue.replaceAll("\\s", "");
+                                    String cleanBase64 =
+                                            RegexPatternUtils.getInstance()
+                                                    .getWhitespacePattern()
+                                                    .matcher(encodedValue)
+                                                    .replaceAll("");
                                     byte[] decodedBytes = Base64.getDecoder().decode(cleanBase64);
                                     Charset targetCharset;
                                     try {
@@ -594,8 +616,16 @@ public class EmlProcessingUtils {
     }
 
     public static String simplifyHtmlContent(String htmlContent) {
-        String simplified = htmlContent.replaceAll("(?i)<script[^>]*>.*?</script>", "");
-        simplified = simplified.replaceAll("(?i)<style[^>]*>.*?</style>", "");
+        String simplified =
+                RegexPatternUtils.getInstance()
+                        .getScriptTagPattern()
+                        .matcher(htmlContent)
+                        .replaceAll("");
+        simplified =
+                RegexPatternUtils.getInstance()
+                        .getStyleTagPattern()
+                        .matcher(simplified)
+                        .replaceAll("");
         return simplified;
     }
 }

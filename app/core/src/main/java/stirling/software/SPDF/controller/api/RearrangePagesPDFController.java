@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -38,7 +38,7 @@ public class RearrangePagesPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-pages")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-pages")
     @Operation(
             summary = "Remove pages from a PDF file",
             description =
@@ -67,9 +67,7 @@ public class RearrangePagesPDFController {
         }
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_removed_pages.pdf");
+                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
     }
 
     private List<Integer> removeFirst(int totalPages) {
@@ -237,7 +235,7 @@ public class RearrangePagesPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/rearrange-pages")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/rearrange-pages")
     @Operation(
             summary = "Rearrange pages in a PDF file",
             description =
@@ -285,9 +283,8 @@ public class RearrangePagesPDFController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_rearranged.pdf");
+                    GeneralUtils.generateFilename(
+                            pdfFile.getOriginalFilename(), "_rearranged.pdf"));
         } catch (IOException e) {
             ExceptionUtils.logException("document rearrangement", e);
             throw e;

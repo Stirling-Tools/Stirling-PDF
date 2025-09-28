@@ -27,12 +27,14 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.UrlUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -40,15 +42,18 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     public static final String LOGOUT_PATH = "/login?logout=true";
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security securityProperties;
 
     private final AppConfig appConfig;
+
+    private final JwtServiceInterface jwtService;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
     public void onLogoutSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
+
         if (!response.isCommitted()) {
             if (authentication != null) {
                 if (authentication instanceof Saml2Authentication samlAuthentication) {
@@ -67,6 +72,12 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                             authentication.getClass().getSimpleName());
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 }
+            } else if (jwtService != null) {
+                String token = jwtService.extractToken(request);
+                if (token != null && !token.isBlank()) {
+                    jwtService.clearToken(response);
+                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                }
             } else {
                 // Redirect to login page after logout
                 String path = checkForErrors(request);
@@ -82,7 +93,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             Saml2Authentication samlAuthentication)
             throws IOException {
 
-        SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
+        SAML2 samlConf = securityProperties.getSaml2();
         String registrationId = samlConf.getRegistrationId();
 
         CustomSaml2AuthenticatedPrincipal principal =
@@ -127,7 +138,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             OAuth2AuthenticationToken oAuthToken)
             throws IOException {
         String registrationId;
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
+        OAUTH2 oauth = securityProperties.getOauth2();
         String path = checkForErrors(request);
 
         String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;
@@ -158,7 +169,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
                 } else {
                     log.info(
-                            "No redirect URL for {} available. Redirecting to default logout URL: {}",
+                            "No redirect URL for {} available. Redirecting to default logout URL:"
+                                    + " {}",
                             registrationId,
                             logoutUrl);
                 }
@@ -239,6 +251,9 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
      * @return a sanitised <code>String</code>
      */
     private String sanitizeInput(String input) {
-        return input.replaceAll("[^a-zA-Z0-9 ]", "");
+        return RegexPatternUtils.getInstance()
+                .getInputSanitizePattern()
+                .matcher(input)
+                .replaceAll("");
     }
 }

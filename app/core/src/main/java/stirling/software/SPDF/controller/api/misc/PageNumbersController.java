@@ -1,8 +1,10 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -37,7 +39,7 @@ public class PageNumbersController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/add-page-numbers", consumes = "multipart/form-data")
+    @PostMapping(value = "/add-page-numbers", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Add page numbers to a PDF document",
             description =
@@ -54,24 +56,27 @@ public class PageNumbersController {
         String customText = request.getCustomText();
         float fontSize = request.getFontSize();
         String fontType = request.getFontType();
+        String fontColor = request.getFontColor();
+
+        Color color = Color.BLACK;
+        if (fontColor != null && !fontColor.trim().isEmpty()) {
+            try {
+                color = Color.decode(fontColor);
+            } catch (NumberFormatException e) {
+                color = Color.BLACK;
+            }
+        }
 
         PDDocument document = pdfDocumentFactory.load(file);
-        float marginFactor;
-        switch (customMargin.toLowerCase()) {
-            case "small":
-                marginFactor = 0.02f;
-                break;
-            case "large":
-                marginFactor = 0.05f;
-                break;
-            case "x-large":
-                marginFactor = 0.075f;
-                break;
-            case "medium":
-            default:
-                marginFactor = 0.035f;
-                break;
-        }
+
+        float marginFactor =
+                switch (customMargin == null ? "" : customMargin.toLowerCase(Locale.ROOT)) {
+                    case "small" -> 0.02f;
+                    case "large" -> 0.05f;
+                    case "x-large" -> 0.075f;
+                    case "medium" -> 0.035f;
+                    default -> 0.035f;
+                };
 
         if (pagesToNumber == null || pagesToNumber.isEmpty()) {
             pagesToNumber = "all";
@@ -79,8 +84,16 @@ public class PageNumbersController {
         if (customText == null || customText.isEmpty()) {
             customText = "{n}";
         }
+
+        final String baseFilename =
+                Filenames.toSimpleFileName(file.getOriginalFilename())
+                        .replaceFirst("[.][^.]+$", "");
+
         List<Integer> pagesToNumberList =
                 GeneralUtils.parsePageList(pagesToNumber.split(","), document.getNumberOfPages());
+
+        // Clamp position to 1..9 (1 = top-left, 9 = bottom-right)
+        int pos = Math.max(1, Math.min(9, position));
 
         for (int i : pagesToNumberList) {
             PDPage page = document.getPage(i);
@@ -92,68 +105,64 @@ public class PageNumbersController {
                             .replace("{total}", String.valueOf(document.getNumberOfPages()))
                             .replace(
                                     "{filename}",
-                                    Filenames.toSimpleFileName(file.getOriginalFilename())
-                                            .replaceFirst("[.][^.]+$", ""));
+                                    GeneralUtils.removeExtension(
+                                            Filenames.toSimpleFileName(
+                                                    file.getOriginalFilename())));
 
             PDType1Font currentFont =
-                    switch (fontType.toLowerCase()) {
+                    switch (fontType == null ? "" : fontType.toLowerCase(Locale.ROOT)) {
                         case "courier" -> new PDType1Font(Standard14Fonts.FontName.COURIER);
                         case "times" -> new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
                         default -> new PDType1Font(Standard14Fonts.FontName.HELVETICA);
                     };
 
-            float x, y;
+            // Text dimensions and font metrics
+            float textWidth = currentFont.getStringWidth(text) / 1000f * fontSize;
+            float ascent = currentFont.getFontDescriptor().getAscent() / 1000f * fontSize;
+            float descent = currentFont.getFontDescriptor().getDescent() / 1000f * fontSize;
 
-            if (position == 5) {
-                // Calculate text width and font metrics
-                float textWidth = currentFont.getStringWidth(text) / 1000 * fontSize;
+            // Derive column/row in range 1..3 (1 = left/top, 2 = center/middle, 3 = right/bottom)
+            int col = ((pos - 1) % 3) + 1; // 1 = left, 2 = center, 3 = right
+            int row = ((pos - 1) / 3) + 1; // 1 = top, 2 = middle, 3 = bottom
 
-                float ascent = currentFont.getFontDescriptor().getAscent() / 1000 * fontSize;
-                float descent = currentFont.getFontDescriptor().getDescent() / 1000 * fontSize;
+            // Anchor coordinates with margin
+            float leftX = pageSize.getLowerLeftX() + marginFactor * pageSize.getWidth();
+            float midX = pageSize.getLowerLeftX() + pageSize.getWidth() / 2f;
+            float rightX = pageSize.getUpperRightX() - marginFactor * pageSize.getWidth();
 
-                float centerX = pageSize.getLowerLeftX() + (pageSize.getWidth() / 2);
-                float centerY = pageSize.getLowerLeftY() + (pageSize.getHeight() / 2);
+            float botY = pageSize.getLowerLeftY() + marginFactor * pageSize.getHeight();
+            float midY = pageSize.getLowerLeftY() + pageSize.getHeight() / 2f;
+            float topY = pageSize.getUpperRightY() - marginFactor * pageSize.getHeight();
 
-                x = centerX - (textWidth / 2);
-                y = centerY - (ascent + descent) / 2;
-            } else {
-                int xGroup = (position - 1) % 3;
-                int yGroup = 2 - (position - 1) / 3;
+            // Horizontal alignment: left = anchor, center = centered, right = right-aligned
+            float x =
+                    switch (col) {
+                        case 1 -> leftX;
+                        case 2 -> midX - textWidth / 2f;
+                        default -> rightX - textWidth;
+                    };
 
-                x =
-                        switch (xGroup) {
-                            case 0 ->
-                                    pageSize.getLowerLeftX()
-                                            + marginFactor * pageSize.getWidth(); // left
-                            case 1 ->
-                                    pageSize.getLowerLeftX() + (pageSize.getWidth() / 2); // center
-                            default ->
-                                    pageSize.getUpperRightX()
-                                            - marginFactor * pageSize.getWidth(); // right
-                        };
+            // Vertical alignment (baseline!):
+            // top    = align text top at topY,
+            // middle = optical middle using ascent/descent,
+            // bottom = baseline at botY
+            float y =
+                    switch (row) {
+                        case 1 -> topY - ascent;
+                        case 2 -> midY - (ascent + descent) / 2f;
+                        default -> botY;
+                    };
 
-                y =
-                        switch (yGroup) {
-                            case 0 ->
-                                    pageSize.getLowerLeftY()
-                                            + marginFactor * pageSize.getHeight(); // bottom
-                            case 1 ->
-                                    pageSize.getLowerLeftY() + (pageSize.getHeight() / 2); // middle
-                            default ->
-                                    pageSize.getUpperRightY()
-                                            - marginFactor * pageSize.getHeight(); // top
-                        };
-            }
-
-            PDPageContentStream contentStream =
+            try (PDPageContentStream contentStream =
                     new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
-            contentStream.beginText();
-            contentStream.setFont(currentFont, fontSize);
-            contentStream.newLineAtOffset(x, y);
-            contentStream.showText(text);
-            contentStream.endText();
-            contentStream.close();
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                contentStream.beginText();
+                contentStream.setFont(currentFont, fontSize);
+                contentStream.setNonStrokingColor(color);
+                contentStream.newLineAtOffset(x, y);
+                contentStream.showText(text);
+                contentStream.endText();
+            }
 
             pageNumber++;
         }
@@ -164,8 +173,7 @@ public class PageNumbersController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_numbersAdded.pdf",
-                MediaType.APPLICATION_PDF);
+                GeneralUtils.generateFilename(
+                        file.getOriginalFilename(), "_page_numbers_added.pdf"));
     }
 }

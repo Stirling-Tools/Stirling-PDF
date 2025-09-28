@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLConnection;
@@ -9,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -34,13 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CheckProgramInstall;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.PdfUtils;
-import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.*;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/convert")
@@ -51,7 +45,7 @@ public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/img")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
     @Operation(
             summary = "Convert PDF to image(s)",
             description =
@@ -66,6 +60,7 @@ public class ConvertImgPDFController {
         String colorType = request.getColorType();
         int dpi = request.getDpi();
         String pageNumbers = request.getPageNumbers();
+        boolean includeAnnotations = Boolean.TRUE.equals(request.getIncludeAnnotations());
         Path tempFile = null;
         Path tempOutputDir = null;
         Path tempPdfPath = null;
@@ -87,9 +82,7 @@ public class ConvertImgPDFController {
             }
             // returns bytes for image
             boolean singleImage = "single".equals(singleOrMultiple);
-            String filename =
-                    Filenames.toSimpleFileName(new File(file.getOriginalFilename()).getName())
-                            .replaceFirst("[.][^.]+$", "");
+            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
 
             result =
                     PdfUtils.convertFromPdf(
@@ -101,7 +94,8 @@ public class ConvertImgPDFController {
                             colorTypeResult,
                             singleImage,
                             dpi,
-                            filename);
+                            filename,
+                            includeAnnotations);
             if (result == null || result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }
@@ -148,10 +142,11 @@ public class ConvertImgPDFController {
                                 .runCommandWithOutputHandling(command);
 
                 // Find all WebP files in the output directory
-                List<Path> webpFiles =
-                        Files.walk(tempOutputDir)
-                                .filter(path -> path.toString().endsWith(".webp"))
-                                .toList();
+                List<Path> webpFiles;
+                try (Stream<Path> walkStream = Files.walk(tempOutputDir)) {
+                    webpFiles =
+                            walkStream.filter(path -> path.toString().endsWith(".webp")).toList();
+                }
 
                 if (webpFiles.isEmpty()) {
                     log.error("No WebP files were created in: {}", tempOutputDir.toString());
@@ -211,7 +206,7 @@ public class ConvertImgPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/img/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/img/pdf")
     @Operation(
             summary = "Convert images to a PDF file",
             description =
@@ -236,13 +231,12 @@ public class ConvertImgPDFController {
                 PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
         return WebResponseUtils.bytesToWebResponse(
                 bytes,
-                new File(file[0].getOriginalFilename()).getName().replaceFirst("[.][^.]+$", "")
-                        + "_converted.pdf");
+                GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
     }
 
     private String getMediaType(String imageFormat) {
         String mimeType = URLConnection.guessContentTypeFromName("." + imageFormat);
-        return "null".equals(mimeType) ? "application/octet-stream" : mimeType;
+        return "null".equals(mimeType) ? MediaType.APPLICATION_OCTET_STREAM_VALUE : mimeType;
     }
 
     /**
