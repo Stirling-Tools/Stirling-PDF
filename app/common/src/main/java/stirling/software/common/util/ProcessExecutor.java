@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 import io.github.pixee.security.BoundedLineReader;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -303,28 +305,14 @@ public class ProcessExecutor {
         OCR_MY_PDF
     }
 
+    @Setter
+    @Getter
     public class ProcessExecutorResult {
         int rc;
         String messages;
 
         public ProcessExecutorResult(int rc, String messages) {
             this.rc = rc;
-            this.messages = messages;
-        }
-
-        public int getRc() {
-            return rc;
-        }
-
-        public void setRc(int rc) {
-            this.rc = rc;
-        }
-
-        public String getMessages() {
-            return messages;
-        }
-
-        public void setMessages(String messages) {
             this.messages = messages;
         }
     }

@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,20 +24,23 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
+@Slf4j
 public class MultiPageLayoutController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/multi-page-layout", consumes = "multipart/form-data")
+    @PostMapping(value = "/multi-page-layout", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
             description =
@@ -102,7 +106,8 @@ public class MultiPageLayoutController {
             float scale = Math.min(scaleWidth, scaleHeight);
 
             int adjustedPageIndex =
-                    i % pagesPerSheet; // This will reset the index for every new page
+                    i % pagesPerSheet; // Close the current content stream and create a new
+            // page and content stream
             int rowIndex = adjustedPageIndex / cols;
             int colIndex = adjustedPageIndex % cols;
 
@@ -130,7 +135,28 @@ public class MultiPageLayoutController {
             }
         }
 
-        contentStream.close(); // Close the final content stream
+        contentStream.close();
+
+        // If any source page is rotated, skip form copying/transformation entirely
+        boolean hasRotation = FormUtils.hasAnyRotatedPage(sourceDocument);
+        if (hasRotation) {
+            log.info("Source document has rotated pages; skipping form field copying.");
+        } else {
+            try {
+                FormUtils.copyAndTransformFormFields(
+                        sourceDocument,
+                        newDocument,
+                        totalPages,
+                        pagesPerSheet,
+                        cols,
+                        rows,
+                        cellWidth,
+                        cellHeight);
+            } catch (Exception e) {
+                log.warn("Failed to copy and transform form fields: {}", e.getMessage(), e);
+            }
+        }
+
         sourceDocument.close();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

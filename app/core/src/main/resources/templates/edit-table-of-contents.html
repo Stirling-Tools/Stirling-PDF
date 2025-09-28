@@ -33,13 +33,12 @@
                   th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
                 </div>
 
-                <div class="mb-3 form-check">
+                <div class="form-check mb-3">
                   <input type="checkbox"
-                    class="form-check-input"
                     id="replaceExisting"
                     name="replaceExisting"
                     checked>
-                  <label class="form-check-label"
+                  <label
                     for="replaceExisting"
                     th:text="#{editTableOfContents.replaceExisting}"></label>
                   <input type="hidden"
