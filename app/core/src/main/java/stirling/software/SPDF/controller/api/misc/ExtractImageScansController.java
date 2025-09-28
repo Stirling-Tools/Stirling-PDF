@@ -72,7 +72,7 @@ public class ExtractImageScansController {
         List<String> images = new ArrayList<>();
 
         List<Path> tempImageFiles = new ArrayList<>();
-        Path tempInputFile = null;
+        Path tempInputFile;
         Path tempZipFile = null;
         List<Path> tempDirs = new ArrayList<>();
 
@@ -201,7 +201,7 @@ public class ExtractImageScansController {
                 return WebResponseUtils.bytesToWebResponse(
                         zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
             }
-            if (processedImageBytes.size() == 0) {
+            if (processedImageBytes.isEmpty()) {
                 throw new IllegalArgumentException("No images detected");
             } else {
 
@@ -219,7 +219,7 @@ public class ExtractImageScansController {
                         try {
                             Files.deleteIfExists(path);
                         } catch (IOException e) {
-                            log.error("Failed to delete temporary image file: " + path, e);
+                            log.error("Failed to delete temporary image file: {}", path, e);
                         }
                     });
 
@@ -227,7 +227,7 @@ public class ExtractImageScansController {
                 try {
                     Files.deleteIfExists(tempZipFile);
                 } catch (IOException e) {
-                    log.error("Failed to delete temporary zip file: " + tempZipFile, e);
+                    log.error("Failed to delete temporary zip file: {}", tempZipFile, e);
                 }
             }
 
@@ -236,7 +236,7 @@ public class ExtractImageScansController {
                         try {
                             FileUtils.deleteDirectory(dir.toFile());
                         } catch (IOException e) {
-                            log.error("Failed to delete temporary directory: " + dir, e);
+                            log.error("Failed to delete temporary directory: {}", dir, e);
                         }
                     });
         }
