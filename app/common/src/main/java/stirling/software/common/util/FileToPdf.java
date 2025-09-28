@@ -1,6 +1,9 @@
 package stirling.software.common.util;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -205,15 +208,27 @@ public class FileToPdf {
             return "";
         }
         // Remove any drive letters (e.g., "C:\") and leading forward/backslashes
-        entryName = entryName.replaceAll("^[a-zA-Z]:[\\\\/]+", "");
-        entryName = entryName.replaceAll("^[\\\\/]+", "");
+        entryName =
+                RegexPatternUtils.getInstance()
+                        .getDriveLetterPattern()
+                        .matcher(entryName)
+                        .replaceAll("");
+        entryName =
+                RegexPatternUtils.getInstance()
+                        .getLeadingSlashesPattern()
+                        .matcher(entryName)
+                        .replaceAll("");
 
         // Recursively remove path traversal sequences
         while (entryName.contains("../") || entryName.contains("..\\")) {
             entryName = entryName.replace("../", "").replace("..\\", "");
         }
         // Normalize all backslashes to forward slashes
-        entryName = entryName.replaceAll("\\\\", "/");
+        entryName =
+                RegexPatternUtils.getInstance()
+                        .getBackslashPattern()
+                        .matcher(entryName)
+                        .replaceAll("/");
         return entryName;
     }
 }

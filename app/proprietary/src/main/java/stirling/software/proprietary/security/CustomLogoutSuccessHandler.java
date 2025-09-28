@@ -27,6 +27,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.UrlUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
@@ -250,6 +251,9 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
      * @return a sanitised <code>String</code>
      */
     private String sanitizeInput(String input) {
-        return input.replaceAll("[^a-zA-Z0-9 ]", "");
+        return RegexPatternUtils.getInstance()
+                .getInputSanitizePattern()
+                .matcher(input)
+                .replaceAll("");
     }
 }

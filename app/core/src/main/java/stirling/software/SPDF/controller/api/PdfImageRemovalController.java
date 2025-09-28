@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.service.PdfImageRemovalService;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 /**
@@ -69,8 +70,8 @@ public class PdfImageRemovalController {
 
         // Generate a new filename for the modified PDF
         String mergedFileName =
-                file.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                        + "_removed_images.pdf";
+                GeneralUtils.generateFilename(
+                        file.getFileInput().getOriginalFilename(), "_images_removed.pdf");
 
         // Convert the byte array to a web response and return it
         return WebResponseUtils.bytesToWebResponse(outputStream.toByteArray(), mergedFileName);

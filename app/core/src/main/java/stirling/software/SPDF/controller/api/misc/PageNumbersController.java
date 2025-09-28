@@ -103,7 +103,11 @@ public class PageNumbersController {
                     customText
                             .replace("{n}", String.valueOf(pageNumber))
                             .replace("{total}", String.valueOf(document.getNumberOfPages()))
-                            .replace("{filename}", baseFilename);
+                            .replace(
+                                    "{filename}",
+                                    GeneralUtils.removeExtension(
+                                            Filenames.toSimpleFileName(
+                                                    file.getOriginalFilename())));
 
             PDType1Font currentFont =
                     switch (fontType == null ? "" : fontType.toLowerCase(Locale.ROOT)) {
@@ -169,8 +173,7 @@ public class PageNumbersController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_numbersAdded.pdf",
-                MediaType.APPLICATION_PDF);
+                GeneralUtils.generateFilename(
+                        file.getOriginalFilename(), "_page_numbers_added.pdf"));
     }
 }

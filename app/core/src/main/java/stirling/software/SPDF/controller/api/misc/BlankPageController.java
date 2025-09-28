@@ -34,6 +34,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -149,8 +150,8 @@ public class BlankPageController {
             ZipOutputStream zos = new ZipOutputStream(baos);
 
             String filename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                            .replaceFirst("[.][^.]+$", "");
+                    GeneralUtils.removeExtension(
+                            Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
 
             if (!nonBlankPages.isEmpty()) {
                 createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");

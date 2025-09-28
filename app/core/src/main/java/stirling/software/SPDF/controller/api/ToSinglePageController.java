@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -92,7 +93,7 @@ public class ToSinglePageController {
         byte[] result = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 result,
-                request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                        + "_singlePage.pdf");
+                GeneralUtils.generateFilename(
+                        request.getFileInput().getOriginalFilename(), "_singlePage.pdf"));
     }
 }

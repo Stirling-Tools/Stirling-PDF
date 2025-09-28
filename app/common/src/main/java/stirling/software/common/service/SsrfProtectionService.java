@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -22,8 +23,9 @@ public class SsrfProtectionService {
     private final ApplicationProperties applicationProperties;
 
     private static final Pattern DATA_URL_PATTERN =
-            Pattern.compile("^data:.*", Pattern.CASE_INSENSITIVE);
-    private static final Pattern FRAGMENT_PATTERN = Pattern.compile("^#.*");
+            RegexPatternUtils.getInstance().getPattern("^data:.*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern FRAGMENT_PATTERN =
+            RegexPatternUtils.getInstance().getPattern("^#.*");
 
     public enum SsrfProtectionLevel {
         OFF, // No SSRF protection - allows all URLs

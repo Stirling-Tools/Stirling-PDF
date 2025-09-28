@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -93,7 +94,7 @@ public class CropController {
         byte[] pdfContent = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 pdfContent,
-                request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                        + "_cropped.pdf");
+                GeneralUtils.generateFilename(
+                        request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
     }
 }

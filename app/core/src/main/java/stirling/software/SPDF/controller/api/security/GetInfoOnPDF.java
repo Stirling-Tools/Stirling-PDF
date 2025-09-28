@@ -66,6 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -224,9 +225,13 @@ public class GetInfoOnPDF {
 
             // Number of words, paragraphs, and images in the entire document
             String fullText = new PDFTextStripper().getText(pdfBoxDoc);
-            String[] words = fullText.split("\\s+");
+            String[] words = RegexPatternUtils.getInstance().getWhitespacePattern().split(fullText);
             int wordCount = words.length;
-            int paragraphCount = fullText.split("\r\n|\r|\n").length;
+            int paragraphCount =
+                    RegexPatternUtils.getInstance()
+                            .getMultiFormatNewlinePattern()
+                            .split(fullText)
+                            .length;
             basicInfo.put("WordCount", wordCount);
             basicInfo.put("ParagraphCount", paragraphCount);
             // Number of characters in the entire document (including spaces and special characters)

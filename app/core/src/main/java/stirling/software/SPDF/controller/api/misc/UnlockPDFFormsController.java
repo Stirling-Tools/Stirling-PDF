@@ -25,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -66,13 +68,15 @@ public class UnlockPDFFormsController {
                 COSBase xfaBase = acroForm.getCOSObject().getDictionaryObject(COSName.XFA);
                 if (xfaBase != null) {
                     try {
+                        var accessReadOnlyPattern =
+                                RegexPatternUtils.getInstance().getAccessReadOnlyPattern();
                         if (xfaBase instanceof COSStream xfaStream) {
                             InputStream is = xfaStream.createInputStream();
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
                             is.transferTo(baos);
                             String xml = baos.toString(StandardCharsets.UTF_8);
 
-                            xml = xml.replaceAll("access\\s*=\\s*\"readOnly\"", "access=\"open\"");
+                            xml = accessReadOnlyPattern.matcher(xml).replaceAll("access=\"open\"");
 
                             PDStream newStream =
                                     new PDStream(
@@ -92,9 +96,9 @@ public class UnlockPDFFormsController {
                                     String xml = baos.toString(StandardCharsets.UTF_8);
 
                                     xml =
-                                            xml.replaceAll(
-                                                    "access\\s*=\\s*\"readOnly\"",
-                                                    "access=\"open\"");
+                                            accessReadOnlyPattern
+                                                    .matcher(xml)
+                                                    .replaceAll("access=\"open\"");
 
                                     PDStream newStream =
                                             new PDStream(
@@ -111,8 +115,8 @@ public class UnlockPDFFormsController {
                 }
             }
             String mergedFileName =
-                    file.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                            + "_unlocked_forms.pdf";
+                    GeneralUtils.generateFilename(
+                            file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(mergedFileName));
         } catch (Exception e) {

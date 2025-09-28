@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -42,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ImageProcessingUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -80,9 +80,7 @@ public class ExtractImagesController {
         // Set compression level
         zos.setLevel(Deflater.BEST_COMPRESSION);
 
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
+        String filename = GeneralUtils.removeExtension(file.getOriginalFilename());
         Set<byte[]> processedImages = new HashSet<>();
 
         if (useMultithreading) {

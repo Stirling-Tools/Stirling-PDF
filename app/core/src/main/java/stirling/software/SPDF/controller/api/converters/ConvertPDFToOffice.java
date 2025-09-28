@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -23,6 +22,7 @@ import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -66,9 +66,7 @@ public class ConvertPDFToOffice {
                 String text = stripper.getText(document);
                 return WebResponseUtils.bytesToWebResponse(
                         text.getBytes(),
-                        Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                        .replaceFirst("[.][^.]+$", "")
-                                + ".txt",
+                        GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt"),
                         MediaType.TEXT_PLAIN);
             }
         } else {

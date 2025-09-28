@@ -27,11 +27,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CustomHtmlSanitizer;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.FileToPdf;
-import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.*;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
@@ -89,9 +85,7 @@ public class ConvertMarkdownToPdf {
                         tempFileManager,
                         customHtmlSanitizer);
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
-        String outputFilename =
-                originalFilename.replaceFirst("[.][^.]+$", "")
-                        + ".pdf"; // Remove file extension and append .pdf
+        String outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
         return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 }
