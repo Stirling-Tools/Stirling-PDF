@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useMemo } from 'react';
+import { createContext, useContext, useState, useRef, useMemo } from 'react';
 import { SidebarState, SidebarRefs, SidebarContextValue, SidebarProviderProps } from '../types/sidebar';
 
 const SidebarContext = createContext<SidebarContextValue | undefined>(undefined);
@@ -7,7 +7,7 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   // All sidebar state management
   const quickAccessRef = useRef<HTMLDivElement>(null);
   const toolPanelRef = useRef<HTMLDivElement>(null);
-  
+
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
@@ -44,4 +44,4 @@ export function useSidebarContext(): SidebarContextValue {
     throw new Error('useSidebarContext must be used within a SidebarProvider');
   }
   return context;
-} 
+}

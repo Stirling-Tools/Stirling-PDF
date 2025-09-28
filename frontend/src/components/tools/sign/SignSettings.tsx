@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from "react-i18next";
 import { Stack, Button, Text, Alert, Tabs } from '@mantine/core';
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
