@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -203,10 +204,8 @@ public class MergeController {
         // Iterate through the original files
         for (MultipartFile file : files) {
             // Get the filename without extension to use as bookmark title
-            String title = file.getOriginalFilename();
-            if (title != null && title.contains(".")) {
-                title = title.substring(0, title.lastIndexOf('.'));
-            }
+            String filename = file.getOriginalFilename();
+            String title = GeneralUtils.removeExtension(filename);
 
             // Create an outline item for this file
             PDOutlineItem item = new PDOutlineItem();
@@ -317,11 +316,10 @@ public class MergeController {
                 mergedDocument.save(outputTempFile.getFile());
 
                 String mergedFileName =
-                        files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                                + "_merged_unsigned.pdf";
+                        GeneralUtils.generateFilename(
+                                files[0].getOriginalFilename(), "_merged_unsigned.pdf");
                 return WebResponseUtils.pdfFileToWebResponse(
                         outputTempFile, mergedFileName); // Return the modified PDF as stream
-            }
         } catch (Exception ex) {
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());

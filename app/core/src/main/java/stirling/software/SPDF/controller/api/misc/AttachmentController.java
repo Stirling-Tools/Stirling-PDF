@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.AddAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @Slf4j
@@ -51,8 +52,8 @@ public class AttachmentController {
 
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_with_attachments.pdf");
+                GeneralUtils.generateFilename(
+                        Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
+                        "_with_attachments.pdf"));
     }
 }
