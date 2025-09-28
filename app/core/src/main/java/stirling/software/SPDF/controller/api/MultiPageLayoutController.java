@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -19,20 +19,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.FormUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
+@Slf4j
 public class MultiPageLayoutController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -103,7 +106,8 @@ public class MultiPageLayoutController {
             float scale = Math.min(scaleWidth, scaleHeight);
 
             int adjustedPageIndex =
-                    i % pagesPerSheet; // This will reset the index for every new page
+                    i % pagesPerSheet; // Close the current content stream and create a new
+            // page and content stream
             int rowIndex = adjustedPageIndex / cols;
             int colIndex = adjustedPageIndex % cols;
 
@@ -131,7 +135,28 @@ public class MultiPageLayoutController {
             }
         }
 
-        contentStream.close(); // Close the final content stream
+        contentStream.close();
+
+        // If any source page is rotated, skip form copying/transformation entirely
+        boolean hasRotation = FormUtils.hasAnyRotatedPage(sourceDocument);
+        if (hasRotation) {
+            log.info("Source document has rotated pages; skipping form field copying.");
+        } else {
+            try {
+                FormUtils.copyAndTransformFormFields(
+                        sourceDocument,
+                        newDocument,
+                        totalPages,
+                        pagesPerSheet,
+                        cols,
+                        rows,
+                        cellWidth,
+                        cellHeight);
+            } catch (Exception e) {
+                log.warn("Failed to copy and transform form fields: {}", e.getMessage(), e);
+            }
+        }
+
         sourceDocument.close();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -141,7 +166,7 @@ public class MultiPageLayoutController {
         byte[] result = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 result,
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_layoutChanged.pdf");
+                GeneralUtils.generateFilename(
+                        file.getOriginalFilename(), "_multi_page_layout.pdf"));
     }
 }

@@ -2,9 +2,11 @@ package stirling.software.common.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 
@@ -12,6 +14,7 @@ import stirling.software.common.model.ApplicationProperties.Driver;
 import stirling.software.common.model.ApplicationProperties.Premium;
 import stirling.software.common.model.ApplicationProperties.Security;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.util.RegexPatternUtils;
 
 class ApplicationPropertiesLogicTest {
 
@@ -31,22 +34,26 @@ class ApplicationPropertiesLogicTest {
 
     @Test
     void tempFileManagement_defaults_and_overrides() {
+        Function<String, String> normalize = s -> Paths.get(s).normalize().toString();
         ApplicationProperties.TempFileManagement tfm =
                 new ApplicationProperties.TempFileManagement();
 
         String expectedBase =
-                java.lang.System.getProperty("java.io.tmpdir").replaceAll("/+$", "")
+                RegexPatternUtils.getInstance()
+                                .getTrailingSlashesPattern()
+                                .matcher(java.lang.System.getProperty("java.io.tmpdir"))
+                                .replaceAll("")
                         + "/stirling-pdf";
-        assertEquals(expectedBase, tfm.getBaseTmpDir());
+        assertEquals(expectedBase, normalize.apply(tfm.getBaseTmpDir()));
 
         String expectedLibre = expectedBase + "/libreoffice";
-        assertEquals(expectedLibre, tfm.getLibreofficeDir());
+        assertEquals(expectedLibre, normalize.apply(tfm.getLibreofficeDir()));
 
         tfm.setBaseTmpDir("/custom/base");
-        assertEquals("/custom/base", tfm.getBaseTmpDir());
+        assertEquals("/custom/base", normalize.apply(tfm.getBaseTmpDir()));
 
         tfm.setLibreofficeDir("/opt/libre");
-        assertEquals("/opt/libre", tfm.getLibreofficeDir());
+        assertEquals("/opt/libre", normalize.apply(tfm.getLibreofficeDir()));
     }
 
     @Test

@@ -34,7 +34,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -128,7 +132,23 @@ public class AutoSplitPdfController {
             pdfRenderer.setSubsamplingAllowed(true);
 
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
-                BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 150);
+                BufferedImage bim;
+
+                // Use global maximum DPI setting, fallback to 300 if not set
+                int renderDpi = 150; // Default fallback
+                ApplicationProperties properties =
+                        ApplicationContextProvider.getBean(ApplicationProperties.class);
+                if (properties != null && properties.getSystem() != null) {
+                    renderDpi = properties.getSystem().getMaxDPI();
+                }
+
+                try {
+                    bim = pdfRenderer.renderImageWithDPI(page, renderDpi);
+                } catch (OutOfMemoryError e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
+                }
                 String result = decodeQRCode(bim);
 
                 boolean isValidQrCode = VALID_QR_CONTENTS.contains(result);
@@ -155,8 +175,8 @@ public class AutoSplitPdfController {
             splitDocuments.removeIf(pdDocument -> pdDocument.getNumberOfPages() == 0);
 
             String filename =
-                    Filenames.toSimpleFileName(file.getOriginalFilename())
-                            .replaceFirst("[.][^.]+$", "");
+                    GeneralUtils.removeExtension(
+                            Filenames.toSimpleFileName(file.getOriginalFilename()));
 
             try (ZipOutputStream zipOut =
                     new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
