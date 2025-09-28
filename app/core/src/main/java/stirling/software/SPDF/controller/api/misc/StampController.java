@@ -193,7 +193,7 @@ public class StampController {
             float margin,
             String colorString) // Y override
             throws IOException {
-        String resourceDir = "";
+        String resourceDir;
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
         resourceDir =
                 switch (alphabet) {
@@ -206,18 +206,16 @@ public class StampController {
                     default -> "static/fonts/NotoSans-Regular.ttf";
                 };
 
-        if (!"".equals(resourceDir)) {
-            ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-            String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
+        ClassPathResource classPathResource = new ClassPathResource(resourceDir);
+        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
 
-            // Use TempFile with try-with-resources for automatic cleanup
-            try (TempFile tempFileWrapper = new TempFile(tempFileManager, fileExtension)) {
-                File tempFile = tempFileWrapper.getFile();
-                try (InputStream is = classPathResource.getInputStream();
-                        FileOutputStream os = new FileOutputStream(tempFile)) {
-                    IOUtils.copy(is, os);
-                    font = PDType0Font.load(document, tempFile);
-                }
+        // Use TempFile with try-with-resources for automatic cleanup
+        try (TempFile tempFileWrapper = new TempFile(tempFileManager, fileExtension)) {
+            File tempFile = tempFileWrapper.getFile();
+            try (InputStream is = classPathResource.getInputStream();
+                    FileOutputStream os = new FileOutputStream(tempFile)) {
+                IOUtils.copy(is, os);
+                font = PDType0Font.load(document, tempFile);
             }
         }
 

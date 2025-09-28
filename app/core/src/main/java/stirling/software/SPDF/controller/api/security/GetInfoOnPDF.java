@@ -122,7 +122,7 @@ public class GetInfoOnPDF {
         if (!ap.canModifyAnnotations()) restrictedPermissions.add("annotation modification");
         if (!ap.canPrint()) restrictedPermissions.add("printing");
 
-        if (restrictedPermissions.size() > 0) {
+        if (!restrictedPermissions.isEmpty()) {
             summaryData.set("restrictedPermissions", restrictedPermissions);
             summaryData.put("restrictedPermissionsCount", restrictedPermissions.size());
         }
@@ -196,7 +196,7 @@ public class GetInfoOnPDF {
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
         boolean readonly = true;
-        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly); ) {
+        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly)) {
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode jsonOutput = objectMapper.createObjectNode();
 
@@ -256,7 +256,6 @@ public class GetInfoOnPDF {
             docInfoNode.put("PDF version", pdfBoxDoc.getVersion());
             docInfoNode.put("Trapped", info.getTrapped());
             docInfoNode.put("Page Mode", getPageModeDescription(pageMode));
-            ;
 
             PDAcroForm acroForm = pdfBoxDoc.getDocumentCatalog().getAcroForm();
 
@@ -270,7 +269,7 @@ public class GetInfoOnPDF {
 
             // Generate structured summary data about PDF characteristics
             ObjectNode summaryData = generatePDFSummaryData(pdfBoxDoc);
-            if (summaryData != null && summaryData.size() > 0) {
+            if (summaryData != null && !summaryData.isEmpty()) {
                 jsonOutput.set("SummaryData", summaryData);
             }
 
@@ -795,7 +794,7 @@ public class GetInfoOnPDF {
 
                         // Recursively explore child elements
                         ArrayNode childElements = exploreStructureTree(structureElement.getKids());
-                        if (childElements.size() > 0) {
+                        if (!childElements.isEmpty()) {
                             elementNode.set("Children", childElements);
                         }
                     }

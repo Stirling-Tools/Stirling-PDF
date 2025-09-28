@@ -69,7 +69,7 @@ public class PipelineController {
 
         try {
             List<Resource> inputFiles = processor.generateInputFiles(files);
-            if (inputFiles == null || inputFiles.size() == 0) {
+            if (inputFiles == null || inputFiles.isEmpty()) {
                 return null;
             }
             PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);

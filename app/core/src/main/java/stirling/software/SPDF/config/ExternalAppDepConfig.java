@@ -101,7 +101,7 @@ public class ExternalAppDepConfig {
                             "Missing dependency: {} - Disabling group: {} (Affected features: {})",
                             command,
                             group,
-                            affectedFeatures != null && !affectedFeatures.isEmpty()
+                            !affectedFeatures.isEmpty()
                                     ? String.join(", ", affectedFeatures)
                                     : "unknown");
                 }

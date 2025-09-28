@@ -77,7 +77,7 @@ public class GeneralWebController {
                             new ObjectMapper()
                                     .readValue(config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
-                    if (name == null || name.length() < 1) {
+                    if (name == null || name.isEmpty()) {
                         String filename =
                                 jsonFiles
                                         .get(pipelineConfigs.indexOf(config))
@@ -94,7 +94,7 @@ public class GeneralWebController {
                 log.error("exception", e);
             }
         }
-        if (pipelineConfigsWithNames.size() == 0) {
+        if (pipelineConfigsWithNames.isEmpty()) {
             Map<String, String> configWithName = new HashMap<>();
             configWithName.put("json", "");
             configWithName.put("name", "No preloaded configs found");

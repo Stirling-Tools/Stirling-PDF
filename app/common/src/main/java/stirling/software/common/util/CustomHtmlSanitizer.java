@@ -26,7 +26,7 @@ public class CustomHtmlSanitizer {
             new AttributePolicy() {
                 @Override
                 public String apply(String elementName, String attributeName, String value) {
-                    if (value == null || value.trim().isEmpty()) {
+                    if (value.trim().isEmpty()) {
                         return null;
                     }
 
