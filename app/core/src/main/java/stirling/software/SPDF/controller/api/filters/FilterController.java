@@ -86,7 +86,6 @@ public class FilterController {
         // Load the PDF
         PDDocument document = pdfDocumentFactory.load(inputFile);
         int actualPageCount = document.getNumberOfPages();
-
         // Perform the comparison
         boolean valid = switch (comparator) {
             case "Greater" -> actualPageCount > pageCount;

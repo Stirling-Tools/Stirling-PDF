@@ -131,7 +131,7 @@ public class PdfUtils {
     }
 
     public boolean hasImagesOnPage(PDPage page) throws IOException {
-        return getAllImages(page.getResources()).size() > 0;
+        return !getAllImages(page.getResources()).isEmpty();
     }
 
     public boolean hasTextOnPage(PDPage page, String phrase) throws IOException {

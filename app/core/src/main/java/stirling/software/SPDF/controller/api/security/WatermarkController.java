@@ -179,17 +179,15 @@ public class WatermarkController {
             default -> "static/fonts/NotoSans-Regular.ttf";
         };
 
-        if (!"".equals(resourceDir)) {
-            ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-            String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
-            File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
-            try (InputStream is = classPathResource.getInputStream();
-                    FileOutputStream os = new FileOutputStream(tempFile)) {
-                IOUtils.copy(is, os);
-                font = PDType0Font.load(document, tempFile);
-            } finally {
-                if (tempFile != null) Files.deleteIfExists(tempFile.toPath());
-            }
+        ClassPathResource classPathResource = new ClassPathResource(resourceDir);
+        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
+        File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
+        try (InputStream is = classPathResource.getInputStream();
+                FileOutputStream os = new FileOutputStream(tempFile)) {
+            IOUtils.copy(is, os);
+            font = PDType0Font.load(document, tempFile);
+        } finally {
+            Files.deleteIfExists(tempFile.toPath());
         }
 
         contentStream.setFont(font, fontSize);
