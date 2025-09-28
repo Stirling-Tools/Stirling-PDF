@@ -32,8 +32,10 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -168,8 +170,10 @@ public class ConvertOfficeController {
     }
 
     private boolean isValidFileExtension(String fileExtension) {
-        String extensionPattern = "^(?i)[a-z0-9]{2,4}$";
-        return fileExtension.matches(extensionPattern);
+        return RegexPatternUtils.getInstance()
+                .getFileExtensionValidationPattern()
+                .matcher(fileExtension)
+                .matches();
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/file/pdf")
@@ -190,9 +194,8 @@ public class ConvertOfficeController {
             PDDocument doc = pdfDocumentFactory.load(file);
             return WebResponseUtils.pdfDocToWebResponse(
                     doc,
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_convertedToPDF.pdf");
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
         } finally {
             if (file != null && file.getParent() != null) {
                 FileUtils.deleteDirectory(file.getParentFile());

@@ -7,13 +7,16 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.RegexPatternUtils;
+
 /** Redacts any map values whose keys match common secret/token patterns. */
 @Slf4j
 public final class SecretMasker {
 
     private static final Pattern SENSITIVE =
-            Pattern.compile(
-                    "(?i)(password|token|secret|api[_-]?key|authorization|auth|jwt|cred|cert)");
+            RegexPatternUtils.getInstance()
+                    .getPattern(
+                            "(?i)(password|token|secret|api[_-]?key|authorization|auth|jwt|cred|cert)");
 
     private SecretMasker() {}
 
