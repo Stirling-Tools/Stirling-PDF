@@ -2,11 +2,7 @@ import React from 'react';
 import { Stack, Text, Code, Group, Badge, Alert, Loader } from '@mantine/core';
 import { useAppConfig } from '../../../../hooks/useAppConfig';
 
-interface OverviewProps {
-  onLogoutClick?: () => void; // Optional for backwards compatibility
-}
-
-const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
+const Overview: React.FC = () => {
   const { config, loading, error } = useAppConfig();
 
   const renderConfigSection = (title: string, data: any) => {

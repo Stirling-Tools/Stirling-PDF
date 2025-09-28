@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Modal, Button, Text, ActionIcon } from '@mantine/core';
+import { Modal, Text, ActionIcon } from '@mantine/core';
 import { useAppConfig } from '../../hooks/useAppConfig';
 import LocalIcon from './LocalIcon';
 import Overview from './config/configSections/Overview';
