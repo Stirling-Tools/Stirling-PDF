@@ -13,7 +13,7 @@ import stirling.software.common.model.api.PDFFile;
 public class SplitPdfBySectionsRequest extends PDFFile {
     @Schema(
             description = "Pages to be split by section",
-            defaultValue = "all",
+            defaultValue = "SPLIT_ALL",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String pageNumbers;
 
