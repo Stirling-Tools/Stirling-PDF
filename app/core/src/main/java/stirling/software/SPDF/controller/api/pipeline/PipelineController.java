@@ -31,6 +31,7 @@ import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.common.service.PostHogService;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -98,9 +99,8 @@ public class PipelineController {
                 // Check if the filename already exists, and modify it if necessary
                 if (filenameCount.containsKey(originalFilename)) {
                     int count = filenameCount.get(originalFilename);
-                    String baseName = originalFilename.replaceAll("\\.[^.]*$", "");
-                    String extension = originalFilename.replaceAll("^.*\\.", "");
-                    filename = baseName + "(" + count + ")." + extension;
+                    assert originalFilename != null;
+                    filename = GeneralUtils.generateFilename(originalFilename, "(" + count + ")");
                     filenameCount.put(originalFilename, count + 1);
                 } else {
                     filenameCount.put(originalFilename, 1);
