@@ -806,7 +806,7 @@ public class CompressController {
                 try {
                     Files.deleteIfExists(tempFile);
                 } catch (IOException e) {
-                    log.warn("Failed to delete temporary file: " + tempFile, e);
+                    log.warn("Failed to delete temporary file: {}", tempFile, e);
                 }
             }
         }

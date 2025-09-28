@@ -339,7 +339,7 @@ public class PipelineProcessor {
             }
             Path path = Paths.get(file.getAbsolutePath());
             // debug statement
-            log.info("Reading file: " + path);
+            log.info("Reading file: {}", path);
             if (Files.exists(path)) {
                 Resource fileResource =
                         new ByteArrayResource(Files.readAllBytes(path)) {
@@ -351,7 +351,7 @@ public class PipelineProcessor {
                         };
                 outputFiles.add(fileResource);
             } else {
-                log.info("File not found: " + path);
+                log.info("File not found: {}", path);
             }
         }
         log.info("Files successfully loaded. Starting processing...");
