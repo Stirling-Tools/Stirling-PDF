@@ -14,6 +14,6 @@ public class PdfToPdfARequest extends PDFFile {
     @Schema(
             description = "The output PDF/A type",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            allowableValues = {"pdfa", "pdfa-1"})
+            allowableValues = {"pdfa", "pdfa-1", "pdfa-2", "pdfa-3"})
     private String outputFormat;
 }
