@@ -230,6 +230,34 @@ public class MergeController {
         }
     }
 
+    // Re-order files to match the explicit order provided by the front-end.
+    // fileOrder is newline-delimited original filenames in the desired order.
+    private static MultipartFile[] reorderFilesByProvidedOrder(MultipartFile[] files, String fileOrder) {
+        String[] desired = fileOrder.split("\n", -1);
+        List<MultipartFile> remaining = new ArrayList<>(Arrays.asList(files));
+        List<MultipartFile> ordered = new ArrayList<>(files.length);
+
+        for (String name : desired) {
+            if (name == null || name.isEmpty()) continue;
+            int idx = indexOfByOriginalFilename(remaining, name);
+            if (idx >= 0) {
+                ordered.add(remaining.remove(idx));
+            }
+        }
+
+        // Append any files not explicitly listed, preserving their relative order
+        ordered.addAll(remaining);
+        return ordered.toArray(new MultipartFile[0]);
+    }
+
+    private static int indexOfByOriginalFilename(List<MultipartFile> list, String name) {
+        for (int i = 0; i < list.size(); i++) {
+            MultipartFile f = list.get(i);
+            if (name.equals(f.getOriginalFilename())) return i;
+        }
+        return -1;
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/merge-pdfs")
     @Operation(
             summary = "Merge multiple PDF files into one",
@@ -242,24 +270,29 @@ public class MergeController {
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
-        TempFile outputTempFile;
+        TempFile outputTempFile = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
         boolean generateToc = request.isGenerateToc();
 
+        MultipartFile[] files = request.getFileInput();
+        if (files == null) {
+            files = new MultipartFile[0];
+        }
+
+        // If front-end provided explicit visible order, honor it and override backend sorting
+        if (fileOrder != null && !fileOrder.isBlank()) {
+            files = reorderFilesByProvidedOrder(files, fileOrder);
+        } else {
+            Arrays.sort(
+                    files,
+                    getSortComparator(
+                            request.getSortType())); // Sort files based on requested sort type
+        }
+
+        ResponseEntity<StreamingResponseBody> response;
+
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
-
-            MultipartFile[] files = request.getFileInput();
-
-            // If front-end provided explicit visible order, honor it and override backend sorting
-            if (fileOrder != null && !fileOrder.isBlank()) {
-                files = reorderFilesByProvidedOrder(files, fileOrder);
-            } else {
-                Arrays.sort(
-                        files,
-                        getSortComparator(
-                                request.getSortType())); // Sort files based on requested sort type
-            }
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;
@@ -314,12 +347,7 @@ public class MergeController {
                 // Save the modified document to a temporary file
                 outputTempFile = new TempFile(tempFileManager, ".pdf");
                 mergedDocument.save(outputTempFile.getFile());
-
-                String mergedFileName =
-                        GeneralUtils.generateFilename(
-                                files[0].getOriginalFilename(), "_merged_unsigned.pdf");
-                return WebResponseUtils.pdfFileToWebResponse(
-                        outputTempFile, mergedFileName); // Return the modified PDF as stream
+            }
         } catch (Exception ex) {
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
@@ -332,33 +360,12 @@ public class MergeController {
                 tempFileManager.deleteTempFile(file); // Delete temporary files
             }
         }
-    }
 
-    // Re-order files to match the explicit order provided by the front-end.
-    // fileOrder is newline-delimited original filenames in the desired order.
-    private MultipartFile[] reorderFilesByProvidedOrder(MultipartFile[] files, String fileOrder) {
-        String[] desired = fileOrder.split("\n", -1);
-        List<MultipartFile> remaining = new ArrayList<>(Arrays.asList(files));
-        List<MultipartFile> ordered = new ArrayList<>(files.length);
+        String firstFilename = files.length > 0 ? files[0].getOriginalFilename() : null;
+        String mergedFileName =
+                GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
-        for (String name : desired) {
-            if (name == null || name.isEmpty()) continue;
-            int idx = indexOfByOriginalFilename(remaining, name);
-            if (idx >= 0) {
-                ordered.add(remaining.remove(idx));
-            }
-        }
-
-        // Append any files not explicitly listed, preserving their relative order
-        ordered.addAll(remaining);
-        return ordered.toArray(new MultipartFile[0]);
-    }
-
-    private int indexOfByOriginalFilename(List<MultipartFile> list, String name) {
-        for (int i = 0; i < list.size(); i++) {
-            MultipartFile f = list.get(i);
-            if (name.equals(f.getOriginalFilename())) return i;
-        }
-        return -1;
+        response = WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
+        return response;
     }
 }
