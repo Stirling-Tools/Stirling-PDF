@@ -75,8 +75,11 @@ public class CustomUserDetailsService implements UserDetailsService {
      */
     private AuthenticationType determinePreferredSSOType() {
         // Check what SSO types are enabled and prefer in order: OAUTH2 > SAML2 > fallback to OAUTH2
-        boolean oauth2Enabled = securityProperties.getOauth2() != null && securityProperties.getOauth2().getEnabled();
-        boolean saml2Enabled = securityProperties.getSaml2() != null && securityProperties.getSaml2().getEnabled();
+        boolean oauth2Enabled =
+                securityProperties.getOauth2() != null
+                        && securityProperties.getOauth2().getEnabled();
+        boolean saml2Enabled =
+                securityProperties.getSaml2() != null && securityProperties.getSaml2().getEnabled();
 
         if (oauth2Enabled) {
             return AuthenticationType.OAUTH2;

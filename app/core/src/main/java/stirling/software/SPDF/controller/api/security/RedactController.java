@@ -89,7 +89,7 @@ public class RedactController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private String removeFileExtension(String filename) {
-        return filename.replaceFirst("[.][^.]+$", "");
+        return GeneralUtils.removeExtension(filename);
     }
 
     @InitBinder
