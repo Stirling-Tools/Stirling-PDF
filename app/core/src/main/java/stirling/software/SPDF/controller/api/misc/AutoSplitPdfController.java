@@ -38,6 +38,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -174,8 +175,8 @@ public class AutoSplitPdfController {
             splitDocuments.removeIf(pdDocument -> pdDocument.getNumberOfPages() == 0);
 
             String filename =
-                    Filenames.toSimpleFileName(file.getOriginalFilename())
-                            .replaceFirst("[.][^.]+$", "");
+                    GeneralUtils.removeExtension(
+                            Filenames.toSimpleFileName(file.getOriginalFilename()));
 
             try (ZipOutputStream zipOut =
                     new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {

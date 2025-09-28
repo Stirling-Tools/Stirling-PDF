@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.util.ExecutorFactory;
+import stirling.software.common.util.RegexPatternUtils;
 
 /** Service for executing jobs asynchronously or synchronously */
 @Service
@@ -426,8 +427,16 @@ public class JobExecutorService {
         }
 
         try {
-            String value = timeout.replaceAll("[^\\d.]", "");
-            String unit = timeout.replaceAll("[\\d.]", "");
+            String value =
+                    RegexPatternUtils.getInstance()
+                            .getNonDigitDotPattern()
+                            .matcher(timeout)
+                            .replaceAll("");
+            String unit =
+                    RegexPatternUtils.getInstance()
+                            .getDigitDotPattern()
+                            .matcher(timeout)
+                            .replaceAll("");
 
             double numericValue = Double.parseDouble(value);
 

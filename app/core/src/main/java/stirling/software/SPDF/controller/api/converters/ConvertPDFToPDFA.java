@@ -7,16 +7,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
@@ -564,18 +566,31 @@ public class ConvertPDFToPDFA {
             adobePdfSchema.setKeywords(keywords);
         }
 
-        // Set creation and modification dates
-        Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        Calendar originalCreationDate = docInfo.getCreationDate();
-        if (originalCreationDate == null) {
-            originalCreationDate = now;
-        }
-        docInfo.setCreationDate(originalCreationDate);
-        xmpBasicSchema.setCreateDate(originalCreationDate);
+        // Set creation and modification dates using java.time and convert to GregorianCalendar
+        Instant nowInstant = Instant.now();
+        ZonedDateTime nowZdt = ZonedDateTime.ofInstant(nowInstant, ZoneId.of("UTC"));
+        GregorianCalendar nowCal = GregorianCalendar.from(nowZdt);
 
-        docInfo.setModificationDate(now);
-        xmpBasicSchema.setModifyDate(now);
-        xmpBasicSchema.setMetadataDate(now);
+        java.util.Calendar originalCreationDate = docInfo.getCreationDate();
+        GregorianCalendar creationCal;
+        if (originalCreationDate == null) {
+            creationCal = nowCal;
+        } else if (originalCreationDate instanceof GregorianCalendar) {
+            creationCal = (GregorianCalendar) originalCreationDate;
+        } else {
+            // convert other Calendar implementations to GregorianCalendar preserving instant
+            creationCal =
+                    GregorianCalendar.from(
+                            ZonedDateTime.ofInstant(
+                                    originalCreationDate.toInstant(), ZoneId.of("UTC")));
+        }
+
+        docInfo.setCreationDate(creationCal);
+        xmpBasicSchema.setCreateDate(creationCal);
+
+        docInfo.setModificationDate(nowCal);
+        xmpBasicSchema.setModifyDate(nowCal);
+        xmpBasicSchema.setMetadataDate(nowCal);
 
         // Serialize the created metadata so it can be attached to the existent metadata
         ByteArrayOutputStream xmpOut = new ByteArrayOutputStream();
