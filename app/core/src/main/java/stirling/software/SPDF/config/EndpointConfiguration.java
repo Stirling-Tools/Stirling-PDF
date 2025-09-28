@@ -400,6 +400,7 @@ public class EndpointConfiguration {
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
+        addEndpointToGroup("Ghostscript", "pdf-to-pdfa");
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");

@@ -190,6 +190,11 @@ public class ExceptionUtils {
                 "error.conversionFailed", "{0} conversion failed", null, "PDF/A");
     }
 
+    public static RuntimeException createPdfaConversionFailedException(Exception cause) {
+        return createRuntimeException(
+                "error.conversionFailed", "{0} conversion failed", cause, "PDF/A");
+    }
+
     public static IllegalArgumentException createInvalidComparatorException() {
         return createIllegalArgumentException(
                 "error.invalidFormat",

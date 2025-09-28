@@ -89,7 +89,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - Add page numbers
 - Auto-rename files by detecting PDF header text
 - OCR on PDF (using Tesseract OCR)
-- PDF/A conversion (using LibreOffice)
+- PDF/A conversion (using Ghostscript pdfwrite)
 - Edit metadata
 - Flatten PDFs
 - Get all information on a PDF to view or export as JSON
