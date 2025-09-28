@@ -4,7 +4,6 @@ import static stirling.software.common.util.ProviderUtils.validateProvider;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -218,7 +217,7 @@ public class AccountWebController {
         Map<String, String> roleDetails = Role.getAllRoleDetails();
         // Map to store session information and user activity status
         Map<String, Boolean> userSessions = new HashMap<>();
-        Map<String, Date> userLastRequest = new HashMap<>();
+        Map<String, Instant> userLastRequest = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
         while (iterator.hasNext()) {
@@ -249,27 +248,29 @@ public class AccountWebController {
                 // Determine the user's session status and last request time
                 int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
                 boolean hasActiveSession = false;
-                Date lastRequest = null;
+                Instant lastRequest = null;
                 Optional<SessionEntity> latestSession =
                         sessionPersistentRegistry.findLatestSession(user.getUsername());
                 if (latestSession.isPresent()) {
                     SessionEntity sessionEntity = latestSession.get();
-                    Date lastAccessedTime = sessionEntity.getLastRequest();
+                    // sessionEntity stores Instant directly
+                    Instant lastAccessedTime =
+                            Optional.ofNullable(sessionEntity.getLastRequest())
+                                    .orElse(Instant.EPOCH);
+
                     Instant now = Instant.now();
                     // Calculate session expiration and update session status accordingly
                     Instant expirationTime =
-                            lastAccessedTime
-                                    .toInstant()
-                                    .plus(maxInactiveInterval, ChronoUnit.SECONDS);
+                            lastAccessedTime.plus(maxInactiveInterval, ChronoUnit.SECONDS);
                     if (now.isAfter(expirationTime)) {
                         sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());
                     } else {
                         hasActiveSession = !sessionEntity.isExpired();
                     }
-                    lastRequest = sessionEntity.getLastRequest();
+                    lastRequest = lastAccessedTime;
                 } else {
                     // No session, set default last request time
-                    lastRequest = new Date(0);
+                    lastRequest = Instant.EPOCH;
                 }
                 userSessions.put(user.getUsername(), hasActiveSession);
                 userLastRequest.put(user.getUsername(), lastRequest);
@@ -286,19 +287,21 @@ public class AccountWebController {
                 allUsers.stream()
                         .sorted(
                                 (u1, u2) -> {
-                                    boolean u1Active = userSessions.get(u1.getUsername());
-                                    boolean u2Active = userSessions.get(u2.getUsername());
+                                    boolean u1Active =
+                                            userSessions.getOrDefault(u1.getUsername(), false);
+                                    boolean u2Active =
+                                            userSessions.getOrDefault(u2.getUsername(), false);
                                     if (u1Active && !u2Active) {
                                         return -1;
                                     } else if (!u1Active && u2Active) {
                                         return 1;
                                     } else {
-                                        Date u1LastRequest =
+                                        Instant u1LastRequest =
                                                 userLastRequest.getOrDefault(
-                                                        u1.getUsername(), new Date(0));
-                                        Date u2LastRequest =
+                                                        u1.getUsername(), Instant.EPOCH);
+                                        Instant u2LastRequest =
                                                 userLastRequest.getOrDefault(
-                                                        u2.getUsername(), new Date(0));
+                                                        u2.getUsername(), Instant.EPOCH);
                                         return u2LastRequest.compareTo(u1LastRequest);
                                     }
                                 })

@@ -1,8 +1,9 @@
 package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import org.springframework.context.annotation.Lazy;
@@ -60,8 +61,12 @@ public class FirstLoginFilter extends OncePerRequestFilter {
         }
         if (log.isDebugEnabled()) {
             HttpSession session = request.getSession(true);
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-            String creationTime = timeFormat.format(new Date(session.getCreationTime()));
+            DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
+            String creationTime =
+                    timeFormat.format(
+                            Instant.ofEpochMilli(session.getCreationTime())
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalTime());
             log.debug(
                     "Request Info - New: {}, creationTimeSession {}, ID:  {}, IP: {}, User-Agent: {}, Referer: {}, Request URL: {}",
                     session.isNew(),

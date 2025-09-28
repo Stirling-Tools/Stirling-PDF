@@ -7,8 +7,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -134,11 +134,12 @@ public class ValidateSignatureController {
                                         : certValidationService.validateTrustStore(cert));
 
                         result.setNotRevoked(!certValidationService.isRevoked(cert));
-                        result.setNotExpired(!cert.getNotAfter().before(new Date()));
+                        result.setNotExpired(
+                                Instant.now().isBefore(cert.getNotAfter().toInstant()));
 
                         // Set basic signature info
                         result.setSignerName(sig.getName());
-                        result.setSignatureDate(sig.getSignDate().getTime().toString());
+                        result.setSignatureDate(sig.getSignDate().toInstant().toString());
                         result.setReason(sig.getReason());
                         result.setLocation(sig.getLocation());
 
