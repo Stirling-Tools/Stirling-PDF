@@ -12,6 +12,7 @@ import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
+import AppConfigModal from './AppConfigModal';
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -217,7 +218,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="spacer" />
 
           {/* Config button at the bottom */}
-          {/* {buttonConfigs
+          {buttonConfigs
             .filter(config => config.id === 'config')
             .map(config => (
                 <div key={config.id} className="flex flex-col items-center gap-1">
@@ -237,14 +238,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     {config.name}
                   </span>
                 </div>
-            ))} */}
+            ))}
         </div>
       </div>
 
-      {/* <AppConfigModal
+      <AppConfigModal
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
-      /> */}
+      />
     </div>
   );
 });
